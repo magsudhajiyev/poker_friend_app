@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "311745459306",
+    "firebase_url": "https://poker-tracker-52df8-default-rtdb.firebaseio.com",
+    "project_id": "poker-tracker-52df8",
+    "storage_bucket": "poker-tracker-52df8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:311745459306:android:82fe9770985ad558d00613",
+        "android_client_info": {
+          "package_name": "com.example.poker_logger"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALRqQpV-jY8FkQjohOUVGirTWA_euCOsA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

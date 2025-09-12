@@ -1,0 +1,685 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../utils/poker_positions.dart';
+import '../models/game_types.dart';
+
+class HandActionsScreen extends StatefulWidget {
+  final Map<String, dynamic> hand;
+
+  const HandActionsScreen({Key? key, required this.hand}) : super(key: key);
+
+  @override
+  _HandActionsScreenState createState() => _HandActionsScreenState();
+}
+
+class _HandActionsScreenState extends State<HandActionsScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final actions = List<Map<String, dynamic>>.from(widget.hand['actions'] ?? []);
+    final startTime = DateTime.parse(widget.hand['startTime']);
+    final buttonPosition = widget.hand['buttonPosition'] ?? 1;
+    final playerCount = widget.hand['playerCount'] ?? 6;
+    final heroPosition = widget.hand['heroPosition'] ?? 1;
+    
+    return Scaffold(
+      backgroundColor: Color(0xFF161618),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Modern Header
+            Container(
+              padding: EdgeInsets.fromLTRB(24, 20, 24, 20),
+              decoration: BoxDecoration(
+                color: Color(0xFF1F1F23),
+              ),
+              child: Row(
+                children: [
+                  // Back button
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Color(0xFF161618),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  // Hand info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hand #${widget.hand['handNumber'] ?? 'N/A'}',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Your Position: ${PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF9A9A9A),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Hand Summary Cards
+                    _buildHandSummaryCards(),
+                    
+                    SizedBox(height: 24),
+                    
+                    // Hero Cards and Winner Info
+                    _buildHeroCardsAndWinner(),
+                    
+                    SizedBox(height: 24),
+                    
+                    // Street-by-street action table
+                    _buildStreetByStreetTable(),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroCardsAndWinner() {
+    final ourHoleCardsData = widget.hand['ourHoleCards'];
+    final winnerId = widget.hand['winnerId'];
+    final playerNamesData = widget.hand['playerNames'];
+    
+    String? heroCard1;
+    String? heroCard2;
+    if (ourHoleCardsData != null && ourHoleCardsData is Map) {
+      heroCard1 = ourHoleCardsData['card1'];
+      heroCard2 = ourHoleCardsData['card2'];
+    }
+    
+    // Get winner name
+    String? winnerName;
+    if (winnerId != null && playerNamesData != null && playerNamesData is Map) {
+      winnerName = playerNamesData[winnerId.toString()];
+    }
+    
+    if ((heroCard1 == null && heroCard2 == null) && winnerId == null) {
+      return SizedBox.shrink(); // Don't show section if no data
+    }
+    
+    return Row(
+      children: [
+        // Hero Cards
+        if (heroCard1 != null || heroCard2 != null)
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFF1F1F23),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Color(0xFF5AC95A)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.style, color: Color(0xFF5AC95A), size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Your Cards',
+                        style: TextStyle(
+                          color: Color(0xFF5AC95A),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (heroCard1 != null) _buildCard(heroCard1),
+                      if (heroCard1 != null && heroCard2 != null) SizedBox(width: 12),
+                      if (heroCard2 != null) _buildCard(heroCard2),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        
+        if ((heroCard1 != null || heroCard2 != null) && winnerId != null)
+          SizedBox(width: 16),
+        
+        // Winner Info
+        if (winnerId != null)
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFF1F1F23),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Color(0xFFFFD700)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Winner',
+                        style: TextStyle(
+                          color: Color(0xFFFFD700),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    winnerName ?? 'Player $winnerId',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (widget.hand['heroPosition'] == winnerId)
+                    Text(
+                      'You won!',
+                      style: TextStyle(
+                        color: Color(0xFFFFD700),
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildHandSummaryCards() {
+    
+    final pot = widget.hand['potAmount'] ?? widget.hand['pot'] ?? 0;
+    final startTime = DateTime.parse(widget.hand['startTime']);
+    
+    // Get blinds and game type from session data
+    final smallBlind = widget.hand['smallBlind'] ?? 1;
+    final bigBlind = widget.hand['bigBlind'] ?? 2;
+    final gameTypeStr = widget.hand['gameType'] ?? 'cash';
+    
+    // Convert string to GameType enum for proper currency formatting
+    final gameType = GameTypeExtension.fromString(gameTypeStr);
+    
+    // Debug what we're actually getting
+    print('🎯 GAME TYPE DEBUG:');
+    print('  Raw gameTypeStr: "$gameTypeStr"');
+    print('  Converted gameType: ${gameType.name}');
+    print('  Should show \$? ${gameType == GameType.cash}');
+    
+    // Format blinds display - only show $ for cash games
+    String blindsText;
+    if (gameType == GameType.cash) {
+      blindsText = '\$${smallBlind}/\$${bigBlind}';
+    } else {
+      blindsText = '${smallBlind}/${bigBlind}';
+    }
+    
+    // Format pot display - only show $ for cash games
+    String potText;
+    if (gameType == GameType.cash) {
+      potText = '\$${pot.toStringAsFixed(0)}';
+    } else {
+      potText = '${pot.toStringAsFixed(0)}';
+    }
+    
+    return Row(
+      children: [
+        Expanded(
+          child: _buildSummaryCard(
+            'Pot Size',
+            potText,
+            Icons.account_balance_wallet,
+            Color(0xFF5AC95A),
+          ),
+        ),
+        SizedBox(width: 12),
+        Expanded(
+          child: _buildSummaryCard(
+            'Blinds',
+            blindsText,
+            Icons.visibility,
+            Color(0xFF8B5CF6),
+          ),
+        ),
+        SizedBox(width: 12),
+        Expanded(
+          child: _buildSummaryCard(
+            'Time',
+            DateFormat('HH:mm').format(startTime),
+            Icons.access_time,
+            Color(0xFFFF9500),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFF2A2A2E)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              color: Color(0xFF9A9A9A),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStreetByStreetTable() {
+    final actions = List<Map<String, dynamic>>.from(widget.hand['actions'] ?? []);
+    final boardCardsData = widget.hand['boardCards'];
+    final buttonPosition = widget.hand['buttonPosition'] ?? 1;
+    final playerCount = widget.hand['playerCount'] ?? 6;
+    final heroPosition = widget.hand['heroPosition'];
+    final playerNamesData = widget.hand['playerNames'];
+    final winnerId = widget.hand['winnerId'];
+    final gameTypeStr = widget.hand['gameType'] ?? 'cash';
+    final gameType = GameTypeExtension.fromString(gameTypeStr);
+    
+    // Parse player names
+    Map<String, String> playerNamesMap = {};
+    if (playerNamesData != null && playerNamesData is Map) {
+      playerNamesData.forEach((key, value) {
+        playerNamesMap[key.toString()] = value.toString();
+      });
+    }
+    
+    // Parse board cards
+    List<String> flop = [];
+    String? turn;
+    String? river;
+    if (boardCardsData != null && boardCardsData is Map) {
+      flop = List<String>.from(boardCardsData['flop'] ?? []);
+      turn = boardCardsData['turn'] as String?;
+      river = boardCardsData['river'] as String?;
+    }
+    
+    // Group actions by street
+    Map<String, List<Map<String, dynamic>>> actionsByStreet = {
+      'preflop': [],
+      'flop': [],
+      'turn': [],
+      'river': [],
+    };
+    
+    for (final action in actions) {
+      final street = action['street'] as String? ?? 'preflop';
+      actionsByStreet[street]?.add(action);
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Action Summary',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 16),
+        
+        // Preflop
+        if (actionsByStreet['preflop']!.isNotEmpty)
+          _buildStreetSection('PREFLOP', null, actionsByStreet['preflop']!, 
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value),
+        
+        // Flop
+        if (flop.isNotEmpty && actionsByStreet['flop']!.isNotEmpty)
+          _buildStreetSection('FLOP', flop, actionsByStreet['flop']!, 
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value),
+        
+        // Turn
+        if (turn != null && actionsByStreet['turn']!.isNotEmpty)
+          _buildStreetSection('TURN', [turn], actionsByStreet['turn']!, 
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value),
+        
+        // River
+        if (river != null && actionsByStreet['river']!.isNotEmpty)
+          _buildStreetSection('RIVER', [river], actionsByStreet['river']!, 
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value),
+      ],
+    );
+  }
+  
+  Widget _buildStreetSection(String streetName, List<String>? cards, List<Map<String, dynamic>> actions,
+                            int buttonPosition, int playerCount, int? heroPosition, 
+                            Map<String, String> playerNamesMap, int? winnerId, String gameType) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFF2A2A2E)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Street header with cards
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Color(0xFF161618),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  streetName,
+                  style: TextStyle(
+                    color: Color(0xFF5AC95A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                if (cards != null && cards.isNotEmpty) ...[
+                  SizedBox(width: 16),
+                  ...cards.map((card) => Padding(
+                    padding: EdgeInsets.only(right: 8),
+                    child: _buildCard(card),
+                  )),
+                ],
+              ],
+            ),
+          ),
+          
+          // Action table
+          _buildActionTable(actions, buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildActionTable(List<Map<String, dynamic>> actions, int buttonPosition, int playerCount,
+                          int? heroPosition, Map<String, String> playerNamesMap, int? winnerId, String gameType) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      child: Table(
+        columnWidths: {
+          0: FlexColumnWidth(2.5), // Player (Position)
+          1: FlexColumnWidth(1.5), // Stack
+          2: FlexColumnWidth(1.5), // Action
+          3: FlexColumnWidth(1), // Amount
+        },
+        children: [
+          // Header row
+          TableRow(
+            children: [
+              _buildTableHeader('PLAYER'),
+              _buildTableHeader('STACK'),
+              _buildTableHeader('ACTION'),
+              _buildTableHeader('AMT'),
+            ],
+          ),
+          // Data rows
+          ...actions.map((action) => _buildActionRow(
+            action, buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType
+          )),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildTableHeader(String text) {
+    return Container(
+      padding: EdgeInsets.only(bottom: 12),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: Color(0xFF9A9A9A),
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+  
+  TableRow _buildActionRow(Map<String, dynamic> action, int buttonPosition, int playerCount,
+                          int? heroPosition, Map<String, String> playerNamesMap, int? winnerId, String gameType) {
+    final playerSeat = action['player'] as int? ?? action['playerSeat'] as int? ?? 1;
+    final actionType = action['action'] as String? ?? 'Unknown';
+    final amount = action['amount'];
+    final stack = action['playerStack'] ?? action['stack'] ?? 0;
+    
+    // Get player name
+    String playerName = playerNamesMap[playerSeat.toString()] ?? 
+                       action['playerName'] as String? ?? 
+                       'Player $playerSeat';
+    
+    final isHero = heroPosition != null && playerSeat == heroPosition;
+    final isWinner = winnerId != null && playerSeat == winnerId;
+    final positionName = PokerPositions.getPositionName(playerSeat, buttonPosition, playerCount);
+    
+    // Format player display
+    String playerDisplay = isHero ? 'You' : playerName;
+    playerDisplay = '$playerDisplay ($positionName)';
+    
+    // Get action color
+    Color actionColor = Color(0xFF9A9A9A);
+    switch (actionType.toLowerCase()) {
+      case 'fold':
+        actionColor = Colors.red;
+        break;
+      case 'call':
+      case 'check':
+        actionColor = Color(0xFF5AC95A);
+        break;
+      case 'raise':
+      case 'bet':
+        actionColor = Color(0xFFFF9500);
+        break;
+      case 'all in':
+      case 'allin':
+        actionColor = Colors.red;
+        break;
+    }
+    
+    return TableRow(
+      children: [
+        // Player column
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              if (isWinner)
+                Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 14),
+              if (isWinner) SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  playerDisplay,
+                  style: TextStyle(
+                    color: isHero ? Color(0xFF5AC95A) : Colors.white,
+                    fontSize: 12,
+                    fontWeight: isHero ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Stack column
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            stack > 0 ? '${gameType == GameType.cash ? '\$' : ''}$stack' : '-',
+            style: TextStyle(
+              color: Color(0xFF9A9A9A),
+              fontSize: 12,
+            ),
+          ),
+        ),
+        // Action column
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            actionType.toUpperCase(),
+            style: TextStyle(
+              color: actionColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        // Amount column
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            amount != null ? '${gameType == GameType.cash ? '\$' : ''}$amount' : '-',
+            style: TextStyle(
+              color: Color(0xFF9A9A9A),
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  Widget _buildCard(String? card) {
+    if (card == null || card.isEmpty) return SizedBox.shrink();
+    
+    final suit = card.length > 1 ? card.substring(1) : '';
+    final rank = card.isNotEmpty ? card[0] : '';
+    
+    Color suitColor = Colors.white;
+    if (suit == '♥' || suit == '♦') suitColor = Colors.red;
+    
+    return Container(
+      width: 36,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Color(0xFF2A2A2E)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            rank,
+            style: TextStyle(
+              color: suitColor == Colors.red ? Colors.red : Colors.black,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 2),
+          Text(
+            suit,
+            style: TextStyle(
+              color: suitColor == Colors.red ? Colors.red : Colors.black,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHiddenCard() {
+    return Container(
+      width: 36,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Color(0xFF2A2A2E),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Color(0xFF3A3A3E)),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.help_outline,
+          color: Color(0xFF9A9A9A),
+          size: 16,
+        ),
+      ),
+    );
+  }
+}

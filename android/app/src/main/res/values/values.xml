@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_web_client_id">311745459306-PLACEHOLDER.apps.googleusercontent.com</string>
+    <string name="firebase_database_url">https://poker-tracker-52df8-default-rtdb.firebaseio.com</string>
+    <string name="gcm_defaultSenderId">311745459306</string>
+    <string name="google_api_key">AIzaSyALRqQpV-jY8FkQjohOUVGirTWA_euCOsA</string>
+    <string name="google_app_id">1:311745459306:android:82fe9770985ad558d00613</string>
+    <string name="google_crash_reporting_api_key">AIzaSyALRqQpV-jY8FkQjohOUVGirTWA_euCOsA</string>
+    <string name="google_storage_bucket">poker-tracker-52df8.firebasestorage.app</string>
+    <string name="project_id">poker-tracker-52df8</string>
+</resources>

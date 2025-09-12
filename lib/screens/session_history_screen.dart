@@ -1,0 +1,720 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../services/firebase_service.dart';
+import '../services/local_storage_service.dart';
+import '../utils/poker_positions.dart';
+import '../widgets/loading_screen.dart';
+import '../models/game_types.dart';
+import 'session_hands_screen.dart';
+
+class SessionHistoryScreen extends StatefulWidget {
+  final String? targetSessionId;
+  
+  const SessionHistoryScreen({Key? key, this.targetSessionId}) : super(key: key);
+  
+  @override
+  _SessionHistoryScreenState createState() => _SessionHistoryScreenState();
+}
+
+class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
+  List<Map<String, dynamic>> sessions = [];
+  bool isLoading = true;
+  String? error;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSessions();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadSessions() async {
+    try {
+      print('📊 DEBUG: _loadSessions called');
+      setState(() {
+        isLoading = true;
+        error = null;
+      });
+
+      List<Map<String, dynamic>> loadedSessions;
+      try {
+        print('📊 DEBUG: Attempting to load from Firebase...');
+        // Try Firebase first
+        loadedSessions = await FirebaseService.getAllSessions();
+        print('📊 DEBUG: Loaded ${loadedSessions.length} sessions from Firebase');
+        print('📊 DEBUG: Firebase sessions: ${loadedSessions.map((s) => '${s['id']?.substring(0, 8)}...(${s['sessionName'] ?? 'unnamed'})')}');
+      } catch (e) {
+        // Fallback to local storage
+        print('📊 DEBUG: Firebase failed, trying local storage: $e');
+        loadedSessions = await LocalStorageService.getUserSessions();
+        print('📊 DEBUG: Loaded ${loadedSessions.length} sessions from local storage');
+        print('📊 DEBUG: Local sessions: ${loadedSessions.map((s) => '${s['id']?.substring(0, 8)}...(${s['sessionName'] ?? 'unnamed'})')}');
+      }
+      
+      setState(() {
+        sessions = loadedSessions;
+        isLoading = false;
+      });
+      
+      // Auto-scroll to the target session if specified
+      if (widget.targetSessionId != null) {
+        _scrollToSession(widget.targetSessionId!);
+      }
+    } catch (e) {
+      setState(() {
+        error = 'Failed to load sessions: $e';
+        isLoading = false;
+      });
+    }
+  }
+
+  void _scrollToSession(String sessionId) {
+    print('📊 DEBUG: _scrollToSession called with sessionId: $sessionId');
+    // Wait a bit for the UI to render
+    Future.delayed(Duration(milliseconds: 300), () {
+      final targetIndex = sessions.indexWhere((session) => session['id'] == sessionId);
+      print('📊 DEBUG: Found target session at index: $targetIndex');
+      
+      if (targetIndex != -1) {
+        // Calculate approximate position (each session card is roughly 120px + margins)
+        const double itemHeight = 140.0;
+        final double scrollOffset = targetIndex * itemHeight;
+        
+        // Scroll to the session with animation
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            scrollOffset,
+            duration: Duration(milliseconds: 800),
+            curve: Curves.easeInOut,
+          );
+          print('📊 DEBUG: Scrolled to offset: $scrollOffset');
+        }
+      } else {
+        print('📊 DEBUG: Target session not found!');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF161618),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: EdgeInsets.fromLTRB(24, 32, 24, 24),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      'Session History',
+                      style: TextStyle(
+                        fontSize: 32,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.refresh,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    onPressed: _loadSessions,
+                  ),
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: Colors.white),
+                    color: Color(0xFF1F1F23),
+                    onSelected: (value) {
+                      if (value == 'clear') {
+                        _showClearConfirmation();
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        value: 'clear',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_forever, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Clear All Sessions', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            Expanded(child: _buildBody()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (isLoading) {
+      return LoadingScreen(message: 'Loading sessions...');
+    }
+
+    if (error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: Colors.red, size: 64),
+            SizedBox(height: 16),
+            Text(
+              'Error',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.red, fontSize: 16),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadSessions,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF5AC95A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Retry',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (sessions.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Color(0xFF2A2A2E),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.sports_esports,
+                      color: Color(0xFF9A9A9A),
+                      size: 40,
+                    );
+                  },
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No Sessions Found',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Play some poker hands and they will appear here!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF9A9A9A),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: EdgeInsets.symmetric(horizontal: 24),
+      itemCount: sessions.length,
+      itemBuilder: (context, index) {
+        final session = sessions[index];
+        return _buildSessionCard(session);
+      },
+    );
+  }
+
+  Widget _buildSessionCard(Map<String, dynamic> session) {
+    final startTime = DateTime.parse(session['startTime']);
+    final endTime = session['endTime'] != null 
+        ? DateTime.parse(session['endTime']) 
+        : null;
+    
+    final duration = endTime != null 
+        ? endTime.difference(startTime).inMinutes 
+        : null;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            Icons.sports_esports,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+        title: Text(
+          session['sessionName'] != null && session['sessionName'].isNotEmpty 
+              ? session['sessionName']
+              : 'Session ${session['id'].substring(0, 8)}...',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 4),
+            Text(
+              '${DateFormat('MMM dd, yyyy HH:mm').format(startTime)}',
+              style: TextStyle(
+                color: Color(0xFF9A9A9A),
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              '${session['playerCount']} players • ${_formatBlinds(session)}',
+              style: TextStyle(
+                color: Color(0xFF9A9A9A),
+                fontSize: 14,
+              ),
+            ),
+            if (duration != null)
+              Text(
+                'Duration: ${duration} minutes',
+                style: TextStyle(
+                  color: Color(0xFF9A9A9A),
+                  fontSize: 14,
+                ),
+              ),
+          ],
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          color: Color(0xFF9A9A9A),
+          size: 16,
+        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SessionHandsScreen(session: session),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHandTile(Map<String, dynamic> hand) {
+    final actions = List<Map<String, dynamic>>.from(hand['actions'] ?? []);
+    final startTime = DateTime.parse(hand['startTime']);
+    
+    return ListTile(
+      dense: true,
+      leading: CircleAvatar(
+        radius: 16,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        child: Text(
+          '${hand['handNumber']}',
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSecondary,
+          ),
+        ),
+      ),
+      title: Text('Hand #${hand['handNumber']}'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Button: ${PokerPositions.getPositionName(hand['buttonPosition'], hand['buttonPosition'], hand['playerCount'])}'),
+          Text('${actions.length} actions • ${DateFormat('HH:mm:ss').format(startTime)}'),
+        ],
+      ),
+      trailing: IconButton(
+        icon: Icon(Icons.info_outline),
+        onPressed: () => _showHandDetails(hand),
+      ),
+    );
+  }
+
+  void _showHandDetails(Map<String, dynamic> hand) {
+    final actions = List<Map<String, dynamic>>.from(hand['actions'] ?? []);
+    final boardCards = hand['boardCards'] as Map<String, dynamic>?;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Hand #${hand['handNumber']} Details'),
+        content: Container(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Button Position: ${PokerPositions.getPositionName(hand['buttonPosition'], hand['buttonPosition'], hand['playerCount'])}'),
+              Text('Player Count: ${hand['playerCount']}'),
+              Text('Start Time: ${DateFormat('MMM dd, HH:mm:ss').format(DateTime.parse(hand['startTime']))}'),
+              
+              // Hole Cards Section  
+              if (hand['ourHoleCards'] != null) ...[
+                SizedBox(height: 16),
+                Text('Your Cards:', style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                _buildHoleCardsDisplay(hand['ourHoleCards']),
+              ],
+
+              // Board Cards Section
+              if (boardCards != null) ...[
+                SizedBox(height: 16),
+                Text('Board Cards:', style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                _buildBoardCardsDisplay(boardCards),
+              ],
+              
+              SizedBox(height: 16),
+              Text('Actions:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              if (actions.isEmpty)
+                Text('No actions recorded')
+              else
+                ...actions.map((action) {
+                  // Get the player name and position from the stored action record
+                  final playerSeat = action['player'] as int;
+                  final storedPlayerName = action['playerName'] as String?;
+                  final storedPlayerPosition = action['playerPosition'] as String?;
+                  
+                  String displayName;
+                  if (storedPlayerName != null && storedPlayerName.isNotEmpty) {
+                    // Check if stored name is just a position name (like UTG, BB, etc.)
+                    bool isPositionName = PokerPositions.isPositionName(storedPlayerName);
+                    
+                    if (isPositionName) {
+                      // If it's just a position name, show seat number with current position
+                      if (storedPlayerPosition != null && storedPlayerPosition.isNotEmpty) {
+                        displayName = 'Seat $playerSeat ($storedPlayerPosition)';
+                      } else {
+                        displayName = 'Seat $playerSeat';
+                      }
+                    } else {
+                      // Use custom player name with position: "Gringo (SB)"
+                      if (storedPlayerPosition != null && storedPlayerPosition.isNotEmpty) {
+                        displayName = '$storedPlayerName ($storedPlayerPosition)';
+                      } else {
+                        // Fallback to custom player name only
+                        displayName = storedPlayerName;
+                      }
+                    }
+                  } else {
+                    // Fallback to seat number with position
+                    if (storedPlayerPosition != null && storedPlayerPosition.isNotEmpty) {
+                      displayName = 'Seat $playerSeat ($storedPlayerPosition)';
+                    } else {
+                      displayName = 'Seat $playerSeat';
+                    }
+                  }
+                  
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 2),
+                    child: Text(
+                      '${_getActionIcon(action['action'])} $displayName ${_formatAction(action['action'])} (${_formatStreet(action['street'])})',
+                      style: TextStyle(fontFamily: 'monospace'),
+                    ),
+                  );
+                }).toList(),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHoleCardsDisplay(Map<String, dynamic> holeCards) {
+    final card1 = holeCards['card1'] as String?;
+    final card2 = holeCards['card2'] as String?;
+    
+    return Row(
+      children: [
+        if (card1 != null) _buildCard(card1),
+        if (card1 != null && card2 != null) SizedBox(width: 8),
+        if (card2 != null) _buildCard(card2),
+        if (card1 == null && card2 == null)
+          Text('No cards recorded', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildBoardCardsDisplay(Map<String, dynamic> boardCards) {
+    final flop = List<String>.from(boardCards['flop'] ?? []);
+    final turn = boardCards['turn'] as String?;
+    final river = boardCards['river'] as String?;
+    
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        if (flop.isNotEmpty) ...[
+          Text('Flop: ', style: TextStyle(fontSize: 12)),
+          ...flop.map((card) => _buildCard(card)),
+        ],
+        if (turn != null) ...[
+          SizedBox(width: 16),
+          Text('Turn: ', style: TextStyle(fontSize: 12)),
+          _buildCard(turn),
+        ],
+        if (river != null) ...[
+          SizedBox(width: 16),
+          Text('River: ', style: TextStyle(fontSize: 12)),
+          _buildCard(river),
+        ],
+      ],
+    );
+  }
+  
+  Widget _buildCard(String card) {
+    final color = _getCardColor(card);
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(4),
+        color: Colors.white,
+      ),
+      child: Text(
+        card,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
+  
+  Color _getCardColor(String card) {
+    if (card.contains('♥') || card.contains('♦')) {
+      return Colors.red;
+    }
+    return Colors.black;
+  }
+
+  String _getActionIcon(String action) {
+    switch (action.toLowerCase()) {
+      case 'bet': return '💰';
+      case 'call': return '✅';
+      case 'raise': return '📈';
+      case 'fold': return '❌';
+      default: return '•';
+    }
+  }
+
+  String _formatAction(String action) {
+    return action.toUpperCase();
+  }
+
+  String _formatStreet(String street) {
+    switch (street.toLowerCase()) {
+      case 'preflop': return 'Preflop';
+      case 'flop': return 'Flop';
+      case 'turn': return 'Turn';
+      case 'river': return 'River';
+      default: return street;
+    }
+  }
+
+  String _getPlayerDisplayName(int playerSeat, int buttonPosition, int playerCount) {
+    // Show seat number with position instead of just position name to avoid confusion
+    String position = PokerPositions.getPositionName(playerSeat, buttonPosition, playerCount);
+    return 'Seat $playerSeat ($position)';
+  }
+
+  void _showClearConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Clear All Sessions?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('This will permanently delete all poker sessions and hands from both Firebase and local storage.'),
+            SizedBox(height: 8),
+            Text(
+              'This action cannot be undone!',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _clearAllSessions();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _clearAllSessions() async {
+    try {
+      setState(() {
+        isLoading = true;
+        error = null;
+      });
+      
+      print('🗑️ DEBUG: Starting to clear all user sessions...');
+      
+      // Clear from Firebase first
+      try {
+        await FirebaseService.clearUserSessions();
+        print('🗑️ DEBUG: Firebase sessions cleared successfully');
+      } catch (e) {
+        print('🗑️ DEBUG: Error clearing Firebase sessions: $e');
+        // Continue with local clearing even if Firebase fails
+      }
+      
+      // Clear from local storage
+      try {
+        await LocalStorageService.clearUserSessions();
+        print('🗑️ DEBUG: Local sessions cleared successfully');
+      } catch (e) {
+        print('🗑️ DEBUG: Error clearing local sessions: $e');
+      }
+      
+      // Refresh the sessions list
+      await _loadSessions();
+      
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('All sessions have been cleared successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+      
+      print('🗑️ DEBUG: All sessions cleared and UI refreshed');
+    } catch (e) {
+      setState(() {
+        error = 'Failed to clear sessions: $e';
+        isLoading = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to clear sessions: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  String _formatBlinds(Map<String, dynamic> session) {
+    final smallBlind = session['smallBlind'] ?? 0;
+    final bigBlind = session['bigBlind'] ?? 0;
+    final gameTypeStr = session['gameType'] ?? 'cash';
+    
+    // Check if it's a cash game
+    final isCashGame = gameTypeStr == 'cash';
+    
+    if (isCashGame) {
+      return '\$$smallBlind/\$$bigBlind';
+    } else {
+      return '$smallBlind/$bigBlind';
+    }
+  }
+}
