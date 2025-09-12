@@ -496,6 +496,11 @@ class PokerSessionManager {
   Future<void> _updateOpponentStats() async {
     if (currentHand == null) return;
     
+    print('🎯 Starting opponent stats update for completed hand #${currentHand?.handNumber}');
+    print('🎯 Active seats: $activeSeats');
+    print('🎯 Player names: $playerNames');
+    print('🎯 Our seat: $ourSeatNumber');
+    
     try {
       // Get all player names from active seats who are not the hero
       for (final seatNumber in activeSeats) {
@@ -514,7 +519,7 @@ class PokerSessionManager {
                   opponent.id,
                   additionalHands: 1,
                 );
-                print('Updated hand count for opponent: $playerName');
+                print('✅ Updated hand count for opponent: $playerName (now has ${opponent.handsPlayed + 1} hands)');
               } else {
                 print('Opponent not found: $playerName');
               }

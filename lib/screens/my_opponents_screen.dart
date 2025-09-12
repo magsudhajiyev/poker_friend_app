@@ -28,6 +28,9 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
         error = null;
       });
 
+      // First recalculate opponent statistics from existing data
+      await OpponentService.recalculateOpponentStats();
+
       final loadedOpponents = await OpponentService.getAllOpponents();
       
       setState(() {

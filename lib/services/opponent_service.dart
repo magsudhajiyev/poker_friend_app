@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/opponent.dart';
+import 'firebase_service.dart';
+import 'local_storage_service.dart';
 
 /// Service for managing opponent data in both Firebase and local storage
 class OpponentService {
@@ -284,5 +286,86 @@ class OpponentService {
       'playerTypeDistribution': typeDistribution,
       'totalHandsTracked': totalHands,
     };
+  }
+
+  /// Recalculate opponent hand counts from existing session data
+  static Future<void> recalculateOpponentStats() async {
+    try {
+      print('🔄 Starting opponent statistics recalculation...');
+      
+      // Get all sessions
+      List<Map<String, dynamic>> sessions;
+      try {
+        sessions = await FirebaseService.getAllSessions();
+        print('📊 Found ${sessions.length} sessions in Firebase');
+      } catch (e) {
+        sessions = await LocalStorageService.getUserSessions();
+        print('📊 Found ${sessions.length} sessions in local storage');
+      }
+
+      // Track opponent hand counts
+      Map<String, int> opponentHandCounts = {};
+
+      // Process each session
+      for (final session in sessions) {
+        final sessionId = session['id'] as String;
+        print('📋 Processing session: $sessionId');
+        
+        try {
+          // Get hands for this session
+          List<Map<String, dynamic>> hands;
+          try {
+            hands = await FirebaseService.getSessionHands(sessionId);
+          } catch (e) {
+            hands = await LocalStorageService.getSessionHands(sessionId);
+          }
+          
+          // Get player names from session
+          final playerNames = session['playerNames'] as Map<String, dynamic>?;
+          if (playerNames != null) {
+            // For each hand, count opponents
+            for (final hand in hands) {
+              // Each hand counts as +1 for all opponents in the session
+              for (final entry in playerNames.entries) {
+                final playerName = entry.value as String;
+                if (playerName.isNotEmpty && !playerName.toLowerCase().contains('player')) {
+                  opponentHandCounts[playerName] = (opponentHandCounts[playerName] ?? 0) + 1;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          print('❌ Error processing session $sessionId: $e');
+        }
+      }
+
+      print('📈 Calculated hand counts: $opponentHandCounts');
+
+      // Update each opponent's hand count
+      for (final entry in opponentHandCounts.entries) {
+        final opponentName = entry.key;
+        final handCount = entry.value;
+        
+        try {
+          final opponent = await findOpponentByName(opponentName);
+          if (opponent != null) {
+            // Update opponent with the correct hand count
+            await updateOpponentStats(
+              opponent.id,
+              additionalHands: handCount - opponent.handsPlayed, // Update to correct total
+            );
+            print('✅ Updated $opponentName: ${opponent.handsPlayed} → $handCount hands');
+          } else {
+            print('⚠️ Opponent not found: $opponentName');
+          }
+        } catch (e) {
+          print('❌ Failed to update $opponentName: $e');
+        }
+      }
+
+      print('🎉 Opponent statistics recalculation completed!');
+    } catch (e) {
+      print('💥 Error recalculating opponent stats: $e');
+    }
   }
 }
