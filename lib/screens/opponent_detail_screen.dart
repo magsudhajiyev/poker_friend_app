@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/opponent.dart';
 import '../services/opponent_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/firebase_service.dart';
 import 'opponent_hands_screen.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
@@ -42,6 +43,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   Future<void> _loadStatistics() async {
     try {
+      // First trigger the recalculation to ensure all stats are up to date
+      print('🔄 Triggering opponent stats recalculation...');
+      await OpponentService.recalculateOpponentStats();
+      
       final stats = await _calculateOpponentStatistics(_opponent.name);
       setState(() {
         _statistics = stats;
@@ -57,13 +62,26 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   Future<Map<String, dynamic>> _calculateOpponentStatistics(String opponentName) async {
     try {
-      // Get all hands from the database - use LocalStorageService method for proper parsing
-      final db = await LocalStorageService.database;
+      // Get all sessions from Firebase first, fallback to local storage
+      List<Map<String, dynamic>> sessions;
+      try {
+        sessions = await FirebaseService.getAllSessions();
+        print('📊 Using Firebase data: ${sessions.length} sessions');
+      } catch (e) {
+        sessions = await LocalStorageService.getUserSessions();
+        print('📊 Using local storage data: ${sessions.length} sessions');
+      }
       
-      // Get all session IDs first
-      final sessions = await db.query('sessions');
+      // Track statistics per street
+      Map<String, int> preflopActionCounts = {
+        'fold': 0,
+        'call': 0,
+        'bet': 0,
+        'raise': 0,
+        'check': 0,
+      };
       
-      Map<String, int> actionCounts = {
+      Map<String, int> allActionCounts = {
         'fold': 0,
         'call': 0,
         'bet': 0,
@@ -72,22 +90,43 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       };
       
       int totalHands = 0;
+      int handsWithPreflopAction = 0;
+      int preflopRaises = 0;
+      int preflopVoluntaryActions = 0; // For VPIP
       int sessionsWithOpponent = 0;
       Set<String> sessionsWithThisOpponent = {};
       
       print('DEBUG: Looking for opponent: "$opponentName"');
       
       for (final session in sessions) {
-        // Get all hands for this session using the proper method
-        final hands = await LocalStorageService.getSessionHands(session['id'] as String);
+        // Get all hands for this session - try Firebase first, then local storage
+        List<Map<String, dynamic>> hands;
+        final sessionId = session['id'] as String;
+        try {
+          hands = await FirebaseService.getSessionHands(sessionId);
+        } catch (e) {
+          hands = await LocalStorageService.getSessionHands(sessionId);
+        }
         
         bool opponentFoundInSession = false;
         
         for (final hand in hands) {
           bool opponentInHand = false;
           
-          // Check if opponent is in playerNames
-          final playerNames = hand['playerNames'] as Map<int, String>?;
+          // Check if opponent is in playerNames - handle different data structures
+          final playerNamesData = hand['playerNames'];
+          Map<String, String>? playerNames;
+          
+          if (playerNamesData is Map<String, dynamic>) {
+            // Firebase format: Map<String, dynamic> where values are strings
+            playerNames = playerNamesData.cast<String, String>();
+          } else if (playerNamesData is Map<int, String>) {
+            // Local storage format: Map<int, String> 
+            playerNames = Map.fromEntries(
+              playerNamesData.entries.map((e) => MapEntry(e.key.toString(), e.value))
+            );
+          }
+          
           if (playerNames != null) {
             for (final playerName in playerNames.values) {
               if (playerName.toLowerCase().contains(opponentName.toLowerCase()) || 
@@ -122,38 +161,76 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             if (hand['actions'] != null) {
               final actions = hand['actions'] as List<dynamic>;
               
-              // Track the most aggressive action by this opponent in this hand
-              String? mostAggressiveAction;
-              int aggressionLevel = 0; // fold:1, check:2, call:3, bet:4, raise:5
+              // Track preflop actions separately for VPIP and PFR
+              bool hasPreflopAction = false;
+              bool hasPreflopVoluntaryAction = false;
+              bool hasPreflopRaise = false;
+              
+              // Track all actions by street
+              Map<String, List<String>> actionsByStreet = {
+                'preflop': [],
+                'flop': [],
+                'turn': [],
+                'river': [],
+              };
+              
+              String currentStreet = 'preflop';
               
               for (final action in actions) {
                 final actionMap = action as Map<String, dynamic>;
                 final actionPlayerName = actionMap['playerName'] as String?;
                 final actionType = actionMap['action'] as String?;
+                final street = actionMap['street'] as String?;
+                
+                // Update current street if provided
+                if (street != null) {
+                  currentStreet = street.toLowerCase();
+                }
                 
                 if (actionPlayerName != null && actionType != null &&
                     (actionPlayerName.toLowerCase().contains(opponentName.toLowerCase()) ||
                      opponentName.toLowerCase().contains(actionPlayerName.toLowerCase()))) {
                   
-                  int currentAggression = 0;
-                  switch (actionType.toLowerCase()) {
-                    case 'fold': currentAggression = 1; break;
-                    case 'check': currentAggression = 2; break;
-                    case 'call': currentAggression = 3; break;
-                    case 'bet': currentAggression = 4; break;
-                    case 'raise': currentAggression = 5; break;
+                  final actionKey = actionType.toLowerCase();
+                  
+                  // Count all actions
+                  if (allActionCounts.containsKey(actionKey)) {
+                    allActionCounts[actionKey] = allActionCounts[actionKey]! + 1;
                   }
                   
-                  if (currentAggression > aggressionLevel) {
-                    aggressionLevel = currentAggression;
-                    mostAggressiveAction = actionType.toLowerCase();
+                  // Track actions by street
+                  actionsByStreet[currentStreet]?.add(actionKey);
+                  
+                  // Count preflop actions separately
+                  if (currentStreet == 'preflop') {
+                    hasPreflopAction = true;
+                    
+                    if (preflopActionCounts.containsKey(actionKey)) {
+                      preflopActionCounts[actionKey] = preflopActionCounts[actionKey]! + 1;
+                    }
+                    
+                    // Check for voluntary action (call, bet, raise)
+                    if (actionKey == 'call' || actionKey == 'bet' || actionKey == 'raise') {
+                      hasPreflopVoluntaryAction = true;
+                    }
+                    
+                    // Check for raise
+                    if (actionKey == 'raise') {
+                      hasPreflopRaise = true;
+                    }
                   }
                 }
               }
               
-              // Count the most aggressive action for this hand
-              if (mostAggressiveAction != null && actionCounts.containsKey(mostAggressiveAction)) {
-                actionCounts[mostAggressiveAction] = actionCounts[mostAggressiveAction]! + 1;
+              // Update preflop statistics
+              if (hasPreflopAction) {
+                handsWithPreflopAction++;
+              }
+              if (hasPreflopVoluntaryAction) {
+                preflopVoluntaryActions++;
+              }
+              if (hasPreflopRaise) {
+                preflopRaises++;
               }
             }
           }
@@ -162,22 +239,35 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       
       sessionsWithOpponent = sessionsWithThisOpponent.length;
       print('DEBUG: Found opponent in $totalHands hands across $sessionsWithOpponent sessions');
-      print('DEBUG: Action counts: $actionCounts');
+      print('DEBUG: Preflop actions: $preflopActionCounts');
+      print('DEBUG: All actions: $allActionCounts');
+      print('DEBUG: Hands with preflop action: $handsWithPreflopAction');
+      print('DEBUG: Preflop voluntary actions: $preflopVoluntaryActions');
+      print('DEBUG: Preflop raises: $preflopRaises');
 
-      final totalActions = totalHands > 0 ? actionCounts.values.reduce((a, b) => a + b) : 0;
+      final totalActions = allActionCounts.values.fold(0, (a, b) => a + b);
       
-      // Calculate VPIP (call + bet + raise)
-      final vpipActions = actionCounts['call']! + actionCounts['bet']! + actionCounts['raise']!;
-      final vpip = totalHands > 0 ? (vpipActions / totalHands * 100) : 0.0;
+      // Calculate VPIP (Voluntarily Put money In Pot) - preflop only
+      final vpip = handsWithPreflopAction > 0 
+          ? (preflopVoluntaryActions / handsWithPreflopAction * 100) 
+          : 0.0;
       
-      // Calculate PFR (preflop raise frequency - simplified)
-      final pfr = totalHands > 0 ? (actionCounts['raise']! / totalHands * 100) : 0.0;
+      // Calculate PFR (PreFlop Raise percentage)
+      final pfr = handsWithPreflopAction > 0 
+          ? (preflopRaises / handsWithPreflopAction * 100) 
+          : 0.0;
       
-      // Calculate aggression factor
-      final aggressiveActions = actionCounts['bet']! + actionCounts['raise']!;
-      final passiveActions = actionCounts['call']! + actionCounts['check']!;
-      final aggression = passiveActions > 0 ? (aggressiveActions / passiveActions) : 
-                        (aggressiveActions > 0 ? 999.0 : 0.0);
+      // Calculate aggression factor (bet + raise) / (call + check)
+      final aggressiveActions = allActionCounts['bet']! + allActionCounts['raise']!;
+      final passiveActions = allActionCounts['call']! + allActionCounts['check']!;
+      final aggression = passiveActions > 0 
+          ? (aggressiveActions.toDouble() / passiveActions.toDouble()) 
+          : (aggressiveActions > 0 ? 999.0 : 0.0);
+      
+      // Calculate fold percentage (folds / total actions)
+      final foldPercentage = totalActions > 0 
+          ? (allActionCounts['fold']! / totalActions * 100) 
+          : 0.0;
 
       return {
         'totalHands': totalHands,
@@ -186,12 +276,12 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         'vpip': vpip,
         'pfr': pfr,
         'aggression': aggression,
-        'foldToBet': totalActions > 0 ? (actionCounts['fold']! / totalActions * 100) : 0.0,
-        'callPercentage': totalActions > 0 ? (actionCounts['call']! / totalActions * 100) : 0.0,
-        'betPercentage': totalActions > 0 ? (actionCounts['bet']! / totalActions * 100) : 0.0,
-        'raisePercentage': totalActions > 0 ? (actionCounts['raise']! / totalActions * 100) : 0.0,
-        'foldPercentage': totalActions > 0 ? (actionCounts['fold']! / totalActions * 100) : 0.0,
-        'checkPercentage': totalActions > 0 ? (actionCounts['check']! / totalActions * 100) : 0.0,
+        'foldToBet': foldPercentage, // Using fold percentage as fold to bet for now
+        'callPercentage': totalActions > 0 ? (allActionCounts['call']! / totalActions * 100) : 0.0,
+        'betPercentage': totalActions > 0 ? (allActionCounts['bet']! / totalActions * 100) : 0.0,
+        'raisePercentage': totalActions > 0 ? (allActionCounts['raise']! / totalActions * 100) : 0.0,
+        'foldPercentage': foldPercentage,
+        'checkPercentage': totalActions > 0 ? (allActionCounts['check']! / totalActions * 100) : 0.0,
         'positionHandsPlayed': <String, int>{},
       };
     } catch (e) {
@@ -640,13 +730,31 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 ),
               )
             else if (_statistics != null) ...[
+              // Update opponent's stored statistics when displaying
+              Builder(
+                builder: (context) {
+                  if (_opponent.vpip == 0.0 && _opponent.pfr == 0.0 && _statistics!['totalHands'] > 0) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _updateOpponentStoredStats();
+                    });
+                  }
+                  return SizedBox.shrink();
+                }
+              ),
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatItem('Hands Played', '${_statistics!['totalHands']}'),
+                    child: SizedBox(
+                      height: 120,
+                      child: _buildStatItem('Hands Played', '${_statistics!['totalHands']}'),
+                    ),
                   ),
+                  SizedBox(width: 16),
                   Expanded(
-                    child: _buildStatItem('Sessions', '${_statistics!['totalSessions']}'),
+                    child: SizedBox(
+                      height: 120,
+                      child: _buildStatItem('Sessions', '${_statistics!['totalSessions']}'),
+                    ),
                   ),
                 ],
               ),
@@ -654,10 +762,17 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatItem('VPIP', '${_statistics!['vpip'].toStringAsFixed(1)}%'),
+                    child: SizedBox(
+                      height: 120,
+                      child: _buildStatItem('VPIP', '${_statistics!['vpip'].toStringAsFixed(1)}%', iconPath: 'icons/vpip.png'),
+                    ),
                   ),
+                  SizedBox(width: 16),
                   Expanded(
-                    child: _buildStatItem('PFR', '${_statistics!['pfr'].toStringAsFixed(1)}%'),
+                    child: SizedBox(
+                      height: 120,
+                      child: _buildStatItem('PFR', '${_statistics!['pfr'].toStringAsFixed(1)}%', iconPath: 'icons/bet.png'),
+                    ),
                   ),
                 ],
               ),
@@ -665,10 +780,17 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatItem('Aggression', _statistics!['aggression'] >= 999 ? '∞' : _statistics!['aggression'].toStringAsFixed(2)),
+                    child: SizedBox(
+                      height: 120,
+                      child: _buildStatItem('Aggression', _statistics!['aggression'] >= 999 ? '∞' : _statistics!['aggression'].toStringAsFixed(2)),
+                    ),
                   ),
+                  SizedBox(width: 16),
                   Expanded(
-                    child: _buildStatItem('Fold %', '${_statistics!['foldPercentage'].toStringAsFixed(1)}%'),
+                    child: SizedBox(
+                      height: 120,
+                      child: _buildStatItem('Fold %', '${_statistics!['foldPercentage'].toStringAsFixed(1)}%'),
+                    ),
                   ),
                 ],
               ),
@@ -704,10 +826,17 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatItem('Call', '${_statistics!['callPercentage'].toStringAsFixed(1)}%'),
+                    child: SizedBox(
+                      height: 120,
+                      child: _buildStatItem('Call', '${_statistics!['callPercentage'].toStringAsFixed(1)}%'),
+                    ),
                   ),
+                  SizedBox(width: 16),
                   Expanded(
-                    child: _buildStatItem('Bet', '${_statistics!['betPercentage'].toStringAsFixed(1)}%'),
+                    child: SizedBox(
+                      height: 120,
+                      child: _buildStatItem('Bet', '${_statistics!['betPercentage'].toStringAsFixed(1)}%'),
+                    ),
                   ),
                 ],
               ),
@@ -715,10 +844,17 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatItem('Raise', '${_statistics!['raisePercentage'].toStringAsFixed(1)}%'),
+                    child: SizedBox(
+                      height: 120,
+                      child: _buildStatItem('Raise', '${_statistics!['raisePercentage'].toStringAsFixed(1)}%'),
+                    ),
                   ),
+                  SizedBox(width: 16),
                   Expanded(
-                    child: _buildStatItem('Check', '${_statistics!['checkPercentage'].toStringAsFixed(1)}%'),
+                    child: SizedBox(
+                      height: 120,
+                      child: _buildStatItem('Check', '${_statistics!['checkPercentage'].toStringAsFixed(1)}%'),
+                    ),
                   ),
                 ],
               ),
@@ -736,7 +872,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
+  Widget _buildStatItem(String label, String value, {String? iconPath}) {
     return Container(
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -745,28 +881,63 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         border: Border.all(color: Color(0xFF2A2A2E)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (iconPath != null)
+                Image.asset(
+                  iconPath,
+                  width: 32,
+                  height: 32,
+                ),
+            ],
+          ),
+          Spacer(),
           Text(
             value,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF5AC95A),
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Color(0xFF9A9A9A),
-              fontWeight: FontWeight.w500,
+              color: Colors.white,
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _updateOpponentStoredStats() async {
+    if (_statistics == null) return;
+    
+    try {
+      await OpponentService.updateOpponentStats(
+        _opponent.id,
+        vpip: _statistics!['vpip'].toDouble(),
+        pfr: _statistics!['pfr'].toDouble(),
+        aggression: _statistics!['aggression'].toDouble(),
+      );
+      
+      // Update local state
+      setState(() {
+        _opponent = _opponent.copyWith(
+          vpip: _statistics!['vpip'].toDouble(),
+          pfr: _statistics!['pfr'].toDouble(),
+          aggression: _statistics!['aggression'].toDouble(),
+        );
+      });
+    } catch (e) {
+      print('Error updating opponent stats: $e');
+    }
   }
 
   Widget _buildHandsButton() {

@@ -288,7 +288,7 @@ class OpponentService {
     };
   }
 
-  /// Recalculate opponent hand counts from existing session data
+  /// Recalculate opponent hand counts and statistics from existing session data
   static Future<void> recalculateOpponentStats() async {
     try {
       print('🔄 Starting opponent statistics recalculation...');
@@ -303,8 +303,8 @@ class OpponentService {
         print('📊 Found ${sessions.length} sessions in local storage');
       }
 
-      // Track opponent hand counts
-      Map<String, int> opponentHandCounts = {};
+      // Track opponent statistics
+      Map<String, Map<String, dynamic>> opponentStats = {};
 
       // Process each session
       for (final session in sessions) {
@@ -323,13 +323,91 @@ class OpponentService {
           // Get player names from session
           final playerNames = session['playerNames'] as Map<String, dynamic>?;
           if (playerNames != null) {
-            // For each hand, count opponents
+            // For each hand, process opponent actions
             for (final hand in hands) {
-              // Each hand counts as +1 for all opponents in the session
+              // Count each opponent in the hand
               for (final entry in playerNames.entries) {
                 final playerName = entry.value as String;
                 if (playerName.isNotEmpty && !playerName.toLowerCase().contains('player')) {
-                  opponentHandCounts[playerName] = (opponentHandCounts[playerName] ?? 0) + 1;
+                  // Initialize stats if needed
+                  if (!opponentStats.containsKey(playerName)) {
+                    opponentStats[playerName] = {
+                      'handsPlayed': 0,
+                      'preflopHands': 0,
+                      'preflopVoluntaryActions': 0,
+                      'preflopRaises': 0,
+                      'totalBets': 0,
+                      'totalRaises': 0,
+                      'totalCalls': 0,
+                      'totalChecks': 0,
+                      'totalFolds': 0,
+                      'sessions': <String>{},
+                    };
+                  }
+                  
+                  // Increment hand count
+                  opponentStats[playerName]!['handsPlayed']++;
+                  opponentStats[playerName]!['sessions'].add(sessionId);
+                  
+                  // Process actions if available
+                  if (hand['actions'] != null) {
+                    final actions = hand['actions'] as List<dynamic>;
+                    bool hasPreflopAction = false;
+                    String currentStreet = 'preflop';
+                    
+                    for (final action in actions) {
+                      final actionMap = action as Map<String, dynamic>;
+                      final actionPlayerName = actionMap['playerName'] as String?;
+                      final actionType = actionMap['action'] as String?;
+                      final street = actionMap['street'] as String?;
+                      
+                      if (street != null) {
+                        currentStreet = street.toLowerCase();
+                      }
+                      
+                      if (actionPlayerName != null && actionType != null &&
+                          (actionPlayerName.toLowerCase().contains(playerName.toLowerCase()) ||
+                           playerName.toLowerCase().contains(actionPlayerName.toLowerCase()))) {
+                        
+                        final actionKey = actionType.toLowerCase();
+                        
+                        // Count total actions
+                        switch (actionKey) {
+                          case 'bet':
+                            opponentStats[playerName]!['totalBets']++;
+                            break;
+                          case 'raise':
+                            opponentStats[playerName]!['totalRaises']++;
+                            break;
+                          case 'call':
+                            opponentStats[playerName]!['totalCalls']++;
+                            break;
+                          case 'check':
+                            opponentStats[playerName]!['totalChecks']++;
+                            break;
+                          case 'fold':
+                            opponentStats[playerName]!['totalFolds']++;
+                            break;
+                        }
+                        
+                        // Track preflop specific stats
+                        if (currentStreet == 'preflop') {
+                          if (!hasPreflopAction) {
+                            hasPreflopAction = true;
+                            opponentStats[playerName]!['preflopHands']++;
+                          }
+                          
+                          if (actionKey == 'call' || actionKey == 'bet' || actionKey == 'raise') {
+                            opponentStats[playerName]!['preflopVoluntaryActions']++;
+                          }
+                          
+                          if (actionKey == 'raise') {
+                            opponentStats[playerName]!['preflopRaises']++;
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -339,22 +417,45 @@ class OpponentService {
         }
       }
 
-      print('📈 Calculated hand counts: $opponentHandCounts');
+      print('📈 Calculated stats for ${opponentStats.length} opponents');
 
-      // Update each opponent's hand count
-      for (final entry in opponentHandCounts.entries) {
+      // Update each opponent's statistics
+      for (final entry in opponentStats.entries) {
         final opponentName = entry.key;
-        final handCount = entry.value;
+        final stats = entry.value;
         
         try {
           final opponent = await findOpponentByName(opponentName);
           if (opponent != null) {
-            // Update opponent with the correct hand count
+            final handsPlayed = stats['handsPlayed'] as int;
+            final preflopHands = stats['preflopHands'] as int;
+            final sessionsSet = stats['sessions'] as Set<String>;
+            
+            // Calculate VPIP and PFR
+            final vpip = preflopHands > 0 
+                ? (stats['preflopVoluntaryActions'] / preflopHands * 100) 
+                : 0.0;
+            final pfr = preflopHands > 0 
+                ? (stats['preflopRaises'] / preflopHands * 100) 
+                : 0.0;
+            
+            // Calculate aggression factor
+            final aggressiveActions = stats['totalBets'] + stats['totalRaises'];
+            final passiveActions = stats['totalCalls'] + stats['totalChecks'];
+            final aggression = passiveActions > 0 
+                ? (aggressiveActions.toDouble() / passiveActions.toDouble()) 
+                : (aggressiveActions > 0 ? 999.0 : 0.0);
+            
+            // Update opponent with calculated statistics
             await updateOpponentStats(
               opponent.id,
-              additionalHands: handCount - opponent.handsPlayed, // Update to correct total
+              additionalHands: handsPlayed - opponent.handsPlayed,
+              additionalSessions: sessionsSet.length - opponent.sessionsPlayed,
+              vpip: vpip,
+              pfr: pfr,
+              aggression: aggression,
             );
-            print('✅ Updated $opponentName: ${opponent.handsPlayed} → $handCount hands');
+            print('✅ Updated $opponentName: $handsPlayed hands, VPIP: ${vpip.toStringAsFixed(1)}%, PFR: ${pfr.toStringAsFixed(1)}%');
           } else {
             print('⚠️ Opponent not found: $opponentName');
           }

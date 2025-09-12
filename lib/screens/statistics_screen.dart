@@ -550,17 +550,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       mainAxisSpacing: 16,
       childAspectRatio: 1.2,
       children: [
-        _buildStatCard('Total Hands', totalHands.toString(), Icons.style),
-        _buildStatCard('Hands Played', handsPlayed.toString(), Icons.play_arrow),
-        _buildStatCard('VPIP', '${vpip.toStringAsFixed(1)}%', Icons.trending_up),
-        _buildStatCard('PFR', '${pfr.toStringAsFixed(1)}%', Icons.arrow_upward),
-        _buildStatCard('3-Bet', '${threeBet.toStringAsFixed(1)}%', Icons.double_arrow),
-        _buildStatCard('Win Rate', '${winRate.toStringAsFixed(1)}%', Icons.emoji_events),
+        _buildStatCard('Total Hands', totalHands.toString(), icon: Icons.style),
+        _buildStatCard('Hands Played', handsPlayed.toString(), icon: Icons.play_arrow),
+        _buildStatCard('VPIP', '${vpip.toStringAsFixed(1)}%', iconPath: 'icons/vpip.png'),
+        _buildStatCard('PFR', '${pfr.toStringAsFixed(1)}%', iconPath: 'icons/bet.png'),
+        _buildStatCard('3-Bet', '${threeBet.toStringAsFixed(1)}%', icon: Icons.double_arrow),
+        _buildStatCard('Win Rate', '${winRate.toStringAsFixed(1)}%', iconPath: 'icons/throphy.png'),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon) {
+  Widget _buildStatCard(String label, String value, {IconData? icon, String? iconPath}) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -581,19 +581,27 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Color(0xFF5AC95A).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+              if (iconPath != null)
+                Image.asset(
+                  iconPath,
+                  width: 48,
+                  height: 48,
+                  fit: BoxFit.contain,
+                )
+              else if (icon != null)
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Color(0xFF5AC95A).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Color(0xFF5AC95A),
+                    size: 20,
+                  ),
                 ),
-                child: Icon(
-                  icon,
-                  color: Color(0xFF5AC95A),
-                  size: 20,
-                ),
-              ),
             ],
           ),
           Spacer(),
