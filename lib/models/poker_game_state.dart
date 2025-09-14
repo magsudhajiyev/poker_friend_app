@@ -22,6 +22,7 @@ class PlayerState {
   bool hasFolded;
   bool hasActed;
   bool hasCalledCurrentBet;
+  bool isAllIn;
   PlayerAction lastAction;
   double startingStack;
   double currentStack;
@@ -33,6 +34,7 @@ class PlayerState {
     this.hasFolded = false,
     this.hasActed = false,
     this.hasCalledCurrentBet = false,
+    this.isAllIn = false,
     this.lastAction = PlayerAction.none,
     this.startingStack = 0.0,
     this.currentStack = 0.0,
@@ -44,6 +46,7 @@ class PlayerState {
     hasFolded = false;
     hasActed = false;
     hasCalledCurrentBet = false;
+    isAllIn = false;
     lastAction = PlayerAction.none;
     betThisRound = 0.0;
     // Keep currentStack and startingStack unchanged for new hand
@@ -63,14 +66,22 @@ class PlayerState {
 
   void updateStack(double amount) {
     currentStack = amount;
-  }
-
-  bool isAllIn() {
-    return currentStack == 0.0;
+    // Update all-in status
+    isAllIn = (currentStack == 0.0);
   }
 
   double getEffectiveStack() {
     return currentStack;
+  }
+
+  void _updateAllInStatus() {
+    bool wasAllIn = isAllIn;
+    isAllIn = (currentStack == 0.0);
+    if (!wasAllIn && isAllIn) {
+      print('🔴 DEBUG: Player $playerId is now all-in (stack: $currentStack)');
+    } else if (wasAllIn && !isAllIn) {
+      print('🟢 DEBUG: Player $playerId is no longer all-in (stack: $currentStack)');
+    }
   }
 }
 
@@ -220,7 +231,8 @@ class PokerGameState {
       }
       
       final playerState = _getPlayer(nextPlayer);
-      if (!playerState.hasFolded && playerState.currentStack > 0.0) {
+      // Skip folded players and all-in players (who cannot act)
+      if (!playerState.hasFolded && !playerState.isAllIn) {
         break;
       }
     } while (nextPlayer != fromPlayer);
@@ -233,7 +245,11 @@ class PokerGameState {
   }
 
   List<int> getPlayersWhoCanAct() {
-    return players.where((p) => !p.hasFolded && p.currentStack > 0.0).map((p) => p.playerId).toList();
+    return players.where((p) => !p.hasFolded && !p.isAllIn).map((p) => p.playerId).toList();
+  }
+
+  List<int> getAllInPlayers() {
+    return players.where((p) => !p.hasFolded && p.isAllIn).map((p) => p.playerId).toList();
   }
 
   bool areAllPlayersAllIn() {
@@ -249,7 +265,7 @@ class PokerGameState {
   bool canPlayerAct(int playerId) {
     PlayerState player = _getPlayer(playerId);
     if (player.hasFolded) return false;
-    if (player.currentStack == 0.0) return false; // All-in players can't act
+    if (player.isAllIn) return false; // All-in players can't act
     return currentPlayer == playerId && !bettingRoundComplete;
   }
 
@@ -370,6 +386,10 @@ class PokerGameState {
     } else {
       // Move to next active player
       int nextPlayer = _getNextActivePlayer(currentPlayer);
+      List<int> allInPlayers = getAllInPlayers();
+      if (allInPlayers.isNotEmpty) {
+        print('DEBUG: All-in players: $allInPlayers');
+      }
       print('DEBUG: Moving from player $currentPlayer to next active player $nextPlayer');
       currentPlayer = nextPlayer;
       return "$actionText\nPlayer $currentPlayer to act";
@@ -409,6 +429,7 @@ class PokerGameState {
         
         // Update stack and bet tracking
         player.currentStack -= actualAmount;
+        player._updateAllInStatus();
         player.betThisRound += actualAmount;
         
         // Update pot directly
@@ -429,6 +450,7 @@ class PokerGameState {
         
         // Update stack and bet tracking
         player.currentStack -= additionalAmount;
+        player._updateAllInStatus();
         player.betThisRound = betAmount;
         
         // Update pot and current bet (only add the additional amount)
@@ -451,8 +473,9 @@ class PokerGameState {
         // Calculate additional amount beyond what player has already bet this round
         double additionalAmount = raiseAmount - player.betThisRound;
         
-        // Update stack and bet tracking  
+        // Update stack and bet tracking
         player.currentStack -= additionalAmount;
+        player._updateAllInStatus();
         player.betThisRound = raiseAmount;
         
         // Update pot and current bet (only add the additional amount)
@@ -616,18 +639,18 @@ class PokerGameState {
         int sbPosition = _getPositionFromButton(1);
         int bbPosition = _getPositionFromButton(2);
         
-        // Check if SB is still active
-        if (!_getPlayer(sbPosition).hasFolded) {
+        // Check if SB is still active (not folded and not all-in)
+        if (!_getPlayer(sbPosition).hasFolded && !_getPlayer(sbPosition).isAllIn) {
           currentPlayer = sbPosition;
-        } else if (!_getPlayer(bbPosition).hasFolded) {
+        } else if (!_getPlayer(bbPosition).hasFolded && !_getPlayer(bbPosition).isAllIn) {
           // SB is out, start from BB
           currentPlayer = bbPosition;
         } else {
           // Both SB and BB are out, start from UTG (or first active player after BB)
           int utgPosition = PokerPositions.getUTGSeat(buttonPosition, numberOfPlayers);
           currentPlayer = utgPosition;
-          // If UTG is also folded, find next active player
-          while (_getPlayer(currentPlayer).hasFolded) {
+          // If UTG is also folded or all-in, find next active player
+          while (_getPlayer(currentPlayer).hasFolded || _getPlayer(currentPlayer).isAllIn) {
             currentPlayer = _getNextActivePlayer(currentPlayer);
           }
         }
@@ -768,6 +791,7 @@ class PokerGameState {
       double sbAmount = smallBlind.toDouble();
       sbPlayer.betThisRound = sbAmount;
       sbPlayer.currentStack -= sbAmount;
+      sbPlayer._updateAllInStatus();
       currentPot += sbAmount;
       print('🎯 DEBUG: Added SB $sbAmount - currentPot: $currentPot');
       
@@ -775,6 +799,7 @@ class PokerGameState {
       double bbAmount = bigBlind.toDouble();
       bbPlayer.betThisRound = bbAmount;
       bbPlayer.currentStack -= bbAmount;
+      bbPlayer._updateAllInStatus();
       currentPot += bbAmount;
       print('🎯 DEBUG: Added BB $bbAmount - currentPot: $currentPot');
       
@@ -789,11 +814,13 @@ class PokerGameState {
       double sbAmount = smallBlind.toDouble();
       sbPlayer.betThisRound = sbAmount;
       sbPlayer.currentStack -= sbAmount;
+      sbPlayer._updateAllInStatus();
       currentPot += sbAmount;
-      
+
       double bbAmount = bigBlind.toDouble();
       bbPlayer.betThisRound = bbAmount;
       bbPlayer.currentStack -= bbAmount;
+      bbPlayer._updateAllInStatus();
       currentPot += bbAmount;
     }
   }
@@ -807,6 +834,7 @@ class PokerGameState {
         callAmount = callAmount > player.currentStack ? player.currentStack : callAmount;
         player.betThisRound += callAmount;
         player.currentStack -= callAmount;
+        player._updateAllInStatus();
         currentPot += callAmount;
         break;
         
@@ -821,6 +849,7 @@ class PokerGameState {
         double additionalAmount = betAmount - player.betThisRound;
         player.betThisRound = betAmount;
         player.currentStack -= additionalAmount;
+        player._updateAllInStatus();
         currentPot += additionalAmount;
         currentBet = betAmount;
         hasBetThisRound = true;
