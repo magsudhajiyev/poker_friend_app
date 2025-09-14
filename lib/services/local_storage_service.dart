@@ -18,7 +18,7 @@ class LocalStorageService {
     
     return await openDatabase(
       path,
-      version: 7,
+      version: 9,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -54,12 +54,20 @@ class LocalStorageService {
             showdownData TEXT,
             reachedShowdown INTEGER DEFAULT 0,
             potAmount REAL DEFAULT 0,
+            preflopPot REAL DEFAULT 0,
+            flopPot REAL DEFAULT 0,
+            turnPot REAL DEFAULT 0,
+            riverPot REAL DEFAULT 0,
             winnerId INTEGER,
             heroPosition INTEGER,
             playerNames TEXT,
             handSmallBlind INTEGER,
             handBigBlind INTEGER,
             handGameType TEXT,
+            isChoppedPot INTEGER DEFAULT 0,
+            choppedWinners TEXT,
+            individualShares TEXT,
+            sharePerWinner REAL,
             FOREIGN KEY (sessionId) REFERENCES sessions (id)
           )
         ''');
@@ -96,6 +104,20 @@ class LocalStorageService {
           await db.execute('ALTER TABLE hands ADD COLUMN handSmallBlind INTEGER');
           await db.execute('ALTER TABLE hands ADD COLUMN handBigBlind INTEGER');
           await db.execute('ALTER TABLE hands ADD COLUMN handGameType TEXT');
+        }
+        if (oldVersion < 8) {
+          // Add per-street pot tracking columns
+          await db.execute('ALTER TABLE hands ADD COLUMN preflopPot REAL DEFAULT 0');
+          await db.execute('ALTER TABLE hands ADD COLUMN flopPot REAL DEFAULT 0');
+          await db.execute('ALTER TABLE hands ADD COLUMN turnPot REAL DEFAULT 0');
+          await db.execute('ALTER TABLE hands ADD COLUMN riverPot REAL DEFAULT 0');
+        }
+        if (oldVersion < 9) {
+          // Add chopped pot tracking columns
+          await db.execute('ALTER TABLE hands ADD COLUMN isChoppedPot INTEGER DEFAULT 0');
+          await db.execute('ALTER TABLE hands ADD COLUMN choppedWinners TEXT');
+          await db.execute('ALTER TABLE hands ADD COLUMN individualShares TEXT');
+          await db.execute('ALTER TABLE hands ADD COLUMN sharePerWinner REAL');
         }
       },
     );
@@ -155,12 +177,21 @@ class LocalStorageService {
     Map<String, dynamic>? showdownData,
     bool? reachedShowdown,
     double? potAmount,
+    double? preflopPot,
+    double? flopPot,
+    double? turnPot,
+    double? riverPot,
     int? winnerId,
     int? heroPosition,
     Map<int, String>? playerNames,
     int? smallBlind,
     int? bigBlind,
     String? gameType,
+    // Chopped pot fields
+    bool? isChoppedPot,
+    List<int>? choppedWinners,
+    Map<int, double>? individualShares,
+    double? sharePerWinner,
   }) async {
     try {
       final db = await database;
@@ -168,10 +199,14 @@ class LocalStorageService {
       
       print('🔥 DEBUG: saveHand called with:');
       print('  potAmount: $potAmount');
-      print('  winnerId: $winnerId'); 
+      print('  winnerId: $winnerId');
       print('  smallBlind: $smallBlind');
       print('  bigBlind: $bigBlind');
       print('  gameType: $gameType');
+      print('  isChoppedPot: $isChoppedPot');
+      print('  choppedWinners: $choppedWinners');
+      print('  individualShares: $individualShares');
+      print('  sharePerWinner: $sharePerWinner');
       
       await db.insert(
         'hands',
@@ -189,12 +224,21 @@ class LocalStorageService {
           'showdownData': showdownData != null ? jsonEncode(showdownData) : null,
           'reachedShowdown': reachedShowdown == true ? 1 : 0,
           'potAmount': potAmount ?? 0,
+          'preflopPot': preflopPot ?? 0,
+          'flopPot': flopPot ?? 0,
+          'turnPot': turnPot ?? 0,
+          'riverPot': riverPot ?? 0,
           'winnerId': winnerId,
           'heroPosition': heroPosition,
           'playerNames': playerNames != null ? jsonEncode(playerNames) : null,
           'handSmallBlind': smallBlind,
           'handBigBlind': bigBlind,
           'handGameType': gameType,
+          // Chopped pot fields
+          'isChoppedPot': (isChoppedPot == true) ? 1 : 0,
+          'choppedWinners': choppedWinners != null ? jsonEncode(choppedWinners) : null,
+          'individualShares': individualShares != null ? jsonEncode(individualShares.map((key, value) => MapEntry(key.toString(), value))) : null,
+          'sharePerWinner': sharePerWinner,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -297,6 +341,10 @@ class LocalStorageService {
         
         // Include pot amount, winner, and hero position
         result['potAmount'] = result['potAmount'] ?? 0;
+        result['preflopPot'] = result['preflopPot'] ?? 0;
+        result['flopPot'] = result['flopPot'] ?? 0;
+        result['turnPot'] = result['turnPot'] ?? 0;
+        result['riverPot'] = result['riverPot'] ?? 0;
         result['winnerId'] = result['winnerId'];
         result['heroPosition'] = result['heroPosition'];
         
@@ -304,7 +352,25 @@ class LocalStorageService {
         result['smallBlind'] = result['handSmallBlind'] ?? sessionDefaults['smallBlind'];
         result['bigBlind'] = result['handBigBlind'] ?? sessionDefaults['bigBlind'];
         result['gameType'] = result['handGameType'] ?? sessionDefaults['gameType'];
-        
+
+        // Parse chopped pot fields
+        result['isChoppedPot'] = (result['isChoppedPot'] == 1);
+        if (result['choppedWinners'] != null && result['choppedWinners'].isNotEmpty) {
+          try {
+            result['choppedWinners'] = jsonDecode(result['choppedWinners']);
+          } catch (e) {
+            result['choppedWinners'] = null;
+          }
+        }
+        if (result['individualShares'] != null && result['individualShares'].isNotEmpty) {
+          try {
+            final sharesMap = jsonDecode(result['individualShares']) as Map<String, dynamic>;
+            result['individualShares'] = sharesMap;
+          } catch (e) {
+            result['individualShares'] = null;
+          }
+        }
+
         return result;
       }).toList();
     } catch (e) {

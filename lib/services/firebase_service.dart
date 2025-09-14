@@ -57,6 +57,22 @@ class FirebaseService {
     Map<String, dynamic>? ourHoleCards,
     Map<String, dynamic>? showdownData,
     bool? reachedShowdown,
+    double? potAmount,
+    double? preflopPot,
+    double? flopPot,
+    double? turnPot,
+    double? riverPot,
+    int? winnerId,
+    int? heroPosition,
+    Map<int, String>? playerNames,
+    int? smallBlind,
+    int? bigBlind,
+    String? gameType,
+    // Chopped pot fields
+    bool? isChoppedPot,
+    List<int>? choppedWinners,
+    Map<int, double>? individualShares,
+    double? sharePerWinner,
   }) async {
     try {
       final handData = {
@@ -85,6 +101,69 @@ class FirebaseService {
         handData['reachedShowdown'] = reachedShowdown;
       }
       
+      // Add pot tracking data
+      if (potAmount != null) {
+        handData['potAmount'] = potAmount;
+      }
+      
+      if (preflopPot != null) {
+        handData['preflopPot'] = preflopPot;
+      }
+      
+      if (flopPot != null) {
+        handData['flopPot'] = flopPot;
+      }
+      
+      if (turnPot != null) {
+        handData['turnPot'] = turnPot;
+      }
+      
+      if (riverPot != null) {
+        handData['riverPot'] = riverPot;
+      }
+      
+      // Add other missing fields
+      if (winnerId != null) {
+        handData['winnerId'] = winnerId;
+      }
+      
+      if (heroPosition != null) {
+        handData['heroPosition'] = heroPosition;
+      }
+      
+      if (playerNames != null) {
+        handData['playerNames'] = playerNames.map((key, value) => MapEntry(key.toString(), value));
+      }
+      
+      if (smallBlind != null) {
+        handData['smallBlind'] = smallBlind;
+      }
+      
+      if (bigBlind != null) {
+        handData['bigBlind'] = bigBlind;
+      }
+      
+      if (gameType != null) {
+        handData['gameType'] = gameType;
+      }
+
+      // Add chopped pot fields
+      if (isChoppedPot != null) {
+        handData['isChoppedPot'] = isChoppedPot;
+      }
+
+      if (choppedWinners != null) {
+        handData['choppedWinners'] = choppedWinners;
+      }
+
+      if (individualShares != null) {
+        handData['individualShares'] = individualShares.map((key, value) => MapEntry(key.toString(), value));
+      }
+
+      if (sharePerWinner != null) {
+        handData['sharePerWinner'] = sharePerWinner;
+      }
+
       // Save to session's subcollection instead of top-level collection
       await _firestore
           .collection(_sessionsCollection)

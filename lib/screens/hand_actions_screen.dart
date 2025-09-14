@@ -179,55 +179,231 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           SizedBox(width: 16),
         
         // Winner Info
-        if (winnerId != null)
+        if (winnerId != null || (widget.hand['isChoppedPot'] == true))
           Expanded(
-            child: Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Color(0xFFFFD700)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            child: _buildWinnerCard(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildWinnerCard() {
+    final isChoppedPot = widget.hand['isChoppedPot'] == true;
+    final winnerId = widget.hand['winnerId'];
+    final choppedWinners = widget.hand['choppedWinners'] as List<dynamic>?;
+    final individualShares = widget.hand['individualShares'] as Map<String, dynamic>?;
+    final playerNamesData = widget.hand['playerNames'];
+    final potAmount = (widget.hand['potAmount'] ?? 0).toDouble();
+    final gameTypeStr = widget.hand['gameType'] ?? 'cash';
+    final heroPosition = widget.hand['heroPosition'];
+
+    String formatAmount(double amount) {
+      if (gameTypeStr == 'cash') {
+        return '\$${amount.toStringAsFixed(2)}';
+      } else {
+        return '${amount.toInt()}';
+      }
+    }
+
+    String getPlayerName(int playerId) {
+      if (playerNamesData != null && playerNamesData is Map) {
+        return playerNamesData[playerId.toString()] ?? 'Player $playerId';
+      }
+      return 'Player $playerId';
+    }
+
+    // ALWAYS prioritize chopped pot display over single winner
+    if (isChoppedPot) {
+      // Chopped pot display - get winners from choppedWinners or fallback to winnerId
+      List<int> winners = [];
+      if (choppedWinners != null && choppedWinners.isNotEmpty) {
+        winners = choppedWinners.map((w) => w as int).toList();
+      } else if (winnerId != null) {
+        // Fallback: if no choppedWinners but marked as chopped, at least show the winnerId
+        winners = [winnerId];
+      }
+
+      return Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Color(0xFF1F1F23),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.orange),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.call_split, color: Colors.orange, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Chopped Pot',
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            if (individualShares != null && individualShares.isNotEmpty) ...[
+              ...individualShares.entries.map((entry) {
+                final playerId = int.parse(entry.key);
+                final amount = (entry.value as num).toDouble();
+                final playerName = getPlayerName(playerId);
+                final isHero = heroPosition != null && playerId == heroPosition;
+
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 20),
-                      SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            playerName,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (isHero)
+                            Text(
+                              'You won!',
+                              style: TextStyle(
+                                color: Color(0xFFFFD700),
+                                fontSize: 11,
+                              ),
+                            ),
+                        ],
+                      ),
                       Text(
-                        'Winner',
+                        formatAmount(amount),
                         style: TextStyle(
-                          color: Color(0xFFFFD700),
+                          color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 12),
-                  Text(
-                    winnerName ?? 'Player $winnerId',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (widget.hand['heroPosition'] == winnerId)
-                    Text(
-                      'You won!',
-                      style: TextStyle(
-                        color: Color(0xFFFFD700),
-                        fontSize: 12,
+                );
+              }).toList(),
+            ] else if (winners.isNotEmpty) ...[
+              // Fallback to equal shares
+              ...winners.map((winnerIdInt) {
+                final playerName = getPlayerName(winnerIdInt);
+                final shareAmount = potAmount / winners.length;
+                final isHero = heroPosition != null && winnerIdInt == heroPosition;
+
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            playerName,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (isHero)
+                            Text(
+                              'You won!',
+                              style: TextStyle(
+                                color: Color(0xFFFFD700),
+                                fontSize: 11,
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
-                ],
+                      Text(
+                        formatAmount(shareAmount),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ] else ...[
+              // No winners data available
+              Text(
+                'Chopped pot - winner details not available',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    } else if (winnerId != null) {
+      // Single winner display
+      final winnerName = getPlayerName(winnerId);
+      final isHero = heroPosition != null && winnerId == heroPosition;
+
+      return Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Color(0xFF1F1F23),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Color(0xFFFFD700)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Winner',
+                  style: TextStyle(
+                    color: Color(0xFFFFD700),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            Text(
+              winnerName,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-      ],
-    );
+            if (isHero)
+              Text(
+                'You won!',
+                style: TextStyle(
+                  color: Color(0xFFFFD700),
+                  fontSize: 12,
+                ),
+              ),
+          ],
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
   }
 
   Widget _buildHandSummaryCards() {
@@ -396,29 +572,29 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         // Preflop
         if (actionsByStreet['preflop']!.isNotEmpty)
           _buildStreetSection('PREFLOP', null, actionsByStreet['preflop']!, 
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value),
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['preflopPot']),
         
         // Flop
         if (flop.isNotEmpty && actionsByStreet['flop']!.isNotEmpty)
           _buildStreetSection('FLOP', flop, actionsByStreet['flop']!, 
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value),
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['flopPot']),
         
         // Turn
         if (turn != null && actionsByStreet['turn']!.isNotEmpty)
           _buildStreetSection('TURN', [turn], actionsByStreet['turn']!, 
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value),
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['turnPot']),
         
         // River
         if (river != null && actionsByStreet['river']!.isNotEmpty)
           _buildStreetSection('RIVER', [river], actionsByStreet['river']!, 
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value),
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['riverPot']),
       ],
     );
   }
   
   Widget _buildStreetSection(String streetName, List<String>? cards, List<Map<String, dynamic>> actions,
                             int buttonPosition, int playerCount, int? heroPosition, 
-                            Map<String, String> playerNamesMap, int? winnerId, String gameType) {
+                            Map<String, String> playerNamesMap, int? winnerId, String gameType, dynamic potAmount) {
     return Container(
       margin: EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
@@ -440,23 +616,46 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               ),
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  streetName,
-                  style: TextStyle(
-                    color: Color(0xFF5AC95A),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      streetName,
+                      style: TextStyle(
+                        color: Color(0xFF5AC95A),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    if (cards != null && cards.isNotEmpty) ...[
+                      SizedBox(width: 16),
+                      ...cards.map((card) => Padding(
+                        padding: EdgeInsets.only(right: 8),
+                        child: _buildCard(card),
+                      )),
+                    ],
+                  ],
                 ),
-                if (cards != null && cards.isNotEmpty) ...[
-                  SizedBox(width: 16),
-                  ...cards.map((card) => Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: _buildCard(card),
-                  )),
-                ],
+                // Pot amount on the right side
+                if (potAmount != null && (potAmount as double) > 0)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF5AC95A).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Color(0xFF5AC95A).withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      _formatPotAmount(potAmount as double, gameType),
+                      style: TextStyle(
+                        color: Color(0xFF5AC95A),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -681,5 +880,17 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ),
       ),
     );
+  }
+
+  String _formatPotAmount(double amount, String gameType) {
+    if (amount <= 0) return '';
+    
+    final isCashGame = gameType == 'cash';
+    
+    if (isCashGame) {
+      return 'Pot: \$${amount.toStringAsFixed(2)}';
+    } else {
+      return 'Pot: ${amount.toInt()}';
+    }
   }
 }

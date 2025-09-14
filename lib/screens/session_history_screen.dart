@@ -437,6 +437,18 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
                 _buildBoardCardsDisplay(boardCards),
               ],
               
+              // Pot Tracking Section
+              if (_hasAnyPotData(hand)) ...[
+                SizedBox(height: 16),
+                Text('Pot by Street:', style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                _buildPotTrackingDisplay(hand, boardCards),
+              ],
+
+              // Winner Section
+              SizedBox(height: 16),
+              _buildWinnerDisplay(hand),
+
               SizedBox(height: 16),
               Text('Actions:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
@@ -703,14 +715,198 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
     }
   }
 
+  bool _hasAnyPotData(Map<String, dynamic> hand) {
+    final preflopPot = (hand['preflopPot'] ?? 0).toDouble();
+    final flopPot = (hand['flopPot'] ?? 0).toDouble();
+    final turnPot = (hand['turnPot'] ?? 0).toDouble();
+    final riverPot = (hand['riverPot'] ?? 0).toDouble();
+    
+    return preflopPot > 0 || flopPot > 0 || turnPot > 0 || riverPot > 0;
+  }
+  
+  Widget _buildPotTrackingDisplay(Map<String, dynamic> hand, Map<String, dynamic>? boardCards) {
+    final preflopPot = (hand['preflopPot'] ?? 0).toDouble();
+    final flopPot = (hand['flopPot'] ?? 0).toDouble();
+    final turnPot = (hand['turnPot'] ?? 0).toDouble();
+    final riverPot = (hand['riverPot'] ?? 0).toDouble();
+    final totalPot = (hand['potAmount'] ?? 0).toDouble();
+    
+    // Determine game type for currency formatting
+    final gameTypeStr = hand['handGameType'] ?? hand['gameType'] ?? 'cash';
+    final isCashGame = gameTypeStr == 'cash';
+    
+    String formatAmount(double amount) {
+      if (amount <= 0) return '--';
+      if (isCashGame) {
+        return '\$${amount.toStringAsFixed(2)}';
+      } else {
+        return '${amount.toInt()}';
+      }
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Preflop:', style: TextStyle(fontSize: 12)),
+            Text(formatAmount(preflopPot), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          ],
+        ),
+        SizedBox(height: 4),
+        if (boardCards?['flop'] != null && (boardCards!['flop'] as List).isNotEmpty) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Flop:', style: TextStyle(fontSize: 12)),
+              Text(formatAmount(flopPot), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          SizedBox(height: 4),
+        ],
+        if (boardCards?['turn'] != null && (boardCards!['turn'] as String).isNotEmpty) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Turn:', style: TextStyle(fontSize: 12)),
+              Text(formatAmount(turnPot), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          SizedBox(height: 4),
+        ],
+        if (boardCards?['river'] != null && (boardCards!['river'] as String).isNotEmpty) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('River:', style: TextStyle(fontSize: 12)),
+              Text(formatAmount(riverPot), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          SizedBox(height: 4),
+        ],
+        Divider(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Final Pot:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(formatAmount(totalPot), style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWinnerDisplay(Map<String, dynamic> hand) {
+    final isChoppedPot = hand['isChoppedPot'] == true;
+    final winnerId = hand['winnerId'] as int?;
+    final choppedWinners = hand['choppedWinners'] as List<dynamic>?;
+    final individualShares = hand['individualShares'] as Map<String, dynamic>?;
+    final potAmount = (hand['potAmount'] ?? 0).toDouble();
+    final gameTypeStr = hand['handGameType'] ?? hand['gameType'] ?? 'cash';
+    final isCashGame = gameTypeStr == 'cash';
+
+    String formatAmount(double amount) {
+      if (isCashGame) {
+        return '\$${amount.toStringAsFixed(2)}';
+      } else {
+        return '${amount.toInt()}';
+      }
+    }
+
+    if (isChoppedPot && choppedWinners != null && choppedWinners.isNotEmpty) {
+      // Chopped pot display
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.call_split, color: Colors.orange, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Chopped Pot (${choppedWinners.length} winners):',
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          if (individualShares != null && individualShares.isNotEmpty) ...[
+            ...individualShares.entries.map((entry) {
+              final playerId = int.parse(entry.key);
+              final amount = (entry.value as num).toDouble();
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('🏆 Player $playerId wins:',
+                         style: TextStyle(fontWeight: FontWeight.w500, color: Colors.green)),
+                    Text(formatAmount(amount),
+                         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                  ],
+                ),
+              );
+            }).toList(),
+          ] else ...[
+            // Fallback to equal shares
+            ...choppedWinners.map((winnerId) {
+              final winnerIdInt = winnerId as int;
+              final shareAmount = potAmount / choppedWinners.length;
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('🏆 Player $winnerIdInt wins:',
+                         style: TextStyle(fontWeight: FontWeight.w500, color: Colors.green)),
+                    Text(formatAmount(shareAmount),
+                         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        ],
+      );
+    } else if (winnerId != null) {
+      // Single winner display
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.emoji_events, color: Colors.amber, size: 20),
+              SizedBox(width: 8),
+              Text(
+                '🏆 Player $winnerId wins:',
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+              ),
+            ],
+          ),
+          Text(
+            formatAmount(potAmount),
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 16),
+          ),
+        ],
+      );
+    } else {
+      // No winner info available
+      return Text(
+        'Winner information not available',
+        style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+      );
+    }
+  }
+
+
   String _formatBlinds(Map<String, dynamic> session) {
     final smallBlind = session['smallBlind'] ?? 0;
     final bigBlind = session['bigBlind'] ?? 0;
     final gameTypeStr = session['gameType'] ?? 'cash';
-    
+
     // Check if it's a cash game
     final isCashGame = gameTypeStr == 'cash';
-    
+
     if (isCashGame) {
       return '\$$smallBlind/\$$bigBlind';
     } else {

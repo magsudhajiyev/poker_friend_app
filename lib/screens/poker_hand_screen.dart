@@ -1641,6 +1641,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void nextStreet() {
     // Check if we're transitioning from River - might need showdown
     if (gameState.currentRound == BettingRound.river) {
+      // Save river pot before completing hand
+      sessionManager.savePotForStreet(BettingRound.river, gameState.currentPot);
       _handleHandComplete();
       return;
     }
@@ -1743,7 +1745,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
   void _proceedToNextStreet() {
     setState(() {
-      gameState.startNewStreet();
+      gameState.startNewStreet(
+        onStreetComplete: (BettingRound completedStreet, double potAmount) {
+          // Save pot amount for the completed street
+          sessionManager.savePotForStreet(completedStreet, potAmount);
+        },
+      );
       addAction("--- ${gameState.getCurrentStreetName()} ---");
       addAction("${sessionManager.getPlayerNameWithPosition(gameState.currentPlayer)} to act");
     });
@@ -1815,10 +1822,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       playerNames.add(sessionManager.getPlayerName(i));
     }
     
-    int? selectedWinner;
-    
+    Map<String, dynamic>? winnerResult;
+
     // ALWAYS show winner selection dialog
-    selectedWinner = await showDialog<int>(
+    winnerResult = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: false,
       builder: (context) => WinnerSelectionDialog(
@@ -1826,13 +1833,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         playerNames: playerNames,
         potAmount: potAmount, // Use saved pot amount
         gameType: widget.gameType, // Pass game type
+        buttonPosition: gameState.buttonPosition,
+        playerCount: gameState.numberOfPlayers,
       ),
     );
-    
-    // If user somehow cancelled (shouldn't happen with barrierDismissible: false), 
+
+    // If user somehow cancelled (shouldn't happen with barrierDismissible: false),
     // show again until they select someone
-    while (selectedWinner == null) {
-      selectedWinner = await showDialog<int>(
+    while (winnerResult == null) {
+      winnerResult = await showDialog<Map<String, dynamic>>(
         context: context,
         barrierDismissible: false,
         builder: (context) => WinnerSelectionDialog(
@@ -1840,35 +1849,89 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           playerNames: playerNames,
           potAmount: potAmount,
           gameType: widget.gameType, // Pass game type
+          buttonPosition: gameState.buttonPosition,
+          playerCount: gameState.numberOfPlayers,
         ),
       );
     }
-    
-    print('DEBUG: Winner selected: $selectedWinner');
+
+    final bool isChoppedPot = winnerResult['isChoppedPot'] ?? false;
+    final List<int> winners = isChoppedPot
+        ? List<int>.from(winnerResult['winners'] ?? [])
+        : [winnerResult['winner'] as int];
+    final Map<int, double> individualShares = isChoppedPot && winnerResult['individualShares'] != null
+        ? Map<int, double>.from(winnerResult['individualShares'])
+        : {};
+    final double sharePerWinner = winnerResult['sharePerWinner'] ?? potAmount;
+
+    print('DEBUG: Winner result: $winnerResult');
+    print('DEBUG: Is chopped pot: $isChoppedPot');
+    print('DEBUG: Winners: $winners');
+    print('DEBUG: Individual shares: $individualShares');
+    print('DEBUG: Share per winner: $sharePerWinner');
     
     // Then show hole cards dialog
     await _showHoleCardsDialog();
     
     setState(() {
-      // Complete current hand in session manager with pot and winner FIRST
-      sessionManager.completeCurrentHand(
-        potAmount: potAmount,
-        winnerId: selectedWinner!,
-      );
-      
-      // Now distribute pot to winner (this will reset pot to 0)
-      _distributePotToWinner(selectedWinner!);
-      
+      if (isChoppedPot) {
+        // Complete current hand in session manager with pot and multiple winners
+        sessionManager.completeCurrentHandWithChop(
+          potAmount: potAmount,
+          winnerIds: winners,
+          individualShares: individualShares,
+        );
+
+        // Distribute pot to all winners with individual amounts
+        for (int winnerId in winners) {
+          final winnerShare = individualShares[winnerId] ?? sharePerWinner;
+          _distributePotToWinner(winnerId, winnerShare);
+        }
+
+        // Reset the pot after distributing to all winners
+        gameState.currentPot = 0.0;
+
+        // Add action log for chopped pot with individual amounts
+        if (individualShares.isNotEmpty) {
+          List<String> winnerDetails = winners.map((id) {
+            final name = sessionManager.getPlayerNameWithPosition(id);
+            final amount = individualShares[id] ?? sharePerWinner;
+            return '$name (${_formatCurrency(amount)})';
+          }).toList();
+          actions.add("🏆 Pot chopped: ${winnerDetails.join(', ')}");
+        } else {
+          String winnerNames = winners.map((id) =>
+            sessionManager.getPlayerNameWithPosition(id)).join(', ');
+          actions.add("🏆 Pot chopped between $winnerNames - ${_formatCurrency(sharePerWinner)} each");
+        }
+      } else {
+        // Complete current hand in session manager with single winner
+        sessionManager.completeCurrentHand(
+          potAmount: potAmount,
+          winnerId: winners.first,
+        );
+
+        // Distribute pot to single winner
+        _distributePotToWinner(winners.first);
+
+        // Add action log for single winner
+        String winnerName = sessionManager.getPlayerNameWithPosition(winners.first);
+        actions.add("🏆 $winnerName wins ${_formatCurrency(potAmount)}");
+      }
+
       // Start new hand in game state
       gameState.startNewHand();
-      
+
       // Start new hand in session manager
       sessionManager.startHand(
         gameState.handNumber,
         gameState.buttonPosition,
       );
-      
-      actions.clear(); // Clear actions for new hand
+
+      // Clear actions for new hand but keep the winner announcement
+      String lastWinnerAction = actions.isNotEmpty ? actions.last : '';
+      actions.clear();
+      if (lastWinnerAction.isNotEmpty) actions.add(lastWinnerAction);
       actions.add("💾 Hand #${gameState.handNumber - 1} saved to Firebase");
       actions.add("Hand #${gameState.handNumber} started");
       actions.add(gameState.getGameStateInfo());
@@ -1992,23 +2055,27 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     return "Valid: ${validActions.join(', ')}";
   }
 
-  void _distributePotToWinner(int winnerId) {
-    // Get the current pot amount
-    double potAmount = gameState.currentPot;
-    
-    if (potAmount > 0) {
-      // Add pot to winner's stack
+  void _distributePotToWinner(int winnerId, [double? shareAmount]) {
+    // Use provided share amount or current pot amount
+    double winAmount = shareAmount ?? gameState.currentPot;
+
+    if (winAmount > 0) {
+      // Add winnings to winner's stack
       double currentStack = gameState.getPlayerStack(winnerId);
-      gameState.setPlayerStack(winnerId, currentStack + potAmount);
-      
-      // Log the pot distribution
-      addAction("💰 ${sessionManager.getPlayerName(winnerId)} wins pot: ${gameState.formatCurrency(potAmount)}");
-      
-      // Reset the pot
-      gameState.currentPot = 0.0;
-      
-      // Update the UI to reflect the new stack
-      setState(() {});
+      gameState.setPlayerStack(winnerId, currentStack + winAmount);
+
+      // Only reset pot if we're distributing the full pot (no share amount specified)
+      if (shareAmount == null) {
+        gameState.currentPot = 0.0;
+      }
+    }
+  }
+
+  String _formatCurrency(double amount) {
+    if (widget.gameType == GameType.cash) {
+      return '\$${amount.toStringAsFixed(2)}';
+    } else {
+      return '${amount.toInt()}';
     }
   }
 

@@ -550,11 +550,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       mainAxisSpacing: 16,
       childAspectRatio: 1.2,
       children: [
-        _buildStatCard('Total Hands', totalHands.toString(), icon: Icons.style),
+        _buildStatCard('Total Hands', totalHands.toString(), iconPath: 'icons/hole_cards.png'),
         _buildStatCard('Hands Played', handsPlayed.toString(), icon: Icons.play_arrow),
         _buildStatCard('VPIP', '${vpip.toStringAsFixed(1)}%', iconPath: 'icons/vpip.png'),
         _buildStatCard('PFR', '${pfr.toStringAsFixed(1)}%', iconPath: 'icons/bet.png'),
-        _buildStatCard('3-Bet', '${threeBet.toStringAsFixed(1)}%', icon: Icons.double_arrow),
+        _buildStatCard('3-Bet', '${threeBet.toStringAsFixed(1)}%', iconPath: 'icons/3bet.png'),
         _buildStatCard('Win Rate', '${winRate.toStringAsFixed(1)}%', iconPath: 'icons/throphy.png'),
       ],
     );

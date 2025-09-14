@@ -168,8 +168,21 @@ class HandRecord {
   ShowdownData? showdownData; // Showdown information
   bool reachedShowdown = false;
   double potAmount = 0;
+  
+  // Per-street pot tracking
+  double preflopPot = 0;
+  double flopPot = 0;
+  double turnPot = 0;
+  double riverPot = 0;
+  
   int? winnerId;
   int? heroPosition;
+
+  // Chopped pot fields
+  bool isChoppedPot = false;
+  List<int>? choppedWinners;
+  Map<int, double>? individualShares;
+  double? sharePerWinner;
 
   HandRecord({
     required this.handNumber,
@@ -184,6 +197,10 @@ class HandRecord {
     this.showdownData,
     this.reachedShowdown = false,
     this.potAmount = 0,
+    this.preflopPot = 0,
+    this.flopPot = 0,
+    this.turnPot = 0,
+    this.riverPot = 0,
     this.winnerId,
     this.heroPosition,
   }) : actions = actions ?? [];
@@ -219,13 +236,21 @@ class HandRecord {
       'showdownData': showdownData?.toMap(),
       'reachedShowdown': reachedShowdown,
       'potAmount': potAmount,
+      'preflopPot': preflopPot,
+      'flopPot': flopPot,
+      'turnPot': turnPot,
+      'riverPot': riverPot,
       'winnerId': winnerId,
       'heroPosition': heroPosition,
+      'isChoppedPot': isChoppedPot,
+      'choppedWinners': choppedWinners,
+      'individualShares': individualShares?.map((key, value) => MapEntry(key.toString(), value)),
+      'sharePerWinner': sharePerWinner,
     };
   }
 
   factory HandRecord.fromMap(Map<String, dynamic> map) {
-    return HandRecord(
+    final hand = HandRecord(
       handNumber: map['handNumber'] ?? 0,
       buttonPosition: map['buttonPosition'] ?? 1,
       playerCount: map['playerCount'] ?? 6,
@@ -238,9 +263,28 @@ class HandRecord {
       showdownData: map['showdownData'] != null ? ShowdownData.fromMap(map['showdownData']) : null,
       reachedShowdown: map['reachedShowdown'] ?? false,
       potAmount: (map['potAmount'] ?? 0).toDouble(),
+      preflopPot: (map['preflopPot'] ?? 0).toDouble(),
+      flopPot: (map['flopPot'] ?? 0).toDouble(),
+      turnPot: (map['turnPot'] ?? 0).toDouble(),
+      riverPot: (map['riverPot'] ?? 0).toDouble(),
       winnerId: map['winnerId'],
       heroPosition: map['heroPosition'],
     );
+
+    // Set chopped pot fields
+    hand.isChoppedPot = map['isChoppedPot'] ?? false;
+    hand.choppedWinners = map['choppedWinners'] != null
+        ? List<int>.from(map['choppedWinners'])
+        : null;
+    hand.individualShares = map['individualShares'] != null
+        ? Map<int, double>.from(
+            (map['individualShares'] as Map<String, dynamic>)
+                .map((key, value) => MapEntry(int.parse(key), value.toDouble()))
+          )
+        : null;
+    hand.sharePerWinner = map['sharePerWinner']?.toDouble();
+
+    return hand;
   }
 }
 
@@ -390,6 +434,33 @@ class PokerSessionManager {
     print('Action recorded: Player $player ${action.name} on ${street.name}');
   }
 
+  // Save pot amount at the end of each street
+  void savePotForStreet(BettingRound street, double potAmount) {
+    if (currentHand == null) return;
+    
+    print('💰 Saving pot for ${street.name}: \$${potAmount.toStringAsFixed(0)}');
+    
+    switch (street) {
+      case BettingRound.preflop:
+        currentHand!.preflopPot = potAmount;
+        break;
+      case BettingRound.flop:
+        currentHand!.flopPot = potAmount;
+        break;
+      case BettingRound.turn:
+        currentHand!.turnPot = potAmount;
+        break;
+      case BettingRound.river:
+        currentHand!.riverPot = potAmount;
+        break;
+    }
+    
+    // Update the final pot amount as well
+    currentHand!.potAmount = potAmount;
+    
+    print('💰 Current hand pot tracking: Preflop: \$${currentHand!.preflopPot}, Flop: \$${currentHand!.flopPot}, Turn: \$${currentHand!.turnPot}, River: \$${currentHand!.riverPot}');
+  }
+
   // Complete the current hand
   void completeCurrentHand({double? potAmount, int? winnerId}) {
     if (currentHand == null) return;
@@ -421,6 +492,46 @@ class PokerSessionManager {
     currentHand = null;
   }
 
+  void completeCurrentHandWithChop({
+    required double potAmount,
+    required List<int> winnerIds,
+    Map<int, double>? individualShares,
+    double? sharePerWinner
+  }) {
+    if (currentHand == null) return;
+
+    // Set pot amount
+    currentHand!.potAmount = potAmount;
+
+    // For chopped pots, we'll store the first winner in winnerId for compatibility
+    // and store additional chop data in a custom field
+    currentHand!.winnerId = winnerIds.first;
+
+    // Add chop data to the hand record
+    currentHand!.isChoppedPot = true;
+    currentHand!.choppedWinners = winnerIds;
+    currentHand!.individualShares = individualShares;
+    currentHand!.sharePerWinner = sharePerWinner;
+
+    // Set hero position
+    currentHand!.heroPosition = ourSeatNumber;
+
+    currentHand!.markCompleted();
+    completedHands.add(currentHand!);
+
+    // Update opponent statistics for this hand
+    _updateOpponentStats();
+
+    // Save hand to Firebase and local storage
+    _saveHandToFirebase(currentHand!);
+
+    // Update session with latest hand count
+    _updateSessionProgress();
+
+    print('Hand #${currentHand!.handNumber} completed as chopped pot: $potAmount between ${winnerIds.length} players');
+    currentHand = null;
+  }
+
   // Save a completed hand to both Firebase and local storage
   Future<void> _saveHandToFirebase(HandRecord hand) async {
     if (sessionId == null) return;
@@ -439,12 +550,21 @@ class PokerSessionManager {
       showdownData: hand.showdownData?.toMap(),
       reachedShowdown: hand.reachedShowdown,
       potAmount: hand.potAmount,
+      preflopPot: hand.preflopPot,
+      flopPot: hand.flopPot,
+      turnPot: hand.turnPot,
+      riverPot: hand.riverPot,
       winnerId: hand.winnerId,
       heroPosition: hand.heroPosition,
       playerNames: playerNames,
       smallBlind: smallBlind,
       bigBlind: bigBlind,
       gameType: gameType.name,
+      // Chopped pot fields
+      isChoppedPot: hand.isChoppedPot,
+      choppedWinners: hand.choppedWinners,
+      individualShares: hand.individualShares,
+      sharePerWinner: hand.sharePerWinner,
     );
     
     try {
@@ -459,6 +579,22 @@ class PokerSessionManager {
         ourHoleCards: hand.ourHoleCards?.toMap(),
         showdownData: hand.showdownData?.toMap(),
         reachedShowdown: hand.reachedShowdown,
+        potAmount: hand.potAmount,
+        preflopPot: hand.preflopPot,
+        flopPot: hand.flopPot,
+        turnPot: hand.turnPot,
+        riverPot: hand.riverPot,
+        winnerId: hand.winnerId,
+        heroPosition: hand.heroPosition,
+        playerNames: playerNames,
+        smallBlind: smallBlind,
+        bigBlind: bigBlind,
+        gameType: gameType.name,
+        // Chopped pot fields
+        isChoppedPot: hand.isChoppedPot,
+        choppedWinners: hand.choppedWinners,
+        individualShares: hand.individualShares,
+        sharePerWinner: hand.sharePerWinner,
       );
       
       hand.markSaved();

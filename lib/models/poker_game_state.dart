@@ -387,6 +387,7 @@ class PokerGameState {
 
     PlayerState player = _getPlayer(currentPlayer);
     String actionText = "";
+    print('🎯 DEBUG: Before action - currentPot: $currentPot');
 
     switch (action) {
       case PlayerAction.fold:
@@ -412,6 +413,7 @@ class PokerGameState {
         
         // Update pot directly
         currentPot += actualAmount;
+        print('🎯 DEBUG: After call - currentPot: $currentPot (added $actualAmount)');
         
         player.lastAction = PlayerAction.call;
         player.hasCalledCurrentBet = true;
@@ -432,6 +434,7 @@ class PokerGameState {
         // Update pot and current bet (only add the additional amount)
         currentPot += additionalAmount;
         currentBet = betAmount;
+        print('🎯 DEBUG: After bet - currentPot: $currentPot (added $additionalAmount)');
         
         hasBetThisRound = true;
         player.lastAction = PlayerAction.bet;
@@ -455,6 +458,7 @@ class PokerGameState {
         // Update pot and current bet (only add the additional amount)
         currentPot += additionalAmount;
         currentBet = raiseAmount;
+        print('🎯 DEBUG: After raise - currentPot: $currentPot (added $additionalAmount)');
         hasBetThisRound = true;
         
         player.lastAction = PlayerAction.raise;
@@ -584,8 +588,14 @@ class PokerGameState {
     return true;
   }
 
-  void startNewStreet() {
+  void startNewStreet({Function(BettingRound, double)? onStreetComplete}) {
     if (bettingRoundComplete) {
+      // Save pot amount for the completed street BEFORE transitioning
+      print('🎯 DEBUG: startNewStreet() - currentRound: ${currentRound.name}, currentPot: $currentPot');
+      if (onStreetComplete != null) {
+        onStreetComplete(currentRound, currentPot);
+      }
+      
       // Reset for new street
       bettingRoundComplete = false;
       hasBetThisRound = false;
@@ -743,6 +753,7 @@ class PokerGameState {
   void initializePot() {
     currentPot = 0.0;
     currentBet = bigBlind.toDouble();
+    print('🎯 DEBUG: initializePot() - Starting with currentPot: $currentPot');
     
     // Post blinds
     if (numberOfPlayers > 2) {
@@ -758,12 +769,14 @@ class PokerGameState {
       sbPlayer.betThisRound = sbAmount;
       sbPlayer.currentStack -= sbAmount;
       currentPot += sbAmount;
+      print('🎯 DEBUG: Added SB $sbAmount - currentPot: $currentPot');
       
       // Big blind posts
       double bbAmount = bigBlind.toDouble();
       bbPlayer.betThisRound = bbAmount;
       bbPlayer.currentStack -= bbAmount;
       currentPot += bbAmount;
+      print('🎯 DEBUG: Added BB $bbAmount - currentPot: $currentPot');
       
     } else {
       // Heads-up: button posts SB, other player posts BB
@@ -841,6 +854,11 @@ class PokerGameState {
     for (PlayerState player in players) {
       player.betThisRound = 0.0;
     }
+  }
+
+  /// Get current pot amount for street-specific tracking
+  double getPotAmountForStreet() {
+    return currentPot;
   }
 
   void trackPositionActivity(int playerId, PlayerAction action) {
