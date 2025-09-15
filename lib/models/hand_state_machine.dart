@@ -206,6 +206,19 @@ class HandRecord {
   }) : actions = actions ?? [];
 
   void addAction(ActionRecord action) {
+    // Check for duplicate actions to prevent multiple recordings
+    final isDuplicate = actions.any((existing) =>
+      existing.player == action.player &&
+      existing.action == action.action &&
+      existing.street == action.street &&
+      (DateTime.now().difference(existing.timestamp).inMilliseconds < 2000) // Within 2 seconds
+    );
+
+    if (isDuplicate) {
+      print('Duplicate action detected and ignored: Player ${action.player} ${action.action.name} on ${action.street.name}');
+      return;
+    }
+
     actions.add(action);
   }
 

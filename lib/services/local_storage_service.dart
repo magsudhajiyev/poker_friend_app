@@ -218,10 +218,10 @@ class LocalStorageService {
           'playerCount': playerCount,
           'startTime': startTime,
           'endTime': endTime,
-          'actions': jsonEncode(actions),
-          'boardCards': boardCards != null ? jsonEncode(boardCards) : null,
-          'ourHoleCards': ourHoleCards != null ? jsonEncode(ourHoleCards) : null,
-          'showdownData': showdownData != null ? jsonEncode(showdownData) : null,
+          'actions': _safeJsonEncode(actions),
+          'boardCards': boardCards != null ? _safeJsonEncode(boardCards) : null,
+          'ourHoleCards': ourHoleCards != null ? _safeJsonEncode(ourHoleCards) : null,
+          'showdownData': showdownData != null ? _safeJsonEncode(showdownData) : null,
           'reachedShowdown': reachedShowdown == true ? 1 : 0,
           'potAmount': potAmount ?? 0,
           'preflopPot': preflopPot ?? 0,
@@ -230,14 +230,14 @@ class LocalStorageService {
           'riverPot': riverPot ?? 0,
           'winnerId': winnerId,
           'heroPosition': heroPosition,
-          'playerNames': playerNames != null ? jsonEncode(playerNames) : null,
+          'playerNames': playerNames != null ? _safeJsonEncode(playerNames) : null,
           'handSmallBlind': smallBlind,
           'handBigBlind': bigBlind,
           'handGameType': gameType,
           // Chopped pot fields
           'isChoppedPot': (isChoppedPot == true) ? 1 : 0,
-          'choppedWinners': choppedWinners != null ? jsonEncode(choppedWinners) : null,
-          'individualShares': individualShares != null ? jsonEncode(individualShares.map((key, value) => MapEntry(key.toString(), value))) : null,
+          'choppedWinners': choppedWinners != null ? _safeJsonEncode(choppedWinners) : null,
+          'individualShares': individualShares != null ? _safeJsonEncode(_convertKeysToStrings(individualShares)) : null,
           'sharePerWinner': sharePerWinner,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
@@ -494,5 +494,59 @@ class LocalStorageService {
       print('Error updating session locally: $e');
       rethrow;
     }
+  }
+
+  // Helper method to safely encode JSON, handling non-serializable objects
+  static String _safeJsonEncode(dynamic data) {
+    try {
+      return jsonEncode(data);
+    } catch (e) {
+      // If encoding fails, try to convert to a safe format
+      try {
+        return jsonEncode(_makeJsonSafe(data));
+      } catch (e2) {
+        print('Warning: Failed to JSON encode data, using toString: $e2');
+        return jsonEncode({'error': 'Failed to encode', 'data': data.toString()});
+      }
+    }
+  }
+
+  // Helper method to make objects JSON-safe by converting problematic types
+  static dynamic _makeJsonSafe(dynamic data) {
+    if (data == null) return null;
+
+    if (data is Map) {
+      Map<String, dynamic> result = {};
+      data.forEach((key, value) {
+        result[key.toString()] = _makeJsonSafe(value);
+      });
+      return result;
+    }
+
+    if (data is List) {
+      return data.map((item) => _makeJsonSafe(item)).toList();
+    }
+
+    // Convert enums to their string representation
+    if (data.runtimeType.toString().contains('Enum')) {
+      return data.toString();
+    }
+
+    // Handle primitive types
+    if (data is String || data is num || data is bool) {
+      return data;
+    }
+
+    // For other objects, try to convert to string
+    return data.toString();
+  }
+
+  // Helper method to convert map keys to strings
+  static Map<String, dynamic> _convertKeysToStrings(Map<int, double> map) {
+    Map<String, dynamic> result = {};
+    map.forEach((key, value) {
+      result[key.toString()] = value;
+    });
+    return result;
   }
 }

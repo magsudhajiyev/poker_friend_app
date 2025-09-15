@@ -164,7 +164,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     actions.add("Game started. Blinds: ${widget.smallBlind}/${widget.bigBlind}");
     actions.add("Your seat: #$ourSeat (${sessionManager.getOurPosition(gameState.buttonPosition) ?? 'UNK'})");
     actions.add(gameState.getGameStateInfo());
-    actions.add("${sessionManager.getPlayerNameWithPosition(gameState.currentPlayer)} to act");
+    actions.add(_getToActMessage());
     
     
     setState(() {});
@@ -629,51 +629,93 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             // Game Info Header - Individual Cards (Dark Theme)
             Container(
               margin: const EdgeInsets.all(PokerFriendSpacing.xs),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Color(0xFF1F1F23),
-                        borderRadius: BorderRadius.circular(PokerFriendRadius.l),
-                        border: Border.all(color: Color(0xFF2A2A2E), width: 1),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(PokerFriendSpacing.xs),
-                        child: _buildInfoItem(context, 'Pot', gameState.formatCurrency(gameState.currentPot), Icons.monetization_on_rounded),
+              child: gameState.areAllPlayersAllIn()
+                ? // All-in situation: Show single unified card
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Color(0xFF5AC95A).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(PokerFriendRadius.l),
+                      border: Border.all(color: Color(0xFF5AC95A), width: 2),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(PokerFriendSpacing.m),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.casino,
+                            color: Color(0xFF5AC95A),
+                            size: 24,
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'ALL IN HAND',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            '• POT: ${gameState.formatCurrency(gameState.currentPot)}',
+                            style: TextStyle(
+                              color: Color(0xFF5AC95A),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                  )
+                : // Normal situation: Show three cards
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Color(0xFF1F1F23),
+                            borderRadius: BorderRadius.circular(PokerFriendRadius.l),
+                            border: Border.all(color: Color(0xFF2A2A2E), width: 1),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(PokerFriendSpacing.xs),
+                            child: _buildInfoItem(context, 'Pot', gameState.formatCurrency(gameState.currentPot), Icons.monetization_on_rounded),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: PokerFriendSpacing.xxs),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Color(0xFF1F1F23),
+                            borderRadius: BorderRadius.circular(PokerFriendRadius.l),
+                            border: Border.all(color: Color(0xFF2A2A2E), width: 1),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(PokerFriendSpacing.xs),
+                            child: _buildInfoItem(context, 'To Act', _getCurrentPlayerNameSafely(), Icons.person_rounded),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: PokerFriendSpacing.xxs),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Color(0xFF1F1F23),
+                            borderRadius: BorderRadius.circular(PokerFriendRadius.l),
+                            border: Border.all(color: Color(0xFF2A2A2E), width: 1),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(PokerFriendSpacing.xs),
+                            child: _buildInfoItem(context, 'Stack', _getCurrentPlayerStackSafely(), Icons.account_balance_wallet_rounded),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: PokerFriendSpacing.xxs),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Color(0xFF1F1F23),
-                        borderRadius: BorderRadius.circular(PokerFriendRadius.l),
-                        border: Border.all(color: Color(0xFF2A2A2E), width: 1),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(PokerFriendSpacing.xs),
-                        child: _buildInfoItem(context, 'To Act', _getCurrentPlayerNameSafely(), Icons.person_rounded),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: PokerFriendSpacing.xxs),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Color(0xFF1F1F23),
-                        borderRadius: BorderRadius.circular(PokerFriendRadius.l),
-                        border: Border.all(color: Color(0xFF2A2A2E), width: 1),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(PokerFriendSpacing.xs),
-                        child: _buildInfoItem(context, 'Stack', _getCurrentPlayerStackSafely(), Icons.account_balance_wallet_rounded),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
 
           
@@ -1322,7 +1364,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     
     // Calculate sensitivity dynamically based on player's stack and screen size
     final minBet = gameState.getMinimumBet().toDouble();
-    final maxBet = currentPlayer.currentStack;
+    // For all-in calculation, include what player has already bet this round
+    final maxBet = currentPlayer.currentStack + currentPlayer.betThisRound;
     final betRange = maxBet - minBet;
     
     // Use actual screen height for better sensitivity calculation
@@ -1343,17 +1386,33 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       // Round to nearest $0.25
       newBetAmount = (newBetAmount * 4).round() / 4;
     } else {
-      // Round to nearest 5 chips for tournaments
-      newBetAmount = (newBetAmount / 5).round() * 5;
+      // For tournaments, be more aggressive about detecting all-in intent
+      final allInThreshold = (maxBet * 0.1).clamp(5.0, 20.0); // 10% of stack or at least 5 chips
+
+      if ((maxBet - newBetAmount) <= allInThreshold) {
+        // If within threshold of all-in, go all-in exactly
+        newBetAmount = maxBet;
+      } else {
+        // Otherwise round to nearest 5 chips
+        newBetAmount = (newBetAmount / 5).round() * 5;
+
+        // Final safety check: if rounding put us very close to all-in, just go all-in
+        if ((maxBet - newBetAmount) <= 5) {
+          newBetAmount = maxBet;
+        }
+      }
     }
-    
+
+    // Ensure we never exceed the player's stack
+    newBetAmount = newBetAmount.clamp(minBet, maxBet);
+
     // Calculate drag bar position (0 = bottom/min bet, 1 = top/max bet)
-    final betProgress = (newBetAmount - minBet) / betRange;
+    final betProgress = betRange > 0 ? (newBetAmount - minBet) / betRange : 0;
     final dragBarPosition = betProgress.clamp(0.0, 1.0);
     
     setState(() {
       _dragBetAmount = newBetAmount;
-      _dragBarPosition = dragBarPosition;
+      _dragBarPosition = dragBarPosition.toDouble();
     });
   }
 
@@ -1436,7 +1495,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
         // Use a post frame callback to avoid calling setState during build
         _schedulePostFrameAction(() {
-          if (gameState.areAllPlayersAllIn()) {
+          if (gameState.shouldAutoAdvanceToShowdown()) {
+            // Auto-advance to next street only (allows board card input)
+            String autoAdvanceResult = gameState.autoAdvanceToNextStreet();
+            for (String line in autoAdvanceResult.split('\n')) {
+              if (line.trim().isNotEmpty) {
+                addAction(line.trim());
+              }
+            }
+            setState(() {});
+
+            // Show board cards dialog for the street we just advanced to
+            if (gameState.currentRound == BettingRound.flop ||
+                gameState.currentRound == BettingRound.turn ||
+                gameState.currentRound == BettingRound.river) {
+              _showBoardCardsDialog(gameState.currentRound);
+            }
+          } else if (gameState.areAllPlayersAllIn()) {
             addAction("🎯 All players all-in - auto-advancing to next street...");
             nextStreet();
           } else if (autoAdvanceStreets) {
@@ -1508,7 +1583,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
         // Use a post frame callback to avoid calling setState during build
         _schedulePostFrameAction(() {
-          if (gameState.areAllPlayersAllIn()) {
+          if (gameState.shouldAutoAdvanceToShowdown()) {
+            // Auto-advance to next street only (allows board card input)
+            String autoAdvanceResult = gameState.autoAdvanceToNextStreet();
+            for (String line in autoAdvanceResult.split('\n')) {
+              if (line.trim().isNotEmpty) {
+                addAction(line.trim());
+              }
+            }
+            setState(() {});
+
+            // Show board cards dialog for the street we just advanced to
+            if (gameState.currentRound == BettingRound.flop ||
+                gameState.currentRound == BettingRound.turn ||
+                gameState.currentRound == BettingRound.river) {
+              _showBoardCardsDialog(gameState.currentRound);
+            }
+          } else if (gameState.areAllPlayersAllIn()) {
             addAction("🎯 All players all-in - auto-advancing to next street...");
             nextStreet();
           } else if (autoAdvanceStreets) {
@@ -1745,14 +1836,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
   void _proceedToNextStreet() {
     setState(() {
-      gameState.startNewStreet(
+      String streetTransitionResult = gameState.startNewStreet(
         onStreetComplete: (BettingRound completedStreet, double potAmount) {
           // Save pot amount for the completed street
           sessionManager.savePotForStreet(completedStreet, potAmount);
         },
       );
+
+      // Show uncalled bet returns if any
+      if (streetTransitionResult.isNotEmpty) {
+        for (String line in streetTransitionResult.split('\n')) {
+          if (line.trim().isNotEmpty) {
+            addAction(line.trim());
+          }
+        }
+      }
+
       addAction("--- ${gameState.getCurrentStreetName()} ---");
-      addAction("${sessionManager.getPlayerNameWithPosition(gameState.currentPlayer)} to act");
+      addAction(_getToActMessage());
     });
   }
 
@@ -1918,7 +2019,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         String winnerName = sessionManager.getPlayerNameWithPosition(winners.first);
         actions.add("🏆 $winnerName wins ${_formatCurrency(potAmount)}");
       }
+    });
 
+    // Check for busted players before starting new hand
+    await _checkForBustedPlayers();
+
+    setState(() {
       // Start new hand in game state
       gameState.startNewHand();
 
@@ -1935,8 +2041,119 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       actions.add("💾 Hand #${gameState.handNumber - 1} saved to Firebase");
       actions.add("Hand #${gameState.handNumber} started");
       actions.add(gameState.getGameStateInfo());
-      actions.add("${sessionManager.getPlayerNameWithPosition(gameState.currentPlayer)} to act");
+      actions.add(_getToActMessage());
     });
+  }
+
+  String _getToActMessage() {
+    // Check various scenarios where no one should act
+    List<int> allInPlayers = gameState.getAllInPlayers();
+    List<int> activePlayers = gameState.getActivePlayers();
+    List<int> playersWhoCanAct = gameState.getPlayersWhoCanAct();
+
+    print('🔥 DEBUG _getToActMessage: activePlayers=$activePlayers, allInPlayers=$allInPlayers, playersWhoCanAct=$playersWhoCanAct');
+
+    // If all active players are all-in
+    if (allInPlayers.length == activePlayers.length && activePlayers.length > 1) {
+      return "All players all-in - dealing remaining cards";
+    }
+
+    // If only 0 or 1 players can act (others are folded/all-in)
+    if (playersWhoCanAct.length <= 1 && activePlayers.length > 1) {
+      return "Waiting for cards to be dealt";
+    }
+
+    // Also check if betting round is complete but we haven't moved to next street yet
+    if (gameState.bettingRoundComplete) {
+      return "Betting complete - ready for next street";
+    }
+
+    // Normal case - show which player needs to act
+    return "${sessionManager.getPlayerNameWithPosition(gameState.currentPlayer)} to act";
+  }
+
+  void _adjustButtonForRemovedPlayer(int removedPlayerId) {
+    // If the removed player had the button, move it to the next active player
+    if (gameState.buttonPosition == removedPlayerId) {
+      int nextButton = gameState.buttonPosition;
+      int attempts = 0;
+      do {
+        nextButton = (nextButton % gameState.numberOfPlayers) + 1;
+        attempts++;
+      } while (!gameState.players[nextButton - 1].isActive && attempts < gameState.numberOfPlayers);
+
+      if (attempts < gameState.numberOfPlayers) {
+        gameState.buttonPosition = nextButton;
+        addAction("🔄 Button moved to Player $nextButton (active seat)");
+      }
+    }
+  }
+
+  void _checkSpecialBlindSituation(int removedPlayerId) {
+    // Calculate who would be SB and BB based on current button
+    int sbPosition = (gameState.buttonPosition % gameState.numberOfPlayers) + 1;
+    int bbPosition = (sbPosition % gameState.numberOfPlayers) + 1;
+
+    // Check if removed player was supposed to be SB or BB
+    if (removedPlayerId == sbPosition) {
+      addAction("⚠️ Small blind seat empty - next hand will start with BB only");
+    } else if (removedPlayerId == bbPosition) {
+      addAction("⚠️ Big blind seat empty - adjusting blind positions");
+    }
+  }
+
+  Future<void> _checkForBustedPlayers() async {
+    // Find all busted players (stack = 0 or negative) who are still active
+    List<int> bustedPlayers = [];
+    for (int playerId = 1; playerId <= gameState.numberOfPlayers; playerId++) {
+      PlayerState player = gameState.players[playerId - 1];
+      // Only check players who are still active (haven't left the table)
+      if (player.isActive) {
+        double stack = gameState.getPlayerStack(playerId);
+        if (stack <= 0) {
+          bustedPlayers.add(playerId);
+        }
+      }
+    }
+
+    // Handle each busted player
+    for (int playerId in bustedPlayers) {
+      String playerName = sessionManager.getPlayerNameWithPosition(playerId) ?? "Player $playerId";
+
+      // Show rebuy/leave dialog
+      final result = await showDialog<Map<String, dynamic>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => _BustedPlayerDialog(
+          playerName: playerName,
+          playerId: playerId,
+          isCashGame: widget.gameType == GameType.cash,
+        ),
+      );
+
+      if (result != null) {
+        if (result['action'] == 'rebuy') {
+          double rebuyAmount = result['amount'] ?? 100.0;
+          gameState.setPlayerStack(playerId, rebuyAmount);
+          addAction("💰 $playerName rebuys for ${gameState.formatCurrency(rebuyAmount)}");
+        } else if (result['action'] == 'leave') {
+          // Mark player as completely inactive (seat empty)
+          PlayerState player = gameState.players[playerId - 1];
+          player.isActive = false;
+          player.currentStack = 0.0;
+          player.startingStack = 0.0;
+          player.hasFolded = true;
+
+          // Adjust button position if needed
+          _adjustButtonForRemovedPlayer(playerId);
+
+          addAction("👋 $playerName leaves the table");
+
+          // If this was SB or BB, note special blind situation
+          _checkSpecialBlindSituation(playerId);
+        }
+      }
+    }
   }
 
   Future<void> _showHoleCardsDialog() async {
@@ -2023,6 +2240,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     await _showHoleCardsDialog();
     
     // Start a new hand without calling completeHand again
+    // Check for busted players before starting new hand
+    await _checkForBustedPlayers();
+
     setState(() {
       // Start new hand in game state
       gameState.startNewHand();
@@ -2037,7 +2257,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       actions.add("💾 Hand #${gameState.handNumber - 1} saved");
       actions.add("Hand #${gameState.handNumber} started");
       actions.add(gameState.getGameStateInfo());
-      actions.add("${sessionManager.getPlayerNameWithPosition(gameState.currentPlayer)} to act");
+      actions.add(_getToActMessage());
     });
   }
 
@@ -2195,5 +2415,148 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       ),
     );
   }
+}
 
+// Dialog for handling busted players
+class _BustedPlayerDialog extends StatefulWidget {
+  final String playerName;
+  final int playerId;
+  final bool isCashGame;
+
+  const _BustedPlayerDialog({
+    Key? key,
+    required this.playerName,
+    required this.playerId,
+    required this.isCashGame,
+  }) : super(key: key);
+
+  @override
+  _BustedPlayerDialogState createState() => _BustedPlayerDialogState();
+}
+
+class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
+  final TextEditingController _amountController = TextEditingController(text: '100');
+  bool _isRebuy = true;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Color(0xFF1F1F23),
+      title: Column(
+        children: [
+          Icon(
+            Icons.warning,
+            color: Colors.orange,
+            size: 48,
+          ),
+          SizedBox(height: 16),
+          Text(
+            '${widget.playerName} is busted!',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Choose an option:',
+            style: TextStyle(color: Colors.white70),
+          ),
+          SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => setState(() => _isRebuy = true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isRebuy ? Colors.green : Colors.grey[700],
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'Rebuy',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => setState(() => _isRebuy = false),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: !_isRebuy ? Colors.red : Colors.grey[700],
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'Leave',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_isRebuy) ...[
+            SizedBox(height: 24),
+            TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: widget.isCashGame ? 'Rebuy Amount (\$)' : 'Rebuy Chips',
+                labelStyle: TextStyle(color: Colors.white70),
+                prefixText: widget.isCashGame ? '\$' : '',
+                prefixStyle: TextStyle(color: Colors.white),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white30),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.green),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            if (_isRebuy) {
+              double amount = double.tryParse(_amountController.text) ?? 100.0;
+              Navigator.pop(context, {
+                'action': 'rebuy',
+                'amount': amount,
+              });
+            } else {
+              Navigator.pop(context, {
+                'action': 'leave',
+              });
+            }
+          },
+          child: Text(
+            'Confirm',
+            style: TextStyle(
+              color: _isRebuy ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
