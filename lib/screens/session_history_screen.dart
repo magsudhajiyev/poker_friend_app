@@ -310,11 +310,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
             ),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            Icons.sports_esports,
-            color: Colors.white,
-            size: 24,
-          ),
+          child: _getGameTypeIcon(session['gameType']),
         ),
         title: Text(
           session['sessionName'] != null && session['sessionName'].isNotEmpty 
@@ -911,6 +907,22 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
       return '\$$smallBlind/\$$bigBlind';
     } else {
       return '$smallBlind/$bigBlind';
+    }
+  }
+
+  Widget _getGameTypeIcon(String? gameType) {
+    final gameTypeStr = gameType ?? 'cash';
+    switch (gameTypeStr.toLowerCase()) {
+      case 'tournament':
+        return Image.asset('icons/podium.png', width: 24, height: 24);
+      case 'cash':
+        return Image.asset('icons/cash.png', width: 24, height: 24);
+      default:
+        return Icon(
+          Icons.sports_esports,
+          color: Colors.white,
+          size: 24,
+        );
     }
   }
 }

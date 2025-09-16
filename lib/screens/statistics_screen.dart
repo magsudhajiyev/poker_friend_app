@@ -310,9 +310,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       backgroundColor: Color(0xFF161618),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 375),
-            margin: EdgeInsets.symmetric(horizontal: 24),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -546,12 +545,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      crossAxisSpacing: 16,
+      crossAxisSpacing: 12,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.2,
+      childAspectRatio: 1.1,
       children: [
         _buildStatCard('Total Hands', totalHands.toString(), iconPath: 'icons/hole_cards.png'),
-        _buildStatCard('Hands Played', handsPlayed.toString(), icon: Icons.play_arrow),
+        _buildStatCard('Hands Played', handsPlayed.toString(), iconPath: 'icons/hands_played.png'),
         _buildStatCard('VPIP', '${vpip.toStringAsFixed(1)}%', iconPath: 'icons/vpip.png'),
         _buildStatCard('PFR', '${pfr.toStringAsFixed(1)}%', iconPath: 'icons/bet.png'),
         _buildStatCard('3-Bet', '${threeBet.toStringAsFixed(1)}%', iconPath: 'icons/3bet.png'),
@@ -573,19 +572,22 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (iconPath != null)
                 Image.asset(
                   iconPath,
-                  width: 48,
-                  height: 48,
+                  width: 40,
+                  height: 40,
                   fit: BoxFit.contain,
                 )
               else if (icon != null)
@@ -637,11 +639,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   color: Color(0xFF5AC95A).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  Icons.trending_up,
-                  color: Color(0xFF5AC95A),
-                  size: 20,
-                ),
+                child: Image.asset('icons/progress.png', width: 20, height: 20),
               ),
               SizedBox(width: 16),
               Text(
@@ -880,11 +878,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     color: Color(0xFF5AC95A).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    Icons.place_outlined,
-                    color: Color(0xFF5AC95A),
-                    size: 20,
-                  ),
+                  child: Image.asset('icons/stats.png', width: 20, height: 20),
                 ),
                 SizedBox(width: 16),
                 Text(
@@ -925,11 +919,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   color: Color(0xFF5AC95A).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  Icons.table_chart_rounded,
-                  color: Color(0xFF5AC95A),
-                  size: 20,
-                ),
+                child: Image.asset('icons/stats.png', width: 20, height: 20),
               ),
               SizedBox(width: 16),
               Text(
@@ -1027,11 +1017,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   color: Color(0xFF5AC95A).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  Icons.access_time,
-                  color: Color(0xFF5AC95A),
-                  size: 20,
-                ),
+                child: Image.asset('icons/clock.png', width: 20, height: 20),
               ),
               SizedBox(width: 16),
               Text(

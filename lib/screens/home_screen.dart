@@ -864,11 +864,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
       child: Row(
         children: [
-          Icon(
-            _getEventTypeIcon(event['type']),
-            color: _getEventTypeColor(event['type']),
-            size: 48,
-          ),
+          _getEventTypeImage(event['type']),
           SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -920,6 +916,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return Color(0xFF8B5CF6);
       default:
         return Color(0xFF9A9A9A);
+    }
+  }
+
+  Widget _getEventTypeImage(String? type) {
+    switch (type) {
+      case 'Tournament':
+        return Image.asset('icons/podium.png', width: 48, height: 48);
+      case 'Cash Game':
+        return Image.asset('icons/cash.png', width: 48, height: 48);
+      case 'Home Game':
+        return Icon(Icons.home, color: Color(0xFFE67E22), size: 48);
+      case 'Online':
+        return Icon(Icons.computer, color: Color(0xFF8B5CF6), size: 48);
+      default:
+        return Icon(Icons.event, color: Color(0xFF9A9A9A), size: 48);
     }
   }
 

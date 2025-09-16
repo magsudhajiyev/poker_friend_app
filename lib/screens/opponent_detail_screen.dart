@@ -596,12 +596,12 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 ),
               ),
             ] else ...[
-              _buildInfoRow(Icons.person, 'Name', _opponent.name),
+              _buildInfoRowWithCustomIcon('icons/id.png', 'Name', _opponent.name),
               if (_opponent.notes != null && _opponent.notes!.isNotEmpty)
-                _buildInfoRow(Icons.note, 'Notes', _opponent.notes!),
-              _buildInfoRow(Icons.calendar_today, 'First Seen', 
+                _buildInfoRowWithCustomIcon('icons/notepad.png', 'Notes', _opponent.notes!),
+              _buildInfoRowWithCustomIcon('icons/calendar.png', 'First Seen',
                   _opponent.createdAt.toString().split(' ')[0]),
-              _buildInfoRow(Icons.access_time, 'Last Seen', 
+              _buildInfoRowWithCustomIcon('icons/clock.png', 'Last Seen',
                   _opponent.lastSeenAt.toString().split(' ')[0]),
             ],
           ],
@@ -702,15 +702,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           children: [
             Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF8B5CF6),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.bar_chart, size: 18, color: Colors.white),
-                ),
+                Image.asset('icons/stats.png', width: 28, height: 28),
                 SizedBox(width: 12),
                 Text(
                   'Statistics',
@@ -746,14 +738,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Hands Played', '${_statistics!['totalHands']}'),
+                      child: _buildStatItem('Hands Played', '${_statistics!['totalHands']}', iconPath: 'icons/hands_played.png'),
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Sessions', '${_statistics!['totalSessions']}'),
+                      child: _buildStatItem('Sessions', '${_statistics!['totalSessions']}', iconPath: 'icons/session.png'),
                     ),
                   ),
                 ],
@@ -782,14 +774,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Aggression', _statistics!['aggression'] >= 999 ? '∞' : _statistics!['aggression'].toStringAsFixed(2)),
+                      child: _buildStatItem('Aggression', _statistics!['aggression'] >= 999 ? '∞' : _statistics!['aggression'].toStringAsFixed(2), iconPath: 'icons/aggression.png'),
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Fold %', '${_statistics!['foldPercentage'].toStringAsFixed(1)}%'),
+                      child: _buildStatItem('Fold %', '${_statistics!['foldPercentage'].toStringAsFixed(1)}%', iconPath: 'icons/fold.png'),
                     ),
                   ),
                 ],
@@ -802,15 +794,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF161618),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Icon(Icons.trending_up, size: 14, color: Color(0xFF9A9A9A)),
-                  ),
+                  Image.asset('icons/action_distribution.png', width: 28, height: 28),
                   SizedBox(width: 8),
                   Text(
                     'Action Distribution',
@@ -828,14 +812,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Call', '${_statistics!['callPercentage'].toStringAsFixed(1)}%'),
+                      child: _buildStatItem('Call', '${_statistics!['callPercentage'].toStringAsFixed(1)}%', iconPath: 'icons/play_style/calling_station.png'),
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Bet', '${_statistics!['betPercentage'].toStringAsFixed(1)}%'),
+                      child: _buildStatItem('Bet', '${_statistics!['betPercentage'].toStringAsFixed(1)}%', iconPath: 'icons/bet_with_chips.png'),
                     ),
                   ),
                 ],
@@ -846,14 +830,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Raise', '${_statistics!['raisePercentage'].toStringAsFixed(1)}%'),
+                      child: _buildStatItem('Raise', '${_statistics!['raisePercentage'].toStringAsFixed(1)}%', iconPath: 'icons/bet.png'),
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Check', '${_statistics!['checkPercentage'].toStringAsFixed(1)}%'),
+                      child: _buildStatItem('Check', '${_statistics!['checkPercentage'].toStringAsFixed(1)}%', iconPath: 'icons/check.png'),
                     ),
                   ),
                 ],
@@ -953,15 +937,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           children: [
             Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF161618),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.history, size: 18, color: Color(0xFF9A9A9A)),
-                ),
+                Image.asset('icons/history.png', width: 28, height: 28),
                 SizedBox(width: 12),
                 Text(
                   'Hand History',
@@ -1020,11 +996,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.history,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                          Image.asset('icons/history.png', width: 20, height: 20),
                           SizedBox(width: 8),
                           Text(
                             'View Hand History',
@@ -1043,6 +1015,39 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRowWithCustomIcon(String iconPath, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Image.asset(iconPath, width: 32, height: 32),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF9A9A9A),
+                fontSize: 14,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

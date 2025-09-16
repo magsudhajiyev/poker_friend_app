@@ -31,6 +31,7 @@ flutter:
     - assets/
     - assets/play_style/
     - icons/
+    - icons/play_style/
 
 flutter_launcher_icons:
   android: true
