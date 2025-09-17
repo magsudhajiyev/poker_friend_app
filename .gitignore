@@ -47,3 +47,7 @@ app.*.map.json
 # iOS build artifacts
 /ios/build/
 /ios/DerivedData/
+
+# Firebase configuration files (contain sensitive keys)
+ios/GoogleService-Info.plist
+android/app/google-services.json

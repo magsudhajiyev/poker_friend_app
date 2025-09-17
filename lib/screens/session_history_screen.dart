@@ -4,7 +4,6 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
-import '../models/game_types.dart';
 import 'session_hands_screen.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
@@ -16,21 +15,30 @@ class SessionHistoryScreen extends StatefulWidget {
   _SessionHistoryScreenState createState() => _SessionHistoryScreenState();
 }
 
-class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
+class _SessionHistoryScreenState extends State<SessionHistoryScreen> with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> sessions = [];
   bool isLoading = true;
   String? error;
   final ScrollController _scrollController = ScrollController();
+  late TabController _tabController;
+
+  List<Map<String, dynamic>> get cashSessions =>
+      sessions.where((session) => session['gameType'] == 'cash').toList();
+
+  List<Map<String, dynamic>> get tournamentSessions =>
+      sessions.where((session) => session['gameType'] == 'tournament').toList();
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadSessions();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -166,15 +174,66 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
                 ],
               ),
             ),
+            // Tab Bar
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 24),
+              decoration: BoxDecoration(
+                color: Color(0xFF1F1F23),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Color(0xFFcb5242),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                labelColor: Colors.white,
+                unselectedLabelColor: Color(0xFF9A9A9A),
+                labelStyle: TextStyle(fontWeight: FontWeight.w600),
+                tabs: [
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset('icons/cash.png', width: 20, height: 20),
+                        SizedBox(width: 8),
+                        Text('Cash'),
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset('icons/podium.png', width: 20, height: 20),
+                        SizedBox(width: 8),
+                        Text('Tournament'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 24),
             // Content
-            Expanded(child: _buildBody()),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildSessionsList(cashSessions),
+                  _buildSessionsList(tournamentSessions),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildSessionsList(List<Map<String, dynamic>> sessionList) {
     if (isLoading) {
       return LoadingScreen(message: 'Loading sessions...');
     }
@@ -219,7 +278,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
       );
     }
 
-    if (sessions.isEmpty) {
+    if (sessionList.isEmpty) {
+      String gameType = _tabController.index == 0 ? 'Cash' : 'Tournament';
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -234,10 +294,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Image.asset(
-                  'assets/logo.png',
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
+                  _tabController.index == 0 ? 'icons/cash.png' : 'icons/podium.png',
+                  width: 40,
+                  height: 40,
                   errorBuilder: (context, error, stackTrace) {
                     return Icon(
                       Icons.sports_esports,
@@ -250,7 +309,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
             ),
             SizedBox(height: 16),
             Text(
-              'No Sessions Found',
+              'No $gameType Sessions',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -259,7 +318,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
             ),
             SizedBox(height: 8),
             Text(
-              'Play some poker hands and they will appear here!',
+              'Play some $gameType poker hands and they will appear here!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF9A9A9A),
@@ -274,9 +333,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
     return ListView.builder(
       controller: _scrollController,
       padding: EdgeInsets.symmetric(horizontal: 24),
-      itemCount: sessions.length,
+      itemCount: sessionList.length,
       itemBuilder: (context, index) {
-        final session = sessions[index];
+        final session = sessionList[index];
         return _buildSessionCard(session);
       },
     );
@@ -305,9 +364,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
-            ),
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: _getGameTypeIcon(session['gameType']),
@@ -363,38 +420,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildHandTile(Map<String, dynamic> hand) {
-    final actions = List<Map<String, dynamic>>.from(hand['actions'] ?? []);
-    final startTime = DateTime.parse(hand['startTime']);
-    
-    return ListTile(
-      dense: true,
-      leading: CircleAvatar(
-        radius: 16,
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        child: Text(
-          '${hand['handNumber']}',
-          style: TextStyle(
-            fontSize: 12,
-            color: Theme.of(context).colorScheme.onSecondary,
-          ),
-        ),
-      ),
-      title: Text('Hand #${hand['handNumber']}'),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Button: ${PokerPositions.getPositionName(hand['buttonPosition'], hand['buttonPosition'], hand['playerCount'])}'),
-          Text('${actions.length} actions • ${DateFormat('HH:mm:ss').format(startTime)}'),
-        ],
-      ),
-      trailing: IconButton(
-        icon: Icon(Icons.info_outline),
-        onPressed: () => _showHandDetails(hand),
       ),
     );
   }
@@ -599,12 +624,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
       case 'river': return 'River';
       default: return street;
     }
-  }
-
-  String _getPlayerDisplayName(int playerSeat, int buttonPosition, int playerCount) {
-    // Show seat number with position instead of just position name to avoid confusion
-    String position = PokerPositions.getPositionName(playerSeat, buttonPosition, playerCount);
-    return 'Seat $playerSeat ($position)';
   }
 
   void _showClearConfirmation() {
