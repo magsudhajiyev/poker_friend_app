@@ -175,18 +175,10 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     children: [
                       Row(
                         children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFcb5242).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Image.asset(
-                              'icons/game_type.png',
-                              width: 20,
-                              height: 20,
-                            ),
+                          Image.asset(
+                            'icons/game_type.png',
+                            width: 28,
+                            height: 28,
                           ),
                           SizedBox(width: 16),
                           Text(
@@ -234,18 +226,10 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Color(0xFFcb5242).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Image.asset(
-                            'icons/game_type.png',
-                            width: 20,
-                            height: 20,
-                          ),
+                        Image.asset(
+                          'icons/game_type.png',
+                          width: 28,
+                          height: 28,
                         ),
                         SizedBox(width: 16),
                         Expanded(
@@ -452,25 +436,25 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Color(0xFF5AC95A).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: iconPath != null
-                    ? Image.asset(
-                        iconPath,
-                        width: 20,
-                        height: 20,
-                      )
-                    : Icon(
+              iconPath != null
+                  ? Image.asset(
+                      iconPath,
+                      width: 28,
+                      height: 28,
+                    )
+                  : Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF5AC95A).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
                         icon ?? Icons.help_outline,
                         color: Color(0xFF5AC95A),
                         size: 20,
                       ),
-              ),
+                    ),
             ],
           ),
           Spacer(),
