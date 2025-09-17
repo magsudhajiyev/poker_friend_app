@@ -98,7 +98,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     _buildSettingCard(
                       title: 'Small Blind',
                       value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
-                      icon: Icons.monetization_on_outlined,
+                      iconPath: 'icons/small_blind.png',
                       onDecrement: () {
                         if (smallBlind > 1) {
                           setState(() => smallBlind--);
@@ -125,7 +125,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     _buildSettingCard(
                       title: 'Big Blind',
                       value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
-                      icon: Icons.attach_money_outlined,
+                      iconPath: 'icons/big_blind.png',
                       onDecrement: () {
                         if (bigBlind > smallBlind + 1) {
                           setState(() => bigBlind--);
@@ -141,7 +141,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     _buildSettingCard(
                       title: 'Duration',
                       value: '${levelDuration}m',
-                      icon: Icons.schedule_outlined,
+                      iconPath: 'icons/clock.png',
                       onDecrement: () {
                         if (levelDuration > 5) setState(() => levelDuration -= 5);
                       },
@@ -150,7 +150,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     _buildSettingCard(
                       title: 'Players',
                       value: '$numberOfPlayers',
-                      icon: Icons.people_outline,
+                      iconPath: 'icons/players.png',
                       onDecrement: () {
                         if (numberOfPlayers > 2) setState(() => numberOfPlayers--);
                       },
@@ -182,10 +182,10 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                               color: Color(0xFFcb5242).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Icon(
-                              Icons.casino_outlined,
-                              color: Color(0xFFcb5242),
-                              size: 20,
+                            child: Image.asset(
+                              'icons/game_type.png',
+                              width: 20,
+                              height: 20,
                             ),
                           ),
                           SizedBox(width: 16),
@@ -241,10 +241,10 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                             color: Color(0xFFcb5242).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Icon(
-                            Icons.casino_outlined,
-                            color: Color(0xFFcb5242),
-                            size: 20,
+                          child: Image.asset(
+                            'icons/game_type.png',
+                            width: 20,
+                            height: 20,
                           ),
                         ),
                         SizedBox(width: 16),
@@ -426,7 +426,8 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
   Widget _buildSettingCard({
     required String title,
     required String value,
-    required IconData icon,
+    IconData? icon,
+    String? iconPath,
     required VoidCallback onDecrement,
     required VoidCallback onIncrement,
     VoidCallback? onValueTap,
@@ -458,11 +459,17 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   color: Color(0xFF5AC95A).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  icon,
-                  color: Color(0xFF5AC95A),
-                  size: 20,
-                ),
+                child: iconPath != null
+                    ? Image.asset(
+                        iconPath,
+                        width: 20,
+                        height: 20,
+                      )
+                    : Icon(
+                        icon ?? Icons.help_outline,
+                        color: Color(0xFF5AC95A),
+                        size: 20,
+                      ),
               ),
             ],
           ),
