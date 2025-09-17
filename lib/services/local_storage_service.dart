@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as path;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../models/game_types.dart';
 
@@ -14,10 +15,10 @@ class LocalStorageService {
   }
   
   static Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'poker_logger.db');
+    String dbPath = path.join(await getDatabasesPath(), 'poker_logger.db');
     
     return await openDatabase(
-      path,
+      dbPath,
       version: 9,
       onCreate: (db, version) async {
         await db.execute('''
@@ -548,5 +549,17 @@ class LocalStorageService {
       result[key.toString()] = value;
     });
     return result;
+  }
+
+  /// Set migration completion flag
+  static Future<void> setMigrationCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('stats_migration_completed', true);
+  }
+
+  /// Check if migration has been completed
+  static Future<bool> isMigrationCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('stats_migration_completed') ?? false;
   }
 }

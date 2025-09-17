@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/user_stats_service.dart';
+import '../services/auth_service.dart';
 import '../models/hand_state_machine.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
+import '../models/user_stats.dart';
 import '../widgets/loading_screen.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -99,37 +102,123 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Future<void> _calculateAllStatistics() async {
-    // Get all sessions
-    List<Map<String, dynamic>> sessions;
-    try {
-      sessions = await FirebaseService.getAllSessions();
-    } catch (e) {
-      sessions = await LocalStorageService.getUserSessions();
+    final userId = AuthService.userId;
+    if (userId == null) {
+      throw 'User not authenticated';
     }
 
-    // Filter sessions by date range if set
+    // Get optimized user stats (O(1) lookup)
+    final userStats = await UserStatsService.getUserStats(userId);
+
+    if (userStats == null) {
+      // If no stats exist, create migration job for user
+      await UserStatsService.migrateUserStats(userId);
+      final newStats = await UserStatsService.getUserStats(userId);
+
+      if (newStats == null) {
+        // Fallback to legacy calculation if migration fails
+        await _calculateLegacyStatistics();
+        return;
+      }
+
+      _populateFromUserStats(newStats);
+    } else {
+      _populateFromUserStats(userStats);
+    }
+
+    // For date range filtering, we still need to do some session analysis
+    // But we only process session metadata, not individual hands
     if (startDate != null && endDate != null) {
-      sessions = sessions.where((session) {
+      await _applyDateRangeFilter();
+    } else {
+      // For chart data, get basic session info (lightweight)
+      await _loadSessionChartData();
+    }
+  }
+
+  void _populateFromUserStats(UserStats userStats) {
+    // Set basic stats from optimized data
+    totalHands = userStats.totalHands;
+    handsPlayed = userStats.handsPlayed;
+    vpip = userStats.vpipPercentage;
+    pfr = userStats.pfrPercentage;
+    threeBet = userStats.threeBetPercentage;
+    winRate = userStats.winRate;
+    totalSessions = userStats.totalSessions;
+    totalPlayTime = userStats.totalPlayTimeMinutes;
+
+    // Set positional stats from optimized data
+    positionStats = userStats.getAllPositionStats();
+  }
+
+  Future<void> _loadSessionChartData() async {
+    try {
+      // Only get session metadata, no hand processing
+      final sessions = await FirebaseService.getAllSessions();
+
+      sessionChartData.clear();
+      sessions.sort((a, b) {
+        final aDate = DateTime.parse(a['startTime']);
+        final bDate = DateTime.parse(b['startTime']);
+        return aDate.compareTo(bDate);
+      });
+
+      for (int i = 0; i < sessions.length; i++) {
+        var session = sessions[i];
+        sessionChartData.add(SessionChartData(
+          date: DateTime.parse(session['startTime']),
+          sessionNumber: i + 1,
+          totalHands: session['totalHands'] ?? 0,
+          gameType: session['gameType'] ?? 'cash',
+        ));
+      }
+    } catch (e) {
+      print('Error loading session chart data: $e');
+      sessionChartData.clear();
+    }
+  }
+
+  Future<void> _applyDateRangeFilter() async {
+    if (startDate == null || endDate == null) return;
+
+    try {
+      // Get sessions in date range
+      final allSessions = await FirebaseService.getAllSessions();
+      final filteredSessions = allSessions.where((session) {
         try {
           final sessionDate = DateTime.parse(session['startTime']);
           return sessionDate.isAfter(startDate!.subtract(Duration(days: 1))) &&
                  sessionDate.isBefore(endDate!.add(Duration(days: 1)));
         } catch (e) {
-          return false; // If date parsing fails, exclude the session
+          return false;
         }
       }).toList();
-    }
 
+      // Recalculate stats only for filtered sessions
+      // For now, fall back to legacy calculation for date filtering
+      // This could be optimized further by storing date-indexed stats
+      await _calculateLegacyStatisticsForSessions(filteredSessions);
+    } catch (e) {
+      print('Error applying date range filter: $e');
+    }
+  }
+
+  Future<void> _calculateLegacyStatistics() async {
+    final allSessions = await FirebaseService.getAllSessions();
+    await _calculateLegacyStatisticsForSessions(allSessions);
+  }
+
+  Future<void> _calculateLegacyStatisticsForSessions(List<Map<String, dynamic>> sessions) async {
     totalSessions = sessions.length;
     totalPlayTime = 0;
     totalHands = 0;
     handsPlayed = 0;
-    
+
     int vpipHands = 0;
     int pfrHands = 0;
     int threeBetHands = 0;
     int wonHands = 0;
-    
+
     Map<String, int> positionHandsPlayed = {};
     Map<String, int> positionVPIP = {};
     Map<String, int> positionPFR = {};
@@ -142,7 +231,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       final bDate = DateTime.parse(b['startTime']);
       return aDate.compareTo(bDate);
     });
-    
+
     for (int i = 0; i < sessions.length; i++) {
       var session = sessions[i];
       if (session['endTime'] != null && session['startTime'] != null) {
@@ -150,7 +239,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         final end = DateTime.parse(session['endTime']);
         totalPlayTime += end.difference(start).inMinutes;
       }
-      
+
       // Add to chart data
       sessionChartData.add(SessionChartData(
         date: DateTime.parse(session['startTime']),
@@ -160,7 +249,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       ));
     }
 
-    // Analyze each session
+    // Analyze each session (only for date filtering)
     for (var session in sessions) {
       List<Map<String, dynamic>> hands;
       try {
@@ -180,39 +269,39 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
       for (var handData in hands) {
         totalHands++;
-        
+
         // Convert hand data to HandRecord for analysis
         final hand = _convertToHandRecord(handData);
-        
+
         // Skip hands if we don't have seat number stored
         if (sessionManager.ourSeatNumber == null) continue;
-        
+
         if (sessionManager.didWePlayHand(hand)) {
           handsPlayed++;
-          
+
           final position = sessionManager.getOurPosition(hand.buttonPosition) ?? 'UNK';
-          
+
           // Update position counters
           positionHandsPlayed[position] = (positionHandsPlayed[position] ?? 0) + 1;
-          
+
           // Check VPIP
           if (sessionManager.didWeVPIP(hand)) {
             vpipHands++;
             positionVPIP[position] = (positionVPIP[position] ?? 0) + 1;
           }
-          
+
           // Check PFR
           if (sessionManager.didWePFR(hand)) {
             pfrHands++;
             positionPFR[position] = (positionPFR[position] ?? 0) + 1;
           }
-          
+
           // Check 3-bet (simplified - any raise after a raise preflop)
           if (_didWeThreeBet(hand, sessionManager.ourSeatNumber!)) {
             threeBetHands++;
             positionThreeBet[position] = (positionThreeBet[position] ?? 0) + 1;
           }
-          
+
           // Win rate calculation (placeholder - would need pot results)
           // For now, just assume we win 50% of hands we play
           if (handsPlayed % 2 == 0) wonHands++;
@@ -233,7 +322,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       final vpipCount = positionVPIP[position] ?? 0;
       final pfrCount = positionPFR[position] ?? 0;
       final threeBetCount = positionThreeBet[position] ?? 0;
-      
+
       positionStats[position] = PositionStats(
         handsPlayed: played,
         vpip: played > 0 ? (vpipCount / played) * 100 : 0,
@@ -432,7 +521,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildBody() {
     if (isLoading) {
-      return LoadingScreen(message: 'Analyzing poker statistics...');
+      return LoadingScreen(message: 'Loading statistics...');
     }
 
     if (error != null) {
@@ -1092,16 +1181,3 @@ class SessionChartData {
   });
 }
 
-class PositionStats {
-  final int handsPlayed;
-  final double vpip;
-  final double pfr;
-  final double threeBet;
-
-  PositionStats({
-    required this.handsPlayed,
-    required this.vpip,
-    required this.pfr,
-    required this.threeBet,
-  });
-}

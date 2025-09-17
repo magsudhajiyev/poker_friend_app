@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../services/opponent_service.dart';
+import '../services/opponent_stats_service.dart';
 import 'opponent_detail_screen.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
@@ -11,6 +12,7 @@ class MyOpponentsScreen extends StatefulWidget {
 
 class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
   List<Opponent> opponents = [];
+  Map<String, int> opponentHandsCounts = {}; // Fast lookup for hands count
   bool isLoading = true;
   String? error;
   String searchQuery = '';
@@ -28,13 +30,19 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
         error = null;
       });
 
-      // First recalculate opponent statistics from existing data
-      await OpponentService.recalculateOpponentStats();
-
+      // Load basic opponent data (name, color, notes, dates) - fast operation
       final loadedOpponents = await OpponentService.getAllOpponents();
-      
+
+      // Load hands counts from optimized stats - also fast O(1) operations
+      final handsCounts = <String, int>{};
+      for (final opponent in loadedOpponents) {
+        final stats = await OpponentStatsService.getOpponentStats(opponent.name);
+        handsCounts[opponent.name] = stats?.handsPlayed ?? 0;
+      }
+
       setState(() {
         opponents = loadedOpponents;
+        opponentHandsCounts = handsCounts;
         isLoading = false;
       });
     } catch (e) {
@@ -445,7 +453,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '${opponent.handsPlayed}',
+                        '${opponentHandsCounts[opponent.name] ?? 0}',
                         style: TextStyle(
                           fontSize: 20,
                           color: Colors.white,

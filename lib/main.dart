@@ -13,6 +13,7 @@ void main() async {
     print('Firebase initialization failed: $e');
     // Continue without Firebase for now
   }
+
   
   runApp(PokerTrackerApp());
 }

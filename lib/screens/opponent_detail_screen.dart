@@ -3,6 +3,7 @@ import '../models/opponent.dart';
 import '../services/opponent_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/firebase_service.dart';
+import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
@@ -43,10 +44,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   Future<void> _loadStatistics() async {
     try {
-      // First trigger the recalculation to ensure all stats are up to date
-      print('🔄 Triggering opponent stats recalculation...');
-      await OpponentService.recalculateOpponentStats();
-      
+      // Load stats from optimized structure - no recalculation needed!
       final stats = await _calculateOpponentStatistics(_opponent.name);
       setState(() {
         _statistics = stats;
@@ -62,247 +60,45 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   Future<Map<String, dynamic>> _calculateOpponentStatistics(String opponentName) async {
     try {
-      // Get all sessions from Firebase first, fallback to local storage
-      List<Map<String, dynamic>> sessions;
-      try {
-        sessions = await FirebaseService.getAllSessions();
-        print('📊 Using Firebase data: ${sessions.length} sessions');
-      } catch (e) {
-        sessions = await LocalStorageService.getUserSessions();
-        print('📊 Using local storage data: ${sessions.length} sessions');
-      }
-      
-      // Track statistics per street
-      Map<String, int> preflopActionCounts = {
-        'fold': 0,
-        'call': 0,
-        'bet': 0,
-        'raise': 0,
-        'check': 0,
-      };
-      
-      Map<String, int> allActionCounts = {
-        'fold': 0,
-        'call': 0,
-        'bet': 0,
-        'raise': 0,
-        'check': 0,
-      };
-      
-      int totalHands = 0;
-      int handsWithPreflopAction = 0;
-      int preflopRaises = 0;
-      int preflopVoluntaryActions = 0; // For VPIP
-      int sessionsWithOpponent = 0;
-      Set<String> sessionsWithThisOpponent = {};
-      
-      print('DEBUG: Looking for opponent: "$opponentName"');
-      
-      for (final session in sessions) {
-        // Get all hands for this session - try Firebase first, then local storage
-        List<Map<String, dynamic>> hands;
-        final sessionId = session['id'] as String;
-        try {
-          hands = await FirebaseService.getSessionHands(sessionId);
-        } catch (e) {
-          hands = await LocalStorageService.getSessionHands(sessionId);
-        }
-        
-        bool opponentFoundInSession = false;
-        
-        for (final hand in hands) {
-          bool opponentInHand = false;
-          
-          // Check if opponent is in playerNames - handle different data structures
-          final playerNamesData = hand['playerNames'];
-          Map<String, String>? playerNames;
-          
-          if (playerNamesData is Map<String, dynamic>) {
-            // Firebase format: Map<String, dynamic> where values are strings
-            playerNames = playerNamesData.cast<String, String>();
-          } else if (playerNamesData is Map<int, String>) {
-            // Local storage format: Map<int, String> 
-            playerNames = Map.fromEntries(
-              playerNamesData.entries.map((e) => MapEntry(e.key.toString(), e.value))
-            );
-          }
-          
-          if (playerNames != null) {
-            for (final playerName in playerNames.values) {
-              if (playerName.toLowerCase().contains(opponentName.toLowerCase()) || 
-                  opponentName.toLowerCase().contains(playerName.toLowerCase())) {
-                opponentInHand = true;
-                break;
-              }
-            }
-          }
-          
-          // Also check actions for playerName field
-          if (!opponentInHand && hand['actions'] != null) {
-            final actions = hand['actions'] as List<dynamic>;
-            for (final action in actions) {
-              final actionMap = action as Map<String, dynamic>;
-              final actionPlayerName = actionMap['playerName'] as String?;
-              if (actionPlayerName != null && 
-                  (actionPlayerName.toLowerCase().contains(opponentName.toLowerCase()) ||
-                   opponentName.toLowerCase().contains(actionPlayerName.toLowerCase()))) {
-                opponentInHand = true;
-                break;
-              }
-            }
-          }
-          
-          if (opponentInHand) {
-            totalHands++;
-            opponentFoundInSession = true;
-            sessionsWithThisOpponent.add(session['id'] as String);
-            
-            // Count actions for this opponent in this hand
-            if (hand['actions'] != null) {
-              final actions = hand['actions'] as List<dynamic>;
-              
-              // Track preflop actions separately for VPIP and PFR
-              bool hasPreflopAction = false;
-              bool hasPreflopVoluntaryAction = false;
-              bool hasPreflopRaise = false;
-              
-              // Track all actions by street
-              Map<String, List<String>> actionsByStreet = {
-                'preflop': [],
-                'flop': [],
-                'turn': [],
-                'river': [],
-              };
-              
-              String currentStreet = 'preflop';
-              
-              for (final action in actions) {
-                final actionMap = action as Map<String, dynamic>;
-                final actionPlayerName = actionMap['playerName'] as String?;
-                final actionType = actionMap['action'] as String?;
-                final street = actionMap['street'] as String?;
-                
-                // Update current street if provided
-                if (street != null) {
-                  currentStreet = street.toLowerCase();
-                }
-                
-                if (actionPlayerName != null && actionType != null &&
-                    (actionPlayerName.toLowerCase().contains(opponentName.toLowerCase()) ||
-                     opponentName.toLowerCase().contains(actionPlayerName.toLowerCase()))) {
-                  
-                  final actionKey = actionType.toLowerCase();
-                  
-                  // Count all actions
-                  if (allActionCounts.containsKey(actionKey)) {
-                    allActionCounts[actionKey] = allActionCounts[actionKey]! + 1;
-                  }
-                  
-                  // Track actions by street
-                  actionsByStreet[currentStreet]?.add(actionKey);
-                  
-                  // Count preflop actions separately
-                  if (currentStreet == 'preflop') {
-                    hasPreflopAction = true;
-                    
-                    if (preflopActionCounts.containsKey(actionKey)) {
-                      preflopActionCounts[actionKey] = preflopActionCounts[actionKey]! + 1;
-                    }
-                    
-                    // Check for voluntary action (call, bet, raise)
-                    if (actionKey == 'call' || actionKey == 'bet' || actionKey == 'raise') {
-                      hasPreflopVoluntaryAction = true;
-                    }
-                    
-                    // Check for raise
-                    if (actionKey == 'raise') {
-                      hasPreflopRaise = true;
-                    }
-                  }
-                }
-              }
-              
-              // Update preflop statistics
-              if (hasPreflopAction) {
-                handsWithPreflopAction++;
-              }
-              if (hasPreflopVoluntaryAction) {
-                preflopVoluntaryActions++;
-              }
-              if (hasPreflopRaise) {
-                preflopRaises++;
-              }
-            }
-          }
-        }
-      }
-      
-      sessionsWithOpponent = sessionsWithThisOpponent.length;
-      print('DEBUG: Found opponent in $totalHands hands across $sessionsWithOpponent sessions');
-      print('DEBUG: Preflop actions: $preflopActionCounts');
-      print('DEBUG: All actions: $allActionCounts');
-      print('DEBUG: Hands with preflop action: $handsWithPreflopAction');
-      print('DEBUG: Preflop voluntary actions: $preflopVoluntaryActions');
-      print('DEBUG: Preflop raises: $preflopRaises');
+      // 🚀 OPTIMIZED: Fast O(1) stats lookup from dedicated table
+      final optimizedStats = await OpponentStatsService.getOpponentStats(opponentName);
 
-      final totalActions = allActionCounts.values.fold(0, (a, b) => a + b);
-      
-      // Calculate VPIP (Voluntarily Put money In Pot) - preflop only
-      final vpip = handsWithPreflopAction > 0 
-          ? (preflopVoluntaryActions / handsWithPreflopAction * 100) 
-          : 0.0;
-      
-      // Calculate PFR (PreFlop Raise percentage)
-      final pfr = handsWithPreflopAction > 0 
-          ? (preflopRaises / handsWithPreflopAction * 100) 
-          : 0.0;
-      
-      // Calculate aggression factor (bet + raise) / (call + check)
-      final aggressiveActions = allActionCounts['bet']! + allActionCounts['raise']!;
-      final passiveActions = allActionCounts['call']! + allActionCounts['check']!;
-      final aggression = passiveActions > 0 
-          ? (aggressiveActions.toDouble() / passiveActions.toDouble()) 
-          : (aggressiveActions > 0 ? 999.0 : 0.0);
-      
-      // Calculate fold percentage (folds / total actions)
-      final foldPercentage = totalActions > 0 
-          ? (allActionCounts['fold']! / totalActions * 100) 
-          : 0.0;
-
-      return {
-        'totalHands': totalHands,
-        'totalSessions': sessionsWithOpponent,
-        'totalActions': totalActions,
-        'vpip': vpip,
-        'pfr': pfr,
-        'aggression': aggression,
-        'foldToBet': foldPercentage, // Using fold percentage as fold to bet for now
-        'callPercentage': totalActions > 0 ? (allActionCounts['call']! / totalActions * 100) : 0.0,
-        'betPercentage': totalActions > 0 ? (allActionCounts['bet']! / totalActions * 100) : 0.0,
-        'raisePercentage': totalActions > 0 ? (allActionCounts['raise']! / totalActions * 100) : 0.0,
-        'foldPercentage': foldPercentage,
-        'checkPercentage': totalActions > 0 ? (allActionCounts['check']! / totalActions * 100) : 0.0,
-        'positionHandsPlayed': <String, int>{},
-      };
+      if (optimizedStats != null) {
+        print('✅ Using optimized stats for $opponentName (${optimizedStats.handsPlayed} hands)');
+        return optimizedStats.toLegacyStatsMap();
+      } else {
+        print('⚠️ No stats found for $opponentName - migration may be needed');
+        return {
+          'handsPlayed': 0,
+          'vpip': 0.0,
+          'pfr': 0.0,
+          'aggression': 0.0,
+          'actions': {
+            'preflop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+            'flop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+            'turn': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+            'river': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+          },
+        };
+      }
     } catch (e) {
-      print('Error calculating statistics: $e');
+      print('❌ Error loading optimized stats: $e');
       return {
-        'totalHands': 0,
-        'totalSessions': 0,
-        'totalActions': 0,
+        'handsPlayed': 0,
         'vpip': 0.0,
         'pfr': 0.0,
         'aggression': 0.0,
-        'foldToBet': 0.0,
-        'callPercentage': 0.0,
-        'betPercentage': 0.0,
-        'raisePercentage': 0.0,
-        'foldPercentage': 0.0,
-        'checkPercentage': 0.0,
-        'positionHandsPlayed': <String, int>{},
+        'actions': {
+          'preflop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+          'flop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+          'turn': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+          'river': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+        },
       };
     }
   }
+
+  // Legacy method removed - using optimized stats only
 
   Future<void> _saveChanges() async {
     if (_nameController.text.trim().isEmpty) {

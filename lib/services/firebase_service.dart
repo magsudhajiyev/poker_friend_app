@@ -3,6 +3,8 @@ import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import 'auth_service.dart';
 import 'local_storage_service.dart';
+import 'opponent_stats_service.dart';
+import 'user_stats_service.dart';
 
 class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -176,7 +178,23 @@ class FirebaseService {
       await _firestore.collection(_sessionsCollection).doc(sessionId).update({
         'totalHands': FieldValue.increment(1),
       });
-      
+
+      // Update opponent statistics incrementally (performance optimization)
+      await _updateOpponentStatsFromHand(
+        actions: actions,
+        playerNames: playerNames,
+      );
+
+      // Update user statistics incrementally (performance optimization)
+      await _updateUserStatsFromHand(
+        actions: actions,
+        heroPosition: heroPosition,
+        buttonPosition: buttonPosition,
+        playerCount: playerCount,
+        winnerId: winnerId,
+        playerNames: playerNames,
+      );
+
       print('Hand $handNumber saved successfully to session $sessionId');
     } catch (e) {
       print('Error saving hand: $e');
@@ -214,10 +232,32 @@ class FirebaseService {
   // End a session
   static Future<void> endSession(String sessionId) async {
     try {
+      // Get session data to calculate duration
+      final sessionDoc = await _firestore.collection(_sessionsCollection).doc(sessionId).get();
+
       await _firestore.collection(_sessionsCollection).doc(sessionId).update({
         'endTime': FieldValue.serverTimestamp(),
       });
-      
+
+      // Update user stats with session count and duration
+      if (sessionDoc.exists) {
+        final sessionData = sessionDoc.data()!;
+        final startTime = sessionData['startTime'] as Timestamp?;
+
+        if (startTime != null) {
+          final duration = DateTime.now().difference(startTime.toDate()).inMinutes;
+
+          final userId = AuthService.userId;
+          if (userId != null) {
+            await UserStatsService.updateStatsAtomic(
+              userId: userId,
+              sessionsDelta: 1,
+              playTimeMinutesDelta: duration,
+            );
+          }
+        }
+      }
+
       print('Session $sessionId ended');
     } catch (e) {
       print('Error ending session: $e');
@@ -533,5 +573,286 @@ class FirebaseService {
       print('🗑️ DEBUG: Error clearing user sessions from Firebase: $e');
       rethrow;
     }
+  }
+
+  /// Process hand actions and update opponent stats incrementally
+  /// This is the key optimization - O(1) updates instead of O(n) recalculation
+  static Future<void> _updateOpponentStatsFromHand({
+    required List<Map<String, dynamic>> actions,
+    required Map<int, String>? playerNames,
+  }) async {
+    if (playerNames == null || actions.isEmpty) return;
+
+    try {
+      // Group actions by opponent to batch updates
+      Map<String, Map<String, int>> opponentDeltas = {};
+
+      // Process each action to determine stat deltas
+      for (final action in actions) {
+        final playerId = action['player'] as int?;
+        final actionType = action['action'] as String?;
+        final street = action['street'] as String?;
+
+        if (playerId == null || actionType == null || street == null) continue;
+
+        // Skip if this is the hero player (we don't track stats for ourselves)
+        final playerName = playerNames[playerId];
+        if (playerName == null || playerName.isEmpty) continue;
+
+        // Initialize deltas for this opponent if not exists
+        opponentDeltas[playerName] ??= {
+          'handsDelta': 0,
+          'vpipDelta': 0,
+          'pfrDelta': 0,
+          'aggressionDelta': 0,
+          'passiveDelta': 0,
+          'foldDelta': 0,
+          'checkDelta': 0,
+          'callDelta': 0,
+          'betDelta': 0,
+          'raiseDelta': 0,
+          'threeBetDelta': 0,
+          'cbetDelta': 0,
+          'fold3betDelta': 0,
+        };
+
+        final deltas = opponentDeltas[playerName]!;
+
+        // Analyze action and update appropriate counters
+        final actionLower = actionType.toLowerCase();
+        final isPreflop = street.toLowerCase() == 'preflop';
+
+        // Count hands (only once per opponent)
+        if (deltas['handsDelta'] == 0) {
+          deltas['handsDelta'] = 1;
+        }
+
+        // Analyze specific actions
+        switch (actionLower) {
+          case 'fold':
+            deltas['foldDelta'] = (deltas['foldDelta'] ?? 0) + 1;
+            break;
+          case 'check':
+            deltas['checkDelta'] = (deltas['checkDelta'] ?? 0) + 1;
+            break;
+          case 'call':
+            deltas['callDelta'] = (deltas['callDelta'] ?? 0) + 1;
+            deltas['passiveDelta'] = (deltas['passiveDelta'] ?? 0) + 1;
+            // VPIP if putting money in voluntarily (not blind)
+            if (!_isBlindAction(action)) {
+              deltas['vpipDelta'] = (deltas['vpipDelta'] ?? 0) + 1;
+            }
+            break;
+          case 'bet':
+            deltas['betDelta'] = (deltas['betDelta'] ?? 0) + 1;
+            deltas['aggressionDelta'] = (deltas['aggressionDelta'] ?? 0) + 1;
+            deltas['vpipDelta'] = (deltas['vpipDelta'] ?? 0) + 1;
+            break;
+          case 'raise':
+            deltas['raiseDelta'] = (deltas['raiseDelta'] ?? 0) + 1;
+            deltas['aggressionDelta'] = (deltas['aggressionDelta'] ?? 0) + 1;
+            deltas['vpipDelta'] = (deltas['vpipDelta'] ?? 0) + 1;
+            // PFR if preflop raise
+            if (isPreflop) {
+              deltas['pfrDelta'] = (deltas['pfrDelta'] ?? 0) + 1;
+            }
+            break;
+        }
+
+        // Detect 3-bet (simplified logic - can be enhanced)
+        if (actionLower == 'raise' && isPreflop) {
+          final raiseCount = _countPreflopRaises(actions, playerId);
+          if (raiseCount >= 2) {
+            deltas['threeBetDelta'] = (deltas['threeBetDelta'] ?? 0) + 1;
+          }
+        }
+      }
+
+      // Apply updates for each opponent
+      for (final entry in opponentDeltas.entries) {
+        final opponentName = entry.key;
+        final deltas = entry.value;
+
+        await OpponentStatsService.updateStatsAtomic(
+          opponentId: opponentName,
+          handsDelta: deltas['handsDelta'] ?? 0,
+          vpipDelta: deltas['vpipDelta'] ?? 0,
+          pfrDelta: deltas['pfrDelta'] ?? 0,
+          aggressionDelta: deltas['aggressionDelta'] ?? 0,
+          passiveDelta: deltas['passiveDelta'] ?? 0,
+          foldDelta: deltas['foldDelta'] ?? 0,
+          checkDelta: deltas['checkDelta'] ?? 0,
+          callDelta: deltas['callDelta'] ?? 0,
+          betDelta: deltas['betDelta'] ?? 0,
+          raiseDelta: deltas['raiseDelta'] ?? 0,
+          threeBetDelta: deltas['threeBetDelta'] ?? 0,
+          cbetDelta: deltas['cbetDelta'] ?? 0,
+          fold3betDelta: deltas['fold3betDelta'] ?? 0,
+        );
+
+      }
+
+    } catch (e) {
+      print('⚠️ Error updating opponent stats: $e');
+      // Don't rethrow - stats update failure shouldn't break hand saving
+    }
+  }
+
+  /// Helper to detect if an action is a blind (not voluntary)
+  static bool _isBlindAction(Map<String, dynamic> action) {
+    final actionType = (action['action'] as String?)?.toLowerCase();
+    return actionType == 'small blind' ||
+           actionType == 'big blind' ||
+           actionType == 'ante';
+  }
+
+  /// Helper to count preflop raises for 3-bet detection
+  static int _countPreflopRaises(List<Map<String, dynamic>> actions, int playerId) {
+    int count = 0;
+    for (final action in actions) {
+      if (action['player'] == playerId &&
+          action['street']?.toLowerCase() == 'preflop' &&
+          action['action']?.toLowerCase() == 'raise') {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /// Update user statistics from hand data incrementally
+  static Future<void> _updateUserStatsFromHand({
+    required List<Map<String, dynamic>> actions,
+    required int? heroPosition,
+    required int buttonPosition,
+    required int playerCount,
+    required int? winnerId,
+    required Map<int, String>? playerNames,
+  }) async {
+    final userId = AuthService.userId;
+    if (userId == null || heroPosition == null) return;
+
+    try {
+      // Initialize user stats if they don't exist
+      await UserStatsService.initializeUserStats(userId);
+
+      // Analyze user's actions in this hand
+      bool didPlay = false;
+      bool didVpip = false;
+      bool didPfr = false;
+      bool didThreeBet = false;
+      bool didWin = false;
+
+      // Get position name for this hand
+      final positionName = _getPositionName(heroPosition, buttonPosition, playerCount);
+
+      // Check if user won this hand
+      if (winnerId != null && winnerId == heroPosition) {
+        didWin = true;
+      }
+
+      // Analyze user's actions
+      for (final action in actions) {
+        final playerId = action['player'] as int?;
+        final actionType = action['action']?.toString().toLowerCase() ?? '';
+        final street = action['street']?.toString().toLowerCase() ?? '';
+
+        if (playerId != heroPosition) continue;
+
+        if (street == 'preflop') {
+          if (actionType == 'bet' || actionType == 'call' || actionType == 'raise') {
+            didPlay = true;
+            if (!_isBlindAction(action)) {
+              didVpip = true;
+            }
+            if (actionType == 'bet' || actionType == 'raise') {
+              didPfr = true;
+            }
+          }
+        }
+      }
+
+      // Check for 3-bet
+      if (didPlay) {
+        final raiseCount = _countPreflopRaises(actions, heroPosition);
+        if (raiseCount >= 2) {
+          didThreeBet = true;
+        }
+      }
+
+      // Prepare deltas for atomic update
+      final Map<String, int> positionHandsDeltas = {};
+      final Map<String, int> positionVpipDeltas = {};
+      final Map<String, int> positionPfrDeltas = {};
+      final Map<String, int> positionThreeBetDeltas = {};
+
+      if (didPlay) {
+        positionHandsDeltas[positionName] = 1;
+        if (didVpip) positionVpipDeltas[positionName] = 1;
+        if (didPfr) positionPfrDeltas[positionName] = 1;
+        if (didThreeBet) positionThreeBetDeltas[positionName] = 1;
+      }
+
+      // Update user stats atomically
+      await UserStatsService.updateStatsAtomic(
+        userId: userId,
+        totalHandsDelta: 1, // Always increment total hands
+        handsDelta: didPlay ? 1 : 0,
+        vpipDelta: didVpip ? 1 : 0,
+        pfrDelta: didPfr ? 1 : 0,
+        threeBetDelta: didThreeBet ? 1 : 0,
+        wonHandsDelta: didWin ? 1 : 0,
+        positionHandsDeltas: positionHandsDeltas.isNotEmpty ? positionHandsDeltas : null,
+        positionVpipDeltas: positionVpipDeltas.isNotEmpty ? positionVpipDeltas : null,
+        positionPfrDeltas: positionPfrDeltas.isNotEmpty ? positionPfrDeltas : null,
+        positionThreeBetDeltas: positionThreeBetDeltas.isNotEmpty ? positionThreeBetDeltas : null,
+      );
+
+
+    } catch (e) {
+      print('⚠️ Error updating user stats: $e');
+      // Don't rethrow - stats update failure shouldn't break hand saving
+    }
+  }
+
+  /// Helper to get position name for user stats
+  static String _getPositionName(int seatNumber, int buttonPosition, int playerCount) {
+    final buttonIndex = (buttonPosition - 1) % playerCount;
+    final seatIndex = (seatNumber - 1) % playerCount;
+    final relativePosition = (seatIndex - buttonIndex) % playerCount;
+
+    if (playerCount == 6) {
+      switch (relativePosition) {
+        case 0: return 'BTN';
+        case 1: return 'SB';
+        case 2: return 'BB';
+        case 3: return 'UTG';
+        case 4: return 'MP';
+        case 5: return 'CO';
+        default: return 'UNK';
+      }
+    } else {
+      final positions = ['UTG', 'UTG+1', 'MP', 'CO', 'BTN', 'SB', 'BB'];
+      return positions[relativePosition.clamp(0, positions.length - 1)];
+    }
+  }
+
+  /// Set migration completion flag in Firebase
+  static Future<void> setMigrationFlag({required bool completed}) async {
+    final userId = AuthService.userId;
+    if (userId == null) throw 'User not authenticated';
+
+    await _firestore.collection('migration_status').doc(userId).set({
+      'completed': completed,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Check if migration has been completed in Firebase
+  static Future<bool> isMigrationCompleted() async {
+    final userId = AuthService.userId;
+    if (userId == null) return false;
+
+    final doc = await _firestore.collection('migration_status').doc(userId).get();
+    return doc.exists && (doc.data()?['completed'] == true);
   }
 }
