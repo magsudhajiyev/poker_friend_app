@@ -177,8 +177,8 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                         children: [
                           Image.asset(
                             'icons/game_type.png',
-                            width: 28,
-                            height: 28,
+                            width: 32,
+                            height: 32,
                           ),
                           SizedBox(width: 16),
                           Text(
@@ -227,9 +227,9 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     child: Row(
                       children: [
                         Image.asset(
-                          'icons/game_type.png',
-                          width: 28,
-                          height: 28,
+                          'icons/ante.png',
+                          width: 32,
+                          height: 32,
                         ),
                         SizedBox(width: 16),
                         Expanded(
@@ -439,8 +439,8 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
               iconPath != null
                   ? Image.asset(
                       iconPath,
-                      width: 28,
-                      height: 28,
+                      width: 32,
+                      height: 32,
                     )
                   : Container(
                       width: 36,
