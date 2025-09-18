@@ -1190,40 +1190,62 @@ class EarningsChartPainter extends CustomPainter {
     // Draw data lines
     paint.strokeWidth = 3;
     
-    // Tournament line (blue)
+    // Helper function to create smooth cubic bezier curves
+    List<Offset> _createSmoothCurvePoints(List<double> values, Rect chartArea) {
+      List<Offset> points = [];
+      for (int i = 0; i < values.length; i++) {
+        final x = chartArea.left + (i / (values.length - 1)) * chartArea.width;
+        final y = chartArea.bottom - (values[i] / 500.0) * chartArea.height;
+        points.add(Offset(x, y));
+      }
+      return points;
+    }
+
+    // Helper function to draw smooth curve with cubic bezier
+    void _drawSmoothCurve(Path path, List<Offset> points) {
+      if (points.isEmpty) return;
+
+      path.moveTo(points[0].dx, points[0].dy);
+
+      if (points.length == 2) {
+        path.lineTo(points[1].dx, points[1].dy);
+        return;
+      }
+
+      // Calculate control points for smooth cubic bezier curves
+      for (int i = 0; i < points.length - 1; i++) {
+        final p0 = i > 0 ? points[i - 1] : points[i];
+        final p1 = points[i];
+        final p2 = points[i + 1];
+        final p3 = i < points.length - 2 ? points[i + 2] : p2;
+
+        // Calculate tension for smoother curves
+        const tension = 0.3;
+
+        // Calculate control points
+        final cp1x = p1.dx + (p2.dx - p0.dx) * tension;
+        final cp1y = p1.dy + (p2.dy - p0.dy) * tension;
+        final cp2x = p2.dx - (p3.dx - p1.dx) * tension;
+        final cp2y = p2.dy - (p3.dy - p1.dy) * tension;
+
+        path.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.dx, p2.dy);
+      }
+    }
+
+    // Tournament line (blue) - smooth curves
     paint.color = Color(0xFF5B9CDF);
     final tournamentPath = Path();
-    bool tournamentFirst = true;
-    
-    for (int i = 0; i < data.length; i++) {
-      final x = chartArea.left + (i / (data.length - 1)) * chartArea.width;
-      final y = chartArea.bottom - (data[i]['tournament'] / 500.0) * chartArea.height;
-      
-      if (tournamentFirst) {
-        tournamentPath.moveTo(x, y);
-        tournamentFirst = false;
-      } else {
-        tournamentPath.lineTo(x, y);
-      }
-    }
+    final tournamentValues = data.map<double>((d) => d['tournament'].toDouble()).toList();
+    final tournamentPoints = _createSmoothCurvePoints(tournamentValues, chartArea);
+    _drawSmoothCurve(tournamentPath, tournamentPoints);
     canvas.drawPath(tournamentPath, paint);
 
-    // Cash game line (green)
+    // Cash game line (green) - smooth curves
     paint.color = Color(0xFF5AC95A);
     final cashPath = Path();
-    bool cashFirst = true;
-    
-    for (int i = 0; i < data.length; i++) {
-      final x = chartArea.left + (i / (data.length - 1)) * chartArea.width;
-      final y = chartArea.bottom - (data[i]['cash'] / 500.0) * chartArea.height;
-      
-      if (cashFirst) {
-        cashPath.moveTo(x, y);
-        cashFirst = false;
-      } else {
-        cashPath.lineTo(x, y);
-      }
-    }
+    final cashValues = data.map<double>((d) => d['cash'].toDouble()).toList();
+    final cashPoints = _createSmoothCurvePoints(cashValues, chartArea);
+    _drawSmoothCurve(cashPath, cashPoints);
     canvas.drawPath(cashPath, paint);
 
     // Draw data points

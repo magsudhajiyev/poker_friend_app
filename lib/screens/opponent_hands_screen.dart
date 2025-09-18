@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../services/local_storage_service.dart';
+import '../services/firebase_service.dart';
 import '../widgets/loading_screen.dart';
 import '../utils/poker_positions.dart';
 import 'hand_actions_screen.dart';
@@ -18,12 +19,39 @@ class OpponentHandsScreen extends StatefulWidget {
 class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
   List<Map<String, dynamic>> hands = [];
   bool isLoading = true;
+  bool isLoadingMore = false;
+  bool hasMoreHands = true;
   String? error;
+  int? totalHandsCount; // Track total count without loading all
+
+  final ScrollController _scrollController = ScrollController();
+  static const int _handsPerPage = 5;
+  int _currentPage = 0;
+
+  // Cache sessions to avoid refetching
+  List<Map<String, dynamic>>? _cachedSessions;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _loadOpponentHands();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      // Load more when user is 200 pixels from the bottom
+      if (!isLoadingMore && hasMoreHands) {
+        _loadMoreHands();
+      }
+    }
   }
 
   Future<void> _loadOpponentHands() async {
@@ -31,14 +59,25 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
       setState(() {
         isLoading = true;
         error = null;
+        _currentPage = 0;
       });
 
-      final allHands = await _getHandsWithOpponent(widget.opponent.name);
-      
+      // Load first page of hands only
+      final firstPageHands = await _getHandsWithOpponentPaginated(
+        widget.opponent.name,
+        page: 0,
+        pageSize: _handsPerPage
+      );
+
       setState(() {
-        hands = allHands;
+        hands = firstPageHands['hands'];
+        totalHandsCount = firstPageHands['totalCount'];
+        hasMoreHands = hands.length == _handsPerPage &&
+                       (totalHandsCount == null || hands.length < totalHandsCount!);
         isLoading = false;
       });
+
+      print('📱 Loaded ${hands.length} hands (estimated ${totalHandsCount ?? "unknown"} total)');
     } catch (e) {
       setState(() {
         error = 'Failed to load hands: $e';
@@ -47,59 +86,163 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _getHandsWithOpponent(String opponentName) async {
+  Future<void> _loadMoreHands() async {
+    if (isLoadingMore || !hasMoreHands) return;
+
+    setState(() {
+      isLoadingMore = true;
+    });
+
     try {
-      final db = await LocalStorageService.database;
-      final sessions = await db.query('sessions');
-      
-      List<Map<String, dynamic>> opponentHands = [];
-      
-      for (final session in sessions) {
-        // Get all hands for this session
-        final sessionHands = await LocalStorageService.getSessionHands(session['id'] as String);
-        
+      final nextPage = _currentPage + 1;
+
+      final moreHandsData = await _getHandsWithOpponentPaginated(
+        widget.opponent.name,
+        page: nextPage,
+        pageSize: _handsPerPage
+      );
+
+      final moreHands = moreHandsData['hands'] as List<Map<String, dynamic>>;
+
+      setState(() {
+        hands.addAll(moreHands);
+        _currentPage = nextPage;
+        totalHandsCount = moreHandsData['totalCount'];
+        hasMoreHands = moreHands.length == _handsPerPage &&
+                       (totalHandsCount == null || hands.length < totalHandsCount!);
+        isLoadingMore = false;
+      });
+
+      print('📱 Loaded ${moreHands.length} more hands (${hands.length}/${totalHandsCount ?? "unknown"} total)');
+    } catch (e) {
+      setState(() {
+        isLoadingMore = false;
+      });
+      print('❌ Error loading more hands: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> _getHandsWithOpponentPaginated(
+    String opponentName, {
+    required int page,
+    required int pageSize,
+  }) async {
+    List<Map<String, dynamic>> opponentHands = [];
+    int totalCount = 0;
+
+    try {
+      print('🔍 Searching for hands with opponent: $opponentName (page $page, size $pageSize)');
+
+      // Cache sessions on first load to avoid repeated fetching
+      if (_cachedSessions == null) {
+        try {
+          _cachedSessions = await FirebaseService.getAllSessions();
+          print('📱 Cached ${_cachedSessions!.length} Firebase sessions');
+        } catch (firebaseError) {
+          print('⚠️ Firebase error, falling back to local storage: $firebaseError');
+          final db = await LocalStorageService.database;
+          _cachedSessions = await db.query('sessions');
+          print('💾 Cached ${_cachedSessions!.length} local sessions');
+        }
+      }
+
+      int handsFound = 0;
+      int handsSkipped = 0;
+      final skipCount = page * pageSize;
+      bool useFirebase = true;
+
+      // Check if we originally loaded from Firebase or local
+      try {
+        await FirebaseService.getAllSessions();
+      } catch (_) {
+        useFirebase = false;
+      }
+
+      for (final session in _cachedSessions!) {
+        final sessionId = session['id'] as String;
+
+        // Get hands for this session
+        List<Map<String, dynamic>> sessionHands;
+        if (useFirebase) {
+          try {
+            sessionHands = await FirebaseService.getSessionHands(sessionId);
+          } catch (_) {
+            sessionHands = await LocalStorageService.getSessionHands(sessionId);
+          }
+        } else {
+          sessionHands = await LocalStorageService.getSessionHands(sessionId);
+        }
+
         for (final hand in sessionHands) {
           // Check if opponent was involved in this hand
-          final playerNamesData = hand['playerNames'];
-          bool opponentInvolved = false;
-          
-          if (playerNamesData != null && playerNamesData is Map) {
-            // Check if opponent name appears in any player slot
-            opponentInvolved = playerNamesData.values.any((name) => 
-              name.toString().toLowerCase().trim() == opponentName.toLowerCase().trim()
-            );
-          }
-          
-          // Also check actions for opponent name (fallback)
-          if (!opponentInvolved) {
-            final actions = List<Map<String, dynamic>>.from(hand['actions'] ?? []);
-            opponentInvolved = actions.any((action) => 
-              action['playerName']?.toString().toLowerCase().trim() == opponentName.toLowerCase().trim()
-            );
-          }
-          
+          bool opponentInvolved = _isOpponentInvolved(hand, opponentName);
+
           if (opponentInvolved) {
+            totalCount++;
+
+            // Skip hands until we reach the requested page
+            if (handsSkipped < skipCount) {
+              handsSkipped++;
+              continue;
+            }
+
+            // Stop collecting once we have enough for this page
+            if (handsFound >= pageSize) {
+              break;
+            }
+
             // Add session info to hand
             final handWithSession = Map<String, dynamic>.from(hand);
             handWithSession['sessionName'] = session['sessionName'] ?? 'Session ${session['id']}';
             handWithSession['sessionDate'] = session['startTime'];
             opponentHands.add(handWithSession);
+            handsFound++;
           }
         }
+
+        // Early exit if we have enough hands for this page
+        if (handsFound >= pageSize) {
+          break;
+        }
       }
-      
+
       // Sort by date (most recent first)
       opponentHands.sort((a, b) {
         final aTime = DateTime.parse(a['startTime'] ?? '1970-01-01');
         final bTime = DateTime.parse(b['startTime'] ?? '1970-01-01');
         return bTime.compareTo(aTime);
       });
-      
-      return opponentHands;
+
+      print('🎯 Page $page: Found ${opponentHands.length} hands for $opponentName (${totalCount} total seen)');
+
+      return {
+        'hands': opponentHands,
+        'totalCount': totalCount >= skipCount + handsFound ? null : totalCount, // null means we don't know the exact total yet
+      };
     } catch (e) {
-      print('Error getting opponent hands: $e');
-      return [];
+      print('❌ Error getting opponent hands: $e');
+      return {
+        'hands': <Map<String, dynamic>>[],
+        'totalCount': 0,
+      };
     }
+  }
+
+  bool _isOpponentInvolved(Map<String, dynamic> hand, String opponentName) {
+    // Check if opponent name appears in player names
+    final playerNamesData = hand['playerNames'];
+    if (playerNamesData != null && playerNamesData is Map) {
+      final involved = playerNamesData.values.any((name) =>
+        name.toString().toLowerCase().trim() == opponentName.toLowerCase().trim()
+      );
+      if (involved) return true;
+    }
+
+    // Also check actions for opponent name (fallback)
+    final actions = List<Map<String, dynamic>>.from(hand['actions'] ?? []);
+    return actions.any((action) =>
+      action['playerName']?.toString().toLowerCase().trim() == opponentName.toLowerCase().trim()
+    );
   }
 
   @override
@@ -150,7 +293,11 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          '${hands.length} hands played together',
+                          totalHandsCount != null
+                              ? 'Showing ${hands.length} of ${totalHandsCount} hands'
+                              : hands.length > 0
+                                  ? 'Showing ${hands.length} hands'
+                                  : 'No hands played together',
                           style: TextStyle(
                             fontSize: 12,
                             color: Color(0xFF9A9A9A),
@@ -255,12 +402,42 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
 
   Widget _buildHandsList() {
     return ListView.builder(
+      controller: _scrollController,
       padding: EdgeInsets.all(24),
-      itemCount: hands.length,
+      itemCount: hands.length + (hasMoreHands ? 1 : 0), // +1 for loading indicator
       itemBuilder: (context, index) {
+        if (index == hands.length) {
+          // Loading indicator at the bottom
+          return _buildLoadingIndicator();
+        }
+
         final hand = hands[index];
         return _buildHandCard(hand, index);
       },
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      child: Center(
+        child: Column(
+          children: [
+            CircularProgressIndicator(
+              color: Color(0xFF5AC95A),
+              strokeWidth: 2,
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Loading more hands...',
+              style: TextStyle(
+                color: Color(0xFF9A9A9A),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

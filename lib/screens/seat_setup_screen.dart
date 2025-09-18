@@ -374,10 +374,10 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(
-                                  Icons.casino_outlined,
-                                  color: Color(0xFFcb5242),
-                                  size: 18,
+                                Image.asset(
+                                  'icons/button.png',
+                                  width: 48,
+                                  height: 48,
                                 ),
                                 SizedBox(width: 8),
                                 Text(
