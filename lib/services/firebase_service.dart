@@ -3,6 +3,7 @@ import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import 'auth_service.dart';
 import 'local_storage_service.dart';
+import 'opponent_service.dart';
 import 'opponent_stats_service.dart';
 import 'user_stats_service.dart';
 
@@ -584,8 +585,13 @@ class FirebaseService {
     if (playerNames == null || actions.isEmpty) return;
 
     try {
-      // Group actions by opponent to batch updates
+      // Get all saved opponents first (only track stats for saved opponents)
+      final savedOpponents = await OpponentService.getAllOpponents();
+      final savedOpponentNames = savedOpponents.map((o) => o.name).toSet();
+
+      // Group actions by opponent ID to batch updates
       Map<String, Map<String, int>> opponentDeltas = {};
+      Set<String> handParticipants = {}; // Track which opponents participated in this hand
 
       // Process each action to determine stat deltas
       for (final action in actions) {
@@ -595,12 +601,21 @@ class FirebaseService {
 
         if (playerId == null || actionType == null || street == null) continue;
 
-        // Skip if this is the hero player (we don't track stats for ourselves)
         final playerName = playerNames[playerId];
         if (playerName == null || playerName.isEmpty) continue;
 
+        // Only track stats for saved opponents (not positions like UTG, CO, BTN)
+        if (!savedOpponentNames.contains(playerName)) continue;
+
+        // Find the opponent ID for this name
+        final opponent = savedOpponents.firstWhere((o) => o.name == playerName);
+        final opponentId = opponent.id;
+
+        // Track hand participants (count each opponent only once per hand)
+        handParticipants.add(opponentId);
+
         // Initialize deltas for this opponent if not exists
-        opponentDeltas[playerName] ??= {
+        opponentDeltas[opponentId] ??= {
           'handsDelta': 0,
           'vpipDelta': 0,
           'pfrDelta': 0,
@@ -616,16 +631,11 @@ class FirebaseService {
           'fold3betDelta': 0,
         };
 
-        final deltas = opponentDeltas[playerName]!;
+        final deltas = opponentDeltas[opponentId]!;
 
         // Analyze action and update appropriate counters
         final actionLower = actionType.toLowerCase();
         final isPreflop = street.toLowerCase() == 'preflop';
-
-        // Count hands (only once per opponent)
-        if (deltas['handsDelta'] == 0) {
-          deltas['handsDelta'] = 1;
-        }
 
         // Analyze specific actions
         switch (actionLower) {
@@ -668,13 +678,20 @@ class FirebaseService {
         }
       }
 
+      // Set hand delta to 1 for each opponent that participated in this hand
+      for (final opponentId in handParticipants) {
+        if (opponentDeltas.containsKey(opponentId)) {
+          opponentDeltas[opponentId]!['handsDelta'] = 1;
+        }
+      }
+
       // Apply updates for each opponent
       for (final entry in opponentDeltas.entries) {
-        final opponentName = entry.key;
+        final opponentId = entry.key;
         final deltas = entry.value;
 
         await OpponentStatsService.updateStatsAtomic(
-          opponentId: opponentName,
+          opponentId: opponentId,
           handsDelta: deltas['handsDelta'] ?? 0,
           vpipDelta: deltas['vpipDelta'] ?? 0,
           pfrDelta: deltas['pfrDelta'] ?? 0,
