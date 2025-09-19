@@ -500,7 +500,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           height: 40,
                           margin: EdgeInsets.only(right: 8),
                           decoration: BoxDecoration(
-                            color: Color(0xFF5AC95A),
+                            color: Colors.red,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: IconButton(
@@ -517,7 +517,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: Color(0xFF5AC95A),
+                          color: Colors.red,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
@@ -682,7 +682,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(PokerFriendSpacing.xs),
-                            child: _buildInfoItem(context, 'Pot', gameState.formatCurrency(gameState.currentPot), Icons.monetization_on_rounded),
+                            child: _buildInfoItemWithAsset(context, 'Pot', gameState.formatCurrency(gameState.currentPot), 'icons/pot.png'),
                           ),
                         ),
                       ),
@@ -696,7 +696,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(PokerFriendSpacing.xs),
-                            child: _buildInfoItem(context, 'To Act', _getCurrentPlayerNameSafely(), Icons.person_rounded),
+                            child: _buildInfoItemWithAsset(context, 'To Act', _getCurrentPlayerNameSafely(), 'icons/player.png'),
                           ),
                         ),
                       ),
@@ -710,7 +710,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(PokerFriendSpacing.xs),
-                            child: _buildInfoItem(context, 'Stack', _getCurrentPlayerStackSafely(), Icons.account_balance_wallet_rounded),
+                            child: _buildInfoItemWithAsset(context, 'Stack', _getCurrentPlayerStackSafely(), 'icons/wallet.png'),
                           ),
                         ),
                       ),
@@ -842,7 +842,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 label: Text('End ${gameState.getCurrentStreetName()} Betting', 
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
@@ -912,8 +912,38 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       children: [
         Icon(
           icon,
-          color: Color(0xFF5AC95A),
+          color: Colors.red,
           size: 24,
+        ),
+        const SizedBox(height: PokerFriendSpacing.xxxs),
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: Color(0xFF9A9A9A),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: PokerFriendSpacing.xxxs),
+        Text(
+          value,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoItemWithAsset(BuildContext context, String label, String value, String assetPath) {
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Image.asset(
+          assetPath,
+          width: 24,
+          height: 24,
         ),
         const SizedBox(height: PokerFriendSpacing.xxxs),
         Text(
