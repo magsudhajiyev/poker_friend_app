@@ -552,14 +552,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('VPIP', '${_statistics!['vpip'].toStringAsFixed(1)}%', iconPath: 'icons/vpip.png'),
+                      child: _buildStatItem('VPIP', '${_formatStat(_statistics!['vpip'])}%', iconPath: 'icons/vpip.png'),
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('PFR', '${_statistics!['pfr'].toStringAsFixed(1)}%', iconPath: 'icons/bet.png'),
+                      child: _buildStatItem('PFR', '${_formatStat(_statistics!['pfr'])}%', iconPath: 'icons/bet.png'),
                     ),
                   ),
                 ],
@@ -570,14 +570,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Aggression', _statistics!['aggression'] >= 999 ? '∞' : _statistics!['aggression'].toStringAsFixed(2), iconPath: 'icons/aggression.png'),
+                      child: _buildStatItem('Aggression', _formatAggression(_statistics!['aggression']), iconPath: 'icons/aggression.png'),
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Fold %', '${_statistics!['foldPercentage'].toStringAsFixed(1)}%', iconPath: 'icons/fold.png'),
+                      child: _buildStatItem('Fold %', '${_formatStat(_statistics!['foldPercentage'])}%', iconPath: 'icons/fold.png'),
                     ),
                   ),
                 ],
@@ -608,14 +608,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Call', '${_statistics!['callPercentage'].toStringAsFixed(1)}%', iconPath: 'icons/play_style/calling_station.png'),
+                      child: _buildStatItem('Call', '${_formatStat(_statistics!['callPercentage'])}%', iconPath: 'icons/play_style/calling_station.png'),
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Bet', '${_statistics!['betPercentage'].toStringAsFixed(1)}%', iconPath: 'icons/bet_with_chips.png'),
+                      child: _buildStatItem('Bet', '${_formatStat(_statistics!['betPercentage'])}%', iconPath: 'icons/bet_with_chips.png'),
                     ),
                   ),
                 ],
@@ -626,14 +626,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Raise', '${_statistics!['raisePercentage'].toStringAsFixed(1)}%', iconPath: 'icons/bet.png'),
+                      child: _buildStatItem('Raise', '${_formatStat(_statistics!['raisePercentage'])}%', iconPath: 'icons/bet.png'),
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: SizedBox(
                       height: 120,
-                      child: _buildStatItem('Check', '${_statistics!['checkPercentage'].toStringAsFixed(1)}%', iconPath: 'icons/check.png'),
+                      child: _buildStatItem('Check', '${_formatStat(_statistics!['checkPercentage'])}%', iconPath: 'icons/check.png'),
                     ),
                   ),
                 ],
@@ -696,23 +696,42 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     );
   }
 
+  /// Helper function to safely format statistics with null safety
+  String _formatStat(dynamic value, {int decimals = 1}) {
+    if (value == null) return '-';
+    if (value is num) {
+      return value.toStringAsFixed(decimals);
+    }
+    return '-';
+  }
+
+  /// Helper function to format aggression factor with infinity handling
+  String _formatAggression(dynamic value) {
+    if (value == null) return '-';
+    if (value is num) {
+      if (value >= 999) return '∞';
+      return value.toStringAsFixed(2);
+    }
+    return '-';
+  }
+
   Future<void> _updateOpponentStoredStats() async {
     if (_statistics == null) return;
     
     try {
       await OpponentService.updateOpponentStats(
         _opponent.id,
-        vpip: _statistics!['vpip'].toDouble(),
-        pfr: _statistics!['pfr'].toDouble(),
-        aggression: _statistics!['aggression'].toDouble(),
+        vpip: (_statistics!['vpip'] ?? 0.0).toDouble(),
+        pfr: (_statistics!['pfr'] ?? 0.0).toDouble(),
+        aggression: (_statistics!['aggression'] ?? 0.0).toDouble(),
       );
       
       // Update local state
       setState(() {
         _opponent = _opponent.copyWith(
-          vpip: _statistics!['vpip'].toDouble(),
-          pfr: _statistics!['pfr'].toDouble(),
-          aggression: _statistics!['aggression'].toDouble(),
+          vpip: (_statistics!['vpip'] ?? 0.0).toDouble(),
+          pfr: (_statistics!['pfr'] ?? 0.0).toDouble(),
+          aggression: (_statistics!['aggression'] ?? 0.0).toDouble(),
         );
       });
     } catch (e) {
