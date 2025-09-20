@@ -215,43 +215,43 @@ class OpponentStats {
   // Calculated properties (derived on read, not stored)
 
   /// VPIP percentage (Voluntarily Put $ In Pot)
-  double get vpipPercentage => handsPlayed > 0 ? (vpipCount / handsPlayed * 100) : 0.0;
+  double get vpipPercentage => (handsPlayed ?? 0) > 0 ? ((vpipCount ?? 0) / handsPlayed! * 100) : 0.0;
 
   /// PFR percentage (Pre-Flop Raise)
-  double get pfrPercentage => handsPlayed > 0 ? (pfrCount / handsPlayed * 100) : 0.0;
+  double get pfrPercentage => (handsPlayed ?? 0) > 0 ? ((pfrCount ?? 0) / handsPlayed! * 100) : 0.0;
 
   /// Aggression factor (0.0 - 1.0)
   double get aggressionFactor {
-    final totalActions = aggressionActions + passiveActions;
-    return totalActions > 0 ? (aggressionActions / totalActions) : 0.0;
+    final totalActions = (aggressionActions ?? 0) + (passiveActions ?? 0);
+    return totalActions > 0 ? ((aggressionActions ?? 0) / totalActions) : 0.0;
   }
 
   /// Fold percentage
-  double get foldPercentage => handsPlayed > 0 ? (foldCount / handsPlayed * 100) : 0.0;
+  double get foldPercentage => (handsPlayed ?? 0) > 0 ? ((foldCount ?? 0) / handsPlayed! * 100) : 0.0;
 
   /// Check percentage
-  double get checkPercentage => handsPlayed > 0 ? (checkCount / handsPlayed * 100) : 0.0;
+  double get checkPercentage => (handsPlayed ?? 0) > 0 ? ((checkCount ?? 0) / handsPlayed! * 100) : 0.0;
 
   /// Call percentage
-  double get callPercentage => handsPlayed > 0 ? (callCount / handsPlayed * 100) : 0.0;
+  double get callPercentage => (handsPlayed ?? 0) > 0 ? ((callCount ?? 0) / handsPlayed! * 100) : 0.0;
 
   /// Bet percentage
-  double get betPercentage => handsPlayed > 0 ? (betCount / handsPlayed * 100) : 0.0;
+  double get betPercentage => (handsPlayed ?? 0) > 0 ? ((betCount ?? 0) / handsPlayed! * 100) : 0.0;
 
   /// Raise percentage
-  double get raisePercentage => handsPlayed > 0 ? (raiseCount / handsPlayed * 100) : 0.0;
+  double get raisePercentage => (handsPlayed ?? 0) > 0 ? ((raiseCount ?? 0) / handsPlayed! * 100) : 0.0;
 
   /// 3-Bet percentage
-  double get threeBetPercentage => handsPlayed > 0 ? (threeBetCount / handsPlayed * 100) : 0.0;
+  double get threeBetPercentage => (handsPlayed ?? 0) > 0 ? ((threeBetCount ?? 0) / handsPlayed! * 100) : 0.0;
 
   /// C-Bet percentage
-  double get cbetPercentage => handsPlayed > 0 ? (cbetCount / handsPlayed * 100) : 0.0;
+  double get cbetPercentage => (handsPlayed ?? 0) > 0 ? ((cbetCount ?? 0) / handsPlayed! * 100) : 0.0;
 
   /// Fold to 3-Bet percentage
-  double get fold3betPercentage => handsPlayed > 0 ? (fold3betCount / handsPlayed * 100) : 0.0;
+  double get fold3betPercentage => (handsPlayed ?? 0) > 0 ? ((fold3betCount ?? 0) / handsPlayed! * 100) : 0.0;
 
   /// Check if stats have sufficient sample size for reliability
-  bool get hasReliableStats => handsPlayed >= 50;
+  bool get hasReliableStats => (handsPlayed ?? 0) >= 50;
 
   /// Convert to legacy Opponent format for compatibility
   Map<String, dynamic> toLegacyStatsMap() {
