@@ -699,19 +699,24 @@ class PokerGameState {
           currentPlayer = playersWhoCanAct.first;
         }
       } else {
-        // Multi-way: Start from SB, then BB, then UTG, etc.
-        int sbPosition = _getPositionFromButton(1);
-        int bbPosition = _getPositionFromButton(2);
+        // Multi-way: Use proper postflop action order starting from SB
+        List<int> postflopOrder = PokerPositions.getPostflopActionOrder(buttonPosition, numberOfPlayers);
 
-        // Check if SB is still active (not folded and not all-in)
-        if (playersWhoCanAct.contains(sbPosition)) {
-          currentPlayer = sbPosition;
-        } else if (playersWhoCanAct.contains(bbPosition)) {
-          // SB is out, start from BB
-          currentPlayer = bbPosition;
-        } else {
-          // Both SB and BB are out, use first available player who can act
+        // Find the first player in postflop order who can actually act
+        bool foundActivePlayer = false;
+        for (int playerSeat in postflopOrder) {
+          if (playersWhoCanAct.contains(playerSeat)) {
+            currentPlayer = playerSeat;
+            foundActivePlayer = true;
+            print('DEBUG: Multi-way postflop, setting currentPlayer to $currentPlayer (${PokerPositions.getPositionName(playerSeat, buttonPosition, numberOfPlayers)})');
+            break;
+          }
+        }
+
+        // Fallback if somehow no player found (shouldn't happen)
+        if (!foundActivePlayer && playersWhoCanAct.isNotEmpty) {
           currentPlayer = playersWhoCanAct.first;
+          print('WARNING: Fallback to first available player: $currentPlayer');
         }
       }
       
