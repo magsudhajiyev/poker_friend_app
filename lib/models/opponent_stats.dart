@@ -256,8 +256,8 @@ class OpponentStats {
   /// Convert to legacy Opponent format for compatibility
   Map<String, dynamic> toLegacyStatsMap() {
     return {
-      'totalHands': handsPlayed,
-      'totalSessions': sessionsPlayed,
+      'totalHands': handsPlayed ?? 0,
+      'totalSessions': sessionsPlayed ?? 0,
       'vpip': vpipPercentage,
       'pfr': pfrPercentage,
       'aggression': aggressionFactor,

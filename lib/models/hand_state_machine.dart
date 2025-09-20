@@ -1,9 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
 import '../services/opponent_service.dart';
+import '../services/opponent_stats_service.dart';
+import '../services/user_stats_service.dart';
 import '../utils/poker_positions.dart';
 
 enum HandState {
@@ -612,11 +615,142 @@ class PokerSessionManager {
       
       hand.markSaved();
       print('Hand #${hand.handNumber} saved to both Firebase and local storage');
+
+      // Update optimized stats for all participants
+      await _updateOptimizedStats(hand);
     } catch (e) {
       print('Failed to save hand to Firebase: $e');
       print('Hand #${hand.handNumber} saved to local storage only');
       // Mark as saved since we have it locally
       hand.markSaved();
+
+      // Still update optimized stats even if Firebase failed
+      await _updateOptimizedStats(hand);
+    }
+  }
+
+  /// Update optimized statistics for all participants in the hand
+  Future<void> _updateOptimizedStats(HandRecord hand) async {
+    try {
+      print('📊 Updating optimized stats for hand #${hand.handNumber}');
+
+      // Get all player names from this hand
+      Set<String> playersInHand = {};
+
+      // Collect all player names who took actions
+      for (final action in hand.actions) {
+        if (action.playerName != null &&
+            action.playerName!.isNotEmpty &&
+            !action.playerName!.toLowerCase().contains('player')) {
+          playersInHand.add(action.playerName!);
+        }
+      }
+
+      // Process each player's actions in this hand
+      for (final playerName in playersInHand) {
+        print('📈 Processing stats for $playerName');
+
+        // Calculate stats for this specific hand
+        int vpipDelta = 0;
+        int pfrDelta = 0;
+        int aggressionDelta = 0;
+        int passiveDelta = 0;
+        int foldDelta = 0;
+        int checkDelta = 0;
+        int callDelta = 0;
+        int betDelta = 0;
+        int raiseDelta = 0;
+
+        bool vpipThisHand = false;
+        bool pfrThisHand = false;
+        String currentStreet = 'preflop';
+
+        // Process this player's actions in this hand
+        for (final action in hand.actions) {
+          if (action.playerName == playerName) {
+            // Track street changes
+            if (action.street != null) {
+              currentStreet = action.street!.name.toLowerCase();
+            }
+
+            final actionType = action.action.name.toLowerCase();
+
+            // Count action types
+            switch (actionType) {
+              case 'fold':
+                foldDelta++;
+                break;
+              case 'call':
+                callDelta++;
+                passiveDelta++;
+                if (currentStreet == 'preflop' && !vpipThisHand) {
+                  vpipThisHand = true;
+                }
+                break;
+              case 'bet':
+                betDelta++;
+                aggressionDelta++;
+                if (currentStreet == 'preflop') {
+                  if (!vpipThisHand) vpipThisHand = true;
+                  if (!pfrThisHand) pfrThisHand = true;
+                }
+                break;
+              case 'raise':
+                raiseDelta++;
+                aggressionDelta++;
+                if (currentStreet == 'preflop') {
+                  if (!vpipThisHand) vpipThisHand = true;
+                  if (!pfrThisHand) pfrThisHand = true;
+                }
+                break;
+              case 'check':
+                checkDelta++;
+                passiveDelta++;
+                break;
+            }
+          }
+        }
+
+        if (vpipThisHand) vpipDelta = 1;
+        if (pfrThisHand) pfrDelta = 1;
+
+        // Update opponent stats (incremental)
+        if (playerName.toLowerCase() != 'hero' && playerName.toLowerCase() != 'you') {
+          await OpponentStatsService.updateStatsIncremental(
+            opponentId: playerName,
+            handsDelta: 1,
+            sessionsDelta: 0, // Sessions are tracked separately
+            vpipDelta: vpipDelta,
+            pfrDelta: pfrDelta,
+            aggressionDelta: aggressionDelta,
+            passiveDelta: passiveDelta,
+            foldDelta: foldDelta,
+            checkDelta: checkDelta,
+            callDelta: callDelta,
+            betDelta: betDelta,
+            raiseDelta: raiseDelta,
+          );
+          print('✅ Updated opponent stats for $playerName');
+        } else {
+          // Update user stats - need to get current user ID
+          final currentUser = FirebaseAuth.instance.currentUser;
+          if (currentUser != null) {
+            await UserStatsService.updateStatsAtomic(
+              userId: currentUser.uid,
+              handsDelta: 1,
+              totalHandsDelta: 1,
+              vpipDelta: vpipDelta,
+              pfrDelta: pfrDelta,
+              wonHandsDelta: (hand.winnerId != null && hand.winnerId == hand.heroPosition) ? 1 : 0,
+            );
+            print('✅ Updated user stats');
+          }
+        }
+      }
+
+      print('🎉 Optimized stats updated for all participants');
+    } catch (e) {
+      print('❌ Error updating optimized stats: $e');
     }
   }
 

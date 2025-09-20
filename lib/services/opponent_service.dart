@@ -267,11 +267,11 @@ class OpponentService {
     }
 
     // Calculate analytics
-    final totalHands = opponents.fold<int>(0, (sum, o) => sum + o.handsPlayed);
+    final totalHands = opponents.fold<int>(0, (sum, o) => sum + (o.handsPlayed ?? 0));
     final averageHands = totalHands / opponents.length;
     
-    final mostPlayed = opponents.reduce((a, b) => 
-        a.handsPlayed > b.handsPlayed ? a : b);
+    final mostPlayed = opponents.reduce((a, b) =>
+        (a.handsPlayed ?? 0) > (b.handsPlayed ?? 0) ? a : b);
     
     final typeDistribution = <String, int>{};
     for (final opponent in opponents) {
@@ -432,19 +432,19 @@ class OpponentService {
             final sessionsSet = stats['sessions'] as Set<String>;
             
             // Calculate VPIP and PFR
-            final vpip = preflopHands > 0 
+            final vpip = (preflopHands ?? 0) > 0 
                 ? (stats['preflopVoluntaryActions'] / preflopHands * 100) 
                 : 0.0;
-            final pfr = preflopHands > 0 
+            final pfr = (preflopHands ?? 0) > 0 
                 ? (stats['preflopRaises'] / preflopHands * 100) 
                 : 0.0;
             
             // Calculate aggression factor
             final aggressiveActions = stats['totalBets'] + stats['totalRaises'];
             final passiveActions = stats['totalCalls'] + stats['totalChecks'];
-            final aggression = passiveActions > 0 
+            final aggression = (passiveActions ?? 0) > 0 
                 ? (aggressiveActions.toDouble() / passiveActions.toDouble()) 
-                : (aggressiveActions > 0 ? 999.0 : 0.0);
+                : ((aggressiveActions ?? 0) > 0 ? 999.0 : 0.0);
             
             // Update opponent with calculated statistics
             await updateOpponentStats(

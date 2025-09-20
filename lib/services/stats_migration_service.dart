@@ -132,7 +132,7 @@ class StatsMigrationService {
       // Check how many already have optimized stats
       for (final opponentName in allOpponents) {
         final stats = await OpponentStatsService.getOpponentStats(opponentName);
-        if (stats != null && stats.handsPlayed > 0) {
+        if (stats != null && (stats.handsPlayed ?? 0) > 0) {
           migratedCount++;
         }
       }

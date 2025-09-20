@@ -65,21 +65,13 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
       if (optimizedStats != null) {
         print('✅ Using optimized stats for $opponentName (${optimizedStats.handsPlayed} hands)');
-        return optimizedStats.toLegacyStatsMap();
+        final legacyMap = optimizedStats.toLegacyStatsMap();
+        print('🔍 DEBUG: Legacy map for $opponentName: totalHands=${legacyMap['totalHands']}, totalSessions=${legacyMap['totalSessions']}');
+        return legacyMap;
       } else {
-        print('⚠️ No stats found for $opponentName - migration may be needed');
-        return {
-          'handsPlayed': 0,
-          'vpip': 0.0,
-          'pfr': 0.0,
-          'aggression': 0.0,
-          'actions': {
-            'preflop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-            'flop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-            'turn': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-            'river': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-          },
-        };
+        print('⚠️ No optimized stats found for $opponentName - calculating from hand data');
+        // Fall back to legacy calculation method
+        return await _calculateLegacyOpponentStatistics(opponentName);
       }
     } catch (e) {
       print('❌ Error loading optimized stats: $e');
@@ -98,7 +90,196 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     }
   }
 
-  // Legacy method removed - using optimized stats only
+  /// Legacy calculation method used as fallback when optimized stats not available
+  Future<Map<String, dynamic>> _calculateLegacyOpponentStatistics(String opponentName) async {
+    try {
+      // Initialize counters
+      int totalHands = 0;
+      int totalSessions = 0;
+      int vpipHands = 0;
+      int pfrHands = 0;
+      int foldCount = 0;
+      int callCount = 0;
+      int betCount = 0;
+      int raiseCount = 0;
+      int checkCount = 0;
+      int aggressiveActions = 0;
+      int passiveActions = 0;
+
+      Set<String> sessionsPlayed = <String>{};
+
+      // Get all sessions
+      List<Map<String, dynamic>> sessions;
+      try {
+        sessions = await FirebaseService.getAllSessions();
+        print('🔍 DEBUG: Found ${sessions.length} sessions from Firebase');
+      } catch (e) {
+        sessions = await LocalStorageService.getUserSessions();
+        print('🔍 DEBUG: Found ${sessions.length} sessions from local storage');
+      }
+
+      // Process each session
+      for (final session in sessions) {
+        final sessionId = session['id'] as String;
+        final playerNames = session['playerNames'] as Map<String, dynamic>?;
+
+        if (playerNames != null) {
+          // Check if opponent played in this session
+          bool opponentInSession = false;
+          print('🔍 DEBUG: Session $sessionId has players: ${playerNames.values.toList()}');
+          for (final playerName in playerNames.values) {
+            print('🔍 DEBUG: Comparing "${playerName.toString().toLowerCase()}" with "${opponentName.toLowerCase()}"');
+            if (playerName.toString().toLowerCase() == opponentName.toLowerCase()) {
+              opponentInSession = true;
+              print('✅ DEBUG: Found $opponentName in session $sessionId');
+              break;
+            }
+          }
+
+          if (opponentInSession) {
+            sessionsPlayed.add(sessionId);
+
+            // Get hands for this session
+            List<Map<String, dynamic>> hands;
+            try {
+              hands = await FirebaseService.getSessionHands(sessionId);
+              print('🔍 DEBUG: Found ${hands.length} hands in Firebase for session $sessionId');
+            } catch (e) {
+              hands = await LocalStorageService.getSessionHands(sessionId);
+              print('🔍 DEBUG: Found ${hands.length} hands in local storage for session $sessionId');
+            }
+
+            // Process each hand
+            for (final hand in hands) {
+              bool opponentInThisHand = false;
+              bool vpipThisHand = false;
+              bool pfrThisHand = false;
+
+              // Process actions if available
+              if (hand['actions'] != null) {
+                final actions = hand['actions'] as List<dynamic>;
+                String currentStreet = 'preflop';
+
+                for (final action in actions) {
+                  final actionMap = action as Map<String, dynamic>;
+                  final actionPlayerName = actionMap['playerName'] as String?;
+                  final actionType = actionMap['action'] as String?;
+                  final street = actionMap['street'] as String?;
+
+                  if (street != null) {
+                    currentStreet = street.toLowerCase();
+                  }
+
+                  if (actionPlayerName != null && actionType != null &&
+                      actionPlayerName.toLowerCase().contains(opponentName.toLowerCase())) {
+
+                    opponentInThisHand = true;
+                    final actionKey = actionType.toLowerCase();
+
+                    // Count action types
+                    switch (actionKey) {
+                      case 'fold':
+                        foldCount++;
+                        break;
+                      case 'call':
+                        callCount++;
+                        passiveActions++;
+                        if (currentStreet == 'preflop' && !vpipThisHand) {
+                          vpipThisHand = true;
+                        }
+                        break;
+                      case 'bet':
+                        betCount++;
+                        aggressiveActions++;
+                        if (currentStreet == 'preflop') {
+                          if (!vpipThisHand) vpipThisHand = true;
+                          if (!pfrThisHand) pfrThisHand = true;
+                        }
+                        break;
+                      case 'raise':
+                        raiseCount++;
+                        aggressiveActions++;
+                        if (currentStreet == 'preflop') {
+                          if (!vpipThisHand) vpipThisHand = true;
+                          if (!pfrThisHand) pfrThisHand = true;
+                        }
+                        break;
+                      case 'check':
+                        checkCount++;
+                        passiveActions++;
+                        break;
+                    }
+                  }
+                }
+              }
+
+              // Only count the hand if opponent participated
+              if (opponentInThisHand) {
+                totalHands++;
+                if (vpipThisHand) vpipHands++;
+                if (pfrThisHand) pfrHands++;
+              }
+            }
+          }
+        }
+      }
+
+      totalSessions = sessionsPlayed.length;
+
+      // Calculate percentages
+      final vpip = totalHands > 0 ? (vpipHands / totalHands * 100) : 0.0;
+      final pfr = totalHands > 0 ? (pfrHands / totalHands * 100) : 0.0;
+      final foldPercentage = totalHands > 0 ? (foldCount / totalHands * 100) : 0.0;
+      final callPercentage = totalHands > 0 ? (callCount / totalHands * 100) : 0.0;
+      final betPercentage = totalHands > 0 ? (betCount / totalHands * 100) : 0.0;
+      final raisePercentage = totalHands > 0 ? (raiseCount / totalHands * 100) : 0.0;
+      final checkPercentage = totalHands > 0 ? (checkCount / totalHands * 100) : 0.0;
+
+      final totalActions = aggressiveActions + passiveActions;
+      final aggression = totalActions > 0 ? (aggressiveActions / totalActions) : 0.0;
+
+      print('📊 Calculated legacy stats for $opponentName: $totalHands hands, VPIP: ${vpip.toStringAsFixed(1)}%, PFR: ${pfr.toStringAsFixed(1)}%');
+
+      return {
+        'totalHands': totalHands,
+        'totalSessions': totalSessions,
+        'vpip': vpip,
+        'pfr': pfr,
+        'aggression': aggression,
+        'foldPercentage': foldPercentage,
+        'callPercentage': callPercentage,
+        'betPercentage': betPercentage,
+        'raisePercentage': raisePercentage,
+        'checkPercentage': checkPercentage,
+        'actions': {
+          'preflop': {'fold': foldCount, 'call': callCount, 'bet': betCount, 'raise': raiseCount},
+          'flop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+          'turn': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+          'river': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+        },
+      };
+    } catch (e) {
+      print('❌ Error calculating legacy stats: $e');
+      return {
+        'totalHands': 0,
+        'totalSessions': 0,
+        'vpip': 0.0,
+        'pfr': 0.0,
+        'aggression': 0.0,
+        'foldPercentage': 0.0,
+        'callPercentage': 0.0,
+        'betPercentage': 0.0,
+        'raisePercentage': 0.0,
+        'checkPercentage': 0.0,
+        'actions': {
+          'preflop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+          'flop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+          'turn': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+          'river': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
+        },
+      };
+    }
+  }
 
   Future<void> _saveChanges() async {
     if (_nameController.text.trim().isEmpty) {
@@ -521,7 +702,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               // Update opponent's stored statistics when displaying
               Builder(
                 builder: (context) {
-                  if (_opponent.vpip == 0.0 && _opponent.pfr == 0.0 && _statistics!['totalHands'] > 0) {
+                  if ((_opponent.vpip ?? 0.0) == 0.0 && (_opponent.pfr ?? 0.0) == 0.0 && (_statistics!['totalHands'] ?? 0) > 0) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       _updateOpponentStoredStats();
                     });
