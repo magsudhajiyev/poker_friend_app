@@ -4,6 +4,7 @@ import '../utils/poker_positions.dart';
 import '../services/auth_service.dart';
 import '../services/opponent_service.dart';
 import '../models/opponent.dart';
+import '../models/poker_game_state.dart';
 
 class SeatSetupScreen extends StatefulWidget {
   final int playerCount;
@@ -12,6 +13,7 @@ class SeatSetupScreen extends StatefulWidget {
   final PokerSessionManager sessionManager;
   final bool isInitialSetup;
   final bool isCashGame;
+  final PokerGameState? gameState;
 
   const SeatSetupScreen({
     Key? key,
@@ -21,6 +23,7 @@ class SeatSetupScreen extends StatefulWidget {
     required this.sessionManager,
     this.isInitialSetup = true,
     this.isCashGame = true,
+    this.gameState,
   }) : super(key: key);
 
   @override
@@ -48,9 +51,22 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         text: widget.sessionManager.getPlayerName(i)
       );
       stackControllers[i] = TextEditingController(
-        text: widget.isCashGame ? '100.00' : '1500'
+        text: _getCurrentStackForSeat(i)
       );
-      seatActive[i] = widget.isInitialSetup ? true : widget.sessionManager.isPlayerActive(i);
+      // Check active status from gameState if available, otherwise fall back to sessionManager
+      if (widget.isInitialSetup) {
+        seatActive[i] = true;
+      } else if (widget.gameState != null) {
+        // Use gameState player status
+        try {
+          final player = widget.gameState!.players.firstWhere((p) => p.playerId == i);
+          seatActive[i] = player.isActive;
+        } catch (e) {
+          seatActive[i] = false;
+        }
+      } else {
+        seatActive[i] = widget.sessionManager.isPlayerActive(i);
+      }
     }
     
     // If this is initial setup, initialize default players
@@ -60,6 +76,16 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     
     // Load opponents for autocomplete
     _loadOpponents();
+  }
+
+  String _getCurrentStackForSeat(int seatNumber) {
+    // If we have gameState and this is not initial setup, use current stacks
+    if (widget.gameState != null && !widget.isInitialSetup) {
+      final currentStack = widget.gameState!.getPlayerStack(seatNumber);
+      return widget.isCashGame ? currentStack.toStringAsFixed(2) : currentStack.toInt().toString();
+    }
+    // Otherwise use default values
+    return widget.isCashGame ? '100.00' : '1500';
   }
 
   @override

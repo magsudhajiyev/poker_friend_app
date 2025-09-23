@@ -308,6 +308,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                               levelDuration: levelDuration,
                               numberOfPlayers: numberOfPlayers,
                               gameType: gameType,
+                              hasBBante: bbAnteEnabled,
                             ),
                           ),
                         );

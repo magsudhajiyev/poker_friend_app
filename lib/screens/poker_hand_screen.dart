@@ -25,6 +25,7 @@ class PokerHandScreen extends StatefulWidget {
   final int levelDuration;
   final int numberOfPlayers;
   final GameType gameType;
+  final bool hasBBante;
 
   const PokerHandScreen({
     super.key,
@@ -33,6 +34,7 @@ class PokerHandScreen extends StatefulWidget {
     required this.levelDuration,
     required this.numberOfPlayers,
     this.gameType = GameType.cash,
+    this.hasBBante = false,
   });
 
   @override
@@ -69,6 +71,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       smallBlind: widget.smallBlind,
       bigBlind: widget.bigBlind,
       isCashGame: widget.gameType == GameType.cash,
+      hasBBante: widget.hasBBante,
     );
     
     // Initialize session manager
@@ -330,6 +333,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           sessionManager: sessionManager,
           isInitialSetup: false,
           isCashGame: widget.gameType == GameType.cash,
+          gameState: gameState,
         ),
       ),
     );
@@ -1363,7 +1367,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     setState(() {
       _isDragBetting = true;
       _pendingAction = action;
-      _dragBetAmount = gameState.getMinimumBet().toDouble();
+      // Use appropriate minimum based on action type
+      _dragBetAmount = action == PlayerAction.raise
+          ? gameState.getMinimumRaise()
+          : gameState.getMinimumBet();
       _dragStartPosition = null;
       _dragBarPosition = 0.0; // Start at minimum bet (top)
     });
@@ -1393,7 +1400,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     if (currentPlayer == null) return;
     
     // Calculate sensitivity dynamically based on player's stack and screen size
-    final minBet = gameState.getMinimumBet().toDouble();
+    final minBet = _pendingAction == PlayerAction.raise
+        ? gameState.getMinimumRaise()
+        : gameState.getMinimumBet();
     // For all-in calculation, include what player has already bet this round
     final maxBet = currentPlayer.currentStack + currentPlayer.betThisRound;
     final betRange = maxBet - minBet;
@@ -1416,20 +1425,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       // Round to nearest $0.25
       newBetAmount = (newBetAmount * 4).round() / 4;
     } else {
-      // For tournaments, be more aggressive about detecting all-in intent
-      final allInThreshold = (maxBet * 0.1).clamp(5.0, 20.0); // 10% of stack or at least 5 chips
+      // For tournaments, round to nearest 1 chip
+      newBetAmount = newBetAmount.round().toDouble();
 
+      // All-in detection: if within 5% of max bet, just go all-in
+      final allInThreshold = (maxBet * 0.05).clamp(1.0, 10.0);
       if ((maxBet - newBetAmount) <= allInThreshold) {
-        // If within threshold of all-in, go all-in exactly
         newBetAmount = maxBet;
-      } else {
-        // Otherwise round to nearest 5 chips
-        newBetAmount = (newBetAmount / 5).round() * 5;
-
-        // Final safety check: if rounding put us very close to all-in, just go all-in
-        if ((maxBet - newBetAmount) <= 5) {
-          newBetAmount = maxBet;
-        }
       }
     }
 
