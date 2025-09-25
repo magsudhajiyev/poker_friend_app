@@ -712,6 +712,24 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
   
+  // Check if an action is an all-in action
+  bool _isAllInAction(Map<String, dynamic> action) {
+    final actionType = action['action'] as String?;
+    final amount = action['amount'];
+    final playerStack = action['playerStack'] ?? action['stack'];
+
+    if (actionType == null || (actionType.toLowerCase() != 'raise' && actionType.toLowerCase() != 'bet')) {
+      return false;
+    }
+
+    if (amount == null || playerStack == null) return false;
+
+    final betAmount = (amount as num).toDouble();
+    final stack = (playerStack as num).toDouble();
+
+    return betAmount >= (stack - 0.01); // Allow for small rounding errors
+  }
+
   TableRow _buildActionRow(Map<String, dynamic> action, int buttonPosition, int playerCount,
                           int? heroPosition, Map<String, String> playerNamesMap, int? winnerId, String gameType) {
     final playerSeat = action['player'] as int? ?? action['playerSeat'] as int? ?? 1;
@@ -791,7 +809,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         Container(
           padding: EdgeInsets.symmetric(vertical: 8),
           child: Text(
-            actionType.toUpperCase(),
+            _isAllInAction(action) ? 'ALL IN' : actionType.toUpperCase(),
             style: TextStyle(
               color: actionColor,
               fontSize: 12,
