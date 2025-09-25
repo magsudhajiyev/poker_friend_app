@@ -665,12 +665,23 @@ class PokerGameState {
     if (currentRound == BettingRound.preflop && numberOfPlayers > 2) {
       int bbPosition = _getPositionFromButton(2);
       PlayerState bbPlayer = _getPlayer(bbPosition);
-      
+
+      // If BB has folded, they don't need to act
+      if (bbPlayer.hasFolded) {
+        // BB folded, check if all other active players have acted and called current bet
+        for (PlayerState player in activePlayers) {
+          if (!player.hasActed || !player.hasCalledCurrentBet) {
+            return false;
+          }
+        }
+        return true;
+      }
+
       // If there was betting action (raises), BB must act
-      if (hasBetThisRound && !bbPlayer.hasActed && !bbPlayer.hasFolded) {
+      if (hasBetThisRound && !bbPlayer.hasActed) {
         return false;
       }
-      
+
       // If no betting (everyone just calls/checks to BB), BB can check to end round
       if (!hasBetThisRound) {
         // All players except BB must have acted
@@ -945,9 +956,34 @@ class PokerGameState {
       hasBetThisRound = false;
       currentBet = 0.0;
 
-      // Reset player states for new street
-      for (PlayerState player in players) {
-        player.resetForNewStreet();
+      // Reset player states for new street, but handle all-in scenarios carefully
+      List<int> activePlayers = getActivePlayers();
+      List<int> playersWhoCanAct = getPlayersWhoCanAct();
+      List<int> allInPlayers = getAllInPlayers();
+
+      // In heads-up all-in scenarios, don't reset the non-all-in player's action state
+      // because they've already called/responded to the all-in
+      bool isHeadsUpAllIn = activePlayers.length == 2 && allInPlayers.length == 1 && playersWhoCanAct.length <= 1;
+
+      if (isHeadsUpAllIn && playersWhoCanAct.length == 1) {
+        PlayerState remainingPlayer = _getPlayer(playersWhoCanAct[0]);
+        if (remainingPlayer.hasActed && remainingPlayer.hasCalledCurrentBet) {
+          advances.add("🎯 Heads-up all-in - no action reset needed");
+          // Don't reset anyone's action state
+        } else {
+          // Still need the remaining player to act, reset normally
+          for (PlayerState player in players) {
+            player.resetForNewStreet();
+          }
+        }
+      } else if (playersWhoCanAct.isEmpty) {
+        // Everyone is all-in, no action needed
+        advances.add("🎯 All players all-in - no action reset needed");
+      } else {
+        // Normal situation, reset for new street
+        for (PlayerState player in players) {
+          player.resetForNewStreet();
+        }
       }
     } else {
       // At river, mark as complete and ready for showdown
