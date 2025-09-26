@@ -825,7 +825,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: _getCardColor(card),
                   ),
                 ),
               )).toList(),
@@ -1041,13 +1041,20 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   String _formatPotAmount(double amount, String gameType) {
     if (amount <= 0) return '';
-    
+
     final isCashGame = gameType == 'cash';
-    
+
     if (isCashGame) {
       return 'Pot: \$${amount.toStringAsFixed(2)}';
     } else {
       return 'Pot: ${amount.toInt()}';
     }
+  }
+
+  Color _getCardColor(String card) {
+    if (card.contains('♥') || card.contains('♦')) {
+      return Colors.red;
+    }
+    return Colors.black;
   }
 }
