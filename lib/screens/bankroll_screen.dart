@@ -480,36 +480,39 @@ class _BankrollScreenState extends State<BankrollScreen> with TickerProviderStat
           ),
           SizedBox(height: 20),
           Container(
-            height: 120,
+            height: 140,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: monthlyData.map((data) {
                 final maxValue = monthlyData.map((d) => d['profit'] as double).reduce((a, b) => a > b ? a : b);
-                final height = ((data['profit'] as double) / maxValue * 100).clamp(20.0, 100.0);
+                final height = ((data['profit'] as double) / maxValue * 80).clamp(20.0, 80.0);
                 final isPositive = (data['profit'] as double) >= 0;
 
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 24,
-                      height: height,
-                      decoration: BoxDecoration(
-                        color: isPositive ? Color(0xFF5AC95A) : Color(0xFFFF6B6B),
-                        borderRadius: BorderRadius.circular(4),
+                return Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 24,
+                        height: height,
+                        decoration: BoxDecoration(
+                          color: isPositive ? Color(0xFF5AC95A) : Color(0xFFFF6B6B),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      data['month'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF9A9A9A),
-                        fontWeight: FontWeight.w500,
+                      SizedBox(height: 8),
+                      Text(
+                        data['month'],
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF9A9A9A),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               }).toList(),
             ),
