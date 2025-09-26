@@ -162,6 +162,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     sessionManager.startHand(
       gameState.handNumber,
       gameState.buttonPosition,
+      sbSeat: gameState.effectiveSBPosition,
+      bbSeat: gameState.effectiveBBPosition,
     );
     
     // Auto-start the hand
@@ -1934,6 +1936,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         sessionManager.startHand(
           gameState.handNumber,
           gameState.buttonPosition,
+          sbSeat: gameState.effectiveSBPosition,
+          bbSeat: gameState.effectiveBBPosition,
         );
 
         actions.clear(); // Clear actions for new hand
@@ -2216,6 +2220,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       sessionManager.startHand(
         gameState.handNumber,
         gameState.buttonPosition,
+        sbSeat: gameState.effectiveSBPosition,
+        bbSeat: gameState.effectiveBBPosition,
       );
 
       // Clear actions for new hand but keep the winner announcement
@@ -2269,6 +2275,77 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         gameState.buttonPosition = nextButton;
         addAction("🔄 Button moved to Player $nextButton (active seat)");
       }
+    }
+  }
+
+  void _adjustPositionsAfterPlayerLeaves(int removedPlayerId) {
+    // The core logic: when a player leaves, the positions shift to fill the gap
+    // This affects blind obligations in the next hand
+
+    // Get current position of the removed player
+    String removedPosition = sessionManager.getPlayerNameWithPosition(removedPlayerId);
+
+    // Get all active players (excluding the one who just left)
+    List<int> activePlayers = gameState.getActivePlayers();
+    int activePlayerCount = activePlayers.length;
+
+    if (activePlayerCount < 2) {
+      // End game if less than 2 players
+      addAction("⚠️ Game cannot continue with less than 2 players");
+      return;
+    }
+
+    addAction("📍 Position adjustment: $removedPosition left the table (${activePlayerCount} players remain)");
+
+    // The position adjustment happens automatically when the next hand starts
+    // because getPositionName() calculates positions based on active players
+    // But we log it here for clarity
+    String nextBBSeat = _findNextBBAfterRemoval(removedPlayerId);
+    if (nextBBSeat.isNotEmpty) {
+      addAction("🎯 Next hand: $nextBBSeat will be BB due to position shift");
+    }
+  }
+
+  String _findNextBBAfterRemoval(int removedPlayerId) {
+    // Find which seat will be BB in the next hand due to the position shift
+    try {
+      // Advance button to next hand position
+      int nextButton = gameState.buttonPosition;
+      int attempts = 0;
+      do {
+        nextButton = (nextButton % gameState.numberOfPlayers) + 1;
+        attempts++;
+      } while (!gameState.players[nextButton - 1].isActive && attempts < gameState.numberOfPlayers);
+
+      if (attempts >= gameState.numberOfPlayers) return "";
+
+      // Find BB position (clockwise from button)
+      List<int> activePlayers = gameState.getActivePlayers();
+      if (activePlayers.length < 2) return "";
+
+      // In heads-up: button is SB, other player is BB
+      if (activePlayers.length == 2) {
+        int otherPlayer = activePlayers.firstWhere((p) => p != nextButton);
+        return sessionManager.getPlayerNameWithPosition(otherPlayer);
+      }
+
+      // Multi-way: BB is 2nd clockwise from button
+      int bbSeat = nextButton;
+      int count = 0;
+      do {
+        bbSeat = (bbSeat % gameState.numberOfPlayers) + 1;
+        if (gameState.players[bbSeat - 1].isActive) {
+          count++;
+        }
+      } while (count < 2 && attempts < gameState.numberOfPlayers * 2);
+
+      if (count == 2 && gameState.players[bbSeat - 1].isActive) {
+        return sessionManager.getPlayerNameWithPosition(bbSeat);
+      }
+
+      return "";
+    } catch (e) {
+      return "";
     }
   }
 
@@ -2327,8 +2404,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           player.startingStack = 0.0;
           player.hasFolded = true;
 
+          // Remove from session manager's active seats
+          sessionManager.removePlayer(playerId);
+
           // Adjust button position if needed
           _adjustButtonForRemovedPlayer(playerId);
+
+          // Adjust positions after player removal
+          _adjustPositionsAfterPlayerLeaves(playerId);
 
           addAction("👋 $playerName leaves the table");
 
@@ -2437,6 +2520,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       sessionManager.startHand(
         gameState.handNumber,
         gameState.buttonPosition,
+        sbSeat: gameState.effectiveSBPosition,
+        bbSeat: gameState.effectiveBBPosition,
       );
 
       actions.clear(); // Clear actions for new hand

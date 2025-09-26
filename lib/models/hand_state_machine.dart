@@ -325,6 +325,8 @@ class PokerSessionManager {
   // Player management
   Map<int, String> playerNames = {}; // seat number -> player name
   Set<int> activeSeats = {}; // seats that have players
+  int? actualSBSeat; // Track who actually posted SB (may differ from calculated)
+  int? actualBBSeat; // Track who actually posted BB (may differ from calculated)
 
   PokerSessionManager({
     required this.smallBlind,
@@ -376,7 +378,7 @@ class PokerSessionManager {
   }
 
   // Start a new hand
-  void startHand(int handNumber, int buttonPosition) {
+  void startHand(int handNumber, int buttonPosition, {int? sbSeat, int? bbSeat}) {
     // Only complete previous hand if it has actions (not empty)
     if (currentHand != null && currentHand!.state == HandState.inProgress) {
       if (currentHand!.actions.isNotEmpty) {
@@ -388,8 +390,10 @@ class PokerSessionManager {
       }
     }
 
-    // Update current button position
+    // Update current button position and blind positions
     this.buttonPosition = buttonPosition;
+    this.actualSBSeat = sbSeat;
+    this.actualBBSeat = bbSeat;
 
     currentHand = HandRecord(
       handNumber: handNumber,
@@ -415,9 +419,9 @@ class PokerSessionManager {
       return;
     }
 
-    // Get player name and position
+    // Get player name and position using consistent logic
     final playerName = getPlayerName(player);
-    final playerPosition = PokerPositions.getPositionName(player, buttonPosition, playerCount);
+    final playerPosition = getPlayerName(player); // This now returns the correct position
 
     final actionRecord = ActionRecord(
       player: player,
@@ -904,9 +908,33 @@ class PokerSessionManager {
   // Get our position relative to button for a given hand
   String? getOurPosition(int handButtonPosition) {
     if (ourSeatNumber == null) return null;
-    
-    // Use the PokerPositions utility for consistent position naming
-    return PokerPositions.getPositionName(ourSeatNumber!, handButtonPosition, playerCount);
+
+    // Use the same logic as getPlayerName but with the provided button position
+    final activeSeatsList = activeSeats.toList()..sort();
+    final currentActivePlayerCount = activeSeatsList.length;
+
+    // Check if we are actually posting blinds or button
+    if (ourSeatNumber == actualBBSeat) {
+      return 'BB';
+    } else if (ourSeatNumber == actualSBSeat) {
+      return 'SB';
+    } else if (ourSeatNumber == handButtonPosition) {
+      return 'BTN';
+    } else {
+      // For non-blind positions, calculate based on active players only
+      int activeButtonIndex = activeSeatsList.indexOf(handButtonPosition);
+      int activePlayerIndex = activeSeatsList.indexOf(ourSeatNumber!);
+
+      if (activeButtonIndex == -1 || activePlayerIndex == -1) {
+        // Fallback if something goes wrong
+        final effectivePlayerCount = currentActivePlayerCount > 0 ? currentActivePlayerCount : playerCount;
+        return PokerPositions.getPositionName(ourSeatNumber!, handButtonPosition, effectivePlayerCount);
+      } else {
+        // Calculate position relative to button among active players only
+        int relativePosition = (activePlayerIndex - activeButtonIndex + currentActivePlayerCount) % currentActivePlayerCount;
+        return PokerPositions.getPositionName(relativePosition + 1, 1, currentActivePlayerCount);
+      }
+    }
   }
 
   // Check if we played in a hand (had any actions)
@@ -959,8 +987,15 @@ class PokerSessionManager {
 
   void setPlayerName(int seatNumber, String name) {
     if (seatNumber >= 1 && seatNumber <= playerCount) {
-      playerNames[seatNumber] = name.trim().isEmpty ? 
-        PokerPositions.getPositionName(seatNumber, buttonPosition, playerCount) : name;
+      if (name.trim().isEmpty) {
+        // Use current number of active players for position calculation
+        final currentActivePlayerCount = activeSeats.length;
+        // Fallback to original player count if no active players
+        final effectivePlayerCount = currentActivePlayerCount > 0 ? currentActivePlayerCount : playerCount;
+        playerNames[seatNumber] = PokerPositions.getPositionName(seatNumber, buttonPosition, effectivePlayerCount);
+      } else {
+        playerNames[seatNumber] = name;
+      }
       activeSeats.add(seatNumber);
     }
   }
@@ -973,20 +1008,86 @@ class PokerSessionManager {
   void addPlayer(int seatNumber, String name) {
     if (seatNumber >= 1 && seatNumber <= playerCount) {
       activeSeats.add(seatNumber);
-      playerNames[seatNumber] = name.trim().isEmpty ? 
-        PokerPositions.getPositionName(seatNumber, buttonPosition, playerCount) : name;
+      if (name.trim().isEmpty) {
+        // Use current number of active players for position calculation
+        final currentActivePlayerCount = activeSeats.length;
+        // Fallback to original player count if no active players
+        final effectivePlayerCount = currentActivePlayerCount > 0 ? currentActivePlayerCount : playerCount;
+        playerNames[seatNumber] = PokerPositions.getPositionName(seatNumber, buttonPosition, effectivePlayerCount);
+      } else {
+        playerNames[seatNumber] = name;
+      }
     }
   }
 
   String getPlayerName(int seatNumber) {
-    return playerNames[seatNumber] ?? 
-      PokerPositions.getPositionName(seatNumber, buttonPosition, playerCount);
+    if (playerNames[seatNumber] != null) {
+      return playerNames[seatNumber]!;
+    }
+
+    // Calculate position the same way as getPlayerNameWithPosition but without seat prefix
+    final activeSeatsList = activeSeats.toList()..sort();
+    final currentActivePlayerCount = activeSeatsList.length;
+
+    // Check if this player is actually posting blinds or button
+    if (seatNumber == actualBBSeat) {
+      return 'BB';
+    } else if (seatNumber == actualSBSeat) {
+      return 'SB';
+    } else if (seatNumber == buttonPosition) {
+      return 'BTN';
+    } else {
+      // For non-blind positions, calculate based on active players only
+      int activeButtonIndex = activeSeatsList.indexOf(buttonPosition);
+      int activePlayerIndex = activeSeatsList.indexOf(seatNumber);
+
+      if (activeButtonIndex == -1 || activePlayerIndex == -1) {
+        // Fallback if something goes wrong
+        final effectivePlayerCount = currentActivePlayerCount > 0 ? currentActivePlayerCount : playerCount;
+        return PokerPositions.getPositionName(seatNumber, buttonPosition, effectivePlayerCount);
+      } else {
+        // Calculate position relative to button among active players only
+        int relativePosition = (activePlayerIndex - activeButtonIndex + currentActivePlayerCount) % currentActivePlayerCount;
+        return PokerPositions.getPositionName(relativePosition + 1, 1, currentActivePlayerCount);
+      }
+    }
   }
 
   /// Get player name with current position for display purposes
   String getPlayerNameWithPosition(int seatNumber) {
     final playerName = playerNames[seatNumber];
-    final currentPosition = PokerPositions.getPositionName(seatNumber, buttonPosition, playerCount);
+
+    // Get active seats sorted
+    final activeSeatsList = activeSeats.toList()..sort();
+    final currentActivePlayerCount = activeSeatsList.length;
+
+    // Check if this player is actually posting blinds or button
+    String currentPosition;
+    if (seatNumber == actualBBSeat) {
+      currentPosition = 'BB';
+    } else if (seatNumber == actualSBSeat) {
+      currentPosition = 'SB';
+    } else if (seatNumber == buttonPosition) {
+      currentPosition = 'BTN';
+    } else {
+      // For non-blind positions, we need to calculate based on active players only
+      // Find the player's position in the active seats relative to button
+      int activeButtonIndex = activeSeatsList.indexOf(buttonPosition);
+      int activePlayerIndex = activeSeatsList.indexOf(seatNumber);
+
+      if (activeButtonIndex == -1 || activePlayerIndex == -1) {
+        // Fallback if something goes wrong
+        final effectivePlayerCount = currentActivePlayerCount > 0 ? currentActivePlayerCount : playerCount;
+        currentPosition = PokerPositions.getPositionName(seatNumber, buttonPosition, effectivePlayerCount);
+      } else {
+        // Calculate position relative to button among active players only
+        int relativePosition = (activePlayerIndex - activeButtonIndex + currentActivePlayerCount) % currentActivePlayerCount;
+
+        // Create a "virtual" seat number based on position in active players
+        // This ensures positions are calculated correctly for the current active player count
+        currentPosition = PokerPositions.getPositionName(relativePosition + 1, 1, currentActivePlayerCount);
+      }
+    }
 
     // If no custom name assigned or name is just the position, show "Seat X (Position)"
     if (playerName == null || playerName == currentPosition || PokerPositions.isPositionName(playerName)) {

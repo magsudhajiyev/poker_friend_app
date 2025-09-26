@@ -106,7 +106,13 @@ class PokerGameState {
   int _currentPlayer = 1;
   double currentPot = 0.0;
   double currentBet = 0.0;
+  int _effectiveBBPosition = 1; // Track who actually posted BB
+  int _effectiveSBPosition = 1; // Track who actually posted SB
   
+  // Getters for effective blind positions
+  int get effectiveBBPosition => _effectiveBBPosition;
+  int get effectiveSBPosition => _effectiveSBPosition;
+
   // Debug property with logging for buttonPosition
   int get buttonPosition => _buttonPosition;
   set buttonPosition(int value) {
@@ -188,21 +194,30 @@ class PokerGameState {
       }
     } else {
       // Multi-way: UTG (Under The Gun) acts first
-      // UTG is always 3 positions after button (after SB and BB)
-      int utgPosition = PokerPositions.getUTGSeat(buttonPosition, numberOfPlayers);
+      // Determine who will actually post the BB
+      int effectiveBBPosition = _determineEffectiveBBPosition();
+      int standardUTGPosition = PokerPositions.getUTGSeat(buttonPosition, numberOfPlayers);
+      int calculatedBBPosition = _getPositionFromButton(2);
 
-      // Check if UTG player is active and has chips
+      int utgPosition;
+      if (effectiveBBPosition == calculatedBBPosition) {
+        // Normal case: BB posted by calculated position, use standard UTG
+        utgPosition = standardUTGPosition;
+      } else {
+        // BB was moved to a different player, UTG is first player after effective BB
+        utgPosition = (effectiveBBPosition % numberOfPlayers) + 1;
+      }
+
+      // Check if the calculated UTG position is active, otherwise find next active
       PlayerState utgPlayer = _getPlayer(utgPosition);
-      print('🔍 DEBUG: UTG Player $utgPosition state - isActive: ${utgPlayer.isActive}, currentStack: ${utgPlayer.currentStack}');
-
       if (utgPlayer.isActive && utgPlayer.currentStack > 0) {
         currentPlayer = utgPosition;
-        print('DEBUG: Multi-way preflop, BTN=$buttonPosition, UTG calculated as $utgPosition, currentPlayer set to $currentPlayer');
       } else {
-        // Find first active player after UTG position
-        currentPlayer = _getNextActivePlayer(utgPosition);
-        print('DEBUG: Multi-way preflop, BTN=$buttonPosition, UTG $utgPosition inactive (active: ${utgPlayer.isActive}, stack: ${utgPlayer.currentStack}), currentPlayer set to $currentPlayer');
+        currentPlayer = _findNextActivePlayer(utgPosition);
       }
+
+      print('🔍 DEBUG: Calculated BB=$calculatedBBPosition, Effective BB=$effectiveBBPosition, UTG search starts at $utgPosition');
+      print('DEBUG: Multi-way preflop, BTN=$buttonPosition, standardUTG=$standardUTGPosition, actualUTG=$utgPosition, currentPlayer=$currentPlayer');
     }
 
     // No one has "called" yet in preflop - everyone needs to act including BB
@@ -219,12 +234,50 @@ class PokerGameState {
       print('ERROR: Invalid buttonPosition $buttonPosition in _getPositionFromButton');
       return 1;
     }
-    
+
     int position = buttonPosition;
     for (int i = 0; i < seatsLeft; i++) {
       position = (position % numberOfPlayers) + 1;
     }
     return position;
+  }
+
+  // Helper method to find the next active player from a starting position
+  int _findNextActivePlayer(int startingPosition) {
+    int position = startingPosition;
+    int checked = 0;
+
+    while (checked < numberOfPlayers) {
+      PlayerState player = _getPlayer(position);
+      if (player.isActive && player.currentStack > 0) {
+        return position;
+      }
+      position = (position % numberOfPlayers) + 1;
+      checked++;
+    }
+
+    // No active players found - return the starting position as fallback
+    print('⚠️ WARNING: No active players found when searching from position $startingPosition');
+    return startingPosition;
+  }
+
+  // Helper method to determine who will post the BB (before actually posting)
+  int _determineEffectiveBBPosition() {
+    // Safety check for number of players
+    if (numberOfPlayers <= 0) {
+      print('⚠️ WARNING: numberOfPlayers is $numberOfPlayers in _determineEffectiveBBPosition');
+      return 1; // Fallback to position 1
+    }
+
+    int calculatedBBPosition = _getPositionFromButton(2);
+    PlayerState bbPlayer = _getPlayer(calculatedBBPosition);
+
+    if (bbPlayer.isActive && bbPlayer.currentStack > 0) {
+      return calculatedBBPosition;
+    } else {
+      // Find next active player to post BB
+      return _findNextActivePlayer(calculatedBBPosition);
+    }
   }
 
   PlayerState _getPlayer(int playerId) {
@@ -1073,6 +1126,7 @@ class PokerGameState {
   void initializePot() {
     currentPot = 0.0;
     currentBet = bigBlind.toDouble();
+    _effectiveBBPosition = _determineEffectiveBBPosition(); // Set before posting
     print('🎯 DEBUG: initializePot() - Starting with currentPot: $currentPot');
 
     // Post blinds
@@ -1095,9 +1149,32 @@ class PokerGameState {
         sbPlayer.currentStack -= sbAmount;
         sbPlayer._updateAllInStatus();
         currentPot += sbAmount;
+        _effectiveSBPosition = sbPosition; // Track who posted SB
         print('🎯 DEBUG: Added SB $sbAmount - currentPot: $currentPot');
       } else {
-        print('⚠️ DEBUG: SB position $sbPosition is empty/busted - no SB posted');
+        print('⚠️ DEBUG: SB position $sbPosition is empty/busted - searching for next active player');
+
+        // Find the next active player to post the SB
+        int nextSBPosition = _findNextActivePlayer(sbPosition);
+        PlayerState nextSBPlayer = _getPlayer(nextSBPosition);
+
+        if (nextSBPlayer.isActive && nextSBPlayer.currentStack > 0 && nextSBPosition != sbPosition) {
+          print('🎯 DEBUG: Found next active SB at position $nextSBPosition');
+
+          // Post the SB with the active player
+          double sbAmount = smallBlind.toDouble();
+          if (nextSBPlayer.currentStack < sbAmount) {
+            sbAmount = nextSBPlayer.currentStack; // All-in for less
+          }
+          nextSBPlayer.betThisRound = sbAmount;
+          nextSBPlayer.currentStack -= sbAmount;
+          nextSBPlayer._updateAllInStatus();
+          currentPot += sbAmount;
+          _effectiveSBPosition = nextSBPosition; // Track who actually posted SB
+          print('🎯 DEBUG: Next active SB posted $sbAmount - currentPot: $currentPot');
+        } else {
+          print('⚠️ DEBUG: No active players found for SB posting');
+        }
       }
 
       // Check if BB seat is active and has chips to post blind
@@ -1131,6 +1208,7 @@ class PokerGameState {
         bbPlayer.currentStack -= totalBBPost;
         bbPlayer._updateAllInStatus();
         currentPot += totalBBPost;
+        _effectiveBBPosition = bbPosition; // Track who posted BB
 
         if (hasBBante) {
           print('🎯 DEBUG: BB posted $bbAmount + ante $anteAmount = $totalBBPost - currentPot: $currentPot');
@@ -1138,14 +1216,61 @@ class PokerGameState {
           print('🎯 DEBUG: Added BB $bbAmount - currentPot: $currentPot');
         }
       } else {
-        print('⚠️ DEBUG: BB position $bbPosition is empty/busted - no BB posted');
-        // If BB seat is empty, adjust current bet based on what's actually in the pot
-        if (sbPlayer.isActive && sbPlayer.currentStack > 0) {
-          // Only SB posted, so minimum bet should be SB amount
-          currentBet = smallBlind.toDouble();
+        print('⚠️ DEBUG: BB position $bbPosition is empty/busted - searching for next active player');
+
+        // Find the next active player to post the BB
+        int nextBBPosition = _findNextActivePlayer(bbPosition);
+        PlayerState nextBBPlayer = _getPlayer(nextBBPosition);
+
+        if (nextBBPlayer.isActive && nextBBPlayer.currentStack > 0 && nextBBPosition != bbPosition) {
+          print('🎯 DEBUG: Found next active BB at position $nextBBPosition');
+
+          // Post the BB with the active player
+          double bbAmount = bigBlind.toDouble();
+          double anteAmount = 0.0;
+
+          // If BB ante is enabled, BB posts an additional ante equal to BB amount
+          if (hasBBante) {
+            anteAmount = bigBlind.toDouble();
+            print('🎯 DEBUG: BB ante enabled - ante amount: $anteAmount');
+          }
+
+          double totalBBPost = bbAmount + anteAmount;
+
+          if (nextBBPlayer.currentStack < totalBBPost) {
+            totalBBPost = nextBBPlayer.currentStack; // All-in for less
+            // If all-in, split proportionally between BB and ante
+            if (hasBBante && totalBBPost > 0) {
+              bbAmount = totalBBPost / 2;
+              anteAmount = totalBBPost - bbAmount;
+            } else {
+              bbAmount = totalBBPost;
+              anteAmount = 0.0;
+            }
+            currentBet = bbAmount; // Adjust current bet if BB is all-in for less
+          }
+
+          nextBBPlayer.betThisRound = bbAmount; // Only the BB portion counts as bet
+          nextBBPlayer.currentStack -= totalBBPost;
+          nextBBPlayer._updateAllInStatus();
+          currentPot += totalBBPost;
+          _effectiveBBPosition = nextBBPosition; // Track who actually posted BB
+
+          if (hasBBante) {
+            print('🎯 DEBUG: Next active BB posted $bbAmount + ante $anteAmount = $totalBBPost - currentPot: $currentPot');
+          } else {
+            print('🎯 DEBUG: Next active BB posted $bbAmount - currentPot: $currentPot');
+          }
         } else {
-          // Both SB and BB empty - no mandatory betting
-          currentBet = 0.0;
+          print('⚠️ DEBUG: No active players found for BB posting');
+          // If BB seat is empty, adjust current bet based on what's actually in the pot
+          if (sbPlayer.isActive && sbPlayer.currentStack > 0) {
+            // Only SB posted, so minimum bet should be SB amount
+            currentBet = smallBlind.toDouble();
+          } else {
+            // Both SB and BB empty - no mandatory betting
+            currentBet = 0.0;
+          }
         }
       }
 
@@ -1167,6 +1292,7 @@ class PokerGameState {
         sbPlayer.currentStack -= sbAmount;
         sbPlayer._updateAllInStatus();
         currentPot += sbAmount;
+        _effectiveSBPosition = sbPosition; // Track who posted SB in heads-up
         print('🎯 DEBUG: Heads-up SB $sbAmount posted - currentPot: $currentPot');
       }
 
@@ -1200,6 +1326,7 @@ class PokerGameState {
         bbPlayer.currentStack -= totalBBPost;
         bbPlayer._updateAllInStatus();
         currentPot += totalBBPost;
+        _effectiveBBPosition = bbPosition; // Track who posted BB in heads-up
 
         if (hasBBante) {
           print('🎯 DEBUG: Heads-up BB posted $bbAmount + ante $anteAmount = $totalBBPost - currentPot: $currentPot');
