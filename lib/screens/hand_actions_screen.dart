@@ -574,20 +574,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           _buildStreetSection('PREFLOP', null, actionsByStreet['preflop']!, 
                             buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['preflopPot']),
         
-        // Flop
-        if (flop.isNotEmpty && actionsByStreet['flop']!.isNotEmpty)
-          _buildStreetSection('FLOP', flop, actionsByStreet['flop']!, 
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['flopPot']),
-        
-        // Turn
-        if (turn != null && actionsByStreet['turn']!.isNotEmpty)
-          _buildStreetSection('TURN', [turn], actionsByStreet['turn']!, 
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['turnPot']),
-        
-        // River
-        if (river != null && actionsByStreet['river']!.isNotEmpty)
-          _buildStreetSection('RIVER', [river], actionsByStreet['river']!, 
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['riverPot']),
+        // Show board cards - either by street (if there were actions) or combined (if all-in)
+        _buildPostflopSections(widget.hand, flop, turn, river, actionsByStreet,
+                             buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType),
       ],
     );
   }
@@ -728,6 +717,156 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final stack = (playerStack as num).toDouble();
 
     return betAmount >= (stack - 0.01); // Allow for small rounding errors
+  }
+
+  // Check if this hand has any all-in actions
+  bool _isAllInSituation(Map<String, dynamic> hand) {
+    final actions = hand['actions'] as List<dynamic>? ?? [];
+    return actions.any((action) => _isAllInAction(action));
+  }
+
+  // Check if there are any postflop actions
+  bool _hasPostflopActions(Map<String, dynamic> hand) {
+    final actions = hand['actions'] as List<dynamic>? ?? [];
+    return actions.any((action) =>
+      action['street'] != null &&
+      action['street'].toString().toLowerCase() != 'preflop'
+    );
+  }
+
+  // Build postflop sections with smart layout for all-in vs regular hands
+  Widget _buildPostflopSections(
+    Map<String, dynamic> hand,
+    List<String> flop,
+    String? turn,
+    String? river,
+    Map<String, List<Map<String, dynamic>>> actionsByStreet,
+    int buttonPosition,
+    int playerCount,
+    int? heroPosition,
+    Map<String, String> playerNamesMap,
+    int? winnerId,
+    GameType gameType,
+  ) {
+    final hasPostflopActions = _hasPostflopActions(hand);
+    final isAllInSituation = _isAllInSituation(hand);
+
+    // If it's an all-in situation with no postflop actions, combine all cards in one section
+    if (isAllInSituation && !hasPostflopActions) {
+      return _buildCombinedBoardSection(flop, turn, river, gameType);
+    } else {
+      // Regular situation or all-in with postflop actions: show by street
+      return _buildStreetByStreetSections(
+        flop, turn, river, actionsByStreet,
+        buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType
+      );
+    }
+  }
+
+  // Build combined board section for all-in situations
+  Widget _buildCombinedBoardSection(List<String> flop, String? turn, String? river, GameType gameType) {
+    // Collect all board cards
+    final allCards = <String>[];
+    allCards.addAll(flop);
+    if (turn != null && turn.isNotEmpty) allCards.add(turn);
+    if (river != null && river.isNotEmpty) allCards.add(river);
+
+    if (allCards.isEmpty) return SizedBox.shrink();
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFF2A2A2E)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Color(0xFF161618),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'BOARD',
+                  style: TextStyle(
+                    color: Color(0xFF5AC95A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Cards
+          Container(
+            padding: EdgeInsets.all(16),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: allCards.map((card) => Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Text(
+                  card,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              )).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build street-by-street sections for regular hands
+  Widget _buildStreetByStreetSections(
+    List<String> flop,
+    String? turn,
+    String? river,
+    Map<String, List<Map<String, dynamic>>> actionsByStreet,
+    int buttonPosition,
+    int playerCount,
+    int? heroPosition,
+    Map<String, String> playerNamesMap,
+    int? winnerId,
+    GameType gameType,
+  ) {
+    return Column(
+      children: [
+        // Flop - show if there are cards (with or without actions)
+        if (flop.isNotEmpty)
+          _buildStreetSection('FLOP', flop, actionsByStreet['flop']!,
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['flopPot']),
+
+        // Turn - show if there are cards (with or without actions)
+        if (turn != null && turn.isNotEmpty)
+          _buildStreetSection('TURN', [turn], actionsByStreet['turn']!,
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['turnPot']),
+
+        // River - show if there are cards (with or without actions)
+        if (river != null && river.isNotEmpty)
+          _buildStreetSection('RIVER', [river], actionsByStreet['river']!,
+                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['riverPot']),
+      ],
+    );
   }
 
   TableRow _buildActionRow(Map<String, dynamic> action, int buttonPosition, int playerCount,

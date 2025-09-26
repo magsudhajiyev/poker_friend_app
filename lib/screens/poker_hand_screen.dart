@@ -6,6 +6,7 @@ import 'package:vibration/vibration.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../widgets/drawing_painter.dart';
 import '../widgets/board_cards_dialog.dart';
+import '../widgets/all_in_board_cards_dialog.dart';
 import '../widgets/hole_cards_dialog.dart';
 import '../widgets/showdown_dialog.dart';
 import 'seat_setup_screen.dart';
@@ -50,6 +51,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   late PokerSessionManager sessionManager;
   bool useButtonMode = false;
   bool autoAdvanceStreets = false;
+  bool _allInHandCompleted = false;
   
   // Drag betting state
   bool _isDragBetting = false;
@@ -189,29 +191,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   Future<void> _stopSession() async {
-    print('🔄 DEBUG: _stopSession called');
-    print('🔄 DEBUG: Session ID: ${sessionManager.sessionId}');
-    print('🔄 DEBUG: Completed hands: ${sessionManager.completedHands.length}');
     
     // Show session name input dialog
     final sessionName = await _showSessionNameDialog();
     if (sessionName == null) {
-      print('🔄 DEBUG: Session name dialog cancelled by user');
       return; // User cancelled
     }
     
-    print('🔄 DEBUG: Session name entered: "$sessionName"');
     
     try {
-      print('🔄 DEBUG: Calling sessionManager.endSession()');
       // End the current session
       await sessionManager.endSession();
-      print('🔄 DEBUG: sessionManager.endSession() completed successfully');
       
-      print('🔄 DEBUG: Calling _updateSessionName("$sessionName")');
       // Update session with the provided name
       await _updateSessionName(sessionName);
-      print('🔄 DEBUG: _updateSessionName completed successfully');
       
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
@@ -221,7 +214,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         ),
       );
       
-      print('🔄 DEBUG: Session "$sessionName" completed successfully');
       
       // Navigate back to home screen
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -292,34 +284,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   Future<void> _updateSessionName(String sessionName) async {
-    print('💾 DEBUG: _updateSessionName called with: "$sessionName"');
     if (sessionManager.sessionId == null) {
-      print('💾 DEBUG: No session ID found, returning early');
       return;
     }
     
-    print('💾 DEBUG: Session ID: ${sessionManager.sessionId}');
     
     try {
-      print('💾 DEBUG: Attempting to update Firebase...');
       // Try to update in Firebase first
       await FirebaseService.updateSessionName(sessionManager.sessionId!, sessionName);
-      print('💾 DEBUG: Firebase update successful');
     } catch (e) {
-      print('💾 DEBUG: Failed to update session name in Firebase: $e');
     }
     
     try {
-      print('💾 DEBUG: Attempting to update local storage...');
       // Always update in local storage
       await LocalStorageService.updateSessionName(sessionManager.sessionId!, sessionName);
-      print('💾 DEBUG: Local storage update successful');
     } catch (e) {
-      print('💾 DEBUG: Failed to update session name in local storage: $e');
       rethrow;
     }
     
-    print('💾 DEBUG: _updateSessionName completed successfully');
   }
 
   Future<void> _managePlayersDialog() async {
@@ -350,7 +332,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // End session when leaving
     if (sessionManager.sessionState == SessionState.active) {
       sessionManager.endSession().catchError((e) {
-        print('Error ending session: $e');
       });
     }
     
@@ -366,7 +347,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       final stack = gameState.getPlayerStack(gameState.currentPlayer);
       return gameState.formatCurrency(stack);
     } catch (e) {
-      print('Error getting current player stack: $e');
       return gameState.formatCurrency(0.0);
     }
   }
@@ -378,7 +358,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       }
       return sessionManager.getPlayerNameWithPosition(gameState.currentPlayer);
     } catch (e) {
-      print('Error getting current player name: $e');
       return 'Unknown';
     }
   }
@@ -386,7 +365,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   // Race condition prevention for PostFrameCallbacks
   void _schedulePostFrameAction(VoidCallback action) {
     if (_isProcessingPostFrameAction) {
-      print('Preventing duplicate PostFrameCallback execution');
       return;
     }
     
@@ -396,7 +374,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         try {
           action();
         } catch (e) {
-          print('Error in PostFrameCallback action: $e');
         } finally {
           _isProcessingPostFrameAction = false;
         }
@@ -525,10 +502,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
-                          onPressed: completeHand,
+                          onPressed: _allInHandCompleted ? null : completeHand,
                           icon: Icon(
                             Icons.check,
-                            color: Colors.white,
+                            color: _allInHandCompleted ? Colors.grey : Colors.white,
                             size: 18,
                           ),
                           padding: EdgeInsets.zero,
@@ -1528,21 +1505,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         // Use a post frame callback to avoid calling setState during build
         _schedulePostFrameAction(() {
           if (gameState.shouldAutoAdvanceToShowdown()) {
-            // Auto-advance to next street only (allows board card input)
-            String autoAdvanceResult = gameState.autoAdvanceToNextStreet();
-            for (String line in autoAdvanceResult.split('\n')) {
-              if (line.trim().isNotEmpty) {
-                addAction(line.trim());
-              }
-            }
-            setState(() {});
-
-            // Show board cards dialog for the street we just advanced to
-            if (gameState.currentRound == BettingRound.flop ||
-                gameState.currentRound == BettingRound.turn ||
-                gameState.currentRound == BettingRound.river) {
-              _showBoardCardsDialog(gameState.currentRound);
-            }
+            // This is an all-in situation - show all-in board dialog
+            addAction("🎯 All-in situation detected - no more actions possible");
+            _showAllInBoardCardsDialog();
           } else if (gameState.areAllPlayersAllIn()) {
             addAction("🎯 All players all-in - auto-advancing to next street...");
             nextStreet();
@@ -1616,21 +1581,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         // Use a post frame callback to avoid calling setState during build
         _schedulePostFrameAction(() {
           if (gameState.shouldAutoAdvanceToShowdown()) {
-            // Auto-advance to next street only (allows board card input)
-            String autoAdvanceResult = gameState.autoAdvanceToNextStreet();
-            for (String line in autoAdvanceResult.split('\n')) {
-              if (line.trim().isNotEmpty) {
-                addAction(line.trim());
-              }
-            }
-            setState(() {});
-
-            // Show board cards dialog for the street we just advanced to
-            if (gameState.currentRound == BettingRound.flop ||
-                gameState.currentRound == BettingRound.turn ||
-                gameState.currentRound == BettingRound.river) {
-              _showBoardCardsDialog(gameState.currentRound);
-            }
+            // This is an all-in situation - show all-in board dialog
+            addAction("🎯 All-in situation detected - no more actions possible");
+            _showAllInBoardCardsDialog();
           } else if (gameState.areAllPlayersAllIn()) {
             addAction("🎯 All players all-in - auto-advancing to next street...");
             nextStreet();
@@ -1769,12 +1722,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       _handleHandComplete();
       return;
     }
-    
+
+    // Check if this is an all-in situation where no one can act
+    if (gameState.shouldAutoAdvanceToShowdown()) {
+      addAction("🎯 All-in situation - selecting all board cards");
+      _showAllInBoardCardsDialog();
+      return;
+    }
+
     // First proceed to next street
     _proceedToNextStreet();
-    
+
     // Then show board cards dialog for the street we just entered
-    if (gameState.currentRound == BettingRound.flop || 
+    if (gameState.currentRound == BettingRound.flop ||
         gameState.currentRound == BettingRound.turn ||
         gameState.currentRound == BettingRound.river) {
       _showBoardCardsDialog(gameState.currentRound);
@@ -1796,7 +1756,193 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
            round == BettingRound.river;
   }
 
+  // Check if we should show all-in board card dialog instead of street-by-street
+  bool _shouldShowAllInBoardDialog() {
+    // We should show all-in dialog when:
+    // 1. We're in a situation where no one can act anymore (all-in showdown)
+    // 2. AND we haven't set all board cards yet
+    if (!gameState.shouldAutoAdvanceToShowdown()) return false;
+
+    final currentHand = sessionManager.currentHand;
+    final boardCards = currentHand?.boardCards;
+
+    // Check if we have all board cards already
+    if (boardCards != null) {
+      bool hasAllCards = boardCards.flop.length == 3 &&
+                        boardCards.turn != null && boardCards.turn!.isNotEmpty &&
+                        boardCards.river != null && boardCards.river!.isNotEmpty;
+      if (hasAllCards) return false; // Already has all cards
+    }
+
+    return true;
+  }
+
+  void _showAllInBoardCardsDialog() async {
+    // Collect hole cards to exclude from board card selection
+    List<String> excludedCards = [];
+    final ourHoleCards = sessionManager.currentHand?.ourHoleCards;
+    if (ourHoleCards?.card1 != null && ourHoleCards!.card1!.isNotEmpty) {
+      excludedCards.add(ourHoleCards!.card1!);
+    }
+    if (ourHoleCards?.card2 != null && ourHoleCards!.card2!.isNotEmpty) {
+      excludedCards.add(ourHoleCards!.card2!);
+    }
+
+    final result = await showDialog<BoardCards>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AllInBoardCardsDialog(
+        excludedCards: excludedCards,
+      ),
+    );
+
+    if (result != null && sessionManager.currentHand != null) {
+      sessionManager.currentHand!.setBoardCards(result);
+      addAction("🃏 All board cards selected: ${result.flop.join(' ')} ${result.turn} ${result.river}");
+
+      // Skip to river (since we have all cards now)
+      gameState.currentRound = BettingRound.river;
+      gameState.bettingRoundComplete = true;
+
+      setState(() {});
+
+      // Now show winner selection
+      _showWinnerSelectionForAllIn();
+    }
+  }
+
+  void _showWinnerSelectionForAllIn() async {
+    // Get active players and their names
+    final activePlayers = gameState.getActivePlayers();
+    List<String> playerNames = [];
+
+    for (int playerId in activePlayers) {
+      String playerName = sessionManager.getPlayerNameWithPosition(playerId);
+      playerNames.add(playerName);
+    }
+
+    final potAmount = gameState.currentPot;
+
+    final winnerResult = await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WinnerSelectionDialog(
+        activePlayers: activePlayers,
+        playerNames: playerNames,
+        potAmount: potAmount,
+        gameType: widget.gameType,
+        buttonPosition: gameState.buttonPosition,
+        playerCount: gameState.numberOfPlayers,
+      ),
+    );
+
+    if (winnerResult != null) {
+      // Process the winner result and complete the hand
+      _processAllInWinnerResult(winnerResult);
+    }
+  }
+
+  void _processAllInWinnerResult(Map<String, dynamic> winnerResult) {
+    final isChoppedPot = winnerResult['isChoppedPot'] as bool? ?? false;
+
+    // Mark hand as completed and use the standard finalization flow
+    _allInHandCompleted = true;
+    setState(() {});
+    addAction("✅ All-in hand completed!");
+
+    if (isChoppedPot) {
+      // Handle chopped pot
+      final winnerIds = List<int>.from(winnerResult['winnerIds'] ?? []);
+      final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
+      final individualShares = winnerResult['individualShares'] as Map<int, double>?;
+      final sharePerWinner = winnerResult['sharePerWinner'] as double?;
+
+      addAction("🏆 Chopped pot between ${winnerIds.length} players");
+    } else {
+      // Handle single winner
+      final winnerId = winnerResult['winnerId'] as int? ?? winnerResult['winner'] as int?;
+      final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
+
+      if (winnerId != null) {
+        final winnerName = sessionManager.getPlayerNameWithPosition(winnerId);
+        addAction("🏆 Winner: $winnerName");
+      }
+    }
+
+    // Show hole cards dialog first, then complete the hand with winner info
+    Future.delayed(Duration(milliseconds: 500), () async {
+      // Show hole cards dialog first
+      await _showHoleCardsDialog();
+
+      // Now complete the hand with proper winner info
+      if (isChoppedPot) {
+        final winnerIds = List<int>.from(winnerResult['winnerIds'] ?? []);
+        final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
+        final individualShares = winnerResult['individualShares'] as Map<int, double>?;
+        final sharePerWinner = winnerResult['sharePerWinner'] as double?;
+
+        sessionManager.completeCurrentHandWithChop(
+          potAmount: potAmount,
+          winnerIds: winnerIds,
+          individualShares: individualShares,
+          sharePerWinner: sharePerWinner,
+        );
+
+        // Update winners' stacks in game state to prevent them being marked as busted
+        for (int winnerId in winnerIds) {
+          final winnerPlayer = gameState.players[winnerId - 1];
+          final winnerShare = individualShares?[winnerId] ?? (sharePerWinner ?? (potAmount / winnerIds.length));
+          winnerPlayer.currentStack += winnerShare;
+        }
+      } else {
+        final winnerId = winnerResult['winnerId'] as int? ?? winnerResult['winner'] as int?;
+        final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
+
+        if (winnerId != null) {
+          sessionManager.completeCurrentHand(
+            potAmount: potAmount,
+            winnerId: winnerId,
+          );
+
+          // Update winner's stack in game state to prevent them being marked as busted
+          final winnerPlayer = gameState.players[winnerId - 1];
+          winnerPlayer.currentStack += potAmount;
+        }
+      }
+
+      // Check for busted players and start next hand
+      await _checkForBustedPlayers();
+
+      setState(() {
+        // Reset all-in completion flag for new hand
+        _allInHandCompleted = false;
+
+        // Start new hand in game state
+        gameState.startNewHand();
+
+        // Start new hand in session manager
+        sessionManager.startHand(
+          gameState.handNumber,
+          gameState.buttonPosition,
+        );
+
+        actions.clear(); // Clear actions for new hand
+        actions.add("💾 Hand #${gameState.handNumber - 1} saved");
+        actions.add("Hand #${gameState.handNumber} started");
+        actions.add(gameState.getGameStateInfo());
+        actions.add(_getToActMessage());
+      });
+    });
+  }
+
   void _showBoardCardsDialog(BettingRound round) {
+    // Check if we should show all-in board card dialog instead
+    if (_shouldShowAllInBoardDialog()) {
+      _showAllInBoardCardsDialog();
+      return;
+    }
+
+    // Regular street-by-street dialog
     // Collect hole cards to exclude from board card selection
     List<String> excludedCards = [];
     final ourHoleCards = sessionManager.currentHand?.ourHoleCards;
@@ -1926,7 +2072,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void _completeHandAutomatically() async {
     // Save pot amount BEFORE distributing
     final potAmount = gameState.currentPot;
-    print('DEBUG: Auto-completing hand with pot amount: $potAmount');
     
     // Get the remaining active player
     List<int> activePlayers = _getActivePlayers();
@@ -1939,7 +2084,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void completeHand() async {
     // Save the pot amount BEFORE showing any dialogs
     final potAmount = gameState.currentPot;
-    print('DEBUG: Completing hand with pot amount: $potAmount');
     
     // First, show winner selection dialog - ALWAYS show it
     List<int> activePlayers = _getActivePlayers();
@@ -1997,11 +2141,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         : {};
     final double sharePerWinner = winnerResult['sharePerWinner'] ?? potAmount;
 
-    print('DEBUG: Winner result: $winnerResult');
-    print('DEBUG: Is chopped pot: $isChoppedPot');
-    print('DEBUG: Winners: $winners');
-    print('DEBUG: Individual shares: $individualShares');
-    print('DEBUG: Share per winner: $sharePerWinner');
     
     // Then show hole cards dialog
     await _showHoleCardsDialog();
@@ -2057,6 +2196,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     await _checkForBustedPlayers();
 
     setState(() {
+      // Reset all-in completion flag for new hand
+      _allInHandCompleted = false;
+
       // Start new hand in game state
       gameState.startNewHand();
 
@@ -2083,7 +2225,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     List<int> activePlayers = gameState.getActivePlayers();
     List<int> playersWhoCanAct = gameState.getPlayersWhoCanAct();
 
-    print('🔥 DEBUG _getToActMessage: activePlayers=$activePlayers, allInPlayers=$allInPlayers, playersWhoCanAct=$playersWhoCanAct');
 
     // If all active players are all-in
     if (allInPlayers.length == activePlayers.length && activePlayers.length > 1) {
@@ -2267,24 +2408,27 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
   void _finalizeHand() async {
     addAction("✅ Hand completed!");
-    
+
     // Show hole cards dialog for the completed hand
     await _showHoleCardsDialog();
-    
+
     // Start a new hand without calling completeHand again
     // Check for busted players before starting new hand
     await _checkForBustedPlayers();
 
     setState(() {
+      // Reset all-in completion flag for new hand
+      _allInHandCompleted = false;
+
       // Start new hand in game state
       gameState.startNewHand();
-      
+
       // Start new hand in session manager
       sessionManager.startHand(
         gameState.handNumber,
         gameState.buttonPosition,
       );
-      
+
       actions.clear(); // Clear actions for new hand
       actions.add("💾 Hand #${gameState.handNumber - 1} saved");
       actions.add("Hand #${gameState.handNumber} started");
