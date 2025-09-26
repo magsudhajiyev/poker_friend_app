@@ -656,6 +656,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                     children: [
                       Expanded(
                         child: Container(
+                          height: 95, // Increased height to prevent overflow
                           decoration: BoxDecoration(
                             color: Color(0xFF1F1F23),
                             borderRadius: BorderRadius.circular(PokerFriendRadius.l),
@@ -670,6 +671,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                       SizedBox(width: PokerFriendSpacing.xxs),
                       Expanded(
                         child: Container(
+                          height: 95, // Increased height to prevent overflow
                           decoration: BoxDecoration(
                             color: Color(0xFF1F1F23),
                             borderRadius: BorderRadius.circular(PokerFriendRadius.l),
@@ -684,6 +686,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                       SizedBox(width: PokerFriendSpacing.xxs),
                       Expanded(
                         child: Container(
+                          height: 95, // Increased height to prevent overflow
                           decoration: BoxDecoration(
                             color: Color(0xFF1F1F23),
                             borderRadius: BorderRadius.circular(PokerFriendRadius.l),
@@ -919,7 +922,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   Widget _buildInfoItemWithAsset(BuildContext context, String label, String value, String assetPath) {
     final theme = Theme.of(context);
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Image.asset(
           assetPath,
@@ -929,6 +934,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         const SizedBox(height: PokerFriendSpacing.xxxs),
         Text(
           label,
+          textAlign: TextAlign.center,
           style: theme.textTheme.labelSmall?.copyWith(
             color: Color(0xFF9A9A9A),
             fontWeight: FontWeight.w500,
@@ -937,9 +943,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         const SizedBox(height: PokerFriendSpacing.xxxs),
         Text(
           value,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: Colors.white,
+            fontSize: 12, // Ensure consistent font size
           ),
         ),
       ],

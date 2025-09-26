@@ -987,12 +987,12 @@ class PokerSessionManager {
   String getPlayerNameWithPosition(int seatNumber) {
     final playerName = playerNames[seatNumber];
     final currentPosition = PokerPositions.getPositionName(seatNumber, buttonPosition, playerCount);
-    
-    // If no custom name assigned, just return the position
+
+    // If no custom name assigned or name is just the position, show "Seat X (Position)"
     if (playerName == null || playerName == currentPosition || PokerPositions.isPositionName(playerName)) {
-      return currentPosition;
+      return 'Seat $seatNumber ($currentPosition)';
     }
-    
+
     // If custom name exists, show it with current position in brackets
     return '$playerName ($currentPosition)';
   }
