@@ -67,9 +67,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void initState() {
     super.initState();
     
-    // Initialize poker game state
+    // Initialize poker game state with 9 seats (standard poker table)
     gameState = PokerGameState(
-      numberOfPlayers: widget.numberOfPlayers,
+      numberOfPlayers: 9, // Always 9 seats regardless of initial player count
       smallBlind: widget.smallBlind,
       bigBlind: widget.bigBlind,
       isCashGame: widget.gameType == GameType.cash,
@@ -149,9 +149,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     sessionManager.ourSeatNumber = ourSeat;
     gameState.buttonPosition = buttonPosition;
     
-    // Initialize player stacks
-    for (final entry in playerStacks.entries) {
-      gameState.setPlayerStack(entry.key, entry.value);
+    // Initialize player stacks and set inactive players
+    for (int i = 1; i <= 9; i++) {
+      if (playerStacks.containsKey(i)) {
+        // Active player - set their stack
+        gameState.setPlayerStack(i, playerStacks[i]!);
+        gameState.setPlayerActive(i, true);
+        // Make sure session manager knows this seat is active
+        if (!sessionManager.activeSeats.contains(i)) {
+          sessionManager.activeSeats.add(i);
+        }
+      } else {
+        // Inactive player - set stack to 0 and mark inactive
+        gameState.setPlayerStack(i, 0.0);
+        gameState.setPlayerActive(i, false);
+        // Make sure session manager knows this seat is inactive
+        sessionManager.activeSeats.remove(i);
+      }
     }
     
     // Initialize pot with blinds

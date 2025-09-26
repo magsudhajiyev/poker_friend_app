@@ -3,7 +3,6 @@ import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
-import '../services/auth_service.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
 import '../services/user_stats_service.dart';
@@ -338,16 +337,11 @@ class PokerSessionManager {
 
   // Start a new session
   Future<void> startSession() async {
-    print('🚀 DEBUG: Starting session...');
-    print('🚀 DEBUG: User authenticated: ${AuthService.isSignedIn}');
-    print('🚀 DEBUG: Current user: ${AuthService.currentUser?.email ?? 'Anonymous'}');
-    print('🚀 DEBUG: User ID: ${AuthService.userId ?? 'null'}');
     
     sessionStartTime = DateTime.now();
     sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
     
     try {
-      print('🚀 DEBUG: Attempting Firebase session creation...');
       // Try Firebase first
       final firebaseId = await FirebaseService.createSession(
         smallBlind: smallBlind,
@@ -357,10 +351,7 @@ class PokerSessionManager {
         gameType: gameType,
       );
       sessionId = firebaseId;
-      print('🚀 DEBUG: Session started with Firebase ID: $sessionId');
     } catch (e) {
-      print('🚀 DEBUG: Failed to start Firebase session: $e');
-      print('🚀 DEBUG: Session started OFFLINE with ID: $sessionId');
     }
     
     // Always save locally as backup
@@ -403,7 +394,6 @@ class PokerSessionManager {
     );
     currentHand!.state = HandState.inProgress;
     
-    print('Hand #$handNumber started (Button: Player $buttonPosition)');
   }
 
   // Record an action
@@ -783,10 +773,6 @@ class PokerSessionManager {
   Future<void> _updateOpponentStats() async {
     if (currentHand == null) return;
     
-    print('🎯 Starting opponent stats update for completed hand #${currentHand?.handNumber}');
-    print('🎯 Active seats: $activeSeats');
-    print('🎯 Player names: $playerNames');
-    print('🎯 Our seat: $ourSeatNumber');
     
     try {
       // Get all player names from active seats who are not the hero
@@ -981,7 +967,7 @@ class PokerSessionManager {
     playerNames.clear();
     for (int i = 1; i <= playerCount; i++) {
       activeSeats.add(i);
-      playerNames[i] = PokerPositions.getPositionName(i, buttonPosition, playerCount);
+      playerNames[i] = 'Player $i'; // Use Player X format based on seat number
     }
   }
 

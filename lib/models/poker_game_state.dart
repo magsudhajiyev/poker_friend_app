@@ -87,9 +87,7 @@ class PlayerState {
     bool wasAllIn = isAllIn;
     isAllIn = (currentStack == 0.0);
     if (!wasAllIn && isAllIn) {
-      print('🔴 DEBUG: Player $playerId is now all-in (stack: $currentStack)');
     } else if (wasAllIn && !isAllIn) {
-      print('🟢 DEBUG: Player $playerId is no longer all-in (stack: $currentStack)');
     }
   }
 }
@@ -113,35 +111,29 @@ class PokerGameState {
   int get effectiveBBPosition => _effectiveBBPosition;
   int get effectiveSBPosition => _effectiveSBPosition;
 
-  // Debug property with logging for buttonPosition
+  // Button position property
   int get buttonPosition => _buttonPosition;
   set buttonPosition(int value) {
     if (_buttonPosition != value) {
-      print('DEBUG: buttonPosition changing from $_buttonPosition to $value');
       _buttonPosition = value;
       // Recalculate action order when button position changes
       if (currentRound == BettingRound.preflop && !bettingRoundComplete) {
         _setInitialActionOrder();
-        print('DEBUG: Action order recalculated due to button position change');
       }
     }
   }
   bool hasBetThisRound;
   
-  // Debug property with logging
+  // Current player property
   int get currentPlayer => _currentPlayer;
   set currentPlayer(int value) {
     if (_currentPlayer != value) {
-      print('DEBUG: currentPlayer changing from $_currentPlayer to $value');
-      
       // Validate current player is within bounds
       if (value < 1 || value > numberOfPlayers) {
-        print('ERROR: Invalid currentPlayer $value. Must be between 1 and $numberOfPlayers');
-        print('DEBUG: Stack trace: ${StackTrace.current}');
         // Don't update to invalid value
         return;
       }
-      
+
       _currentPlayer = value;
     }
   }
@@ -167,13 +159,12 @@ class PokerGameState {
        currentBet = 0.0,
        positionActivity = {} {
 
-    // Initialize players with default stacks
+    // Initialize players with default stacks but mark as inactive initially
     double defaultStack = isCashGame ? 100.0 : 1500.0;
     for (int i = 1; i <= numberOfPlayers; i++) {
-      PlayerState player = PlayerState(playerId: i);
+      PlayerState player = PlayerState(playerId: i, isActive: false); // Start inactive
       player.setStack(defaultStack);
       players.add(player);
-      print('DEBUG: Initialized Player $i with stack $defaultStack (isCashGame: $isCashGame)');
     }
 
     // Set initial action order for preflop
@@ -186,11 +177,9 @@ class PokerGameState {
       // Make sure button player is active and has chips
       if (_getPlayer(buttonPosition).isActive && _getPlayer(buttonPosition).currentStack > 0) {
         currentPlayer = buttonPosition;
-        print('DEBUG: Heads-up preflop, currentPlayer set to $currentPlayer (BTN)');
       } else {
         // Find first active player
         currentPlayer = _getNextActivePlayer(buttonPosition);
-        print('DEBUG: Heads-up preflop, button inactive, currentPlayer set to $currentPlayer');
       }
     } else {
       // Multi-way: UTG (Under The Gun) acts first
@@ -216,8 +205,6 @@ class PokerGameState {
         currentPlayer = _findNextActivePlayer(utgPosition);
       }
 
-      print('🔍 DEBUG: Calculated BB=$calculatedBBPosition, Effective BB=$effectiveBBPosition, UTG search starts at $utgPosition');
-      print('DEBUG: Multi-way preflop, BTN=$buttonPosition, standardUTG=$standardUTGPosition, actualUTG=$utgPosition, currentPlayer=$currentPlayer');
     }
 
     // No one has "called" yet in preflop - everyone needs to act including BB
@@ -345,19 +332,16 @@ class PokerGameState {
     List<int> playersWhoCanAct = getPlayersWhoCanAct();
     List<int> allInPlayers = getAllInPlayers();
 
-    print('DEBUG: areAllPlayersAllIn() - Active: ${activePlayers.length}, CanAct: ${playersWhoCanAct.length}, AllIn: ${allInPlayers.length}');
 
     // Check if any players who can act still need to respond to the current bet
     for (int playerId in playersWhoCanAct) {
       PlayerState player = _getPlayer(playerId);
       // If there's a bet and they haven't called it, they need to act
       if (hasBetThisRound && !player.hasCalledCurrentBet) {
-        print('DEBUG: Player $playerId still needs to respond to current bet');
         return false;
       }
       // If they haven't acted this round at all, they need to act
       if (!player.hasActed) {
-        print('DEBUG: Player $playerId hasn\'t acted this round yet');
         return false;
       }
     }
@@ -365,7 +349,6 @@ class PokerGameState {
     // All-in scenario: at least 2 active players, but 0 or 1 can act
     if (playersWhoCanAct.length == 0) {
       // Everyone is all-in
-      print('DEBUG: Everyone is all-in - no one can act');
       return true;
     } else if (playersWhoCanAct.length == 1) {
       // Special case: If exactly 2 players are active (heads-up) and 1 is all-in,
@@ -374,7 +357,6 @@ class PokerGameState {
         PlayerState lastPlayer = _getPlayer(playersWhoCanAct[0]);
         // Only if they've already acted and called/checked
         if (lastPlayer.hasActed && (lastPlayer.hasCalledCurrentBet || !hasBetThisRound)) {
-          print('DEBUG: Heads-up all-in scenario - both players have acted');
           return true;
         }
       }
@@ -382,7 +364,6 @@ class PokerGameState {
       // Multi-way or heads-up where the last player has responded
       PlayerState lastActingPlayer = _getPlayer(playersWhoCanAct[0]);
       if (lastActingPlayer.hasActed && (lastActingPlayer.hasCalledCurrentBet || !hasBetThisRound)) {
-        print('DEBUG: Last acting player has responded - all-in situation');
         return true;
       }
     }
@@ -515,9 +496,7 @@ class PokerGameState {
       int nextPlayer = _getNextActivePlayer(currentPlayer);
       List<int> allInPlayers = getAllInPlayers();
       if (allInPlayers.isNotEmpty) {
-        print('DEBUG: All-in players: $allInPlayers');
       }
-      print('DEBUG: Moving from player $currentPlayer to next active player $nextPlayer');
       currentPlayer = nextPlayer;
       return "$actionText\nPlayer $currentPlayer to act";
     }
@@ -534,7 +513,6 @@ class PokerGameState {
 
     PlayerState player = _getPlayer(currentPlayer);
     String actionText = "";
-    print('🎯 DEBUG: Before action - currentPot: $currentPot');
 
     switch (action) {
       case PlayerAction.fold:
@@ -561,7 +539,6 @@ class PokerGameState {
         
         // Update pot directly
         currentPot += actualAmount;
-        print('🎯 DEBUG: After call - currentPot: $currentPot (added $actualAmount)');
         
         player.lastAction = PlayerAction.call;
         player.hasCalledCurrentBet = true;
@@ -586,7 +563,6 @@ class PokerGameState {
         // Update pot and current bet (only add the additional amount)
         currentPot += additionalAmount;
         currentBet = betAmount;
-        print('🎯 DEBUG: After bet - currentPot: $currentPot (added $additionalAmount)');
         
         hasBetThisRound = true;
         player.lastAction = PlayerAction.bet;
@@ -614,7 +590,6 @@ class PokerGameState {
         // Update pot and current bet (only add the additional amount)
         currentPot += additionalAmount;
         currentBet = raiseAmount;
-        print('🎯 DEBUG: After raise - currentPot: $currentPot (added $additionalAmount)');
         hasBetThisRound = true;
         
         player.lastAction = PlayerAction.raise;
@@ -647,7 +622,6 @@ class PokerGameState {
     } else {
       // Move to next active player
       int nextPlayer = _getNextActivePlayer(currentPlayer);
-      print('DEBUG: Moving from player $currentPlayer to next active player $nextPlayer');
       currentPlayer = nextPlayer;
       return "$actionText\nPlayer $currentPlayer to act";
     }
@@ -710,7 +684,6 @@ class PokerGameState {
 
     // Check for all-in scenarios first
     if (areAllPlayersAllIn()) {
-      print('DEBUG: Betting round complete due to all-in scenario');
       return true;
     }
     
@@ -764,12 +737,10 @@ class PokerGameState {
       // Process uncalled bet returns before street transition
       String uncalledReturns = processUncalledBetReturns();
       if (uncalledReturns.isNotEmpty) {
-        print('🎯 DEBUG: $uncalledReturns');
         result = uncalledReturns;
       }
 
       // Save pot amount for the completed street AFTER processing returns
-      print('🎯 DEBUG: startNewStreet() - currentRound: ${currentRound.name}, currentPot: $currentPot');
       if (onStreetComplete != null) {
         onStreetComplete(currentRound, currentPot);
       }
@@ -792,7 +763,6 @@ class PokerGameState {
       if (playersWhoCanAct.isEmpty) {
         // No one can act - everyone is all-in or folded
         // Keep current player as is (doesn't matter since no one acts)
-        print('DEBUG: No players can act in new street - all are all-in or folded');
       } else if (numberOfPlayers == 2) {
         // Heads up: non-button (BB) acts first post-flop
         int nextPlayer = _getNextActivePlayer(buttonPosition);
@@ -813,7 +783,6 @@ class PokerGameState {
           if (playersWhoCanAct.contains(playerSeat)) {
             currentPlayer = playerSeat;
             foundActivePlayer = true;
-            print('DEBUG: Multi-way postflop, setting currentPlayer to $currentPlayer (${PokerPositions.getPositionName(playerSeat, buttonPosition, numberOfPlayers)})');
             break;
           }
         }
@@ -848,7 +817,6 @@ class PokerGameState {
     for (PlayerState player in players) {
       if (player.isActive && player.currentStack <= 0.0) {
         player.isActive = false;
-        print('🚫 DEBUG: Player ${player.playerId} deactivated (busted with stack: ${player.currentStack})');
       }
     }
   }
@@ -859,7 +827,6 @@ class PokerGameState {
   }
 
   void startNewHand() {
-    print('DEBUG: startNewHand() called - handNumber was $handNumber, buttonPosition was $buttonPosition');
 
     // Deactivate busted players before starting new hand
     deactivateBustedPlayers();
@@ -872,7 +839,6 @@ class PokerGameState {
 
       // Check if current button position is still active
       if (!players[buttonPosition - 1].isActive || players[buttonPosition - 1].currentStack <= 0) {
-        print('DEBUG: Current button position $buttonPosition is busted, need to find new button');
       }
 
       // Move button to next active player
@@ -885,19 +851,16 @@ class PokerGameState {
 
       if (attempts < numberOfPlayers) {
         buttonPosition = nextButton;
-        print('DEBUG: Button moved from $oldButtonPosition to $buttonPosition (next active seat) for hand #$handNumber');
 
         // Special handling for when BB was busted - adjust positions
         if (numberOfPlayers > 2) {
           int newBBPosition = _getPositionFromButton(2);
           int newSBPosition = _getPositionFromButton(1);
-          print('DEBUG: New positions - Button: $buttonPosition, SB: $newSBPosition, BB: $newBBPosition');
         }
       } else {
         print('ERROR: No active players found for button movement!');
       }
     } else {
-      print('DEBUG: First hand - keeping button at position $buttonPosition');
     }
     
     // Reset all players
@@ -916,7 +879,6 @@ class PokerGameState {
     initializePot();
     
     // Set action order for new hand
-    print('DEBUG: About to call _setInitialActionOrder() with button=$buttonPosition, players=$numberOfPlayers');
     _setInitialActionOrder();
   }
 
@@ -932,17 +894,14 @@ class PokerGameState {
     // Need at least 2 active players for a hand
     if (activePlayers.length < 2) return false;
 
-    print('DEBUG: shouldAutoAdvanceToShowdown() - Active: ${activePlayers.length}, CanAct: ${playersWhoCanAct.length}, AllIn: ${allInPlayers.length}');
 
     // Auto-advance if NO players can act (all are all-in)
     if (playersWhoCanAct.length == 0) {
-      print('DEBUG: Auto-advance - everyone is all-in');
       return true;
     }
 
     // Special case: heads-up all-in (2 active, 1 all-in, 1 can act)
     if (activePlayers.length == 2 && allInPlayers.length == 1 && playersWhoCanAct.length <= 1) {
-      print('DEBUG: Auto-advance - heads-up all-in scenario');
       return true;
     }
 
@@ -951,7 +910,6 @@ class PokerGameState {
       PlayerState lastPlayer = _getPlayer(playersWhoCanAct[0]);
       bool shouldAdvance = lastPlayer.hasActed && (lastPlayer.hasCalledCurrentBet || !hasBetThisRound);
       if (shouldAdvance) {
-        print('DEBUG: Auto-advance - last player has responded');
       }
       return shouldAdvance;
     }
@@ -1086,6 +1044,11 @@ class PokerGameState {
     player.setStack(stackSize);
   }
 
+  void setPlayerActive(int playerId, bool isActive) {
+    PlayerState player = _getPlayer(playerId);
+    player.isActive = isActive;
+  }
+
   PlayerState? getCurrentPlayer() {
     if (currentPlayer <= 0 || currentPlayer > numberOfPlayers) return null;
     return _getPlayer(currentPlayer);
@@ -1127,7 +1090,6 @@ class PokerGameState {
     currentPot = 0.0;
     currentBet = bigBlind.toDouble();
     _effectiveBBPosition = _determineEffectiveBBPosition(); // Set before posting
-    print('🎯 DEBUG: initializePot() - Starting with currentPot: $currentPot');
 
     // Post blinds
     if (numberOfPlayers > 2) {
@@ -1150,16 +1112,13 @@ class PokerGameState {
         sbPlayer._updateAllInStatus();
         currentPot += sbAmount;
         _effectiveSBPosition = sbPosition; // Track who posted SB
-        print('🎯 DEBUG: Added SB $sbAmount - currentPot: $currentPot');
       } else {
-        print('⚠️ DEBUG: SB position $sbPosition is empty/busted - searching for next active player');
 
         // Find the next active player to post the SB
         int nextSBPosition = _findNextActivePlayer(sbPosition);
         PlayerState nextSBPlayer = _getPlayer(nextSBPosition);
 
         if (nextSBPlayer.isActive && nextSBPlayer.currentStack > 0 && nextSBPosition != sbPosition) {
-          print('🎯 DEBUG: Found next active SB at position $nextSBPosition');
 
           // Post the SB with the active player
           double sbAmount = smallBlind.toDouble();
@@ -1171,9 +1130,7 @@ class PokerGameState {
           nextSBPlayer._updateAllInStatus();
           currentPot += sbAmount;
           _effectiveSBPosition = nextSBPosition; // Track who actually posted SB
-          print('🎯 DEBUG: Next active SB posted $sbAmount - currentPot: $currentPot');
         } else {
-          print('⚠️ DEBUG: No active players found for SB posting');
         }
       }
 
@@ -1186,7 +1143,6 @@ class PokerGameState {
         // If BB ante is enabled, BB posts an additional ante equal to BB amount
         if (hasBBante) {
           anteAmount = bigBlind.toDouble();
-          print('🎯 DEBUG: BB ante enabled - ante amount: $anteAmount');
         }
 
         double totalBBPost = bbAmount + anteAmount;
@@ -1211,19 +1167,15 @@ class PokerGameState {
         _effectiveBBPosition = bbPosition; // Track who posted BB
 
         if (hasBBante) {
-          print('🎯 DEBUG: BB posted $bbAmount + ante $anteAmount = $totalBBPost - currentPot: $currentPot');
         } else {
-          print('🎯 DEBUG: Added BB $bbAmount - currentPot: $currentPot');
         }
       } else {
-        print('⚠️ DEBUG: BB position $bbPosition is empty/busted - searching for next active player');
 
         // Find the next active player to post the BB
         int nextBBPosition = _findNextActivePlayer(bbPosition);
         PlayerState nextBBPlayer = _getPlayer(nextBBPosition);
 
         if (nextBBPlayer.isActive && nextBBPlayer.currentStack > 0 && nextBBPosition != bbPosition) {
-          print('🎯 DEBUG: Found next active BB at position $nextBBPosition');
 
           // Post the BB with the active player
           double bbAmount = bigBlind.toDouble();
@@ -1232,7 +1184,6 @@ class PokerGameState {
           // If BB ante is enabled, BB posts an additional ante equal to BB amount
           if (hasBBante) {
             anteAmount = bigBlind.toDouble();
-            print('🎯 DEBUG: BB ante enabled - ante amount: $anteAmount');
           }
 
           double totalBBPost = bbAmount + anteAmount;
@@ -1257,12 +1208,9 @@ class PokerGameState {
           _effectiveBBPosition = nextBBPosition; // Track who actually posted BB
 
           if (hasBBante) {
-            print('🎯 DEBUG: Next active BB posted $bbAmount + ante $anteAmount = $totalBBPost - currentPot: $currentPot');
           } else {
-            print('🎯 DEBUG: Next active BB posted $bbAmount - currentPot: $currentPot');
           }
         } else {
-          print('⚠️ DEBUG: No active players found for BB posting');
           // If BB seat is empty, adjust current bet based on what's actually in the pot
           if (sbPlayer.isActive && sbPlayer.currentStack > 0) {
             // Only SB posted, so minimum bet should be SB amount
@@ -1293,7 +1241,6 @@ class PokerGameState {
         sbPlayer._updateAllInStatus();
         currentPot += sbAmount;
         _effectiveSBPosition = sbPosition; // Track who posted SB in heads-up
-        print('🎯 DEBUG: Heads-up SB $sbAmount posted - currentPot: $currentPot');
       }
 
       // Post BB if player is active
@@ -1304,7 +1251,6 @@ class PokerGameState {
         // If BB ante is enabled, BB posts an additional ante equal to BB amount
         if (hasBBante) {
           anteAmount = bigBlind.toDouble();
-          print('🎯 DEBUG: Heads-up BB ante enabled - ante amount: $anteAmount');
         }
 
         double totalBBPost = bbAmount + anteAmount;
@@ -1329,9 +1275,7 @@ class PokerGameState {
         _effectiveBBPosition = bbPosition; // Track who posted BB in heads-up
 
         if (hasBBante) {
-          print('🎯 DEBUG: Heads-up BB posted $bbAmount + ante $anteAmount = $totalBBPost - currentPot: $currentPot');
         } else {
-          print('🎯 DEBUG: Heads-up BB $bbAmount posted - currentPot: $currentPot');
         }
       }
     }

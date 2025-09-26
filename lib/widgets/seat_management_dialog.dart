@@ -42,20 +42,33 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
     selectedSeat = widget.currentSeat;
     selectedButtonPosition = widget.buttonPosition;
     
-    // Initialize controllers and seat states
-    for (int i = 1; i <= widget.playerCount; i++) {
-      nameControllers[i] = TextEditingController(
-        text: widget.sessionManager.getPlayerName(i)
-      );
+    // If this is initial setup, initialize default players FIRST
+    if (widget.isInitialSetup) {
+      widget.sessionManager.initializeDefaultPlayers();
+    }
+
+    // Always initialize 9 seats regardless of player count
+    for (int i = 1; i <= 9; i++) {
+      // First determine active status
+      if (widget.isInitialSetup) {
+        // For initial setup, activate only up to playerCount seats
+        seatActive[i] = i <= widget.playerCount;
+      } else {
+        seatActive[i] = widget.sessionManager.isPlayerActive(i);
+      }
+
+      // Then initialize controllers based on active status
+      if (seatActive[i] == true) {
+        nameControllers[i] = TextEditingController(
+          text: widget.sessionManager.getPlayerName(i)
+        );
+      } else {
+        nameControllers[i] = TextEditingController(text: '');
+      }
+
       stackControllers[i] = TextEditingController(
         text: widget.isCashGame ? '100.00' : '1500'
       );
-      seatActive[i] = widget.isInitialSetup ? true : widget.sessionManager.isPlayerActive(i);
-    }
-    
-    // If this is initial setup, initialize default players
-    if (widget.isInitialSetup) {
-      widget.sessionManager.initializeDefaultPlayers();
     }
     
     // Load opponents for autocomplete
@@ -293,6 +306,78 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
     }
   }
 
+  String _getPositionForActiveSeat(int seatNumber) {
+    // Get all active seats
+    List<int> activeSeats = [];
+    for (int i = 1; i <= 9; i++) {
+      if (seatActive[i] == true) {
+        activeSeats.add(i);
+      }
+    }
+
+    if (activeSeats.isEmpty) return '';
+
+    // If this seat is not active, return empty
+    if (!activeSeats.contains(seatNumber)) return 'Empty';
+
+    // Calculate position based on active players only
+    final buttonPos = selectedButtonPosition ?? widget.buttonPosition;
+    final activePlayerCount = activeSeats.length;
+
+    // Check if this is the button
+    if (seatNumber == buttonPos) {
+      return 'BTN';
+    }
+
+    // For heads-up
+    if (activePlayerCount == 2) {
+      if (seatNumber == buttonPos) {
+        return 'BTN/SB';
+      } else {
+        return 'BB';
+      }
+    }
+
+    // Find SB and BB positions among active players
+    int sbSeat = buttonPos;
+    int bbSeat = buttonPos;
+
+    // Find next active player for SB
+    int position = buttonPos;
+    for (int i = 0; i < 9; i++) {
+      position = (position % 9) + 1;
+      if (activeSeats.contains(position)) {
+        sbSeat = position;
+        break;
+      }
+    }
+
+    // Find next active player for BB
+    position = sbSeat;
+    for (int i = 0; i < 9; i++) {
+      position = (position % 9) + 1;
+      if (activeSeats.contains(position)) {
+        bbSeat = position;
+        break;
+      }
+    }
+
+    if (seatNumber == sbSeat) {
+      return 'SB';
+    }
+    if (seatNumber == bbSeat) {
+      return 'BB';
+    }
+
+    // Calculate relative position among active players
+    activeSeats.sort();
+    int activeButtonIndex = activeSeats.indexOf(buttonPos);
+    int activePlayerIndex = activeSeats.indexOf(seatNumber);
+    int relativePosition = (activePlayerIndex - activeButtonIndex + activePlayerCount) % activePlayerCount;
+
+    return PokerPositions.getPositionName(relativePosition + 1, 1, activePlayerCount);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -410,25 +495,30 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: Row(
-                                children: List.generate(widget.playerCount, (index) {
+                                children: List.generate(9, (index) {
                                   final seatNum = index + 1;
                                   final isSelected = selectedButtonPosition == seatNum;
+                                  final isActive = seatActive[seatNum] ?? false;
                                   return GestureDetector(
-                                    onTap: () => setState(() {
+                                    onTap: isActive ? () => setState(() {
                                       selectedButtonPosition = seatNum;
                                       _updatePlayerNamesForButtonChange();
-                                    }),
+                                    }) : null,
                                     child: Container(
                                       margin: EdgeInsets.only(right: 12),
                                       width: 44,
                                       height: 44,
                                       decoration: BoxDecoration(
-                                        color: isSelected 
+                                        color: !isActive
+                                            ? Color(0xFF0A0A0C)
+                                            : isSelected
                                             ? Color(0xFF5AC95A)
                                             : Color(0xFF161618),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: isSelected 
+                                          color: !isActive
+                                              ? Color(0xFF1A1A1E)
+                                              : isSelected
                                               ? Color(0xFF5AC95A)
                                               : Color(0xFF2A2A2E),
                                           width: 1,
@@ -438,7 +528,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                         child: Text(
                                           '$seatNum',
                                           style: TextStyle(
-                                            color: Colors.white,
+                                            color: isActive ? Colors.white : Color(0xFF4A4A4E),
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                           ),
@@ -456,7 +546,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                     ],
                     Expanded(
                       child: ListView.builder(
-                        itemCount: widget.playerCount,
+                        itemCount: 9,
                         itemBuilder: (context, index) {
                           final seatNumber = index + 1;
                           final isButtonSeat = seatNumber == (selectedButtonPosition ?? widget.buttonPosition);
@@ -548,7 +638,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                 ),
                                                 SizedBox(height: 2),
                                                 Text(
-                                                  PokerPositions.getPositionName(seatNumber, selectedButtonPosition ?? widget.buttonPosition, widget.playerCount),
+                                                  isActive ? _getPositionForActiveSeat(seatNumber) : 'Empty',
                                                   style: TextStyle(
                                                     fontSize: 12,
                                                     color: Color(0xFF9A9A9A),
@@ -573,12 +663,8 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                 seatActive[seatNumber] = value;
                                                 if (value) {
                                                   if (nameControllers[seatNumber]!.text.isEmpty) {
-                                                    final positionName = PokerPositions.getPositionName(
-                                                      seatNumber, 
-                                                      selectedButtonPosition ?? widget.buttonPosition, 
-                                                      widget.playerCount
-                                                    );
-                                                    nameControllers[seatNumber]!.text = positionName;
+                                                    // Use Player X format based on seat number
+                                                    nameControllers[seatNumber]!.text = 'Player $seatNumber';
                                                   }
                                                 }
                                               });
@@ -876,24 +962,9 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
   }
 
   void _updatePlayerNamesForButtonChange() {
-    // Update position names for players who haven't been given custom names
-    for (int seat = 1; seat <= widget.playerCount; seat++) {
-      final controller = nameControllers[seat];
-      if (controller != null && seatActive[seat] == true) {
-        final currentText = controller.text;
-        final currentButtonPos = selectedButtonPosition ?? widget.buttonPosition;
-        
-        // Check if the current text is a position name (not a custom name)
-        final expectedPositionName = PokerPositions.getPositionName(seat, widget.buttonPosition, widget.playerCount);
-        final newPositionName = PokerPositions.getPositionName(seat, currentButtonPos, widget.playerCount);
-        
-        // If current text matches the old position name, update it to new position name
-        if (currentText == expectedPositionName || currentText.isEmpty) {
-          controller.text = newPositionName;
-          widget.sessionManager.setPlayerName(seat, newPositionName);
-        }
-      }
-    }
+    // Player names don't need to change when button position changes
+    // Position labels are shown separately and calculated dynamically
+    // Player names remain as "Player X" or custom names
   }
 
   void _autoInsertUsernameForSeat(int seatNumber) {
@@ -923,8 +994,8 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
 
     // Update all player names and active status
     Map<int, double> playerStacks = {};
-    
-    for (int seat = 1; seat <= widget.playerCount; seat++) {
+
+    for (int seat = 1; seat <= 9; seat++) {
       final isActive = seatActive[seat] ?? false;
       final name = nameControllers[seat]?.text ?? '';
       
