@@ -376,7 +376,6 @@ class PokerSessionManager {
         completeCurrentHand();
       } else {
         // Discard empty hand without saving
-        print('Discarding empty hand #${currentHand!.handNumber}');
         currentHand = null;
       }
     }
@@ -809,9 +808,14 @@ class PokerSessionManager {
 
   // End the session
   Future<void> endSession() async {
-    // Complete current hand if active
+    // Complete current hand if active and has actions, otherwise discard empty hand
     if (currentHand != null && currentHand!.state == HandState.inProgress) {
-      completeCurrentHand();
+      if (currentHand!.actions.isNotEmpty) {
+        completeCurrentHand();
+      } else {
+        // Discard empty hand without saving
+        currentHand = null;
+      }
     }
 
     sessionEndTime = DateTime.now();
