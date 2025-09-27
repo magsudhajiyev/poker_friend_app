@@ -32,6 +32,7 @@ flutter:
     - assets/play_style/
     - icons/
     - icons/play_style/
+    - logo.png
 
 flutter_launcher_icons:
   android: true

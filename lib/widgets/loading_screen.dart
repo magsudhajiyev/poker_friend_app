@@ -73,10 +73,10 @@ class _LoadingScreenState extends State<LoadingScreen>
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24),
                       child: Image.asset(
-                        'assets/logo.png',
+                        'logo.png',
                         width: 120,
                         height: 120,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
                           // Fallback if logo not found
                           return Container(

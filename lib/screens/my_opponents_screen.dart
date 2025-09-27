@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
+import '../widgets/global_loading_spinner.dart';
 import 'opponent_detail_screen.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
@@ -235,22 +236,8 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
   Widget _buildBody() {
     if (isLoading) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(
-              color: Color(0xFFcb5242),
-              strokeWidth: 3,
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Loading opponents...',
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
-                fontSize: 16,
-              ),
-            ),
-          ],
+        child: GlobalLoadingSpinner(
+          message: 'Loading opponents...',
         ),
       );
     }

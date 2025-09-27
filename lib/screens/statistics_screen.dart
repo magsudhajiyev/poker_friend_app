@@ -6,6 +6,7 @@ import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
+import '../widgets/global_loading_spinner.dart';
 
 class StatisticsScreen extends StatefulWidget {
   @override
@@ -28,6 +29,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   // Chart data
   List<SessionChartData> sessionChartData = [];
+
+  // Loading state details
+  String loadingMessage = 'Loading statistics...';
 
   @override
   void initState() {
@@ -69,109 +73,66 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     sessionChartData.clear();
 
     try {
+      setState(() {
+        loadingMessage = 'Fetching sessions...';
+      });
+
       // Get all sessions from Firebase
       final sessions = await FirebaseService.getAllSessions();
       totalSessions = sessions.length;
+
+      if (sessions.isEmpty) {
+        return; // No sessions to process
+      }
+
+      setState(() {
+        loadingMessage = 'Processing ${sessions.length} sessions...';
+      });
 
       int vpipHands = 0;
       int pfrHands = 0;
       int threeBetHands = 0;
       int wonHands = 0;
 
-      // Process each session
-      for (int i = 0; i < sessions.length; i++) {
-        var session = sessions[i];
+      // Process sessions in batches of 5 to avoid overwhelming the database
+      const batchSize = 5;
+      for (int batchStart = 0; batchStart < sessions.length; batchStart += batchSize) {
+        final batchEnd = (batchStart + batchSize).clamp(0, sessions.length);
+        final sessionBatch = sessions.sublist(batchStart, batchEnd);
 
-        // Calculate play time
-        if (session['endTime'] != null && session['startTime'] != null) {
-          final start = DateTime.parse(session['startTime']);
-          final end = DateTime.parse(session['endTime']);
-          totalPlayTime += end.difference(start).inMinutes;
-        }
+        setState(() {
+          loadingMessage = 'Processing sessions ${batchStart + 1}-$batchEnd of ${sessions.length}...';
+        });
 
-        // Add to chart data
-        sessionChartData.add(SessionChartData(
-          date: DateTime.parse(session['startTime']),
-          sessionNumber: i + 1,
-          totalHands: session['totalHands'] ?? 0,
-          gameType: session['gameType'] ?? 'cash',
-        ));
+        // Process batch in parallel
+        final futures = sessionBatch.map((session) async {
+          final sessionData = await _processSingleSession(session, batchStart + sessionBatch.indexOf(session));
+          return sessionData;
+        }).toList();
 
-        // Get hands for this session
-        final sessionId = session['id'] as String;
-        List<Map<String, dynamic>> hands;
-        try {
-          hands = await FirebaseService.getSessionHands(sessionId);
-        } catch (e) {
-          hands = await LocalStorageService.getSessionHands(sessionId);
-        }
+        final batchResults = await Future.wait(futures);
 
-        // Count hands
-        totalHands += hands.length;
+        // Aggregate results from batch
+        for (final sessionResult in batchResults) {
+          totalHands += sessionResult['totalHands'] as int;
+          handsPlayed += sessionResult['handsPlayed'] as int;
+          vpipHands += sessionResult['vpipHands'] as int;
+          pfrHands += sessionResult['pfrHands'] as int;
+          threeBetHands += sessionResult['threeBetHands'] as int;
+          wonHands += sessionResult['wonHands'] as int;
 
-        // Process hands for player statistics
-        for (final hand in hands) {
-          if (hand['actions'] != null) {
-            final actions = hand['actions'] as List<dynamic>;
-            bool playerInHand = false;
-            bool playerVPIP = false;
-            bool playerPFR = false;
-            bool player3Bet = false;
-            bool playerWon = false;
-
-            // Check if player was involved in the hand
-            for (final action in actions) {
-              final actionMap = action as Map<String, dynamic>;
-              final playerName = actionMap['playerName'] as String?;
-
-              // Assume any action by "Player" or position like "You" means our player
-              if (playerName != null &&
-                  (playerName.toLowerCase().contains('player') ||
-                   playerName.toLowerCase().contains('you') ||
-                   playerName == 'Hero')) {
-                playerInHand = true;
-
-                final actionType = actionMap['action'] as String?;
-                final street = actionMap['street'] as String?;
-
-                if (street?.toLowerCase() == 'preflop') {
-                  // VPIP: Voluntarily put money in pot preflop
-                  if (actionType?.toLowerCase() == 'call' ||
-                      actionType?.toLowerCase() == 'bet' ||
-                      actionType?.toLowerCase() == 'raise') {
-                    playerVPIP = true;
-                  }
-
-                  // PFR: Preflop raise
-                  if (actionType?.toLowerCase() == 'raise' ||
-                      actionType?.toLowerCase() == 'bet') {
-                    playerPFR = true;
-                  }
-
-                  // 3-Bet: This is simplified - would need more complex logic
-                  if (actionType?.toLowerCase() == 'raise') {
-                    player3Bet = true;
-                  }
-                }
-              }
-            }
-
-            // Check if player won (simplified)
-            if (hand['winner'] != null &&
-                hand['winner'].toString().toLowerCase().contains('player')) {
-              playerWon = true;
-            }
-
-            if (playerInHand) {
-              handsPlayed++;
-              if (playerVPIP) vpipHands++;
-              if (playerPFR) pfrHands++;
-              if (player3Bet) threeBetHands++;
-              if (playerWon) wonHands++;
-            }
+          if (sessionResult['chartData'] != null) {
+            sessionChartData.add(sessionResult['chartData']);
           }
         }
+
+        // Small delay to prevent UI freeze
+        await Future.delayed(Duration(milliseconds: 50));
       }
+
+      setState(() {
+        loadingMessage = 'Calculating final statistics...';
+      });
 
       // Calculate percentages
       if (handsPlayed > 0) {
@@ -189,88 +150,217 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     }
   }
 
+  Future<Map<String, dynamic>> _processSingleSession(Map<String, dynamic> session, int sessionIndex) async {
+    int sessionTotalHands = 0;
+    int sessionHandsPlayed = 0;
+    int sessionVpipHands = 0;
+    int sessionPfrHands = 0;
+    int sessionThreeBetHands = 0;
+    int sessionWonHands = 0;
+    SessionChartData? chartData;
+
+    try {
+      // Calculate play time
+      if (session['endTime'] != null && session['startTime'] != null) {
+        final start = DateTime.parse(session['startTime']);
+        final end = DateTime.parse(session['endTime']);
+        totalPlayTime += end.difference(start).inMinutes;
+      }
+
+      // Add to chart data
+      chartData = SessionChartData(
+        date: DateTime.parse(session['startTime']),
+        sessionNumber: sessionIndex + 1,
+        totalHands: session['totalHands'] ?? 0,
+        gameType: session['gameType'] ?? 'cash',
+      );
+
+      // Get hands for this session
+      final sessionId = session['id'] as String;
+      List<Map<String, dynamic>> hands;
+      try {
+        hands = await FirebaseService.getSessionHands(sessionId);
+      } catch (e) {
+        hands = await LocalStorageService.getSessionHands(sessionId);
+      }
+
+      sessionTotalHands = hands.length;
+
+      // Process hands for player statistics
+      for (final hand in hands) {
+        if (hand['actions'] != null) {
+          final handResult = _processHandStatistics(hand);
+          if (handResult['playerInHand']) {
+            sessionHandsPlayed++;
+            if (handResult['playerVPIP']) sessionVpipHands++;
+            if (handResult['playerPFR']) sessionPfrHands++;
+            if (handResult['player3Bet']) sessionThreeBetHands++;
+            if (handResult['playerWon']) sessionWonHands++;
+          }
+        }
+      }
+    } catch (e) {
+      final sessionId = session['id'] ?? 'unknown';
+      print('❌ Error processing session $sessionId: $e');
+    }
+
+    return {
+      'totalHands': sessionTotalHands,
+      'handsPlayed': sessionHandsPlayed,
+      'vpipHands': sessionVpipHands,
+      'pfrHands': sessionPfrHands,
+      'threeBetHands': sessionThreeBetHands,
+      'wonHands': sessionWonHands,
+      'chartData': chartData,
+    };
+  }
+
+  Map<String, dynamic> _processHandStatistics(Map<String, dynamic> hand) {
+    final actions = hand['actions'] as List<dynamic>;
+    bool playerInHand = false;
+    bool playerVPIP = false;
+    bool playerPFR = false;
+    bool player3Bet = false;
+    bool playerWon = false;
+
+    // Check if player was involved in the hand
+    for (final action in actions) {
+      final actionMap = action as Map<String, dynamic>;
+      final playerName = actionMap['playerName'] as String?;
+
+      // Assume any action by "Player" or position like "You" means our player
+      if (playerName != null &&
+          (playerName.toLowerCase().contains('player') ||
+           playerName.toLowerCase().contains('you') ||
+           playerName == 'Hero')) {
+        playerInHand = true;
+
+        final actionType = actionMap['action'] as String?;
+        final street = actionMap['street'] as String?;
+
+        if (street?.toLowerCase() == 'preflop') {
+          // VPIP: Voluntarily put money in pot preflop
+          if (actionType?.toLowerCase() == 'call' ||
+              actionType?.toLowerCase() == 'bet' ||
+              actionType?.toLowerCase() == 'raise') {
+            playerVPIP = true;
+          }
+
+          // PFR: Preflop raise
+          if (actionType?.toLowerCase() == 'raise' ||
+              actionType?.toLowerCase() == 'bet') {
+            playerPFR = true;
+          }
+
+          // 3-Bet: This is simplified - would need more complex logic
+          if (actionType?.toLowerCase() == 'raise') {
+            player3Bet = true;
+          }
+        }
+      }
+    }
+
+    // Check if player won (simplified)
+    if (hand['winner'] != null &&
+        hand['winner'].toString().toLowerCase().contains('player')) {
+      playerWon = true;
+    }
+
+    return {
+      'playerInHand': playerInHand,
+      'playerVPIP': playerVPIP,
+      'playerPFR': playerPFR,
+      'player3Bet': player3Bet,
+      'playerWon': playerWon,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF161618),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Section - matching home screen style
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 32, 0, 32),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Statistics',
-                            style: TextStyle(
-                              fontSize: 32,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Overall performance',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF9A9A9A),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            margin: EdgeInsets.only(right: 12),
-                            decoration: BoxDecoration(
-                              color: Color(0xFF1F1F23),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: IconButton(
-                              onPressed: () => Navigator.pop(context),
-                              icon: Icon(
-                                Icons.arrow_back,
+      body: LoadingWrapper(
+        isLoading: isLoading,
+        loadingMessage: loadingMessage,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Section - matching home screen style
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 32, 0, 32),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Statistics',
+                              style: TextStyle(
+                                fontSize: 32,
                                 color: Colors.white,
-                                size: 20,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
                               ),
                             ),
-                          ),
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF1F1F23),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: IconButton(
-                              onPressed: _loadStatistics,
-                              icon: Icon(
-                                Icons.refresh,
-                                color: Colors.white,
-                                size: 20,
+                            SizedBox(height: 4),
+                            Text(
+                              'Overall performance',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF9A9A9A),
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              margin: EdgeInsets.only(right: 12),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF1F1F23),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: IconButton(
+                                onPressed: () => Navigator.pop(context),
+                                icon: Icon(
+                                  Icons.arrow_back,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF1F1F23),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: IconButton(
+                                onPressed: isLoading ? null : _loadStatistics,
+                                icon: Icon(
+                                  Icons.refresh,
+                                  color: isLoading ? Colors.grey : Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                _buildBody(),
-              ],
+                  _buildBody(),
+                ],
+              ),
             ),
           ),
         ),
@@ -279,33 +369,42 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildBody() {
-    if (isLoading) {
-      return Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      );
-    }
-
     if (error != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Error loading statistics',
-              style: TextStyle(color: Colors.red, fontSize: 18),
-            ),
-            SizedBox(height: 8),
-            Text(
-              error!,
-              style: TextStyle(color: Colors.white70),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadStatistics,
-              child: Text('Retry'),
-            ),
-          ],
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 64,
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Error loading statistics',
+                style: TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                error!,
+                style: TextStyle(color: Colors.white70),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _loadStatistics,
+                icon: Icon(Icons.refresh),
+                label: Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF5AC95A),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
