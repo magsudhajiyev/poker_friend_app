@@ -94,8 +94,8 @@ class PlayerState {
 
 class PokerGameState {
   final int numberOfPlayers;
-  final int smallBlind;
-  final int bigBlind;
+  int smallBlind;
+  int bigBlind;
   final bool isCashGame;
   bool hasBBante = false;
   

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/game_types.dart';
+import '../utils/poker_positions.dart';
 
 class WinnerSelectionDialog extends StatefulWidget {
   final List<int> activePlayers;
@@ -88,6 +89,20 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
     return positionFromButton;
   }
 
+  String _getPlayerDisplayName(int playerId) {
+    final playerName = playerId <= widget.playerNames.length
+        ? widget.playerNames[playerId - 1]
+        : 'Player $playerId';
+
+    final position = PokerPositions.getPositionName(
+      playerId,
+      widget.buttonPosition,
+      widget.playerCount
+    );
+
+    return '$playerName ($position)';
+  }
+
   List<Widget> _buildIndividualSharesDisplay() {
     final shares = _calculateIndividualShares();
     if (shares.isEmpty) return [];
@@ -105,22 +120,24 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
       ...shares.entries.map((entry) {
         final playerId = entry.key;
         final amount = entry.value;
-        final playerName = playerId <= widget.playerNames.length
-            ? widget.playerNames[playerId - 1]
-            : 'Player $playerId';
+        final playerDisplayName = _getPlayerDisplayName(playerId);
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 1),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                playerName,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.blue,
+              Expanded(
+                child: Text(
+                  playerDisplayName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.blue,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 _formatCurrency(amount),
                 style: const TextStyle(
@@ -183,13 +200,11 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
           Text(isChoppedPot ? 'Select all winners:' : 'Select the winner:'),
           const SizedBox(height: 12),
           ...widget.activePlayers.map((playerId) {
-            final playerName = playerId <= widget.playerNames.length
-                ? widget.playerNames[playerId - 1]
-                : 'Player $playerId';
+            final playerDisplayName = _getPlayerDisplayName(playerId);
 
             if (isChoppedPot) {
               return CheckboxListTile(
-                title: Text(playerName),
+                title: Text(playerDisplayName),
                 value: selectedWinners.contains(playerId),
                 onChanged: (bool? value) {
                   setState(() {
@@ -204,7 +219,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
               );
             } else {
               return RadioListTile<int>(
-                title: Text(playerName),
+                title: Text(playerDisplayName),
                 value: playerId,
                 groupValue: selectedWinner,
                 onChanged: (value) {

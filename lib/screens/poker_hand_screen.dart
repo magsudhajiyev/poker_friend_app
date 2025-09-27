@@ -17,7 +17,6 @@ import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
-import 'introduction_screen.dart';
 import 'session_history_screen.dart';
 
 class PokerHandScreen extends StatefulWidget {
@@ -340,6 +339,48 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     setState(() {});
   }
 
+  Future<void> _showSettingsDialog() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => _SettingsDialog(
+        currentSmallBlind: sessionManager.smallBlind,
+        currentBigBlind: sessionManager.bigBlind,
+        currentLevelDuration: widget.levelDuration,
+        useButtonMode: useButtonMode,
+        onBlindsChanged: (smallBlind, bigBlind) async {
+          setState(() {
+            // Update both sessionManager and gameState blinds
+            sessionManager.smallBlind = smallBlind;
+            sessionManager.bigBlind = bigBlind;
+            gameState.smallBlind = smallBlind;
+            gameState.bigBlind = bigBlind;
+          });
+          // Save blinds to preferences for persistence
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt('small_blind', smallBlind);
+          await prefs.setInt('big_blind', bigBlind);
+          // Note: These changes will take effect immediately for new hands
+        },
+        onLevelDurationChanged: (duration) {
+          // Note: levelDuration is a final widget property,
+          // so we can't update it directly. This would need
+          // to be handled at the parent widget level or stored
+          // in preferences for the next session.
+          prefs.setInt('level_duration', duration);
+        },
+        onButtonModeToggled: (value) async {
+          setState(() {
+            useButtonMode = value;
+          });
+          await prefs.setBool('use_button_mode', value);
+        },
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _tapTimer?.cancel();
@@ -557,10 +598,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
               } else if (value == 'stopSession') {
                 _stopSession();
               } else if (value == 'settings') {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const IntroductionScreen()),
-                );
+                _showSettingsDialog();
               }
             },
                       itemBuilder: (context) => [
@@ -569,7 +607,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           child: Row(
                             children: [
                               Icon(Icons.stop, color: Color(0xFF9A9A9A), size: 18),
-                              SizedBox(width: 12),
+                              const SizedBox(width: 12),
                               Text(
                                 'End Street',
                                 style: TextStyle(color: Colors.white, fontSize: 14),
@@ -582,7 +620,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           child: Row(
                             children: [
                               Icon(Icons.people, color: Color(0xFF9A9A9A), size: 18),
-                              SizedBox(width: 12),
+                              const SizedBox(width: 12),
                               Text(
                                 'Manage Players',
                                 style: TextStyle(color: Colors.white, fontSize: 14),
@@ -595,7 +633,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           child: Row(
                             children: [
                               Icon(Icons.exit_to_app, color: Colors.red, size: 18),
-                              SizedBox(width: 12),
+                              const SizedBox(width: 12),
                               Text(
                                 'Stop Session',
                                 style: TextStyle(color: Colors.red, fontSize: 14),
@@ -608,7 +646,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           child: Row(
                             children: [
                               Icon(Icons.settings, color: Color(0xFF9A9A9A), size: 18),
-                              SizedBox(width: 12),
+                              const SizedBox(width: 12),
                               Text(
                                 'Settings',
                                 style: TextStyle(color: Colors.white, fontSize: 14),
@@ -644,7 +682,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                             color: Color(0xFF5AC95A),
                             size: 24,
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Text(
                             'ALL IN HAND',
                             style: TextStyle(
@@ -654,7 +692,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                               letterSpacing: 2,
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Text(
                             '• POT: ${gameState.formatCurrency(gameState.currentPot)}',
                             style: TextStyle(
@@ -2777,7 +2815,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                   ),
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
                   onPressed: () => setState(() => _isRebuy = false),
@@ -2797,7 +2835,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
             ],
           ),
           if (_isRebuy) ...[
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
@@ -2837,6 +2875,453 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
             'Confirm',
             style: TextStyle(
               color: _isRebuy ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SettingsDialog extends StatefulWidget {
+  final int currentSmallBlind;
+  final int currentBigBlind;
+  final int currentLevelDuration;
+  final bool useButtonMode;
+  final Function(int smallBlind, int bigBlind) onBlindsChanged;
+  final Function(int) onLevelDurationChanged;
+  final Function(bool) onButtonModeToggled;
+
+  const _SettingsDialog({
+    Key? key,
+    required this.currentSmallBlind,
+    required this.currentBigBlind,
+    required this.currentLevelDuration,
+    required this.useButtonMode,
+    required this.onBlindsChanged,
+    required this.onLevelDurationChanged,
+    required this.onButtonModeToggled,
+  }) : super(key: key);
+
+  @override
+  _SettingsDialogState createState() => _SettingsDialogState();
+}
+
+class _SettingsDialogState extends State<_SettingsDialog> {
+  static const int LEVEL_DURATION_INCREMENT = 5;
+  static const int MIN_LEVEL_DURATION = 5;
+  static const int MIN_SMALL_BLIND = 1;
+
+  late int smallBlind;
+  late int bigBlind;
+  late int levelDuration;
+  late bool useButtonMode;
+
+  @override
+  void initState() {
+    super.initState();
+    smallBlind = widget.currentSmallBlind;
+    bigBlind = widget.currentBigBlind;
+    levelDuration = widget.currentLevelDuration;
+    useButtonMode = widget.useButtonMode;
+  }
+
+  Future<void> _showBlindInputDialog(String title, int currentValue, Function(int) onValueChanged) async {
+    final TextEditingController controller = TextEditingController(text: currentValue.toString());
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFF161618),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'Enter $title',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          style: TextStyle(color: Colors.white, fontSize: 18),
+          decoration: InputDecoration(
+            hintText: 'Enter value',
+            hintStyle: TextStyle(color: Colors.white30),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF5AC95A)),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF5AC95A), width: 2),
+            ),
+          ),
+          onSubmitted: (value) {
+            final intValue = int.tryParse(value);
+            if (intValue != null && intValue > 0) {
+              Navigator.pop(context, intValue);
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF9A9A9A)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final intValue = int.tryParse(controller.text);
+              if (intValue != null && intValue > 0) {
+                Navigator.pop(context, intValue);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF5AC95A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'OK',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      onValueChanged(result);
+    }
+  }
+
+  Widget _buildNumberAdjuster(String title, int value, VoidCallback onIncrement, VoidCallback onDecrement, VoidCallback onTap) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFF2A2A2E)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              title,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: onDecrement,
+                icon: Icon(Icons.remove, color: Colors.white, size: 20),
+                style: IconButton.styleFrom(
+                  backgroundColor: Color(0xFF161618),
+                  minimumSize: Size(36, 36),
+                  padding: EdgeInsets.zero,
+                ),
+                tooltip: 'Decrease',
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  constraints: BoxConstraints(minWidth: 50),
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF161618),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Color(0xFF5AC95A).withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    value.toString(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF5AC95A),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: onIncrement,
+                icon: Icon(Icons.add, color: Colors.white, size: 20),
+                style: IconButton.styleFrom(
+                  backgroundColor: Color(0xFF161618),
+                  minimumSize: Size(36, 36),
+                  padding: EdgeInsets.zero,
+                ),
+                tooltip: 'Increase',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggle(String title, String subtitle, bool value, Function(bool) onChanged) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFF2A2A2E)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Color(0xFF9A9A9A),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: Color(0xFF5AC95A),
+            activeTrackColor: Color(0xFF5AC95A).withOpacity(0.5),
+            inactiveTrackColor: Color(0xFF2A2A2E),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Color(0xFF161618),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: Row(
+        children: [
+          Icon(Icons.settings, color: Color(0xFF5AC95A), size: 24),
+          const SizedBox(width: 12),
+          Text(
+            'Game Settings',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Blind adjustments section
+            Text(
+              'Blind Levels',
+              style: TextStyle(
+                color: Color(0xFF9A9A9A),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Changes take effect on the next hand',
+              style: TextStyle(
+                color: Color(0xFF9A9A9A).withOpacity(0.7),
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildNumberAdjuster(
+              'Small Blind',
+              smallBlind,
+              () {
+                setState(() {
+                  smallBlind++;
+                  // Ensure big blind is at least double the small blind
+                  if (bigBlind < smallBlind * 2) {
+                    bigBlind = smallBlind * 2;
+                  }
+                });
+              },
+              () {
+                if (smallBlind > MIN_SMALL_BLIND) {
+                  setState(() {
+                    smallBlind--;
+                    // Ensure big blind maintains proper relationship
+                    if (bigBlind < smallBlind * 2) {
+                      bigBlind = smallBlind * 2;
+                    }
+                  });
+                }
+              },
+              () {
+                _showBlindInputDialog('Small Blind', smallBlind, (value) {
+                  setState(() {
+                    smallBlind = value;
+                    // Ensure big blind is at least double the small blind
+                    if (bigBlind < smallBlind * 2) {
+                      bigBlind = smallBlind * 2;
+                    }
+                  });
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildNumberAdjuster(
+              'Big Blind',
+              bigBlind,
+              () {
+                setState(() {
+                  bigBlind++;
+                });
+              },
+              () {
+                // Big blind must be at least double the small blind
+                if (bigBlind > smallBlind * 2) {
+                  setState(() {
+                    bigBlind--;
+                  });
+                }
+              },
+              () {
+                _showBlindInputDialog('Big Blind', bigBlind, (value) {
+                  setState(() {
+                    // Ensure big blind is at least double the small blind
+                    if (value >= smallBlind * 2) {
+                      bigBlind = value;
+                    } else {
+                      bigBlind = smallBlind * 2;
+                    }
+                  });
+                });
+              },
+            ),
+            const SizedBox(height: 24),
+
+            // Level duration section
+            Text(
+              'Tournament Settings',
+              style: TextStyle(
+                color: Color(0xFF9A9A9A),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildNumberAdjuster(
+              'Level Duration (min)',
+              levelDuration,
+              () {
+                setState(() {
+                  levelDuration += LEVEL_DURATION_INCREMENT;
+                });
+              },
+              () {
+                if (levelDuration > MIN_LEVEL_DURATION) {
+                  setState(() {
+                    levelDuration -= LEVEL_DURATION_INCREMENT;
+                  });
+                }
+              },
+              () {
+                _showBlindInputDialog('Level Duration (minutes)', levelDuration, (value) {
+                  setState(() {
+                    levelDuration = value;
+                  });
+                });
+              },
+            ),
+            const SizedBox(height: 24),
+
+            // Interface settings section
+            Text(
+              'Interface',
+              style: TextStyle(
+                color: Color(0xFF9A9A9A),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildToggle(
+              'Button View',
+              'Switch between button grid and drawing pad',
+              useButtonMode,
+              (value) {
+                setState(() {
+                  useButtonMode = value;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              color: Color(0xFF9A9A9A),
+              fontSize: 16,
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            widget.onBlindsChanged(smallBlind, bigBlind);
+            widget.onLevelDurationChanged(levelDuration);
+            widget.onButtonModeToggled(useButtonMode);
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF5AC95A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+          child: Text(
+            'Apply',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
