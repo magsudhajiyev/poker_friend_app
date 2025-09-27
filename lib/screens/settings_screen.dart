@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../design_system/poker_friend_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -45,7 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
+      backgroundColor: PokerFriendColors.dark1,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
@@ -77,7 +78,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'Customize your experience',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Color(0xFF9A9A9A),
+                              color: PokerFriendColors.dark9,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -87,7 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: Color(0xFF1F1F23),
+                          color: PokerFriendColors.dark3,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: IconButton(
@@ -107,7 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
+                    color: PokerFriendColors.dark3,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Column(
@@ -119,12 +120,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Color(0xFFcb5242).withOpacity(0.1),
+                              color: PokerFriendColors.red.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
                               useButtonMode ? Icons.smart_button : Icons.touch_app,
-                              color: Color(0xFFcb5242),
+                              color: PokerFriendColors.red,
                               size: 20,
                             ),
                           ),
@@ -146,7 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   useButtonMode ? 'Action Buttons' : 'Gesture Mode',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Color(0xFF9A9A9A),
+                                    color: PokerFriendColors.dark9,
                                   ),
                                 ),
                               ],
@@ -155,9 +156,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Switch(
                             value: useButtonMode,
                             onChanged: _saveButtonMode,
-                            activeColor: Color(0xFFcb5242),
+                            activeColor: PokerFriendColors.red,
                             inactiveThumbColor: Colors.white,
-                            inactiveTrackColor: Color(0xFF2A2A2E),
+                            inactiveTrackColor: PokerFriendColors.dark4,
                           ),
                         ],
                       ),
@@ -165,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Container(
                         padding: EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Color(0xFF161618),
+                          color: PokerFriendColors.dark1,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -202,7 +203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
+                    color: PokerFriendColors.dark3,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Column(
@@ -214,12 +215,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Color(0xFFcb5242).withOpacity(0.1),
+                              color: PokerFriendColors.red.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
                               autoAdvanceStreets ? Icons.fast_forward : Icons.pause,
-                              color: Color(0xFFcb5242),
+                              color: PokerFriendColors.red,
                               size: 20,
                             ),
                           ),
@@ -241,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   autoAdvanceStreets ? 'Auto-Advance Mode' : 'Manual Mode',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Color(0xFF9A9A9A),
+                                    color: PokerFriendColors.dark9,
                                   ),
                                 ),
                               ],
@@ -250,9 +251,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Switch(
                             value: autoAdvanceStreets,
                             onChanged: _saveAutoAdvanceStreets,
-                            activeColor: Color(0xFFcb5242),
+                            activeColor: PokerFriendColors.red,
                             inactiveThumbColor: Colors.white,
-                            inactiveTrackColor: Color(0xFF2A2A2E),
+                            inactiveTrackColor: PokerFriendColors.dark4,
                           ),
                         ],
                       ),
@@ -260,7 +261,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Container(
                         padding: EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Color(0xFF161618),
+                          color: PokerFriendColors.dark1,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -307,7 +308,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         text,
         style: TextStyle(
           fontSize: 13,
-          color: Color(0xFF9A9A9A),
+          color: PokerFriendColors.dark9,
           height: 1.4,
         ),
       ),

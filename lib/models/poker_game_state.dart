@@ -167,8 +167,8 @@ class PokerGameState {
       players.add(player);
     }
 
-    // Set initial action order for preflop
-    _setInitialActionOrder();
+    // Note: _setInitialActionOrder() will be called when button position is set
+    // after players are properly activated
   }
 
   void _setInitialActionOrder() {
@@ -183,27 +183,29 @@ class PokerGameState {
       }
     } else {
       // Multi-way: UTG (Under The Gun) acts first
-      // Determine who will actually post the BB
-      int effectiveBBPosition = _determineEffectiveBBPosition();
-      int standardUTGPosition = PokerPositions.getUTGSeat(buttonPosition, numberOfPlayers);
-      int calculatedBBPosition = _getPositionFromButton(2);
+      // Get active players and find UTG based on button position among active players
+      List<int> activePlayers = getActivePlayers();
 
-      int utgPosition;
-      if (effectiveBBPosition == calculatedBBPosition) {
-        // Normal case: BB posted by calculated position, use standard UTG
-        utgPosition = standardUTGPosition;
-      } else {
-        // BB was moved to a different player, UTG is first player after effective BB
-        utgPosition = (effectiveBBPosition % numberOfPlayers) + 1;
+      if (activePlayers.isEmpty) {
+        print('ERROR: No active players found for UTG calculation');
+        currentPlayer = 1; // Fallback
+        return;
       }
 
-      // Check if the calculated UTG position is active, otherwise find next active
-      PlayerState utgPlayer = _getPlayer(utgPosition);
-      if (utgPlayer.isActive && utgPlayer.currentStack > 0) {
-        currentPlayer = utgPosition;
-      } else {
-        currentPlayer = _findNextActivePlayer(utgPosition);
+      // Find button position in active players list
+      int buttonIndex = activePlayers.indexOf(buttonPosition);
+      if (buttonIndex == -1) {
+        // Button not in active players, use first active player as button
+        buttonIndex = 0;
       }
+
+      // UTG is 3 positions clockwise from button in active players
+      // SB = +1, BB = +2, UTG = +3
+      int utgIndex = (buttonIndex + 3) % activePlayers.length;
+      int utgPosition = activePlayers[utgIndex];
+
+      // Set current player to the calculated UTG position
+      currentPlayer = utgPosition;
 
     }
 
