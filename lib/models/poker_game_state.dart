@@ -106,7 +106,8 @@ class PokerGameState {
   double currentBet = 0.0;
   int _effectiveBBPosition = 1; // Track who actually posted BB
   int _effectiveSBPosition = 1; // Track who actually posted SB
-  
+  bool _isInitializing = true; // Flag to prevent premature action order calculation
+
   // Getters for effective blind positions
   int get effectiveBBPosition => _effectiveBBPosition;
   int get effectiveSBPosition => _effectiveSBPosition;
@@ -117,8 +118,12 @@ class PokerGameState {
     if (_buttonPosition != value) {
       _buttonPosition = value;
       // Recalculate action order when button position changes
-      if (currentRound == BettingRound.preflop && !bettingRoundComplete) {
+      // BUT ONLY if we're not still initializing
+      if (!_isInitializing && currentRound == BettingRound.preflop && !bettingRoundComplete) {
+        print('🎮 DEBUG: Button position changed to $value, recalculating action order');
         _setInitialActionOrder();
+      } else if (_isInitializing) {
+        print('🎮 DEBUG: Button position set to $value during initialization, deferring action order calculation');
       }
     }
   }
@@ -167,8 +172,17 @@ class PokerGameState {
       players.add(player);
     }
 
-    // Note: _setInitialActionOrder() will be called when button position is set
-    // after players are properly activated
+    // Note: _setInitialActionOrder() will be called when finializeInitialization() is called
+    // after players are properly activated and button position is set
+  }
+
+  // Method to complete initialization and trigger action order calculation
+  void finalizeInitialization() {
+    print('🎮 DEBUG: Finalizing initialization and calculating action order');
+    _isInitializing = false;
+    if (currentRound == BettingRound.preflop && !bettingRoundComplete) {
+      _setInitialActionOrder();
+    }
   }
 
   void _setInitialActionOrder() {

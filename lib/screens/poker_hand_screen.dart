@@ -144,11 +144,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       return;
     }
     
-    // Set our seat number and button position
+    // Set our seat number
     sessionManager.ourSeatNumber = ourSeat;
-    gameState.buttonPosition = buttonPosition;
-    
-    // Initialize player stacks and set inactive players
+
+    print('🎮 DEBUG: Initializing players BEFORE setting button position');
+    // Initialize player stacks and set inactive players FIRST
     for (int i = 1; i <= 9; i++) {
       if (playerStacks.containsKey(i)) {
         // Active player - set their stack
@@ -166,7 +166,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         sessionManager.activeSeats.remove(i);
       }
     }
-    
+
+    print('🎮 DEBUG: Setting button position AFTER player initialization');
+    // NOW set button position AFTER players are initialized
+    gameState.buttonPosition = buttonPosition;
+
+    print('🎮 DEBUG: Finalizing initialization to trigger action order calculation');
+    // Complete initialization and calculate action order
+    gameState.finalizeInitialization();
+
     // Initialize pot with blinds
     gameState.initializePot();
     
