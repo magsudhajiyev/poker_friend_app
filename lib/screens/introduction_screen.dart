@@ -3,9 +3,13 @@ import '../widgets/modern_setting_row.dart';
 import '../models/game_types.dart';
 import 'poker_hand_screen.dart';
 import '../widgets/loading_screen.dart';
+import 'logging_mode_selection_screen.dart';
+import 'individual_session_setup_screen.dart';
 
 class IntroductionScreen extends StatefulWidget {
-  const IntroductionScreen({super.key});
+  final LoggingMode? loggingMode;
+
+  const IntroductionScreen({super.key, this.loggingMode});
 
   @override
   State<IntroductionScreen> createState() => _IntroductionScreenState();
@@ -299,19 +303,30 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                           isStartingGame = false;
                         });
                         
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PokerHandScreen(
-                              smallBlind: smallBlind,
-                              bigBlind: bigBlind,
-                              levelDuration: levelDuration,
-                              numberOfPlayers: numberOfPlayers,
-                              gameType: gameType,
-                              hasBBante: bbAnteEnabled,
+                        // Navigate based on logging mode
+                        if (widget.loggingMode == LoggingMode.individual) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => IndividualSessionSetupScreen(),
                             ),
-                          ),
-                        );
+                          );
+                        } else {
+                          // Default to full logging mode (existing behavior)
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PokerHandScreen(
+                                smallBlind: smallBlind,
+                                bigBlind: bigBlind,
+                                levelDuration: levelDuration,
+                                numberOfPlayers: numberOfPlayers,
+                                gameType: gameType,
+                                hasBBante: bbAnteEnabled,
+                              ),
+                            ),
+                          );
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(

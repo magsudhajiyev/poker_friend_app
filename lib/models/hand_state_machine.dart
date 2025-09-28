@@ -333,37 +333,48 @@ class PokerSessionManager {
     required this.playerCount,
     this.ourSeatNumber,
     this.gameType = GameType.cash,
-  });
+    String? existingSessionId,
+  }) {
+    // If we have an existing session ID, use it
+    if (existingSessionId != null) {
+      sessionId = existingSessionId;
+    }
+  }
 
   // Start a new session
   Future<void> startSession() async {
-    
     sessionStartTime = DateTime.now();
-    sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
-    
-    try {
-      // Try Firebase first
-      final firebaseId = await FirebaseService.createSession(
+
+    // If we already have a session ID (from individual session), don't create a new one
+    if (sessionId == null) {
+      sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
+
+      try {
+        // Try Firebase first
+        final firebaseId = await FirebaseService.createSession(
+          smallBlind: smallBlind,
+          bigBlind: bigBlind,
+          playerCount: playerCount,
+          ourSeatNumber: ourSeatNumber,
+          gameType: gameType,
+        );
+        sessionId = firebaseId;
+      } catch (e) {
+      }
+
+      // Always save locally as backup
+      await LocalStorageService.saveSession(
+        sessionId: sessionId!,
         smallBlind: smallBlind,
         bigBlind: bigBlind,
         playerCount: playerCount,
+        startTime: sessionStartTime!.toIso8601String(),
         ourSeatNumber: ourSeatNumber,
         gameType: gameType,
       );
-      sessionId = firebaseId;
-    } catch (e) {
+    } else {
+      // We already have an existing session (individual session case)
     }
-    
-    // Always save locally as backup
-    await LocalStorageService.saveSession(
-      sessionId: sessionId!,
-      smallBlind: smallBlind,
-      bigBlind: bigBlind,
-      playerCount: playerCount,
-      startTime: sessionStartTime!.toIso8601String(),
-      ourSeatNumber: ourSeatNumber,
-      gameType: gameType,
-    );
     
     sessionState = SessionState.active;
   }

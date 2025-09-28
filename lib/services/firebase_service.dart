@@ -21,17 +21,22 @@ class FirebaseService {
     required int playerCount,
     int? ourSeatNumber,
     GameType gameType = GameType.cash,
+    bool isIndividualSession = false,
+    String? sessionName,
+    double? startingStack,
+    bool hasBBante = false,
   }) async {
     try {
       final userId = AuthService.userId;
       if (userId == null) throw 'User not authenticated';
       
-      final sessionRef = await _firestore.collection(_sessionsCollection).add({
+      final sessionData = {
         'userId': userId,
         'userEmail': AuthService.currentUser?.email,
         'userName': AuthService.userDisplayName,
         'smallBlind': smallBlind,
         'bigBlind': bigBlind,
+        'hasBBante': hasBBante,
         'playerCount': playerCount,
         'ourSeatNumber': ourSeatNumber,
         'gameType': gameType.value,
@@ -39,7 +44,22 @@ class FirebaseService {
         'endTime': null,
         'totalHands': 0,
         'createdAt': FieldValue.serverTimestamp(),
-      });
+        'isIndividualSession': isIndividualSession,
+        'sessionName': sessionName ?? (isIndividualSession ? 'Individual Session' : ''), // Always set sessionName
+      };
+
+      // Add individual session specific fields
+      if (isIndividualSession) {
+        sessionData.addAll({
+          'startingStack': startingStack ?? 0.0,
+          'currentStack': startingStack ?? 0.0,
+          'handsLogged': 0,
+          'biggestPot': 0.0,
+          'sessionStatus': 'active',
+        });
+      }
+
+      final sessionRef = await _firestore.collection(_sessionsCollection).add(sessionData);
       
       print('Session created with ID: ${sessionRef.id} for user: $userId');
       return sessionRef.id;
@@ -534,6 +554,56 @@ class FirebaseService {
       print('Session updated: $sessionId (totalHands: $totalHands)');
     } catch (e) {
       print('Error updating session: $e');
+      rethrow;
+    }
+  }
+
+  // Update individual session data
+  static Future<void> updateIndividualSession({
+    required String sessionId,
+    double? currentStack,
+    int? handsLogged,
+    double? biggestPot,
+    String? sessionStatus,
+    int? smallBlind,
+    int? bigBlind,
+    bool? hasBBante,
+  }) async {
+    try {
+      final userId = AuthService.userId;
+      if (userId == null) throw 'User not authenticated';
+
+      Map<String, dynamic> updateData = {
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      if (currentStack != null) {
+        updateData['currentStack'] = currentStack;
+      }
+      if (handsLogged != null) {
+        updateData['handsLogged'] = handsLogged;
+      }
+      if (biggestPot != null) {
+        updateData['biggestPot'] = biggestPot;
+      }
+      if (sessionStatus != null) {
+        updateData['sessionStatus'] = sessionStatus;
+      }
+      if (smallBlind != null) {
+        updateData['smallBlind'] = smallBlind;
+      }
+      if (bigBlind != null) {
+        updateData['bigBlind'] = bigBlind;
+      }
+      if (hasBBante != null) {
+        updateData['hasBBante'] = hasBBante;
+      }
+
+      await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
+
+      print('Individual session updated: $sessionId');
+    } catch (e) {
+      print('Error updating individual session: $e');
       rethrow;
     }
   }

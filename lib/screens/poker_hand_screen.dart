@@ -26,6 +26,12 @@ class PokerHandScreen extends StatefulWidget {
   final int numberOfPlayers;
   final GameType gameType;
   final bool hasBBante;
+  final int ante;
+
+  // Individual session parameters
+  final bool isIndividualSession;
+  final double? individualCurrentStack;
+  final String? individualSessionId;
 
   const PokerHandScreen({
     super.key,
@@ -35,6 +41,10 @@ class PokerHandScreen extends StatefulWidget {
     required this.numberOfPlayers,
     this.gameType = GameType.cash,
     this.hasBBante = false,
+    this.ante = 0,
+    this.isIndividualSession = false,
+    this.individualCurrentStack,
+    this.individualSessionId,
   });
 
   @override
@@ -81,6 +91,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       bigBlind: widget.bigBlind,
       playerCount: widget.numberOfPlayers,
       gameType: widget.gameType,
+      existingSessionId: widget.individualSessionId, // Use existing session ID for individual sessions
     );
     
     // Load button mode setting
@@ -144,11 +155,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       return;
     }
     
-    // Set our seat number and button position
+    // CRITICAL: Set our seat number
     sessionManager.ourSeatNumber = ourSeat;
-    gameState.buttonPosition = buttonPosition;
-    
-    // Initialize player stacks and set inactive players
+
+    print('🎮 DEBUG: Initializing players BEFORE setting button position');
+    // CRITICAL: Initialize player stacks and set inactive players FIRST
     for (int i = 1; i <= 9; i++) {
       if (playerStacks.containsKey(i)) {
         // Active player - set their stack
@@ -166,6 +177,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         sessionManager.activeSeats.remove(i);
       }
     }
+
+    print('🎮 DEBUG: Setting button position AFTER player initialization');
+    // CRITICAL: NOW set button position AFTER players are initialized
+    gameState.buttonPosition = buttonPosition;
+
+    print('🎮 DEBUG: Finalizing initialization to trigger action order calculation');
+    // CRITICAL: Complete initialization and calculate action order
+    gameState.finalizeInitialization();
     
     // Initialize pot with blinds
     gameState.initializePot();
@@ -200,6 +219,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           sessionManager: sessionManager,
           isInitialSetup: true,
           isCashGame: widget.gameType == GameType.cash,
+          isIndividualSession: widget.isIndividualSession,
+          individualCurrentStack: widget.individualCurrentStack,
         ),
       ),
     );
@@ -331,6 +352,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           isInitialSetup: false,
           isCashGame: widget.gameType == GameType.cash,
           gameState: gameState,
+          isIndividualSession: widget.isIndividualSession,
+          individualCurrentStack: widget.individualCurrentStack,
         ),
       ),
     );
@@ -2258,6 +2281,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       }
     });
 
+    // For individual sessions, return to the session tracking screen
+    if (widget.isIndividualSession) {
+      // Get the user's final stack and pot size
+      final ourSeat = sessionManager.ourSeatNumber;
+      final finalStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : widget.individualCurrentStack ?? 0.0;
+      final potSize = potAmount; // Use the potAmount we saved earlier
+
+      // Return to session tracking screen with hand completion data
+      Navigator.pop(context, {
+        'completed': true,
+        'finalStack': finalStack,
+        'potSize': potSize,
+      });
+      return;
+    }
+
+    // For full sessions, continue with normal flow
     // Check for busted players before starting new hand
     await _checkForBustedPlayers();
 
@@ -2557,7 +2597,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Show hole cards dialog for the completed hand
     await _showHoleCardsDialog();
 
-    // Start a new hand without calling completeHand again
+    // For individual sessions, return to the session tracking screen
+    if (widget.isIndividualSession) {
+      // Get the user's final stack and pot size
+      final ourSeat = sessionManager.ourSeatNumber;
+      final finalStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : widget.individualCurrentStack ?? 0.0;
+      final potSize = gameState.currentPot;
+
+      // Return to session tracking screen with hand completion data
+      Navigator.pop(context, {
+        'completed': true,
+        'finalStack': finalStack,
+        'potSize': potSize,
+      });
+      return;
+    }
+
+    // For full sessions, continue with normal flow
     // Check for busted players before starting new hand
     await _checkForBustedPlayers();
 

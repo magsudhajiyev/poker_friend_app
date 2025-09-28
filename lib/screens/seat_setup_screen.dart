@@ -15,6 +15,10 @@ class SeatSetupScreen extends StatefulWidget {
   final bool isCashGame;
   final PokerGameState? gameState;
 
+  // Individual session parameters
+  final bool isIndividualSession;
+  final double? individualCurrentStack;
+
   const SeatSetupScreen({
     Key? key,
     required this.playerCount,
@@ -24,6 +28,8 @@ class SeatSetupScreen extends StatefulWidget {
     this.isInitialSetup = true,
     this.isCashGame = true,
     this.gameState,
+    this.isIndividualSession = false,
+    this.individualCurrentStack,
   }) : super(key: key);
 
   @override
@@ -87,6 +93,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   }
 
   String _getCurrentStackForSeat(int seatNumber) {
+    // For individual session, use the current stack for the user's seat
+    // Note: We'll apply the individual stack after the user selects their seat
+
     // If we have gameState and this is not initial setup, use current stacks
     if (widget.gameState != null && !widget.isInitialSetup) {
       final currentStack = widget.gameState!.getPlayerStack(seatNumber);
@@ -593,6 +602,12 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                           setState(() {
                                             selectedSeat = seatNumber;
                                             _autoInsertUsernameForSeat(seatNumber);
+                                            // For individual session, set the user's current stack
+                                            if (widget.isIndividualSession && widget.individualCurrentStack != null) {
+                                              stackControllers[seatNumber]?.text = widget.isCashGame
+                                                ? widget.individualCurrentStack!.toStringAsFixed(2)
+                                                : widget.individualCurrentStack!.toInt().toString();
+                                            }
                                           });
                                         },
                                         borderRadius: BorderRadius.circular(12),

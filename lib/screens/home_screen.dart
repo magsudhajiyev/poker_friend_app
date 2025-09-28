@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import '../screens/introduction_screen.dart';
+import '../screens/logging_mode_selection_screen.dart';
 import '../screens/session_history_screen.dart';
 import '../screens/statistics_screen.dart';
 import '../screens/my_opponents_screen.dart';
@@ -636,7 +637,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case 2:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => IntroductionScreen()),
+          MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
         );
         break;
       case 3:
@@ -1003,7 +1004,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildSessionItem(Map<String, dynamic> session) {
     String sessionName = session['sessionName'] ?? '';
-    
+
     // If no sessionName, create a meaningful one based on available data
     if (sessionName.isEmpty) {
       final createdAt = _parseSessionDate(session);
