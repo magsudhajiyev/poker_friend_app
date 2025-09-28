@@ -601,7 +601,6 @@ class FirebaseService {
 
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
 
-      print('Individual session updated: $sessionId');
     } catch (e) {
       print('Error updating individual session: $e');
       rethrow;

@@ -57,6 +57,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   int _currentBigBlind = 0;
   bool _currentHasBBante = false;
 
+  // Display mode
+  bool _showBBMode = false;
+
   @override
   void initState() {
     super.initState();
@@ -99,7 +102,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         _sessionId = sessionId;
       });
 
-      print('Individual session created with ID: $sessionId');
     } catch (e) {
       print('Error creating individual session: $e');
       // Fallback to local session ID
@@ -139,12 +141,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     return ((_currentStack - _initialStack) / _initialStack) * 100;
   }
 
-  // Calculate hourly rate
-  double get hourlyRate {
-    if (_sessionDuration.inMinutes == 0) return 0;
-    final hours = _sessionDuration.inMinutes / 60;
-    return (_currentStack - _initialStack) / hours;
-  }
 
   // Get color based on stack performance
   Color get stackColor {
@@ -165,6 +161,21 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return "$hours:$minutes:$seconds";
   }
+
+  // Format stack value based on display mode
+  String _formatStackValue(double value) {
+    if (_showBBMode && _currentBigBlind > 0) {
+      final bbValue = value / _currentBigBlind;
+      return '${bbValue.toStringAsFixed(1)} BB';
+    } else {
+      return widget.gameType == GameType.cash
+          ? '\$${value.toStringAsFixed(2)}'
+          : value.toStringAsFixed(0);
+    }
+  }
+
+
+
 
   // Manual stack update dialog
   Future<void> _showUpdateStackDialog() async {
@@ -235,9 +246,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         FirebaseService.updateIndividualSession(
           sessionId: _sessionId!,
           currentStack: _currentStack,
-        ).catchError((e) {
-          print('Error updating current stack: $e');
-        });
+        ).catchError((e) {});
       }
     }
   }
@@ -370,9 +379,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           smallBlind: _currentSmallBlind,
           bigBlind: _currentBigBlind,
           hasBBante: _currentHasBBante,
-        ).catchError((e) {
-          print('Error updating blinds: $e');
-        });
+        ).catchError((e) {});
       }
     }
   }
@@ -419,9 +426,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             currentStack: _currentStack,
             handsLogged: _handsLogged,
             biggestPot: _biggestPot,
-          ).catchError((e) {
-            print('Error updating individual session: $e');
-          });
+          ).catchError((e) {});
         }
       }
     }
@@ -486,9 +491,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             biggestPot: _biggestPot,
           );
 
-          print('Individual session ended: $_sessionId');
         } catch (e) {
-          print('Error ending individual session: $e');
         }
       }
 
@@ -562,6 +565,34 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   ),
                 ),
 
+                // BB Mode Toggle
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  margin: EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: PokerFriendColors.dark3,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'BB Mode',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Switch(
+                        value: _showBBMode,
+                        onChanged: (value) => setState(() => _showBBMode = value),
+                        activeColor: PokerFriendColors.red,
+                      ),
+                    ],
+                  ),
+                ),
+
                 // Main Stack Card
                 Container(
                   padding: EdgeInsets.all(24),
@@ -622,9 +653,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                       ),
                       SizedBox(height: 12),
                       Text(
-                        widget.gameType == GameType.cash
-                          ? '\$${_currentStack.toStringAsFixed(2)}'
-                          : _currentStack.toStringAsFixed(0),
+                        _formatStackValue(_currentStack),
                         style: TextStyle(
                           fontSize: 42,
                           color: stackColor,
@@ -673,26 +702,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                                 ),
                                 Text(
                                   '${stackGrowthPercentage >= 0 ? '+' : ''}${stackGrowthPercentage.toStringAsFixed(1)}%',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'Hourly',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white.withOpacity(0.8),
-                                  ),
-                                ),
-                                Text(
-                                  '${hourlyRate >= 0 ? '+' : ''}${widget.gameType == GameType.cash ? '\$' : ''}${hourlyRate.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}/hr',
                                   style: TextStyle(
                                     fontSize: 18,
                                     color: Colors.white,

@@ -158,7 +158,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // CRITICAL: Set our seat number
     sessionManager.ourSeatNumber = ourSeat;
 
-    print('🎮 DEBUG: Initializing players BEFORE setting button position');
     // CRITICAL: Initialize player stacks and set inactive players FIRST
     for (int i = 1; i <= 9; i++) {
       if (playerStacks.containsKey(i)) {
@@ -178,11 +177,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       }
     }
 
-    print('🎮 DEBUG: Setting button position AFTER player initialization');
     // CRITICAL: NOW set button position AFTER players are initialized
     gameState.buttonPosition = buttonPosition;
 
-    print('🎮 DEBUG: Finalizing initialization to trigger action order calculation');
     // CRITICAL: Complete initialization and calculate action order
     gameState.finalizeInitialization();
     
