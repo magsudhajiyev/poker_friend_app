@@ -250,23 +250,15 @@ class LoggingModeSelectionScreen extends StatelessWidget {
   }
 
   void _navigateToMode(BuildContext context, LoggingMode mode) {
-    if (mode == LoggingMode.individual) {
-      // For Individual mode, go directly to Session Setup
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => IndividualSessionSetupScreen(),
+    // Both modes now go to Session Setup first
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => IndividualSessionSetupScreen(
+          loggingMode: mode,
         ),
-      );
-    } else {
-      // For Full mode, go to Game Setup (Introduction Screen)
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => IntroductionScreen(loggingMode: mode),
-        ),
-      );
-    }
+      ),
+    );
   }
 }
 

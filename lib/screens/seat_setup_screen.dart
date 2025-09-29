@@ -5,12 +5,14 @@ import '../services/auth_service.dart';
 import '../services/opponent_service.dart';
 import '../models/opponent.dart';
 import '../models/poker_game_state.dart';
+import '../models/game_types.dart';
+import 'poker_hand_screen.dart';
 
 class SeatSetupScreen extends StatefulWidget {
-  final int playerCount;
-  final int buttonPosition;
+  final int? playerCount;
+  final int? buttonPosition;
   final int? currentSeat;
-  final PokerSessionManager sessionManager;
+  final PokerSessionManager? sessionManager;
   final bool isInitialSetup;
   final bool isCashGame;
   final PokerGameState? gameState;
@@ -19,17 +21,33 @@ class SeatSetupScreen extends StatefulWidget {
   final bool isIndividualSession;
   final double? individualCurrentStack;
 
+  // Session parameters from Session Setup
+  final String? sessionName;
+  final double? buyInAmount;
+  final double? startingStack;
+  final GameType? gameType;
+  final int? smallBlind;
+  final int? bigBlind;
+  final bool? hasBBante;
+
   const SeatSetupScreen({
     Key? key,
-    required this.playerCount,
-    required this.buttonPosition,
+    this.playerCount,
+    this.buttonPosition,
     this.currentSeat,
-    required this.sessionManager,
+    this.sessionManager,
     this.isInitialSetup = true,
     this.isCashGame = true,
     this.gameState,
     this.isIndividualSession = false,
     this.individualCurrentStack,
+    this.sessionName,
+    this.buyInAmount,
+    this.startingStack,
+    this.gameType,
+    this.smallBlind,
+    this.bigBlind,
+    this.hasBBante,
   }) : super(key: key);
 
   @override
@@ -49,11 +67,14 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   void initState() {
     super.initState();
     selectedSeat = widget.currentSeat;
-    selectedButtonPosition = widget.buttonPosition;
-    
-    // If this is initial setup, initialize default players FIRST
-    if (widget.isInitialSetup) {
-      widget.sessionManager.initializeDefaultPlayers();
+    selectedButtonPosition = widget.buttonPosition ?? 1;
+
+    // Use default player count of 6 if not provided
+    final effectivePlayerCount = widget.playerCount ?? 6;
+
+    // If this is initial setup and sessionManager exists, initialize default players
+    if (widget.isInitialSetup && widget.sessionManager != null) {
+      widget.sessionManager!.initializeDefaultPlayers();
     }
 
     // Always initialize 9 seats regardless of player count
@@ -61,7 +82,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
       // First determine active status
       if (widget.isInitialSetup) {
         // For initial setup, activate only up to playerCount seats
-        seatActive[i] = i <= widget.playerCount;
+        seatActive[i] = i <= effectivePlayerCount;
       } else if (widget.gameState != null) {
         // Use gameState player status
         try {
@@ -71,13 +92,13 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
           seatActive[i] = false;
         }
       } else {
-        seatActive[i] = widget.sessionManager.isPlayerActive(i);
+        seatActive[i] = widget.sessionManager?.isPlayerActive(i) ?? false;
       }
 
       // Then initialize controllers based on active status
       if (seatActive[i] == true) {
         nameControllers[i] = TextEditingController(
-          text: widget.sessionManager.getPlayerName(i)
+          text: widget.sessionManager?.getPlayerName(i) ?? ''
         );
       } else {
         nameControllers[i] = TextEditingController(text: '');
@@ -369,11 +390,11 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     }
 
     // Find SB and BB positions among active players
-    int sbSeat = buttonPos;
-    int bbSeat = buttonPos;
+    int sbSeat = buttonPos ?? 1;
+    int bbSeat = buttonPos ?? 1;
 
     // Find next active player for SB
-    int position = buttonPos;
+    int position = buttonPos ?? 1;
     for (int i = 0; i < 9; i++) {
       position = (position % 9) + 1;
       if (activeSeats.contains(position)) {
@@ -401,7 +422,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
     // Calculate relative position among active players
     activeSeats.sort();
-    int activeButtonIndex = activeSeats.indexOf(buttonPos);
+    int activeButtonIndex = activeSeats.indexOf(buttonPos ?? 1);
     int activePlayerIndex = activeSeats.indexOf(seatNumber);
     int relativePosition = (activePlayerIndex - activeButtonIndex + activePlayerCount) % activePlayerCount;
 
@@ -602,11 +623,18 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                           setState(() {
                                             selectedSeat = seatNumber;
                                             _autoInsertUsernameForSeat(seatNumber);
-                                            // For individual session, set the user's current stack
+
+                                            // Set the user's stack from session setup
                                             if (widget.isIndividualSession && widget.individualCurrentStack != null) {
+                                              // For individual session, use current stack
                                               stackControllers[seatNumber]?.text = widget.isCashGame
                                                 ? widget.individualCurrentStack!.toStringAsFixed(2)
                                                 : widget.individualCurrentStack!.toInt().toString();
+                                            } else if (widget.startingStack != null) {
+                                              // For full session, use starting stack from session setup
+                                              stackControllers[seatNumber]?.text = widget.gameType == GameType.cash
+                                                ? widget.startingStack!.toStringAsFixed(2)
+                                                : widget.startingStack!.toInt().toString();
                                             }
                                           });
                                         },
@@ -714,7 +742,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                       },
                                       onSelected: (String selection) {
                                         nameControllers[seatNumber]!.text = selection;
-                                        widget.sessionManager.setPlayerName(seatNumber, selection);
+                                        widget.sessionManager?.setPlayerName(seatNumber, selection);
                                         _checkIfShouldShowSaveTip(seatNumber, selection);
                                       },
                                       fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
@@ -750,7 +778,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                               // Update our original controller
                                               nameControllers[seatNumber]!.text = value;
                                               // Auto-update the session manager
-                                              widget.sessionManager.setPlayerName(seatNumber, value);
+                                              widget.sessionManager?.setPlayerName(seatNumber, value);
                                               // Check if we should show save tip
                                               _checkIfShouldShowSaveTip(seatNumber, value);
                                             },
@@ -990,7 +1018,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
       controller.text = userName;
       // Make sure the seat is active
       seatActive[seatNumber] = true;
-      widget.sessionManager.setPlayerName(seatNumber, userName);
+      widget.sessionManager?.setPlayerName(seatNumber, userName);
     }
   }
 
@@ -1014,7 +1042,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
       final name = nameControllers[seat]?.text ?? '';
       
       if (isActive) {
-        widget.sessionManager.addPlayer(seat, name);
+        widget.sessionManager?.addPlayer(seat, name);
         
         // Parse and store stack size
         final stackText = stackControllers[seat]?.text ?? '0';
@@ -1026,16 +1054,41 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         }
         playerStacks[seat] = stackSize;
       } else {
-        widget.sessionManager.removePlayer(seat);
+        widget.sessionManager?.removePlayer(seat);
       }
     }
 
-    // Return the selected seat, button position, and stack sizes for initial setup
-    Navigator.pop(context, {
-      'seat': selectedSeat,
-      'buttonPosition': selectedButtonPosition ?? widget.buttonPosition,
-      'playerStacks': playerStacks,
-      'isCashGame': widget.isCashGame,
-    });
+    // Check if this is part of the full session setup flow
+    if (widget.sessionName != null && widget.smallBlind != null && widget.bigBlind != null) {
+      // Navigate to PokerHandScreen for full session flow
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PokerHandScreen(
+            smallBlind: widget.smallBlind!,
+            bigBlind: widget.bigBlind!,
+            levelDuration: 15, // Default level duration
+            numberOfPlayers: 6, // Default player count
+            gameType: widget.gameType ?? GameType.cash,
+            hasBBante: widget.hasBBante ?? false,
+            ante: (widget.hasBBante ?? false) ? widget.bigBlind! : 0,
+            sessionName: widget.sessionName,
+            buyInAmount: widget.buyInAmount,
+            startingStack: widget.startingStack,
+            initialSeat: selectedSeat,
+            initialButtonPosition: selectedButtonPosition ?? widget.buttonPosition,
+            sessionManager: widget.sessionManager,
+          ),
+        ),
+      );
+    } else {
+      // Return data for the old flow (when used from other screens)
+      Navigator.pop(context, {
+        'seat': selectedSeat,
+        'buttonPosition': selectedButtonPosition ?? widget.buttonPosition,
+        'playerStacks': playerStacks,
+        'isCashGame': widget.isCashGame,
+      });
+    }
   }
 }
