@@ -2220,8 +2220,103 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
   }
 
-  void _showRebuyDialog() {
+  // Confirmation dialog for rebuy when user has existing stack
+  Future<bool?> _showRebuyConfirmationDialog(double currentStack) async {
+    // Format stack value based on game type
+    String formatStackValue(double value) {
+      return widget.gameType == GameType.cash
+          ? '\$${value.toStringAsFixed(2)}'
+          : value.toStringAsFixed(0);
+    }
+
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: PokerFriendColors.dark3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: PokerFriendColors.red, size: 24),
+            SizedBox(width: 12),
+            Text(
+              'Confirm Rebuy',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'You currently have ${formatStackValue(currentStack)} remaining.',
+              style: TextStyle(
+                color: PokerFriendColors.dark10,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Proceeding with a rebuy will replace your current stack. Are you sure you want to continue?',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: PokerFriendColors.dark10,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PokerFriendColors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'Proceed with Rebuy',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRebuyDialog() async {
     if (widget.gameType != GameType.tournament) return;
+
+    // Check if user has existing stack and confirm they want to lose it
+    final ourSeat = sessionManager.ourSeatNumber;
+    final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : (widget.individualCurrentStack ?? 0.0);
+    if (currentStack > 0) {
+      final confirmed = await _showRebuyConfirmationDialog(currentStack);
+      if (confirmed != true) {
+        return; // User cancelled, don't proceed with rebuy
+      }
+    }
 
     final rebuyAmountController = TextEditingController();
     final stackSizeController = TextEditingController();
@@ -2365,12 +2460,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                     stack: stackSize,
                   );
 
+                  // Update the player's current stack in game state
+                  final ourSeat = sessionManager.ourSeatNumber;
+                  if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+                    setState(() {
+                      gameState.players[ourSeat - 1].currentStack = stackSize;
+                    });
+                  }
+
                   Navigator.pop(context);
 
                   // Show confirmation
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Rebuy added: \$${rebuyAmount.toStringAsFixed(2)}'),
+                      content: Text('Rebuy added: \$${rebuyAmount.toStringAsFixed(2)} (Stack: ${stackSize.toStringAsFixed(0)})'),
                       backgroundColor: PokerFriendColors.red,
                     ),
                   );

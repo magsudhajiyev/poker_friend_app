@@ -631,26 +631,44 @@ class FirebaseService {
       if (userId == null) throw 'User not authenticated';
 
       // Create rebuy record
+      final now = DateTime.now();
       final rebuyRecord = {
-        'timestamp': FieldValue.serverTimestamp(),
+        'timestamp': now.millisecondsSinceEpoch,
         'amount': rebuyAmount,
         'stackSize': newStackSize,
-        'createdAt': DateTime.now().toIso8601String(),
+        'createdAt': now.toIso8601String(),
       };
 
       // Create stack history entry
       final stackHistoryEntry = {
-        'timestamp': FieldValue.serverTimestamp(),
+        'timestamp': now.millisecondsSinceEpoch,
         'stackSize': newStackSize,
         'changeType': 'rebuy',
         'changeAmount': rebuyAmount,
-        'createdAt': DateTime.now().toIso8601String(),
+        'createdAt': now.toIso8601String(),
       };
 
-      // Update session with rebuy data using array union
-      await _firestore.collection(_sessionsCollection).doc(sessionId).update({
-        'rebuys': FieldValue.arrayUnion([rebuyRecord]),
-        'stackHistory': FieldValue.arrayUnion([stackHistoryEntry]),
+      // Get current document to check if arrays exist
+      final docRef = _firestore.collection(_sessionsCollection).doc(sessionId);
+      final docSnap = await docRef.get();
+
+      if (!docSnap.exists) {
+        throw 'Session document not found';
+      }
+
+      final data = docSnap.data() as Map<String, dynamic>;
+
+      // Initialize arrays if they don't exist, otherwise append to existing
+      final currentRebuys = data['rebuys'] as List<dynamic>? ?? [];
+      final currentStackHistory = data['stackHistory'] as List<dynamic>? ?? [];
+
+      currentRebuys.add(rebuyRecord);
+      currentStackHistory.add(stackHistoryEntry);
+
+      // Update session with rebuy data
+      await docRef.update({
+        'rebuys': currentRebuys,
+        'stackHistory': currentStackHistory,
         'currentStack': newStackSize,
         'totalBuyIn': newTotalBuyIn,
         'updatedAt': FieldValue.serverTimestamp(),
