@@ -442,6 +442,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       // Hand was completed, update our stack
       final newStack = result['finalStack'] as double?;
       if (newStack != null) {
+        final previousStack = _currentStack;
+        final stackChange = newStack - previousStack;
+
         setState(() {
           _currentStack = newStack;
           _handsLogged++;
@@ -452,6 +455,15 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           }
         });
 
+        // Add stack history entry for this hand
+        _stackHistory.add({
+          'timestamp': DateTime.now().toIso8601String(),
+          'stackSize': _currentStack,
+          'changeType': stackChange >= 0 ? 'win' : 'loss',
+          'changeAmount': stackChange.abs(),
+          'handNumber': _handsLogged,
+        });
+
         // Update session in Firebase
         if (_sessionId != null) {
           FirebaseService.updateIndividualSession(
@@ -459,6 +471,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             currentStack: _currentStack,
             handsLogged: _handsLogged,
             biggestPot: _biggestPot,
+            stackHistory: _stackHistory, // Include stack history in update
           ).catchError((e) {});
         }
       }

@@ -5,6 +5,7 @@ import '../services/local_storage_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import 'session_hands_screen.dart';
+import 'session_analytics_screen.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -222,8 +223,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildSessionsList(cashSessions),
-                  _buildSessionsList(tournamentSessions),
+                  _buildSessionsList(cashSessions, 'Cash'),
+                  _buildSessionsList(tournamentSessions, 'Tournament'),
                 ],
               ),
             ),
@@ -233,7 +234,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     );
   }
 
-  Widget _buildSessionsList(List<Map<String, dynamic>> sessionList) {
+  Widget _buildSessionsList(List<Map<String, dynamic>> sessionList, String gameType) {
     if (isLoading) {
       return LoadingScreen(message: 'Loading sessions...');
     }
@@ -279,7 +280,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     }
 
     if (sessionList.isEmpty) {
-      String gameType = _tabController.index == 0 ? 'Cash' : 'Tournament';
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -294,7 +294,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Image.asset(
-                  _tabController.index == 0 ? 'icons/cash.png' : 'icons/podium.png',
+                  gameType == 'Cash' ? 'icons/cash.png' : 'icons/podium.png',
                   width: 40,
                   height: 40,
                   errorBuilder: (context, error, stackTrace) {
@@ -416,7 +416,10 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => SessionHandsScreen(session: session),
+              builder: (context) => SessionAnalyticsScreen(
+                sessionData: session,
+                sessionId: session['id'],
+              ),
             ),
           );
         },

@@ -243,6 +243,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     await sessionManager.startSession();
 
+    print('🎮 DEBUG: About to start hand - effectiveSBPosition: ${gameState.effectiveSBPosition}, effectiveBBPosition: ${gameState.effectiveBBPosition}');
     sessionManager.startHand(
       gameState.handNumber,
       gameState.buttonPosition,

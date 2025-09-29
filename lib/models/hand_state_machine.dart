@@ -438,6 +438,8 @@ class PokerSessionManager {
     this.buttonPosition = buttonPosition;
     this.actualSBSeat = sbSeat;
     this.actualBBSeat = bbSeat;
+    print('🎮 DEBUG: Hand started - received sbSeat: $sbSeat, bbSeat: $bbSeat');
+    print('🎮 DEBUG: Hand started - actualSBSeat: $actualSBSeat, actualBBSeat: $actualBBSeat');
 
     currentHand = HandRecord(
       handNumber: handNumber,
@@ -1135,12 +1137,16 @@ class PokerSessionManager {
 
     // Check if this player is actually posting blinds or button
     String currentPosition;
+    print('🎮 DEBUG: Position check for seat $seatNumber - actualBBSeat: $actualBBSeat, actualSBSeat: $actualSBSeat, buttonPosition: $buttonPosition');
     if (seatNumber == actualBBSeat) {
       currentPosition = 'BB';
+      print('🎮 DEBUG: Seat $seatNumber identified as BB');
     } else if (seatNumber == actualSBSeat) {
       currentPosition = 'SB';
+      print('🎮 DEBUG: Seat $seatNumber identified as SB');
     } else if (seatNumber == buttonPosition) {
       currentPosition = 'BTN';
+      print('🎮 DEBUG: Seat $seatNumber identified as BTN');
     } else {
       // For non-blind positions, we need to calculate based on active players only
       // Find the player's position in the active seats relative to button

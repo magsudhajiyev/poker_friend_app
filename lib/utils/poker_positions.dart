@@ -2,10 +2,11 @@
 /// relative to the button position
 class PokerPositions {
   /// Get the position name for a seat relative to the button position
+  /// This method assumes all seats from 1 to playerCount are active
   static String getPositionName(int seatNumber, int buttonPosition, int playerCount) {
     // Calculate the position relative to the button
     int position = (seatNumber - buttonPosition + playerCount) % playerCount;
-    
+
     // Convert position to poker terminology
     switch (playerCount) {
       case 2: // Heads-up
@@ -29,6 +30,69 @@ class PokerPositions {
       default:
         // For unusual player counts, use generic position names
         return _getGenericPosition(position, playerCount);
+    }
+  }
+
+  /// Get the position name for a seat considering only active players
+  /// This method calculates positions based on which seats are actually active
+  static String getPositionNameForActivePlayers(int seatNumber, int buttonPosition, List<int> activeSeats) {
+    if (!activeSeats.contains(seatNumber)) {
+      return 'Empty';
+    }
+
+    final activePlayerCount = activeSeats.length;
+
+    if (activePlayerCount < 2) {
+      return seatNumber == buttonPosition ? 'BTN' : 'P1';
+    }
+
+    // Sort active seats to get consistent ordering
+    final sortedActiveSeats = List<int>.from(activeSeats)..sort();
+
+    // Find button position in the sorted active seats
+    int buttonIndex = sortedActiveSeats.indexOf(buttonPosition);
+    if (buttonIndex == -1) {
+      // Button is not active, find the next active seat clockwise
+      buttonIndex = 0; // Default to first active seat
+      for (int i = 0; i < sortedActiveSeats.length; i++) {
+        if (sortedActiveSeats[i] > buttonPosition) {
+          buttonIndex = i;
+          break;
+        }
+      }
+    }
+
+    // Find current seat position in the sorted active seats
+    int seatIndex = sortedActiveSeats.indexOf(seatNumber);
+    if (seatIndex == -1) {
+      return 'Empty';
+    }
+
+    // Calculate relative position (0 = button, 1 = SB, 2 = BB, etc.)
+    int relativePosition = (seatIndex - buttonIndex + activePlayerCount) % activePlayerCount;
+
+    // Convert to position name based on active player count
+    switch (activePlayerCount) {
+      case 2: // Heads-up
+        return _getHeadsUpPosition(relativePosition);
+      case 3: // 3-handed
+        return _get3HandedPosition(relativePosition);
+      case 4: // 4-handed
+        return _get4HandedPosition(relativePosition);
+      case 5: // 5-handed
+        return _get5HandedPosition(relativePosition);
+      case 6: // 6-handed
+        return _get6HandedPosition(relativePosition);
+      case 7: // 7-handed
+        return _get7HandedPosition(relativePosition);
+      case 8: // 8-handed
+        return _get8HandedPosition(relativePosition);
+      case 9: // 9-handed
+        return _get9HandedPosition(relativePosition);
+      case 10: // 10-handed (full ring)
+        return _get10HandedPosition(relativePosition);
+      default:
+        return _getGenericPosition(relativePosition, activePlayerCount);
     }
   }
 

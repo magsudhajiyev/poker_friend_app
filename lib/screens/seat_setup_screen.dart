@@ -371,62 +371,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     // If this seat is not active, return empty
     if (!activeSeats.contains(seatNumber)) return 'Empty';
 
-    // Calculate position based on active players only
-    final buttonPos = selectedButtonPosition ?? widget.buttonPosition;
-    final activePlayerCount = activeSeats.length;
-
-    // Check if this is the button
-    if (seatNumber == buttonPos) {
-      return 'BTN';
-    }
-
-    // For heads-up
-    if (activePlayerCount == 2) {
-      if (seatNumber == buttonPos) {
-        return 'BTN/SB';
-      } else {
-        return 'BB';
-      }
-    }
-
-    // Find SB and BB positions among active players
-    int sbSeat = buttonPos ?? 1;
-    int bbSeat = buttonPos ?? 1;
-
-    // Find next active player for SB
-    int position = buttonPos ?? 1;
-    for (int i = 0; i < 9; i++) {
-      position = (position % 9) + 1;
-      if (activeSeats.contains(position)) {
-        sbSeat = position;
-        break;
-      }
-    }
-
-    // Find next active player for BB
-    position = sbSeat;
-    for (int i = 0; i < 9; i++) {
-      position = (position % 9) + 1;
-      if (activeSeats.contains(position)) {
-        bbSeat = position;
-        break;
-      }
-    }
-
-    if (seatNumber == sbSeat) {
-      return 'SB';
-    }
-    if (seatNumber == bbSeat) {
-      return 'BB';
-    }
-
-    // Calculate relative position among active players
-    activeSeats.sort();
-    int activeButtonIndex = activeSeats.indexOf(buttonPos ?? 1);
-    int activePlayerIndex = activeSeats.indexOf(seatNumber);
-    int relativePosition = (activePlayerIndex - activeButtonIndex + activePlayerCount) % activePlayerCount;
-
-    return PokerPositions.getPositionName(relativePosition + 1, 1, activePlayerCount);
+    // Use the new position calculation method that considers active players only
+    final buttonPos = selectedButtonPosition ?? widget.buttonPosition ?? 1;
+    return PokerPositions.getPositionNameForActivePlayers(seatNumber, buttonPos, activeSeats);
   }
 
   @override
