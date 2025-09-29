@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../models/game_types.dart';
 import 'individual_session_tracking_screen.dart';
+import 'logging_mode_selection_screen.dart';
+import 'seat_setup_screen.dart';
+import '../models/hand_state_machine.dart';
 
 class IndividualSessionSetupScreen extends StatefulWidget {
-  const IndividualSessionSetupScreen({super.key});
+  final LoggingMode? loggingMode;
+
+  const IndividualSessionSetupScreen({super.key, this.loggingMode});
 
   @override
   State<IndividualSessionSetupScreen> createState() => _IndividualSessionSetupScreenState();
@@ -83,7 +88,9 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                           ),
                           SizedBox(height: 4),
                           Text(
-                            'Individual session tracking',
+                            widget.loggingMode == LoggingMode.full
+                              ? 'Full session tracking'
+                              : 'Individual session tracking',
                             style: TextStyle(
                               fontSize: 16,
                               color: PokerFriendColors.dark9,
@@ -621,20 +628,53 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
     final buyIn = double.parse(_buyInController.text);
     final startingStack = double.parse(_startingStackController.text);
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => IndividualSessionTrackingScreen(
-          sessionName: sessionName,
-          buyInAmount: buyIn,
-          startingStack: startingStack,
-          gameType: gameType,
-          smallBlind: smallBlind,
-          bigBlind: bigBlind,
-          hasBBante: hasBBante,
+    if (widget.loggingMode == LoggingMode.full) {
+      // For Full mode, go directly to Seat Setup screen
+      // Create session manager
+      final sessionManager = PokerSessionManager(
+        smallBlind: smallBlind,
+        bigBlind: bigBlind,
+        playerCount: 6,
+        gameType: gameType,
+        sessionName: sessionName,
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SeatSetupScreen(
+            playerCount: 6,
+            buttonPosition: 1,
+            sessionManager: sessionManager,
+            isInitialSetup: true,
+            isCashGame: gameType == GameType.cash,
+            sessionName: sessionName,
+            buyInAmount: buyIn,
+            startingStack: startingStack,
+            gameType: gameType,
+            smallBlind: smallBlind,
+            bigBlind: bigBlind,
+            hasBBante: hasBBante,
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      // For Individual mode, go to Individual Session Tracking
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => IndividualSessionTrackingScreen(
+            sessionName: sessionName,
+            buyInAmount: buyIn,
+            startingStack: startingStack,
+            gameType: gameType,
+            smallBlind: smallBlind,
+            bigBlind: bigBlind,
+            hasBBante: hasBBante,
+          ),
+        ),
+      );
+    }
   }
 }
 

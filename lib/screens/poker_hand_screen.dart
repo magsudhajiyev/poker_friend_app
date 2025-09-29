@@ -17,6 +17,7 @@ import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/auth_service.dart';
 import 'session_history_screen.dart';
 
 class PokerHandScreen extends StatefulWidget {
@@ -33,6 +34,14 @@ class PokerHandScreen extends StatefulWidget {
   final double? individualCurrentStack;
   final String? individualSessionId;
 
+  // Full session parameters
+  final String? sessionName;
+  final double? buyInAmount;
+  final double? startingStack;
+  final int? initialSeat;
+  final int? initialButtonPosition;
+  final PokerSessionManager? sessionManager;
+
   const PokerHandScreen({
     super.key,
     required this.smallBlind,
@@ -45,6 +54,12 @@ class PokerHandScreen extends StatefulWidget {
     this.isIndividualSession = false,
     this.individualCurrentStack,
     this.individualSessionId,
+    this.sessionName,
+    this.buyInAmount,
+    this.startingStack,
+    this.initialSeat,
+    this.initialButtonPosition,
+    this.sessionManager,
   });
 
   @override
@@ -85,21 +100,32 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       hasBBante: widget.hasBBante,
     );
     
-    // Initialize session manager
-    sessionManager = PokerSessionManager(
-      smallBlind: widget.smallBlind,
-      bigBlind: widget.bigBlind,
-      playerCount: widget.numberOfPlayers,
-      gameType: widget.gameType,
-      existingSessionId: widget.individualSessionId, // Use existing session ID for individual sessions
-    );
+    // Initialize session manager - use the one passed from SeatSetupScreen if available
+    if (widget.sessionManager != null) {
+      sessionManager = widget.sessionManager!;
+      print("DEBUG: Using existing sessionManager from SeatSetupScreen");
+    } else {
+      sessionManager = PokerSessionManager(
+        smallBlind: widget.smallBlind,
+        bigBlind: widget.bigBlind,
+        playerCount: widget.numberOfPlayers,
+        gameType: widget.gameType,
+        existingSessionId: widget.individualSessionId, // Use existing session ID for individual sessions
+      );
+      print("DEBUG: Created new sessionManager");
+    }
     
     // Load button mode setting
     _loadButtonModeSetting();
     
     // Start session and first hand
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeSession();
+      // If we have initial seat info from session setup, skip seat selection
+      if (widget.initialSeat != null && widget.initialButtonPosition != null) {
+        _initializeWithSeatInfo(widget.initialSeat!, widget.initialButtonPosition!);
+      } else {
+        _initializeSession();
+      }
     });
   }
 
@@ -133,6 +159,112 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
     
     return actions;
+  }
+
+  Future<void> _initializeWithSeatInfo(int seat, int buttonPosition) async {
+    // Initialize with provided seat info, skipping seat selection dialog
+
+    // CRITICAL: Set our seat number
+    sessionManager.ourSeatNumber = seat;
+
+    // Debug: Check what names are in sessionManager
+    print("DEBUG: Checking sessionManager names:");
+    for (int i = 1; i <= 9; i++) {
+      String? name = sessionManager.getPlayerName(i);
+      if (name != null) {
+        print("  Seat $i: $name");
+      }
+    }
+
+    // Set our player name (get from auth service or use "You") - only if not already set
+    String? existingName = sessionManager.getPlayerName(seat);
+    print("DEBUG: Our seat $seat existing name: $existingName");
+
+    if (existingName == null || existingName.isEmpty || existingName.startsWith('Player ')) {
+      String ourName = "You"; // Default name
+      try {
+        final user = AuthService.currentUser;
+        if (user != null && user.displayName?.isNotEmpty == true) {
+          ourName = user.displayName!;
+        }
+      } catch (e) {
+        // Use default if auth fails
+      }
+      print("DEBUG: Setting our name to: $ourName");
+      sessionManager.setPlayerName(seat, ourName);
+    } else {
+      print("DEBUG: Keeping existing name: $existingName");
+    }
+
+    // Build playerStacks - we need to simulate what SeatSetupScreen would have returned
+    Map<int, double> playerStacks = {};
+
+    // Add our seat with the starting stack from session setup
+    if (widget.startingStack != null) {
+      playerStacks[seat] = widget.startingStack!;
+    }
+
+    // Add other players with default stacks (assuming 6 players total)
+    List<int> seats = [1, 2, 3, 4, 5, 6];
+    for (int seatNum in seats) {
+      if (seatNum != seat) {
+        playerStacks[seatNum] = widget.gameType == GameType.cash ? 100.0 : 1500.0;
+      }
+    }
+
+    // CRITICAL: Initialize player stacks and set inactive players FIRST
+    for (int i = 1; i <= 9; i++) {
+      if (playerStacks.containsKey(i)) {
+        // Active player - set their stack
+        gameState.setPlayerStack(i, playerStacks[i]!);
+        gameState.setPlayerActive(i, true);
+        // Make sure session manager knows this seat is active
+        if (!sessionManager.activeSeats.contains(i)) {
+          sessionManager.activeSeats.add(i);
+        }
+      } else {
+        // Inactive player - set stack to 0 and mark inactive
+        gameState.setPlayerStack(i, 0.0);
+        gameState.setPlayerActive(i, false);
+        // Make sure session manager knows this seat is inactive
+        sessionManager.activeSeats.remove(i);
+      }
+    }
+
+    // CRITICAL: NOW set button position AFTER players are initialized
+    gameState.buttonPosition = buttonPosition;
+
+    // CRITICAL: Complete initialization and calculate action order
+    gameState.finalizeInitialization();
+
+    // Initialize pot with blinds - this will deduct blinds from stacks and add to pot
+    gameState.initializePot();
+
+    await sessionManager.startSession();
+
+    sessionManager.startHand(
+      gameState.handNumber,
+      gameState.buttonPosition,
+      sbSeat: gameState.effectiveSBPosition,
+      bbSeat: gameState.effectiveBBPosition,
+    );
+
+    // Auto-start the hand
+    actions.add("🔥 Session started - Firebase ID: ${sessionManager.sessionId?.substring(0, 8)}...");
+    actions.add("Game started. Blinds: ${widget.smallBlind}/${widget.bigBlind}");
+
+    // Add blind posting actions
+    List<int> activePlayers = gameState.getActivePlayers();
+    if (activePlayers.length > 2) {
+      actions.add("Player ${gameState.effectiveSBPosition} posts small blind \$${widget.smallBlind}");
+      actions.add("Player ${gameState.effectiveBBPosition} posts big blind \$${widget.bigBlind}");
+
+      if (widget.hasBBante) {
+        actions.add("Player ${gameState.effectiveBBPosition} posts ante \$${widget.bigBlind} for all players");
+      }
+    }
+
+    setState(() {});
   }
 
   Future<void> _initializeSession() async {
@@ -224,118 +356,84 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   Future<void> _stopSession() async {
-    
-    // Show session name input dialog
-    final sessionName = await _showSessionNameDialog();
-    if (sessionName == null) {
-      return; // User cancelled
-    }
-    
-    
-    try {
-      // End the current session
-      await sessionManager.endSession();
-      
-      // Update session with the provided name
-      await _updateSessionName(sessionName);
-      
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Session "$sessionName" saved successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      
-      
-      // Navigate back to home screen
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save session: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<String?> _showSessionNameDialog() async {
-    final TextEditingController controller = TextEditingController();
-    final now = DateTime.now();
-    final defaultName = 'Session ${now.day}/${now.month}/${now.year} ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
-    
-    controller.text = defaultName;
-    
-    return showDialog<String>(
+    final confirmed = await showDialog<bool>(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text('Save Session'),
-        content: Container(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Enter a name for this poker session:'),
-              SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  labelText: 'Session Name',
-                  border: OutlineInputBorder(),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: PokerFriendColors.dark3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Stop Session?',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to stop this session? All hands will be saved.',
+            style: TextStyle(
+              color: PokerFriendColors.dark10,
+              fontSize: 16,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false); // Cancel
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: PokerFriendColors.dark10,
+                  fontSize: 16,
                 ),
-                maxLength: 50,
-                autofocus: true,
               ),
-              SizedBox(height: 16),
-              Text(
-                'Total hands played: ${sessionManager.completedHands.length}',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, true); // Confirm
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: PokerFriendColors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                Navigator.pop(context, name);
-              }
-            },
-            child: Text('Save Session'),
-          ),
-        ],
-      ),
+              child: Text(
+                'Stop Session',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
+
+    if (confirmed == true) {
+      try {
+        // End the session and save all data
+        await sessionManager.endSession();
+
+        // Navigate back to main screen
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to end session: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  Future<void> _updateSessionName(String sessionName) async {
-    if (sessionManager.sessionId == null) {
-      return;
-    }
-    
-    
-    try {
-      // Try to update in Firebase first
-      await FirebaseService.updateSessionName(sessionManager.sessionId!, sessionName);
-    } catch (e) {
-    }
-    
-    try {
-      // Always update in local storage
-      await LocalStorageService.updateSessionName(sessionManager.sessionId!, sessionName);
-    } catch (e) {
-      rethrow;
-    }
-    
-  }
 
   Future<void> _managePlayersDialog() async {
     await Navigator.push<void>(
@@ -730,14 +828,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                     children: [
                       Expanded(
                         child: Container(
-                          height: 95, // Increased height to prevent overflow
+                          height: 105, // Increased height to accommodate text
                           decoration: BoxDecoration(
                             color: Color(0xFF1F1F23),
                             borderRadius: BorderRadius.circular(PokerFriendRadius.l),
                             border: Border.all(color: Color(0xFF2A2A2E), width: 1),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(PokerFriendSpacing.xs),
+                            padding: const EdgeInsets.all(8.0), // Reduced padding
                             child: _buildInfoItemWithAsset(context, 'Pot', gameState.formatCurrency(gameState.currentPot), 'icons/pot.png'),
                           ),
                         ),
@@ -745,14 +843,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                       SizedBox(width: PokerFriendSpacing.xxs),
                       Expanded(
                         child: Container(
-                          height: 95, // Increased height to prevent overflow
+                          height: 105, // Increased height to accommodate text
                           decoration: BoxDecoration(
                             color: Color(0xFF1F1F23),
                             borderRadius: BorderRadius.circular(PokerFriendRadius.l),
                             border: Border.all(color: Color(0xFF2A2A2E), width: 1),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(PokerFriendSpacing.xs),
+                            padding: const EdgeInsets.all(8.0), // Reduced padding
                             child: _buildInfoItemWithAsset(context, 'To Act', _getCurrentPlayerNameSafely(), 'icons/player.png'),
                           ),
                         ),
@@ -760,14 +858,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                       SizedBox(width: PokerFriendSpacing.xxs),
                       Expanded(
                         child: Container(
-                          height: 95, // Increased height to prevent overflow
+                          height: 105, // Increased height to accommodate text
                           decoration: BoxDecoration(
                             color: Color(0xFF1F1F23),
                             borderRadius: BorderRadius.circular(PokerFriendRadius.l),
                             border: Border.all(color: Color(0xFF2A2A2E), width: 1),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(PokerFriendSpacing.xs),
+                            padding: const EdgeInsets.all(8.0), // Reduced padding
                             child: _buildInfoItemWithAsset(context, 'Stack', _getCurrentPlayerStackSafely(), 'icons/wallet.png'),
                           ),
                         ),
@@ -996,7 +1094,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   Widget _buildInfoItemWithAsset(BuildContext context, String label, String value, String assetPath) {
     final theme = Theme.of(context);
     return Column(
-      mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -1005,25 +1102,32 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           width: 24,
           height: 24,
         ),
-        const SizedBox(height: PokerFriendSpacing.xxxs),
+        const SizedBox(height: 4),
         Text(
           label,
           textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.labelSmall?.copyWith(
             color: Color(0xFF9A9A9A),
             fontWeight: FontWeight.w500,
+            fontSize: 11,
           ),
         ),
-        const SizedBox(height: PokerFriendSpacing.xxxs),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            fontSize: 12, // Ensure consistent font size
+        const SizedBox(height: 4),
+        Expanded(
+          child: Center(
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                fontSize: 12,
+              ),
+            ),
           ),
         ),
       ],
@@ -1894,6 +1998,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       _showWinnerSelectionForAllIn();
     }
   }
+
 
   void _showWinnerSelectionForAllIn() async {
     // Get active players and their names
@@ -3382,4 +3487,5 @@ class _SettingsDialogState extends State<_SettingsDialog> {
       ],
     );
   }
+
 }

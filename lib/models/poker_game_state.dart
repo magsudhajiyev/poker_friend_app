@@ -197,30 +197,28 @@ class PokerGameState {
       }
     } else {
       // Multi-way: UTG (Under The Gun) acts first
-      // Get active players and find UTG based on button position among active players
-      List<int> activePlayers = getActivePlayers();
+      // Find the active SB (first active player AFTER button)
+      int sbPosition = _findNextActivePlayerAfter(buttonPosition);
+      // Find the active BB (first active player AFTER SB)
+      int bbPosition = _findNextActivePlayerAfter(sbPosition);
 
-      if (activePlayers.isEmpty) {
+      // Start search from the position AFTER BB
+      int candidate = (bbPosition % numberOfPlayers) + 1; // Start one position clockwise from BB
+      int attempts = 0;
+
+      // Find the first active player clockwise from BB
+      while ((!_getPlayer(candidate).isActive || _getPlayer(candidate).currentStack <= 0) && attempts < numberOfPlayers) {
+        candidate = (candidate % numberOfPlayers) + 1; // Move clockwise
+        attempts++;
+      }
+
+      if (attempts >= numberOfPlayers) {
         print('ERROR: No active players found for UTG calculation');
         currentPlayer = 1; // Fallback
         return;
       }
 
-      // Find button position in active players list
-      int buttonIndex = activePlayers.indexOf(buttonPosition);
-      if (buttonIndex == -1) {
-        // Button not in active players, use first active player as button
-        buttonIndex = 0;
-      }
-
-      // UTG is 3 positions clockwise from button in active players
-      // SB = +1, BB = +2, UTG = +3
-      int utgIndex = (buttonIndex + 3) % activePlayers.length;
-      int utgPosition = activePlayers[utgIndex];
-
-      // Set current player to the calculated UTG position
-      currentPlayer = utgPosition;
-
+      currentPlayer = candidate;
     }
 
     // No one has "called" yet in preflop - everyone needs to act including BB
@@ -261,6 +259,25 @@ class PokerGameState {
 
     // No active players found - return the starting position as fallback
     print('⚠️ WARNING: No active players found when searching from position $startingPosition');
+    return startingPosition;
+  }
+
+  // Helper method to find the next active player AFTER a starting position
+  int _findNextActivePlayerAfter(int startingPosition) {
+    int position = (startingPosition % numberOfPlayers) + 1; // Start one position clockwise
+    int checked = 0;
+
+    while (checked < numberOfPlayers) {
+      PlayerState player = _getPlayer(position);
+      if (player.isActive && player.currentStack > 0) {
+        return position;
+      }
+      position = (position % numberOfPlayers) + 1;
+      checked++;
+    }
+
+    // No active players found - return the starting position as fallback
+    print('⚠️ WARNING: No active players found when searching after position $startingPosition');
     return startingPosition;
   }
 
@@ -843,7 +860,6 @@ class PokerGameState {
   }
 
   void startNewHand() {
-
     // Deactivate busted players before starting new hand
     deactivateBustedPlayers();
 

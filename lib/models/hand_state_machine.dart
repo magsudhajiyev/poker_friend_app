@@ -317,6 +317,7 @@ class PokerSessionManager {
   int playerCount;
   int? ourSeatNumber; // Our position at the table (1-playerCount)
   GameType gameType; // Cash game or tournament
+  String? sessionName; // User-provided session name
   int buttonPosition = 1; // Current button position
   DateTime? sessionStartTime;
   DateTime? sessionEndTime;
@@ -333,6 +334,7 @@ class PokerSessionManager {
     required this.playerCount,
     this.ourSeatNumber,
     this.gameType = GameType.cash,
+    this.sessionName,
     String? existingSessionId,
   }) {
     // If we have an existing session ID, use it
@@ -357,6 +359,7 @@ class PokerSessionManager {
           playerCount: playerCount,
           ourSeatNumber: ourSeatNumber,
           gameType: gameType,
+          sessionName: sessionName,
         );
         sessionId = firebaseId;
       } catch (e) {
