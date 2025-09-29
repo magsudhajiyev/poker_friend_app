@@ -568,6 +568,9 @@ class FirebaseService {
     int? smallBlind,
     int? bigBlind,
     bool? hasBBante,
+    List<Map<String, dynamic>>? rebuys,
+    double? totalBuyIn,
+    List<Map<String, dynamic>>? stackHistory,
   }) async {
     try {
       final userId = AuthService.userId;
@@ -598,11 +601,63 @@ class FirebaseService {
       if (hasBBante != null) {
         updateData['hasBBante'] = hasBBante;
       }
+      if (rebuys != null) {
+        updateData['rebuys'] = rebuys;
+      }
+      if (totalBuyIn != null) {
+        updateData['totalBuyIn'] = totalBuyIn;
+      }
+      if (stackHistory != null) {
+        updateData['stackHistory'] = stackHistory;
+      }
 
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
 
     } catch (e) {
       print('Error updating individual session: $e');
+      rethrow;
+    }
+  }
+
+  // Add rebuy record to session
+  static Future<void> addRebuyToSession({
+    required String sessionId,
+    required double rebuyAmount,
+    required double newStackSize,
+    required double newTotalBuyIn,
+  }) async {
+    try {
+      final userId = AuthService.userId;
+      if (userId == null) throw 'User not authenticated';
+
+      // Create rebuy record
+      final rebuyRecord = {
+        'timestamp': FieldValue.serverTimestamp(),
+        'amount': rebuyAmount,
+        'stackSize': newStackSize,
+        'createdAt': DateTime.now().toIso8601String(),
+      };
+
+      // Create stack history entry
+      final stackHistoryEntry = {
+        'timestamp': FieldValue.serverTimestamp(),
+        'stackSize': newStackSize,
+        'changeType': 'rebuy',
+        'changeAmount': rebuyAmount,
+        'createdAt': DateTime.now().toIso8601String(),
+      };
+
+      // Update session with rebuy data using array union
+      await _firestore.collection(_sessionsCollection).doc(sessionId).update({
+        'rebuys': FieldValue.arrayUnion([rebuyRecord]),
+        'stackHistory': FieldValue.arrayUnion([stackHistoryEntry]),
+        'currentStack': newStackSize,
+        'totalBuyIn': newTotalBuyIn,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+    } catch (e) {
+      print('Error adding rebuy to session: $e');
       rethrow;
     }
   }

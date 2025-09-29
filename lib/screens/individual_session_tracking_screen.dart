@@ -52,6 +52,11 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   int _handsLogged = 0;
   double _biggestPot = 0.0;
 
+  // Rebuy tracking
+  List<Map<String, dynamic>> _rebuys = [];
+  double _totalBuyIn = 0.0;
+  List<Map<String, dynamic>> _stackHistory = [];
+
   // Current blinds (can be updated during session)
   int _currentSmallBlind = 0;
   int _currentBigBlind = 0;
@@ -66,6 +71,17 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     _currentStack = widget.currentStack ?? widget.startingStack;
     _initialStack = widget.startingStack;
     _sessionId = widget.sessionId;
+
+    // Initialize rebuy tracking
+    _totalBuyIn = widget.buyInAmount; // Start with initial buy-in
+
+    // Add initial stack to history
+    _stackHistory.add({
+      'timestamp': DateTime.now().toIso8601String(),
+      'stackSize': _currentStack,
+      'changeType': 'initial',
+      'changeAmount': widget.buyInAmount,
+    });
 
     // Initialize current blinds with widget values
     _currentSmallBlind = widget.smallBlind;
@@ -500,6 +516,254 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     }
   }
 
+  // Rebuy dialog - handles both Cash and MTT differently
+  Future<void> _showRebuyDialog() async {
+    final rebuyAmountController = TextEditingController();
+    final stackSizeController = TextEditingController();
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: PokerFriendColors.dark3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.add_circle_outline, color: PokerFriendColors.red, size: 24),
+            SizedBox(width: 12),
+            Text(
+              'Rebuy',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Container(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.gameType == GameType.cash
+                    ? 'Enter rebuy amount (stack will equal rebuy amount)'
+                    : 'Enter rebuy amount and new stack size',
+                style: TextStyle(
+                  color: PokerFriendColors.dark10,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 20),
+
+              // Rebuy Amount Input (always shown)
+              TextField(
+                controller: rebuyAmountController,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                autofocus: true,
+                style: TextStyle(color: Colors.white, fontSize: 16),
+                decoration: InputDecoration(
+                  labelText: 'Rebuy Amount',
+                  labelStyle: TextStyle(color: PokerFriendColors.dark9),
+                  prefixText: '\$ ',
+                  prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
+                  filled: true,
+                  fillColor: PokerFriendColors.dark1,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+
+              // Stack Size Input (only for MTT)
+              if (widget.gameType == GameType.tournament) ...[
+                SizedBox(height: 16),
+                TextField(
+                  controller: stackSizeController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  decoration: InputDecoration(
+                    labelText: 'New Stack Size',
+                    labelStyle: TextStyle(color: PokerFriendColors.dark9),
+                    hintText: 'Chip count after rebuy',
+                    hintStyle: TextStyle(color: PokerFriendColors.dark8),
+                    filled: true,
+                    fillColor: PokerFriendColors.dark1,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ],
+
+              SizedBox(height: 20),
+
+              // Current session info
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: PokerFriendColors.dark4,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: PokerFriendColors.dark6, width: 1),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Session Info',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Total Invested: \$${_totalBuyIn.toStringAsFixed(2)}',
+                      style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
+                    ),
+                    Text(
+                      'Current Stack: ${_formatStackValue(_currentStack)}',
+                      style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
+                    ),
+                    Text(
+                      'Rebuys: ${_rebuys.length}',
+                      style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: PokerFriendColors.dark10,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final rebuyAmount = double.tryParse(rebuyAmountController.text);
+
+              if (widget.gameType == GameType.cash) {
+                // Cash game: rebuy amount = stack size
+                if (rebuyAmount != null && rebuyAmount > 0) {
+                  Navigator.pop(context, {
+                    'rebuyAmount': rebuyAmount,
+                    'newStack': rebuyAmount, // For cash, stack equals rebuy amount
+                  });
+                }
+              } else {
+                // MTT: need both rebuy amount and stack size
+                final stackSize = double.tryParse(stackSizeController.text);
+                if (rebuyAmount != null && stackSize != null &&
+                    rebuyAmount > 0 && stackSize > 0) {
+                  Navigator.pop(context, {
+                    'rebuyAmount': rebuyAmount,
+                    'newStack': stackSize,
+                  });
+                }
+              }
+
+              // Show error if validation fails
+              if (rebuyAmount == null || rebuyAmount <= 0 ||
+                  (widget.gameType == GameType.tournament &&
+                   (double.tryParse(stackSizeController.text) == null ||
+                    double.tryParse(stackSizeController.text)! <= 0))) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Please enter valid amounts'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PokerFriendColors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'Add Rebuy',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Handle the rebuy result
+    if (result != null) {
+      final rebuyAmount = result['rebuyAmount'] as double;
+      final newStack = result['newStack'] as double;
+
+      // Update local tracking data
+      setState(() {
+        _currentStack = newStack;
+        _initialStack = newStack; // Reset initial stack so it shows gray
+        _totalBuyIn += rebuyAmount;
+
+        // Add rebuy record
+        _rebuys.add({
+          'timestamp': DateTime.now().toIso8601String(),
+          'amount': rebuyAmount,
+          'stackSize': newStack,
+        });
+
+        // Add stack history entry
+        _stackHistory.add({
+          'timestamp': DateTime.now().toIso8601String(),
+          'stackSize': newStack,
+          'changeType': 'rebuy',
+          'changeAmount': rebuyAmount,
+        });
+      });
+
+      // Update session in Firebase with rebuy data
+      if (_sessionId != null) {
+        try {
+          await FirebaseService.addRebuyToSession(
+            sessionId: _sessionId!,
+            rebuyAmount: rebuyAmount,
+            newStackSize: newStack,
+            newTotalBuyIn: _totalBuyIn,
+          );
+        } catch (e) {
+          print('Error saving rebuy: $e');
+        }
+      }
+
+      // Show success feedback
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.gameType == GameType.cash
+                ? 'Rebuy added: \$${rebuyAmount.toStringAsFixed(2)}'
+                : 'Rebuy added: \$${rebuyAmount.toStringAsFixed(2)} (Stack: ${newStack.toStringAsFixed(0)})',
+          ),
+          backgroundColor: PokerFriendColors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final profitLoss = _currentStack - _initialStack;
@@ -545,21 +809,67 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                           ),
                         ],
                       ),
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: PokerFriendColors.red,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: IconButton(
-                          onPressed: _stopSession,
-                          icon: Icon(
-                            Icons.stop_rounded,
-                            color: Colors.white,
-                            size: 24,
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: PokerFriendColors.dark4,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: PopupMenuButton<String>(
+                              icon: Icon(
+                                Icons.settings,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              color: PokerFriendColors.dark3,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              onSelected: (value) {
+                                if (value == 'rebuy') {
+                                  _showRebuyDialog();
+                                }
+                                // Future settings options will be handled here
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'rebuy',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.add_circle_outline, color: PokerFriendColors.red, size: 18),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Rebuy',
+                                        style: TextStyle(color: Colors.white, fontSize: 14),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Future menu items will be added here
+                              ],
+                            ),
                           ),
-                        ),
+                          SizedBox(width: 12),
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: PokerFriendColors.red,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: IconButton(
+                              onPressed: _stopSession,
+                              icon: Icon(
+                                Icons.stop_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -761,10 +1071,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                         ),
                         child: Column(
                           children: [
-                            _buildStatRow('Buy-in', '\$${widget.buyInAmount.toStringAsFixed(2)}'),
-                            _buildStatRow('Starting Stack', widget.gameType == GameType.cash
-                              ? '\$${widget.startingStack.toStringAsFixed(2)}'
-                              : widget.startingStack.toStringAsFixed(0)),
+                            _buildStatRow('Initial Buy-in', '\$${widget.buyInAmount.toStringAsFixed(2)}'),
+                            _buildStatRow('Total Invested', '\$${_totalBuyIn.toStringAsFixed(2)}'),
+                            _buildStatRow('Rebuys', '${_rebuys.length}'),
                             _buildStatRow('Hands Logged', '$_handsLogged'),
                             _buildStatRow('Biggest Pot', widget.gameType == GameType.cash
                               ? '\$${_biggestPot.toStringAsFixed(2)}'
