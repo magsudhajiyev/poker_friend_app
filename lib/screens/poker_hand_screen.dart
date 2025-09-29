@@ -2220,6 +2220,191 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
   }
 
+  void _showRebuyDialog() {
+    if (widget.gameType != GameType.tournament) return;
+
+    final rebuyAmountController = TextEditingController();
+    final stackSizeController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: PokerFriendColors.dark3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.add_circle_outline, color: PokerFriendColors.red, size: 24),
+              SizedBox(width: 12),
+              Text(
+                'Rebuy',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Container(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Enter rebuy details for the tournament',
+                  style: TextStyle(
+                    color: PokerFriendColors.dark10,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(height: 20),
+
+                // Rebuy Amount Input
+                TextField(
+                  controller: rebuyAmountController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  decoration: InputDecoration(
+                    labelText: 'Rebuy Amount',
+                    labelStyle: TextStyle(color: PokerFriendColors.dark9),
+                    prefixText: '\$ ',
+                    prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
+                    filled: true,
+                    fillColor: PokerFriendColors.dark1,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+
+                SizedBox(height: 16),
+
+                // Stack Size Input
+                TextField(
+                  controller: stackSizeController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  decoration: InputDecoration(
+                    labelText: 'New Stack Size',
+                    labelStyle: TextStyle(color: PokerFriendColors.dark9),
+                    hintText: 'Chip count after rebuy',
+                    hintStyle: TextStyle(color: PokerFriendColors.dark8),
+                    filled: true,
+                    fillColor: PokerFriendColors.dark1,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+
+                SizedBox(height: 20),
+
+                // Current session info
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: PokerFriendColors.dark3,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: PokerFriendColors.dark4, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Session Info',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Total Invested: \$${sessionManager.totalBuyIn.toStringAsFixed(2)}',
+                        style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
+                      ),
+                      Text(
+                        'Rebuys: ${sessionManager.getRebuyCount()}',
+                        style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: PokerFriendColors.dark10,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final rebuyAmount = double.tryParse(rebuyAmountController.text);
+                final stackSize = double.tryParse(stackSizeController.text);
+
+                if (rebuyAmount != null && stackSize != null && rebuyAmount > 0 && stackSize > 0) {
+                  // Add rebuy to session manager
+                  sessionManager.addRebuy(
+                    amount: rebuyAmount,
+                    stack: stackSize,
+                  );
+
+                  Navigator.pop(context);
+
+                  // Show confirmation
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Rebuy added: \$${rebuyAmount.toStringAsFixed(2)}'),
+                      backgroundColor: PokerFriendColors.red,
+                    ),
+                  );
+                } else {
+                  // Show error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Please enter valid amounts'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: PokerFriendColors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Add Rebuy',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _proceedToNextStreet() {
     setState(() {
       String streetTransitionResult = gameState.startNewStreet(
@@ -3505,189 +3690,5 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     );
   }
 
-  void _showRebuyDialog() {
-    if (widget.gameType != GameType.tournament) return;
-
-    final rebuyAmountController = TextEditingController();
-    final stackSizeController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: PokerFriendColors.dark3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(Icons.add_circle_outline, color: PokerFriendColors.red, size: 24),
-              SizedBox(width: 12),
-              Text(
-                'Rebuy',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          content: Container(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Enter rebuy details for the tournament',
-                  style: TextStyle(
-                    color: PokerFriendColors.dark10,
-                    fontSize: 16,
-                  ),
-                ),
-                SizedBox(height: 20),
-
-                // Rebuy Amount Input
-                TextField(
-                  controller: rebuyAmountController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                  decoration: InputDecoration(
-                    labelText: 'Rebuy Amount',
-                    labelStyle: TextStyle(color: PokerFriendColors.dark9),
-                    prefixText: '\$ ',
-                    prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
-                    filled: true,
-                    fillColor: PokerFriendColors.dark1,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                ),
-
-                SizedBox(height: 16),
-
-                // Stack Size Input
-                TextField(
-                  controller: stackSizeController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                  decoration: InputDecoration(
-                    labelText: 'New Stack Size',
-                    labelStyle: TextStyle(color: PokerFriendColors.dark9),
-                    hintText: 'Chip count after rebuy',
-                    hintStyle: TextStyle(color: PokerFriendColors.dark8),
-                    filled: true,
-                    fillColor: PokerFriendColors.dark1,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                ),
-
-                SizedBox(height: 20),
-
-                // Current session info
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark2,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: PokerFriendColors.dark4, width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Session Info',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Total Invested: \$${sessionManager.totalBuyIn.toStringAsFixed(2)}',
-                        style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
-                      ),
-                      Text(
-                        'Rebuys: ${sessionManager.getRebuyCount()}',
-                        style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: PokerFriendColors.dark10,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final rebuyAmount = double.tryParse(rebuyAmountController.text);
-                final stackSize = double.tryParse(stackSizeController.text);
-
-                if (rebuyAmount != null && stackSize != null && rebuyAmount > 0 && stackSize > 0) {
-                  // Add rebuy to session manager
-                  sessionManager.addRebuy(
-                    amount: rebuyAmount,
-                    stack: stackSize,
-                  );
-
-                  Navigator.pop(context);
-
-                  // Show confirmation
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Rebuy added: \$${rebuyAmount.toStringAsFixed(2)}'),
-                      backgroundColor: PokerFriendColors.red,
-                    ),
-                  );
-                } else {
-                  // Show error
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Please enter valid amounts'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: PokerFriendColors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Add Rebuy',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
 }

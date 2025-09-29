@@ -276,7 +276,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                     padding: EdgeInsets.all(16),
                     margin: EdgeInsets.only(bottom: 24),
                     decoration: BoxDecoration(
-                      color: PokerFriendColors.dark2,
+                      color: PokerFriendColors.dark3,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: PokerFriendColors.dark4, width: 1),
                     ),
