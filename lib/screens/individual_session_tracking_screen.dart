@@ -17,6 +17,7 @@ class IndividualSessionTrackingScreen extends StatefulWidget {
   // Optional parameters for when returning from hand tracking
   final double? currentStack;
   final String? sessionId;
+  final bool isFromActiveSession;
 
   const IndividualSessionTrackingScreen({
     super.key,
@@ -29,6 +30,7 @@ class IndividualSessionTrackingScreen extends StatefulWidget {
     required this.hasBBante,
     this.currentStack,
     this.sessionId,
+    this.isFromActiveSession = false,
   });
 
   @override
@@ -69,7 +71,16 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   void initState() {
     super.initState();
     _currentStack = widget.currentStack ?? widget.startingStack;
-    _initialStack = widget.startingStack;
+
+    // When accessed from active session, calculate the proper initial stack for P/L display
+    if (widget.isFromActiveSession && widget.currentStack != null) {
+      // If we have rebuys, the initial stack should be reset to show proper P/L
+      // For now, use the buy-in as initial for proper P/L calculation
+      _initialStack = widget.buyInAmount;
+    } else {
+      _initialStack = widget.startingStack;
+    }
+
     _sessionId = widget.sessionId;
 
     // Initialize rebuy tracking
@@ -402,6 +413,12 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   // Navigate to hand logging
   Future<void> _logHand() async {
+    if (widget.isFromActiveSession) {
+      // If called from an active poker session, return with updated stack
+      Navigator.pop(context, {'updatedStack': _currentStack, 'totalBuyIn': _totalBuyIn});
+      return;
+    }
+
     // Navigate to PokerHandScreen with individual session context
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
@@ -1176,20 +1193,22 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
                 SizedBox(height: 32),
 
-                // Log a Hand Button
+                // Show different button based on access mode
                 Container(
                   width: double.infinity,
                   height: 60,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [PokerFriendColors.red, Color(0xFFb8442f)],
+                      colors: widget.isFromActiveSession
+                        ? [PokerFriendColors.dark6, PokerFriendColors.dark4] // Darker for Go Back
+                        : [PokerFriendColors.red, Color(0xFFb8442f)], // Red for Log a Hand
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: ElevatedButton(
-                    onPressed: _logHand,
+                    onPressed: _logHand, // Same method handles both cases
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
@@ -1197,13 +1216,22 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: Text(
-                      'LOG A HAND',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (widget.isFromActiveSession)
+                          Icon(Icons.arrow_back, color: Colors.white, size: 22),
+                        if (widget.isFromActiveSession)
+                          SizedBox(width: 8),
+                        Text(
+                          widget.isFromActiveSession ? 'GO BACK TO HAND' : 'LOG A HAND',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

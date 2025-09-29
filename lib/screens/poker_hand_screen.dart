@@ -8,6 +8,7 @@ import '../widgets/drawing_painter.dart';
 import '../widgets/board_cards_dialog.dart';
 import '../widgets/all_in_board_cards_dialog.dart';
 import '../widgets/hole_cards_dialog.dart';
+import 'individual_session_tracking_screen.dart';
 import '../widgets/showdown_dialog.dart';
 import 'seat_setup_screen.dart';
 import '../widgets/action_button_grid.dart';
@@ -711,6 +712,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             onSelected: (value) {
               if (value == 'endStreet') {
                 endStreetManually();
+              } else if (value == 'sessionDetails') {
+                _showSessionDetails();
               } else if (value == 'managePlayers') {
                 _managePlayersDialog();
               } else if (value == 'rebuy') {
@@ -730,6 +733,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                               const SizedBox(width: 12),
                               Text(
                                 'End Street',
+                                style: TextStyle(color: Colors.white, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'sessionDetails',
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, color: Color(0xFF9A9A9A), size: 18),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Session Details',
                                 style: TextStyle(color: Colors.white, fontSize: 14),
                               ),
                             ],
@@ -2217,6 +2233,46 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         break;
       default:
         break;
+    }
+  }
+
+  // Navigate to session details screen
+  Future<void> _showSessionDetails() async {
+    // Get current stack for our seat
+    final ourSeat = sessionManager.ourSeatNumber;
+    final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : (widget.individualCurrentStack ?? 0.0);
+
+    // Navigate to individual session tracking screen with current data
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => IndividualSessionTrackingScreen(
+          sessionName: sessionManager.sessionName ?? 'Poker Session',
+          buyInAmount: sessionManager.totalBuyIn, // Use actual total invested (including 0 for freerolls)
+          startingStack: sessionManager.totalBuyIn, // Use initial buy-in as starting stack for P/L calculations
+          gameType: widget.gameType,
+          smallBlind: widget.smallBlind,
+          bigBlind: widget.bigBlind,
+          hasBBante: widget.hasBBante,
+          currentStack: currentStack,
+          sessionId: sessionManager.sessionId,
+          isFromActiveSession: true, // Indicate this is from an active poker session
+        ),
+      ),
+    );
+
+    // Update stack if rebuy was done in session details
+    if (result != null && result['updatedStack'] != null) {
+      final updatedStack = result['updatedStack'] as double;
+      final updatedTotalBuyIn = result['totalBuyIn'] as double;
+
+      // Update the player's stack in game state
+      if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+        setState(() {
+          gameState.players[ourSeat - 1].currentStack = updatedStack;
+          sessionManager.totalBuyIn = updatedTotalBuyIn;
+        });
+      }
     }
   }
 
