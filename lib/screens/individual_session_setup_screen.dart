@@ -31,11 +31,17 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
 
   // Form validation
   bool get isFormValid {
-    return _sessionNameController.text.isNotEmpty &&
-           _buyInController.text.isNotEmpty &&
-           _startingStackController.text.isNotEmpty &&
-           double.tryParse(_buyInController.text) != null &&
-           double.tryParse(_startingStackController.text) != null;
+    bool basicValid = _sessionNameController.text.isNotEmpty &&
+                     _buyInController.text.isNotEmpty &&
+                     double.tryParse(_buyInController.text) != null;
+
+    if (gameType == GameType.tournament) {
+      return basicValid &&
+             _startingStackController.text.isNotEmpty &&
+             double.tryParse(_startingStackController.text) != null;
+    }
+
+    return basicValid;
   }
 
   @override
@@ -143,61 +149,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
 
                 SizedBox(height: 24),
 
-                // Buy-in Amount Input
-                _buildInputCard(
-                  title: 'Buy-in Amount',
-                  iconPath: 'icons/cash.png',
-                  child: TextField(
-                    controller: _buyInController,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'Enter buy-in amount',
-                      hintStyle: TextStyle(color: PokerFriendColors.dark9),
-                      prefixText: '\$ ',
-                      prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
-                      filled: true,
-                      fillColor: PokerFriendColors.dark1,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    onChanged: (value) => setState(() {}),
-                  ),
-                ),
-
-                SizedBox(height: 24),
-
-                // Starting Stack Input
-                _buildInputCard(
-                  title: 'Starting Stack',
-                  iconPath: 'icons/ante.png',
-                  child: TextField(
-                    controller: _startingStackController,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'Enter starting stack',
-                      hintStyle: TextStyle(color: PokerFriendColors.dark9),
-                      prefixText: gameType == GameType.cash ? '\$ ' : '',
-                      prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
-                      filled: true,
-                      fillColor: PokerFriendColors.dark1,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    onChanged: (value) => setState(() {}),
-                  ),
-                ),
-
-                SizedBox(height: 24),
-
-                // Game Type Selection
+                // Game Type Selection - moved here after session name
                 Container(
                   padding: EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -237,7 +189,10 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             child: _GameTypeButton(
                               gameType: GameType.cash,
                               selectedGameType: gameType,
-                              onTap: () => setState(() => gameType = GameType.cash),
+                              onTap: () => setState(() {
+                                gameType = GameType.cash;
+                                _updateStackForGameType();
+                              }),
                             ),
                           ),
                           SizedBox(width: 12),
@@ -245,7 +200,10 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             child: _GameTypeButton(
                               gameType: GameType.tournament,
                               selectedGameType: gameType,
-                              onTap: () => setState(() => gameType = GameType.tournament),
+                              onTap: () => setState(() {
+                                gameType = GameType.tournament;
+                                _updateStackForGameType();
+                              }),
                             ),
                           ),
                         ],
@@ -255,6 +213,89 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                 ),
 
                 SizedBox(height: 24),
+
+                // Buy-in Amount Input
+                _buildInputCard(
+                  title: 'Buy-in Amount',
+                  iconPath: 'icons/cash.png',
+                  child: TextField(
+                    controller: _buyInController,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    decoration: InputDecoration(
+                      hintText: 'Enter buy-in amount',
+                      hintStyle: TextStyle(color: PokerFriendColors.dark9),
+                      prefixText: '\$ ',
+                      prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
+                      filled: true,
+                      fillColor: PokerFriendColors.dark1,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    onChanged: (value) {
+                      setState(() {});
+                      _updateStackForGameType();
+                    },
+                  ),
+                ),
+
+                SizedBox(height: 24),
+
+                // Starting Stack Input - only show for MTT
+                if (gameType == GameType.tournament) ...[
+                  _buildInputCard(
+                    title: 'Starting Stack',
+                    iconPath: 'icons/ante.png',
+                    child: TextField(
+                      controller: _startingStackController,
+                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      decoration: InputDecoration(
+                        hintText: 'Enter chip stack',
+                        hintStyle: TextStyle(color: PokerFriendColors.dark9),
+                        filled: true,
+                        fillColor: PokerFriendColors.dark1,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                      onChanged: (value) => setState(() {}),
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                ],
+
+                // Cash game explanation
+                if (gameType == GameType.cash)
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    margin: EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: PokerFriendColors.dark2,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: PokerFriendColors.dark4, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: PokerFriendColors.red, size: 20),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'In cash games, your starting stack equals your buy-in amount.',
+                            style: TextStyle(
+                              color: PokerFriendColors.dark10,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
                 // Blinds Settings - Grid Layout
                 GridView.count(
@@ -623,10 +664,23 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
     );
   }
 
+  void _updateStackForGameType() {
+    if (gameType == GameType.cash) {
+      // For cash games, starting stack equals buy-in amount
+      final buyInText = _buyInController.text;
+      if (buyInText.isNotEmpty && double.tryParse(buyInText) != null) {
+        _startingStackController.text = buyInText;
+      }
+    }
+    // For MTT, user enters starting stack manually
+  }
+
   void _startSession() {
     final sessionName = _sessionNameController.text;
     final buyIn = double.parse(_buyInController.text);
-    final startingStack = double.parse(_startingStackController.text);
+    final startingStack = gameType == GameType.cash
+        ? buyIn  // For cash games, starting stack = buy-in
+        : double.parse(_startingStackController.text);  // For MTT, use entered value
 
     if (widget.loggingMode == LoggingMode.full) {
       // For Full mode, go directly to Seat Setup screen
@@ -637,6 +691,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
         playerCount: 6,
         gameType: gameType,
         sessionName: sessionName,
+        initialBuyIn: buyIn,
       );
 
       Navigator.push(

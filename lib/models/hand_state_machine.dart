@@ -303,6 +303,38 @@ class HandRecord {
   }
 }
 
+class RebuyRecord {
+  final DateTime timestamp;
+  final double amount; // Rebuy amount
+  final double stack; // Stack size after rebuy (for MTT)
+  final int handNumber; // Hand number when rebuy occurred
+
+  RebuyRecord({
+    required this.timestamp,
+    required this.amount,
+    required this.stack,
+    required this.handNumber,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'timestamp': timestamp.millisecondsSinceEpoch,
+      'amount': amount,
+      'stack': stack,
+      'handNumber': handNumber,
+    };
+  }
+
+  factory RebuyRecord.fromMap(Map<String, dynamic> map) {
+    return RebuyRecord(
+      timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp']),
+      amount: map['amount']?.toDouble() ?? 0.0,
+      stack: map['stack']?.toDouble() ?? 0.0,
+      handNumber: map['handNumber'] ?? 0,
+    );
+  }
+}
+
 class PokerSessionManager {
   String? sessionId;
   SessionState sessionState = SessionState.notStarted;
@@ -328,6 +360,10 @@ class PokerSessionManager {
   int? actualSBSeat; // Track who actually posted SB (may differ from calculated)
   int? actualBBSeat; // Track who actually posted BB (may differ from calculated)
 
+  // Rebuy tracking
+  List<RebuyRecord> rebuys = []; // Track all rebuys during session
+  double totalBuyIn = 0.0; // Total amount invested including rebuys
+
   PokerSessionManager({
     required this.smallBlind,
     required this.bigBlind,
@@ -336,11 +372,15 @@ class PokerSessionManager {
     this.gameType = GameType.cash,
     this.sessionName,
     String? existingSessionId,
+    double? initialBuyIn,
   }) {
     // If we have an existing session ID, use it
     if (existingSessionId != null) {
       sessionId = existingSessionId;
     }
+
+    // Initialize total buy-in with initial buy-in amount
+    totalBuyIn = initialBuyIn ?? 0.0;
   }
 
   // Start a new session
@@ -854,6 +894,34 @@ class PokerSessionManager {
     }
 
     print('Session ended. Total hands: ${completedHands.length}');
+  }
+
+  // Add a rebuy to the session
+  void addRebuy({
+    required double amount,
+    required double stack,
+  }) {
+    final rebuy = RebuyRecord(
+      timestamp: DateTime.now(),
+      amount: amount,
+      stack: stack,
+      handNumber: completedHands.length + 1, // Next hand number
+    );
+
+    rebuys.add(rebuy);
+    totalBuyIn += amount;
+
+    print('Rebuy added: \$${amount.toStringAsFixed(2)}, New stack: ${stack.toStringAsFixed(2)}, Total invested: \$${totalBuyIn.toStringAsFixed(2)}');
+  }
+
+  // Get total rebuy amount
+  double getTotalRebuyAmount() {
+    return rebuys.fold(0.0, (sum, rebuy) => sum + rebuy.amount);
+  }
+
+  // Get rebuy count
+  int getRebuyCount() {
+    return rebuys.length;
   }
 
   // Retry failed saves
