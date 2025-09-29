@@ -106,23 +106,14 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                       onDecrement: () {
                         if (smallBlind > 1) {
                           setState(() => smallBlind--);
-                          if (bigBlind <= smallBlind) {
-                            setState(() => bigBlind = smallBlind + 1);
-                          }
                         }
                       },
                       onIncrement: () {
                         setState(() => smallBlind++);
-                        if (bigBlind <= smallBlind) {
-                          setState(() => bigBlind = smallBlind * 2);
-                        }
                       },
                       onValueTap: () => _showBlindInputDialog('Small Blind', smallBlind, (value) {
                         setState(() {
                           smallBlind = value;
-                          if (bigBlind <= smallBlind) {
-                            bigBlind = smallBlind + 1;
-                          }
                         });
                       }),
                     ),
@@ -131,14 +122,14 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                       value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
                       iconPath: 'icons/big_blind.png',
                       onDecrement: () {
-                        if (bigBlind > smallBlind + 1) {
+                        if (bigBlind > 1) {
                           setState(() => bigBlind--);
                         }
                       },
                       onIncrement: () => setState(() => bigBlind++),
                       onValueTap: () => _showBlindInputDialog('Big Blind', bigBlind, (value) {
                         setState(() {
-                          bigBlind = value > smallBlind ? value : smallBlind + 1;
+                          bigBlind = value;
                         });
                       }),
                     ),

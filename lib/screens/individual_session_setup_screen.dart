@@ -115,7 +115,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                 // Session Name Input
                 _buildInputCard(
                   title: 'Session Name',
-                  icon: Icons.edit,
+                  iconPath: 'icons/pencil.png',
                   child: TextField(
                     controller: _sessionNameController,
                     style: TextStyle(color: Colors.white, fontSize: 16),
@@ -139,7 +139,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                 // Buy-in Amount Input
                 _buildInputCard(
                   title: 'Buy-in Amount',
-                  icon: Icons.monetization_on,
+                  iconPath: 'icons/cash.png',
                   child: TextField(
                     controller: _buyInController,
                     keyboardType: TextInputType.numberWithOptions(decimal: true),
@@ -166,7 +166,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                 // Starting Stack Input
                 _buildInputCard(
                   title: 'Starting Stack',
-                  icon: Icons.casino,
+                  iconPath: 'icons/ante.png',
                   child: TextField(
                     controller: _startingStackController,
                     keyboardType: TextInputType.numberWithOptions(decimal: true),
@@ -205,14 +205,11 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                           Container(
                             width: 40,
                             height: 40,
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.casino,
-                              color: PokerFriendColors.red,
-                              size: 20,
+                            child: Image.asset(
+                              'icons/game_type.png',
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.contain,
                             ),
                           ),
                           SizedBox(width: 16),
@@ -252,143 +249,117 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
 
                 SizedBox(height: 24),
 
-                // Blinds Settings
-                Container(
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.attach_money,
-                              color: PokerFriendColors.red,
-                              size: 20,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Text(
-                            'Blinds',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildBlindSelector(
-                              label: 'Small Blind',
-                              value: smallBlind,
-                              controller: _smallBlindController,
-                              onIncrement: () => setState(() {
-                                smallBlind++;
-                                _smallBlindController.text = smallBlind.toString();
-                                if (bigBlind <= smallBlind) {
-                                  bigBlind = smallBlind * 2;
-                                  _bigBlindController.text = bigBlind.toString();
-                                }
-                              }),
-                              onDecrement: () => setState(() {
-                                if (smallBlind > 1) {
-                                  smallBlind--;
-                                  _smallBlindController.text = smallBlind.toString();
-                                  if (bigBlind <= smallBlind) {
-                                    bigBlind = smallBlind + 1;
-                                    _bigBlindController.text = bigBlind.toString();
-                                  }
-                                }
-                              }),
-                              onChanged: (value) {
-                                final parsedValue = int.tryParse(value);
-                                if (parsedValue != null && parsedValue > 0) {
-                                  setState(() {
-                                    smallBlind = parsedValue;
-                                    if (bigBlind <= smallBlind) {
-                                      bigBlind = smallBlind * 2;
-                                      _bigBlindController.text = bigBlind.toString();
-                                    }
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: _buildBlindSelector(
-                              label: 'Big Blind',
-                              value: bigBlind,
-                              controller: _bigBlindController,
-                              onIncrement: () => setState(() {
-                                bigBlind++;
-                                _bigBlindController.text = bigBlind.toString();
-                              }),
-                              onDecrement: () => setState(() {
-                                if (bigBlind > smallBlind + 1) {
-                                  bigBlind--;
-                                  _bigBlindController.text = bigBlind.toString();
-                                }
-                              }),
-                              onChanged: (value) {
-                                final parsedValue = int.tryParse(value);
-                                if (parsedValue != null && parsedValue > smallBlind) {
-                                  setState(() {
-                                    bigBlind = parsedValue;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Ante switch (only for tournaments)
-                      if (gameType == GameType.tournament) ...[
-                        SizedBox(height: 16),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: PokerFriendColors.dark3,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'BB Ante',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Switch(
-                                value: hasBBante,
-                                onChanged: (value) => setState(() => hasBBante = value),
-                                activeColor: PokerFriendColors.red,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                // Blinds Settings - Grid Layout
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.0,
+                  children: [
+                    _buildBlindCard(
+                      title: 'Small Blind',
+                      value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
+                      iconPath: 'icons/small_blind.png',
+                      onDecrement: () => setState(() {
+                        if (smallBlind > 1) {
+                          smallBlind--;
+                          _smallBlindController.text = smallBlind.toString();
+                        }
+                      }),
+                      onIncrement: () => setState(() {
+                        smallBlind++;
+                        _smallBlindController.text = smallBlind.toString();
+                      }),
+                      onValueTap: () => _showBlindInputDialog('Small Blind', smallBlind, (value) {
+                        setState(() {
+                          smallBlind = value;
+                          _smallBlindController.text = smallBlind.toString();
+                        });
+                      }),
+                    ),
+                    _buildBlindCard(
+                      title: 'Big Blind',
+                      value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
+                      iconPath: 'icons/big_blind.png',
+                      onDecrement: () => setState(() {
+                        if (bigBlind > 1) {
+                          bigBlind--;
+                          _bigBlindController.text = bigBlind.toString();
+                        }
+                      }),
+                      onIncrement: () => setState(() {
+                        bigBlind++;
+                        _bigBlindController.text = bigBlind.toString();
+                      }),
+                      onValueTap: () => _showBlindInputDialog('Big Blind', bigBlind, (value) {
+                        setState(() {
+                          bigBlind = value;
+                          _bigBlindController.text = bigBlind.toString();
+                        });
+                      }),
+                    ),
+                  ],
                 ),
+
+                // Ante Card (only for tournaments)
+                if (gameType == GameType.tournament) ...[
+                  SizedBox(height: 16),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: PokerFriendColors.dark3,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Image.asset(
+                                  'icons/ante.png',
+                                  width: 32,
+                                  height: 32,
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'BB Ante',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: hasBBante,
+                              onChanged: (value) => setState(() => hasBBante = value),
+                              activeColor: PokerFriendColors.red,
+                              trackColor: MaterialStateProperty.all(
+                                hasBBante ? PokerFriendColors.red.withOpacity(0.3) : PokerFriendColors.dark4,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (hasBBante) ...[
+                          SizedBox(height: 8),
+                          Text(
+                            'Big blind posts ante for all players',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: PokerFriendColors.dark9,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
 
                 SizedBox(height: 32),
 
@@ -449,7 +420,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
 
   Widget _buildInputCard({
     required String title,
-    required IconData icon,
+    required String iconPath,
     required Widget child,
   }) {
     return Container(
@@ -466,14 +437,11 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  color: PokerFriendColors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: PokerFriendColors.red,
-                  size: 20,
+                child: Image.asset(
+                  iconPath,
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.contain,
                 ),
               ),
               SizedBox(width: 16),
@@ -494,70 +462,157 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
     );
   }
 
-  Widget _buildBlindSelector({
-    required String label,
-    required int value,
-    required TextEditingController controller,
-    required VoidCallback onIncrement,
+  Widget _buildBlindCard({
+    required String title,
+    required String value,
+    required String iconPath,
     required VoidCallback onDecrement,
-    required Function(String) onChanged,
+    required VoidCallback onIncrement,
+    VoidCallback? onValueTap,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: PokerFriendColors.dark9,
-          ),
-        ),
-        SizedBox(height: 8),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: PokerFriendColors.dark1,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: PokerFriendColors.dark3,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: onDecrement,
-                child: Icon(Icons.remove, color: Colors.white, size: 20),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    isDense: true,
-                    prefixText: gameType == GameType.cash ? '\$' : '',
-                    prefixStyle: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  onChanged: onChanged,
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              GestureDetector(
-                onTap: onIncrement,
-                child: Icon(Icons.add, color: Colors.white, size: 20),
+              Image.asset(
+                iconPath,
+                width: 32,
+                height: 32,
               ),
             ],
           ),
-        ),
-      ],
+          Spacer(),
+          GestureDetector(
+            onTap: onValueTap,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: onValueTap != null ? BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: PokerFriendColors.red.withOpacity(0.3)),
+              ) : null,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 24,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: onDecrement,
+                  child: Container(
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: PokerFriendColors.dark1,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.remove,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: onIncrement,
+                  child: Container(
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: PokerFriendColors.red,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBlindInputDialog(String title, int currentValue, Function(int) onConfirm) {
+    final controller = TextEditingController(text: currentValue.toString());
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: PokerFriendColors.dark3,
+          title: Text(
+            title,
+            style: TextStyle(color: Colors.white),
+          ),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Enter value',
+              hintStyle: TextStyle(color: PokerFriendColors.dark9),
+              filled: true,
+              fillColor: PokerFriendColors.dark1,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: PokerFriendColors.dark9),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final value = int.tryParse(controller.text);
+                if (value != null && value > 0) {
+                  onConfirm(value);
+                  Navigator.pop(context);
+                }
+              },
+              child: Text(
+                'OK',
+                style: TextStyle(color: PokerFriendColors.red),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

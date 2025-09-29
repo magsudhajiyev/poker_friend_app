@@ -76,7 +76,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                       title: 'Full Logging Mode',
                       subtitle: 'Complete session tracking',
                       description: 'Track entire poker sessions with multiple hands, detailed statistics, and comprehensive analysis.',
-                      icon: Icons.assessment_outlined,
+                      iconPath: 'icons/notebook.png',
                       features: [
                         'Multi-hand session tracking',
                         'Real-time statistics',
@@ -94,7 +94,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                       title: 'Individual Logging Mode',
                       subtitle: 'Single hand tracking',
                       description: 'Log individual hands quickly and efficiently. Perfect for spot tracking or specific hand analysis.',
-                      icon: Icons.casino_outlined,
+                      iconPath: 'icons/notepad.png',
                       features: [
                         'Single hand focus',
                         'Quick logging',
@@ -120,7 +120,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
     required String title,
     required String subtitle,
     required String description,
-    required IconData icon,
+    required String iconPath,
     required List<String> features,
     required VoidCallback onTap,
   }) {
@@ -146,14 +146,11 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: PokerFriendColors.red,
-                    size: 24,
+                  child: Image.asset(
+                    iconPath,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.contain,
                   ),
                 ),
                 SizedBox(width: 16),

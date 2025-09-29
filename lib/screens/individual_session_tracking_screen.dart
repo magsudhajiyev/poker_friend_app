@@ -734,14 +734,11 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                           Container(
                             width: 40,
                             height: 40,
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.analytics_outlined,
-                              color: PokerFriendColors.red,
-                              size: 20,
+                            child: Image.asset(
+                              'icons/stats.png',
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.contain,
                             ),
                           ),
                           SizedBox(width: 16),
@@ -803,24 +800,13 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.casino,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          'LOG A HAND',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'LOG A HAND',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
