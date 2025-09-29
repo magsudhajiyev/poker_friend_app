@@ -657,37 +657,40 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             onPressed: () {
               final rebuyAmount = double.tryParse(rebuyAmountController.text);
 
-              if (widget.gameType == GameType.cash) {
-                // Cash game: rebuy amount = stack size
-                if (rebuyAmount != null && rebuyAmount > 0) {
-                  Navigator.pop(context, {
-                    'rebuyAmount': rebuyAmount,
-                    'newStack': rebuyAmount, // For cash, stack equals rebuy amount
-                  });
-                }
-              } else {
-                // MTT: need both rebuy amount and stack size
-                final stackSize = double.tryParse(stackSizeController.text);
-                if (rebuyAmount != null && stackSize != null &&
-                    rebuyAmount > 0 && stackSize > 0) {
-                  Navigator.pop(context, {
-                    'rebuyAmount': rebuyAmount,
-                    'newStack': stackSize,
-                  });
-                }
-              }
-
-              // Show error if validation fails
-              if (rebuyAmount == null || rebuyAmount <= 0 ||
-                  (widget.gameType == GameType.tournament &&
-                   (double.tryParse(stackSizeController.text) == null ||
-                    double.tryParse(stackSizeController.text)! <= 0))) {
+              // Validate inputs first
+              if (rebuyAmount == null || rebuyAmount <= 0) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Please enter valid amounts'),
+                    content: Text('Please enter a valid rebuy amount'),
                     backgroundColor: Colors.red,
                   ),
                 );
+                return;
+              }
+
+              if (widget.gameType == GameType.cash) {
+                // Cash game: rebuy amount = stack size
+                Navigator.pop(context, {
+                  'rebuyAmount': rebuyAmount,
+                  'newStack': rebuyAmount, // For cash, stack equals rebuy amount
+                });
+              } else {
+                // MTT: need both rebuy amount and stack size
+                final stackSize = double.tryParse(stackSizeController.text);
+                if (stackSize == null || stackSize <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Please enter a valid stack size'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                Navigator.pop(context, {
+                  'rebuyAmount': rebuyAmount,
+                  'newStack': stackSize,
+                });
               }
             },
             style: ElevatedButton.styleFrom(
@@ -815,6 +818,23 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
+                              color: PokerFriendColors.red,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: IconButton(
+                              onPressed: _stopSession,
+                              icon: Icon(
+                                Icons.stop_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
                               color: PokerFriendColors.dark4,
                               borderRadius: BorderRadius.circular(14),
                             ),
@@ -850,23 +870,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                                 ),
                                 // Future menu items will be added here
                               ],
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.red,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: IconButton(
-                              onPressed: _stopSession,
-                              icon: Icon(
-                                Icons.stop_rounded,
-                                color: Colors.white,
-                                size: 24,
-                              ),
                             ),
                           ),
                         ],
