@@ -70,10 +70,26 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   }
 
   void _calculateSessionAnalytics() {
+    // First try to use totalBuyIn from session data if available
+    final sessionTotalBuyIn = widget.sessionData['totalBuyIn']?.toDouble() ?? 0.0;
+
     // Calculate total invested (initial buy-in + rebuys)
     final initialBuyIn = widget.sessionData['buyInAmount']?.toDouble() ?? 0.0;
     final totalRebuyAmount = _rebuys.fold<double>(0.0, (sum, rebuy) => sum + (rebuy['amount']?.toDouble() ?? 0.0));
-    _totalInvested = initialBuyIn + totalRebuyAmount;
+    final calculatedTotal = initialBuyIn + totalRebuyAmount;
+
+    // Use session totalBuyIn if available and greater than calculated, otherwise use calculated
+    _totalInvested = (sessionTotalBuyIn > 0) ? sessionTotalBuyIn : calculatedTotal;
+
+    print('💰 DEBUG: Session data totalBuyIn: $sessionTotalBuyIn');
+    print('💰 DEBUG: Initial buy-in: $initialBuyIn');
+    print('💰 DEBUG: Rebuys found: ${_rebuys.length}');
+    for (int i = 0; i < _rebuys.length; i++) {
+      print('💰 DEBUG: Rebuy $i: ${_rebuys[i]['amount']} (parsed: ${_rebuys[i]['amount']?.toDouble()})');
+    }
+    print('💰 DEBUG: Total rebuy amount: $totalRebuyAmount');
+    print('💰 DEBUG: Calculated total: $calculatedTotal');
+    print('💰 DEBUG: Final total invested: $_totalInvested');
 
     // Get final stack from stack history or session data
     if (_stackHistory.isNotEmpty) {
@@ -86,18 +102,24 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
     // If we still don't have a total invested amount, try to get it from stack history
     if (_totalInvested == 0.0 && _stackHistory.isNotEmpty) {
+      print('💰 DEBUG: Fallback to stack history for total invested');
       // Find initial stack entry
       final initialEntry = _stackHistory.firstWhere(
         (entry) => entry['changeType'] == 'initial',
         orElse: () => _stackHistory.first,
       );
       _totalInvested = initialEntry['stackSize']?.toDouble() ?? 0.0;
+      print('💰 DEBUG: Initial from stack history: $_totalInvested');
 
       // Add rebuy amounts from stack history
       final rebuyEntries = _stackHistory.where((entry) => entry['changeType'] == 'rebuy');
+      print('💰 DEBUG: Rebuy entries from stack history: ${rebuyEntries.length}');
       for (final rebuy in rebuyEntries) {
-        _totalInvested += rebuy['changeAmount']?.toDouble() ?? 0.0;
+        final amount = rebuy['changeAmount']?.toDouble() ?? 0.0;
+        print('💰 DEBUG: Adding rebuy from stack history: $amount');
+        _totalInvested += amount;
       }
+      print('💰 DEBUG: Final total invested from stack history: $_totalInvested');
     }
 
     // Calculate profit/loss
@@ -113,6 +135,11 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     } else {
       return amount.toStringAsFixed(0);
     }
+  }
+
+  // Always format with $ sign for Total Invested display
+  String _formatTotalInvested(double amount) {
+    return '\$${amount.toStringAsFixed(2)}';
   }
 
   String _formatDuration() {
@@ -175,7 +202,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
               Expanded(
                 child: _buildMetricCardWithAsset(
                   'Total Invested',
-                  _formatCurrency(_totalInvested),
+                  _formatTotalInvested(_totalInvested),
                   'icons/wallet_original.png',
                 ),
               ),

@@ -568,6 +568,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                       child: InkWell(
                                         onTap: () {
                                           setState(() {
+                                            // Restore defaults for previous seat before selecting new one
+                                            _restoreDefaultsForPreviousSeat(selectedSeat);
+
                                             selectedSeat = seatNumber;
                                             _autoInsertUsernameForSeat(seatNumber);
 
@@ -956,11 +959,35 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     // Player names remain as "Player X" or custom names
   }
 
+  void _restoreDefaultsForPreviousSeat(int? previousSeat) {
+    if (previousSeat == null) return;
+
+    final userName = AuthService.userDisplayName;
+    final nameController = nameControllers[previousSeat];
+    final stackController = stackControllers[previousSeat];
+
+    // Always restore defaults for the previous seat (if it was selected)
+    if (nameController != null && stackController != null) {
+      // Check if this seat was the user's seat (contains user's name or was selected)
+      bool wasUserSeat = nameController.text == userName ||
+                        nameController.text == "You" ||
+                        nameController.text.isEmpty;
+
+      if (wasUserSeat) {
+        // Restore default name and stack
+        nameController.text = 'Player $previousSeat';
+        stackController.text = widget.isCashGame ? '100.00' : '1500';
+        seatActive[previousSeat] = true; // Keep seat active with default player
+        widget.sessionManager?.setPlayerName(previousSeat, 'Player $previousSeat');
+      }
+    }
+  }
+
   void _autoInsertUsernameForSeat(int seatNumber) {
     // Auto-insert the current user's display name for their selected seat
     final userName = AuthService.userDisplayName;
     final controller = nameControllers[seatNumber];
-    
+
     if (controller != null && userName.isNotEmpty) {
       controller.text = userName;
       // Make sure the seat is active

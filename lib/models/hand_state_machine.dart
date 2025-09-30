@@ -540,6 +540,9 @@ class PokerSessionManager {
   void completeCurrentHand({double? potAmount, int? winnerId, double? currentStack}) {
     if (currentHand == null) return;
 
+    print('🔧 DEBUG: completeCurrentHand called for hand #${currentHand!.handNumber}');
+    print('🔧 DEBUG: sessionId when completing hand: $sessionId');
+
     // Set pot amount and winner if provided
     if (potAmount != null) {
       currentHand!.potAmount = potAmount;
@@ -561,6 +564,8 @@ class PokerSessionManager {
 
     currentHand!.markCompleted();
     completedHands.add(currentHand!);
+
+    print('🔧 DEBUG: Hand added to completedHands, total count: ${completedHands.length}');
 
     // Update opponent statistics for this hand
     _updateOpponentStats();
@@ -627,7 +632,10 @@ class PokerSessionManager {
   // Save a completed hand to both Firebase and local storage
   Future<void> _saveHandToFirebase(HandRecord hand) async {
     if (sessionId == null) return;
-    
+
+    print('🔧 DEBUG: _saveHandToFirebase called for hand #${hand.handNumber}');
+    print('🔧 DEBUG: Using sessionId: $sessionId');
+
     // Always save to local storage first
     await LocalStorageService.saveHand(
       sessionId: sessionId!,
@@ -658,6 +666,8 @@ class PokerSessionManager {
       individualShares: hand.individualShares,
       sharePerWinner: hand.sharePerWinner,
     );
+
+    print('🔧 DEBUG: Hand #${hand.handNumber} saved to local storage with sessionId: $sessionId');
     
     try {
       // Try to save to Firebase as well
@@ -847,7 +857,7 @@ class PokerSessionManager {
     if (sessionId == null) return;
 
     try {
-      // Update Firebase session with stack history
+      // Update Firebase session with stack history and totalBuyIn
       await FirebaseService.updateSession(
         sessionId: sessionId!,
         totalHands: completedHands.length,
@@ -857,11 +867,12 @@ class PokerSessionManager {
       print('Failed to update session in Firebase: $e');
     }
 
-    // Always update local storage with stack history
+    // Always update local storage with stack history and totalBuyIn
     await LocalStorageService.updateSession(
       sessionId: sessionId!,
       totalHands: completedHands.length,
       stackHistory: stackHistory,
+      totalBuyIn: totalBuyIn,
     );
   }
 
@@ -958,6 +969,9 @@ class PokerSessionManager {
     _addStackHistoryEntry(stack, 'rebuy', amount, completedHands.length + 1);
 
     print('Rebuy added: \$${amount.toStringAsFixed(2)}, New stack: ${stack.toStringAsFixed(2)}, Total invested: \$${totalBuyIn.toStringAsFixed(2)}');
+
+    // Update session immediately with new totalBuyIn
+    _updateSessionProgress();
   }
 
   // Get total rebuy amount

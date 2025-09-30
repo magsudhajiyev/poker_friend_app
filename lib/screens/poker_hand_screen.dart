@@ -463,6 +463,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         currentLevelDuration: widget.levelDuration,
         useButtonMode: useButtonMode,
         onBlindsChanged: (smallBlind, bigBlind) async {
+          print('🔧 DEBUG: Blind update called - SB: $smallBlind, BB: $bigBlind');
+          print('🔧 DEBUG: Current sessionId before update: ${sessionManager.sessionId}');
+
           setState(() {
             // Update both sessionManager and gameState blinds
             sessionManager.smallBlind = smallBlind;
@@ -470,6 +473,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             gameState.smallBlind = smallBlind;
             gameState.bigBlind = bigBlind;
           });
+
+          print('🔧 DEBUG: Current sessionId after update: ${sessionManager.sessionId}');
+
           // Save blinds to preferences for persistence
           final prefs = await SharedPreferences.getInstance();
           await prefs.setInt('small_blind', smallBlind);

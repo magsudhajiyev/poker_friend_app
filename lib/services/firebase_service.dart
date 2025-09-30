@@ -196,11 +196,16 @@ class FirebaseService {
       }
 
       // Save to session's subcollection instead of top-level collection
+      // Use timestamp to ensure unique document ID even if handNumber repeats
+      final handDocId = 'hand_${handNumber}_${DateTime.now().millisecondsSinceEpoch}';
+
+      print('🔧 DEBUG Firebase: Generated handDocId: $handDocId for sessionId: $sessionId, handNumber: $handNumber');
+
       await _firestore
           .collection(_sessionsCollection)
           .doc(sessionId)
           .collection(_handsCollection)
-          .doc(handNumber.toString())
+          .doc(handDocId)
           .set(handData);
       
       // Update session total hands count

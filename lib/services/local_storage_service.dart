@@ -214,7 +214,10 @@ class LocalStorageService {
   }) async {
     try {
       final db = await database;
-      final handId = '${sessionId}_hand_$handNumber';
+      // Use timestamp to ensure unique handId even if sessionId changes mid-session
+      final handId = '${sessionId}_hand_${handNumber}_${DateTime.now().millisecondsSinceEpoch}';
+
+      print('🔧 DEBUG: Generated handId: $handId for sessionId: $sessionId, handNumber: $handNumber');
       
       print('🔥 DEBUG: saveHand called with:');
       print('  potAmount: $potAmount');
@@ -490,6 +493,7 @@ class LocalStorageService {
     required String sessionId,
     int? totalHands,
     List<Map<String, dynamic>>? stackHistory,
+    double? totalBuyIn,
   }) async {
     try {
       final db = await database;
@@ -506,6 +510,11 @@ class LocalStorageService {
         updateData['stackHistory'] = _safeJsonEncode(stackHistory);
       }
 
+      if (totalBuyIn != null) {
+        updateData['totalBuyIn'] = totalBuyIn;
+        print('💰 DEBUG: Updating session totalBuyIn to: $totalBuyIn');
+      }
+
       await db.update(
         'sessions',
         updateData,
@@ -513,7 +522,7 @@ class LocalStorageService {
         whereArgs: [sessionId],
       );
 
-      print('Session updated locally: $sessionId (totalHands: $totalHands, stackHistory entries: ${stackHistory?.length ?? 0})');
+      print('Session updated locally: $sessionId (totalHands: $totalHands, stackHistory entries: ${stackHistory?.length ?? 0}, totalBuyIn: $totalBuyIn)');
     } catch (e) {
       print('Error updating session locally: $e');
       rethrow;
