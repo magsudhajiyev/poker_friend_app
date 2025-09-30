@@ -57,6 +57,14 @@ class FirebaseService {
           'biggestPot': 0.0,
           'sessionStatus': 'active',
         });
+      } else {
+        // For full hand logging sessions, save starting stack as buyInAmount
+        if (startingStack != null && startingStack > 0) {
+          sessionData.addAll({
+            'buyInAmount': startingStack,
+            'totalBuyIn': startingStack,
+          });
+        }
       }
 
       final sessionRef = await _firestore.collection(_sessionsCollection).add(sessionData);
@@ -536,22 +544,27 @@ class FirebaseService {
   static Future<void> updateSession({
     required String sessionId,
     int? totalHands,
+    List<Map<String, dynamic>>? stackHistory,
   }) async {
     try {
       final userId = AuthService.userId;
       if (userId == null) throw 'User not authenticated';
-      
+
       Map<String, dynamic> updateData = {
         'updatedAt': FieldValue.serverTimestamp(),
       };
-      
+
       if (totalHands != null) {
         updateData['totalHands'] = totalHands;
       }
-      
+
+      if (stackHistory != null) {
+        updateData['stackHistory'] = stackHistory;
+      }
+
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
-      
-      print('Session updated: $sessionId (totalHands: $totalHands)');
+
+      print('Session updated: $sessionId (totalHands: $totalHands, stackHistory entries: ${stackHistory?.length ?? 0})');
     } catch (e) {
       print('Error updating session: $e');
       rethrow;

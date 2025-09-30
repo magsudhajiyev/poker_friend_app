@@ -38,7 +38,12 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   Future<void> _loadSessionAnalytics() async {
     try {
       // Load detailed session data including stack history, rebuys, and hands
-      final sessionDetails = await FirebaseService.getSession(widget.sessionId);
+      Map<String, dynamic>? sessionDetails;
+      try {
+        sessionDetails = await FirebaseService.getSession(widget.sessionId);
+      } catch (e) {
+        sessionDetails = await LocalStorageService.getSession(widget.sessionId);
+      }
 
       // Try Firebase first, fall back to local storage
       List<Map<String, dynamic>> hands;
@@ -70,11 +75,35 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     final totalRebuyAmount = _rebuys.fold<double>(0.0, (sum, rebuy) => sum + (rebuy['amount']?.toDouble() ?? 0.0));
     _totalInvested = initialBuyIn + totalRebuyAmount;
 
-    // Get final stack from session data
-    _finalStack = widget.sessionData['finalStack']?.toDouble() ?? widget.sessionData['currentStack']?.toDouble() ?? 0.0;
+    // Get final stack from stack history or session data
+    if (_stackHistory.isNotEmpty) {
+      // Use the latest stack size from stack history
+      _finalStack = _stackHistory.last['stackSize']?.toDouble() ?? 0.0;
+    } else {
+      // Fallback to session data
+      _finalStack = widget.sessionData['finalStack']?.toDouble() ?? widget.sessionData['currentStack']?.toDouble() ?? 0.0;
+    }
+
+    // If we still don't have a total invested amount, try to get it from stack history
+    if (_totalInvested == 0.0 && _stackHistory.isNotEmpty) {
+      // Find initial stack entry
+      final initialEntry = _stackHistory.firstWhere(
+        (entry) => entry['changeType'] == 'initial',
+        orElse: () => _stackHistory.first,
+      );
+      _totalInvested = initialEntry['stackSize']?.toDouble() ?? 0.0;
+
+      // Add rebuy amounts from stack history
+      final rebuyEntries = _stackHistory.where((entry) => entry['changeType'] == 'rebuy');
+      for (final rebuy in rebuyEntries) {
+        _totalInvested += rebuy['changeAmount']?.toDouble() ?? 0.0;
+      }
+    }
 
     // Calculate profit/loss
     _profitLoss = _finalStack - _totalInvested;
+
+    print('📊 Analytics calculated: invested: $_totalInvested, final: $_finalStack, P/L: $_profitLoss');
   }
 
   String _formatCurrency(double amount) {
@@ -125,7 +154,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           // Session Title
           Row(
             children: [
-              Image.asset('icons/stats.png', width: 24, height: 24),
+              Image.asset('icons/session.png', width: 24, height: 24),
               SizedBox(width: 12),
               Text(
                 widget.sessionData['sessionName'] ?? 'Poker Session',
@@ -196,7 +225,6 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             ),
             child: Column(
               children: [
-                _buildDetailRow('Hands Played', '${widget.sessionData['totalHands'] ?? _hands.length}'),
                 _buildDetailRow('Rebuys', '${_rebuys.length}'),
               ],
             ),
@@ -218,7 +246,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         children: [
           Row(
             children: [
-              Image.asset(assetPath, width: 16, height: 16),
+              Image.asset(assetPath, width: 20, height: 20),
               SizedBox(width: 6),
               Text(
                 title,
@@ -321,7 +349,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.show_chart, color: PokerFriendColors.green, size: 24),
+              Image.asset('icons/stats.png', width: 24, height: 24),
               SizedBox(width: 12),
               Text(
                 'Stack Growth',
@@ -535,7 +563,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         child: ElevatedButton(
           onPressed: _navigateToLoggedHands,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
+            backgroundColor: Color(0xFFcb5242),
+            foregroundColor: Colors.white,
             shadowColor: Colors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -547,7 +576,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
               Icon(Icons.style_outlined, color: Colors.white, size: 24),
               SizedBox(width: 12),
               Text(
-                'View Logged Hands (${_hands.length})',
+                'View Logged Hands',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

@@ -108,13 +108,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       List<Map<String, dynamic>> sessions;
       try {
         sessions = await FirebaseService.getAllSessions();
-        print('📱 DEBUG: Loaded ${sessions.length} sessions from Firebase');
       } catch (e) {
         sessions = await LocalStorageService.getUserSessions();
-        print('📱 DEBUG: Loaded ${sessions.length} sessions from LocalStorage');
       }
       
-      print('📱 DEBUG: All sessions: ${sessions.map((s) => s['createdAt']).toList()}');
       
       // Sort by date and take the latest 3
       sessions.sort((a, b) {
@@ -124,13 +121,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           
           return dateB.compareTo(dateA);
         } catch (e) {
-          print('📱 DEBUG: Error parsing dates: $e');
           return 0;
         }
       });
       
       List<Map<String, dynamic>> recent = sessions.take(3).toList();
-      print('📱 DEBUG: Recent 3 sessions: ${recent.map((s) => s['sessionName'] ?? s['id']).toList()}');
       
       return recent;
     } catch (e) {
@@ -175,7 +170,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       
       return DateTime(2000);
     } catch (e) {
-      print('📱 DEBUG: Error parsing session date: $e');
       return DateTime(2000);
     }
   }

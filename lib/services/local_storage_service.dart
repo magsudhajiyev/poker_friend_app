@@ -19,7 +19,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 9,
+      version: 11,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -36,7 +36,10 @@ class LocalStorageService {
             userName TEXT,
             sessionName TEXT,
             updatedAt TEXT,
-            gameType TEXT DEFAULT 'cash'
+            gameType TEXT DEFAULT 'cash',
+            stackHistory TEXT,
+            buyInAmount REAL,
+            totalBuyIn REAL
           )
         ''');
         
@@ -120,6 +123,15 @@ class LocalStorageService {
           await db.execute('ALTER TABLE hands ADD COLUMN individualShares TEXT');
           await db.execute('ALTER TABLE hands ADD COLUMN sharePerWinner REAL');
         }
+        if (oldVersion < 10) {
+          // Add stack history tracking column to sessions table
+          await db.execute('ALTER TABLE sessions ADD COLUMN stackHistory TEXT');
+        }
+        if (oldVersion < 11) {
+          // Add buy-in amount tracking columns to sessions table
+          await db.execute('ALTER TABLE sessions ADD COLUMN buyInAmount REAL');
+          await db.execute('ALTER TABLE sessions ADD COLUMN totalBuyIn REAL');
+        }
       },
     );
   }
@@ -134,27 +146,33 @@ class LocalStorageService {
     String? endTime,
     int? ourSeatNumber,
     GameType gameType = GameType.cash,
+    double? buyInAmount,
   }) async {
     try {
       final db = await database;
       final userId = AuthService.userId ?? 'anonymous';
-      
-      await db.insert(
-        'sessions',
-        {
-          'id': sessionId,
-          'userId': userId,
-          'smallBlind': smallBlind,
-          'bigBlind': bigBlind,
-          'playerCount': playerCount,
-          'ourSeatNumber': ourSeatNumber,
-          'totalHands': 0,
-          'startTime': startTime,
-          'endTime': endTime,
-          'userEmail': AuthService.currentUser?.email,
-          'userName': AuthService.userDisplayName,
-          'gameType': gameType.value,
-        },
+
+      final sessionData = {
+        'id': sessionId,
+        'userId': userId,
+        'smallBlind': smallBlind,
+        'bigBlind': bigBlind,
+        'playerCount': playerCount,
+        'ourSeatNumber': ourSeatNumber,
+        'totalHands': 0,
+        'startTime': startTime,
+        'endTime': endTime,
+        'userEmail': AuthService.currentUser?.email,
+        'userName': AuthService.userDisplayName,
+        'gameType': gameType.value,
+      };
+
+      if (buyInAmount != null) {
+        sessionData['buyInAmount'] = buyInAmount;
+        sessionData['totalBuyIn'] = buyInAmount;
+      }
+
+      await db.insert('sessions', sessionData,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
       
@@ -471,26 +489,31 @@ class LocalStorageService {
   static Future<void> updateSession({
     required String sessionId,
     int? totalHands,
+    List<Map<String, dynamic>>? stackHistory,
   }) async {
     try {
       final db = await database;
-      
+
       Map<String, dynamic> updateData = {
         'updatedAt': DateTime.now().toIso8601String(),
       };
-      
+
       if (totalHands != null) {
         updateData['totalHands'] = totalHands;
       }
-      
+
+      if (stackHistory != null) {
+        updateData['stackHistory'] = _safeJsonEncode(stackHistory);
+      }
+
       await db.update(
         'sessions',
         updateData,
         where: 'id = ?',
         whereArgs: [sessionId],
       );
-      
-      print('Session updated locally: $sessionId (totalHands: $totalHands)');
+
+      print('Session updated locally: $sessionId (totalHands: $totalHands, stackHistory entries: ${stackHistory?.length ?? 0})');
     } catch (e) {
       print('Error updating session locally: $e');
       rethrow;
@@ -561,5 +584,44 @@ class LocalStorageService {
   static Future<bool> isMigrationCompleted() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('stats_migration_completed') ?? false;
+  }
+
+  /// Get session details including stack history and rebuys
+  static Future<Map<String, dynamic>?> getSession(String sessionId) async {
+    try {
+      final db = await database;
+      final results = await db.query(
+        'sessions',
+        where: 'id = ?',
+        whereArgs: [sessionId],
+        limit: 1,
+      );
+
+      if (results.isEmpty) {
+        return null;
+      }
+
+      final sessionData = Map<String, dynamic>.from(results.first);
+
+      // Parse JSON fields
+      if (sessionData['stackHistory'] != null) {
+        try {
+          sessionData['stackHistory'] = jsonDecode(sessionData['stackHistory']);
+        } catch (e) {
+          print('Error parsing stackHistory: $e');
+          sessionData['stackHistory'] = [];
+        }
+      } else {
+        sessionData['stackHistory'] = [];
+      }
+
+      // Add empty rebuys for compatibility (local storage doesn't track rebuys separately yet)
+      sessionData['rebuys'] = sessionData['rebuys'] ?? [];
+
+      return sessionData;
+    } catch (e) {
+      print('Error getting session from local storage: $e');
+      return null;
+    }
   }
 }

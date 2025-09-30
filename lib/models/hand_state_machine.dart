@@ -364,6 +364,9 @@ class PokerSessionManager {
   List<RebuyRecord> rebuys = []; // Track all rebuys during session
   double totalBuyIn = 0.0; // Total amount invested including rebuys
 
+  // Stack history tracking for analytics
+  List<Map<String, dynamic>> stackHistory = [];
+
   PokerSessionManager({
     required this.smallBlind,
     required this.bigBlind,
@@ -384,7 +387,7 @@ class PokerSessionManager {
   }
 
   // Start a new session
-  Future<void> startSession() async {
+  Future<void> startSession({double? initialStack}) async {
     sessionStartTime = DateTime.now();
 
     // If we already have a session ID (from individual session), don't create a new one
@@ -400,6 +403,7 @@ class PokerSessionManager {
           ourSeatNumber: ourSeatNumber,
           gameType: gameType,
           sessionName: sessionName,
+          startingStack: initialStack,
         );
         sessionId = firebaseId;
       } catch (e) {
@@ -414,11 +418,17 @@ class PokerSessionManager {
         startTime: sessionStartTime!.toIso8601String(),
         ourSeatNumber: ourSeatNumber,
         gameType: gameType,
+        buyInAmount: initialStack,
       );
     } else {
       // We already have an existing session (individual session case)
     }
-    
+
+    // Initialize stack history with initial stack
+    if (initialStack != null && initialStack > 0) {
+      _addStackHistoryEntry(initialStack, 'initial', 0.0, 0);
+    }
+
     sessionState = SessionState.active;
   }
 
@@ -527,9 +537,9 @@ class PokerSessionManager {
   }
 
   // Complete the current hand
-  void completeCurrentHand({double? potAmount, int? winnerId}) {
+  void completeCurrentHand({double? potAmount, int? winnerId, double? currentStack}) {
     if (currentHand == null) return;
-    
+
     // Set pot amount and winner if provided
     if (potAmount != null) {
       currentHand!.potAmount = potAmount;
@@ -537,22 +547,30 @@ class PokerSessionManager {
     if (winnerId != null) {
       currentHand!.winnerId = winnerId;
     }
-    
+
     // Set hero position
     currentHand!.heroPosition = ourSeatNumber;
-    
+
+    // Track stack history if current stack is provided
+    if (currentStack != null && stackHistory.isNotEmpty) {
+      final previousStack = stackHistory.last['stackSize'] as double;
+      final stackChange = currentStack - previousStack;
+      final changeType = stackChange >= 0 ? 'win' : 'loss';
+      _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
+    }
+
     currentHand!.markCompleted();
     completedHands.add(currentHand!);
-    
+
     // Update opponent statistics for this hand
     _updateOpponentStats();
-    
+
     // Save hand to Firebase and local storage
     _saveHandToFirebase(currentHand!);
-    
+
     // Update session with latest hand count
     _updateSessionProgress();
-    
+
     print('Hand #${currentHand!.handNumber} completed with pot: $potAmount, winner: $winnerId');
     currentHand = null;
   }
@@ -561,7 +579,8 @@ class PokerSessionManager {
     required double potAmount,
     required List<int> winnerIds,
     Map<int, double>? individualShares,
-    double? sharePerWinner
+    double? sharePerWinner,
+    double? currentStack
   }) {
     if (currentHand == null) return;
 
@@ -580,6 +599,14 @@ class PokerSessionManager {
 
     // Set hero position
     currentHand!.heroPosition = ourSeatNumber;
+
+    // Track stack history if current stack is provided
+    if (currentStack != null && stackHistory.isNotEmpty) {
+      final previousStack = stackHistory.last['stackSize'] as double;
+      final stackChange = currentStack - previousStack;
+      final changeType = stackChange >= 0 ? 'win' : 'loss';
+      _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
+    }
 
     currentHand!.markCompleted();
     completedHands.add(currentHand!);
@@ -803,24 +830,38 @@ class PokerSessionManager {
     }
   }
 
+  // Add stack history entry
+  void _addStackHistoryEntry(double stackSize, String changeType, double changeAmount, int handNumber) {
+    stackHistory.add({
+      'timestamp': DateTime.now().toIso8601String(),
+      'stackSize': stackSize,
+      'changeType': changeType,
+      'changeAmount': changeAmount,
+      'handNumber': handNumber,
+    });
+    print('📊 Stack history added: \$${stackSize.toStringAsFixed(2)} ($changeType) hand #$handNumber');
+  }
+
   // Update session with current progress (hand count, etc.)
   Future<void> _updateSessionProgress() async {
     if (sessionId == null) return;
-    
+
     try {
-      // Update Firebase session
+      // Update Firebase session with stack history
       await FirebaseService.updateSession(
         sessionId: sessionId!,
         totalHands: completedHands.length,
+        stackHistory: stackHistory,
       );
     } catch (e) {
       print('Failed to update session in Firebase: $e');
     }
-    
-    // Always update local storage
+
+    // Always update local storage with stack history
     await LocalStorageService.updateSession(
       sessionId: sessionId!,
       totalHands: completedHands.length,
+      stackHistory: stackHistory,
     );
   }
 
@@ -912,6 +953,9 @@ class PokerSessionManager {
 
     rebuys.add(rebuy);
     totalBuyIn += amount;
+
+    // Add stack history entry for rebuy
+    _addStackHistoryEntry(stack, 'rebuy', amount, completedHands.length + 1);
 
     print('Rebuy added: \$${amount.toStringAsFixed(2)}, New stack: ${stack.toStringAsFixed(2)}, Total invested: \$${totalBuyIn.toStringAsFixed(2)}');
   }

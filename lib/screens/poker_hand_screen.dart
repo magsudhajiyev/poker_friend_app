@@ -104,7 +104,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Initialize session manager - use the one passed from SeatSetupScreen if available
     if (widget.sessionManager != null) {
       sessionManager = widget.sessionManager!;
-      print("DEBUG: Using existing sessionManager from SeatSetupScreen");
     } else {
       sessionManager = PokerSessionManager(
         smallBlind: widget.smallBlind,
@@ -113,7 +112,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         gameType: widget.gameType,
         existingSessionId: widget.individualSessionId, // Use existing session ID for individual sessions
       );
-      print("DEBUG: Created new sessionManager");
     }
     
     // Load button mode setting
@@ -168,18 +166,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // CRITICAL: Set our seat number
     sessionManager.ourSeatNumber = seat;
 
-    // Debug: Check what names are in sessionManager
-    print("DEBUG: Checking sessionManager names:");
-    for (int i = 1; i <= 9; i++) {
-      String? name = sessionManager.getPlayerName(i);
-      if (name != null) {
-        print("  Seat $i: $name");
-      }
-    }
-
     // Set our player name (get from auth service or use "You") - only if not already set
     String? existingName = sessionManager.getPlayerName(seat);
-    print("DEBUG: Our seat $seat existing name: $existingName");
 
     if (existingName == null || existingName.isEmpty || existingName.startsWith('Player ')) {
       String ourName = "You"; // Default name
@@ -191,10 +179,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       } catch (e) {
         // Use default if auth fails
       }
-      print("DEBUG: Setting our name to: $ourName");
       sessionManager.setPlayerName(seat, ourName);
-    } else {
-      print("DEBUG: Keeping existing name: $existingName");
     }
 
     // Build playerStacks - we need to simulate what SeatSetupScreen would have returned
@@ -241,9 +226,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Initialize pot with blinds - this will deduct blinds from stacks and add to pot
     gameState.initializePot();
 
-    await sessionManager.startSession();
+    // Get initial stack for our seat to track in session history
+    final sessionSeat = sessionManager.ourSeatNumber;
+    final initialStack = sessionSeat != null ? gameState.players[sessionSeat - 1].currentStack : widget.startingStack;
 
-    print('🎮 DEBUG: About to start hand - effectiveSBPosition: ${gameState.effectiveSBPosition}, effectiveBBPosition: ${gameState.effectiveBBPosition}');
+    await sessionManager.startSession(initialStack: initialStack);
+
     sessionManager.startHand(
       gameState.handNumber,
       gameState.buttonPosition,
@@ -319,8 +307,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // Initialize pot with blinds
     gameState.initializePot();
-    
-    await sessionManager.startSession();
+
+    // Get initial stack for our seat to track in session history
+    final sessionSeat = sessionManager.ourSeatNumber;
+    final initialStack = sessionSeat != null ? gameState.players[sessionSeat - 1].currentStack : widget.startingStack;
+
+    await sessionManager.startSession(initialStack: initialStack);
     
     sessionManager.startHand(
       gameState.handNumber,
@@ -2104,11 +2096,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         final individualShares = winnerResult['individualShares'] as Map<int, double>?;
         final sharePerWinner = winnerResult['sharePerWinner'] as double?;
 
+        // Get current stack for our seat to track in session history
+        final ourSeat = sessionManager.ourSeatNumber;
+        final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+
         sessionManager.completeCurrentHandWithChop(
           potAmount: potAmount,
           winnerIds: winnerIds,
           individualShares: individualShares,
           sharePerWinner: sharePerWinner,
+          currentStack: currentStack,
         );
 
         // Update winners' stacks in game state to prevent them being marked as busted
@@ -2122,9 +2119,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
 
         if (winnerId != null) {
+          // Get current stack for our seat to track in session history
+          final ourSeat = sessionManager.ourSeatNumber;
+          final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+
           sessionManager.completeCurrentHand(
             potAmount: potAmount,
             winnerId: winnerId,
+            currentStack: currentStack,
           );
 
           // Update winner's stack in game state to prevent them being marked as busted
@@ -2700,11 +2702,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     
     setState(() {
       if (isChoppedPot) {
+        // Get current stack for our seat to track in session history
+        final ourSeat = sessionManager.ourSeatNumber;
+        final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+
         // Complete current hand in session manager with pot and multiple winners
         sessionManager.completeCurrentHandWithChop(
           potAmount: potAmount,
           winnerIds: winners,
           individualShares: individualShares,
+          currentStack: currentStack,
         );
 
         // Distribute pot to all winners with individual amounts
@@ -2730,10 +2737,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           actions.add("🏆 Pot chopped between $winnerNames - ${_formatCurrency(sharePerWinner)} each");
         }
       } else {
+        // Get current stack for our seat to track in session history
+        final ourSeat = sessionManager.ourSeatNumber;
+        final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+
         // Complete current hand in session manager with single winner
         sessionManager.completeCurrentHand(
           potAmount: potAmount,
           winnerId: winners.first,
+          currentStack: currentStack,
         );
 
         // Distribute pot to single winner
