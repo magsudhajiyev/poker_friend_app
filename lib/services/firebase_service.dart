@@ -25,6 +25,7 @@ class FirebaseService {
     String? sessionName,
     double? startingStack,
     bool hasBBante = false,
+    double? totalBuyIn,
   }) async {
     try {
       final userId = AuthService.userId;
@@ -53,6 +54,7 @@ class FirebaseService {
         sessionData.addAll({
           'startingStack': startingStack ?? 0.0,
           'currentStack': startingStack ?? 0.0,
+          'totalBuyIn': totalBuyIn ?? 0.0, // Add totalBuyIn for individual sessions
           'handsLogged': 0,
           'biggestPot': 0.0,
           'sessionStatus': 'active',
@@ -550,6 +552,7 @@ class FirebaseService {
     required String sessionId,
     int? totalHands,
     List<Map<String, dynamic>>? stackHistory,
+    double? totalBuyIn,
   }) async {
     try {
       final userId = AuthService.userId;
@@ -565,6 +568,10 @@ class FirebaseService {
 
       if (stackHistory != null) {
         updateData['stackHistory'] = stackHistory;
+      }
+
+      if (totalBuyIn != null) {
+        updateData['totalBuyIn'] = totalBuyIn;
       }
 
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);

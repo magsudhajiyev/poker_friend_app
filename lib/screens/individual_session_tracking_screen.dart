@@ -3,6 +3,7 @@ import 'dart:async';
 import '../design_system/poker_friend_theme.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
+import '../services/local_storage_service.dart';
 import 'poker_hand_screen.dart';
 
 class IndividualSessionTrackingScreen extends StatefulWidget {
@@ -86,6 +87,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     // Initialize rebuy tracking
     _totalBuyIn = widget.buyInAmount; // Start with initial buy-in
 
+    // Debug logging for total invested initialization
+    print('🔧 DEBUG: Initialized _totalBuyIn = $_totalBuyIn (buyInAmount: ${widget.buyInAmount}, startingStack: ${widget.startingStack})');
+
     // Add initial stack to history
     _stackHistory.add({
       'timestamp': DateTime.now().toIso8601String(),
@@ -123,6 +127,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         sessionName: widget.sessionName,
         startingStack: widget.startingStack,
         hasBBante: widget.hasBBante,
+        totalBuyIn: widget.buyInAmount, // Include initial buy-in
       );
 
       setState(() {
@@ -140,7 +145,44 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   Future<void> _resumeSession() async {
     // Resume existing session
-    // TODO: Load session data from Firebase
+    // Load session data from Firebase or local storage
+    if (_sessionId != null) {
+      try {
+        Map<String, dynamic>? sessionData;
+
+        try {
+          sessionData = await FirebaseService.getSession(_sessionId!);
+        } catch (e) {
+          sessionData = await LocalStorageService.getSession(_sessionId!);
+        }
+
+        if (sessionData != null) {
+          print('🔧 DEBUG: Loading session data for resume: $sessionData');
+
+          setState(() {
+            // Load existing data from database
+            _totalBuyIn = sessionData!['totalBuyIn']?.toDouble() ?? _totalBuyIn;
+            _handsLogged = sessionData['handsLogged'] ?? 0;
+            _biggestPot = sessionData['biggestPot']?.toDouble() ?? 0.0;
+
+            // Load rebuys if available
+            if (sessionData['rebuys'] != null) {
+              _rebuys = List<Map<String, dynamic>>.from(sessionData['rebuys']);
+            }
+
+            // Load stack history if available
+            if (sessionData['stackHistory'] != null) {
+              _stackHistory = List<Map<String, dynamic>>.from(sessionData['stackHistory']);
+            }
+
+            print('🔧 DEBUG: Resumed session - totalBuyIn: $_totalBuyIn, rebuys: ${_rebuys.length}, stackHistory: ${_stackHistory.length}');
+          });
+        }
+      } catch (e) {
+        print('🔧 DEBUG: Error loading session data: $e');
+      }
+    }
+
     if (_sessionStartTime == null) {
       _sessionStartTime = DateTime.now();
     }
@@ -206,7 +248,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   // Manual stack update dialog
   Future<void> _showUpdateStackDialog() async {
-    final controller = TextEditingController(text: _currentStack.toString());
+    final newStackController = TextEditingController(text: _currentStack.toString());
+    final changeAmountController = TextEditingController();
 
     final newStack = await showDialog<double>(
       context: context,
@@ -223,22 +266,173 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             fontWeight: FontWeight.bold,
           ),
         ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
-          autofocus: true,
-          style: TextStyle(color: Colors.white, fontSize: 18),
-          decoration: InputDecoration(
-            hintText: 'Enter current stack',
-            hintStyle: TextStyle(color: PokerFriendColors.dark9),
-            prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
-            prefixStyle: TextStyle(color: Colors.white, fontSize: 18),
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: PokerFriendColors.red),
-            ),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: PokerFriendColors.red, width: 2),
-            ),
+        content: Container(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Current Stack Display
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: PokerFriendColors.dark4,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Current Stack:',
+                      style: TextStyle(
+                        color: PokerFriendColors.dark10,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      _formatStackValue(_currentStack),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 20),
+
+              // Method 1: Set New Total
+              Text(
+                'Method 1: Set New Total',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 8),
+              TextField(
+                controller: newStackController,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                style: TextStyle(color: Colors.white, fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Enter new total stack',
+                  hintStyle: TextStyle(color: PokerFriendColors.dark9),
+                  prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
+                  prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
+                  filled: true,
+                  fillColor: PokerFriendColors.dark1,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                ),
+              ),
+
+              SizedBox(height: 20),
+
+              // Method 2: Add/Subtract Amount
+              Text(
+                'Method 2: Add/Subtract Amount',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  // Amount Input
+                  Expanded(
+                    flex: 3,
+                    child: TextField(
+                      controller: changeAmountController,
+                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      decoration: InputDecoration(
+                        hintText: 'Amount',
+                        hintStyle: TextStyle(color: PokerFriendColors.dark9),
+                        prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
+                        prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
+                        filled: true,
+                        fillColor: PokerFriendColors.dark1,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: 12),
+
+                  // Plus Button
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final amount = double.tryParse(changeAmountController.text);
+                        if (amount != null && amount > 0) {
+                          final newTotal = _currentStack + amount;
+                          Navigator.pop(context, newTotal);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        '+',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: 8),
+
+                  // Minus Button
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final amount = double.tryParse(changeAmountController.text);
+                        if (amount != null && amount > 0) {
+                          final newTotal = _currentStack - amount;
+                          if (newTotal >= 0) {
+                            Navigator.pop(context, newTotal);
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: PokerFriendColors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        '-',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         actions: [
@@ -251,11 +445,11 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           ),
           TextButton(
             onPressed: () {
-              final value = double.tryParse(controller.text);
+              final value = double.tryParse(newStackController.text);
               Navigator.pop(context, value);
             },
             child: Text(
-              'Update',
+              'Set Total',
               style: TextStyle(color: PokerFriendColors.red),
             ),
           ),
@@ -264,16 +458,36 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     );
 
     if (newStack != null && newStack >= 0) {
+      final previousStack = _currentStack;
+      final stackChange = newStack - previousStack;
+
       setState(() {
         _currentStack = newStack;
+
+        // Add stack history entry for manual update
+        _stackHistory.add({
+          'timestamp': DateTime.now().toIso8601String(),
+          'stackSize': newStack,
+          'changeType': stackChange >= 0 ? 'manual_increase' : 'manual_decrease',
+          'changeAmount': stackChange.abs(),
+        });
       });
 
-      // Update session in Firebase
+      // Debug logging for manual stack update
+      print('🔧 DEBUG: Manual stack update - Previous: $previousStack, New: $newStack, Change: $stackChange');
+      print('🔧 DEBUG: Stack history length after manual update: ${_stackHistory.length}');
+      print('🔧 DEBUG: Latest stack history entry: ${_stackHistory.last}');
+
+      // Update session in Firebase with stack history
       if (_sessionId != null) {
+        print('🔧 DEBUG: Updating Firebase with sessionId: $_sessionId');
         FirebaseService.updateIndividualSession(
           sessionId: _sessionId!,
           currentStack: _currentStack,
-        ).catchError((e) {});
+          stackHistory: _stackHistory,
+        ).catchError((e) {
+          print('🔧 DEBUG: Error updating Firebase session: $e');
+        });
       }
     }
   }
@@ -535,6 +749,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             currentStack: _currentStack,
             handsLogged: _handsLogged,
             biggestPot: _biggestPot,
+            stackHistory: _stackHistory, // Include complete stack history
           );
 
         } catch (e) {
@@ -837,6 +1052,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         _currentStack = newStack;
         _initialStack = newStack; // Reset initial stack so it shows gray
         _totalBuyIn += rebuyAmount;
+
+        // Debug logging for total invested update
+        print('🔧 DEBUG: Rebuy added - Previous total: ${_totalBuyIn - rebuyAmount}, Rebuy amount: $rebuyAmount, New total: $_totalBuyIn');
 
         // Add rebuy record
         _rebuys.add({

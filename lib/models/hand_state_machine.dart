@@ -425,9 +425,9 @@ class PokerSessionManager {
     }
 
     // Initialize stack history with initial stack
-    if (initialStack != null && initialStack > 0) {
-      _addStackHistoryEntry(initialStack, 'initial', 0.0, 0);
-    }
+    // Always add initial entry to ensure stack tracking works
+    final startingStack = initialStack ?? totalBuyIn ?? 100.0;
+    _addStackHistoryEntry(startingStack, 'initial', 0.0, 0);
 
     sessionState = SessionState.active;
   }
@@ -542,6 +542,8 @@ class PokerSessionManager {
 
     print('🔧 DEBUG: completeCurrentHand called for hand #${currentHand!.handNumber}');
     print('🔧 DEBUG: sessionId when completing hand: $sessionId');
+    print('🔧 DEBUG: currentStack parameter: $currentStack');
+    print('🔧 DEBUG: stackHistory length before: ${stackHistory.length}');
 
     // Set pot amount and winner if provided
     if (potAmount != null) {
@@ -555,12 +557,23 @@ class PokerSessionManager {
     currentHand!.heroPosition = ourSeatNumber;
 
     // Track stack history if current stack is provided
-    if (currentStack != null && stackHistory.isNotEmpty) {
-      final previousStack = stackHistory.last['stackSize'] as double;
-      final stackChange = currentStack - previousStack;
-      final changeType = stackChange >= 0 ? 'win' : 'loss';
-      _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
+    if (currentStack != null) {
+      if (stackHistory.isEmpty) {
+        // If no initial entry exists, add it first with the current stack as starting point
+        print('🔧 DEBUG: stackHistory was empty, adding initial entry with stack: $currentStack');
+        _addStackHistoryEntry(currentStack, 'initial', 0.0, 0);
+      } else {
+        final previousStack = stackHistory.last['stackSize'] as double;
+        final stackChange = currentStack - previousStack;
+        final changeType = stackChange >= 0 ? 'win' : 'loss';
+        print('🔧 DEBUG: Adding stack entry - previous: $previousStack, current: $currentStack, change: $stackChange ($changeType)');
+        _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
+      }
+    } else {
+      print('🔧 DEBUG: currentStack is null, not tracking stack history');
     }
+
+    print('🔧 DEBUG: stackHistory length after: ${stackHistory.length}');
 
     currentHand!.markCompleted();
     completedHands.add(currentHand!);
@@ -606,11 +619,16 @@ class PokerSessionManager {
     currentHand!.heroPosition = ourSeatNumber;
 
     // Track stack history if current stack is provided
-    if (currentStack != null && stackHistory.isNotEmpty) {
-      final previousStack = stackHistory.last['stackSize'] as double;
-      final stackChange = currentStack - previousStack;
-      final changeType = stackChange >= 0 ? 'win' : 'loss';
-      _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
+    if (currentStack != null) {
+      if (stackHistory.isEmpty) {
+        // If no initial entry exists, add it first with the current stack as starting point
+        _addStackHistoryEntry(currentStack, 'initial', 0.0, 0);
+      } else {
+        final previousStack = stackHistory.last['stackSize'] as double;
+        final stackChange = currentStack - previousStack;
+        final changeType = stackChange >= 0 ? 'win' : 'loss';
+        _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
+      }
     }
 
     currentHand!.markCompleted();
@@ -842,38 +860,53 @@ class PokerSessionManager {
 
   // Add stack history entry
   void _addStackHistoryEntry(double stackSize, String changeType, double changeAmount, int handNumber) {
-    stackHistory.add({
+    final entry = {
       'timestamp': DateTime.now().toIso8601String(),
       'stackSize': stackSize,
       'changeType': changeType,
       'changeAmount': changeAmount,
       'handNumber': handNumber,
-    });
+    };
+    stackHistory.add(entry);
     print('📊 Stack history added: \$${stackSize.toStringAsFixed(2)} ($changeType) hand #$handNumber');
+    print('📊 DEBUG: Entry details: $entry');
+    print('📊 DEBUG: Total stackHistory entries now: ${stackHistory.length}');
+    print('📊 DEBUG: All stackHistory: $stackHistory');
   }
 
   // Update session with current progress (hand count, etc.)
   Future<void> _updateSessionProgress() async {
     if (sessionId == null) return;
 
+    print('📊 DEBUG: _updateSessionProgress called');
+    print('📊 DEBUG: sessionId: $sessionId');
+    print('📊 DEBUG: stackHistory entries to save: ${stackHistory.length}');
+    print('📊 DEBUG: stackHistory data: $stackHistory');
+    print('📊 DEBUG: totalBuyIn: $totalBuyIn');
+
     try {
       // Update Firebase session with stack history and totalBuyIn
+      print('📊 DEBUG: Updating Firebase with stack history...');
       await FirebaseService.updateSession(
         sessionId: sessionId!,
         totalHands: completedHands.length,
         stackHistory: stackHistory,
+        totalBuyIn: totalBuyIn,
       );
+      print('📊 DEBUG: Firebase update successful');
     } catch (e) {
-      print('Failed to update session in Firebase: $e');
+      print('❌ Failed to update session in Firebase: $e');
     }
 
     // Always update local storage with stack history and totalBuyIn
+    print('📊 DEBUG: Updating local storage with stack history...');
     await LocalStorageService.updateSession(
       sessionId: sessionId!,
       totalHands: completedHands.length,
       stackHistory: stackHistory,
       totalBuyIn: totalBuyIn,
     );
+    print('📊 DEBUG: Local storage update completed');
   }
 
   // Update opponent statistics for completed hand
@@ -928,7 +961,10 @@ class PokerSessionManager {
 
     sessionEndTime = DateTime.now();
     sessionState = SessionState.ended;
-    
+
+    // Save final stack history before ending
+    await _updateSessionProgress();
+
     // Always update local storage
     if (sessionId != null) {
       await LocalStorageService.endSession(sessionId!, sessionEndTime!.toIso8601String());

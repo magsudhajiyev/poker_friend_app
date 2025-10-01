@@ -58,6 +58,12 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         _rebuys = List<Map<String, dynamic>>.from(sessionDetails?['rebuys'] ?? []);
         _hands = hands;
 
+        print('📊 DEBUG: Analytics loaded - Stack history entries: ${_stackHistory.length}');
+        print('📊 DEBUG: Stack history data: $_stackHistory');
+        print('📊 DEBUG: Session details keys: ${sessionDetails?.keys}');
+        print('📊 DEBUG: Full session details: $sessionDetails');
+        print('📊 DEBUG: Hands loaded: ${_hands.length}');
+
         // Calculate analytics
         _calculateSessionAnalytics();
         _isLoading = false;
