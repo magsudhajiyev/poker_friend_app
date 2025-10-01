@@ -84,8 +84,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     final totalRebuyAmount = _rebuys.fold<double>(0.0, (sum, rebuy) => sum + (rebuy['amount']?.toDouble() ?? 0.0));
     final calculatedTotal = initialBuyIn + totalRebuyAmount;
 
-    // Use session totalBuyIn if available and greater than calculated, otherwise use calculated
-    _totalInvested = (sessionTotalBuyIn > 0) ? sessionTotalBuyIn : calculatedTotal;
+    // Use the higher of session totalBuyIn or calculated total (to handle cases where session data is stale)
+    _totalInvested = (sessionTotalBuyIn > calculatedTotal) ? sessionTotalBuyIn : calculatedTotal;
 
     print('💰 DEBUG: Session data totalBuyIn: $sessionTotalBuyIn');
     print('💰 DEBUG: Initial buy-in: $initialBuyIn');
