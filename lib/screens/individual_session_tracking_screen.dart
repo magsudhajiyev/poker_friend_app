@@ -750,6 +750,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             handsLogged: _handsLogged,
             biggestPot: _biggestPot,
             stackHistory: _stackHistory, // Include complete stack history
+            totalBuyIn: _totalBuyIn, // Include total invested amount
           );
 
         } catch (e) {

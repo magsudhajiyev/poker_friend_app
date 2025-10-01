@@ -20,6 +20,9 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
   late String? _card2;
   Set<String> _currentlySelected = {};
 
+  String? _selectedRank; // Track selected rank for two-step selection
+  int? _targetSlotIndex; // Track which slot is being filled (0 or 1)
+
   final List<String> _suits = ['♠', '♥', '♦', '♣'];
   final List<String> _ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 
@@ -28,7 +31,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
     super.initState();
     _card1 = widget.existingCards?.card1;
     _card2 = widget.existingCards?.card2;
-    
+
     // Add existing selections to currently selected
     if (_card1?.isNotEmpty == true) _currentlySelected.add(_card1!);
     if (_card2?.isNotEmpty == true) _currentlySelected.add(_card2!);
@@ -41,22 +44,19 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
       title: Text('Your Hole Cards', style: TextStyle(color: Colors.white)),
       content: Container(
         width: double.maxFinite,
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Enter your hole cards (optional)', style: TextStyle(color: Colors.white70)),
             SizedBox(height: 16),
-            
+
             // Show current selections at the top
             _buildCurrentSelections(),
-            
-            SizedBox(height: 16),
-            
-            // Card grid
-            Expanded(
-              child: _buildCardGrid(),
-            ),
+
+            SizedBox(height: 20),
+
+            // Direct rank and suit selection
+            _buildRankAndSuitSelection(),
           ],
         ),
       ),
@@ -80,9 +80,9 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
     return Container(
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFF2A2A2E),
+        color: Color(0xFF161618),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFF3A3A3E)),
+        border: Border.all(color: Color(0xFF2A2A2E)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,8 +92,8 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildSelectedCardSlot(_card1 ?? '', 'Card 1'),
-              _buildSelectedCardSlot(_card2 ?? '', 'Card 2'),
+              _buildSelectedCardSlot(0),
+              _buildSelectedCardSlot(1),
             ],
           ),
         ],
@@ -101,216 +101,312 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
     );
   }
 
-  Widget _buildSelectedCardSlot(String card, String label) {
-    return Column(
-      children: [
-        Text(label, style: TextStyle(fontSize: 9, color: Colors.white70)),
-        SizedBox(height: 2),
-        GestureDetector(
-          onTap: card.isNotEmpty ? () => _clearCard(card) : null,
-          child: Container(
-            width: 40,
-            height: 56,
-            decoration: BoxDecoration(
-              border: Border.all(color: card.isEmpty ? Color(0xFF4A4A4E) : Color(0xFF5A5A5E)),
-              borderRadius: BorderRadius.circular(6),
-              color: card.isEmpty ? Color(0xFF2A2A2E) : Color(0xFF3A3A3E),
-            ),
-            child: Center(
-              child: Text(
-                card.isEmpty ? '?' : card,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: card.isEmpty ? Colors.white54 : _getCardColor(card),
-                ),
-              ),
-            ),
+  Widget _buildSelectedCardSlot(int index) {
+    final card = index == 0 ? (_card1 ?? '') : (_card2 ?? '');
+    final isEmpty = card.isEmpty;
+    final isIncomplete = card.length == 1; // Just a rank without suit
+
+    return GestureDetector(
+      onTap: !isEmpty ? () => _clearCard(index) : null,
+      child: Container(
+        width: 50,
+        height: 70,
+        decoration: BoxDecoration(
+          color: isEmpty ? Colors.grey[800] : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isEmpty ? Colors.grey[600]! : Colors.grey[300]!,
+            width: 2,
           ),
         ),
-        if (card.isNotEmpty)
-          TextButton(
-            onPressed: () => _clearCard(card),
-            child: Text('Clear', style: TextStyle(fontSize: 7, color: Colors.white54)),
-          ),
-      ],
+        child: isEmpty
+            ? Center(
+                child: Text(
+                  '?',
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 20,
+                  ),
+                ),
+              )
+            : Center(
+                child: Text(
+                  card,
+                  style: TextStyle(
+                    color: isIncomplete ? Colors.grey : _getCardColor(card),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+      ),
     );
   }
 
-  Widget _buildCardGrid() {
+  Widget _buildRankAndSuitSelection() {
     return Container(
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Color(0xFF2A2A2E),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Color(0xFF3A3A3E)),
       ),
-      padding: EdgeInsets.all(8),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Compact 4-row layout, one row per suit
-          ..._suits.map((suit) => Expanded(child: _buildSuitRow(suit))),
+          // Rank selection
+          _buildRankSelection(),
+          SizedBox(height: 20),
+          // Suit selection (only shown after rank is selected)
+          if (_selectedRank != null) _buildSuitSelection(),
         ],
       ),
     );
   }
 
-  Widget _buildSuitRow(String suit) {
-    return Container(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Suit icon with better visibility
-          Container(
-            width: 24,
-            child: Text(
-              suit,
-              style: TextStyle(
-                color: _getSuitColor(suit),
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+  Widget _buildRankSelection() {
+    return Column(
+      children: [
+        // Row 1: A, K, Q, J, T
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: _ranks.sublist(0, 5).map((rank) => _buildRankCard(rank)).toList(),
+        ),
+        SizedBox(height: 12),
+        // Row 2: 9, 8, 7, 6, 5
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: _ranks.sublist(5, 10).map((rank) => _buildRankCard(rank)).toList(),
+        ),
+        SizedBox(height: 12),
+        // Row 3: 4, 3, 2
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ..._ranks.sublist(10, 13).map((rank) => _buildRankCard(rank)).toList(),
+            // Add empty spacers to center the 3 cards
+            Container(width: 50),
+            Container(width: 50),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRankCard(String rank) {
+    // Check if this rank is completely excluded (all suits used)
+    bool isCompletelyExcluded = _suits.every((suit) =>
+        widget.usedCards.contains('$rank$suit') ||
+        _currentlySelected.contains('$rank$suit'));
+
+    return GestureDetector(
+      onTap: isCompletelyExcluded ? null : () => _selectRank(rank),
+      child: Container(
+        width: 50,
+        height: 70,
+        decoration: BoxDecoration(
+          color: isCompletelyExcluded ? Color(0xFF2A2A2E) : Color(0xFF3A3A3E),
+          border: Border.all(
+            color: isCompletelyExcluded ? Color(0xFF3A3A3E) : Color(0xFF4A4A4E),
+            width: 2,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Text(
+                rank,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: isCompletelyExcluded ? Colors.grey[600] : Colors.white,
+                ),
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
-          SizedBox(width: 8),
-          // Cards in this suit
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Calculate card size based on available width with tighter spacing
-                final availableWidth = constraints.maxWidth;
-                final cardWidth = (availableWidth - (12 * 2)) / 13; // 13 cards, 12 spaces of 2px each
-                final cardHeight = cardWidth * 1.5; // Slightly taller aspect ratio
-                
-                return Wrap(
-                  spacing: 2,
-                  runSpacing: 2,
-                  children: _ranks.map((rank) {
-                    final card = '$rank$suit';
-                    final isUsedInBoard = widget.usedCards.contains(card);
-                    final isCurrentlySelected = _currentlySelected.contains(card);
-                    final isDisabled = isUsedInBoard;
-                    
-                    return GestureDetector(
-                      onTap: isDisabled ? null : () => _toggleCard(card),
-                      child: Container(
-                        width: cardWidth.clamp(26, 36),
-                        height: cardHeight.clamp(35, 54),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: isCurrentlySelected 
-                              ? Colors.blue
-                              : isDisabled 
-                                ? Color(0xFF3A3A3E) 
-                                : Color(0xFF4A4A4E),
-                            width: isCurrentlySelected ? 2 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(4),
-                          color: isUsedInBoard
-                            ? Color(0xFF1A1A1E) // Very dark for used cards
-                            : isCurrentlySelected
-                              ? Color(0xFF2A4A6E) // Blue tint for selected
-                              : Color(0xFF3A3A3E), // Normal background
-                        ),
-                        child: Center(
-                          child: Text(
-                            card,
-                            style: TextStyle(
-                              fontSize: (cardWidth * 0.4).clamp(11, 14),
-                              fontWeight: FontWeight.bold,
-                              color: isUsedInBoard
-                                ? Colors.grey[600] // Very faded for used cards
-                                : isCurrentlySelected
-                                  ? Colors.white // White for selected
-                                  : _getCardColor(card), // Normal color for available
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-          ),
-        ],
+            if (isCompletelyExcluded)
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Icon(
+                  Icons.close,
+                  color: Colors.red[400],
+                  size: 16,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  Color _getSuitColor(String suit) {
-    if (suit == '♥' || suit == '♦') {
+  Widget _buildSuitSelection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: _suits.map((suit) => _buildSuitCard(suit)).toList(),
+    );
+  }
+
+  Widget _buildSuitCard(String suit) {
+    String card = '$_selectedRank$suit';
+    bool isExcluded = widget.usedCards.contains(card) ||
+                     _currentlySelected.contains(card);
+
+    Color suitColor = _getSuitColor(suit);
+
+    return GestureDetector(
+      onTap: isExcluded ? null : () => _selectSuit(suit),
+      child: Container(
+        width: 60,
+        height: 85,
+        decoration: BoxDecoration(
+          color: isExcluded ? Color(0xFF2A2A2E) : Color(0xFF3A3A3E),
+          border: Border.all(
+            color: isExcluded ? Color(0xFF3A3A3E) : Color(0xFF4A4A4E),
+            width: 2,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _selectedRank!,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isExcluded ? Colors.grey[600] : suitColor,
+                    ),
+                  ),
+                  Text(
+                    suit,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: isExcluded ? Colors.grey[600] : suitColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isExcluded)
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Icon(
+                  Icons.close,
+                  color: Colors.red[400],
+                  size: 16,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _selectRank(String rank) {
+    setState(() {
+      _selectedRank = rank;
+
+      // Find next empty slot and show rank immediately
+      if (_card1 == null || _card1!.isEmpty) {
+        _targetSlotIndex = 0;
+        _card1 = rank; // Show just the rank temporarily
+      } else if (_card2 == null || _card2!.isEmpty) {
+        _targetSlotIndex = 1;
+        _card2 = rank; // Show just the rank temporarily
+      }
+    });
+  }
+
+  void _selectSuit(String suit) {
+    if (_selectedRank == null || _targetSlotIndex == null) return;
+
+    String card = '$_selectedRank$suit';
+
+    // Can only select 2 cards max
+    if (_currentlySelected.length >= 2 && !_currentlySelected.contains(_card1) && !_currentlySelected.contains(_card2)) {
+      return;
+    }
+
+    setState(() {
+      // Complete the card with suit
+      if (_targetSlotIndex == 0) {
+        // Remove old card if it was complete
+        if (_card1 != null && _card1!.length > 1) {
+          _currentlySelected.remove(_card1);
+        }
+        _card1 = card;
+        _currentlySelected.add(card);
+      } else if (_targetSlotIndex == 1) {
+        // Remove old card if it was complete
+        if (_card2 != null && _card2!.length > 1) {
+          _currentlySelected.remove(_card2);
+        }
+        _card2 = card;
+        _currentlySelected.add(card);
+      }
+
+      // Reset selection state
+      _selectedRank = null;
+      _targetSlotIndex = null;
+    });
+  }
+
+  void _clearCard(int index) {
+    setState(() {
+      if (index == 0) {
+        if (_card1 != null && _card1!.length > 1) {
+          _currentlySelected.remove(_card1);
+        }
+        _card1 = '';
+      } else {
+        if (_card2 != null && _card2!.length > 1) {
+          _currentlySelected.remove(_card2);
+        }
+        _card2 = '';
+      }
+    });
+  }
+
+  Color _getCardColor(String card) {
+    if (card.isEmpty || card.length == 1) return Colors.grey;
+    if (card.contains('♥') || card.contains('♦')) {
       return Colors.red[300]!;
     }
     // Make spades and clubs more visible on dark background
     return Color(0xFFE0E0E0); // Light gray instead of white for better visibility
   }
 
-  void _toggleCard(String card) {
-    setState(() {
-      if (_currentlySelected.contains(card)) {
-        // Deselect the card
-        _currentlySelected.remove(card);
-        _removeCardFromSelection(card);
-      } else {
-        // Can only select 2 cards max
-        if (_currentlySelected.length < 2) {
-          _currentlySelected.add(card);
-          _addCardToSelection(card);
-        }
-      }
-    });
-  }
-
-  void _addCardToSelection(String card) {
-    if (_card1 == null || _card1!.isEmpty) {
-      _card1 = card;
-    } else if (_card2 == null || _card2!.isEmpty) {
-      _card2 = card;
-    } else {
-      // Both slots are full - this shouldn't happen due to UI logic
-      print('Warning: Trying to add card when both slots are full');
-    }
-  }
-
-  void _removeCardFromSelection(String card) {
-    if (_card1 == card) {
-      _card1 = '';
-    } else if (_card2 == card) {
-      _card2 = '';
-    }
-  }
-
-  void _clearCard(String card) {
-    setState(() {
-      _currentlySelected.remove(card);
-      _removeCardFromSelection(card);
-    });
-  }
-
-  Color _getCardColor(String card) {
-    if (card.isEmpty) return Colors.grey;
-    if (card.contains('♥') || card.contains('♦')) {
+  Color _getSuitColor(String suit) {
+    if (suit == '♥' || suit == '♦') {
       return Colors.red[300]!;
     }
-    // Make spades and clubs more visible on dark background
     return Color(0xFFE0E0E0);
   }
 
   void _saveCards() {
+    // Helper function to check if a card is complete (has both rank and suit)
+    bool isCompleteCard(String? card) {
+      return card != null && card.isNotEmpty && card.length > 1 &&
+             (card.contains('♠') || card.contains('♥') || card.contains('♦') || card.contains('♣'));
+    }
+
     // Validate that both cards are selected or neither is selected
-    final card1Empty = _card1?.isEmpty == true || _card1 == null;
-    final card2Empty = _card2?.isEmpty == true || _card2 == null;
-    
-    if (card1Empty && card2Empty) {
+    final card1Complete = isCompleteCard(_card1);
+    final card2Complete = isCompleteCard(_card2);
+
+    if (!card1Complete && !card2Complete) {
       // Neither card selected - OK to skip
       final holeCards = HoleCards(card1: null, card2: null);
       Navigator.pop(context, holeCards);
       return;
     }
-    
-    if (!card1Empty && !card2Empty) {
+
+    if (card1Complete && card2Complete) {
       // Both cards selected - validate they're not the same card
       if (_card1 == _card2) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -321,13 +417,13 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
         );
         return;
       }
-      
+
       // Both cards selected and different - OK to save
       final holeCards = HoleCards(card1: _card1, card2: _card2);
       Navigator.pop(context, holeCards);
       return;
     }
-    
+
     // One card selected but not both - show error
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
