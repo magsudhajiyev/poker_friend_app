@@ -217,18 +217,7 @@ class LocalStorageService {
       // Use timestamp to ensure unique handId even if sessionId changes mid-session
       final handId = '${sessionId}_hand_${handNumber}_${DateTime.now().millisecondsSinceEpoch}';
 
-      print('🔧 DEBUG: Generated handId: $handId for sessionId: $sessionId, handNumber: $handNumber');
       
-      print('🔥 DEBUG: saveHand called with:');
-      print('  potAmount: $potAmount');
-      print('  winnerId: $winnerId');
-      print('  smallBlind: $smallBlind');
-      print('  bigBlind: $bigBlind');
-      print('  gameType: $gameType');
-      print('  isChoppedPot: $isChoppedPot');
-      print('  choppedWinners: $choppedWinners');
-      print('  individualShares: $individualShares');
-      print('  sharePerWinner: $sharePerWinner');
       
       await db.insert(
         'hands',
@@ -334,8 +323,6 @@ class LocalStorageService {
         orderBy: 'handNumber ASC',
       );
       
-      print('🔥 DEBUG: getSessionHands called for sessionId: $sessionId');
-      print('🔥 DEBUG: Found ${hands.length} hands in local database');
       
       return hands.map((hand) {
         final result = Map<String, dynamic>.from(hand);

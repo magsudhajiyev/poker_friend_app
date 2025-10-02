@@ -157,9 +157,21 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                     onSelected: (value) {
                       if (value == 'clear') {
                         _showClearConfirmation();
+                      } else if (value == 'sync') {
+                        _syncLocalToFirebase();
                       }
                     },
                     itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        value: 'sync',
+                        child: Row(
+                          children: [
+                            Icon(Icons.cloud_upload, color: Colors.blue),
+                            SizedBox(width: 8),
+                            Text('Sync to Cloud', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
                       PopupMenuItem<String>(
                         value: 'clear',
                         child: Row(
@@ -626,6 +638,65 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       case 'turn': return 'Turn';
       case 'river': return 'River';
       default: return street;
+    }
+  }
+
+  Future<void> _syncLocalToFirebase() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFF1F1F23),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: Colors.blue),
+            SizedBox(height: 16),
+            Text('Syncing to cloud...', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      // Perform sync
+      final result = await FirebaseService.syncLocalSessionsToFirebase();
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show result
+      if (mounted) {
+        final success = result['success'] == true;
+        final message = result['message'] ?? 'Sync completed';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: success ? Colors.green : Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+
+        // Reload sessions if successful
+        if (success) {
+          await _loadSessions();
+        }
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sync failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

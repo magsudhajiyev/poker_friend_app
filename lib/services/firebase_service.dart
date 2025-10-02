@@ -1039,4 +1039,99 @@ class FirebaseService {
     final doc = await _firestore.collection('migration_status').doc(userId).get();
     return doc.exists && (doc.data()?['completed'] == true);
   }
+
+  // Force sync local sessions to Firebase
+  static Future<Map<String, dynamic>> syncLocalSessionsToFirebase() async {
+    final userId = AuthService.userId;
+    if (userId == null) {
+      return {'success': false, 'message': 'User not authenticated'};
+    }
+
+    try {
+      print('🔄 Starting sync of local sessions to Firebase...');
+
+      // Get all local sessions
+      final localSessions = await LocalStorageService.getUserSessions();
+      print('📊 Found ${localSessions.length} local sessions');
+
+      // Get existing Firebase sessions to avoid duplicates
+      final firebaseSessions = await getAllSessions();
+      final firebaseSessionIds = firebaseSessions.map((s) => s['id'] as String).toSet();
+      print('📊 Found ${firebaseSessions.length} existing Firebase sessions');
+
+      int syncedCount = 0;
+      int skippedCount = 0;
+      List<String> errors = [];
+
+      for (final session in localSessions) {
+        final sessionId = session['id'] as String?;
+        if (sessionId == null) continue;
+
+        try {
+          // Skip if already in Firebase
+          if (firebaseSessionIds.contains(sessionId)) {
+            skippedCount++;
+            continue;
+          }
+
+          // Prepare session data for Firebase
+          final sessionData = Map<String, dynamic>.from(session);
+          sessionData['userId'] = userId;
+
+          // Ensure timestamps are proper
+          if (sessionData['startTime'] == null) {
+            sessionData['startTime'] = FieldValue.serverTimestamp();
+          }
+          if (sessionData['createdAt'] == null) {
+            sessionData['createdAt'] = FieldValue.serverTimestamp();
+          }
+
+          // Upload to Firebase
+          await _firestore.collection(_sessionsCollection).doc(sessionId).set(
+            sessionData,
+            SetOptions(merge: true),
+          );
+
+          // Also sync associated hands if any
+          final localHands = await LocalStorageService.getSessionHands(sessionId);
+          if (localHands.isNotEmpty) {
+            for (final hand in localHands) {
+              final handId = '${sessionId}_hand_${hand['handNumber']}';
+              await _firestore
+                  .collection(_sessionsCollection)
+                  .doc(sessionId)
+                  .collection(_handsCollection)
+                  .doc(handId)
+                  .set(hand, SetOptions(merge: true));
+            }
+            print('✅ Synced session $sessionId with ${localHands.length} hands');
+          } else {
+            print('✅ Synced session $sessionId (no hands)');
+          }
+
+          syncedCount++;
+        } catch (e) {
+          errors.add('Session $sessionId: $e');
+          print('❌ Failed to sync session $sessionId: $e');
+        }
+      }
+
+      final message = 'Sync complete: $syncedCount synced, $skippedCount already in cloud${errors.isNotEmpty ? ', ${errors.length} errors' : ''}';
+      print('🎉 $message');
+
+      return {
+        'success': true,
+        'message': message,
+        'synced': syncedCount,
+        'skipped': skippedCount,
+        'errors': errors,
+      };
+    } catch (e) {
+      print('❌ Sync failed: $e');
+      return {
+        'success': false,
+        'message': 'Sync failed: $e',
+      };
+    }
+  }
 }

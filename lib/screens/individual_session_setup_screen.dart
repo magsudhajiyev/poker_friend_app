@@ -682,8 +682,6 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
         ? buyIn  // For cash games, starting stack = buy-in
         : double.parse(_startingStackController.text);  // For MTT, use entered value
 
-    // Debug logging to understand what values are being passed
-    print('🔧 DEBUG: IndividualSessionSetup - buyIn: $buyIn, startingStack: $startingStack, gameType: $gameType');
 
     if (widget.loggingMode == LoggingMode.full) {
       // For Full mode, go directly to Seat Setup screen

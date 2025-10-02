@@ -540,10 +540,6 @@ class PokerSessionManager {
   void completeCurrentHand({double? potAmount, int? winnerId, double? currentStack}) {
     if (currentHand == null) return;
 
-    print('🔧 DEBUG: completeCurrentHand called for hand #${currentHand!.handNumber}');
-    print('🔧 DEBUG: sessionId when completing hand: $sessionId');
-    print('🔧 DEBUG: currentStack parameter: $currentStack');
-    print('🔧 DEBUG: stackHistory length before: ${stackHistory.length}');
 
     // Set pot amount and winner if provided
     if (potAmount != null) {
@@ -560,25 +556,20 @@ class PokerSessionManager {
     if (currentStack != null) {
       if (stackHistory.isEmpty) {
         // If no initial entry exists, add it first with the current stack as starting point
-        print('🔧 DEBUG: stackHistory was empty, adding initial entry with stack: $currentStack');
         _addStackHistoryEntry(currentStack, 'initial', 0.0, 0);
       } else {
         final previousStack = stackHistory.last['stackSize'] as double;
         final stackChange = currentStack - previousStack;
         final changeType = stackChange >= 0 ? 'win' : 'loss';
-        print('🔧 DEBUG: Adding stack entry - previous: $previousStack, current: $currentStack, change: $stackChange ($changeType)');
         _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
       }
     } else {
-      print('🔧 DEBUG: currentStack is null, not tracking stack history');
     }
 
-    print('🔧 DEBUG: stackHistory length after: ${stackHistory.length}');
 
     currentHand!.markCompleted();
     completedHands.add(currentHand!);
 
-    print('🔧 DEBUG: Hand added to completedHands, total count: ${completedHands.length}');
 
     // Update opponent statistics for this hand
     _updateOpponentStats();
@@ -651,8 +642,6 @@ class PokerSessionManager {
   Future<void> _saveHandToFirebase(HandRecord hand) async {
     if (sessionId == null) return;
 
-    print('🔧 DEBUG: _saveHandToFirebase called for hand #${hand.handNumber}');
-    print('🔧 DEBUG: Using sessionId: $sessionId');
 
     // Always save to local storage first
     await LocalStorageService.saveHand(
@@ -685,7 +674,6 @@ class PokerSessionManager {
       sharePerWinner: hand.sharePerWinner,
     );
 
-    print('🔧 DEBUG: Hand #${hand.handNumber} saved to local storage with sessionId: $sessionId');
     
     try {
       // Try to save to Firebase as well

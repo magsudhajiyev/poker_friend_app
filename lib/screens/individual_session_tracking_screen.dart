@@ -87,8 +87,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     // Initialize rebuy tracking
     _totalBuyIn = widget.buyInAmount; // Start with initial buy-in
 
-    // Debug logging for total invested initialization
-    print('🔧 DEBUG: Initialized _totalBuyIn = $_totalBuyIn (buyInAmount: ${widget.buyInAmount}, startingStack: ${widget.startingStack})');
 
     // Add initial stack to history
     _stackHistory.add({
@@ -135,11 +133,34 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       });
 
     } catch (e) {
-      print('Error creating individual session: $e');
-      // Fallback to local session ID
+      print('Error creating individual session in Firebase: $e');
+      // Create session with timestamp ID but also save to local
+      final localSessionId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Save to local storage as backup
+      await LocalStorageService.saveSession(
+        sessionId: localSessionId,
+        smallBlind: widget.smallBlind,
+        bigBlind: widget.bigBlind,
+        playerCount: 6, // Default for individual sessions
+        startTime: DateTime.now().toIso8601String(),
+        gameType: widget.gameType,
+        buyInAmount: widget.buyInAmount,
+      );
+
       setState(() {
-        _sessionId = DateTime.now().millisecondsSinceEpoch.toString();
+        _sessionId = localSessionId;
       });
+
+      // Show warning to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Session created locally. Will sync to cloud when connection is available.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     }
   }
 
@@ -157,7 +178,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         }
 
         if (sessionData != null) {
-          print('🔧 DEBUG: Loading session data for resume: $sessionData');
 
           setState(() {
             // Load existing data from database
@@ -175,11 +195,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               _stackHistory = List<Map<String, dynamic>>.from(sessionData['stackHistory']);
             }
 
-            print('🔧 DEBUG: Resumed session - totalBuyIn: $_totalBuyIn, rebuys: ${_rebuys.length}, stackHistory: ${_stackHistory.length}');
           });
         }
       } catch (e) {
-        print('🔧 DEBUG: Error loading session data: $e');
       }
     }
 
@@ -474,19 +492,14 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       });
 
       // Debug logging for manual stack update
-      print('🔧 DEBUG: Manual stack update - Previous: $previousStack, New: $newStack, Change: $stackChange');
-      print('🔧 DEBUG: Stack history length after manual update: ${_stackHistory.length}');
-      print('🔧 DEBUG: Latest stack history entry: ${_stackHistory.last}');
 
       // Update session in Firebase with stack history
       if (_sessionId != null) {
-        print('🔧 DEBUG: Updating Firebase with sessionId: $_sessionId');
         FirebaseService.updateIndividualSession(
           sessionId: _sessionId!,
           currentStack: _currentStack,
           stackHistory: _stackHistory,
         ).catchError((e) {
-          print('🔧 DEBUG: Error updating Firebase session: $e');
         });
       }
     }
@@ -1055,7 +1068,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         _totalBuyIn += rebuyAmount;
 
         // Debug logging for total invested update
-        print('🔧 DEBUG: Rebuy added - Previous total: ${_totalBuyIn - rebuyAmount}, Rebuy amount: $rebuyAmount, New total: $_totalBuyIn');
 
         // Add rebuy record
         _rebuys.add({
