@@ -2013,6 +2013,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       barrierDismissible: false,
       builder: (context) => AllInBoardCardsDialog(
         excludedCards: excludedCards,
+        existingBoardCards: sessionManager.currentHand?.boardCards,
       ),
     );
 
