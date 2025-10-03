@@ -883,7 +883,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     
     final isHero = heroPosition != null && playerSeat == heroPosition;
     final isWinner = winnerId != null && playerSeat == winnerId;
-    final positionName = PokerPositions.getPositionName(playerSeat, buttonPosition, playerCount);
+    // CRITICAL: Use saved position from action (calculated with active seats during hand)
+    // DO NOT recalculate with playerCount=9 as it will give wrong positions
+    final positionName = action['playerPosition'] as String? ??
+                        PokerPositions.getPositionName(playerSeat, buttonPosition, playerCount);
     
     // Format player display
     String playerDisplay = isHero ? 'You' : playerName;

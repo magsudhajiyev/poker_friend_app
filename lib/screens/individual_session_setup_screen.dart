@@ -689,7 +689,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
       final sessionManager = PokerSessionManager(
         smallBlind: smallBlind,
         bigBlind: bigBlind,
-        playerCount: 6,
+        playerCount: 9, // Support all 9 seats
         gameType: gameType,
         sessionName: sessionName,
         initialBuyIn: buyIn,
@@ -699,7 +699,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
         context,
         MaterialPageRoute(
           builder: (context) => SeatSetupScreen(
-            playerCount: 6,
+            playerCount: 9, // Support all 9 seats
             buttonPosition: 1,
             sessionManager: sessionManager,
             isInitialSetup: true,

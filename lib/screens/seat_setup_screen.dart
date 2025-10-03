@@ -72,17 +72,15 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     // Use default player count of 6 if not provided
     final effectivePlayerCount = widget.playerCount ?? 6;
 
-    // If this is initial setup and sessionManager exists, initialize default players
-    if (widget.isInitialSetup && widget.sessionManager != null) {
-      widget.sessionManager!.initializeDefaultPlayers();
-    }
+    // Note: No longer calling initializeDefaultPlayers()
+    // All seats are shown active initially, user deactivates unwanted seats
 
     // Always initialize 9 seats regardless of player count
     for (int i = 1; i <= 9; i++) {
       // First determine active status
       if (widget.isInitialSetup) {
-        // For initial setup, activate only up to playerCount seats
-        seatActive[i] = i <= effectivePlayerCount;
+        // For initial setup, all 9 seats are active - user will deactivate seats they don't want
+        seatActive[i] = true;
       } else if (widget.gameState != null) {
         // Use gameState player status
         try {
@@ -1042,7 +1040,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
             smallBlind: widget.smallBlind!,
             bigBlind: widget.bigBlind!,
             levelDuration: 15, // Default level duration
-            numberOfPlayers: 6, // Default player count
+            numberOfPlayers: 9, // Support all 9 seats
             gameType: widget.gameType ?? GameType.cash,
             hasBBante: widget.hasBBante ?? false,
             ante: (widget.hasBBante ?? false) ? widget.bigBlind! : 0,
