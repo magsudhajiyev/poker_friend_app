@@ -187,11 +187,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // Use ONLY the active seats from sessionManager (user's configuration from seat setup)
     for (int seatNum in sessionManager.activeSeats) {
-      if (seatNum == seat && widget.startingStack != null) {
-        // Use the starting stack from session setup for our seat
+      // First try to get custom stack from sessionManager
+      final customStack = sessionManager.getPlayerStack(seatNum);
+      if (customStack != null) {
+        // Use the custom stack configured in seat setup
+        playerStacks[seatNum] = customStack;
+      } else if (seatNum == seat && widget.startingStack != null) {
+        // Fallback: Use the starting stack from session setup for our seat
         playerStacks[seatNum] = widget.startingStack!;
       } else {
-        // For other active seats, use default stack
+        // Fallback: For other active seats, use default stack
         playerStacks[seatNum] = widget.gameType == GameType.cash ? 100.0 : 1500.0;
       }
     }

@@ -357,6 +357,7 @@ class PokerSessionManager {
   // Player management
   Map<int, String> playerNames = {}; // seat number -> player name
   Set<int> activeSeats = {}; // seats that have players
+  Map<int, double> playerStacks = {}; // seat number -> stack size
   int? actualSBSeat; // Track who actually posted SB (may differ from calculated)
   int? actualBBSeat; // Track who actually posted BB (may differ from calculated)
 
@@ -1148,6 +1149,16 @@ class PokerSessionManager {
         playerNames[seatNumber] = name;
       }
     }
+  }
+
+  void setPlayerStack(int seatNumber, double stack) {
+    if (seatNumber >= 1 && seatNumber <= playerCount) {
+      playerStacks[seatNumber] = stack;
+    }
+  }
+
+  double? getPlayerStack(int seatNumber) {
+    return playerStacks[seatNumber];
   }
 
   String getPlayerName(int seatNumber) {
