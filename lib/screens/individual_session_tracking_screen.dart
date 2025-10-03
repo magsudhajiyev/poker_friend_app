@@ -119,7 +119,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       final sessionId = await FirebaseService.createSession(
         smallBlind: widget.smallBlind,
         bigBlind: widget.bigBlind,
-        playerCount: 6, // Default for individual sessions
+        playerCount: 9, // Support all 9 seats
         gameType: widget.gameType,
         isIndividualSession: true,
         sessionName: widget.sessionName,
@@ -142,7 +142,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         sessionId: localSessionId,
         smallBlind: widget.smallBlind,
         bigBlind: widget.bigBlind,
-        playerCount: 6, // Default for individual sessions
+        playerCount: 9, // Support all 9 seats
         startTime: DateTime.now().toIso8601String(),
         gameType: widget.gameType,
         buyInAmount: widget.buyInAmount,

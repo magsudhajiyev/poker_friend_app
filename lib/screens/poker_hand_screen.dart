@@ -182,18 +182,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       sessionManager.setPlayerName(seat, ourName);
     }
 
-    // Build playerStacks - we need to simulate what SeatSetupScreen would have returned
+    // Build playerStacks - use active seats from sessionManager (configured in SeatSetupScreen)
     Map<int, double> playerStacks = {};
 
-    // Add our seat with the starting stack from session setup
-    if (widget.startingStack != null) {
-      playerStacks[seat] = widget.startingStack!;
-    }
-
-    // Add other players with default stacks (assuming 6 players total)
-    List<int> seats = [1, 2, 3, 4, 5, 6];
-    for (int seatNum in seats) {
-      if (seatNum != seat) {
+    // Use ONLY the active seats from sessionManager (user's configuration from seat setup)
+    for (int seatNum in sessionManager.activeSeats) {
+      if (seatNum == seat && widget.startingStack != null) {
+        // Use the starting stack from session setup for our seat
+        playerStacks[seatNum] = widget.startingStack!;
+      } else {
+        // For other active seats, use default stack
         playerStacks[seatNum] = widget.gameType == GameType.cash ? 100.0 : 1500.0;
       }
     }

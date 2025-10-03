@@ -448,8 +448,6 @@ class PokerSessionManager {
     this.buttonPosition = buttonPosition;
     this.actualSBSeat = sbSeat;
     this.actualBBSeat = bbSeat;
-    print('🎮 DEBUG: Hand started - received sbSeat: $sbSeat, bbSeat: $bbSeat');
-    print('🎮 DEBUG: Hand started - actualSBSeat: $actualSBSeat, actualBBSeat: $actualBBSeat');
 
     currentHand = HandRecord(
       handNumber: handNumber,
@@ -476,7 +474,11 @@ class PokerSessionManager {
 
     // Get player name and position using consistent logic
     final playerName = getPlayerName(player);
-    final playerPosition = getPlayerName(player); // This now returns the correct position
+    final playerPosition = PokerPositions.getPositionNameForActivePlayers(
+      player,
+      buttonPosition,
+      activeSeats.toList()
+    );
 
     final actionRecord = ActionRecord(
       player: player,
@@ -512,9 +514,7 @@ class PokerSessionManager {
   // Save pot amount at the end of each street
   void savePotForStreet(BettingRound street, double potAmount) {
     if (currentHand == null) return;
-    
-    print('💰 Saving pot for ${street.name}: \$${potAmount.toStringAsFixed(0)}');
-    
+
     switch (street) {
       case BettingRound.preflop:
         currentHand!.preflopPot = potAmount;
@@ -529,11 +529,9 @@ class PokerSessionManager {
         currentHand!.riverPot = potAmount;
         break;
     }
-    
+
     // Update the final pot amount as well
     currentHand!.potAmount = potAmount;
-    
-    print('💰 Current hand pot tracking: Preflop: \$${currentHand!.preflopPot}, Flop: \$${currentHand!.flopPot}, Turn: \$${currentHand!.turnPot}, River: \$${currentHand!.riverPot}');
   }
 
   // Complete the current hand
@@ -724,8 +722,6 @@ class PokerSessionManager {
   /// Update optimized statistics for all participants in the hand
   Future<void> _updateOptimizedStats(HandRecord hand) async {
     try {
-      print('📊 Updating optimized stats for hand #${hand.handNumber}');
-
       // Get all player names from this hand
       Set<String> playersInHand = {};
 
@@ -740,7 +736,6 @@ class PokerSessionManager {
 
       // Process each player's actions in this hand
       for (final playerName in playersInHand) {
-        print('📈 Processing stats for $playerName');
 
         // Calculate stats for this specific hand
         int vpipDelta = 0;
@@ -822,7 +817,6 @@ class PokerSessionManager {
             betDelta: betDelta,
             raiseDelta: raiseDelta,
           );
-          print('✅ Updated opponent stats for $playerName');
         } else {
           // Update user stats - need to get current user ID
           final currentUser = FirebaseAuth.instance.currentUser;
@@ -835,14 +829,11 @@ class PokerSessionManager {
               pfrDelta: pfrDelta,
               wonHandsDelta: (hand.winnerId != null && hand.winnerId == hand.heroPosition) ? 1 : 0,
             );
-            print('✅ Updated user stats');
           }
         }
       }
-
-      print('🎉 Optimized stats updated for all participants');
     } catch (e) {
-      print('❌ Error updating optimized stats: $e');
+      print('Error updating optimized stats: $e');
     }
   }
 
@@ -856,45 +847,31 @@ class PokerSessionManager {
       'handNumber': handNumber,
     };
     stackHistory.add(entry);
-    print('📊 Stack history added: \$${stackSize.toStringAsFixed(2)} ($changeType) hand #$handNumber');
-    print('📊 DEBUG: Entry details: $entry');
-    print('📊 DEBUG: Total stackHistory entries now: ${stackHistory.length}');
-    print('📊 DEBUG: All stackHistory: $stackHistory');
   }
 
   // Update session with current progress (hand count, etc.)
   Future<void> _updateSessionProgress() async {
     if (sessionId == null) return;
 
-    print('📊 DEBUG: _updateSessionProgress called');
-    print('📊 DEBUG: sessionId: $sessionId');
-    print('📊 DEBUG: stackHistory entries to save: ${stackHistory.length}');
-    print('📊 DEBUG: stackHistory data: $stackHistory');
-    print('📊 DEBUG: totalBuyIn: $totalBuyIn');
-
     try {
       // Update Firebase session with stack history and totalBuyIn
-      print('📊 DEBUG: Updating Firebase with stack history...');
       await FirebaseService.updateSession(
         sessionId: sessionId!,
         totalHands: completedHands.length,
         stackHistory: stackHistory,
         totalBuyIn: totalBuyIn,
       );
-      print('📊 DEBUG: Firebase update successful');
     } catch (e) {
-      print('❌ Failed to update session in Firebase: $e');
+      print('Failed to update session in Firebase: $e');
     }
 
     // Always update local storage with stack history and totalBuyIn
-    print('📊 DEBUG: Updating local storage with stack history...');
     await LocalStorageService.updateSession(
       sessionId: sessionId!,
       totalHands: completedHands.length,
       stackHistory: stackHistory,
       totalBuyIn: totalBuyIn,
     );
-    print('📊 DEBUG: Local storage update completed');
   }
 
   // Update opponent statistics for completed hand
@@ -920,9 +897,6 @@ class PokerSessionManager {
                   opponent.id,
                   additionalHands: 1,
                 );
-                print('✅ Updated hand count for opponent: $playerName (now has ${opponent.handsPlayed + 1} hands)');
-              } else {
-                print('Opponent not found: $playerName');
               }
             } catch (e) {
               print('Failed to update stats for opponent $playerName: $e');
@@ -1219,16 +1193,12 @@ class PokerSessionManager {
 
     // Check if this player is actually posting blinds or button
     String currentPosition;
-    print('🎮 DEBUG: Position check for seat $seatNumber - actualBBSeat: $actualBBSeat, actualSBSeat: $actualSBSeat, buttonPosition: $buttonPosition');
     if (seatNumber == actualBBSeat) {
       currentPosition = 'BB';
-      print('🎮 DEBUG: Seat $seatNumber identified as BB');
     } else if (seatNumber == actualSBSeat) {
       currentPosition = 'SB';
-      print('🎮 DEBUG: Seat $seatNumber identified as SB');
     } else if (seatNumber == buttonPosition) {
       currentPosition = 'BTN';
-      print('🎮 DEBUG: Seat $seatNumber identified as BTN');
     } else {
       // For non-blind positions, we need to calculate based on active players only
       // Find the player's position in the active seats relative to button
