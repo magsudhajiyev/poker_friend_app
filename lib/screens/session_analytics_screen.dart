@@ -428,122 +428,163 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       ];
     }
 
-    return LineChart(
-      LineChartData(
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          horizontalInterval: spots.isNotEmpty ? (spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) / 5) : 100,
-          getDrawingHorizontalLine: (value) {
-            return FlLine(
-              color: PokerFriendColors.dark6,
-              strokeWidth: 1,
-            );
-          },
+    // Calculate chart width: 60 pixels per data point
+    final double pointWidth = 60.0;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double chartAreaWidth = spots.length > 7
+        ? spots.length * pointWidth
+        : screenWidth - 92; // Account for Y-axis (60) and padding (32)
+
+    return Row(
+      children: [
+        // Fixed Y-axis on the left
+        SizedBox(
+          width: 60,
+          child: LineChart(
+            LineChartData(
+              gridData: FlGridData(show: false),
+              titlesData: FlTitlesData(
+                show: true,
+                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: spots.isNotEmpty ? (spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) / 4) : 100,
+                    reservedSize: 60,
+                    getTitlesWidget: (double value, TitleMeta meta) {
+                      return Text(
+                        _formatCurrency(value),
+                        style: TextStyle(
+                          color: PokerFriendColors.dark9,
+                          fontSize: 10,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              minY: spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.9 : 0,
+              maxY: spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1 : 100,
+              lineBarsData: [],
+            ),
+          ),
         ),
-        titlesData: FlTitlesData(
-          show: true,
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 30,
-              interval: 1,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                if (value.toInt() < _stackHistory.length) {
-                  final entry = _stackHistory[value.toInt()];
-                  final changeType = entry['changeType'] ?? 'unknown';
+        // Scrollable chart area
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            reverse: true, // Start scrolled to the right (showing last 7 points)
+            child: SizedBox(
+              width: chartAreaWidth,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: spots.isNotEmpty ? (spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) / 5) : 100,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: PokerFriendColors.dark6,
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)), // Hide left titles in scrollable area
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                        interval: 1,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          if (value.toInt() < _stackHistory.length) {
+                            final entry = _stackHistory[value.toInt()];
+                            final changeType = entry['changeType'] ?? 'unknown';
 
-                  String label = '';
-                  switch (changeType) {
-                    case 'initial':
-                      label = 'Start';
-                      break;
-                    case 'rebuy':
-                      label = 'Rebuy';
-                      break;
-                    case 'hand':
-                      label = 'Hand';
-                      break;
-                    default:
-                      label = '${value.toInt() + 1}';
-                  }
+                            String label = '';
+                            switch (changeType) {
+                              case 'initial':
+                                label = 'Start';
+                                break;
+                              case 'rebuy':
+                                label = 'Rebuy';
+                                break;
+                              case 'hand':
+                                label = 'Hand';
+                                break;
+                              default:
+                                label = '${value.toInt() + 1}';
+                            }
 
-                  return SideTitleWidget(
-                    axisSide: meta.axisSide,
-                    space: 8.0,
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        color: PokerFriendColors.dark9,
-                        fontSize: 10,
+                            return SideTitleWidget(
+                              axisSide: meta.axisSide,
+                              space: 8.0,
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  color: PokerFriendColors.dark9,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            );
+                          }
+                          return Container();
+                        },
                       ),
                     ),
-                  );
-                }
-                return Container();
-              },
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              interval: spots.isNotEmpty ? (spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) / 4) : 100,
-              reservedSize: 60,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                return Text(
-                  _formatCurrency(value),
-                  style: TextStyle(
-                    color: PokerFriendColors.dark9,
-                    fontSize: 10,
                   ),
-                );
-              },
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border.all(color: PokerFriendColors.dark6),
+                  ),
+                  minX: 0,
+                  maxX: (spots.length - 1).toDouble(),
+                  minY: spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.9 : 0,
+                  maxY: spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1 : 100,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      gradient: LinearGradient(
+                        colors: _profitLoss >= 0
+                          ? [PokerFriendColors.green.withOpacity(0.3), PokerFriendColors.green]
+                          : [PokerFriendColors.red.withOpacity(0.3), PokerFriendColors.red],
+                      ),
+                      barWidth: 3,
+                      isStrokeCapRound: true,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                          radius: 4,
+                          color: Colors.white,
+                          strokeWidth: 2,
+                          strokeColor: _profitLoss >= 0 ? PokerFriendColors.green : PokerFriendColors.red,
+                        ),
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          colors: _profitLoss >= 0
+                            ? [PokerFriendColors.green.withOpacity(0.1), Colors.transparent]
+                            : [PokerFriendColors.red.withOpacity(0.1), Colors.transparent],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
-        borderData: FlBorderData(
-          show: true,
-          border: Border.all(color: PokerFriendColors.dark6),
-        ),
-        minX: 0,
-        maxX: (spots.length - 1).toDouble(),
-        minY: spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.9 : 0,
-        maxY: spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1 : 100,
-        lineBarsData: [
-          LineChartBarData(
-            spots: spots,
-            isCurved: true,
-            gradient: LinearGradient(
-              colors: _profitLoss >= 0
-                ? [PokerFriendColors.green.withOpacity(0.3), PokerFriendColors.green]
-                : [PokerFriendColors.red.withOpacity(0.3), PokerFriendColors.red],
-            ),
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                radius: 4,
-                color: Colors.white,
-                strokeWidth: 2,
-                strokeColor: _profitLoss >= 0 ? PokerFriendColors.green : PokerFriendColors.red,
-              ),
-            ),
-            belowBarData: BarAreaData(
-              show: true,
-              gradient: LinearGradient(
-                colors: _profitLoss >= 0
-                  ? [PokerFriendColors.green.withOpacity(0.1), Colors.transparent]
-                  : [PokerFriendColors.red.withOpacity(0.1), Colors.transparent],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 
