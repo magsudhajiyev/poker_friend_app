@@ -1560,20 +1560,468 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
   }
 
-  void _enterDragBettingMode(PlayerAction action) {
-    setState(() {
-      _isDragBetting = true;
-      _pendingAction = action;
-      // Use appropriate minimum based on action type
-      _dragBetAmount = action == PlayerAction.raise
-          ? gameState.getMinimumRaise()
-          : gameState.getMinimumBet();
-      _dragStartPosition = null;
-      _dragBarPosition = 0.0; // Start at minimum bet (top)
-    });
-    
-    // Start listening for drag gestures
-    _showDragBettingInstruction();
+  void _enterDragBettingMode(PlayerAction action) async {
+    // Show number input dialog instead of drag mode
+    final amount = await _showBetAmountDialog(action);
+
+    if (amount != null) {
+      // User entered an amount, perform the action
+      _performPokerActionWithAmount(action, amount);
+    }
+    // If amount is null, user cancelled - do nothing
+  }
+
+  Future<double?> _showBetAmountDialog(PlayerAction action) async {
+    final currentPlayer = gameState.getCurrentPlayer();
+    if (currentPlayer == null) return null;
+
+    final minBet = action == PlayerAction.raise
+        ? gameState.getMinimumRaise()
+        : gameState.getMinimumBet();
+    final maxBet = currentPlayer.currentStack + currentPlayer.betThisRound;
+
+    // Determine which multiplier mode to use
+    final bool isPreflop = gameState.currentRound == BettingRound.preflop;
+    final bool hasVoluntaryBet = gameState.hasBetThisRound; // True if someone voluntarily bet/raised (not just blinds)
+    final double currentPot = gameState.currentPot;
+    final double bigBlind = gameState.bigBlind.toDouble();
+
+    final TextEditingController amountController = TextEditingController();
+
+    return showDialog<double>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 320),
+            decoration: BoxDecoration(
+              color: Color(0xFF161618),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF1F1F23),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFcb5242).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.attach_money,
+                          color: Color(0xFFcb5242),
+                          size: 18,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        action == PlayerAction.raise ? 'Raise Amount' : 'Bet Amount',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Content
+                Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Min: ${widget.gameType == GameType.cash ? '\$${minBet.toStringAsFixed(2)}' : minBet.toInt()} • Max: ${widget.gameType == GameType.cash ? '\$${maxBet.toStringAsFixed(2)}' : maxBet.toInt()}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF9A9A9A),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Color(0xFF1F1F23),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Color(0xFF2A2A2E)),
+                        ),
+                        child: TextField(
+                          controller: amountController,
+                          autofocus: true,
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: widget.gameType == GameType.cash,
+                          ),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          decoration: InputDecoration(
+                            prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
+                            prefixStyle: TextStyle(
+                              color: Color(0xFF9A9A9A),
+                              fontSize: 24,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      // Multiplier buttons - dynamic based on context
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ..._buildDynamicMultiplierButtons(
+                            isPreflop: isPreflop,
+                            hasVoluntaryBet: hasVoluntaryBet,
+                            currentPot: currentPot,
+                            bigBlind: bigBlind,
+                            minBet: minBet,
+                            maxBet: maxBet,
+                            amountController: amountController,
+                            setState: setState,
+                          ),
+                          // All-In button
+                          _buildAllInButton(maxBet, amountController, setState),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              // Actions
+              Container(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF1F1F23),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(context, null);
+                          },
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Color(0xFF9A9A9A),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFFcb5242), Color(0xFFb8442f)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            final text = amountController.text.trim();
+                            double? amount;
+                            try {
+                              amount = double.parse(text);
+                              if (amount < minBet || amount > maxBet) {
+                                // Show error
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Amount must be between ${minBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} and ${maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                            } catch (e) {
+                              // Show error
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Please enter a valid number'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+                            Navigator.pop(context, amount);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Confirm',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildDynamicMultiplierButtons({
+    required bool isPreflop,
+    required bool hasVoluntaryBet,
+    required double currentPot,
+    required double bigBlind,
+    required double minBet,
+    required double maxBet,
+    required TextEditingController amountController,
+    required void Function(void Function()) setState,
+  }) {
+    // Scenario 1: Preflop with no voluntary bet yet - use BB multipliers
+    if (isPreflop && !hasVoluntaryBet) {
+      return [
+        _buildMultiplierButtonWithBase('2X', 2.0, bigBlind, maxBet, amountController, setState),
+        _buildMultiplierButtonWithBase('2.2X', 2.2, bigBlind, maxBet, amountController, setState),
+        _buildMultiplierButtonWithBase('2.5X', 2.5, bigBlind, maxBet, amountController, setState),
+        _buildMultiplierButtonWithBase('3X', 3.0, bigBlind, maxBet, amountController, setState),
+        _buildMultiplierButtonWithBase('4X', 4.0, bigBlind, maxBet, amountController, setState),
+      ];
+    }
+
+    // Scenario 3: Postflop with pot - use pot percentage multipliers
+    if (!isPreflop && currentPot > 0) {
+      return [
+        _buildPotPercentageButton('25%', 0.25, currentPot, minBet, maxBet, amountController, setState),
+        _buildPotPercentageButton('50%', 0.50, currentPot, minBet, maxBet, amountController, setState),
+        _buildPotPercentageButton('70%', 0.70, currentPot, minBet, maxBet, amountController, setState),
+        _buildPotPercentageButton('100%', 1.0, currentPot, minBet, maxBet, amountController, setState),
+        _buildPotPercentageButton('125%', 1.25, currentPot, minBet, maxBet, amountController, setState),
+        _buildPotPercentageButton('150%', 1.50, currentPot, minBet, maxBet, amountController, setState),
+      ];
+    }
+
+    // Scenario 2: There's already a bet/raise - use minBet multipliers
+    return [
+      _buildMultiplierButtonWithBase('2X', 2.0, minBet, maxBet, amountController, setState),
+      _buildMultiplierButtonWithBase('2.2X', 2.2, minBet, maxBet, amountController, setState),
+      _buildMultiplierButtonWithBase('2.5X', 2.5, minBet, maxBet, amountController, setState),
+      _buildMultiplierButtonWithBase('3X', 3.0, minBet, maxBet, amountController, setState),
+      _buildMultiplierButtonWithBase('4X', 4.0, minBet, maxBet, amountController, setState),
+    ];
+  }
+
+  Widget _buildMultiplierButtonWithBase(
+    String label,
+    double multiplier,
+    double baseAmount,
+    double maxBet,
+    TextEditingController controller,
+    void Function(void Function()) setState,
+  ) {
+    return InkWell(
+      onTap: () {
+        double amount = baseAmount * multiplier;
+        // Clamp to max bet
+        if (amount > maxBet) {
+          amount = maxBet;
+        }
+        // Round appropriately
+        if (widget.gameType == GameType.cash) {
+          amount = (amount * 4).round() / 4; // Round to nearest $0.25
+        } else {
+          amount = amount.round().toDouble(); // Round to nearest chip
+        }
+        setState(() {
+          controller.text = widget.gameType == GameType.cash
+              ? amount.toStringAsFixed(2)
+              : amount.toInt().toString();
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Color(0xFF1F1F23),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Color(0xFF2A2A2E)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Color(0xFFcb5242),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPotPercentageButton(
+    String label,
+    double percentage,
+    double potSize,
+    double minBet,
+    double maxBet,
+    TextEditingController controller,
+    void Function(void Function()) setState,
+  ) {
+    return InkWell(
+      onTap: () {
+        double amount = potSize * percentage;
+        // Ensure it's at least the minimum bet
+        if (amount < minBet) {
+          amount = minBet;
+        }
+        // Clamp to max bet
+        if (amount > maxBet) {
+          amount = maxBet;
+        }
+        // Round appropriately
+        if (widget.gameType == GameType.cash) {
+          amount = (amount * 4).round() / 4; // Round to nearest $0.25
+        } else {
+          amount = amount.round().toDouble(); // Round to nearest chip
+        }
+        setState(() {
+          controller.text = widget.gameType == GameType.cash
+              ? amount.toStringAsFixed(2)
+              : amount.toInt().toString();
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Color(0xFF1F1F23),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Color(0xFF2A2A2E)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Color(0xFFcb5242),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAllInButton(
+    double maxBet,
+    TextEditingController controller,
+    void Function(void Function()) setState,
+  ) {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          controller.text = widget.gameType == GameType.cash
+              ? maxBet.toStringAsFixed(2)
+              : maxBet.toInt().toString();
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFcb5242), Color(0xFFb8442f)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Color(0xFFcb5242)),
+        ),
+        child: Text(
+          'All-In',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMultiplierButton(
+    String label,
+    double multiplier,
+    double minBet,
+    double maxBet,
+    TextEditingController controller,
+    void Function(void Function()) setState,
+  ) {
+    return InkWell(
+      onTap: () {
+        double amount = minBet * multiplier;
+        // Clamp to max bet
+        if (amount > maxBet) {
+          amount = maxBet;
+        }
+        // Round appropriately
+        if (widget.gameType == GameType.cash) {
+          amount = (amount * 4).round() / 4; // Round to nearest $0.25
+        } else {
+          amount = amount.round().toDouble(); // Round to nearest chip
+        }
+        setState(() {
+          controller.text = widget.gameType == GameType.cash
+              ? amount.toStringAsFixed(2)
+              : amount.toInt().toString();
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Color(0xFF1F1F23),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Color(0xFF2A2A2E)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Color(0xFFcb5242),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
   }
 
   void _showDragBettingInstruction() {
