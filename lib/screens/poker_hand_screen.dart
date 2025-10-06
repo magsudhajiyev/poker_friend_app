@@ -436,7 +436,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
 
   Future<void> _managePlayersDialog() async {
-    await Navigator.push<void>(
+    final result = await Navigator.push<Map<String, dynamic>?>(
       context,
       MaterialPageRoute(
         builder: (context) => SeatSetupScreen(
@@ -452,9 +452,140 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         ),
       ),
     );
-    
-    // Refresh the UI to show updated player names/status
-    setState(() {});
+
+    // Sync gameState with sessionManager's active seats
+    setState(() {
+      // Store the current player and button before changes
+      final previousCurrentPlayer = gameState.currentPlayer;
+      final previousButton = gameState.buttonPosition;
+
+      // Store previous active player count BEFORE making changes
+      final previousActiveCount = gameState.getActivePlayers().length;
+
+      // Update button position if it was changed
+      if (result != null && result['buttonPosition'] != null) {
+        final newButtonPosition = result['buttonPosition'] as int;
+        if (newButtonPosition != previousButton) {
+          gameState.buttonPosition = newButtonPosition;
+          sessionManager.buttonPosition = newButtonPosition;
+          addAction("🔘 Button moved to Player $newButtonPosition");
+        }
+      }
+
+      for (int seat = 1; seat <= widget.numberOfPlayers; seat++) {
+        final isActive = sessionManager.activeSeats.contains(seat);
+        gameState.setPlayerActive(seat, isActive);
+      }
+
+      // Get active players for position calculations
+      List<int> activePlayers = gameState.getActivePlayers();
+      final activeCountChanged = activePlayers.length != previousActiveCount;
+
+      // Recalculate blind positions based on new button position
+      if (activePlayers.length >= 2) {
+        if (activePlayers.length == 2) {
+          // Heads-up: button is SB, other player is BB
+          if (activePlayers.contains(gameState.buttonPosition)) {
+            sessionManager.actualSBSeat = gameState.buttonPosition;
+            // Find the other active player for BB
+            sessionManager.actualBBSeat = activePlayers.firstWhere((p) => p != gameState.buttonPosition);
+          }
+        } else {
+          // Multi-way: find SB and BB positions among active players
+          int sbPosition = gameState.buttonPosition;
+          int attempts = 0;
+          // Find first active player after button for SB
+          do {
+            sbPosition = (sbPosition % gameState.numberOfPlayers) + 1;
+            attempts++;
+            if (activePlayers.contains(sbPosition)) {
+              break;
+            }
+          } while (attempts < gameState.numberOfPlayers);
+          sessionManager.actualSBSeat = sbPosition;
+
+          // Find next active player after SB for BB
+          int bbPosition = sbPosition;
+          attempts = 0;
+          do {
+            bbPosition = (bbPosition % gameState.numberOfPlayers) + 1;
+            attempts++;
+            if (activePlayers.contains(bbPosition)) {
+              break;
+            }
+          } while (attempts < gameState.numberOfPlayers);
+          sessionManager.actualBBSeat = bbPosition;
+        }
+      }
+
+      // Check if the current player was deactivated or if button/positions changed
+      final currentPlayerStillActive = sessionManager.activeSeats.contains(previousCurrentPlayer);
+      final buttonChanged = gameState.buttonPosition != previousButton;
+
+      if (!currentPlayerStillActive && !gameState.bettingRoundComplete) {
+        // Current player was deactivated, advance to next active player
+        int nextPlayer = previousCurrentPlayer;
+        int attempts = 0;
+        do {
+          nextPlayer = (nextPlayer % gameState.numberOfPlayers) + 1;
+          attempts++;
+
+          if (attempts > gameState.numberOfPlayers) {
+            break;
+          }
+
+          final playerState = gameState.players[nextPlayer - 1];
+          if (playerState.isActive && !playerState.hasFolded) {
+            break;
+          }
+        } while (nextPlayer != previousCurrentPlayer);
+
+        gameState.currentPlayer = nextPlayer;
+        addAction("⏭️ Player ${previousCurrentPlayer} removed - Player ${nextPlayer} to act");
+      } else if ((buttonChanged || activeCountChanged) && !gameState.bettingRoundComplete) {
+        // Button or active players changed, recalculate who should act
+        if (activePlayers.length >= 2) {
+          if (gameState.currentRound == BettingRound.preflop) {
+            // For preflop: UTG is first active player after BB
+            // We already calculated actualBBSeat above
+            int bbPosition = sessionManager.actualBBSeat ?? gameState.buttonPosition;
+            int utgPosition = gameState.currentPlayer;
+            int nextPlayer = bbPosition;
+            int attempts = 0;
+            do {
+              nextPlayer = (nextPlayer % gameState.numberOfPlayers) + 1;
+              attempts++;
+              if (activePlayers.contains(nextPlayer) && !gameState.players[nextPlayer - 1].hasFolded) {
+                utgPosition = nextPlayer;
+                break;
+              }
+            } while (attempts < gameState.numberOfPlayers);
+            gameState.currentPlayer = utgPosition;
+
+            // Log with position name
+            final playerName = sessionManager.getPlayerNameWithPosition(utgPosition);
+            addAction("🔄 Positions recalculated - $playerName to act");
+          } else {
+            // Postflop: first active player after button who hasn't folded
+            int nextPlayer = gameState.buttonPosition;
+            int attempts = 0;
+            do {
+              nextPlayer = (nextPlayer % gameState.numberOfPlayers) + 1;
+              attempts++;
+              if (activePlayers.contains(nextPlayer) && !gameState.players[nextPlayer - 1].hasFolded) {
+                gameState.currentPlayer = nextPlayer;
+                break;
+              }
+            } while (attempts < gameState.numberOfPlayers);
+
+            final playerName = sessionManager.getPlayerNameWithPosition(gameState.currentPlayer);
+            addAction("🔄 Positions recalculated - $playerName to act");
+          }
+        }
+      } else if (currentPlayerStillActive && !buttonChanged) {
+        addAction("👥 Player configuration updated");
+      }
+    });
   }
 
   Future<void> _showSettingsDialog() async {

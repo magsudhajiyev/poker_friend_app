@@ -524,7 +524,89 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                       ),
                       SizedBox(height: 20),
                     ],
-                    
+
+                    // Button position selector for Manage Players mode
+                    if (!widget.isInitialSetup) ...[
+                      Container(
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF1F1F23),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Image.asset(
+                                  'icons/button.png',
+                                  width: 48,
+                                  height: 48,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Button Position',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: List.generate(9, (index) {
+                                  final seatNum = index + 1;
+                                  final isSelected = (selectedButtonPosition ?? widget.buttonPosition) == seatNum;
+                                  final isActive = seatActive[seatNum] ?? false;
+                                  return GestureDetector(
+                                    onTap: isActive ? () => setState(() {
+                                      selectedButtonPosition = seatNum;
+                                    }) : null,
+                                    child: Container(
+                                      margin: EdgeInsets.only(right: 12),
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: !isActive
+                                            ? Color(0xFF0A0A0C)
+                                            : isSelected
+                                            ? Color(0xFFcb5242)
+                                            : Color(0xFF161618),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: !isActive
+                                              ? Color(0xFF1A1A1E)
+                                              : isSelected
+                                              ? Color(0xFFcb5242)
+                                              : Color(0xFF2A2A2E),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '$seatNum',
+                                          style: TextStyle(
+                                            color: isActive ? Colors.white : Color(0xFF4A4A4E),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                    ],
+
                     // Player seats - always show 9 seats
                     ...List.generate(9, (index) {
                       final seatNumber = index + 1;
