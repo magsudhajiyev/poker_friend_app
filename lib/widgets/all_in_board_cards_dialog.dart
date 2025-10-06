@@ -235,23 +235,23 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
         // Row 1: A, K, Q, J, T
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: _ranks.sublist(0, 5).map((rank) => _buildRankCard(rank)).toList(),
+          children: _ranks.sublist(0, 5).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
         ),
         SizedBox(height: 12),
         // Row 2: 9, 8, 7, 6, 5
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: _ranks.sublist(5, 10).map((rank) => _buildRankCard(rank)).toList(),
+          children: _ranks.sublist(5, 10).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
         ),
         SizedBox(height: 12),
         // Row 3: 4, 3, 2
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            ..._ranks.sublist(10, 13).map((rank) => _buildRankCard(rank)).toList(),
-            // Add empty spacers to center the 3 cards
-            Container(width: 50),
-            Container(width: 50),
+            ..._ranks.sublist(10, 13).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
+            // Add empty spacers to balance the row
+            Expanded(child: Container()),
+            Expanded(child: Container()),
           ],
         ),
       ],
@@ -264,11 +264,13 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
         widget.excludedCards.contains('$rank$suit') ||
         _currentlySelected.contains('$rank$suit'));
 
-    return GestureDetector(
-      onTap: isCompletelyExcluded ? null : () => _selectRank(rank),
-      child: Container(
-        width: 50,
-        height: 70,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: GestureDetector(
+        onTap: isCompletelyExcluded ? null : () => _selectRank(rank),
+        child: Container(
+          // Remove fixed width, let Expanded control it
+          height: 70,
         decoration: BoxDecoration(
           color: isCompletelyExcluded ? Color(0xFF2A2A2E) : Color(0xFF3A3A3E),
           border: Border.all(
@@ -301,6 +303,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
               ),
           ],
         ),
+        ),
       ),
     );
   }
@@ -308,7 +311,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
   Widget _buildSuitSelection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: _suits.map((suit) => _buildSuitCard(suit)).toList(),
+      children: _suits.map((suit) => Expanded(child: _buildSuitCard(suit))).toList(),
     );
   }
 
@@ -319,11 +322,13 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
 
     Color suitColor = _getSuitColor(suit);
 
-    return GestureDetector(
-      onTap: isExcluded ? null : () => _selectSuit(suit),
-      child: Container(
-        width: 60,
-        height: 85,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: GestureDetector(
+        onTap: isExcluded ? null : () => _selectSuit(suit),
+        child: Container(
+          // Remove fixed width, let Expanded control it
+          height: 85,
         decoration: BoxDecoration(
           color: isExcluded ? Color(0xFF2A2A2E) : Color(0xFF3A3A3E),
           border: Border.all(
@@ -368,6 +373,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
                 ),
               ),
           ],
+        ),
         ),
       ),
     );
