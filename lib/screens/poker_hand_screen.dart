@@ -3366,21 +3366,22 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void completeHand() async {
     // Save the pot amount BEFORE showing any dialogs
     final potAmount = gameState.currentPot;
-    
+
     // First, show winner selection dialog - ALWAYS show it
     List<int> activePlayers = _getActivePlayers();
     if (activePlayers.isEmpty) {
       // If no active players, get all players for selection
       activePlayers = List.generate(gameState.numberOfPlayers, (i) => i + 1);
     }
-    
+
     List<String> playerNames = [];
-    
-    // Get player names for the dialog
-    for (int i = 1; i <= gameState.numberOfPlayers; i++) {
-      playerNames.add(sessionManager.getPlayerName(i));
+
+    // Get player names with positions for the dialog
+    for (int playerId in activePlayers) {
+      String playerName = sessionManager.getPlayerNameWithPosition(playerId);
+      playerNames.add(playerName);
     }
-    
+
     Map<String, dynamic>? winnerResult;
 
     // ALWAYS show winner selection dialog
@@ -3400,6 +3401,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // If user somehow cancelled (shouldn't happen with barrierDismissible: false),
     // show again until they select someone
     while (winnerResult == null) {
+      // Rebuild playerNames in case they changed
+      playerNames.clear();
+      for (int playerId in activePlayers) {
+        String playerName = sessionManager.getPlayerNameWithPosition(playerId);
+        playerNames.add(playerName);
+      }
+
       winnerResult = await showDialog<Map<String, dynamic>>(
         context: context,
         barrierDismissible: false,

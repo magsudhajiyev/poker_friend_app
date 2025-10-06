@@ -90,17 +90,16 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
   }
 
   String _getPlayerDisplayName(int playerId) {
-    final playerName = playerId <= widget.playerNames.length
-        ? widget.playerNames[playerId - 1]
-        : 'Player $playerId';
+    // Find the index of this player in activePlayers list
+    final playerIndex = widget.activePlayers.indexOf(playerId);
 
-    final position = PokerPositions.getPositionName(
-      playerId,
-      widget.buttonPosition,
-      widget.playerCount
-    );
+    if (playerIndex >= 0 && playerIndex < widget.playerNames.length) {
+      // playerNames already includes position from sessionManager.getPlayerNameWithPosition()
+      return widget.playerNames[playerIndex];
+    }
 
-    return '$playerName ($position)';
+    // Fallback if player not found (shouldn't happen)
+    return 'Player $playerId';
   }
 
   List<Widget> _buildIndividualSharesDisplay() {
