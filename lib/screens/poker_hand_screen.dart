@@ -634,20 +634,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SessionHistoryScreen(),
-                              ),
-                            );
-                          },
+                          onPressed: _skipCurrentAction,
                           icon: Icon(
-                            Icons.history,
+                            Icons.skip_next,
                             color: Colors.white,
                             size: 18,
                           ),
                           padding: EdgeInsets.zero,
+                          tooltip: 'Skip',
                         ),
                       ),
                       if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river)
@@ -2198,6 +2192,81 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     setState(() {});
   }
 
+  void _skipCurrentAction() {
+    // Skip the entire hand - move button and start fresh without incrementing hand number
+    setState(() {
+      // Move button to next active player
+      int nextButton = gameState.buttonPosition;
+      int attempts = 0;
+      do {
+        nextButton = (nextButton % gameState.numberOfPlayers) + 1;
+        attempts++;
+      } while ((!gameState.players[nextButton - 1].isActive || gameState.players[nextButton - 1].currentStack <= 0) && attempts < gameState.numberOfPlayers);
+
+      if (attempts < gameState.numberOfPlayers) {
+        gameState.buttonPosition = nextButton;
+      }
+
+      // Reset all players
+      for (var player in gameState.players) {
+        player.reset();
+      }
+
+      // Reset game state
+      gameState.currentRound = BettingRound.preflop;
+      gameState.bettingRoundComplete = false;
+      gameState.hasBetThisRound = false;
+      gameState.currentPot = 0.0;
+      gameState.currentBet = 0.0;
+
+      // Initialize pot with blinds for new hand
+      gameState.initializePot();
+
+      // Update sessionManager with new blind positions so position names show correctly
+      sessionManager.actualSBSeat = gameState.effectiveSBPosition;
+      sessionManager.actualBBSeat = gameState.effectiveBBPosition;
+      sessionManager.buttonPosition = gameState.buttonPosition;
+
+      // Set initial action order manually (can't call private _setInitialActionOrder)
+      List<int> activePlayers = gameState.getActivePlayers();
+      if (activePlayers.length >= 2) {
+        if (activePlayers.length == 2) {
+          // Heads up: button acts first preflop
+          gameState.currentPlayer = activePlayers.contains(gameState.buttonPosition)
+              ? gameState.buttonPosition
+              : activePlayers[0];
+        } else {
+          // Multi-way: UTG acts first (first active player after BB)
+          int bbPosition = gameState.effectiveBBPosition;
+          int utgPosition = gameState.currentPlayer; // Will be set properly
+
+          // Find first active player after BB
+          int nextPlayer = bbPosition;
+          int attempts = 0;
+          do {
+            nextPlayer = (nextPlayer % gameState.numberOfPlayers) + 1;
+            attempts++;
+            if (activePlayers.contains(nextPlayer)) {
+              utgPosition = nextPlayer;
+              break;
+            }
+          } while (attempts < gameState.numberOfPlayers);
+
+          gameState.currentPlayer = utgPosition;
+        }
+      } else if (activePlayers.isNotEmpty) {
+        gameState.currentPlayer = activePlayers[0];
+      }
+
+      // Clear actions and add skip message
+      actions.clear();
+      actions.add("⏭️ Hand skipped - Button moved to Player ${gameState.buttonPosition}");
+      actions.add("Hand #${gameState.handNumber} ready");
+      actions.add(gameState.getGameStateInfo());
+      actions.add(_getToActMessage());
+    });
+  }
+
   void _performPokerAction(PlayerAction action) {
     if (gameState.bettingRoundComplete) {
       addAction("Betting round is complete. Press 'Next Street' to continue.");
@@ -3082,13 +3151,82 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void _completeHandAutomatically() async {
     // Save pot amount BEFORE distributing
     final potAmount = gameState.currentPot;
-    
+
     // Get the remaining active player
     List<int> activePlayers = _getActivePlayers();
-    
-    // Instead of automatically awarding, ALWAYS show winner selection
-    // This gives the user control and ensures the winner is always captured
-    completeHand(); // This will show the winner selection dialog
+
+    // If only one player remains, award pot automatically without dialog
+    if (activePlayers.length == 1) {
+      final winnerId = activePlayers[0];
+      final winnerName = sessionManager.getPlayerName(winnerId);
+
+      // Award pot to winner
+      final winnerPlayer = gameState.players[winnerId - 1];
+      winnerPlayer.currentStack += potAmount;
+
+      addAction("🏆 $winnerName wins \$${potAmount.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} (last player standing)");
+
+      // Complete hand in session manager
+      final currentStack = gameState.getPlayerStack(sessionManager.ourSeatNumber ?? 1);
+      sessionManager.completeCurrentHand(
+        potAmount: potAmount,
+        winnerId: winnerId,
+        currentStack: currentStack,
+      );
+
+      // Show card selection for hero (to move to next hand)
+      _showCardSelectionForNextHand();
+    } else {
+      // Multiple players remain, show winner selection dialog
+      completeHand();
+    }
+  }
+
+  void _showCardSelectionForNextHand() async {
+    addAction("✅ Hand completed!");
+
+    // Show hole cards dialog for the completed hand
+    await _showHoleCardsDialog();
+
+    // For individual sessions, return to the session tracking screen
+    if (widget.isIndividualSession) {
+      final ourSeat = sessionManager.ourSeatNumber;
+      final finalStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : widget.individualCurrentStack ?? 0.0;
+      final potSize = gameState.currentPot;
+
+      Navigator.pop(context, {
+        'completed': true,
+        'finalStack': finalStack,
+        'potSize': potSize,
+      });
+      return;
+    }
+
+    // For full sessions, start next hand
+    // Check for busted players before starting new hand
+    await _checkForBustedPlayers();
+
+    setState(() {
+      // Reset all-in completion flag for new hand
+      _allInHandCompleted = false;
+
+      // Start new hand in game state
+      gameState.startNewHand();
+
+      // Start new hand in session manager
+      sessionManager.startHand(
+        gameState.handNumber,
+        gameState.buttonPosition,
+        sbSeat: gameState.effectiveSBPosition,
+        bbSeat: gameState.effectiveBBPosition,
+      );
+
+      actions.clear(); // Clear actions for new hand
+      actions.add("💾 Hand #${gameState.handNumber - 1} saved");
+      actions.add("Hand #${gameState.handNumber} started");
+      actions.add(gameState.getGameStateInfo());
+      actions.add(_getToActMessage());
+    });
   }
 
   void completeHand() async {
