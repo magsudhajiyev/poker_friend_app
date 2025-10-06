@@ -661,6 +661,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           isIndividualSession: true,
           individualCurrentStack: _currentStack,
           individualSessionId: _sessionId,
+          individualTotalBuyIn: _totalBuyIn, // Pass total buy-in for proper tracking
         ),
       ),
     );

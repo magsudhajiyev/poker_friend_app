@@ -34,6 +34,7 @@ class PokerHandScreen extends StatefulWidget {
   final bool isIndividualSession;
   final double? individualCurrentStack;
   final String? individualSessionId;
+  final double? individualTotalBuyIn;
 
   // Full session parameters
   final String? sessionName;
@@ -55,6 +56,7 @@ class PokerHandScreen extends StatefulWidget {
     this.isIndividualSession = false,
     this.individualCurrentStack,
     this.individualSessionId,
+    this.individualTotalBuyIn,
     this.sessionName,
     this.buyInAmount,
     this.startingStack,
@@ -111,6 +113,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         playerCount: widget.numberOfPlayers,
         gameType: widget.gameType,
         existingSessionId: widget.individualSessionId, // Use existing session ID for individual sessions
+        initialBuyIn: widget.individualTotalBuyIn, // Pass total buy-in for individual sessions
       );
     }
     
