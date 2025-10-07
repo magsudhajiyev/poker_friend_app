@@ -15,7 +15,6 @@ import '../services/bankroll_service.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../screens/auth_screen.dart';
-import '../screens/bankroll_screen.dart';
 import '../widgets/loading_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -248,23 +247,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 
                 // Goal Progress Card
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BankrollScreen(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(24),
-                    margin: EdgeInsets.only(bottom: 24),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF1F1F23),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(24),
+                  margin: EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF1F1F23),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -353,7 +343,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ],
                       ),
                     ],
-                  ),
                   ),
                 ),
                 

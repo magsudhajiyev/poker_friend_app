@@ -1,0 +1,144 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
+
+class SessionResultService {
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static const String _sessionResultsCollection = 'session_results';
+
+  // Add a session result
+  static Future<void> addSessionResult({
+    required double amount,
+    required String gameType, // 'cash' or 'tournament'
+  }) async {
+    try {
+      final userId = AuthService.currentUser?.uid;
+      final userEmail = AuthService.currentUser?.email;
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
+      await _firestore.collection(_sessionResultsCollection).add({
+        'userId': userId,
+        'userEmail': userEmail,
+        'amount': amount,
+        'gameType': gameType,
+        'timestamp': FieldValue.serverTimestamp(),
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+
+      print('✅ Session result added: \$$amount ($gameType)');
+    } catch (e) {
+      print('Error adding session result: $e');
+      rethrow;
+    }
+  }
+
+  // Get all session results for current user
+  static Future<List<Map<String, dynamic>>> getAllSessionResults() async {
+    try {
+      final userId = AuthService.currentUser?.uid;
+      if (userId == null) {
+        return [];
+      }
+
+      final snapshot = await _firestore
+          .collection(_sessionResultsCollection)
+          .where('userId', isEqualTo: userId)
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          ...doc.data(),
+        };
+      }).toList();
+    } catch (e) {
+      print('Error getting session results: $e');
+      return [];
+    }
+  }
+
+  // Get session results for a specific date range
+  static Future<List<Map<String, dynamic>>> getSessionResultsByDateRange({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      final userId = AuthService.currentUser?.uid;
+      if (userId == null) {
+        return [];
+      }
+
+      final snapshot = await _firestore
+          .collection(_sessionResultsCollection)
+          .where('userId', isEqualTo: userId)
+          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
+          .orderBy('timestamp', descending: false)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          ...doc.data(),
+        };
+      }).toList();
+    } catch (e) {
+      print('Error getting session results by date range: $e');
+      return [];
+    }
+  }
+
+  // Get aggregated data for earnings chart (grouped by week or day)
+  static Future<Map<String, dynamic>> getEarningsChartData({
+    int daysBack = 30,
+  }) async {
+    try {
+      final endDate = DateTime.now();
+      final startDate = endDate.subtract(Duration(days: daysBack));
+
+      final results = await getSessionResultsByDateRange(
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      // Group by date and game type
+      Map<String, Map<String, double>> groupedData = {};
+
+      for (var result in results) {
+        DateTime date;
+        if (result['timestamp'] != null) {
+          date = (result['timestamp'] as Timestamp).toDate();
+        } else if (result['createdAt'] != null) {
+          date = DateTime.parse(result['createdAt']);
+        } else {
+          continue;
+        }
+
+        final dateKey = '${date.month}/${date.day}';
+        final gameType = result['gameType'] as String? ?? 'cash';
+        final amount = (result['amount'] as num?)?.toDouble() ?? 0.0;
+
+        if (!groupedData.containsKey(dateKey)) {
+          groupedData[dateKey] = {'tournament': 0.0, 'cash': 0.0};
+        }
+
+        groupedData[dateKey]![gameType] = (groupedData[dateKey]![gameType] ?? 0.0) + amount;
+      }
+
+      return {
+        'chartData': groupedData,
+        'totalCash': results
+            .where((r) => r['gameType'] == 'cash')
+            .fold<double>(0.0, (sum, r) => sum + ((r['amount'] as num?)?.toDouble() ?? 0.0)),
+        'totalTournament': results
+            .where((r) => r['gameType'] == 'tournament')
+            .fold<double>(0.0, (sum, r) => sum + ((r['amount'] as num?)?.toDouble() ?? 0.0)),
+      };
+    } catch (e) {
+      print('Error getting earnings chart data: $e');
+      return {'chartData': {}, 'totalCash': 0.0, 'totalTournament': 0.0};
+    }
+  }
+}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
+import '../services/session_result_service.dart';
 import '../screens/settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -13,10 +14,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _goalController = TextEditingController();
   final _bankrollController = TextEditingController();
   final _sessionResultController = TextEditingController();
-  
+
   double currentBankroll = 0.0;
   double bankrollGoal = 0.0;
   bool isLoading = true;
+  String _selectedGameType = 'cash'; // Default to cash
 
   @override
   void initState() {
@@ -111,13 +113,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _addSessionResult() async {
     try {
       final result = double.tryParse(_sessionResultController.text) ?? 0.0;
+
+      if (result == 0.0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please enter a valid amount'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Add to bankroll
       await BankrollService.addToBankroll(result);
-      
+
+      // Save session result with game type
+      await SessionResultService.addSessionResult(
+        amount: result,
+        gameType: _selectedGameType,
+      );
+
       // Reload data
       await _loadData();
-      
+
       _sessionResultController.clear();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Session result added!'),
@@ -414,6 +434,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: Color(0xFF9A9A9A),
                           fontWeight: FontWeight.w500,
                         ),
+                      ),
+                      SizedBox(height: 16),
+                      // Game Type Selector
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _selectedGameType = 'cash'),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _selectedGameType == 'cash' ? Color(0xFF5AC95A) : Color(0xFF2A2A2E),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _selectedGameType == 'cash' ? Color(0xFF5AC95A) : Color(0xFF3A3A3E),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Cash Game',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _selectedGameType = 'tournament'),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _selectedGameType == 'tournament' ? Color(0xFF5B9CDF) : Color(0xFF2A2A2E),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _selectedGameType == 'tournament' ? Color(0xFF5B9CDF) : Color(0xFF3A3A3E),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Tournament',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 16),
                       TextField(
