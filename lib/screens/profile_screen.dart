@@ -522,6 +522,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
 
+                // Log Out Button
+                Container(
+                  width: double.infinity,
+                  margin: EdgeInsets.only(bottom: 24),
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      // Show confirmation dialog
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: Color(0xFF1F1F23),
+                          title: Text(
+                            'Log Out',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          content: Text(
+                            'Are you sure you want to log out?',
+                            style: TextStyle(color: Color(0xFF9A9A9A)),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(color: Color(0xFF9A9A9A)),
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                              child: Text(
+                                'Log Out',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        await AuthService.signOut();
+                        // AuthWrapper's StreamBuilder will automatically navigate to AuthScreen
+                        if (mounted) {
+                          // Pop all screens to go back to root (AuthWrapper)
+                          Navigator.of(context).popUntil((route) => route.isFirst);
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF1F1F23),
+                      padding: EdgeInsets.all(20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        side: BorderSide(color: Colors.red.withOpacity(0.3)),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            Icons.logout,
+                            color: Colors.red,
+                            size: 24,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            'Log Out',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.red,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 SizedBox(height: 100), // Space for bottom navigation
               ],
             ),

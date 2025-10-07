@@ -108,101 +108,96 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.primaryContainer,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // App Header
-              Padding(
-                padding: EdgeInsets.all(32.0),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.workspace_premium,
-                      size: 64,
+      backgroundColor: Color(0xFF161618),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // App Header
+            Padding(
+              padding: EdgeInsets.fromLTRB(32, 60, 32, 40),
+              child: Column(
+                children: [
+                  // Logo
+                  Image.asset(
+                    'logo.png',
+                    width: 100,
+                    height: 100,
+                  ),
+                  SizedBox(height: 24),
+                  Text(
+                    'Welcome to Poker Friend',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
                       color: Colors.white,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Poker Logger',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Sign in to track your poker sessions',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Auth Form
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  child: Column(
-                    children: [
-                      // Tab Bar
-                      TabBar(
+                ],
+              ),
+            ),
+
+            // Auth Form
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color(0xFF1F1F23),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    // Tab Bar
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Color(0xFF2A2A2E),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: TabBar(
                         controller: _tabController,
-                        labelColor: theme.colorScheme.primary,
-                        unselectedLabelColor: Colors.grey,
-                        indicatorColor: theme.colorScheme.primary,
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Color(0xFF9A9A9A),
+                        indicatorColor: Color(0xFFcb5242),
+                        indicatorWeight: 3,
+                        labelStyle: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                         tabs: [
                           Tab(text: 'Sign In'),
                           Tab(text: 'Register'),
                         ],
                       ),
-                      
-                      // Tab Views
-                      Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildSignInForm(theme),
-                            _buildRegisterForm(theme),
-                          ],
-                        ),
+                    ),
+
+                    // Tab Views
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildSignInForm(),
+                          _buildRegisterForm(),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildSignInForm(ThemeData theme) {
+  Widget _buildSignInForm() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(24),
       child: Form(
@@ -211,15 +206,32 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(height: 20),
-            
+
             TextFormField(
               controller: _loginEmailController,
               keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
+                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                prefixIcon: Icon(Icons.email, color: Color(0xFF9A9A9A)),
+                filled: true,
+                fillColor: Color(0xFF2A2A2E),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red),
                 ),
               ),
               validator: (value) {
@@ -232,21 +244,41 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 return null;
               },
             ),
-            
+
             SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _loginPasswordController,
               obscureText: _obscureLoginPassword,
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Password',
-                prefixIcon: Icon(Icons.lock),
+                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                prefixIcon: Icon(Icons.lock, color: Color(0xFF9A9A9A)),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureLoginPassword ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(
+                    _obscureLoginPassword ? Icons.visibility : Icons.visibility_off,
+                    color: Color(0xFF9A9A9A),
+                  ),
                   onPressed: () => setState(() => _obscureLoginPassword = !_obscureLoginPassword),
                 ),
+                filled: true,
+                fillColor: Color(0xFF2A2A2E),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red),
                 ),
               ),
               validator: (value) {
@@ -256,18 +288,19 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 return null;
               },
             ),
-            
+
             SizedBox(height: 24),
-            
+
             ElevatedButton(
               onPressed: _isLoading ? null : _signIn,
               style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
+                backgroundColor: Color(0xFFcb5242),
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                disabledBackgroundColor: Colors.grey[600],
               ),
               child: _isLoading
                   ? SizedBox(
@@ -283,12 +316,15 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
             ),
-            
+
             SizedBox(height: 16),
-            
+
             TextButton(
               onPressed: () => _showForgotPasswordDialog(),
-              child: Text('Forgot Password?'),
+              child: Text(
+                'Forgot Password?',
+                style: TextStyle(color: Color(0xFF9A9A9A)),
+              ),
             ),
           ],
         ),
@@ -296,7 +332,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildRegisterForm(ThemeData theme) {
+  Widget _buildRegisterForm() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(24),
       child: Form(
@@ -305,14 +341,31 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(height: 20),
-            
+
             TextFormField(
               controller: _registerNameController,
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Display Name',
-                prefixIcon: Icon(Icons.person),
+                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                prefixIcon: Icon(Icons.person, color: Color(0xFF9A9A9A)),
+                filled: true,
+                fillColor: Color(0xFF2A2A2E),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red),
                 ),
               ),
               validator: (value) {
@@ -325,17 +378,34 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 return null;
               },
             ),
-            
+
             SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _registerEmailController,
               keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
+                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                prefixIcon: Icon(Icons.email, color: Color(0xFF9A9A9A)),
+                filled: true,
+                fillColor: Color(0xFF2A2A2E),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red),
                 ),
               ),
               validator: (value) {
@@ -348,21 +418,41 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 return null;
               },
             ),
-            
+
             SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _registerPasswordController,
               obscureText: _obscureRegisterPassword,
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Password',
-                prefixIcon: Icon(Icons.lock),
+                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                prefixIcon: Icon(Icons.lock, color: Color(0xFF9A9A9A)),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureRegisterPassword ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(
+                    _obscureRegisterPassword ? Icons.visibility : Icons.visibility_off,
+                    color: Color(0xFF9A9A9A),
+                  ),
                   onPressed: () => setState(() => _obscureRegisterPassword = !_obscureRegisterPassword),
                 ),
+                filled: true,
+                fillColor: Color(0xFF2A2A2E),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red),
                 ),
               ),
               validator: (value) {
@@ -375,21 +465,41 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 return null;
               },
             ),
-            
+
             SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _confirmPasswordController,
               obscureText: _obscureConfirmPassword,
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
-                prefixIcon: Icon(Icons.lock_outline),
+                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF9A9A9A)),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(
+                    _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                    color: Color(0xFF9A9A9A),
+                  ),
                   onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                 ),
+                filled: true,
+                fillColor: Color(0xFF2A2A2E),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red),
                 ),
               ),
               validator: (value) {
@@ -402,18 +512,19 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 return null;
               },
             ),
-            
+
             SizedBox(height: 24),
-            
+
             ElevatedButton(
               onPressed: _isLoading ? null : _register,
               style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
+                backgroundColor: Color(0xFFcb5242),
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                disabledBackgroundColor: Colors.grey[600],
               ),
               child: _isLoading
                   ? SizedBox(
@@ -437,22 +548,44 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
 
   void _showForgotPasswordDialog() {
     final emailController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Reset Password'),
+        backgroundColor: Color(0xFF1F1F23),
+        title: Text(
+          'Reset Password',
+          style: TextStyle(color: Colors.white),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Enter your email address to receive a password reset link.'),
+            Text(
+              'Enter your email address to receive a password reset link.',
+              style: TextStyle(color: Color(0xFF9A9A9A)),
+            ),
             SizedBox(height: 16),
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Email',
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                filled: true,
+                fillColor: Color(0xFF2A2A2E),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFF2A2A2E)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFFcb5242)),
+                ),
               ),
             ),
           ],
@@ -460,7 +593,10 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF9A9A9A)),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -471,7 +607,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Password reset email sent!'),
-                      backgroundColor: Colors.green,
+                      backgroundColor: Color(0xFFcb5242),
                     ),
                   );
                 } catch (e) {
@@ -484,6 +620,10 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 }
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF5AC95A),
+              foregroundColor: Colors.white,
+            ),
             child: Text('Send Reset Link'),
           ),
         ],
