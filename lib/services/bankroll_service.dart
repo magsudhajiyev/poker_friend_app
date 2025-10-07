@@ -108,17 +108,43 @@ class BankrollService {
       // Calculate total sessions
       int totalSessions = sessions.length;
 
-      // Calculate total hours (estimate based on session count)
-      double totalHours = totalSessions * 1.5; // Estimate 1.5 hours per session
-
-      // Calculate win rate (simplified - based on positive profit sessions)
+      // Calculate total hours from actual session durations
+      double totalHours = 0.0;
       int wonSessions = 0;
       double totalProfit = 0.0;
-      
-      // Placeholder data - replace with real calculations later
-      double winRate = 74.0; // 74% win rate for demonstration
       int currentStreak = 0;
-      double avgWeeklyEarnings = 0.0;
+
+      for (var session in sessions) {
+        // Calculate hours from session duration if available
+        if (session.containsKey('duration') && session['duration'] != null) {
+          // Duration is in minutes
+          totalHours += (session['duration'] as num).toDouble() / 60.0;
+        }
+
+        // Calculate win rate based on profit/loss
+        double profit = 0.0;
+        if (session.containsKey('profit') && session['profit'] != null) {
+          profit = (session['profit'] as num).toDouble();
+        } else if (session.containsKey('finalStack') && session.containsKey('totalBuyIn')) {
+          // Calculate profit from final stack and buy-in
+          double finalStack = (session['finalStack'] as num?)?.toDouble() ?? 0.0;
+          double totalBuyIn = (session['totalBuyIn'] as num?)?.toDouble() ?? 0.0;
+          profit = finalStack - totalBuyIn;
+        }
+
+        totalProfit += profit;
+        if (profit > 0) {
+          wonSessions++;
+        }
+      }
+
+      // Calculate win rate as percentage of winning sessions
+      double winRate = totalSessions > 0 ? (wonSessions / totalSessions) * 100 : 0.0;
+
+      // Calculate average weekly earnings (rough estimate based on total profit)
+      double avgWeeklyEarnings = totalProfit / (totalSessions > 0 ? (totalSessions / 2.0) : 1.0);
+
+      print('📊 DEBUG Stats: Sessions=$totalSessions, Hours=$totalHours, WonSessions=$wonSessions, WinRate=$winRate%, TotalProfit=$totalProfit');
 
       return {
         'totalSessions': totalSessions,
