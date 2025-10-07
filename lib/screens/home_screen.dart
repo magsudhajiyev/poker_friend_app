@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/introduction_screen.dart';
 import '../screens/logging_mode_selection_screen.dart';
 import '../screens/session_history_screen.dart';
@@ -14,6 +15,7 @@ import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/session_result_service.dart';
 import '../screens/auth_screen.dart';
 import '../widgets/loading_screen.dart';
 
@@ -29,12 +31,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   double currentBankroll = 0.0;
   double bankrollGoal = 0.0;
   double bankrollProgress = 0.0;
-  
+
   // Animation variables
   late AnimationController _progressAnimationController;
   late Animation<double> _progressAnimation;
   Map<String, dynamic> playerStats = {};
   List<Map<String, dynamic>> recentSessions = [];
+  List<Map<String, dynamic>> earningsChartData = [];
+  double avgEarnings = 0.0;
   bool isLoadingData = true;
 
   @override
@@ -71,12 +75,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       setState(() {
         isLoadingData = true;
       });
-      
+
       final bankroll = await BankrollService.getCurrentBankroll();
       final goal = await BankrollService.getBankrollGoal();
       final progress = await BankrollService.getBankrollProgress();
       final stats = await BankrollService.getPlayerStatistics();
       final sessions = await _getRecentSessions();
+      final earningsData = await _getEarningsData();
 
       if (mounted) {
         setState(() {
@@ -85,9 +90,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           bankrollProgress = progress;
           playerStats = stats;
           recentSessions = sessions;
+          earningsChartData = earningsData['chartData'];
+          avgEarnings = earningsData['avgEarnings'];
           isLoadingData = false;
         });
-        
+
         // Reset and start animation from 0 to the new progress value
         _progressAnimationController.reset();
         _progressAnimationController.forward();
@@ -138,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // Handle Firebase Timestamp objects
       var createdAt = session['createdAt'];
       var timestamp = session['timestamp'];
-      
+
       if (createdAt != null) {
         // If it's a Firebase Timestamp, convert it
         if (createdAt.runtimeType.toString().contains('Timestamp')) {
@@ -153,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           return DateTime.tryParse(createdAt) ?? DateTime(2000);
         }
       }
-      
+
       if (timestamp != null) {
         // Handle timestamp field similarly
         if (timestamp.runtimeType.toString().contains('Timestamp')) {
@@ -166,10 +173,96 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           return DateTime.tryParse(timestamp) ?? DateTime(2000);
         }
       }
-      
+
       return DateTime(2000);
     } catch (e) {
       return DateTime(2000);
+    }
+  }
+
+  Future<Map<String, dynamic>> _getEarningsData() async {
+    try {
+      // Get all session results
+      final sessionResults = await SessionResultService.getAllSessionResults();
+
+      // Calculate current week (Monday to Sunday)
+      final now = DateTime.now();
+      final currentWeekday = now.weekday; // 1 = Monday, 7 = Sunday
+
+      // Get Monday of current week (weekday 1)
+      final monday = now.subtract(Duration(days: currentWeekday - 1));
+      // Get Sunday of current week
+      final sunday = monday.add(Duration(days: 6));
+
+      print('📅 Current Week: ${DateFormat('MMM d').format(monday)} - ${DateFormat('MMM d').format(sunday)}');
+
+      // Initialize data for all 7 days of current week with zeros
+      Map<String, Map<String, double>> dailyData = {};
+      for (int i = 0; i < 7; i++) {
+        final date = monday.add(Duration(days: i));
+        final dateKey = DateFormat('MMM d').format(date);
+        dailyData[dateKey] = {'tournament': 0.0, 'cash': 0.0, 'dateObj': date.millisecondsSinceEpoch.toDouble()};
+      }
+
+      // Fill in actual data for days that have session results
+      for (var result in sessionResults) {
+        DateTime date;
+        if (result['timestamp'] != null) {
+          date = (result['timestamp'] as Timestamp).toDate();
+        } else if (result['createdAt'] != null) {
+          date = DateTime.parse(result['createdAt']);
+        } else {
+          continue;
+        }
+
+        // Only include data from current week (Monday to Sunday)
+        if (date.isBefore(monday) || date.isAfter(sunday.add(Duration(days: 1)))) continue;
+
+        // Normalize to day (ignore time)
+        final dateKey = DateFormat('MMM d').format(date);
+
+        final gameType = result['gameType'] as String? ?? 'cash';
+        final amount = (result['amount'] as num?)?.toDouble() ?? 0.0;
+
+        if (dailyData.containsKey(dateKey)) {
+          dailyData[dateKey]![gameType] = (dailyData[dateKey]![gameType] ?? 0.0) + amount;
+        }
+      }
+
+      // Convert to list and sort chronologically
+      List<Map<String, dynamic>> chartData = dailyData.entries.map((entry) {
+        return {
+          'date': entry.key,
+          'tournament': entry.value['tournament']!,
+          'cash': entry.value['cash']!,
+          'dateObj': entry.value['dateObj']!,
+        };
+      }).toList();
+
+      // Sort by actual date
+      chartData.sort((a, b) => (a['dateObj'] as double).compareTo(b['dateObj'] as double));
+
+      // Remove dateObj as it's only used for sorting
+      for (var item in chartData) {
+        item.remove('dateObj');
+      }
+
+      // Calculate average earnings: total / number of sessions (can be negative)
+      double totalEarnings = sessionResults.fold(0.0, (sum, r) => sum + ((r['amount'] as num?)?.toDouble() ?? 0.0));
+      double avgEarnings = sessionResults.isNotEmpty ? totalEarnings / sessionResults.length : 0.0;
+
+      print('📊 Earnings Data: ${chartData.length} days, Avg: \$${avgEarnings.toStringAsFixed(2)}');
+
+      return {
+        'chartData': chartData,
+        'avgEarnings': avgEarnings,
+      };
+    } catch (e) {
+      print('Error getting earnings data: $e');
+      return {
+        'chartData': <Map<String, dynamic>>[],
+        'avgEarnings': 0.0,
+      };
     }
   }
 
@@ -408,10 +501,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                           ),
                           Text(
-                            'Avg this week \$582',
+                            'Avg ${avgEarnings >= 0 ? '\$' : '-\$'}${avgEarnings.abs().toStringAsFixed(0)}',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Color(0xFF9A9A9A),
+                              color: avgEarnings >= 0 ? Color(0xFF5AC95A) : Color(0xFFFF6B6B),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -784,18 +877,44 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildEarningsChart() {
-    // Dummy data for the chart
-    final List<Map<String, dynamic>> chartData = [
-      {'date': 'Sep 1', 'tournament': 150, 'cash': 200},
-      {'date': 'Sep 3', 'tournament': 300, 'cash': 150},
-      {'date': 'Sep 5', 'tournament': 100, 'cash': 350},
-      {'date': 'Sep 7', 'tournament': 450, 'cash': 100},
-      {'date': 'Sep 9', 'tournament': 200, 'cash': 400},
-      {'date': 'Sep 11', 'tournament': 350, 'cash': 250},
-    ];
+    // Show empty state if no data
+    if (earningsChartData.isEmpty) {
+      return Container(
+        height: 200,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.show_chart,
+                size: 48,
+                color: Color(0xFF9A9A9A),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'No earnings data yet',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF9A9A9A),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Add session results to see your progress',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF9A9A9A),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return CustomPaint(
-      painter: EarningsChartPainter(chartData),
+      painter: EarningsChartPainter(earningsChartData),
       size: Size.infinite,
     );
   }
@@ -1111,7 +1230,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-// Custom painter for earnings chart
+// Custom painter for earnings chart (bar chart)
 class EarningsChartPainter extends CustomPainter {
   final List<Map<String, dynamic>> data;
 
@@ -1119,53 +1238,141 @@ class EarningsChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+    if (data.isEmpty) return;
 
-    // Chart area (leaving space for axes)
-    final chartArea = Rect.fromLTWH(40, 20, size.width - 60, size.height - 60);
-    
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // Chart area (leaving space for axes and labels)
+    final chartArea = Rect.fromLTWH(50, 20, size.width - 70, size.height - 50);
+
+    // Find max and min values for scaling (including negatives)
+    double maxValue = 0;
+    double minValue = 0;
+    for (var point in data) {
+      final tournament = (point['tournament'] as num?)?.toDouble() ?? 0.0;
+      final cash = (point['cash'] as num?)?.toDouble() ?? 0.0;
+      maxValue = math.max(maxValue, math.max(tournament, cash));
+      minValue = math.min(minValue, math.min(tournament, cash));
+    }
+
+    // Ensure minimum scale
+    if (maxValue == 0 && minValue == 0) {
+      maxValue = 100;
+      minValue = -100;
+    }
+
+    // Round to nearest 100
+    maxValue = ((maxValue / 100).ceil() * 100).toDouble();
+    minValue = ((minValue / 100).floor() * 100).toDouble();
+
+    final valueRange = maxValue - minValue;
+
+    // Calculate zero line position
+    final zeroY = chartArea.bottom - ((0 - minValue) / valueRange) * chartArea.height;
+
     // Draw axes
-    paint.color = Color(0xFF9A9A9A);
-    paint.strokeWidth = 1;
-    
+    final axisPaint = Paint()
+      ..color = Color(0xFF9A9A9A)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
     // Y-axis
     canvas.drawLine(
       Offset(chartArea.left, chartArea.top),
       Offset(chartArea.left, chartArea.bottom),
-      paint,
+      axisPaint,
     );
-    
-    // X-axis
+
+    // Zero line (X-axis)
     canvas.drawLine(
-      Offset(chartArea.left, chartArea.bottom),
-      Offset(chartArea.right, chartArea.bottom),
-      paint,
+      Offset(chartArea.left, zeroY),
+      Offset(chartArea.right, zeroY),
+      axisPaint,
     );
 
     // Draw Y-axis labels
     final textPainter = TextPainter(
       textDirection: ui.TextDirection.ltr,
     );
-    
+
+    // Draw 5 labels from min to max
     for (int i = 0; i <= 4; i++) {
-      final value = (i * 100).toString();
+      final value = minValue + (i * valueRange / 4);
       textPainter.text = TextSpan(
-        text: '\$${value}',
+        text: '\$${value.toInt()}',
         style: TextStyle(
           color: Color(0xFF9A9A9A),
           fontSize: 10,
         ),
       );
       textPainter.layout();
-      
+
       final y = chartArea.bottom - (i / 4) * chartArea.height;
       textPainter.paint(canvas, Offset(5, y - textPainter.height / 2));
     }
 
-    // Draw X-axis labels
+    // Calculate bar width and spacing
+    final barGroupWidth = chartArea.width / data.length;
+    final barWidth = (barGroupWidth - 16) / 2; // 2 bars per group with spacing
+    final spacing = 4.0; // Space between tournament and cash bars
+
+    // Draw bars
     for (int i = 0; i < data.length; i++) {
+      final tournamentValue = (data[i]['tournament'] as num?)?.toDouble() ?? 0.0;
+      final cashValue = (data[i]['cash'] as num?)?.toDouble() ?? 0.0;
+
+      // Calculate x position for this group
+      final groupX = chartArea.left + (i * barGroupWidth) + 8;
+
+      // Draw tournament bar (left bar in group)
+      final tournamentBarX = groupX;
+      final tournamentHeight = ((tournamentValue - 0) / valueRange) * chartArea.height;
+      final tournamentTop = tournamentValue >= 0
+          ? zeroY - tournamentHeight.abs()
+          : zeroY;
+      final tournamentBarHeight = tournamentHeight.abs();
+
+      if (tournamentBarHeight > 0) {
+        paint.color = Color(0xFF5B9CDF);
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(
+              tournamentBarX,
+              tournamentTop,
+              barWidth,
+              tournamentBarHeight,
+            ),
+            Radius.circular(4),
+          ),
+          paint,
+        );
+      }
+
+      // Draw cash bar (right bar in group)
+      final cashBarX = groupX + barWidth + spacing;
+      final cashHeight = ((cashValue - 0) / valueRange) * chartArea.height;
+      final cashTop = cashValue >= 0
+          ? zeroY - cashHeight.abs()
+          : zeroY;
+      final cashBarHeight = cashHeight.abs();
+
+      if (cashBarHeight > 0) {
+        paint.color = Color(0xFF5AC95A);
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(
+              cashBarX,
+              cashTop,
+              barWidth,
+              cashBarHeight,
+            ),
+            Radius.circular(4),
+          ),
+          paint,
+        );
+      }
+
+      // Draw X-axis label (date) centered under the bar group
       textPainter.text = TextSpan(
         text: data[i]['date'],
         style: TextStyle(
@@ -1174,90 +1381,12 @@ class EarningsChartPainter extends CustomPainter {
         ),
       );
       textPainter.layout();
-      
-      final x = chartArea.left + (i / (data.length - 1)) * chartArea.width;
-      textPainter.paint(canvas, Offset(x - textPainter.width / 2, chartArea.bottom + 5));
-    }
 
-    // Draw data lines
-    paint.strokeWidth = 3;
-    
-    // Helper function to create smooth cubic bezier curves
-    List<Offset> _createSmoothCurvePoints(List<double> values, Rect chartArea) {
-      List<Offset> points = [];
-      for (int i = 0; i < values.length; i++) {
-        final x = chartArea.left + (i / (values.length - 1)) * chartArea.width;
-        final y = chartArea.bottom - (values[i] / 500.0) * chartArea.height;
-        points.add(Offset(x, y));
-      }
-      return points;
-    }
-
-    // Helper function to draw smooth curve with cubic bezier
-    void _drawSmoothCurve(Path path, List<Offset> points) {
-      if (points.isEmpty) return;
-
-      path.moveTo(points[0].dx, points[0].dy);
-
-      if (points.length == 2) {
-        path.lineTo(points[1].dx, points[1].dy);
-        return;
-      }
-
-      // Calculate control points for smooth cubic bezier curves
-      for (int i = 0; i < points.length - 1; i++) {
-        final p0 = i > 0 ? points[i - 1] : points[i];
-        final p1 = points[i];
-        final p2 = points[i + 1];
-        final p3 = i < points.length - 2 ? points[i + 2] : p2;
-
-        // Calculate tension for smoother curves
-        const tension = 0.3;
-
-        // Calculate control points
-        final cp1x = p1.dx + (p2.dx - p0.dx) * tension;
-        final cp1y = p1.dy + (p2.dy - p0.dy) * tension;
-        final cp2x = p2.dx - (p3.dx - p1.dx) * tension;
-        final cp2y = p2.dy - (p3.dy - p1.dy) * tension;
-
-        path.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.dx, p2.dy);
-      }
-    }
-
-    // Tournament line (blue) - smooth curves
-    paint.color = Color(0xFF5B9CDF);
-    final tournamentPath = Path();
-    final tournamentValues = data.map<double>((d) => d['tournament'].toDouble()).toList();
-    final tournamentPoints = _createSmoothCurvePoints(tournamentValues, chartArea);
-    _drawSmoothCurve(tournamentPath, tournamentPoints);
-    canvas.drawPath(tournamentPath, paint);
-
-    // Cash game line (green) - smooth curves
-    paint.color = Color(0xFF5AC95A);
-    final cashPath = Path();
-    final cashValues = data.map<double>((d) => d['cash'].toDouble()).toList();
-    final cashPoints = _createSmoothCurvePoints(cashValues, chartArea);
-    _drawSmoothCurve(cashPath, cashPoints);
-    canvas.drawPath(cashPath, paint);
-
-    // Draw data points
-    paint.style = PaintingStyle.fill;
-    
-    for (int i = 0; i < data.length; i++) {
-      final x = chartArea.left + (i / (data.length - 1)) * chartArea.width;
-      
-      // Tournament points
-      final tournamentY = chartArea.bottom - (data[i]['tournament'] / 500.0) * chartArea.height;
-      paint.color = Color(0xFF5B9CDF);
-      canvas.drawCircle(Offset(x, tournamentY), 4, paint);
-      
-      // Cash game points
-      final cashY = chartArea.bottom - (data[i]['cash'] / 500.0) * chartArea.height;
-      paint.color = Color(0xFF5AC95A);
-      canvas.drawCircle(Offset(x, cashY), 4, paint);
+      final labelX = groupX + (barGroupWidth - 16) / 2 - textPainter.width / 2;
+      textPainter.paint(canvas, Offset(labelX, chartArea.bottom + 5));
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
