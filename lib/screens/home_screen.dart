@@ -31,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   double currentBankroll = 0.0;
   double bankrollGoal = 0.0;
   double bankrollProgress = 0.0;
+  String userName = 'User';
 
   // Animation variables
   late AnimationController _progressAnimationController;
@@ -83,6 +84,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final sessions = await _getRecentSessions();
       final earningsData = await _getEarningsData();
 
+      // Get user's display name
+      final user = AuthService.currentUser;
+      String displayName = 'User';
+      if (user != null) {
+        displayName = user.displayName ?? user.email?.split('@')[0] ?? 'User';
+      }
+
       if (mounted) {
         setState(() {
           currentBankroll = bankroll;
@@ -92,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           recentSessions = sessions;
           earningsChartData = earningsData['chartData'];
           avgEarnings = earningsData['avgEarnings'];
+          userName = displayName;
           isLoadingData = false;
         });
 
@@ -300,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Hi, Mike!',
+                            'Hi, $userName!',
                             style: TextStyle(
                               fontSize: 32,
                               color: Colors.white,
@@ -885,10 +894,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.show_chart,
-                size: 48,
-                color: Color(0xFF9A9A9A),
+              Image.asset(
+                'icons/stats.png',
+                width: 48,
+                height: 48,
+                fit: BoxFit.contain,
               ),
               SizedBox(height: 12),
               Text(
