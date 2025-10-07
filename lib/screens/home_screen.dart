@@ -523,7 +523,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               );
                             },
                             child: Text(
-                              'View Calendar',
+                              'View All',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Color(0xFF5AC95A),
@@ -812,33 +812,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildUpcomingEvents() {
-    // Mock upcoming events - replace with real data later
-    final upcomingEvents = [
-      {
-        'title': 'Friday Night Tournament',
-        'date': 'Sep 15, 7:00 PM',
-        'type': 'Tournament',
-        'buyIn': 50.0,
-      },
-      {
-        'title': 'Weekend Cash Game',
-        'date': 'Sep 16, 2:00 PM', 
-        'type': 'Cash Game',
-        'buyIn': 100.0,
-      },
-    ];
+    // TODO: Replace with real calendar events from database
+    // For now, show empty state since we don't have future events
+    final upcomingEvents = <Map<String, dynamic>>[];
 
-    if (upcomingEvents.isEmpty) {
+    // Filter to only show future events (after today)
+    final now = DateTime.now();
+    final futureEvents = upcomingEvents.where((event) {
+      // Parse event date and check if it's in the future
+      // This will be implemented when real event data is available
+      return true;
+    }).toList();
+
+    if (futureEvents.isEmpty) {
       return Container(
         height: 100,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.event_outlined,
-                size: 32,
-                color: Color(0xFF9A9A9A),
+              Image.asset(
+                'icons/calendar.png',
+                width: 48,
+                height: 48,
+                fit: BoxFit.contain,
               ),
               SizedBox(height: 8),
               Text(
@@ -856,7 +853,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     return Column(
-      children: upcomingEvents.map((event) => _buildEventItem(event)).toList(),
+      children: futureEvents.map((event) => _buildEventItem(event)).toList(),
     );
   }
 
