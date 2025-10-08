@@ -786,15 +786,25 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                         final isButtonSeat = seatNumber == (selectedButtonPosition ?? widget.buttonPosition);
                         final position = _getSeatPosition(seatNumber, Size(constraints.maxWidth, constraints.maxHeight));
 
-                        return Positioned(
-                          left: position.dx - 40,
-                          top: position.dy - 45,
-                          child: GestureDetector(
-                            onTap: () => _showSeatDialog(seatNumber),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
+                        // Calculate button position (towards center of table)
+                        final double startAngle = math.pi * 1.25;
+                        final double angleStep = (2 * math.pi) / 9;
+                        final double seatAngle = startAngle + (angleStep * (seatNumber - 1));
+
+                        // Button offset towards center (negative of seat direction)
+                        // Use larger offset (50 pixels) to position button well inside the table
+                        final buttonOffsetX = -50 * math.cos(seatAngle);
+                        final buttonOffsetY = -50 * math.sin(seatAngle);
+
+                        return Stack(
+                          children: [
+                            // Seat circle
+                            Positioned(
+                              left: position.dx - 30,
+                              top: position.dy - 30,
+                              child: GestureDetector(
+                                onTap: () => _showSeatDialog(seatNumber),
+                                child: Container(
                                   width: 60,
                                   height: 60,
                                   decoration: BoxDecoration(
@@ -863,9 +873,14 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                     ),
                                   ),
                                 ),
-                                if (isButtonSeat) ...[
-                                  SizedBox(height: 4),
-                                  Draggable<int>(
+                              ),
+                            ),
+                            // Button positioned towards center
+                            if (isButtonSeat)
+                              Positioned(
+                                left: position.dx - 16 + buttonOffsetX,
+                                top: position.dy - 16 + buttonOffsetY,
+                                child: Draggable<int>(
                                     data: seatNumber,
                                     feedback: Opacity(
                                       opacity: 0.7,
@@ -933,10 +948,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                       height: 32,
                                     ),
                                   ),
-                                ],
-                              ],
-                            ),
-                          ),
+                                ),
+                          ],
                         );
                       }),
                     ],
