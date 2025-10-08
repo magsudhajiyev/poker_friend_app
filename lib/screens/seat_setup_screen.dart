@@ -749,6 +749,32 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               ),
                             ],
                           ),
+                          child: Center(
+                            child: Opacity(
+                              opacity: 0.12,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'icons/logo.png',
+                                    width: 100,
+                                    height: 100,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'POKER FRIEND',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
 
