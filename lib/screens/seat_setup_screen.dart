@@ -7,6 +7,7 @@ import '../models/opponent.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import 'poker_hand_screen.dart';
+import 'dart:math' as math;
 
 class SeatSetupScreen extends StatefulWidget {
   final int? playerCount;
@@ -62,18 +63,14 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   Map<int, bool> seatActive = {};
   List<Opponent> allOpponents = [];
   Map<int, bool> showSaveOpponentTip = {};
+  Offset? buttonDragPosition;
+  bool isDraggingButton = false;
 
   @override
   void initState() {
     super.initState();
     selectedSeat = widget.currentSeat;
-    selectedButtonPosition = widget.buttonPosition ?? 1;
-
-    // Use default player count of 6 if not provided
-    final effectivePlayerCount = widget.playerCount ?? 6;
-
-    // Note: No longer calling initializeDefaultPlayers()
-    // All seats are shown active initially, user deactivates unwanted seats
+    selectedButtonPosition = widget.buttonPosition ?? 1; // Default button to seat 1
 
     // Always initialize 9 seats regardless of player count
     for (int i = 1; i <= 9; i++) {
@@ -106,15 +103,12 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         text: _getCurrentStackForSeat(i)
       );
     }
-    
+
     // Load opponents for autocomplete
     _loadOpponents();
   }
 
   String _getCurrentStackForSeat(int seatNumber) {
-    // For individual session, use the current stack for the user's seat
-    // Note: We'll apply the individual stack after the user selects their seat
-
     // If we have gameState and this is not initial setup, use current stacks
     if (widget.gameState != null && !widget.isInitialSetup) {
       final currentStack = widget.gameState!.getPlayerStack(seatNumber);
@@ -144,7 +138,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
   List<String> _getSuggestions(String query) {
     if (query.isEmpty) return [];
-    
+
     return allOpponents
         .where((opponent) => opponent.name.toLowerCase().contains(query.toLowerCase()))
         .map((opponent) => opponent.name)
@@ -167,171 +161,10 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
     // Show tip if name doesn't exist and it's not a position name
     final isPositionName = PokerPositions.isPositionName(name);
-    
+
     setState(() {
       showSaveOpponentTip[seatNumber] = !existingOpponent && !isPositionName;
     });
-  }
-
-  void _showSaveOpponentDialog(int seatNumber, String name) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          constraints: BoxConstraints(maxWidth: 320),
-          decoration: BoxDecoration(
-            color: Color(0xFF161618),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
-                decoration: BoxDecoration(
-                  color: Color(0xFF1F1F23),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFcb5242).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.person_add,
-                        color: Color(0xFFcb5242),
-                        size: 18,
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Save Opponent?',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Content
-              Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Would you like to save "$name" to your opponents list for future tracking?',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF9A9A9A),
-                    height: 1.4,
-                  ),
-                ),
-              ),
-              // Actions
-              Container(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF1F1F23),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            setState(() {
-                              showSaveOpponentTip[seatNumber] = false;
-                            });
-                          },
-                          child: Text(
-                            'Not Now',
-                            style: TextStyle(
-                              color: Color(0xFF9A9A9A),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        height: 44,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0xFFcb5242), Color(0xFFb8442f)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            try {
-                              final opponent = OpponentService.createNewOpponent(name: name);
-                              await OpponentService.saveOpponent(opponent);
-                              await _loadOpponents(); // Refresh the list
-                              
-                              Navigator.pop(context);
-                              setState(() {
-                                showSaveOpponentTip[seatNumber] = false;
-                              });
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Opponent "$name" saved successfully!'),
-                                  backgroundColor: Color(0xFFcb5242),
-                                ),
-                              );
-                            } catch (e) {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to save opponent: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Save',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Color _getColorForOpponent(OpponentColor color) {
@@ -372,6 +205,460 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     // Use the new position calculation method that considers active players only
     final buttonPos = selectedButtonPosition ?? widget.buttonPosition ?? 1;
     return PokerPositions.getPositionNameForActivePlayers(seatNumber, buttonPos, activeSeats);
+  }
+
+  Offset _getSeatPosition(int seatNumber, Size tableSize) {
+    // Define seat positions ON the table border
+    // Seats should sit exactly on the oval border line
+    final double centerX = tableSize.width / 2;
+    final double centerY = tableSize.height / 2;
+    // Match the table size (80% width, 70% height)
+    final double radiusX = (tableSize.width * 0.80) / 2;
+    final double radiusY = (tableSize.height * 0.70) / 2;
+
+    // Evenly distribute 9 seats around the oval
+    // Seat 1 at top-left, then 2-9 going clockwise
+    // Clockwise from top-left: 1(top-left), 2(left), 3(bottom-left), 4(bottom-center),
+    //         5(bottom-right), 6(right), 7(top-right), 8(top-center), 9(between 8 and 1)
+
+    // Position seats evenly: 360° / 9 = 40° between each seat
+    // Starting position: top-left (225° or 5π/4)
+    final double startAngle = math.pi * 1.25; // Start at top-left (225°)
+    final double angleStep = (2 * math.pi) / 9; // 40° in radians
+
+    // Calculate angle for this seat (clockwise = add angle, not subtract)
+    final double angle = startAngle + (angleStep * (seatNumber - 1));
+
+    final x = centerX + radiusX * math.cos(angle);
+    final y = centerY + radiusY * math.sin(angle);
+
+    return Offset(x, y);
+  }
+
+  void _showSeatDialog(int seatNumber) {
+    final isActive = seatActive[seatNumber] ?? false;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: Color(0xFF161618),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+                decoration: BoxDecoration(
+                  color: Color(0xFF1F1F23),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFcb5242).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$seatNumber',
+                          style: TextStyle(
+                            color: Color(0xFFcb5242),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Seat $seatNumber',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            _getPositionForActiveSeat(seatNumber),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF9A9A9A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Active toggle
+                    Switch(
+                      value: isActive,
+                      activeColor: Color(0xFFcb5242),
+                      inactiveThumbColor: Colors.white,
+                      inactiveTrackColor: Color(0xFF2A2A2E),
+                      onChanged: (value) {
+                        setState(() {
+                          seatActive[seatNumber] = value;
+                          if (value) {
+                            if (nameControllers[seatNumber]!.text.isEmpty) {
+                              nameControllers[seatNumber]!.text = 'Player $seatNumber';
+                            }
+                          }
+                        });
+                        Navigator.pop(context);
+                        if (value) {
+                          // Reopen dialog to edit
+                          Future.delayed(Duration(milliseconds: 100), () {
+                            _showSeatDialog(seatNumber);
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              if (isActive) ...[
+                Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // My Seat selection (only for initial setup)
+                      if (widget.isInitialSetup) ...[
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              // Restore defaults for previous seat before selecting new one
+                              _restoreDefaultsForPreviousSeat(selectedSeat);
+
+                              selectedSeat = seatNumber;
+                              _autoInsertUsernameForSeat(seatNumber);
+
+                              // Set the user's stack from session setup
+                              if (widget.isIndividualSession && widget.individualCurrentStack != null) {
+                                stackControllers[seatNumber]?.text = widget.isCashGame
+                                  ? widget.individualCurrentStack!.toStringAsFixed(2)
+                                  : widget.individualCurrentStack!.toInt().toString();
+                              } else if (widget.startingStack != null) {
+                                stackControllers[seatNumber]?.text = widget.gameType == GameType.cash
+                                  ? widget.startingStack!.toStringAsFixed(2)
+                                  : widget.startingStack!.toInt().toString();
+                              }
+                            });
+                            // Close and reopen dialog to refresh with updated name
+                            Navigator.pop(context);
+                            Future.delayed(Duration(milliseconds: 100), () {
+                              _showSeatDialog(seatNumber);
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: selectedSeat == seatNumber
+                                ? Color(0xFFcb5242).withOpacity(0.1)
+                                : Color(0xFF1F1F23),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: selectedSeat == seatNumber
+                                  ? Color(0xFFcb5242)
+                                  : Color(0xFF2A2A2E),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  selectedSeat == seatNumber ? Icons.check_circle : Icons.circle_outlined,
+                                  color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Color(0xFF9A9A9A),
+                                  size: 20,
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'This is my seat',
+                                  style: TextStyle(
+                                    color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                      ],
+                      // Player name
+                      Autocomplete<String>(
+                        initialValue: TextEditingValue(text: nameControllers[seatNumber]!.text),
+                        optionsBuilder: (TextEditingValue textEditingValue) {
+                          return _getSuggestions(textEditingValue.text);
+                        },
+                        onSelected: (String selection) {
+                          nameControllers[seatNumber]!.text = selection;
+                          widget.sessionManager?.setPlayerName(seatNumber, selection);
+                          _checkIfShouldShowSaveTip(seatNumber, selection);
+                        },
+                        fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+                          // Sync with our original controller
+                          if (controller.text != nameControllers[seatNumber]!.text) {
+                            controller.text = nameControllers[seatNumber]!.text;
+                          }
+
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Color(0xFF1F1F23),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Color(0xFF2A2A2E)),
+                            ),
+                            child: TextField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              onEditingComplete: onEditingComplete,
+                              style: TextStyle(color: Colors.white, fontSize: 16),
+                              decoration: InputDecoration(
+                                labelText: 'Player Name',
+                                labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                                hintText: 'Enter player name',
+                                hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                suffixIcon: allOpponents.isNotEmpty
+                                    ? Icon(Icons.search, size: 18, color: Color(0xFF9A9A9A))
+                                    : null,
+                              ),
+                              textCapitalization: TextCapitalization.words,
+                              onChanged: (value) {
+                                nameControllers[seatNumber]!.text = value;
+                                widget.sessionManager?.setPlayerName(seatNumber, value);
+                                _checkIfShouldShowSaveTip(seatNumber, value);
+                              },
+                            ),
+                          );
+                        },
+                        optionsViewBuilder: (context, onSelected, options) {
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Material(
+                              elevation: 8,
+                              borderRadius: BorderRadius.circular(12),
+                              color: Color(0xFF1F1F23),
+                              child: Container(
+                                constraints: BoxConstraints(maxHeight: 200, maxWidth: 300),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Color(0xFF2A2A2E)),
+                                ),
+                                child: ListView.builder(
+                                  padding: EdgeInsets.all(8),
+                                  shrinkWrap: true,
+                                  itemCount: options.length,
+                                  itemBuilder: (context, index) {
+                                    final option = options.elementAt(index);
+                                    final opponent = allOpponents.firstWhere(
+                                      (o) => o.name == option,
+                                      orElse: () => allOpponents.first,
+                                    );
+
+                                    return Container(
+                                      margin: EdgeInsets.only(bottom: 4),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFF161618),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: ListTile(
+                                        dense: true,
+                                        title: Text(
+                                          option,
+                                          style: TextStyle(color: Colors.white, fontSize: 14),
+                                        ),
+                                        subtitle: Text(
+                                          opponent.playingStyle,
+                                          style: TextStyle(fontSize: 11, color: Color(0xFF9A9A9A)),
+                                        ),
+                                        leading: Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: _getColorForOpponent(opponent.color),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        onTap: () => onSelected(option),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      // Save opponent tip
+                      if (showSaveOpponentTip[seatNumber] == true) ...[
+                        SizedBox(height: 12),
+                        InkWell(
+                          onTap: () async {
+                            try {
+                              final opponent = OpponentService.createNewOpponent(name: nameControllers[seatNumber]!.text);
+                              await OpponentService.saveOpponent(opponent);
+                              await _loadOpponents();
+
+                              setState(() {
+                                showSaveOpponentTip[seatNumber] = false;
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Opponent saved successfully!'),
+                                  backgroundColor: Color(0xFFcb5242),
+                                ),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to save opponent: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFcb5242).withOpacity(0.1),
+                              border: Border.all(color: Color(0xFFcb5242).withOpacity(0.3)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.person_add, size: 16, color: Color(0xFFcb5242)),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Save "${nameControllers[seatNumber]!.text}" as opponent?',
+                                    style: TextStyle(fontSize: 12, color: Color(0xFFcb5242)),
+                                  ),
+                                ),
+                                Icon(Icons.arrow_forward, size: 16, color: Color(0xFFcb5242)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // Stack size input
+                      SizedBox(height: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Color(0xFF1F1F23),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Color(0xFF2A2A2E)),
+                        ),
+                        child: TextField(
+                          controller: stackControllers[seatNumber],
+                          keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          decoration: InputDecoration(
+                            labelText: widget.isCashGame ? 'Buy-in Amount (\$)' : 'Starting Chips',
+                            labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                            hintText: widget.isCashGame ? '100.00' : '1500',
+                            hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                            prefixText: widget.isCashGame ? '\$ ' : '',
+                            prefixStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          onChanged: (value) {
+                            // Validate input format
+                            if (widget.isCashGame) {
+                              if (value.isNotEmpty && !RegExp(r'^\d*\.?\d{0,2}$').hasMatch(value)) {
+                                stackControllers[seatNumber]!.text = stackControllers[seatNumber]!.text.substring(0, stackControllers[seatNumber]!.text.length - 1);
+                                stackControllers[seatNumber]!.selection = TextSelection.fromPosition(TextPosition(offset: stackControllers[seatNumber]!.text.length));
+                              }
+                            } else {
+                              if (value.isNotEmpty && !RegExp(r'^\d+$').hasMatch(value)) {
+                                stackControllers[seatNumber]!.text = stackControllers[seatNumber]!.text.substring(0, stackControllers[seatNumber]!.text.length - 1);
+                                stackControllers[seatNumber]!.selection = TextSelection.fromPosition(TextPosition(offset: stackControllers[seatNumber]!.text.length));
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Actions
+                Container(
+                  padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 44,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFFcb5242), Color(0xFFb8442f)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'Done',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    'This seat is empty. Toggle the switch above to activate it.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF9A9A9A),
+                      height: 1.4,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -420,8 +707,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          widget.isInitialSetup 
-                              ? 'Choose your seat and configure table' 
+                          widget.isInitialSetup
+                              ? 'Click seats to configure. Drag button to position.'
                               : 'Update player information',
                           style: TextStyle(
                             fontSize: 12,
@@ -435,528 +722,203 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                 ],
               ),
             ),
-            
-            // Content
+
+            // Visual Poker Table
             Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (widget.isInitialSetup) ...[
-                      Container(
-                        padding: EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF1F1F23),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Image.asset(
-                                  'icons/button.png',
-                                  width: 48,
-                                  height: 48,
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Button Position',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Stack(
+                    children: [
+                      // Table background
+                      Center(
+                        child: Container(
+                          width: constraints.maxWidth * 0.80,
+                          height: constraints.maxHeight * 0.70,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF0D5D2D),
+                            borderRadius: BorderRadius.circular(200),
+                            border: Border.all(
+                              color: Color(0xFF4A4A4E),
+                              width: 4,
                             ),
-                            SizedBox(height: 16),
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: List.generate(9, (index) {
-                                  final seatNum = index + 1;
-                                  final isSelected = selectedButtonPosition == seatNum;
-                                  final isActive = seatActive[seatNum] ?? false;
-                                  return GestureDetector(
-                                    onTap: isActive ? () => setState(() {
-                                      selectedButtonPosition = seatNum;
-                                      _updatePlayerNamesForButtonChange();
-                                    }) : null,
-                                    child: Container(
-                                      margin: EdgeInsets.only(right: 12),
-                                      width: 44,
-                                      height: 44,
-                                      decoration: BoxDecoration(
-                                        color: !isActive
-                                            ? Color(0xFF0A0A0C)
-                                            : isSelected
-                                            ? Color(0xFFcb5242)
-                                            : Color(0xFF161618),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: !isActive
-                                              ? Color(0xFF1A1A1E)
-                                              : isSelected
-                                              ? Color(0xFFcb5242)
-                                              : Color(0xFF2A2A2E),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          '$seatNum',
-                                          style: TextStyle(
-                                            color: isActive ? Colors.white : Color(0xFF4A4A4E),
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 20,
+                                spreadRadius: 5,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                    ],
-
-                    // Button position selector for Manage Players mode
-                    if (!widget.isInitialSetup) ...[
-                      Container(
-                        padding: EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF1F1F23),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Image.asset(
-                                  'icons/button.png',
-                                  width: 48,
-                                  height: 48,
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Button Position',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 16),
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: List.generate(9, (index) {
-                                  final seatNum = index + 1;
-                                  final isSelected = (selectedButtonPosition ?? widget.buttonPosition) == seatNum;
-                                  final isActive = seatActive[seatNum] ?? false;
-                                  return GestureDetector(
-                                    onTap: isActive ? () => setState(() {
-                                      selectedButtonPosition = seatNum;
-                                    }) : null,
-                                    child: Container(
-                                      margin: EdgeInsets.only(right: 12),
-                                      width: 44,
-                                      height: 44,
-                                      decoration: BoxDecoration(
-                                        color: !isActive
-                                            ? Color(0xFF0A0A0C)
-                                            : isSelected
-                                            ? Color(0xFFcb5242)
-                                            : Color(0xFF161618),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: !isActive
-                                              ? Color(0xFF1A1A1E)
-                                              : isSelected
-                                              ? Color(0xFFcb5242)
-                                              : Color(0xFF2A2A2E),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          '$seatNum',
-                                          style: TextStyle(
-                                            color: isActive ? Colors.white : Color(0xFF4A4A4E),
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                    ],
-
-                    // Player seats - always show 9 seats
-                    ...List.generate(9, (index) {
-                      final seatNumber = index + 1;
-                      final isButtonSeat = seatNumber == (selectedButtonPosition ?? widget.buttonPosition);
-                      final isSelected = selectedSeat == seatNumber;
-                      final isActive = seatActive[seatNumber] ?? false;
-                      
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: isSelected 
-                              ? Color(0xFFcb5242).withOpacity(0.1)
-                              : Color(0xFF1F1F23),
-                          borderRadius: BorderRadius.circular(16),
-                          border: isSelected 
-                              ? Border.all(color: Color(0xFFcb5242), width: 1)
-                              : null,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              // Seat header with selection and status
-                              Row(
-                                children: [
-                                  // Seat selection (only for initial setup)
-                                  if (widget.isInitialSetup)
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      margin: EdgeInsets.only(right: 12),
-                                      decoration: BoxDecoration(
-                                        color: isSelected ? Color(0xFFcb5242) : Color(0xFF161618),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: isSelected ? Color(0xFFcb5242) : Color(0xFF2A2A2E),
-                                        ),
-                                      ),
-                                      child: InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            // Restore defaults for previous seat before selecting new one
-                                            _restoreDefaultsForPreviousSeat(selectedSeat);
-
-                                            selectedSeat = seatNumber;
-                                            _autoInsertUsernameForSeat(seatNumber);
-
-                                            // Set the user's stack from session setup
-                                            if (widget.isIndividualSession && widget.individualCurrentStack != null) {
-                                              // For individual session, use current stack
-                                              stackControllers[seatNumber]?.text = widget.isCashGame
-                                                ? widget.individualCurrentStack!.toStringAsFixed(2)
-                                                : widget.individualCurrentStack!.toInt().toString();
-                                            } else if (widget.startingStack != null) {
-                                              // For full session, use starting stack from session setup
-                                              stackControllers[seatNumber]?.text = widget.gameType == GameType.cash
-                                                ? widget.startingStack!.toStringAsFixed(2)
-                                                : widget.startingStack!.toInt().toString();
-                                            }
-                                          });
-                                        },
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Center(
-                                          child: isSelected 
-                                              ? Icon(Icons.check, color: Colors.white, size: 16)
-                                              : null,
-                                        ),
-                                      ),
-                                    ),
-                                  // Seat info
-                                  Expanded(
-                                    child: Row(
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  'Seat $seatNumber',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                                if (isButtonSeat) ...[
-                                                  SizedBox(width: 8),
-                                                  Container(
-                                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.orange,
-                                                      borderRadius: BorderRadius.circular(8),
-                                                    ),
-                                                    child: Text(
-                                                      'BTN',
-                                                      style: TextStyle(
-                                                        fontSize: 10,
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ],
-                                            ),
-                                            SizedBox(height: 2),
-                                            Text(
-                                              isActive ? _getPositionForActiveSeat(seatNumber) : 'Empty',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Color(0xFF9A9A9A),
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Active toggle
-                                  Column(
-                                    children: [
-                                      Switch(
-                                        value: isActive,
-                                        activeColor: Color(0xFFcb5242),
-                                        inactiveThumbColor: Colors.white,
-                                        inactiveTrackColor: Color(0xFF2A2A2E),
-                                        onChanged: (value) {
-                                          setState(() {
-                                            seatActive[seatNumber] = value;
-                                            if (value) {
-                                              if (nameControllers[seatNumber]!.text.isEmpty) {
-                                                // Use Player X format based on seat number
-                                                nameControllers[seatNumber]!.text = 'Player $seatNumber';
-                                              }
-                                            }
-                                          });
-                                        },
-                                      ),
-                                      Text(
-                                        isActive ? 'Active' : 'Empty',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: isActive ? Color(0xFFcb5242) : Color(0xFF9A9A9A),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              // Player name input (only if active)
-                              if (isActive) ...[
-                                SizedBox(height: 16),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Autocomplete<String>(
-                                      initialValue: TextEditingValue(text: nameControllers[seatNumber]!.text),
-                                      optionsBuilder: (TextEditingValue textEditingValue) {
-                                        return _getSuggestions(textEditingValue.text);
-                                      },
-                                      onSelected: (String selection) {
-                                        nameControllers[seatNumber]!.text = selection;
-                                        widget.sessionManager?.setPlayerName(seatNumber, selection);
-                                        _checkIfShouldShowSaveTip(seatNumber, selection);
-                                      },
-                                      fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
-                                        // Sync with our original controller
-                                        if (controller.text != nameControllers[seatNumber]!.text) {
-                                          controller.text = nameControllers[seatNumber]!.text;
-                                        }
-                                        
-                                        return Container(
-                                          decoration: BoxDecoration(
-                                            color: Color(0xFF161618),
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(color: Color(0xFF2A2A2E)),
-                                          ),
-                                          child: TextField(
-                                            controller: controller,
-                                            focusNode: focusNode,
-                                            onEditingComplete: onEditingComplete,
-                                            style: TextStyle(color: Colors.white, fontSize: 16),
-                                            decoration: InputDecoration(
-                                              labelText: 'Player Name',
-                                              labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                                              hintText: 'Enter player name',
-                                              hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                                              border: InputBorder.none,
-                                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                              suffixIcon: allOpponents.isNotEmpty 
-                                                  ? Icon(Icons.search, size: 18, color: Color(0xFF9A9A9A)) 
-                                                  : null,
-                                            ),
-                                            textCapitalization: TextCapitalization.words,
-                                            onChanged: (value) {
-                                              // Update our original controller
-                                              nameControllers[seatNumber]!.text = value;
-                                              // Auto-update the session manager
-                                              widget.sessionManager?.setPlayerName(seatNumber, value);
-                                              // Check if we should show save tip
-                                              _checkIfShouldShowSaveTip(seatNumber, value);
-                                            },
-                                          ),
-                                        );
-                                      },
-                                      optionsViewBuilder: (context, onSelected, options) {
-                                        return Align(
-                                          alignment: Alignment.topLeft,
-                                          child: Material(
-                                            elevation: 8,
-                                            borderRadius: BorderRadius.circular(12),
-                                            color: Color(0xFF1F1F23),
-                                            child: Container(
-                                              constraints: BoxConstraints(maxHeight: 200, maxWidth: 300),
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(12),
-                                                border: Border.all(color: Color(0xFF2A2A2E)),
-                                              ),
-                                              child: ListView.builder(
-                                                padding: EdgeInsets.all(8),
-                                                shrinkWrap: true,
-                                                itemCount: options.length,
-                                                itemBuilder: (context, index) {
-                                                  final option = options.elementAt(index);
-                                                  final opponent = allOpponents.firstWhere(
-                                                    (o) => o.name == option,
-                                                    orElse: () => allOpponents.first,
-                                                  );
-                                                  
-                                                  return Container(
-                                                    margin: EdgeInsets.only(bottom: 4),
-                                                    decoration: BoxDecoration(
-                                                      color: Color(0xFF161618),
-                                                      borderRadius: BorderRadius.circular(8),
-                                                    ),
-                                                    child: ListTile(
-                                                      dense: true,
-                                                      title: Text(
-                                                        option,
-                                                        style: TextStyle(color: Colors.white, fontSize: 14),
-                                                      ),
-                                                      subtitle: Text(
-                                                        opponent.playingStyle, 
-                                                        style: TextStyle(fontSize: 11, color: Color(0xFF9A9A9A)),
-                                                      ),
-                                                      leading: Container(
-                                                        width: 12,
-                                                        height: 12,
-                                                        decoration: BoxDecoration(
-                                                          color: _getColorForOpponent(opponent.color),
-                                                          shape: BoxShape.circle,
-                                                        ),
-                                                      ),
-                                                      onTap: () => onSelected(option),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    // Save opponent tip
-                                    if (showSaveOpponentTip[seatNumber] == true) ...[
-                                      SizedBox(height: 12),
-                                      InkWell(
-                                        onTap: () => _showSaveOpponentDialog(seatNumber, nameControllers[seatNumber]!.text),
-                                        child: Container(
-                                          padding: EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: Color(0xFFcb5242).withOpacity(0.1),
-                                            border: Border.all(color: Color(0xFFcb5242).withOpacity(0.3)),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.person_add, size: 16, color: Color(0xFFcb5242)),
-                                              SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  'Save "${nameControllers[seatNumber]!.text}" as opponent?',
-                                                  style: TextStyle(fontSize: 12, color: Color(0xFFcb5242)),
-                                                ),
-                                              ),
-                                              Icon(Icons.arrow_forward, size: 16, color: Color(0xFFcb5242)),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    
-                                    // Stack size input
-                                    SizedBox(height: 16),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: Color(0xFF161618),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Color(0xFF2A2A2E)),
-                                      ),
-                                      child: TextField(
-                                        controller: stackControllers[seatNumber],
-                                        keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
-                                        style: TextStyle(color: Colors.white, fontSize: 16),
-                                        decoration: InputDecoration(
-                                          labelText: widget.isCashGame ? 'Buy-in Amount (\$)' : 'Starting Chips',
-                                          labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                                          hintText: widget.isCashGame ? '100.00' : '1500',
-                                          hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                                          prefixText: widget.isCashGame ? '\$ ' : '',
-                                          prefixStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                        ),
-                                        onChanged: (value) {
-                                          // Validate input format
-                                          if (widget.isCashGame) {
-                                            // For cash games, ensure decimal format
-                                            if (value.isNotEmpty && !RegExp(r'^\d*\.?\d{0,2}$').hasMatch(value)) {
-                                              // Reset to previous valid value
-                                              stackControllers[seatNumber]!.text = stackControllers[seatNumber]!.text.substring(0, stackControllers[seatNumber]!.text.length - 1);
-                                              stackControllers[seatNumber]!.selection = TextSelection.fromPosition(TextPosition(offset: stackControllers[seatNumber]!.text.length));
-                                            }
-                                          } else {
-                                            // For tournaments, ensure integer format
-                                            if (value.isNotEmpty && !RegExp(r'^\d+$').hasMatch(value)) {
-                                              // Reset to previous valid value
-                                              stackControllers[seatNumber]!.text = stackControllers[seatNumber]!.text.substring(0, stackControllers[seatNumber]!.text.length - 1);
-                                              stackControllers[seatNumber]!.selection = TextSelection.fromPosition(TextPosition(offset: stackControllers[seatNumber]!.text.length));
-                                            }
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
                             ],
                           ),
                         ),
-                      );
-                    }),
-                  ],
-                ),
+                      ),
+
+                      // Seats positioned around the table
+                      ...List.generate(9, (index) {
+                        final seatNumber = index + 1;
+                        final isActive = seatActive[seatNumber] ?? false;
+                        final isSelected = selectedSeat == seatNumber;
+                        final isButtonSeat = seatNumber == (selectedButtonPosition ?? widget.buttonPosition);
+                        final position = _getSeatPosition(seatNumber, Size(constraints.maxWidth, constraints.maxHeight));
+
+                        return Positioned(
+                          left: position.dx - 40,
+                          top: position.dy - 45,
+                          child: GestureDetector(
+                            onTap: () => _showSeatDialog(seatNumber),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: !isActive
+                                        ? Color(0xFF0A0A0C)
+                                        : isSelected
+                                        ? Color(0xFFcb5242)
+                                        : Color(0xFF2A2A2E),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: !isActive
+                                          ? Color(0xFF1A1A1E)
+                                          : isSelected
+                                          ? Color(0xFFcb5242)
+                                          : Color(0xFF4A4A4E),
+                                      width: 2,
+                                    ),
+                                    boxShadow: isSelected ? [
+                                      BoxShadow(
+                                        color: Color(0xFFcb5242).withOpacity(0.5),
+                                        blurRadius: 10,
+                                        spreadRadius: 2,
+                                      ),
+                                    ] : null,
+                                  ),
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '$seatNumber',
+                                          style: TextStyle(
+                                            color: isActive ? Colors.white : Color(0xFF4A4A4E),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                        if (isActive && nameControllers[seatNumber]!.text.isNotEmpty)
+                                          Padding(
+                                            padding: EdgeInsets.only(top: 2),
+                                            child: Text(
+                                              nameControllers[seatNumber]!.text.length > 6
+                                                  ? '${nameControllers[seatNumber]!.text.substring(0, 6)}...'
+                                                  : nameControllers[seatNumber]!.text,
+                                              style: TextStyle(
+                                                color: Color(0xFF9A9A9A),
+                                                fontSize: 8,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        if (!isActive)
+                                          Padding(
+                                            padding: EdgeInsets.only(top: 2),
+                                            child: Text(
+                                              'Empty',
+                                              style: TextStyle(
+                                                color: Color(0xFF4A4A4E),
+                                                fontSize: 8,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (isButtonSeat) ...[
+                                  SizedBox(height: 4),
+                                  Draggable<int>(
+                                    data: seatNumber,
+                                    feedback: Opacity(
+                                      opacity: 0.7,
+                                      child: Image.asset(
+                                        'icons/button.png',
+                                        width: 40,
+                                        height: 40,
+                                      ),
+                                    ),
+                                    childWhenDragging: Opacity(
+                                      opacity: 0.3,
+                                      child: Image.asset(
+                                        'icons/button.png',
+                                        width: 32,
+                                        height: 32,
+                                      ),
+                                    ),
+                                    onDragStarted: () {
+                                      setState(() {
+                                        isDraggingButton = true;
+                                      });
+                                    },
+                                    onDragEnd: (details) {
+                                      // Find closest active seat to drop position
+                                      int? closestSeat;
+                                      double minDistance = double.infinity;
+
+                                      // Get the local position relative to the widget
+                                      final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+                                      if (renderBox != null) {
+                                        final localPosition = renderBox.globalToLocal(details.offset);
+
+                                        for (int i = 1; i <= 9; i++) {
+                                          if (seatActive[i] == true) {
+                                            final seatPos = _getSeatPosition(i, Size(constraints.maxWidth, constraints.maxHeight));
+                                            final distance = (seatPos - localPosition).distance;
+
+                                            if (distance < minDistance) {
+                                              minDistance = distance;
+                                              closestSeat = i;
+                                            }
+                                          }
+                                        }
+
+                                        // Increase detection radius to 150 pixels for better UX
+                                        if (closestSeat != null && minDistance < 150) {
+                                          setState(() {
+                                            selectedButtonPosition = closestSeat;
+                                            isDraggingButton = false;
+                                          });
+                                        } else {
+                                          setState(() {
+                                            isDraggingButton = false;
+                                          });
+                                        }
+                                      } else {
+                                        setState(() {
+                                          isDraggingButton = false;
+                                        });
+                                      }
+                                    },
+                                    child: Image.asset(
+                                      'icons/button.png',
+                                      width: 32,
+                                      height: 32,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  );
+                },
               ),
             ),
-            
+
             // Actions
             Container(
               padding: EdgeInsets.all(24),
@@ -1033,12 +995,6 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     );
   }
 
-  void _updatePlayerNamesForButtonChange() {
-    // Player names don't need to change when button position changes
-    // Position labels are shown separately and calculated dynamically
-    // Player names remain as "Player X" or custom names
-  }
-
   void _restoreDefaultsForPreviousSeat(int? previousSeat) {
     if (previousSeat == null) return;
 
@@ -1046,31 +1002,26 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     final nameController = nameControllers[previousSeat];
     final stackController = stackControllers[previousSeat];
 
-    // Always restore defaults for the previous seat (if it was selected)
     if (nameController != null && stackController != null) {
-      // Check if this seat was the user's seat (contains user's name or was selected)
       bool wasUserSeat = nameController.text == userName ||
                         nameController.text == "You" ||
                         nameController.text.isEmpty;
 
       if (wasUserSeat) {
-        // Restore default name and stack
         nameController.text = 'Player $previousSeat';
         stackController.text = widget.isCashGame ? '100.00' : '1500';
-        seatActive[previousSeat] = true; // Keep seat active with default player
+        seatActive[previousSeat] = true;
         widget.sessionManager?.setPlayerName(previousSeat, 'Player $previousSeat');
       }
     }
   }
 
   void _autoInsertUsernameForSeat(int seatNumber) {
-    // Auto-insert the current user's display name for their selected seat
     final userName = AuthService.userDisplayName;
     final controller = nameControllers[seatNumber];
 
     if (controller != null && userName.isNotEmpty) {
       controller.text = userName;
-      // Make sure the seat is active
       seatActive[seatNumber] = true;
       widget.sessionManager?.setPlayerName(seatNumber, userName);
     }
@@ -1104,10 +1055,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         try {
           stackSize = double.parse(stackText);
         } catch (e) {
-          stackSize = widget.isCashGame ? 100.0 : 1500.0; // Default values
+          stackSize = widget.isCashGame ? 100.0 : 1500.0;
         }
         playerStacks[seat] = stackSize;
-        // Store custom stack in sessionManager
         widget.sessionManager?.setPlayerStack(seat, stackSize);
       } else {
         widget.sessionManager?.removePlayer(seat);
@@ -1123,8 +1073,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
           builder: (context) => PokerHandScreen(
             smallBlind: widget.smallBlind!,
             bigBlind: widget.bigBlind!,
-            levelDuration: 15, // Default level duration
-            numberOfPlayers: 9, // Support all 9 seats
+            levelDuration: 15,
+            numberOfPlayers: 9,
             gameType: widget.gameType ?? GameType.cash,
             hasBBante: widget.hasBBante ?? false,
             ante: (widget.hasBBante ?? false) ? widget.bigBlind! : 0,
@@ -1138,7 +1088,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         ),
       );
     } else {
-      // Return data for the old flow (when used from other screens)
+      // Return data for the old flow
       Navigator.pop(context, {
         'seat': selectedSeat,
         'buttonPosition': selectedButtonPosition ?? widget.buttonPosition,
