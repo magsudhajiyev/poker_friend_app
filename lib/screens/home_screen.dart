@@ -16,6 +16,7 @@ import '../services/bankroll_service.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/session_result_service.dart';
+import '../services/play_style_detector.dart';
 import '../screens/auth_screen.dart';
 import '../widgets/loading_screen.dart';
 
@@ -831,34 +832,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   // Play style detection methods
   String _getPlayStyleName() {
-    // For now, return TAG as demonstration
-    // In future, this will be calculated based on user's session data
-    return 'TAG';
+    // Get stats from playerStats
+    final vpip = (playerStats['vpip'] as num?)?.toDouble() ?? 0.0;
+    final pfr = (playerStats['pfr'] as num?)?.toDouble() ?? 0.0;
+    final threeBet = (playerStats['threeBet'] as num?)?.toDouble() ?? 0.0;
+    final aggressionFactor = (playerStats['aggressionFactor'] as num?)?.toDouble() ?? 0.0;
+    final wtsd = (playerStats['wtsd'] as num?)?.toDouble();
+    final wsd = (playerStats['wsd'] as num?)?.toDouble();
+
+    final result = PlayStyleDetector.detectPlayStyle(
+      vpip: vpip,
+      pfr: pfr,
+      threeBet: threeBet,
+      aggressionFactor: aggressionFactor,
+      wtsd: wtsd,
+      wsd: wsd,
+    );
+
+    return PlayStyleDetector.getStyleAbbreviation(result['style']!);
   }
 
   String _getPlayStyleIcon() {
-    // This method will dynamically determine which icon to show
-    // based on the detected play style
-    final playStyle = _detectPlayStyle();
-    return '${playStyle.toLowerCase()}.png';
-  }
+    // Get stats from playerStats
+    final vpip = (playerStats['vpip'] as num?)?.toDouble() ?? 0.0;
+    final pfr = (playerStats['pfr'] as num?)?.toDouble() ?? 0.0;
+    final threeBet = (playerStats['threeBet'] as num?)?.toDouble() ?? 0.0;
+    final aggressionFactor = (playerStats['aggressionFactor'] as num?)?.toDouble() ?? 0.0;
+    final wtsd = (playerStats['wtsd'] as num?)?.toDouble();
+    final wsd = (playerStats['wsd'] as num?)?.toDouble();
 
-  String _detectPlayStyle() {
-    // Placeholder algorithm - for now returns TAG for demonstration
-    // In the future, this will analyze user's session data and calculate:
-    // - VPIP (Voluntarily Put money In Pot percentage)
-    // - PFR (Pre-Flop Raise percentage) 
-    // - Aggression factor
-    // - Number of hands played
-    // 
-    // Play style classifications:
-    // - TAG (Tight Aggressive): Low VPIP (15-25%), High PFR (12-20%), High aggression
-    // - LAG (Loose Aggressive): High VPIP (25-35%), High PFR (18-25%), High aggression  
-    // - Nit: Very low VPIP (<15%), Low PFR (<10%), Low aggression
-    // - Maniac: Very high VPIP (>40%), Very high PFR (>30%), Very high aggression
-    // - Fish: High VPIP (>30%), Low PFR (<15%), Low aggression
-    
-    return 'tag'; // For demonstration, always return TAG
+    final result = PlayStyleDetector.detectPlayStyle(
+      vpip: vpip,
+      pfr: pfr,
+      threeBet: threeBet,
+      aggressionFactor: aggressionFactor,
+      wtsd: wtsd,
+      wsd: wsd,
+    );
+
+    return result['icon']!;
   }
 
   Widget _buildLegendItem(String label, Color color) {

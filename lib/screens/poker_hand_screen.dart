@@ -2922,17 +2922,42 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       ),
     );
 
-    // Update stack if rebuy was done in session details
-    if (result != null && result['updatedStack'] != null) {
-      final updatedStack = result['updatedStack'] as double;
-      final updatedTotalBuyIn = result['totalBuyIn'] as double;
+    // Update stack and blinds if changed in session details
+    if (result != null) {
+      if (result['updatedStack'] != null) {
+        final updatedStack = result['updatedStack'] as double;
+        final updatedTotalBuyIn = result['totalBuyIn'] as double;
 
-      // Update the player's stack in game state
-      if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+        // Update the player's stack in game state
+        if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+          setState(() {
+            gameState.players[ourSeat - 1].currentStack = updatedStack;
+            sessionManager.totalBuyIn = updatedTotalBuyIn;
+          });
+        }
+      }
+
+      // Update blinds if they were changed
+      if (result['smallBlind'] != null && result['bigBlind'] != null) {
+        final newSmallBlind = result['smallBlind'] as int;
+        final newBigBlind = result['bigBlind'] as int;
+        final newHasBBante = result['hasBBante'] as bool? ?? false;
+
         setState(() {
-          gameState.players[ourSeat - 1].currentStack = updatedStack;
-          sessionManager.totalBuyIn = updatedTotalBuyIn;
+          // Update sessionManager blinds
+          sessionManager.smallBlind = newSmallBlind;
+          sessionManager.bigBlind = newBigBlind;
+
+          // Update gameState blinds
+          gameState.smallBlind = newSmallBlind;
+          gameState.bigBlind = newBigBlind;
+          gameState.hasBBante = newHasBBante;
         });
+
+        // Save blinds to preferences for persistence
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('small_blind', newSmallBlind);
+        await prefs.setInt('big_blind', newBigBlind);
       }
     }
   }

@@ -641,8 +641,14 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   // Navigate to hand logging
   Future<void> _logHand() async {
     if (widget.isFromActiveSession) {
-      // If called from an active poker session, return with updated stack
-      Navigator.pop(context, {'updatedStack': _currentStack, 'totalBuyIn': _totalBuyIn});
+      // If called from an active poker session, return with updated stack and blinds
+      Navigator.pop(context, {
+        'updatedStack': _currentStack,
+        'totalBuyIn': _totalBuyIn,
+        'smallBlind': _currentSmallBlind,
+        'bigBlind': _currentBigBlind,
+        'hasBBante': _currentHasBBante,
+      });
       return;
     }
 

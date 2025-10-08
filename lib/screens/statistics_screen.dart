@@ -223,47 +223,115 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     bool player3Bet = false;
     bool playerWon = false;
 
-    // Check if player was involved in the hand
+    // Track betting sequence for 3-bet detection
+    int preflopRaiseCount = 0;
+
+    // Get current user's ID for matching with new action format
+    final currentUserId = AuthService.currentUser?.uid;
+
+    // For backward compatibility: Get current user's display name
+    final currentUserName = AuthService.currentUser?.displayName ??
+                           AuthService.currentUser?.email?.split('@')[0] ??
+                           'User';
+
+    // Check if any actions have the new isCurrentUser field
+    bool hasNewFormat = false;
     for (final action in actions) {
       final actionMap = action as Map<String, dynamic>;
-      final playerName = actionMap['playerName'] as String?;
+      if (actionMap.containsKey('isCurrentUser')) {
+        hasNewFormat = true;
+        break;
+      }
+    }
 
-      // Assume any action by "Player" or position like "You" means our player
-      if (playerName != null &&
-          (playerName.toLowerCase().contains('player') ||
-           playerName.toLowerCase().contains('you') ||
-           playerName == 'Hero')) {
+    print('📊 Processing hand with ${hasNewFormat ? 'NEW' : 'OLD'} format (userId: ${currentUserId?.substring(0, 8)}...)');
+
+    // Second pass: analyze actions
+    for (final action in actions) {
+      final actionMap = action as Map<String, dynamic>;
+      final actionType = actionMap['action'] as String?;
+      final street = actionMap['street'] as String?;
+
+      // Normalize street name
+      final streetLower = street?.toLowerCase().trim() ?? '';
+
+      // Track raises/bets by ANY player for sequence counting (ONLY preflop)
+      if (streetLower == 'preflop' &&
+          (actionType?.toLowerCase() == 'raise' || actionType?.toLowerCase() == 'bet')) {
+        preflopRaiseCount++;
+      }
+
+      // Check if this action is by our player using new or old format
+      bool isCurrentPlayerAction = false;
+
+      if (hasNewFormat) {
+        // Use new isCurrentUser field
+        isCurrentPlayerAction = actionMap['isCurrentUser'] == true;
+      } else {
+        // Fallback to old name-based matching for backward compatibility
+        final playerName = actionMap['playerName'] as String?;
+        if (playerName != null &&
+            (playerName.toLowerCase().contains('you') ||
+             playerName.toLowerCase() == 'hero' ||
+             playerName == currentUserName ||
+             playerName.toLowerCase() == currentUserName.toLowerCase() ||
+             playerName == 'Mike' || // Temporary fallback for old data
+             playerName.toLowerCase().startsWith('player') && !playerName.contains(' '))) {
+          isCurrentPlayerAction = true;
+        }
+      }
+
+      if (isCurrentPlayerAction) {
         playerInHand = true;
 
-        final actionType = actionMap['action'] as String?;
-        final street = actionMap['street'] as String?;
+        // Debug: print action details for our player
+        print('🎯 Player action: street=$streetLower, action=${actionType?.toLowerCase()}');
 
-        if (street?.toLowerCase() == 'preflop') {
+        // ONLY process PREFLOP actions for VPIP, PFR, 3-bet
+        if (streetLower == 'preflop') {
           // VPIP: Voluntarily put money in pot preflop
+          // Includes: call (including limps), raise, bet
+          // Excludes: fold, check
           if (actionType?.toLowerCase() == 'call' ||
               actionType?.toLowerCase() == 'bet' ||
               actionType?.toLowerCase() == 'raise') {
             playerVPIP = true;
+            print('✅ VPIP counted for ${actionType}');
           }
 
-          // PFR: Preflop raise
-          if (actionType?.toLowerCase() == 'raise' ||
-              actionType?.toLowerCase() == 'bet') {
-            playerPFR = true;
-          }
-
-          // 3-Bet: This is simplified - would need more complex logic
+          // PFR: Preflop Raise - ONLY count 'raise' or opening 'bet'
+          // 'call' is NEVER a raise (even if it's first action/limp)
+          // 'bet' counts as PFR only if it's truly an opening bet, not a limp
           if (actionType?.toLowerCase() == 'raise') {
+            playerPFR = true;
+            print('✅ PFR counted for RAISE');
+          } else if (actionType?.toLowerCase() == 'bet') {
+            // Only count 'bet' as PFR if there were no previous actions
+            // (opening the pot counts as raise)
+            // For now, count 'bet' as PFR since limps are logged as 'call'
+            playerPFR = true;
+            print('✅ PFR counted for BET');
+          }
+
+          // 3-Bet: Player raises when it's at least the 3rd aggressive action preflop
+          // Must be a raise AND there must have been at least 1 raise before this one
+          if (actionType?.toLowerCase() == 'raise' && preflopRaiseCount >= 2) {
             player3Bet = true;
+            print('✅ 3-Bet counted');
           }
         }
       }
     }
 
-    // Check if player won (simplified)
-    if (hand['winner'] != null &&
-        hand['winner'].toString().toLowerCase().contains('player')) {
-      playerWon = true;
+    // Check if player won (need to handle both new and old formats)
+    final winner = hand['winner'];
+    if (winner != null) {
+      final winnerStr = winner.toString();
+      if (winnerStr.toLowerCase().contains('you') ||
+          winnerStr.toLowerCase().contains('hero') ||
+          (currentUserName.isNotEmpty && winnerStr.contains(currentUserName))) {
+        playerWon = true;
+      }
     }
 
     return {

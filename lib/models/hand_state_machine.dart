@@ -28,7 +28,9 @@ class ActionRecord {
   final BettingRound street;
   final DateTime timestamp;
   final int buttonPosition;
-  final String? playerName;
+  final String? playerName; // Display name only (for UI)
+  final String? playerId; // Unique identifier: userId for current user, opponentId for opponents
+  final bool isCurrentUser; // True if this is the logged-in user
   final String? playerPosition;
   final double? playerStack;
   final double? amount;
@@ -40,6 +42,8 @@ class ActionRecord {
     required this.timestamp,
     required this.buttonPosition,
     this.playerName,
+    this.playerId,
+    this.isCurrentUser = false,
     this.playerPosition,
     this.playerStack,
     this.amount,
@@ -52,7 +56,9 @@ class ActionRecord {
       'street': street.name,
       'timestamp': timestamp.toIso8601String(),
       'buttonPosition': buttonPosition,
-      'playerName': playerName,
+      'playerName': playerName, // Keep for display/backward compatibility
+      'playerId': playerId, // New: unique identifier
+      'isCurrentUser': isCurrentUser, // New: flag for current user
       'playerPosition': playerPosition,
       'playerStack': playerStack,
       'amount': amount,
@@ -67,6 +73,8 @@ class ActionRecord {
       timestamp: DateTime.parse(map['timestamp']),
       buttonPosition: map['buttonPosition'] ?? 1,
       playerName: map['playerName'],
+      playerId: map['playerId'], // New field
+      isCurrentUser: map['isCurrentUser'] ?? false, // New field
       playerPosition: map['playerPosition'],
       playerStack: map['playerStack']?.toDouble(),
       amount: map['amount']?.toDouble(),
@@ -462,9 +470,9 @@ class PokerSessionManager {
 
   // Record an action
   void recordAction(
-    int player, 
-    PlayerAction action, 
-    BettingRound street, 
+    int player,
+    PlayerAction action,
+    BettingRound street,
     int buttonPosition,
     {double? playerStack, double? amount}
   ) {
@@ -481,6 +489,19 @@ class PokerSessionManager {
       activeSeats.toList()
     );
 
+    // Determine if this is the current user and get their ID
+    final isCurrentUser = (ourSeatNumber != null && player == ourSeatNumber);
+    String? playerId;
+
+    if (isCurrentUser) {
+      // This is the current user - use their Firebase user ID
+      final currentUser = FirebaseAuth.instance.currentUser;
+      playerId = currentUser?.uid;
+    } else {
+      // This is an opponent - use their name as ID for now (will be improved with opponent ID system)
+      playerId = playerName;
+    }
+
     final actionRecord = ActionRecord(
       player: player,
       action: action,
@@ -488,13 +509,15 @@ class PokerSessionManager {
       timestamp: DateTime.now(),
       buttonPosition: buttonPosition,
       playerName: playerName,
+      playerId: playerId,
+      isCurrentUser: isCurrentUser,
       playerPosition: playerPosition,
       playerStack: playerStack,
       amount: amount,
     );
 
     currentHand!.addAction(actionRecord);
-    
+
     // Optionally save action to Firebase immediately for real-time tracking
     if (sessionId != null && !sessionId!.startsWith('offline_')) {
       FirebaseService.saveAction(
@@ -508,7 +531,7 @@ class PokerSessionManager {
         print('Failed to save action real-time: $e');
       });
     }
-    
+
     print('Action recorded: Player $player ${action.name} on ${street.name}');
   }
 

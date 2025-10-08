@@ -80,9 +80,7 @@ class AuthService {
   
   // Get user display name
   static String get userDisplayName {
-    // Temporarily hardcoded for demo videos
-    return 'Mike';
-    // return currentUser?.displayName ?? currentUser?.email?.split('@').first ?? 'Player';
+    return currentUser?.displayName ?? currentUser?.email?.split('@').first ?? 'Player';
   }
   
   // Get user ID for database operations
