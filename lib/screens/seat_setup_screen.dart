@@ -664,7 +664,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
+      backgroundColor: Color(0xFF1F1F23),
       body: SafeArea(
         child: Column(
           children: [
@@ -729,49 +729,83 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                 builder: (context, constraints) {
                   return Stack(
                     children: [
-                      // Table background
+                      // Table background with depth
                       Center(
                         child: Container(
                           width: constraints.maxWidth * 0.80,
                           height: constraints.maxHeight * 0.70,
                           decoration: BoxDecoration(
-                            color: Color(0xFF0D5D2D),
                             borderRadius: BorderRadius.circular(200),
-                            border: Border.all(
-                              color: Color(0xFF4A4A4E),
-                              width: 4,
-                            ),
                             boxShadow: [
+                              // Outer shadow for elevation
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.5),
+                                blurRadius: 30,
+                                spreadRadius: 0,
+                                offset: Offset(0, 10),
+                              ),
+                              // Inner shadow for depth
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.3),
-                                blurRadius: 20,
-                                spreadRadius: 5,
+                                blurRadius: 15,
+                                spreadRadius: -5,
+                                offset: Offset(0, 5),
                               ),
                             ],
                           ),
-                          child: Center(
-                            child: Opacity(
-                              opacity: 0.12,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Image.asset(
-                                    'icons/logo.png',
-                                    width: 100,
-                                    height: 100,
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'POKER FRIEND',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 1.5,
-                                    ),
-                                  ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              // Gradient for felt texture depth
+                              gradient: RadialGradient(
+                                center: Alignment.center,
+                                radius: 0.8,
+                                colors: [
+                                  Color(0xFF0F6B33), // Lighter green center
+                                  Color(0xFF0D5D2D), // Medium green
+                                  Color(0xFF0A4A24), // Darker green edges
                                 ],
+                                stops: [0.0, 0.6, 1.0],
+                              ),
+                              borderRadius: BorderRadius.circular(200),
+                              border: Border.all(
+                                color: Color(0xFF2A2A2E),
+                                width: 6,
+                              ),
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(194),
+                                // Inner border highlight
+                                border: Border.all(
+                                  color: Color(0xFF1A1A1E).withOpacity(0.5),
+                                  width: 2,
+                                ),
+                              ),
+                              child: Center(
+                                child: Opacity(
+                                  opacity: 0.12,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        'icons/logo.png',
+                                        width: 100,
+                                        height: 100,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'POKER FRIEND',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          letterSpacing: 1.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -851,8 +885,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                                   ? '${nameControllers[seatNumber]!.text.substring(0, 6)}...'
                                                   : nameControllers[seatNumber]!.text,
                                               style: TextStyle(
-                                                color: Color(0xFF9A9A9A),
+                                                color: isSelected ? Colors.white : Color(0xFFBBBBBB),
                                                 fontSize: 8,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
