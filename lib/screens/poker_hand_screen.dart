@@ -114,6 +114,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         gameType: widget.gameType,
         existingSessionId: widget.individualSessionId, // Use existing session ID for individual sessions
         initialBuyIn: widget.individualTotalBuyIn, // Pass total buy-in for individual sessions
+        startingStack: widget.startingStack, // Pass starting stack (chips for MTT, same as buy-in for cash)
       );
     }
     
@@ -475,6 +476,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       for (int seat = 1; seat <= widget.numberOfPlayers; seat++) {
         final isActive = sessionManager.activeSeats.contains(seat);
         gameState.setPlayerActive(seat, isActive);
+
+        // Sync player stack from sessionManager to gameState
+        if (isActive && sessionManager.playerStacks.containsKey(seat)) {
+          final stackSize = sessionManager.playerStacks[seat]!;
+          gameState.players[seat - 1].currentStack = stackSize;
+          gameState.players[seat - 1].startingStack = stackSize;
+        }
       }
 
       // Get active players for position calculations
@@ -2846,7 +2854,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       if (round != BettingRound.flop && boardCards.flop.isNotEmpty) {
         usedCards.addAll(boardCards.flop);
       }
-      // Add turn card if we're on river  
+      // Add turn card if we're on river
       if (round == BettingRound.river && boardCards.turn != null && boardCards.turn!.isNotEmpty) {
         usedCards.add(boardCards.turn!);
       }
@@ -2909,8 +2917,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       MaterialPageRoute(
         builder: (context) => IndividualSessionTrackingScreen(
           sessionName: sessionManager.sessionName ?? 'Poker Session',
-          buyInAmount: sessionManager.totalBuyIn, // Use actual total invested (including 0 for freerolls)
-          startingStack: sessionManager.totalBuyIn, // Use initial buy-in as starting stack for P/L calculations
+          buyInAmount: widget.buyInAmount ?? sessionManager.totalBuyIn, // Initial buy-in amount (money)
+          startingStack: sessionManager.initialStartingStack ?? sessionManager.totalBuyIn, // Starting chips (MTT) or buy-in (cash)
           gameType: widget.gameType,
           smallBlind: widget.smallBlind,
           bigBlind: widget.bigBlind,
@@ -3394,6 +3402,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // First, show winner selection dialog - ALWAYS show it
     List<int> activePlayers = _getActivePlayers();
+
     if (activePlayers.isEmpty) {
       // If no active players, get all players for selection
       activePlayers = List.generate(gameState.numberOfPlayers, (i) => i + 1);
@@ -3408,7 +3417,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
 
     Map<String, dynamic>? winnerResult;
-
     // ALWAYS show winner selection dialog
     winnerResult = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -3751,26 +3759,52 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   Future<void> _showHoleCardsDialog() async {
-    // Collect board cards as used cards
+    // Collect board cards as used cards from the LAST COMPLETED hand
     Set<String> usedCards = {};
-    final boardCards = sessionManager.currentHand?.boardCards;
+    BoardCards? boardCards;
+
+    // Try to get board cards from the last completed hand (if hand was just completed)
+    if (sessionManager.completedHands.isNotEmpty) {
+      boardCards = sessionManager.completedHands.last.boardCards;
+    }
+
+    // Fallback to current hand if it exists (for ongoing hands)
+    if (boardCards == null) {
+      boardCards = sessionManager.currentHand?.boardCards;
+    }
+
     if (boardCards != null) {
       if (boardCards.flop.isNotEmpty) usedCards.addAll(boardCards.flop);
       if (boardCards.turn != null && boardCards.turn!.isNotEmpty) usedCards.add(boardCards.turn!);
       if (boardCards.river != null && boardCards.river!.isNotEmpty) usedCards.add(boardCards.river!);
     }
-    
+
+    // Get hole cards from last completed hand for editing
+    HoleCards? existingHoleCards;
+    if (sessionManager.completedHands.isNotEmpty) {
+      existingHoleCards = sessionManager.completedHands.last.ourHoleCards;
+    } else {
+      existingHoleCards = sessionManager.currentHand?.ourHoleCards;
+    }
+
     final holeCards = await showDialog<HoleCards>(
       context: context,
       barrierDismissible: true,
       builder: (context) => HoleCardsDialog(
-        existingCards: sessionManager.currentHand?.ourHoleCards,
+        existingCards: existingHoleCards,
         usedCards: usedCards,
       ),
     );
 
-    if (holeCards != null && sessionManager.currentHand != null) {
-      sessionManager.currentHand!.ourHoleCards = holeCards;
+    if (holeCards != null) {
+      // Save hole cards to the last completed hand (if hand was just completed)
+      if (sessionManager.completedHands.isNotEmpty) {
+        sessionManager.completedHands.last.ourHoleCards = holeCards;
+      } else if (sessionManager.currentHand != null) {
+        // Fallback to current hand if no completed hands yet
+        sessionManager.currentHand!.ourHoleCards = holeCards;
+      }
+
       if (holeCards.isComplete) {
         addAction("🂠 Your cards: ${holeCards.card1} ${holeCards.card2}");
       }
@@ -3778,9 +3812,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   void _handleHandComplete() {
-    // Hand complete - just finish it up
-    // Winner selection is now handled manually in completeHand()
-    _finalizeHand();
+    // Hand complete - show winner selection dialog first
+    completeHand();
   }
 
   List<int> _getActivePlayers() {

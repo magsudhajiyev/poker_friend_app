@@ -288,50 +288,31 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
   }
 
   Widget _buildRankCard(String rank) {
-    // Check if this rank is completely excluded (all suits used)
-    bool isCompletelyExcluded = _suits.every((suit) =>
-        widget.excludedCards.contains('$rank$suit') ||
-        widget.usedCards.contains('$rank$suit') ||
-        _currentlySelected.contains('$rank$suit'));
-
+    // Rank cards are always selectable - exclusion happens at suit level
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: GestureDetector(
-        onTap: isCompletelyExcluded ? null : () => _selectRank(rank),
+        onTap: () => _selectRank(rank),
         child: Container(
           // Remove fixed width, let Expanded control it
           height: 70,
           decoration: BoxDecoration(
-          color: isCompletelyExcluded ? Color(0xFF2A2A2E) : Color(0xFF3A3A3E),
+          color: Color(0xFF3A3A3E),
           border: Border.all(
-            color: isCompletelyExcluded ? Color(0xFF3A3A3E) : Color(0xFF4A4A4E),
+            color: Color(0xFF4A4A4E),
             width: 2,
           ),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Stack(
-          children: [
-            Center(
-              child: Text(
-                rank,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: isCompletelyExcluded ? Colors.grey[600] : Colors.white,
-                ),
-              ),
+        child: Center(
+          child: Text(
+            rank,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-            if (isCompletelyExcluded)
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Icon(
-                  Icons.close,
-                  color: Colors.red[400],
-                  size: 16,
-                ),
-              ),
-          ],
+          ),
         ),
         ),
       ),

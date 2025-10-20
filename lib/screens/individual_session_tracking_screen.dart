@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
@@ -73,14 +74,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     super.initState();
     _currentStack = widget.currentStack ?? widget.startingStack;
 
-    // When accessed from active session, calculate the proper initial stack for P/L display
-    if (widget.isFromActiveSession && widget.currentStack != null) {
-      // If we have rebuys, the initial stack should be reset to show proper P/L
-      // For now, use the buy-in as initial for proper P/L calculation
-      _initialStack = widget.buyInAmount;
-    } else {
-      _initialStack = widget.startingStack;
-    }
+    // Always use startingStack as initial for P/L calculation
+    // This ensures we're comparing same units (chips for MTT, dollars for cash)
+    _initialStack = widget.startingStack;
 
     _sessionId = widget.sessionId;
 
@@ -195,12 +191,27 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               _stackHistory = List<Map<String, dynamic>>.from(sessionData['stackHistory']);
             }
 
+            // Load session start time from stored data
+            if (sessionData['startTime'] != null) {
+              try {
+                // Handle both Timestamp (from Firebase) and String (from local storage)
+                if (sessionData['startTime'] is Timestamp) {
+                  _sessionStartTime = (sessionData['startTime'] as Timestamp).toDate();
+                } else if (sessionData['startTime'] is String) {
+                  _sessionStartTime = DateTime.parse(sessionData['startTime']);
+                }
+              } catch (e) {
+                print('Error parsing session start time: $e');
+              }
+            }
+
           });
         }
       } catch (e) {
       }
     }
 
+    // Only set to current time if we couldn't load it from stored data
     if (_sessionStartTime == null) {
       _sessionStartTime = DateTime.now();
     }
@@ -1428,6 +1439,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                         child: Column(
                           children: [
                             _buildStatRow('Initial Buy-in', '\$${widget.buyInAmount.toStringAsFixed(2)}'),
+                            if (widget.gameType == GameType.tournament)
+                              _buildStatRow('Starting Stack', widget.startingStack.toStringAsFixed(0)),
                             _buildStatRow('Total Invested', '\$${_totalBuyIn.toStringAsFixed(2)}'),
                             _buildStatRow('Rebuys', '${_rebuys.length}'),
                             _buildStatRow('Hands Logged', '$_handsLogged'),

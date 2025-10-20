@@ -237,11 +237,13 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => IndividualSessionTrackingScreen(
+                            sessionName: handName.isEmpty ? 'Individual Hand' : handName,
+                            buyInAmount: 0.0, // Default for individual hand
+                            startingStack: gameType == GameType.cash ? 100.0 : 1500.0, // Default starting stack
+                            gameType: gameType,
                             smallBlind: smallBlind,
                             bigBlind: bigBlind,
-                            numberOfPlayers: numberOfPlayers,
-                            gameType: gameType,
-                            handName: handName.isEmpty ? null : handName,
+                            hasBBante: false,
                           ),
                         ),
                       );

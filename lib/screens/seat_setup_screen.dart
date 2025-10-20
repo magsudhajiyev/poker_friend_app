@@ -240,7 +240,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
           constraints: BoxConstraints(maxWidth: 400),
@@ -410,7 +411,10 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                         onSelected: (String selection) {
                           nameControllers[seatNumber]!.text = selection;
                           widget.sessionManager?.setPlayerName(seatNumber, selection);
-                          _checkIfShouldShowSaveTip(seatNumber, selection);
+                          setState(() {
+                            _checkIfShouldShowSaveTip(seatNumber, selection);
+                          });
+                          setDialogState(() {});
                         },
                         fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
                           // Sync with our original controller
@@ -444,7 +448,10 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               onChanged: (value) {
                                 nameControllers[seatNumber]!.text = value;
                                 widget.sessionManager?.setPlayerName(seatNumber, value);
-                                _checkIfShouldShowSaveTip(seatNumber, value);
+                                setState(() {
+                                  _checkIfShouldShowSaveTip(seatNumber, value);
+                                });
+                                setDialogState(() {});
                               },
                             ),
                           );
@@ -512,14 +519,16 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                         SizedBox(height: 12),
                         InkWell(
                           onTap: () async {
+                            // Immediately hide the save prompt to prevent double-tap
+                            setState(() {
+                              showSaveOpponentTip[seatNumber] = false;
+                            });
+                            setDialogState(() {});
+
                             try {
                               final opponent = OpponentService.createNewOpponent(name: nameControllers[seatNumber]!.text);
                               await OpponentService.saveOpponent(opponent);
                               await _loadOpponents();
-
-                              setState(() {
-                                showSaveOpponentTip[seatNumber] = false;
-                              });
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -528,6 +537,12 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                 ),
                               );
                             } catch (e) {
+                              // Show the prompt again if save failed
+                              setState(() {
+                                showSaveOpponentTip[seatNumber] = true;
+                              });
+                              setDialogState(() {});
+
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('Failed to save opponent: $e'),
@@ -657,6 +672,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

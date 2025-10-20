@@ -60,12 +60,16 @@ class FirebaseService {
           'sessionStatus': 'active',
         });
       } else {
-        // For full hand logging sessions, save starting stack as buyInAmount
-        if (startingStack != null && startingStack > 0) {
+        // For full hand logging sessions, save buy-in amount and total invested (NOT chip count)
+        if (totalBuyIn != null && totalBuyIn > 0) {
           sessionData.addAll({
-            'buyInAmount': startingStack,
-            'totalBuyIn': startingStack,
+            'buyInAmount': totalBuyIn, // Money paid for buy-in
+            'totalBuyIn': totalBuyIn,  // Total money invested (starts with buy-in)
           });
+        }
+        // Also save starting stack if provided (for reference, but not used in total invested)
+        if (startingStack != null && startingStack > 0) {
+          sessionData['startingStack'] = startingStack;
         }
       }
 

@@ -372,6 +372,7 @@ class PokerSessionManager {
   // Rebuy tracking
   List<RebuyRecord> rebuys = []; // Track all rebuys during session
   double totalBuyIn = 0.0; // Total amount invested including rebuys
+  double? initialStartingStack; // Initial chip count (for MTT) or buy-in amount (for cash)
 
   // Stack history tracking for analytics
   List<Map<String, dynamic>> stackHistory = [];
@@ -385,6 +386,7 @@ class PokerSessionManager {
     this.sessionName,
     String? existingSessionId,
     double? initialBuyIn,
+    double? startingStack,
   }) {
     // If we have an existing session ID, use it
     if (existingSessionId != null) {
@@ -393,6 +395,9 @@ class PokerSessionManager {
 
     // Initialize total buy-in with initial buy-in amount
     totalBuyIn = initialBuyIn ?? 0.0;
+
+    // Store initial starting stack (chips for MTT, same as buy-in for cash)
+    initialStartingStack = startingStack;
   }
 
   // Start a new session
@@ -413,6 +418,7 @@ class PokerSessionManager {
           gameType: gameType,
           sessionName: sessionName,
           startingStack: initialStack,
+          totalBuyIn: totalBuyIn, // Pass total buy-in (money invested)
         );
         sessionId = firebaseId;
       } catch (e) {

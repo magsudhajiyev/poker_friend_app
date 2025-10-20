@@ -693,6 +693,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
         gameType: gameType,
         sessionName: sessionName,
         initialBuyIn: buyIn,
+        startingStack: startingStack, // Pass starting stack for P/L calculations
       );
 
       Navigator.push(
