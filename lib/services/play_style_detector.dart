@@ -35,7 +35,7 @@ class PlayStyleDetector {
     if (vpip >= 25 && pfr < 10 && vpipPfrGap >= 15 && threeBet < 3 && aggressionFactor < 1) {
       return {
         'style': 'Calling Station',
-        'icon': 'fish.png',
+        'icon': 'calling_station.png',
         'description': 'Plays many hands passively, calls too often',
       };
     }
@@ -77,7 +77,7 @@ class PlayStyleDetector {
         aggressionFactor >= 2 && aggressionFactor <= 4) {
       return {
         'style': 'Balanced',
-        'icon': 'tag.png', // Use TAG icon for balanced players
+        'icon': 'balanced.png',
         'description': 'Balanced approach, adjusts strategy to opponents',
       };
     }
@@ -97,7 +97,7 @@ class PlayStyleDetector {
     if (vpip >= 25 && pfr < 15 && vpipPfrGap >= 10 && aggressionFactor < 2) {
       return {
         'style': 'Loose-Passive',
-        'icon': 'fish.png',
+        'icon': 'calling_station.png',
         'description': 'Plays many hands with passive approach',
       };
     }
@@ -108,6 +108,15 @@ class PlayStyleDetector {
         'style': 'LAG',
         'icon': 'lag.png',
         'description': 'Loose and aggressive, plays many hands aggressively',
+      };
+    }
+
+    // Aggressive but with moderate AF (still LAG-ish)
+    if (vpip > 30 && pfr > 20 && aggressionFactor >= 1.0) {
+      return {
+        'style': 'LAG',
+        'icon': 'lag.png',
+        'description': 'Loose and aggressive, plays many hands with aggression',
       };
     }
 

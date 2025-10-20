@@ -1,6 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/user_stats_service.dart';
+import '../services/auth_service.dart';
 
 class BankrollService {
   static const String _goalKey = 'bankroll_goal';
@@ -84,18 +87,11 @@ class BankrollService {
     }
   }
 
-  // Get statistics from sessions
+  // Get statistics from user stats (real-time updated from hands)
   static Future<Map<String, dynamic>> getPlayerStatistics() async {
     try {
-      // Get all sessions
-      List<Map<String, dynamic>> sessions = [];
-      try {
-        sessions = await FirebaseService.getAllSessions();
-      } catch (e) {
-        sessions = await LocalStorageService.getUserSessions();
-      }
-
-      if (sessions.isEmpty) {
+      final userId = AuthService.userId;
+      if (userId == null) {
         return {
           'totalSessions': 0,
           'totalHours': 0.0,
@@ -105,53 +101,78 @@ class BankrollService {
         };
       }
 
-      // Calculate total sessions
-      int totalSessions = sessions.length;
+      // Get user stats from database (already updated incrementally from each hand)
+      final userStats = await UserStatsService.getUserStats(userId);
 
-      // Calculate total hours from actual session durations
-      double totalHours = 0.0;
-      int wonSessions = 0;
+      if (userStats == null) {
+        return {
+          'totalSessions': 0,
+          'totalHours': 0.0,
+          'winRate': 0.0,
+          'currentStreak': 0,
+          'avgWeeklyEarnings': 0.0,
+        };
+      }
+
+      // Calculate win rate from user stats (hands won / total hands)
+      final totalHands = userStats.totalHands;
+      final wonHands = userStats.wonHands;
+      final winRate = totalHands > 0 ? (wonHands / totalHands) * 100 : 0.0;
+
+      // Calculate total hours from play time minutes
+      final totalHours = userStats.totalPlayTimeMinutes / 60.0;
+
+      // Get sessions for weekly earnings calculation
+      List<Map<String, dynamic>> sessions = [];
+      try {
+        sessions = await FirebaseService.getAllSessions();
+      } catch (e) {
+        sessions = await LocalStorageService.getUserSessions();
+      }
+
       double totalProfit = 0.0;
-      int currentStreak = 0;
-
       for (var session in sessions) {
-        // Calculate hours from session duration if available
-        if (session.containsKey('duration') && session['duration'] != null) {
-          // Duration is in minutes
-          totalHours += (session['duration'] as num).toDouble() / 60.0;
-        }
-
-        // Calculate win rate based on profit/loss
-        double profit = 0.0;
         if (session.containsKey('profit') && session['profit'] != null) {
-          profit = (session['profit'] as num).toDouble();
+          totalProfit += (session['profit'] as num).toDouble();
         } else if (session.containsKey('finalStack') && session.containsKey('totalBuyIn')) {
-          // Calculate profit from final stack and buy-in
           double finalStack = (session['finalStack'] as num?)?.toDouble() ?? 0.0;
           double totalBuyIn = (session['totalBuyIn'] as num?)?.toDouble() ?? 0.0;
-          profit = finalStack - totalBuyIn;
-        }
-
-        totalProfit += profit;
-        if (profit > 0) {
-          wonSessions++;
+          totalProfit += (finalStack - totalBuyIn);
         }
       }
 
-      // Calculate win rate as percentage of winning sessions
-      double winRate = totalSessions > 0 ? (wonSessions / totalSessions) * 100 : 0.0;
+      final avgWeeklyEarnings = totalProfit / (sessions.length > 0 ? (sessions.length / 2.0) : 1.0);
 
-      // Calculate average weekly earnings (rough estimate based on total profit)
-      double avgWeeklyEarnings = totalProfit / (totalSessions > 0 ? (totalSessions / 2.0) : 1.0);
+      // Calculate VPIP, PFR, 3-bet percentages for play style detection
+      final vpip = userStats.handsPlayed > 0
+          ? (userStats.vpipCount / userStats.handsPlayed) * 100
+          : 0.0;
+      final pfr = userStats.handsPlayed > 0
+          ? (userStats.pfrCount / userStats.handsPlayed) * 100
+          : 0.0;
+      final threeBet = userStats.handsPlayed > 0
+          ? (userStats.threeBetCount / userStats.handsPlayed) * 100
+          : 0.0;
 
-      print('📊 DEBUG Stats: Sessions=$totalSessions, Hours=$totalHours, WonSessions=$wonSessions, WinRate=$winRate%, TotalProfit=$totalProfit');
+      // Calculate aggression factor
+      // AF = aggressive actions (bet/raise) / passive actions (call)
+      // Approximate: PFR count represents aggressive actions, (VPIP - PFR) represents calls
+      final aggressiveActions = userStats.pfrCount.toDouble();
+      final passiveActions = (userStats.vpipCount - userStats.pfrCount).toDouble();
+      final aggressionFactor = passiveActions > 0
+          ? aggressiveActions / passiveActions
+          : (aggressiveActions > 0 ? 5.0 : 0.0); // If only aggressive, set high AF
 
       return {
-        'totalSessions': totalSessions,
+        'totalSessions': userStats.totalSessions,
         'totalHours': totalHours,
         'winRate': winRate,
-        'currentStreak': currentStreak,
+        'currentStreak': 0,
         'avgWeeklyEarnings': avgWeeklyEarnings,
+        'vpip': vpip,
+        'pfr': pfr,
+        'threeBet': threeBet,
+        'aggressionFactor': aggressionFactor,
       };
     } catch (e) {
       print('Error getting player statistics: $e');
