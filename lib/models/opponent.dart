@@ -186,6 +186,11 @@ class Opponent {
 
   /// Calculate player type based on stats
   static PlayerType _calculatePlayerType(double vpip, double pfr, double threeBet, double aggression) {
+    // Return unknown if all stats are zero (no hands played)
+    if (vpip == 0 && pfr == 0 && threeBet == 0 && aggression == 0) {
+      return PlayerType.unknown;
+    }
+
     if (vpip < 15 && pfr < 12) {
       return aggression > 2.5 ? PlayerType.tightAggressive : PlayerType.tightPassive;
     } else if (vpip > 25 && pfr > 20) {
@@ -218,7 +223,7 @@ class Opponent {
       case PlayerType.calling_station:
         return 'Calling Station';
       case PlayerType.unknown:
-        return 'Unknown';
+        return 'No Data';
     }
   }
 

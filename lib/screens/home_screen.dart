@@ -17,6 +17,7 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/session_result_service.dart';
 import '../services/play_style_detector.dart';
+import '../services/stats_verification_service.dart';
 import '../screens/auth_screen.dart';
 import '../widgets/loading_screen.dart';
 
@@ -77,6 +78,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       setState(() {
         isLoadingData = true;
       });
+
+      // Run stats verification in background
+      StatsVerificationService.verifyAllStats();
 
       final bankroll = await BankrollService.getCurrentBankroll();
       final goal = await BankrollService.getBankrollGoal();
