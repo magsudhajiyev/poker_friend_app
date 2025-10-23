@@ -1,6 +1,11 @@
 class PlayStyleDetector {
+  /// Minimum hands required for reliable play style detection
+  static const int minHandsForReliableStats = 50;
+
   /// Detects play style based on poker statistics
   /// Returns a map with 'style' and 'description'
+  ///
+  /// [handsPlayed] - Optional parameter to check if sample size is sufficient
   static Map<String, String> detectPlayStyle({
     required double vpip,
     required double pfr,
@@ -8,7 +13,17 @@ class PlayStyleDetector {
     required double aggressionFactor,
     double? wtsd,
     double? wsd,
+    int? handsPlayed,
   }) {
+    // Check if we have enough data for reliable detection
+    if (handsPlayed != null && handsPlayed < minHandsForReliableStats) {
+      return {
+        'style': 'Unknown',
+        'icon': 'tag.png',
+        'description': 'Need ${minHandsForReliableStats - handsPlayed} more hands for reliable detection',
+      };
+    }
+
     // Handle edge cases
     if (vpip == 0 && pfr == 0) {
       return {

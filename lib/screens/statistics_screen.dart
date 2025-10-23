@@ -6,6 +6,7 @@ import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
+import '../services/user_stats_service.dart';
 import '../widgets/global_loading_spinner.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -74,75 +75,54 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     try {
       setState(() {
-        loadingMessage = 'Fetching sessions...';
+        loadingMessage = 'Fetching user stats...';
       });
 
-      // Get all sessions from Firebase
-      final sessions = await FirebaseService.getAllSessions();
-      totalSessions = sessions.length;
-
-      if (sessions.isEmpty) {
-        return; // No sessions to process
+      // Get user stats from UserStatsService (single source of truth)
+      final userId = AuthService.userId;
+      if (userId == null) {
+        return;
       }
 
-      setState(() {
-        loadingMessage = 'Processing ${sessions.length} sessions...';
-      });
-
-      int vpipHands = 0;
-      int pfrHands = 0;
-      int threeBetHands = 0;
-      int wonHands = 0;
-
-      // Process sessions in batches of 5 to avoid overwhelming the database
-      const batchSize = 5;
-      for (int batchStart = 0; batchStart < sessions.length; batchStart += batchSize) {
-        final batchEnd = (batchStart + batchSize).clamp(0, sessions.length);
-        final sessionBatch = sessions.sublist(batchStart, batchEnd);
-
-        setState(() {
-          loadingMessage = 'Processing sessions ${batchStart + 1}-$batchEnd of ${sessions.length}...';
-        });
-
-        // Process batch in parallel
-        final futures = sessionBatch.map((session) async {
-          final sessionData = await _processSingleSession(session, batchStart + sessionBatch.indexOf(session));
-          return sessionData;
-        }).toList();
-
-        final batchResults = await Future.wait(futures);
-
-        // Aggregate results from batch
-        for (final sessionResult in batchResults) {
-          totalHands += sessionResult['totalHands'] as int;
-          handsPlayed += sessionResult['handsPlayed'] as int;
-          vpipHands += sessionResult['vpipHands'] as int;
-          pfrHands += sessionResult['pfrHands'] as int;
-          threeBetHands += sessionResult['threeBetHands'] as int;
-          wonHands += sessionResult['wonHands'] as int;
-
-          if (sessionResult['chartData'] != null) {
-            sessionChartData.add(sessionResult['chartData']);
-          }
-        }
-
-        // Small delay to prevent UI freeze
-        await Future.delayed(Duration(milliseconds: 50));
+      final userStats = await UserStatsService.getUserStats(userId);
+      if (userStats == null) {
+        return;
       }
 
-      setState(() {
-        loadingMessage = 'Calculating final statistics...';
-      });
+      // Use stats directly from the database
+      totalHands = userStats.totalHands;
+      handsPlayed = userStats.handsPlayed;
+      totalSessions = userStats.totalSessions;
+      totalPlayTime = userStats.totalPlayTimeMinutes;
 
-      // Calculate percentages
+      // Calculate percentages from database stats
       if (handsPlayed > 0) {
-        vpip = (vpipHands / handsPlayed) * 100;
-        pfr = (pfrHands / handsPlayed) * 100;
-        threeBet = (threeBetHands / handsPlayed) * 100;
-        winRate = (wonHands / handsPlayed) * 100;
+        vpip = (userStats.vpipCount / handsPlayed) * 100;
+        pfr = (userStats.pfrCount / handsPlayed) * 100;
+        threeBet = (userStats.threeBetCount / handsPlayed) * 100;
+        // Win rate = wonHands / handsPlayed (single source of truth)
+        winRate = (userStats.wonHands / handsPlayed) * 100;
       }
 
-      print('📊 Calculated stats: Hands: $handsPlayed, VPIP: ${vpip.toStringAsFixed(1)}%, PFR: ${pfr.toStringAsFixed(1)}%');
+      setState(() {
+        loadingMessage = 'Loading session chart data...';
+      });
+
+      // Get sessions for chart data only
+      final sessions = await FirebaseService.getAllSessions();
+      for (int i = 0; i < sessions.length; i++) {
+        final session = sessions[i];
+        if (session['startTime'] != null) {
+          sessionChartData.add(SessionChartData(
+            date: DateTime.parse(session['startTime']),
+            sessionNumber: i + 1,
+            totalHands: session['totalHands'] ?? 0,
+            gameType: session['gameType'] ?? 'cash',
+          ));
+        }
+      }
+
+      print('📊 Stats from UserStatsService: Total Hands: $totalHands, Hands Played: $handsPlayed, Won: ${userStats.wonHands}, Win Rate: ${winRate.toStringAsFixed(1)}%');
 
     } catch (e) {
       print('❌ Error calculating statistics: $e');
@@ -186,17 +166,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
       sessionTotalHands = hands.length;
 
+      // Get our seat number for win detection
+      final ourSeatNumber = session['ourSeatNumber'] as int?;
+
       // Process hands for player statistics
       for (final hand in hands) {
         if (hand['actions'] != null) {
-          final handResult = _processHandStatistics(hand);
+          final handResult = _processHandStatistics(hand, ourSeatNumber);
           if (handResult['playerInHand']) {
             sessionHandsPlayed++;
             if (handResult['playerVPIP']) sessionVpipHands++;
             if (handResult['playerPFR']) sessionPfrHands++;
             if (handResult['player3Bet']) sessionThreeBetHands++;
-            if (handResult['playerWon']) sessionWonHands++;
           }
+          // Check wins separately - can win even without being in hand
+          if (handResult['playerWon']) sessionWonHands++;
         }
       }
     } catch (e) {
@@ -215,7 +199,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     };
   }
 
-  Map<String, dynamic> _processHandStatistics(Map<String, dynamic> hand) {
+  Map<String, dynamic> _processHandStatistics(Map<String, dynamic> hand, int? ourSeatNumber) {
     final actions = hand['actions'] as List<dynamic>;
     bool playerInHand = false;
     bool playerVPIP = false;
@@ -323,15 +307,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       }
     }
 
-    // Check if player won (need to handle both new and old formats)
-    final winner = hand['winner'];
-    if (winner != null) {
-      final winnerStr = winner.toString();
-      if (winnerStr.toLowerCase().contains('you') ||
-          winnerStr.toLowerCase().contains('hero') ||
-          (currentUserName.isNotEmpty && winnerStr.contains(currentUserName))) {
-        playerWon = true;
-      }
+    // Check if player won by comparing winnerId with ourSeatNumber
+    // This is the single source of truth for win detection
+    final winnerId = hand['winnerId'] as int?;
+    if (winnerId != null && ourSeatNumber != null && winnerId == ourSeatNumber) {
+      playerWon = true;
     }
 
     return {

@@ -22,7 +22,8 @@ class StatsVerificationService {
 
       // Fetch all sessions
       final sessions = await FirebaseService.getAllSessions();
-      print('📁 Total Sessions Found: ${sessions.length}\n');
+      print('📁 Total Sessions Found: ${sessions.length}');
+      print('📁 Session IDs: ${sessions.map((s) => s['id']).join(', ')}\n');
 
       // Variables to track calculated stats
       int totalHandsCalc = 0;
@@ -49,11 +50,33 @@ class StatsVerificationService {
 
         // Calculate session duration
         if (session['startTime'] != null && session['endTime'] != null) {
-          final startTime = (session['startTime'] as Timestamp).toDate();
-          final endTime = (session['endTime'] as Timestamp).toDate();
-          final duration = endTime.difference(startTime).inMinutes;
-          totalPlayTimeMinutes += duration;
-          print('Duration: $duration minutes');
+          try {
+            DateTime startTime;
+            DateTime endTime;
+
+            // Handle both Timestamp and String formats
+            if (session['startTime'] is Timestamp) {
+              startTime = (session['startTime'] as Timestamp).toDate();
+            } else if (session['startTime'] is String) {
+              startTime = DateTime.parse(session['startTime']);
+            } else {
+              throw Exception('Unknown startTime type: ${session['startTime'].runtimeType}');
+            }
+
+            if (session['endTime'] is Timestamp) {
+              endTime = (session['endTime'] as Timestamp).toDate();
+            } else if (session['endTime'] is String) {
+              endTime = DateTime.parse(session['endTime']);
+            } else {
+              throw Exception('Unknown endTime type: ${session['endTime'].runtimeType}');
+            }
+
+            final duration = endTime.difference(startTime).inMinutes;
+            totalPlayTimeMinutes += duration;
+            print('Duration: $duration minutes');
+          } catch (e) {
+            print('⚠️  Error parsing session times: $e');
+          }
         }
 
         // Fetch hands for this session
@@ -194,7 +217,7 @@ class StatsVerificationService {
       print('Total Hands: $totalHandsCalc');
       print('Hands Played: $handsPlayedCalc');
       print('Won Hands: $wonHandsCalc');
-      print('Win Rate: ${totalHandsCalc > 0 ? (wonHandsCalc / totalHandsCalc * 100).toStringAsFixed(1) : "0.0"}%');
+      print('Win Rate: ${handsPlayedCalc > 0 ? (wonHandsCalc / handsPlayedCalc * 100).toStringAsFixed(1) : "0.0"}%');
       print('VPIP Count: $vpipCountCalc');
       print('VPIP %: ${handsPlayedCalc > 0 ? (vpipCountCalc / handsPlayedCalc * 100).toStringAsFixed(1) : "0.0"}%');
       print('PFR Count: $pfrCountCalc');
@@ -212,14 +235,14 @@ class StatsVerificationService {
         print('Total Hands: ${userStats.totalHands}');
         print('Hands Played: ${userStats.handsPlayed}');
         print('Won Hands: ${userStats.wonHands}');
-        print('Win Rate: ${userStats.totalHands > 0 ? (userStats.wonHands / userStats.totalHands * 100).toStringAsFixed(1) : "0.0"}%');
+        print('Win Rate: ${userStats.handsPlayed > 0 ? (userStats.wonHands / userStats.handsPlayed * 100).toStringAsFixed(1) : "0.0"}%');
         print('VPIP Count: ${userStats.vpipCount}');
         print('VPIP %: ${userStats.handsPlayed > 0 ? (userStats.vpipCount / userStats.handsPlayed * 100).toStringAsFixed(1) : "0.0"}%');
         print('PFR Count: ${userStats.pfrCount}');
         print('PFR %: ${userStats.handsPlayed > 0 ? (userStats.pfrCount / userStats.handsPlayed * 100).toStringAsFixed(1) : "0.0"}%');
         print('3-Bet Count: ${userStats.threeBetCount}');
         print('Total Play Time: ${userStats.totalPlayTimeMinutes} minutes (${(userStats.totalPlayTimeMinutes / 60).toStringAsFixed(1)} hours)');
-        print('Total Sessions: ${userStats.totalSessions}');
+        print('Total Sessions: ${userStats.totalSessions} ⚠️  (Database shows ${userStats.totalSessions} but we found ${sessions.length} sessions in poker_sessions collection)');
         print('');
 
         // Compare
@@ -246,12 +269,20 @@ class StatsVerificationService {
   }
 
   static Future<List<Map<String, dynamic>>> _getHandsForSession(String sessionId) async {
+    print('     🔍 Fetching hands from: poker_sessions/$sessionId/poker_hands');
+
     final snapshot = await _firestore
         .collection('poker_sessions')
         .doc(sessionId)
-        .collection('hands')
+        .collection('poker_hands')
         .orderBy('handNumber')
         .get();
+
+    print('     🔍 Found ${snapshot.docs.length} hand documents');
+
+    if (snapshot.docs.isNotEmpty) {
+      print('     🔍 Hand document IDs: ${snapshot.docs.map((d) => d.id).join(', ')}');
+    }
 
     return snapshot.docs.map((doc) {
       final data = doc.data();

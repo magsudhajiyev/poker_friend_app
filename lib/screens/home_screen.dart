@@ -97,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
 
       if (mounted) {
+        print('🏠 DEBUG Home Screen - playerStats: $stats');
         setState(() {
           currentBankroll = bankroll;
           bankrollGoal = goal;
@@ -843,6 +844,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final aggressionFactor = (playerStats['aggressionFactor'] as num?)?.toDouble() ?? 0.0;
     final wtsd = (playerStats['wtsd'] as num?)?.toDouble();
     final wsd = (playerStats['wsd'] as num?)?.toDouble();
+    final handsPlayed = (playerStats['handsPlayed'] as num?)?.toInt();
 
     final result = PlayStyleDetector.detectPlayStyle(
       vpip: vpip,
@@ -851,6 +853,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       aggressionFactor: aggressionFactor,
       wtsd: wtsd,
       wsd: wsd,
+      handsPlayed: handsPlayed,
     );
 
     return PlayStyleDetector.getStyleAbbreviation(result['style']!);
@@ -864,6 +867,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final aggressionFactor = (playerStats['aggressionFactor'] as num?)?.toDouble() ?? 0.0;
     final wtsd = (playerStats['wtsd'] as num?)?.toDouble();
     final wsd = (playerStats['wsd'] as num?)?.toDouble();
+    final handsPlayed = (playerStats['handsPlayed'] as num?)?.toInt();
 
     final result = PlayStyleDetector.detectPlayStyle(
       vpip: vpip,
@@ -872,6 +876,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       aggressionFactor: aggressionFactor,
       wtsd: wtsd,
       wsd: wsd,
+      handsPlayed: handsPlayed,
     );
 
     return result['icon']!;

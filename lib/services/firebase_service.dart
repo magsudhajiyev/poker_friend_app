@@ -206,6 +206,8 @@ class FirebaseService {
       final handDocId = 'hand_${handNumber}_${DateTime.now().millisecondsSinceEpoch}';
 
       print('🔧 DEBUG Firebase: Generated handDocId: $handDocId for sessionId: $sessionId, handNumber: $handNumber');
+      print('🔧 DEBUG Firebase: Saving to path: $_sessionsCollection/$sessionId/$_handsCollection/$handDocId');
+      print('🔧 DEBUG Firebase: Hand data keys: ${handData.keys.join(', ')}');
 
       await _firestore
           .collection(_sessionsCollection)
@@ -213,17 +215,23 @@ class FirebaseService {
           .collection(_handsCollection)
           .doc(handDocId)
           .set(handData);
-      
+
+      print('✅ DEBUG Firebase: Hand document created successfully');
+
       // Update session total hands count
       await _firestore.collection(_sessionsCollection).doc(sessionId).update({
         'totalHands': FieldValue.increment(1),
       });
+
+      print('✅ DEBUG Firebase: Session totalHands incremented');
 
       // Update opponent statistics incrementally (performance optimization)
       await _updateOpponentStatsFromHand(
         actions: actions,
         playerNames: playerNames,
       );
+
+      print('✅ DEBUG Firebase: Opponent stats updated');
 
       // Update user statistics incrementally (performance optimization)
       await _updateUserStatsFromHand(
@@ -235,7 +243,8 @@ class FirebaseService {
         playerNames: playerNames,
       );
 
-      print('Hand $handNumber saved successfully to session $sessionId');
+      print('✅ DEBUG Firebase: User stats updated');
+      print('✅ Hand $handNumber saved successfully to session $sessionId');
     } catch (e) {
       print('Error saving hand: $e');
       rethrow;

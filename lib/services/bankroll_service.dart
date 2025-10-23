@@ -98,6 +98,10 @@ class BankrollService {
           'winRate': 0.0,
           'currentStreak': 0,
           'avgWeeklyEarnings': 0.0,
+          'vpip': 0.0,
+          'pfr': 0.0,
+          'threeBet': 0.0,
+          'aggressionFactor': 0.0,
         };
       }
 
@@ -111,13 +115,18 @@ class BankrollService {
           'winRate': 0.0,
           'currentStreak': 0,
           'avgWeeklyEarnings': 0.0,
+          'vpip': 0.0,
+          'pfr': 0.0,
+          'threeBet': 0.0,
+          'aggressionFactor': 0.0,
         };
       }
 
-      // Calculate win rate from user stats (hands won / total hands)
-      final totalHands = userStats.totalHands;
+      // Calculate win rate from user stats (hands won / hands played)
+      // Win rate should only count hands where we voluntarily put money in
+      final handsPlayed = userStats.handsPlayed;
       final wonHands = userStats.wonHands;
-      final winRate = totalHands > 0 ? (wonHands / totalHands) * 100 : 0.0;
+      final winRate = handsPlayed > 0 ? (wonHands / handsPlayed) * 100 : 0.0;
 
       // Calculate total hours from play time minutes
       final totalHours = userStats.totalPlayTimeMinutes / 60.0;
@@ -173,6 +182,7 @@ class BankrollService {
         'pfr': pfr,
         'threeBet': threeBet,
         'aggressionFactor': aggressionFactor,
+        'handsPlayed': userStats.handsPlayed,
       };
     } catch (e) {
       print('Error getting player statistics: $e');
@@ -182,6 +192,10 @@ class BankrollService {
         'winRate': 0.0,
         'currentStreak': 0,
         'avgWeeklyEarnings': 0.0,
+        'vpip': 0.0,
+        'pfr': 0.0,
+        'threeBet': 0.0,
+        'aggressionFactor': 0.0,
       };
     }
   }
