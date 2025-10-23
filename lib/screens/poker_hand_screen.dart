@@ -1716,6 +1716,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         : gameState.getMinimumBet();
     final maxBet = currentPlayer.currentStack + currentPlayer.betThisRound;
 
+    // If player is short-stacked (can't meet min bet), allow all-in for whatever they have
+    final effectiveMinBet = maxBet < minBet ? maxBet : minBet;
+
     // Determine which multiplier mode to use
     final bool isPreflop = gameState.currentRound == BettingRound.preflop;
     final bool hasVoluntaryBet = gameState.hasBetThisRound; // True if someone voluntarily bet/raised (not just blinds)
@@ -1782,7 +1785,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Min: ${widget.gameType == GameType.cash ? '\$${minBet.toStringAsFixed(2)}' : minBet.toInt()} • Max: ${widget.gameType == GameType.cash ? '\$${maxBet.toStringAsFixed(2)}' : maxBet.toInt()}',
+                        'Min: ${widget.gameType == GameType.cash ? '\$${effectiveMinBet.toStringAsFixed(2)}' : effectiveMinBet.toInt()} • Max: ${widget.gameType == GameType.cash ? '\$${maxBet.toStringAsFixed(2)}' : maxBet.toInt()}',
                         style: TextStyle(
                           fontSize: 12,
                           color: Color(0xFF9A9A9A),
@@ -1828,7 +1831,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                             hasVoluntaryBet: hasVoluntaryBet,
                             currentPot: currentPot,
                             bigBlind: bigBlind,
-                            minBet: minBet,
+                            minBet: effectiveMinBet,
                             maxBet: maxBet,
                             amountController: amountController,
                             setState: setState,
@@ -1885,12 +1888,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                             double? amount;
                             try {
                               amount = double.parse(text);
-                              if (amount < minBet || amount > maxBet) {
+                              if (amount < effectiveMinBet || amount > maxBet) {
                                 // Show error
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Amount must be between ${minBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} and ${maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
+                                      'Amount must be between ${effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} and ${maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
                                     ),
                                     backgroundColor: Colors.red,
                                   ),
@@ -2186,20 +2189,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         : gameState.getMinimumBet();
     // For all-in calculation, include what player has already bet this round
     final maxBet = currentPlayer.currentStack + currentPlayer.betThisRound;
-    final betRange = maxBet - minBet;
-    
+
+    // If player is short-stacked (can't meet min bet), use maxBet as both min and max
+    final effectiveMinBet = maxBet < minBet ? maxBet : minBet;
+    final betRange = maxBet - effectiveMinBet;
+
     // Use actual screen height for better sensitivity calculation
     // Use 60% of screen height as effective drag area
     final screenHeight = MediaQuery.of(context).size.height;
     final effectiveDragArea = screenHeight * 0.6; // 60% of screen height
-    final sensitivity = betRange / effectiveDragArea;
-    
+    final sensitivity = betRange > 0 ? betRange / effectiveDragArea : 0;
+
     // Calculate new bet amount based on total drag distance from start
     // Negative totalDeltaY = drag up = increase bet
     // Positive totalDeltaY = drag down = decrease bet
     final totalBetChange = -totalDeltaY * sensitivity;
-    
-    double newBetAmount = (minBet + totalBetChange).clamp(minBet, maxBet);
+
+    double newBetAmount = (effectiveMinBet + totalBetChange).clamp(effectiveMinBet, maxBet);
     
     // Round to appropriate increments
     if (widget.gameType == GameType.cash) {
@@ -2217,10 +2223,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
 
     // Ensure we never exceed the player's stack
-    newBetAmount = newBetAmount.clamp(minBet, maxBet);
+    newBetAmount = newBetAmount.clamp(effectiveMinBet, maxBet);
 
     // Calculate drag bar position (0 = bottom/min bet, 1 = top/max bet)
-    final betProgress = betRange > 0 ? (newBetAmount - minBet) / betRange : 0;
+    final betProgress = betRange > 0 ? (newBetAmount - effectiveMinBet) / betRange : 0;
     final dragBarPosition = betProgress.clamp(0.0, 1.0);
     
     setState(() {

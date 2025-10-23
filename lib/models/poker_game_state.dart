@@ -679,8 +679,15 @@ class PokerGameState {
         double minRaise = getMinimumRaise();
         // For all-in, max bet is current stack + what they've already bet this round
         double maxTotalBet = player.currentStack + player.betThisRound;
-        double raiseAmount = amount.clamp(minRaise, maxTotalBet);
-        
+
+        // If player is short-stacked (can't meet min raise), allow all-in for whatever they have
+        double raiseAmount;
+        if (maxTotalBet < minRaise) {
+          raiseAmount = maxTotalBet; // Short stack all-in
+        } else {
+          raiseAmount = amount.clamp(minRaise, maxTotalBet);
+        }
+
         // Calculate additional amount beyond what player has already bet this round
         double additionalAmount = raiseAmount - player.betThisRound;
         
