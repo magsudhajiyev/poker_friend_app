@@ -1223,9 +1223,7 @@ class PokerGameState {
   void initializePot() {
     currentPot = 0.0;
     currentBet = bigBlind.toDouble();
-    print('🎮 DEBUG: initializePot - _effectiveBBPosition before: $_effectiveBBPosition');
     _effectiveBBPosition = _determineEffectiveBBPosition(); // Set before posting
-    print('🎮 DEBUG: initializePot - _effectiveBBPosition after: $_effectiveBBPosition');
 
     // Post blinds
     if (numberOfPlayers > 2) {

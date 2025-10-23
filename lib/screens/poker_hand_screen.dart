@@ -607,7 +607,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         currentBigBlind: sessionManager.bigBlind,
         currentLevelDuration: widget.levelDuration,
         useButtonMode: useButtonMode,
-        onBlindsChanged: (smallBlind, bigBlind) async {
+        currentHasBBante: gameState.hasBBante,
+        gameType: widget.gameType,
+        onBlindsChanged: (smallBlind, bigBlind, hasBBante) async {
 
           setState(() {
             // Update both sessionManager and gameState blinds
@@ -615,13 +617,23 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             sessionManager.bigBlind = bigBlind;
             gameState.smallBlind = smallBlind;
             gameState.bigBlind = bigBlind;
+            gameState.hasBBante = hasBBante;
           });
-
 
           // Save blinds to preferences for persistence
           final prefs = await SharedPreferences.getInstance();
           await prefs.setInt('small_blind', smallBlind);
           await prefs.setInt('big_blind', bigBlind);
+
+          // For individual sessions, also update Firebase so session details screen shows correct values
+          if (widget.isIndividualSession && sessionManager.sessionId != null) {
+            await FirebaseService.updateIndividualSession(
+              sessionId: sessionManager.sessionId!,
+              smallBlind: smallBlind,
+              bigBlind: bigBlind,
+              hasBBante: hasBBante,
+            ).catchError((e) {});
+          }
           // Note: These changes will take effect immediately for new hands
         },
         onLevelDurationChanged: (duration) {
@@ -2928,7 +2940,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           gameType: widget.gameType,
           smallBlind: widget.smallBlind,
           bigBlind: widget.bigBlind,
-          hasBBante: widget.hasBBante,
+          hasBBante: gameState.hasBBante,
           currentStack: currentStack,
           sessionId: sessionManager.sessionId,
           isFromActiveSession: true, // Indicate this is from an active poker session
@@ -4230,7 +4242,9 @@ class _SettingsDialog extends StatefulWidget {
   final int currentBigBlind;
   final int currentLevelDuration;
   final bool useButtonMode;
-  final Function(int smallBlind, int bigBlind) onBlindsChanged;
+  final bool currentHasBBante;
+  final GameType gameType;
+  final Function(int smallBlind, int bigBlind, bool hasBBante) onBlindsChanged;
   final Function(int) onLevelDurationChanged;
   final Function(bool) onButtonModeToggled;
 
@@ -4240,6 +4254,8 @@ class _SettingsDialog extends StatefulWidget {
     required this.currentBigBlind,
     required this.currentLevelDuration,
     required this.useButtonMode,
+    required this.currentHasBBante,
+    required this.gameType,
     required this.onBlindsChanged,
     required this.onLevelDurationChanged,
     required this.onButtonModeToggled,
@@ -4258,6 +4274,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
   late int bigBlind;
   late int levelDuration;
   late bool useButtonMode;
+  late bool hasBBante;
 
   @override
   void initState() {
@@ -4266,6 +4283,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     bigBlind = widget.currentBigBlind;
     levelDuration = widget.currentLevelDuration;
     useButtonMode = widget.useButtonMode;
+    hasBBante = widget.currentHasBBante;
   }
 
   Future<void> _showBlindInputDialog(String title, int currentValue, Function(int) onValueChanged) async {
@@ -4573,6 +4591,39 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 });
               },
             ),
+            const SizedBox(height: 16),
+
+            // BB Ante switch (only for tournaments)
+            if (widget.gameType == GameType.tournament)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Color(0xFF1F1F23),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'BB Ante',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Switch(
+                      value: hasBBante,
+                      onChanged: (value) {
+                        setState(() {
+                          hasBBante = value;
+                        });
+                      },
+                      activeColor: Color(0xFF5AC95A),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 24),
 
             // Level duration section
@@ -4646,7 +4697,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
         ),
         ElevatedButton(
           onPressed: () {
-            widget.onBlindsChanged(smallBlind, bigBlind);
+            widget.onBlindsChanged(smallBlind, bigBlind, hasBBante);
             widget.onLevelDurationChanged(levelDuration);
             widget.onButtonModeToggled(useButtonMode);
             Navigator.pop(context);
