@@ -61,6 +61,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   double _totalBuyIn = 0.0;
   List<Map<String, dynamic>> _stackHistory = [];
 
+  // Average growth tracking (for tournaments)
+  double _averageGrowth = 0.0;
+  double _previousStack = 0.0;
+
   // Current blinds (can be updated during session)
   int _currentSmallBlind = 0;
   int _currentBigBlind = 0;
@@ -83,6 +87,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     // Initialize rebuy tracking
     _totalBuyIn = widget.buyInAmount; // Start with initial buy-in
 
+    // Initialize average growth tracking
+    _previousStack = _currentStack;
 
     // Add initial stack to history
     _stackHistory.add({
@@ -180,6 +186,16 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             _totalBuyIn = sessionData!['totalBuyIn']?.toDouble() ?? _totalBuyIn;
             _handsLogged = sessionData['handsLogged'] ?? 0;
             _biggestPot = sessionData['biggestPot']?.toDouble() ?? 0.0;
+
+            // Load blinds from database (they might have been updated during session)
+            _currentSmallBlind = sessionData['smallBlind'] ?? _currentSmallBlind;
+            _currentBigBlind = sessionData['bigBlind'] ?? _currentBigBlind;
+            _currentHasBBante = sessionData['hasBBante'] ?? _currentHasBBante;
+
+            // Load average growth for tournaments
+            if (widget.gameType == GameType.tournament) {
+              _averageGrowth = sessionData['averageGrowth']?.toDouble() ?? 0.0;
+            }
 
             // Load rebuys if available
             if (sessionData['rebuys'] != null) {
@@ -690,6 +706,13 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         final previousStack = _currentStack;
         final stackChange = newStack - previousStack;
 
+        // Calculate incremental average growth for tournaments
+        if (widget.gameType == GameType.tournament && previousStack > 0) {
+          final handGrowth = ((newStack - previousStack) / previousStack) * 100;
+          // Update running average: newAvg = (oldAvg * n + newValue) / (n + 1)
+          _averageGrowth = (_averageGrowth * _handsLogged + handGrowth) / (_handsLogged + 1);
+        }
+
         setState(() {
           _currentStack = newStack;
           _handsLogged++;
@@ -697,6 +720,17 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           final potSize = result['potSize'] as double?;
           if (potSize != null && potSize > _biggestPot) {
             _biggestPot = potSize;
+          }
+
+          // Update blinds if they were changed during the hand
+          if (result['smallBlind'] != null) {
+            _currentSmallBlind = result['smallBlind'] as int;
+          }
+          if (result['bigBlind'] != null) {
+            _currentBigBlind = result['bigBlind'] as int;
+          }
+          if (result['hasBBante'] != null) {
+            _currentHasBBante = result['hasBBante'] as bool;
           }
         });
 
@@ -717,6 +751,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             handsLogged: _handsLogged,
             biggestPot: _biggestPot,
             stackHistory: _stackHistory, // Include stack history in update
+            smallBlind: _currentSmallBlind, // Update blinds in Firebase
+            bigBlind: _currentBigBlind,
+            hasBBante: _currentHasBBante,
+            averageGrowth: widget.gameType == GameType.tournament ? _averageGrowth : null,
           ).catchError((e) {});
         }
       }

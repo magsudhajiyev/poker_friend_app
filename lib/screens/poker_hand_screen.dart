@@ -3365,6 +3365,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         'completed': true,
         'finalStack': finalStack,
         'potSize': potSize,
+        'smallBlind': sessionManager.smallBlind,
+        'bigBlind': sessionManager.bigBlind,
+        'hasBBante': gameState.hasBBante,
       });
       return;
     }
@@ -3537,6 +3540,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         'completed': true,
         'finalStack': finalStack,
         'potSize': potSize,
+        'smallBlind': sessionManager.smallBlind,
+        'bigBlind': sessionManager.bigBlind,
+        'hasBBante': gameState.hasBBante,
       });
       return;
     }
@@ -3703,9 +3709,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     List<int> bustedPlayers = [];
     for (int playerId = 1; playerId <= gameState.numberOfPlayers; playerId++) {
       PlayerState player = gameState.players[playerId - 1];
+      double stack = gameState.getPlayerStack(playerId);
+
       // Only check players who are still active (haven't left the table)
       if (player.isActive) {
-        double stack = gameState.getPlayerStack(playerId);
         if (stack <= 0) {
           bustedPlayers.add(playerId);
         }
@@ -3878,6 +3885,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         'completed': true,
         'finalStack': finalStack,
         'potSize': potSize,
+        'smallBlind': sessionManager.smallBlind,
+        'bigBlind': sessionManager.bigBlind,
+        'hasBBante': gameState.hasBBante,
       });
       return;
     }

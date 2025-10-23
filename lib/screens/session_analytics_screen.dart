@@ -58,12 +58,6 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         _rebuys = List<Map<String, dynamic>>.from(sessionDetails?['rebuys'] ?? []);
         _hands = hands;
 
-        print('📊 DEBUG: Analytics loaded - Stack history entries: ${_stackHistory.length}');
-        print('📊 DEBUG: Stack history data: $_stackHistory');
-        print('📊 DEBUG: Session details keys: ${sessionDetails?.keys}');
-        print('📊 DEBUG: Full session details: $sessionDetails');
-        print('📊 DEBUG: Hands loaded: ${_hands.length}');
-
         // Calculate analytics
         _calculateSessionAnalytics();
         _isLoading = false;
@@ -76,67 +70,77 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   }
 
   void _calculateSessionAnalytics() {
-    // First try to use totalBuyIn from session data if available
-    final sessionTotalBuyIn = widget.sessionData['totalBuyIn']?.toDouble() ?? 0.0;
-
-    // Calculate total invested (initial buy-in + rebuys)
-    final initialBuyIn = widget.sessionData['buyInAmount']?.toDouble() ?? 0.0;
-    final totalRebuyAmount = _rebuys.fold<double>(0.0, (sum, rebuy) => sum + (rebuy['amount']?.toDouble() ?? 0.0));
-    final calculatedTotal = initialBuyIn + totalRebuyAmount;
-
-    // Use the higher of session totalBuyIn or calculated total (to handle cases where session data is stale)
-    _totalInvested = (sessionTotalBuyIn > calculatedTotal) ? sessionTotalBuyIn : calculatedTotal;
-
-    print('💰 DEBUG: Session data totalBuyIn: $sessionTotalBuyIn');
-    print('💰 DEBUG: Initial buy-in: $initialBuyIn');
-    print('💰 DEBUG: Rebuys found: ${_rebuys.length}');
-    for (int i = 0; i < _rebuys.length; i++) {
-      print('💰 DEBUG: Rebuy $i: ${_rebuys[i]['amount']} (parsed: ${_rebuys[i]['amount']?.toDouble()})');
-    }
-    print('💰 DEBUG: Total rebuy amount: $totalRebuyAmount');
-    print('💰 DEBUG: Calculated total: $calculatedTotal');
-    print('💰 DEBUG: Final total invested: $_totalInvested');
+    final gameType = widget.sessionData['gameType'];
+    final isCashGame = gameType == 'cash' || gameType == GameType.cash.name;
 
     // Get final stack from stack history or session data
     if (_stackHistory.isNotEmpty) {
-      // Use the latest stack size from stack history
       _finalStack = _stackHistory.last['stackSize']?.toDouble() ?? 0.0;
     } else {
-      // Fallback to session data
       _finalStack = widget.sessionData['finalStack']?.toDouble() ?? widget.sessionData['currentStack']?.toDouble() ?? 0.0;
     }
 
-    // If we still don't have a total invested amount, try to get it from stack history
-    if (_totalInvested == 0.0 && _stackHistory.isNotEmpty) {
-      print('💰 DEBUG: Fallback to stack history for total invested');
-      // Find initial stack entry
-      final initialEntry = _stackHistory.firstWhere(
-        (entry) => entry['changeType'] == 'initial',
-        orElse: () => _stackHistory.first,
-      );
-      _totalInvested = initialEntry['stackSize']?.toDouble() ?? 0.0;
-      print('💰 DEBUG: Initial from stack history: $_totalInvested');
+    if (isCashGame) {
+      // CASH GAME: Calculate P/L in dollars
+      // Total invested = buy-in + rebuys (in cash, chips = dollars)
+      final sessionTotalBuyIn = widget.sessionData['totalBuyIn']?.toDouble() ?? 0.0;
+      final initialBuyIn = widget.sessionData['buyInAmount']?.toDouble() ?? 0.0;
+      final totalRebuyAmount = _rebuys.fold<double>(0.0, (sum, rebuy) => sum + (rebuy['amount']?.toDouble() ?? 0.0));
+      final calculatedTotal = initialBuyIn + totalRebuyAmount;
 
-      // Add rebuy amounts from stack history
-      final rebuyEntries = _stackHistory.where((entry) => entry['changeType'] == 'rebuy');
-      print('💰 DEBUG: Rebuy entries from stack history: ${rebuyEntries.length}');
-      for (final rebuy in rebuyEntries) {
-        final amount = rebuy['changeAmount']?.toDouble() ?? 0.0;
-        print('💰 DEBUG: Adding rebuy from stack history: $amount');
-        _totalInvested += amount;
+      _totalInvested = (sessionTotalBuyIn > calculatedTotal) ? sessionTotalBuyIn : calculatedTotal;
+
+      // P/L = Final Stack - Total Invested
+      _profitLoss = _finalStack - _totalInvested;
+    } else {
+      // TOURNAMENT: Use pre-calculated average growth
+      // Store total invested as buy-in amount (for display purposes)
+      _totalInvested = widget.sessionData['buyInAmount']?.toDouble() ?? 0.0;
+
+      // Use pre-calculated average growth from session data (O(1) instead of O(n))
+      _profitLoss = widget.sessionData['averageGrowth']?.toDouble() ?? 0.0;
+
+      // Fallback: If averageGrowth not stored (old sessions), calculate it
+      if (_profitLoss == 0.0 && _stackHistory.length > 1) {
+        double startingStack = widget.sessionData['startingStack']?.toDouble() ?? 0.0;
+
+        if (startingStack == 0.0 && _stackHistory.isNotEmpty) {
+          final initialEntry = _stackHistory.firstWhere(
+            (entry) => entry['changeType'] == 'initial',
+            orElse: () => _stackHistory.first,
+          );
+          startingStack = initialEntry['stackSize']?.toDouble() ?? 0.0;
+        }
+
+        if (startingStack > 0) {
+          double totalGrowth = 0.0;
+          int growthCount = 0;
+
+          // Calculate growth for each hand (excluding initial)
+          for (int i = 1; i < _stackHistory.length; i++) {
+            final currentStack = _stackHistory[i]['stackSize']?.toDouble() ?? 0.0;
+            final previousStack = _stackHistory[i - 1]['stackSize']?.toDouble() ?? startingStack;
+
+            if (previousStack > 0) {
+              final handGrowth = ((currentStack - previousStack) / previousStack) * 100;
+              totalGrowth += handGrowth;
+              growthCount++;
+            }
+          }
+
+          _profitLoss = growthCount > 0 ? totalGrowth / growthCount : 0.0;
+        }
       }
-      print('💰 DEBUG: Final total invested from stack history: $_totalInvested');
     }
+  }
 
-    // Calculate profit/loss
-    _profitLoss = _finalStack - _totalInvested;
-
-    print('📊 Analytics calculated: invested: $_totalInvested, final: $_finalStack, P/L: $_profitLoss');
+  bool _isCashGame() {
+    final gameType = widget.sessionData['gameType'];
+    return gameType == 'cash' || gameType == GameType.cash.name;
   }
 
   String _formatCurrency(double amount) {
-    final gameType = widget.sessionData['gameType'];
-    if (gameType == 'cash' || gameType == GameType.cash.name) {
+    if (_isCashGame()) {
       return '\$${amount.toStringAsFixed(2)}';
     } else {
       return amount.toStringAsFixed(0);
@@ -225,13 +229,15 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
           SizedBox(height: 12),
 
-          // Profit/Loss and Duration Row
+          // Profit/Loss (Cash) or Avg Growth (Tournament) and Duration Row
           Row(
             children: [
               Expanded(
                 child: _buildMetricCardWithAsset(
-                  'Profit/Loss',
-                  '${_profitLoss >= 0 ? '+' : ''}${_formatCurrency(_profitLoss)}',
+                  _isCashGame() ? 'Profit/Loss' : 'Avg Growth',
+                  _isCashGame()
+                    ? '${_profitLoss >= 0 ? '+' : ''}${_formatCurrency(_profitLoss)}'
+                    : '${_profitLoss >= 0 ? '+' : ''}${_profitLoss.toStringAsFixed(2)}',
                   'icons/progress.png',
                   textColor: _profitLoss >= 0 ? PokerFriendColors.green : PokerFriendColors.red,
                 ),
