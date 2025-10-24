@@ -1159,7 +1159,9 @@ class PokerSessionManager {
 
   void removePlayer(int seatNumber) {
     activeSeats.remove(seatNumber);
-    // Keep the name in case they rejoin
+    // Reset to initial state when seat is deactivated
+    playerNames[seatNumber] = 'Player $seatNumber';
+    playerStacks.remove(seatNumber);
   }
 
   void addPlayer(int seatNumber, String name) {
