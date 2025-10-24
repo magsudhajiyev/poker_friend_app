@@ -742,7 +742,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
 
   void _showAnalyticsDialog() async {
     final analytics = await OpponentService.getOpponentAnalytics();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

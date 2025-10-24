@@ -369,6 +369,9 @@ class PokerSessionManager {
   int? actualSBSeat; // Track who actually posted SB (may differ from calculated)
   int? actualBBSeat; // Track who actually posted BB (may differ from calculated)
 
+  // Opponent session tracking
+  Set<String> opponentsSeenThisSession = {}; // Track opponents for session count
+
   // Rebuy tracking
   List<RebuyRecord> rebuys = []; // Track all rebuys during session
   double totalBuyIn = 0.0; // Total amount invested including rebuys
@@ -403,6 +406,9 @@ class PokerSessionManager {
   // Start a new session
   Future<void> startSession({double? initialStack}) async {
     sessionStartTime = DateTime.now();
+
+    // Clear opponent tracking for new session
+    opponentsSeenThisSession.clear();
 
     // If we already have a session ID (from individual session), don't create a new one
     if (sessionId == null) {
@@ -832,10 +838,16 @@ class PokerSessionManager {
 
         // Update opponent stats (incremental)
         if (playerName.toLowerCase() != 'hero' && playerName.toLowerCase() != 'you') {
+          // Check if this is first time seeing this opponent in this session
+          final isFirstTimeSeen = !opponentsSeenThisSession.contains(playerName);
+          if (isFirstTimeSeen) {
+            opponentsSeenThisSession.add(playerName);
+          }
+
           await OpponentStatsService.updateStatsIncremental(
             opponentId: playerName,
             handsDelta: 1,
-            sessionsDelta: 0, // Sessions are tracked separately
+            sessionsDelta: isFirstTimeSeen ? 1 : 0, // Increment session only first time
             vpipDelta: vpipDelta,
             pfrDelta: pfrDelta,
             aggressionDelta: aggressionDelta,
@@ -906,26 +918,36 @@ class PokerSessionManager {
   // Update opponent statistics for completed hand
   Future<void> _updateOpponentStats() async {
     if (currentHand == null) return;
-    
-    
+
+
     try {
       // Get all player names from active seats who are not the hero
       for (final seatNumber in activeSeats) {
         if (seatNumber != ourSeatNumber) {
           final playerName = playerNames[seatNumber];
-          if (playerName != null && 
-              playerName.isNotEmpty && 
+          if (playerName != null &&
+              playerName.isNotEmpty &&
               !playerName.toLowerCase().contains('player')) {
-            
+
             try {
               // Find opponent by name first
               final opponent = await OpponentService.findOpponentByName(playerName);
               if (opponent != null) {
+                // Check if this is the first time seeing this opponent in this session
+                final isFirstTimeSeen = !opponentsSeenThisSession.contains(opponent.id);
+                if (isFirstTimeSeen) {
+                  opponentsSeenThisSession.add(opponent.id);
+                }
+
                 // Update stats using opponent ID
+                // Increment session count only on first hand with this opponent
                 await OpponentService.updateOpponentStats(
                   opponent.id,
                   additionalHands: 1,
+                  additionalSessions: isFirstTimeSeen ? 1 : null,
                 );
+
+                print('📊 Updated opponent $playerName: +1 hand${isFirstTimeSeen ? ', +1 session' : ''}');
               }
             } catch (e) {
               print('Failed to update stats for opponent $playerName: $e');

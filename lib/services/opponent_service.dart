@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/opponent.dart';
 import 'firebase_service.dart';
 import 'local_storage_service.dart';
+import 'opponent_stats_service.dart';
 
 /// Service for managing opponent data in both Firebase and local storage
 class OpponentService {
@@ -469,4 +470,5 @@ class OpponentService {
       print('💥 Error recalculating opponent stats: $e');
     }
   }
+
 }
