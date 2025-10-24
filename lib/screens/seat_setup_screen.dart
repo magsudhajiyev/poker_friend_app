@@ -3,7 +3,9 @@ import '../models/hand_state_machine.dart';
 import '../utils/poker_positions.dart';
 import '../services/auth_service.dart';
 import '../services/opponent_service.dart';
+import '../services/opponent_stats_service.dart';
 import '../models/opponent.dart';
+import '../models/opponent_stats.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import 'poker_hand_screen.dart';
@@ -62,6 +64,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   Map<int, TextEditingController> stackControllers = {};
   Map<int, bool> seatActive = {};
   List<Opponent> allOpponents = [];
+  Map<String, OpponentStats> opponentStats = {}; // For accessing playingStyle
   Map<int, bool> showSaveOpponentTip = {};
   Offset? buttonDragPosition;
   bool isDraggingButton = false;
@@ -128,8 +131,19 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   Future<void> _loadOpponents() async {
     try {
       final opponents = await OpponentService.getAllOpponents();
+      final statsMap = <String, OpponentStats>{};
+
+      // Load stats for each opponent
+      for (final opponent in opponents) {
+        final stats = await OpponentStatsService.getOpponentStats(opponent.name);
+        if (stats != null) {
+          statsMap[opponent.name] = stats;
+        }
+      }
+
       setState(() {
         allOpponents = opponents;
+        opponentStats = statsMap;
       });
     } catch (e) {
       print('Failed to load opponents: $e');
@@ -493,7 +507,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                           style: TextStyle(color: Colors.white, fontSize: 14),
                                         ),
                                         subtitle: Text(
-                                          opponent.playingStyle,
+                                          opponentStats[opponent.name]?.playingStyle ?? 'No Data',
                                           style: TextStyle(fontSize: 11, color: Color(0xFF9A9A9A)),
                                         ),
                                         leading: Container(

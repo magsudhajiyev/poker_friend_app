@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/opponent.dart';
+import '../models/opponent_stats.dart';
 import '../services/opponent_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/firebase_service.dart';
@@ -24,6 +25,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   late TextEditingController _nameController;
   late TextEditingController _notesController;
   Map<String, dynamic>? _statistics;
+  OpponentStats? _opponentStats; // Store the actual OpponentStats object
   bool _isLoadingStats = true;
 
   @override
@@ -46,8 +48,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     try {
       // Load stats from optimized structure - no recalculation needed!
       final stats = await _calculateOpponentStatistics(_opponent.name);
+      final opponentStats = await OpponentStatsService.getOpponentStats(_opponent.name);
       setState(() {
         _statistics = stats;
+        _opponentStats = opponentStats;
         _isLoadingStats = false;
       });
     } catch (e) {
@@ -521,7 +525,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Playing Style: ${_opponent.playingStyle}',
+                        'Playing Style: ${_opponentStats?.playingStyle ?? 'No Data'}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Color(0xFF9A9A9A),
@@ -699,17 +703,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 ),
               )
             else if (_statistics != null) ...[
-              // Update opponent's stored statistics when displaying
-              Builder(
-                builder: (context) {
-                  if ((_opponent.vpip ?? 0.0) == 0.0 && (_opponent.pfr ?? 0.0) == 0.0 && (_statistics!['totalHands'] ?? 0) > 0) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _updateOpponentStoredStats();
-                    });
-                  }
-                  return SizedBox.shrink();
-                }
-              ),
+              // Stats are loaded from OpponentStats - no need to update Opponent model
               Row(
                 children: [
                   Expanded(
@@ -896,29 +890,8 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     return '-';
   }
 
-  Future<void> _updateOpponentStoredStats() async {
-    if (_statistics == null) return;
-    
-    try {
-      await OpponentService.updateOpponentStats(
-        _opponent.id,
-        vpip: (_statistics!['vpip'] ?? 0.0).toDouble(),
-        pfr: (_statistics!['pfr'] ?? 0.0).toDouble(),
-        aggression: (_statistics!['aggression'] ?? 0.0).toDouble(),
-      );
-      
-      // Update local state
-      setState(() {
-        _opponent = _opponent.copyWith(
-          vpip: (_statistics!['vpip'] ?? 0.0).toDouble(),
-          pfr: (_statistics!['pfr'] ?? 0.0).toDouble(),
-          aggression: (_statistics!['aggression'] ?? 0.0).toDouble(),
-        );
-      });
-    } catch (e) {
-      print('Error updating opponent stats: $e');
-    }
-  }
+  // REMOVED: _updateOpponentStoredStats() is no longer needed
+  // Stats are stored in OpponentStats only, not in Opponent model
 
   Widget _buildHandsButton() {
     return Container(
