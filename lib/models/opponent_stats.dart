@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'opponent.dart'; // For PlayerType enum
 
 /// Optimized opponent statistics model using incremental counters
 /// instead of recalculating from all hands every time
@@ -252,6 +253,53 @@ class OpponentStats {
 
   /// Check if stats have sufficient sample size for reliability
   bool get hasReliableStats => (handsPlayed ?? 0) >= 50;
+
+  /// Calculate player type based on stats (same logic as Opponent model)
+  PlayerType get playerType {
+    final vpip = vpipPercentage;
+    final pfr = pfrPercentage;
+    final threeBet = threeBetPercentage;
+    final aggression = aggressionFactor * 10; // Scale to match Opponent model's aggression factor
+
+    // Return unknown if all stats are zero (no hands played)
+    if (vpip == 0 && pfr == 0 && threeBet == 0 && aggression == 0) {
+      return PlayerType.unknown;
+    }
+
+    if (vpip < 15 && pfr < 12) {
+      return aggression > 2.5 ? PlayerType.tightAggressive : PlayerType.tightPassive;
+    } else if (vpip > 25 && pfr > 20) {
+      return aggression > 2.5 ? PlayerType.looseAggressive : PlayerType.loosePassive;
+    } else if (vpip < 20 && pfr > 15) {
+      return PlayerType.tightAggressive;
+    } else if (vpip > 30) {
+      return PlayerType.loosePassive;
+    } else {
+      return PlayerType.tagRegular; // Tight-Aggressive-Good (regular)
+    }
+  }
+
+  /// Calculate playing style description (same logic as Opponent model)
+  String get playingStyle {
+    switch (playerType) {
+      case PlayerType.tightAggressive:
+        return 'Tight-Aggressive (TAG)';
+      case PlayerType.tightPassive:
+        return 'Tight-Passive (Rock)';
+      case PlayerType.looseAggressive:
+        return 'Loose-Aggressive (LAG)';
+      case PlayerType.loosePassive:
+        return 'Loose-Passive (Fish)';
+      case PlayerType.tagRegular:
+        return 'TAG Regular';
+      case PlayerType.maniac:
+        return 'Maniac';
+      case PlayerType.calling_station:
+        return 'Calling Station';
+      case PlayerType.unknown:
+        return 'No Data';
+    }
+  }
 
   /// Convert to legacy Opponent format for compatibility
   Map<String, dynamic> toLegacyStatsMap() {

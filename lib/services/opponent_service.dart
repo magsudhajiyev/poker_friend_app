@@ -80,17 +80,8 @@ class OpponentService {
     }
   }
 
-  /// Update opponent statistics
-  static Future<void> updateOpponentStats(String opponentId, {
-    int? additionalHands,
-    int? additionalSessions,
-    double? vpip,
-    double? pfr,
-    double? threeBet,
-    double? cbet,
-    double? fold3bet,
-    double? aggression,
-  }) async {
+  /// Update opponent's lastSeenAt timestamp
+  static Future<void> updateLastSeen(String opponentId) async {
     final opponents = await getAllOpponents();
     final opponent = opponents.cast<Opponent?>().firstWhere(
       (o) => o?.id == opponentId,
@@ -99,18 +90,6 @@ class OpponentService {
 
     if (opponent != null) {
       final updatedOpponent = opponent.copyWith(
-        handsPlayed: additionalHands != null 
-            ? opponent.handsPlayed + additionalHands 
-            : opponent.handsPlayed,
-        sessionsPlayed: additionalSessions != null
-            ? opponent.sessionsPlayed + additionalSessions
-            : opponent.sessionsPlayed,
-        vpip: vpip ?? opponent.vpip,
-        pfr: pfr ?? opponent.pfr,
-        threeBet: threeBet ?? opponent.threeBet,
-        cbet: cbet ?? opponent.cbet,
-        fold3bet: fold3bet ?? opponent.fold3bet,
-        aggression: aggression ?? opponent.aggression,
         lastSeenAt: DateTime.now(),
       );
 
@@ -257,7 +236,7 @@ class OpponentService {
   /// Get opponent statistics summary for analysis
   static Future<Map<String, dynamic>> getOpponentAnalytics() async {
     final opponents = await getAllOpponents();
-    
+
     if (opponents.isEmpty) {
       return {
         'totalOpponents': 0,
@@ -267,208 +246,45 @@ class OpponentService {
       };
     }
 
-    // Calculate analytics
-    final totalHands = opponents.fold<int>(0, (sum, o) => sum + (o.handsPlayed ?? 0));
-    final averageHands = totalHands / opponents.length;
-    
-    final mostPlayed = opponents.reduce((a, b) =>
-        (a.handsPlayed ?? 0) > (b.handsPlayed ?? 0) ? a : b);
-    
+    // Load stats for all opponents from OpponentStats
+    int totalHands = 0;
+    String? mostPlayedName;
+    int mostPlayedHands = 0;
     final typeDistribution = <String, int>{};
+
     for (final opponent in opponents) {
-      final type = opponent.playingStyle;
-      typeDistribution[type] = (typeDistribution[type] ?? 0) + 1;
+      final stats = await OpponentStatsService.getOpponentStats(opponent.name);
+      if (stats != null) {
+        final hands = stats.handsPlayed;
+        totalHands += hands;
+
+        if (hands > mostPlayedHands) {
+          mostPlayedHands = hands;
+          mostPlayedName = opponent.name;
+        }
+
+        final type = stats.playingStyle;
+        typeDistribution[type] = (typeDistribution[type] ?? 0) + 1;
+      }
     }
+
+    final averageHands = opponents.isNotEmpty ? totalHands / opponents.length : 0;
 
     return {
       'totalOpponents': opponents.length,
       'averageHands': averageHands.round(),
-      'mostPlayedAgainst': mostPlayed.name,
+      'mostPlayedAgainst': mostPlayedName,
       'playerTypeDistribution': typeDistribution,
       'totalHandsTracked': totalHands,
     };
   }
 
-  /// Recalculate opponent hand counts and statistics from existing session data
+  /// DEPRECATED: This method is no longer needed.
+  /// Statistics are now stored and updated incrementally in OpponentStats collection
+  /// via OpponentStatsService.updateStatsIncremental() after each hand.
+  @Deprecated('Use OpponentStatsService for all statistical operations')
   static Future<void> recalculateOpponentStats() async {
-    try {
-      print('🔄 Starting opponent statistics recalculation...');
-      
-      // Get all sessions
-      List<Map<String, dynamic>> sessions;
-      try {
-        sessions = await FirebaseService.getAllSessions();
-        print('📊 Found ${sessions.length} sessions in Firebase');
-      } catch (e) {
-        sessions = await LocalStorageService.getUserSessions();
-        print('📊 Found ${sessions.length} sessions in local storage');
-      }
-
-      // Track opponent statistics
-      Map<String, Map<String, dynamic>> opponentStats = {};
-
-      // Process each session
-      for (final session in sessions) {
-        final sessionId = session['id'] as String;
-        print('📋 Processing session: $sessionId');
-        
-        try {
-          // Get hands for this session
-          List<Map<String, dynamic>> hands;
-          try {
-            hands = await FirebaseService.getSessionHands(sessionId);
-          } catch (e) {
-            hands = await LocalStorageService.getSessionHands(sessionId);
-          }
-          
-          // Get player names from session
-          final playerNames = session['playerNames'] as Map<String, dynamic>?;
-          if (playerNames != null) {
-            // For each hand, process opponent actions
-            for (final hand in hands) {
-              // Count each opponent in the hand
-              for (final entry in playerNames.entries) {
-                final playerName = entry.value as String;
-                if (playerName.isNotEmpty && !playerName.toLowerCase().contains('player')) {
-                  // Initialize stats if needed
-                  if (!opponentStats.containsKey(playerName)) {
-                    opponentStats[playerName] = {
-                      'handsPlayed': 0,
-                      'preflopHands': 0,
-                      'preflopVoluntaryActions': 0,
-                      'preflopRaises': 0,
-                      'totalBets': 0,
-                      'totalRaises': 0,
-                      'totalCalls': 0,
-                      'totalChecks': 0,
-                      'totalFolds': 0,
-                      'sessions': <String>{},
-                    };
-                  }
-                  
-                  // Increment hand count
-                  opponentStats[playerName]!['handsPlayed']++;
-                  opponentStats[playerName]!['sessions'].add(sessionId);
-                  
-                  // Process actions if available
-                  if (hand['actions'] != null) {
-                    final actions = hand['actions'] as List<dynamic>;
-                    bool hasPreflopAction = false;
-                    String currentStreet = 'preflop';
-                    
-                    for (final action in actions) {
-                      final actionMap = action as Map<String, dynamic>;
-                      final actionPlayerName = actionMap['playerName'] as String?;
-                      final actionType = actionMap['action'] as String?;
-                      final street = actionMap['street'] as String?;
-                      
-                      if (street != null) {
-                        currentStreet = street.toLowerCase();
-                      }
-                      
-                      if (actionPlayerName != null && actionType != null &&
-                          (actionPlayerName.toLowerCase().contains(playerName.toLowerCase()) ||
-                           playerName.toLowerCase().contains(actionPlayerName.toLowerCase()))) {
-                        
-                        final actionKey = actionType.toLowerCase();
-                        
-                        // Count total actions
-                        switch (actionKey) {
-                          case 'bet':
-                            opponentStats[playerName]!['totalBets']++;
-                            break;
-                          case 'raise':
-                            opponentStats[playerName]!['totalRaises']++;
-                            break;
-                          case 'call':
-                            opponentStats[playerName]!['totalCalls']++;
-                            break;
-                          case 'check':
-                            opponentStats[playerName]!['totalChecks']++;
-                            break;
-                          case 'fold':
-                            opponentStats[playerName]!['totalFolds']++;
-                            break;
-                        }
-                        
-                        // Track preflop specific stats
-                        if (currentStreet == 'preflop') {
-                          if (!hasPreflopAction) {
-                            hasPreflopAction = true;
-                            opponentStats[playerName]!['preflopHands']++;
-                          }
-                          
-                          if (actionKey == 'call' || actionKey == 'bet' || actionKey == 'raise') {
-                            opponentStats[playerName]!['preflopVoluntaryActions']++;
-                          }
-                          
-                          if (actionKey == 'raise') {
-                            opponentStats[playerName]!['preflopRaises']++;
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        } catch (e) {
-          print('❌ Error processing session $sessionId: $e');
-        }
-      }
-
-      print('📈 Calculated stats for ${opponentStats.length} opponents');
-
-      // Update each opponent's statistics
-      for (final entry in opponentStats.entries) {
-        final opponentName = entry.key;
-        final stats = entry.value;
-        
-        try {
-          final opponent = await findOpponentByName(opponentName);
-          if (opponent != null) {
-            final handsPlayed = stats['handsPlayed'] as int;
-            final preflopHands = stats['preflopHands'] as int;
-            final sessionsSet = stats['sessions'] as Set<String>;
-            
-            // Calculate VPIP and PFR
-            final vpip = (preflopHands ?? 0) > 0 
-                ? (stats['preflopVoluntaryActions'] / preflopHands * 100) 
-                : 0.0;
-            final pfr = (preflopHands ?? 0) > 0 
-                ? (stats['preflopRaises'] / preflopHands * 100) 
-                : 0.0;
-            
-            // Calculate aggression factor
-            final aggressiveActions = stats['totalBets'] + stats['totalRaises'];
-            final passiveActions = stats['totalCalls'] + stats['totalChecks'];
-            final aggression = (passiveActions ?? 0) > 0 
-                ? (aggressiveActions.toDouble() / passiveActions.toDouble()) 
-                : ((aggressiveActions ?? 0) > 0 ? 999.0 : 0.0);
-            
-            // Update opponent with calculated statistics
-            await updateOpponentStats(
-              opponent.id,
-              additionalHands: handsPlayed - opponent.handsPlayed,
-              additionalSessions: sessionsSet.length - opponent.sessionsPlayed,
-              vpip: vpip,
-              pfr: pfr,
-              aggression: aggression,
-            );
-            print('✅ Updated $opponentName: $handsPlayed hands, VPIP: ${vpip.toStringAsFixed(1)}%, PFR: ${pfr.toStringAsFixed(1)}%');
-          } else {
-            print('⚠️ Opponent not found: $opponentName');
-          }
-        } catch (e) {
-          print('❌ Failed to update $opponentName: $e');
-        }
-      }
-
-      print('🎉 Opponent statistics recalculation completed!');
-    } catch (e) {
-      print('💥 Error recalculating opponent stats: $e');
-    }
+    print('⚠️ recalculateOpponentStats is deprecated. Stats are now managed by OpponentStatsService.');
   }
 
 }

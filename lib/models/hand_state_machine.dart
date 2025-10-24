@@ -915,10 +915,10 @@ class PokerSessionManager {
     );
   }
 
-  // Update opponent statistics for completed hand
+  // Update opponent lastSeenAt timestamp for completed hand
+  // NOTE: Statistical updates happen via _updateOptimizedStats() which updates OpponentStats
   Future<void> _updateOpponentStats() async {
     if (currentHand == null) return;
-
 
     try {
       // Get all player names from active seats who are not the hero
@@ -930,33 +930,20 @@ class PokerSessionManager {
               !playerName.toLowerCase().contains('player')) {
 
             try {
-              // Find opponent by name first
+              // Find opponent by name and update lastSeenAt
               final opponent = await OpponentService.findOpponentByName(playerName);
               if (opponent != null) {
-                // Check if this is the first time seeing this opponent in this session
-                final isFirstTimeSeen = !opponentsSeenThisSession.contains(opponent.id);
-                if (isFirstTimeSeen) {
-                  opponentsSeenThisSession.add(opponent.id);
-                }
-
-                // Update stats using opponent ID
-                // Increment session count only on first hand with this opponent
-                await OpponentService.updateOpponentStats(
-                  opponent.id,
-                  additionalHands: 1,
-                  additionalSessions: isFirstTimeSeen ? 1 : null,
-                );
-
-                print('📊 Updated opponent $playerName: +1 hand${isFirstTimeSeen ? ', +1 session' : ''}');
+                await OpponentService.updateLastSeen(opponent.id);
+                print('📊 Updated opponent $playerName lastSeenAt');
               }
             } catch (e) {
-              print('Failed to update stats for opponent $playerName: $e');
+              print('Failed to update lastSeenAt for opponent $playerName: $e');
             }
           }
         }
       }
     } catch (e) {
-      print('Error updating opponent stats: $e');
+      print('Error updating opponent timestamps: $e');
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
+import '../models/opponent_stats.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
 import '../widgets/global_loading_spinner.dart';
@@ -14,6 +15,7 @@ class MyOpponentsScreen extends StatefulWidget {
 class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
   List<Opponent> opponents = [];
   Map<String, int> opponentHandsCounts = {}; // Fast lookup for hands count
+  Map<String, OpponentStats> opponentStats = {}; // Fast lookup for stats (playingStyle, playerType)
   bool isLoading = true;
   String? error;
   String searchQuery = '';
@@ -34,16 +36,21 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
       // Load basic opponent data (name, color, notes, dates) - fast operation
       final loadedOpponents = await OpponentService.getAllOpponents();
 
-      // Load hands counts from optimized stats - also fast O(1) operations
+      // Load stats from optimized stats - fast O(1) operations
       final handsCounts = <String, int>{};
+      final statsMap = <String, OpponentStats>{};
       for (final opponent in loadedOpponents) {
         final stats = await OpponentStatsService.getOpponentStats(opponent.name);
         handsCounts[opponent.name] = stats?.handsPlayed ?? 0;
+        if (stats != null) {
+          statsMap[opponent.name] = stats;
+        }
       }
 
       setState(() {
         opponents = loadedOpponents;
         opponentHandsCounts = handsCounts;
+        opponentStats = statsMap;
         isLoading = false;
       });
     } catch (e) {
@@ -56,10 +63,12 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
 
   List<Opponent> get filteredOpponents {
     if (searchQuery.isEmpty) return opponents;
-    return opponents.where((opponent) =>
-        opponent.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-        opponent.playingStyle.toLowerCase().contains(searchQuery.toLowerCase())
-    ).toList();
+    return opponents.where((opponent) {
+      final nameMatch = opponent.name.toLowerCase().contains(searchQuery.toLowerCase());
+      final stats = opponentStats[opponent.name];
+      final styleMatch = stats?.playingStyle.toLowerCase().contains(searchQuery.toLowerCase()) ?? false;
+      return nameMatch || styleMatch;
+    }).toList();
   }
 
   @override
@@ -425,10 +434,10 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                         ),
                         SizedBox(height: 2),
                         Text(
-                          opponent.playingStyle,
+                          opponentStats[opponent.name]?.playingStyle ?? 'No Data',
                           style: TextStyle(
                             fontSize: 14,
-                            color: _getStyleColor(opponent.playerType),
+                            color: _getStyleColor(opponentStats[opponent.name]?.playerType ?? PlayerType.unknown),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
