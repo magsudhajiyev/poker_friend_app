@@ -670,7 +670,6 @@ class PokerSessionManager {
   Future<void> _saveHandToFirebase(HandRecord hand) async {
     if (sessionId == null) return;
 
-
     // Always save to local storage first
     await LocalStorageService.saveHand(
       sessionId: sessionId!,

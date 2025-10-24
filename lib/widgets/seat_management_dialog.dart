@@ -62,13 +62,24 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
         nameControllers[i] = TextEditingController(
           text: widget.sessionManager.getPlayerName(i)
         );
+
+        // Initialize stack from sessionManager if available
+        final stack = widget.sessionManager.getPlayerStack(i);
+        if (stack != null) {
+          stackControllers[i] = TextEditingController(
+            text: widget.isCashGame ? stack.toStringAsFixed(2) : stack.toInt().toString()
+          );
+        } else {
+          stackControllers[i] = TextEditingController(
+            text: widget.isCashGame ? '100.00' : '1500'
+          );
+        }
       } else {
         nameControllers[i] = TextEditingController(text: '');
+        stackControllers[i] = TextEditingController(
+          text: widget.isCashGame ? '100.00' : '1500'
+        );
       }
-
-      stackControllers[i] = TextEditingController(
-        text: widget.isCashGame ? '100.00' : '1500'
-      );
     }
     
     // Load opponents for autocomplete
@@ -662,9 +673,23 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                               setState(() {
                                                 seatActive[seatNumber] = value;
                                                 if (value) {
-                                                  if (nameControllers[seatNumber]!.text.isEmpty) {
-                                                    // Use Player X format based on seat number
+                                                  // When activating a seat, check if it needs to be reset to defaults
+                                                  final currentName = widget.sessionManager.getPlayerName(seatNumber);
+                                                  if (currentName == 'Player $seatNumber') {
+                                                    // Seat was reset (player left), use defaults
                                                     nameControllers[seatNumber]!.text = 'Player $seatNumber';
+                                                    stackControllers[seatNumber]!.text = widget.isCashGame ? '100.00' : '1500';
+                                                  } else {
+                                                    // Seat still has player data, keep it
+                                                    nameControllers[seatNumber]!.text = currentName;
+                                                    final stack = widget.sessionManager.getPlayerStack(seatNumber);
+                                                    if (stack != null) {
+                                                      stackControllers[seatNumber]!.text = widget.isCashGame
+                                                        ? stack.toStringAsFixed(2)
+                                                        : stack.toInt().toString();
+                                                    } else {
+                                                      stackControllers[seatNumber]!.text = widget.isCashGame ? '100.00' : '1500';
+                                                    }
                                                   }
                                                 }
                                               });

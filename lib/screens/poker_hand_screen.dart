@@ -3351,7 +3351,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       addAction("🏆 $winnerName wins \$${potAmount.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} (last player standing)");
 
-      // Complete hand in session manager
+      // Show hole cards dialog BEFORE completing the hand
+      addAction("✅ Hand completed!");
+      await _showHoleCardsDialog();
+
+      // Now complete hand in session manager (hole cards are already saved to currentHand)
       final currentStack = gameState.getPlayerStack(sessionManager.ourSeatNumber ?? 1);
       sessionManager.completeCurrentHand(
         potAmount: potAmount,
@@ -3359,8 +3363,41 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         currentStack: currentStack,
       );
 
-      // Show card selection for hero (to move to next hand)
-      _showCardSelectionForNextHand();
+      // For individual sessions, return to the session tracking screen
+      if (widget.isIndividualSession) {
+        final ourSeat = sessionManager.ourSeatNumber;
+        final finalStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : widget.individualCurrentStack ?? 0.0;
+
+        Navigator.pop(context, {
+          'completed': true,
+          'finalStack': finalStack,
+          'potSize': potAmount,
+          'smallBlind': sessionManager.smallBlind,
+          'bigBlind': sessionManager.bigBlind,
+          'hasBBante': gameState.hasBBante,
+        });
+        return;
+      }
+
+      // For full sessions, start next hand
+      await _checkForBustedPlayers();
+
+      setState(() {
+        _allInHandCompleted = false;
+        gameState.startNewHand();
+        sessionManager.startHand(
+          gameState.handNumber,
+          gameState.buttonPosition,
+          sbSeat: gameState.effectiveSBPosition,
+          bbSeat: gameState.effectiveBBPosition,
+        );
+
+        actions.clear();
+        actions.add("💾 Hand #${gameState.handNumber - 1} saved");
+        actions.add("Hand #${gameState.handNumber} started");
+        actions.add(gameState.getGameStateInfo());
+        actions.add(_getToActMessage());
+      });
     } else {
       // Multiple players remain, show winner selection dialog
       completeHand();
@@ -3783,33 +3820,28 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
   }
 
-  Future<void> _showHoleCardsDialog() async {
-    // Collect board cards as used cards from the LAST COMPLETED hand
+  Future<void> _showHoleCardsDialog({bool isForCompletedHand = true}) async {
+    // Collect board cards as used cards
     Set<String> usedCards = {};
     BoardCards? boardCards;
+    HoleCards? existingHoleCards;
 
-    // Try to get board cards from the last completed hand (if hand was just completed)
-    if (sessionManager.completedHands.isNotEmpty) {
-      boardCards = sessionManager.completedHands.last.boardCards;
-    }
-
-    // Fallback to current hand if it exists (for ongoing hands)
-    if (boardCards == null) {
+    // IMPORTANT: When called for a hand that's about to be completed, currentHand still exists
+    // So we should use currentHand (not completedHands.last) to avoid showing previous hand's cards
+    if (sessionManager.currentHand != null) {
+      // Use the current hand being played/completed
       boardCards = sessionManager.currentHand?.boardCards;
+      existingHoleCards = sessionManager.currentHand?.ourHoleCards;
+    } else if (sessionManager.completedHands.isNotEmpty) {
+      // Fallback to last completed hand (for editing after hand is fully complete)
+      boardCards = sessionManager.completedHands.last.boardCards;
+      existingHoleCards = sessionManager.completedHands.last.ourHoleCards;
     }
 
     if (boardCards != null) {
       if (boardCards.flop.isNotEmpty) usedCards.addAll(boardCards.flop);
       if (boardCards.turn != null && boardCards.turn!.isNotEmpty) usedCards.add(boardCards.turn!);
       if (boardCards.river != null && boardCards.river!.isNotEmpty) usedCards.add(boardCards.river!);
-    }
-
-    // Get hole cards from last completed hand for editing
-    HoleCards? existingHoleCards;
-    if (sessionManager.completedHands.isNotEmpty) {
-      existingHoleCards = sessionManager.completedHands.last.ourHoleCards;
-    } else {
-      existingHoleCards = sessionManager.currentHand?.ourHoleCards;
     }
 
     final holeCards = await showDialog<HoleCards>(
@@ -3822,12 +3854,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     );
 
     if (holeCards != null) {
-      // Save hole cards to the last completed hand (if hand was just completed)
-      if (sessionManager.completedHands.isNotEmpty) {
-        sessionManager.completedHands.last.ourHoleCards = holeCards;
-      } else if (sessionManager.currentHand != null) {
-        // Fallback to current hand if no completed hands yet
+      // Save hole cards to the current hand (or last completed if current doesn't exist)
+      if (sessionManager.currentHand != null) {
         sessionManager.currentHand!.ourHoleCards = holeCards;
+      } else if (sessionManager.completedHands.isNotEmpty) {
+        sessionManager.completedHands.last.ourHoleCards = holeCards;
       }
 
       if (holeCards.isComplete) {
