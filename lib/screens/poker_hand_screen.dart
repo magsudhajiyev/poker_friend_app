@@ -3489,28 +3489,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       ),
     );
 
-    // If user somehow cancelled (shouldn't happen with barrierDismissible: false),
-    // show again until they select someone
-    while (winnerResult == null) {
-      // Rebuild playerNames in case they changed
-      playerNames.clear();
-      for (int playerId in activePlayers) {
-        String playerName = sessionManager.getPlayerNameWithPosition(playerId);
-        playerNames.add(playerName);
-      }
-
-      winnerResult = await showDialog<Map<String, dynamic>>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => WinnerSelectionDialog(
-          activePlayers: activePlayers,
-          playerNames: playerNames,
-          potAmount: potAmount,
-          gameType: widget.gameType, // Pass game type
-          buttonPosition: gameState.buttonPosition,
-          playerCount: gameState.numberOfPlayers,
-        ),
-      );
+    // User can cancel the dialog if they want to continue the hand
+    if (winnerResult == null) {
+      addAction("❌ Winner selection cancelled - hand continues");
+      return;
     }
 
     final bool isChoppedPot = winnerResult['isChoppedPot'] ?? false;

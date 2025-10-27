@@ -69,6 +69,22 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   Offset? buttonDragPosition;
   bool isDraggingButton = false;
 
+  /// Check if button can be moved
+  /// Button is locked once any player has acted (folded/called/raised)
+  /// Button can be moved: before hand starts, or after blinds posted but before first action
+  bool _isButtonLocked() {
+    if (widget.gameState == null) return false;
+
+    // Check if any player has acted
+    for (final player in widget.gameState!.players) {
+      if (player.isActive && player.hasActed) {
+        return true; // At least one player acted, button is locked
+      }
+    }
+
+    return false; // No actions taken yet, button can be moved
+  }
+
   @override
   void initState() {
     super.initState();
@@ -739,10 +755,12 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                         Text(
                           widget.isInitialSetup
                               ? 'Click seats to configure. Drag button to position.'
-                              : 'Update player information',
+                              : _isButtonLocked()
+                                  ? 'Button locked - hand in progress'
+                                  : 'Update player information',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF9A9A9A),
+                            color: _isButtonLocked() ? Colors.red.withOpacity(0.8) : Color(0xFF9A9A9A),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -945,74 +963,96 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               Positioned(
                                 left: position.dx - 16 + buttonOffsetX,
                                 top: position.dy - 16 + buttonOffsetY,
-                                child: Draggable<int>(
-                                    data: seatNumber,
-                                    feedback: Opacity(
-                                      opacity: 0.7,
-                                      child: Image.asset(
-                                        'icons/button.png',
-                                        width: 40,
-                                        height: 40,
+                                child: _isButtonLocked()
+                                  ? // Button is locked - show with lock icon
+                                    Opacity(
+                                      opacity: 0.6,
+                                      child: Stack(
+                                        children: [
+                                          Image.asset(
+                                            'icons/button.png',
+                                            width: 32,
+                                            height: 32,
+                                          ),
+                                          Positioned.fill(
+                                            child: Icon(
+                                              Icons.lock,
+                                              color: Colors.red.withOpacity(0.8),
+                                              size: 16,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    childWhenDragging: Opacity(
-                                      opacity: 0.3,
+                                    )
+                                  : // Button is unlocked - can be dragged
+                                    Draggable<int>(
+                                      data: seatNumber,
+                                      feedback: Opacity(
+                                        opacity: 0.7,
+                                        child: Image.asset(
+                                          'icons/button.png',
+                                          width: 40,
+                                          height: 40,
+                                        ),
+                                      ),
+                                      childWhenDragging: Opacity(
+                                        opacity: 0.3,
+                                        child: Image.asset(
+                                          'icons/button.png',
+                                          width: 32,
+                                          height: 32,
+                                        ),
+                                      ),
+                                      onDragStarted: () {
+                                        setState(() {
+                                          isDraggingButton = true;
+                                        });
+                                      },
+                                      onDragEnd: (details) {
+                                        // Find closest active seat to drop position
+                                        int? closestSeat;
+                                        double minDistance = double.infinity;
+
+                                        // Get the local position relative to the widget
+                                        final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+                                        if (renderBox != null) {
+                                          final localPosition = renderBox.globalToLocal(details.offset);
+
+                                          for (int i = 1; i <= 9; i++) {
+                                            if (seatActive[i] == true) {
+                                              final seatPos = _getSeatPosition(i, Size(constraints.maxWidth, constraints.maxHeight));
+                                              final distance = (seatPos - localPosition).distance;
+
+                                              if (distance < minDistance) {
+                                                minDistance = distance;
+                                                closestSeat = i;
+                                              }
+                                            }
+                                          }
+
+                                          // Increase detection radius to 150 pixels for better UX
+                                          if (closestSeat != null && minDistance < 150) {
+                                            setState(() {
+                                              selectedButtonPosition = closestSeat;
+                                              isDraggingButton = false;
+                                            });
+                                          } else {
+                                            setState(() {
+                                              isDraggingButton = false;
+                                            });
+                                          }
+                                        } else {
+                                          setState(() {
+                                            isDraggingButton = false;
+                                          });
+                                        }
+                                      },
                                       child: Image.asset(
                                         'icons/button.png',
                                         width: 32,
                                         height: 32,
                                       ),
                                     ),
-                                    onDragStarted: () {
-                                      setState(() {
-                                        isDraggingButton = true;
-                                      });
-                                    },
-                                    onDragEnd: (details) {
-                                      // Find closest active seat to drop position
-                                      int? closestSeat;
-                                      double minDistance = double.infinity;
-
-                                      // Get the local position relative to the widget
-                                      final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-                                      if (renderBox != null) {
-                                        final localPosition = renderBox.globalToLocal(details.offset);
-
-                                        for (int i = 1; i <= 9; i++) {
-                                          if (seatActive[i] == true) {
-                                            final seatPos = _getSeatPosition(i, Size(constraints.maxWidth, constraints.maxHeight));
-                                            final distance = (seatPos - localPosition).distance;
-
-                                            if (distance < minDistance) {
-                                              minDistance = distance;
-                                              closestSeat = i;
-                                            }
-                                          }
-                                        }
-
-                                        // Increase detection radius to 150 pixels for better UX
-                                        if (closestSeat != null && minDistance < 150) {
-                                          setState(() {
-                                            selectedButtonPosition = closestSeat;
-                                            isDraggingButton = false;
-                                          });
-                                        } else {
-                                          setState(() {
-                                            isDraggingButton = false;
-                                          });
-                                        }
-                                      } else {
-                                        setState(() {
-                                          isDraggingButton = false;
-                                        });
-                                      }
-                                    },
-                                    child: Image.asset(
-                                      'icons/button.png',
-                                      width: 32,
-                                      height: 32,
-                                    ),
-                                  ),
                                 ),
                           ],
                         );

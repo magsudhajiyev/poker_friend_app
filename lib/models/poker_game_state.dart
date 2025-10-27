@@ -120,10 +120,7 @@ class PokerGameState {
       // CRITICAL: Recalculate action order when button position changes
       // BUT ONLY if we're not still initializing
       if (!_isInitializing && currentRound == BettingRound.preflop && !bettingRoundComplete) {
-        print('🎮 DEBUG: Button position changed to $value, recalculating action order');
         _setInitialActionOrder();
-      } else if (_isInitializing) {
-        print('🎮 DEBUG: Button position set to $value during initialization, deferring action order calculation');
       }
     }
   }

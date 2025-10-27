@@ -154,12 +154,14 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(isChoppedPot ? 'Who chopped this pot?' : 'Who won this hand?'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Builder(
+      builder: (dialogContext) => AlertDialog(
+        title: Text(isChoppedPot ? 'Who chopped this pot?' : 'Who won this hand?'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
           Text(
             'Pot Size: ${_formatCurrency(widget.potAmount)}',
             style: const TextStyle(
@@ -230,39 +232,39 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
               );
             }
           }).toList(),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(null);
-          },
-          child: const Text('Cancel'),
+          ],
         ),
-        ElevatedButton(
-          onPressed: isChoppedPot
-              ? (selectedWinners.isNotEmpty
-                  ? () {
-                      Navigator.of(context).pop({
+      ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: isChoppedPot
+                ? (selectedWinners.isNotEmpty
+                    ? () {
+                        Navigator.of(dialogContext, rootNavigator: true).pop({
                         'isChoppedPot': true,
                         'winners': selectedWinners.toList(),
                         'individualShares': _calculateIndividualShares(),
                         'sharePerWinner': _getSharePerWinner(), // Keep for backward compatibility
                       });
                     }
-                  : null)
-              : (selectedWinner != null
-                  ? () {
-                      Navigator.of(context).pop({
+                    : null)
+                : (selectedWinner != null
+                    ? () {
+                        Navigator.of(dialogContext, rootNavigator: true).pop({
                         'isChoppedPot': false,
                         'winner': selectedWinner,
                         'sharePerWinner': widget.potAmount,
-                      });
-                    }
-                  : null),
-          child: Text(isChoppedPot ? 'Confirm Winners' : 'Confirm Winner'),
-        ),
-      ],
+                        });
+                      }
+                    : null),
+            child: Text(isChoppedPot ? 'Confirm Winners' : 'Confirm Winner'),
+          ),
+        ],
+      ),
     );
   }
 }
