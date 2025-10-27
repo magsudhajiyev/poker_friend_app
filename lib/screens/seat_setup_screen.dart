@@ -369,9 +369,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // My Seat selection (only for initial setup)
-                      if (widget.isInitialSetup) ...[
-                        InkWell(
+                      // My Seat selection (always available)
+                      InkWell(
                           onTap: () {
                             setState(() {
                               // Restore defaults for previous seat before selecting new one
@@ -430,8 +429,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 16),
-                      ],
+                      SizedBox(height: 16),
                       // Player name
                       Autocomplete<String>(
                         initialValue: TextEditingValue(text: nameControllers[seatNumber]!.text),
@@ -686,8 +684,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                   ),
                 ),
               ],
-              // For inactive seats during initial setup, still show seat selection option
-              if (!isActive && widget.isInitialSetup) ...[
+              // For inactive seats, still show seat selection option
+              if (!isActive) ...[
                 Padding(
                   padding: EdgeInsets.all(24),
                   child: Column(
