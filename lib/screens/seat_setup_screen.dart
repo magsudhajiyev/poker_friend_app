@@ -1218,9 +1218,21 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                         nameController.text.isEmpty;
 
       if (wasUserSeat) {
+        // Reset to default player name
         nameController.text = 'Player $previousSeat';
-        stackController.text = widget.isCashGame ? '100.00' : '1500';
-        seatActive[previousSeat] = true;
+
+        // Reset to default stack based on session settings
+        if (widget.startingStack != null) {
+          stackController.text = widget.gameType == GameType.cash
+              ? widget.startingStack!.toStringAsFixed(2)
+              : widget.startingStack!.toInt().toString();
+        } else {
+          // Fallback to generic defaults if no session settings
+          stackController.text = widget.isCashGame ? '100.00' : '1500';
+        }
+
+        // Deactivate the previous seat (user moved away from it)
+        seatActive[previousSeat] = false;
         widget.sessionManager?.setPlayerName(previousSeat, 'Player $previousSeat');
       }
     }
