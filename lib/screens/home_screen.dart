@@ -617,11 +617,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => CalendarScreen()),
                               );
+                              // Reload events after returning from calendar screen
+                              _loadData();
                             },
                             child: Text(
                               'View All',
