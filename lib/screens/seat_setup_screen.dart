@@ -362,15 +362,14 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                   ],
                 ),
               ),
-              // Content
-              if (isActive) ...[
-                Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // My Seat selection (only for initial setup)
-                      if (widget.isInitialSetup) ...[
+              // Content - Always show seat selection option during initial setup
+              Padding(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // My Seat selection (always available in initial setup)
+                    if (widget.isInitialSetup) ...[
                         InkWell(
                           onTap: () {
                             setState(() {
@@ -685,17 +684,85 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                     ],
                   ),
                 ),
-              ] else ...[
+              ],
+              // For inactive seats during initial setup, still show seat selection option
+              if (!isActive && widget.isInitialSetup) ...[
                 Padding(
                   padding: EdgeInsets.all(24),
-                  child: Text(
-                    'This seat is empty. Toggle the switch above to activate it.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF9A9A9A),
-                      height: 1.4,
-                    ),
-                    textAlign: TextAlign.center,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            // Restore defaults for previous seat before selecting new one
+                            _restoreDefaultsForPreviousSeat(selectedSeat);
+
+                            // Activate this seat when selecting it as user's seat
+                            seatActive[seatNumber] = true;
+                            selectedSeat = seatNumber;
+                            _autoInsertUsernameForSeat(seatNumber);
+
+                            // Set the user's stack from session setup
+                            if (widget.isIndividualSession && widget.individualCurrentStack != null) {
+                              stackControllers[seatNumber]?.text = widget.isCashGame
+                                  ? widget.individualCurrentStack!.toStringAsFixed(2)
+                                  : widget.individualCurrentStack!.toInt().toString();
+                            } else if (widget.startingStack != null) {
+                              stackControllers[seatNumber]?.text = widget.gameType == GameType.cash
+                                  ? widget.startingStack!.toStringAsFixed(2)
+                                  : widget.startingStack!.toInt().toString();
+                            }
+                          });
+                          // Close and reopen dialog to refresh
+                          Navigator.pop(context);
+                          Future.delayed(Duration(milliseconds: 100), () {
+                            _showSeatDialog(seatNumber);
+                          });
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: selectedSeat == seatNumber
+                                ? Color(0xFFcb5242).withOpacity(0.1)
+                                : Color(0xFF1F1F23),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: selectedSeat == seatNumber
+                                  ? Color(0xFFcb5242)
+                                  : Color(0xFF2A2A2E),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                selectedSeat == seatNumber ? Icons.check_circle : Icons.circle_outlined,
+                                color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Color(0xFF9A9A9A),
+                                size: 20,
+                              ),
+                              SizedBox(width: 12),
+                              Text(
+                                'This is my seat',
+                                style: TextStyle(
+                                  color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'This seat is currently empty. Select it as your seat to activate it, or toggle the switch above to assign another player.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF9A9A9A),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
