@@ -20,15 +20,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Future<void> _loadEvents() async {
     try {
+      print('📅 Calendar screen: Loading events...');
       final eventsData = await CalendarEventService.getUserEvents();
+      print('📅 Calendar screen: Loaded ${eventsData.length} events');
 
       setState(() {
         events = eventsData
             .map((data) => PokerEvent.fromJson(data))
             .toList();
       });
+
+      print('📅 Calendar screen: Parsed ${events.length} PokerEvent objects');
     } catch (e) {
-      print('Error loading events: $e');
+      print('❌ Calendar screen error loading events: $e');
     }
   }
 

@@ -958,10 +958,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<List<Map<String, dynamic>>> _loadCalendarEvents() async {
     try {
+      print('🏠 Home screen: Loading calendar events...');
       // Load upcoming events from Firebase
-      return await CalendarEventService.getUpcomingEvents();
+      final events = await CalendarEventService.getUpcomingEvents();
+      print('🏠 Home screen: Loaded ${events.length} events');
+      for (final event in events) {
+        print('  - ${event['title']} on ${event['date']}');
+      }
+      return events;
     } catch (e) {
-      print('Error loading calendar events: $e');
+      print('❌ Error loading calendar events: $e');
       return [];
     }
   }
