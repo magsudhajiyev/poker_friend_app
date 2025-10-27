@@ -362,14 +362,15 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                   ],
                 ),
               ),
-              // Content - Always show seat selection option during initial setup
-              Padding(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // My Seat selection (always available in initial setup)
-                    if (widget.isInitialSetup) ...[
+              // Content
+              if (isActive) ...[
+                Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // My Seat selection (only for initial setup)
+                      if (widget.isInitialSetup) ...[
                         InkWell(
                           onTap: () {
                             setState(() {
