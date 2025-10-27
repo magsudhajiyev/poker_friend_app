@@ -71,9 +71,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           content: Container(
             width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                 // Event Type Selector
                 Container(
                   width: double.infinity,
@@ -227,6 +228,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                 ),
               ],
+              ),
             ),
           ),
           actions: [
