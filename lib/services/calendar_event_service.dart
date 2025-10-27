@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth_service.dart';
+import 'notification_service.dart';
 
 class CalendarEventService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -30,6 +31,15 @@ class CalendarEventService {
 
       final eventRef = await _firestore.collection(_eventsCollection).add(eventData);
       print('Event created with ID: ${eventRef.id}');
+
+      // Schedule notifications for this event
+      await NotificationService.scheduleEventNotifications(
+        eventId: eventRef.id,
+        eventTitle: title,
+        eventType: type,
+        eventDate: date,
+      );
+
       return eventRef.id;
     } catch (e) {
       print('Error creating event: $e');
@@ -168,6 +178,15 @@ class CalendarEventService {
       });
 
       print('Event updated: $eventId');
+
+      // Cancel old notifications and schedule new ones
+      await NotificationService.cancelEventNotifications(eventId);
+      await NotificationService.scheduleEventNotifications(
+        eventId: eventId,
+        eventTitle: title,
+        eventType: type,
+        eventDate: date,
+      );
     } catch (e) {
       print('Error updating event: $e');
       rethrow;
@@ -179,6 +198,9 @@ class CalendarEventService {
     try {
       final userId = AuthService.userId;
       if (userId == null) throw 'User not authenticated';
+
+      // Cancel notifications for this event
+      await NotificationService.cancelEventNotifications(eventId);
 
       await _firestore.collection(_eventsCollection).doc(eventId).delete();
       print('Event deleted: $eventId');

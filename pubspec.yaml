@@ -24,6 +24,8 @@ dependencies:
   cloud_firestore: ^5.5.0
   firebase_auth: ^5.3.3
   flutter_launcher_icons: ^0.14.4
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
 
 
 flutter:
