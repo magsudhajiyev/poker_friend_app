@@ -20,6 +20,8 @@ import '../services/play_style_detector.dart';
 import '../services/stats_verification_service.dart';
 import '../screens/auth_screen.dart';
 import '../widgets/loading_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -28,6 +30,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _currentIndex = 2; // Start tab is selected by default
+  List<Map<String, dynamic>> upcomingEvents = [];
   
   // Data variables
   double currentBankroll = 0.0;
@@ -88,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final stats = await BankrollService.getPlayerStatistics();
       final sessions = await _getRecentSessions();
       final earningsData = await _getEarningsData();
+      final events = await _loadCalendarEvents();
 
       // Get user's display name
       final user = AuthService.currentUser;
@@ -106,6 +110,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           recentSessions = sessions;
           earningsChartData = earningsData['chartData'];
           avgEarnings = earningsData['avgEarnings'];
+          upcomingEvents = events;
           userName = displayName;
           isLoadingData = false;
         });
@@ -950,20 +955,46 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  Future<List<Map<String, dynamic>>> _loadCalendarEvents() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final eventsJson = prefs.getStringList('poker_events') ?? [];
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      return eventsJson
+          .map((json) {
+            final eventData = jsonDecode(json);
+            final eventDate = DateTime.parse(eventData['date']);
+            final eventDateOnly = DateTime(eventDate.year, eventDate.month, eventDate.day);
+
+            // Only include future events (today or later)
+            if (eventDateOnly.isAfter(today.subtract(Duration(days: 1)))) {
+              return {
+                'id': eventData['id'],
+                'title': eventData['title'],
+                'type': eventData['type'],
+                'location': eventData['location'],
+                'date': eventData['date'],
+                'buyIn': eventData['buyIn'],
+              };
+            }
+            return null;
+          })
+          .where((event) => event != null)
+          .cast<Map<String, dynamic>>()
+          .toList()
+        ..sort((a, b) => DateTime.parse(a['date']).compareTo(DateTime.parse(b['date'])));
+    } catch (e) {
+      print('Error loading calendar events: $e');
+      return [];
+    }
+  }
+
   Widget _buildUpcomingEvents() {
-    // TODO: Replace with real calendar events from database
-    // For now, show empty state since we don't have future events
-    final upcomingEvents = <Map<String, dynamic>>[];
-
-    // Filter to only show future events (after today)
-    final now = DateTime.now();
-    final futureEvents = upcomingEvents.where((event) {
-      // Parse event date and check if it's in the future
-      // This will be implemented when real event data is available
-      return true;
-    }).toList();
-
-    if (futureEvents.isEmpty) {
+    // Events are already filtered to future events in _loadCalendarEvents
+    if (upcomingEvents.isEmpty) {
       return Container(
         height: 100,
         child: Center(
@@ -991,20 +1022,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
+    // Show only the first 3 upcoming events
+    final displayEvents = upcomingEvents.take(3).toList();
+
     return Column(
-      children: futureEvents.map((event) => _buildEventItem(event)).toList(),
+      children: displayEvents.map((event) => _buildEventItem(event)).toList(),
     );
   }
 
   Widget _buildEventItem(Map<String, dynamic> event) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color(0xFF2A2A2E),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
+    // Format the date to be more readable
+    String formattedDate = '';
+    try {
+      final dateTime = DateTime.parse(event['date']);
+      final dateFormat = DateFormat('MMM dd, h:mm a'); // e.g., "Oct 27, 7:00 PM"
+      formattedDate = dateFormat.format(dateTime);
+    } catch (e) {
+      formattedDate = event['date'] ?? '';
+    }
+
+    return InkWell(
+      onTap: () => _showEventOptionsDialog(event),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12),
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Color(0xFF2A2A2E),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
         children: [
           _getEventTypeImage(event['type']),
           SizedBox(width: 16),
@@ -1022,7 +1069,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  event['date'] ?? '',
+                  formattedDate,
                   style: TextStyle(
                     fontSize: 14,
                     color: Color(0xFF9A9A9A),
@@ -1042,8 +1089,344 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
         ],
+        ),
       ),
     );
+  }
+
+  void _showEventOptionsDialog(Map<String, dynamic> event) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFF1F1F23),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          event['title'] ?? 'Event Options',
+          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.edit, color: Colors.blue),
+              title: Text('Edit Event', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _showEditEventDialog(event);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.delete, color: Colors.red),
+              title: Text('Delete Event', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteEventConfirmation(event);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditEventDialog(Map<String, dynamic> event) async {
+    final titleController = TextEditingController(text: event['title']);
+    final locationController = TextEditingController(text: event['location']);
+    final buyInController = TextEditingController(text: event['buyIn'].toString());
+
+    final eventDate = DateTime.parse(event['date']);
+    DateTime selectedDate = eventDate;
+    TimeOfDay selectedTime = TimeOfDay(hour: eventDate.hour, minute: eventDate.minute);
+    String selectedType = event['type'] ?? 'Tournament';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Color(0xFF1F1F23),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Edit Event',
+            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Event Type Selector
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF2A2A2E),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedType,
+                      dropdownColor: Color(0xFF2A2A2E),
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      items: ['Tournament', 'Cash Game', 'Home Game', 'Online']
+                          .map((type) => DropdownMenuItem(
+                                value: type,
+                                child: Text(type),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setDialogState(() => selectedType = value!);
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: titleController,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Event Name',
+                    labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                    filled: true,
+                    fillColor: Color(0xFF2A2A2E),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: locationController,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Location',
+                    labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                    filled: true,
+                    fillColor: Color(0xFF2A2A2E),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: buyInController,
+                  keyboardType: TextInputType.number,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Buy-in (\$)',
+                    labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                    filled: true,
+                    fillColor: Color(0xFF2A2A2E),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                InkWell(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(Duration(days: 365)),
+                    );
+                    if (date != null) {
+                      setDialogState(() => selectedDate = date);
+                    }
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF2A2A2E),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today, color: Colors.white),
+                        SizedBox(width: 12),
+                        Text(
+                          DateFormat('MMM dd, yyyy').format(selectedDate),
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                InkWell(
+                  onTap: () async {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: selectedTime,
+                    );
+                    if (time != null) {
+                      setDialogState(() => selectedTime = time);
+                    }
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF2A2A2E),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.access_time, color: Colors.white),
+                        SizedBox(width: 12),
+                        Text(
+                          selectedTime.format(context),
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: Colors.white)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final title = titleController.text.trim();
+                if (title.isEmpty) return;
+
+                final eventDateTime = DateTime(
+                  selectedDate.year,
+                  selectedDate.month,
+                  selectedDate.day,
+                  selectedTime.hour,
+                  selectedTime.minute,
+                );
+
+                // Update the event
+                await _updateEvent(
+                  event['id'],
+                  title,
+                  selectedType,
+                  locationController.text.trim(),
+                  eventDateTime,
+                  double.tryParse(buyInController.text) ?? 0.0,
+                );
+
+                Navigator.pop(context);
+                _loadData(); // Reload to show updated event
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFcb5242),
+              ),
+              child: Text('Save', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteEventConfirmation(Map<String, dynamic> event) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFF1F1F23),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'Delete Event?',
+          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Are you sure you want to delete "${event['title']}"?',
+          style: TextStyle(color: Color(0xFF9A9A9A)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: Colors.white)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _deleteEvent(event['id']);
+              Navigator.pop(context);
+              _loadData(); // Reload to remove deleted event
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateEvent(
+    String id,
+    String title,
+    String type,
+    String location,
+    DateTime date,
+    double buyIn,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final eventsJson = prefs.getStringList('poker_events') ?? [];
+
+      final events = eventsJson.map((json) => jsonDecode(json)).toList();
+
+      // Find and update the event
+      final eventIndex = events.indexWhere((e) => e['id'] == id);
+      if (eventIndex != -1) {
+        events[eventIndex] = {
+          'id': id,
+          'title': title,
+          'type': type,
+          'location': location,
+          'date': date.toIso8601String(),
+          'buyIn': buyIn,
+        };
+
+        // Save back to SharedPreferences
+        final updatedEventsJson = events.map((e) => jsonEncode(e)).toList();
+        await prefs.setStringList('poker_events', updatedEventsJson);
+      }
+    } catch (e) {
+      print('Error updating event: $e');
+    }
+  }
+
+  Future<void> _deleteEvent(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final eventsJson = prefs.getStringList('poker_events') ?? [];
+
+      final events = eventsJson
+          .map((json) => jsonDecode(json))
+          .where((event) => event['id'] != id)
+          .toList();
+
+      // Save back to SharedPreferences
+      final updatedEventsJson = events.map((e) => jsonEncode(e)).toList();
+      await prefs.setStringList('poker_events', updatedEventsJson);
+    } catch (e) {
+      print('Error deleting event: $e');
+    }
   }
 
   Color _getEventTypeColor(String? type) {

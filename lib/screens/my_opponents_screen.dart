@@ -20,32 +20,61 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
   String? error;
   String searchQuery = '';
 
+  // In-memory cache to avoid reloading on every screen visit
+  static List<Opponent>? _cachedOpponents;
+  static Map<String, int>? _cachedHandsCounts;
+  static Map<String, OpponentStats>? _cachedStats;
+
   @override
   void initState() {
     super.initState();
-    _loadOpponents();
+    _loadOpponents(useCache: true);
   }
 
-  Future<void> _loadOpponents() async {
+  Future<void> _loadOpponents({bool useCache = false}) async {
     try {
       setState(() {
         isLoading = true;
         error = null;
       });
 
+      // Use cache if available and requested
+      if (useCache && _cachedOpponents != null && _cachedHandsCounts != null && _cachedStats != null) {
+        setState(() {
+          opponents = _cachedOpponents!;
+          opponentHandsCounts = _cachedHandsCounts!;
+          opponentStats = _cachedStats!;
+          isLoading = false;
+        });
+        return;
+      }
+
       // Load basic opponent data (name, color, notes, dates) - fast operation
       final loadedOpponents = await OpponentService.getAllOpponents();
 
-      // Load stats from optimized stats - fast O(1) operations
+      // PARALLEL LOADING: Load all opponent stats simultaneously instead of sequentially
+      final statsFutures = loadedOpponents.map((opponent) =>
+        OpponentStatsService.getOpponentStats(opponent.name)
+      ).toList();
+
+      final allStats = await Future.wait(statsFutures);
+
+      // Build lookup maps
       final handsCounts = <String, int>{};
       final statsMap = <String, OpponentStats>{};
-      for (final opponent in loadedOpponents) {
-        final stats = await OpponentStatsService.getOpponentStats(opponent.name);
+      for (int i = 0; i < loadedOpponents.length; i++) {
+        final opponent = loadedOpponents[i];
+        final stats = allStats[i];
         handsCounts[opponent.name] = stats?.handsPlayed ?? 0;
         if (stats != null) {
           statsMap[opponent.name] = stats;
         }
       }
+
+      // Cache the results
+      _cachedOpponents = loadedOpponents;
+      _cachedHandsCounts = handsCounts;
+      _cachedStats = statsMap;
 
       setState(() {
         opponents = loadedOpponents;
@@ -156,7 +185,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: IconButton(
-                              onPressed: _loadOpponents,
+                              onPressed: () => _loadOpponents(useCache: false),
                               icon: Icon(
                                 Icons.refresh,
                                 color: Colors.white,
@@ -383,13 +412,17 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => OpponentDetailScreen(opponent: opponent),
             ),
-          ).then((_) => _loadOpponents()); // Refresh when returning
+          );
+          // Only reload if opponent was modified (invalidate cache)
+          if (result == true) {
+            _loadOpponents(useCache: false);
+          }
         },
         borderRadius: BorderRadius.circular(20),
         child: Padding(
@@ -679,7 +712,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
 
                   await OpponentService.saveOpponent(newOpponent);
                   Navigator.pop(context);
-                  _loadOpponents();
+                  _loadOpponents(useCache: false); // Invalidate cache
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -725,7 +758,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
               try {
                 await OpponentService.deleteOpponent(opponent.id);
                 Navigator.pop(context);
-                _loadOpponents();
+                _loadOpponents(useCache: false); // Invalidate cache
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Opponent deleted successfully'),
@@ -815,7 +848,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
               try {
                 await OpponentService.clearAllOpponents();
                 Navigator.pop(context);
-                _loadOpponents();
+                _loadOpponents(useCache: false); // Invalidate cache
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('All opponents cleared'),
