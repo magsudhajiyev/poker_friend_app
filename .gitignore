@@ -54,3 +54,6 @@ android/app/google-services.json
 
 # Development diary and notes
 diary/
+
+# Node.js dependencies
+node_modules/
