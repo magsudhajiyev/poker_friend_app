@@ -205,8 +205,8 @@ class StatsVerificationService {
         print('     Hands: ${hands.length}');
         print('     Hands Played: $sessionHandsPlayed');
         print('     Hands Won: $sessionHandsWon (${hands.length > 0 ? (sessionHandsWon / hands.length * 100).toStringAsFixed(1) : "0.0"}%)');
-        print('     VPIP: $sessionVpip (${sessionHandsPlayed > 0 ? (sessionVpip / sessionHandsPlayed * 100).toStringAsFixed(1) : "0.0"}%)');
-        print('     PFR: $sessionPfr (${sessionHandsPlayed > 0 ? (sessionPfr / sessionHandsPlayed * 100).toStringAsFixed(1) : "0.0"}%)');
+        print('     VPIP: $sessionVpip (${hands.length > 0 ? (sessionVpip / hands.length * 100).toStringAsFixed(1) : "0.0"}%)');
+        print('     PFR: $sessionPfr (${hands.length > 0 ? (sessionPfr / hands.length * 100).toStringAsFixed(1) : "0.0"}%)');
         print('     3-Bet: $sessionThreeBet');
         print('');
       }
@@ -219,9 +219,9 @@ class StatsVerificationService {
       print('Won Hands: $wonHandsCalc');
       print('Win Rate: ${handsPlayedCalc > 0 ? (wonHandsCalc / handsPlayedCalc * 100).toStringAsFixed(1) : "0.0"}%');
       print('VPIP Count: $vpipCountCalc');
-      print('VPIP %: ${handsPlayedCalc > 0 ? (vpipCountCalc / handsPlayedCalc * 100).toStringAsFixed(1) : "0.0"}%');
+      print('VPIP %: ${totalHandsCalc > 0 ? (vpipCountCalc / totalHandsCalc * 100).toStringAsFixed(1) : "0.0"}%');
       print('PFR Count: $pfrCountCalc');
-      print('PFR %: ${handsPlayedCalc > 0 ? (pfrCountCalc / handsPlayedCalc * 100).toStringAsFixed(1) : "0.0"}%');
+      print('PFR %: ${totalHandsCalc > 0 ? (pfrCountCalc / totalHandsCalc * 100).toStringAsFixed(1) : "0.0"}%');
       print('3-Bet Count: $threeBetCountCalc');
       print('Total Play Time: $totalPlayTimeMinutes minutes (${(totalPlayTimeMinutes / 60).toStringAsFixed(1)} hours)');
       print('');
@@ -237,9 +237,9 @@ class StatsVerificationService {
         print('Won Hands: ${userStats.wonHands}');
         print('Win Rate: ${userStats.handsPlayed > 0 ? (userStats.wonHands / userStats.handsPlayed * 100).toStringAsFixed(1) : "0.0"}%');
         print('VPIP Count: ${userStats.vpipCount}');
-        print('VPIP %: ${userStats.handsPlayed > 0 ? (userStats.vpipCount / userStats.handsPlayed * 100).toStringAsFixed(1) : "0.0"}%');
+        print('VPIP %: ${userStats.totalHands > 0 ? (userStats.vpipCount / userStats.totalHands * 100).toStringAsFixed(1) : "0.0"}%');
         print('PFR Count: ${userStats.pfrCount}');
-        print('PFR %: ${userStats.handsPlayed > 0 ? (userStats.pfrCount / userStats.handsPlayed * 100).toStringAsFixed(1) : "0.0"}%');
+        print('PFR %: ${userStats.totalHands > 0 ? (userStats.pfrCount / userStats.totalHands * 100).toStringAsFixed(1) : "0.0"}%');
         print('3-Bet Count: ${userStats.threeBetCount}');
         print('Total Play Time: ${userStats.totalPlayTimeMinutes} minutes (${(userStats.totalPlayTimeMinutes / 60).toStringAsFixed(1)} hours)');
         print('Total Sessions: ${userStats.totalSessions} ⚠️  (Database shows ${userStats.totalSessions} but we found ${sessions.length} sessions in poker_sessions collection)');

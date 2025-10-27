@@ -96,11 +96,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       totalPlayTime = userStats.totalPlayTimeMinutes;
 
       // Calculate percentages from database stats
+      if (totalHands > 0) {
+        vpip = (userStats.vpipCount / totalHands) * 100;
+        pfr = (userStats.pfrCount / totalHands) * 100;
+        threeBet = (userStats.threeBetCount / totalHands) * 100;
+      }
+      // Win rate uses handsPlayed (only count hands you actually played)
       if (handsPlayed > 0) {
-        vpip = (userStats.vpipCount / handsPlayed) * 100;
-        pfr = (userStats.pfrCount / handsPlayed) * 100;
-        threeBet = (userStats.threeBetCount / handsPlayed) * 100;
-        // Win rate = wonHands / handsPlayed (single source of truth)
         winRate = (userStats.wonHands / handsPlayed) * 100;
       }
 

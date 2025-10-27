@@ -785,6 +785,7 @@ class PokerSessionManager {
 
         bool vpipThisHand = false;
         bool pfrThisHand = false;
+        bool playedPastPreflop = false; // Track if player saw flop/turn/river
         String currentStreet = 'preflop';
 
         // Process this player's actions in this hand
@@ -793,6 +794,10 @@ class PokerSessionManager {
             // Track street changes
             if (action.street != null) {
               currentStreet = action.street!.name.toLowerCase();
+              // If player has action on flop/turn/river, they played past preflop
+              if (currentStreet != 'preflop') {
+                playedPastPreflop = true;
+              }
             }
 
             final actionType = action.action.name.toLowerCase();
@@ -833,8 +838,12 @@ class PokerSessionManager {
           }
         }
 
-        if (vpipThisHand) vpipDelta = 1;
-        if (pfrThisHand) pfrDelta = 1;
+        if (vpipThisHand) {
+          vpipDelta = 1;
+        }
+        if (pfrThisHand) {
+          pfrDelta = 1;
+        }
 
         // Update opponent stats (incremental)
         if (playerName.toLowerCase() != 'hero' && playerName.toLowerCase() != 'you') {
@@ -864,8 +873,8 @@ class PokerSessionManager {
           if (currentUser != null) {
             await UserStatsService.updateStatsAtomic(
               userId: currentUser.uid,
-              handsDelta: 1,
-              totalHandsDelta: 1,
+              handsDelta: playedPastPreflop ? 1 : 0, // Only count if player saw flop/turn/river
+              totalHandsDelta: 1, // Always count total hands dealt
               vpipDelta: vpipDelta,
               pfrDelta: pfrDelta,
               wonHandsDelta: (hand.winnerId != null && hand.winnerId == hand.heroPosition) ? 1 : 0,

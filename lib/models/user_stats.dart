@@ -39,9 +39,9 @@ class UserStats {
        positionThreeBetCount = positionThreeBetCount ?? {};
 
   /// Calculate percentages from counters
-  double get vpipPercentage => handsPlayed > 0 ? (vpipCount / handsPlayed * 100) : 0.0;
-  double get pfrPercentage => handsPlayed > 0 ? (pfrCount / handsPlayed * 100) : 0.0;
-  double get threeBetPercentage => handsPlayed > 0 ? (threeBetCount / handsPlayed * 100) : 0.0;
+  double get vpipPercentage => totalHands > 0 ? (vpipCount / totalHands * 100) : 0.0;
+  double get pfrPercentage => totalHands > 0 ? (pfrCount / totalHands * 100) : 0.0;
+  double get threeBetPercentage => totalHands > 0 ? (threeBetCount / totalHands * 100) : 0.0;
   double get winRate => handsPlayed > 0 ? (wonHands / handsPlayed * 100) : 0.0;
 
   /// Calculate average session duration
