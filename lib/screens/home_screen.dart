@@ -20,8 +20,7 @@ import '../services/play_style_detector.dart';
 import '../services/stats_verification_service.dart';
 import '../screens/auth_screen.dart';
 import '../widgets/loading_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import '../services/calendar_event_service.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -957,35 +956,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<List<Map<String, dynamic>>> _loadCalendarEvents() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final eventsJson = prefs.getStringList('poker_events') ?? [];
-
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-
-      return eventsJson
-          .map((json) {
-            final eventData = jsonDecode(json);
-            final eventDate = DateTime.parse(eventData['date']);
-            final eventDateOnly = DateTime(eventDate.year, eventDate.month, eventDate.day);
-
-            // Only include future events (today or later)
-            if (eventDateOnly.isAfter(today.subtract(Duration(days: 1)))) {
-              return {
-                'id': eventData['id'],
-                'title': eventData['title'],
-                'type': eventData['type'],
-                'location': eventData['location'],
-                'date': eventData['date'],
-                'buyIn': eventData['buyIn'],
-              };
-            }
-            return null;
-          })
-          .where((event) => event != null)
-          .cast<Map<String, dynamic>>()
-          .toList()
-        ..sort((a, b) => DateTime.parse(a['date']).compareTo(DateTime.parse(b['date'])));
+      // Load upcoming events from Firebase
+      return await CalendarEventService.getUpcomingEvents();
     } catch (e) {
       print('Error loading calendar events: $e');
       return [];
@@ -1385,27 +1357,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     double buyIn,
   ) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final eventsJson = prefs.getStringList('poker_events') ?? [];
-
-      final events = eventsJson.map((json) => jsonDecode(json)).toList();
-
-      // Find and update the event
-      final eventIndex = events.indexWhere((e) => e['id'] == id);
-      if (eventIndex != -1) {
-        events[eventIndex] = {
-          'id': id,
-          'title': title,
-          'type': type,
-          'location': location,
-          'date': date.toIso8601String(),
-          'buyIn': buyIn,
-        };
-
-        // Save back to SharedPreferences
-        final updatedEventsJson = events.map((e) => jsonEncode(e)).toList();
-        await prefs.setStringList('poker_events', updatedEventsJson);
-      }
+      await CalendarEventService.updateEvent(
+        eventId: id,
+        title: title,
+        type: type,
+        location: location,
+        date: date,
+        buyIn: buyIn,
+      );
     } catch (e) {
       print('Error updating event: $e');
     }
@@ -1413,17 +1372,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _deleteEvent(String id) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final eventsJson = prefs.getStringList('poker_events') ?? [];
-
-      final events = eventsJson
-          .map((json) => jsonDecode(json))
-          .where((event) => event['id'] != id)
-          .toList();
-
-      // Save back to SharedPreferences
-      final updatedEventsJson = events.map((e) => jsonEncode(e)).toList();
-      await prefs.setStringList('poker_events', updatedEventsJson);
+      await CalendarEventService.deleteEvent(id);
     } catch (e) {
       print('Error deleting event: $e');
     }

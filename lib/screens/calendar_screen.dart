@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import '../services/calendar_event_service.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -21,12 +20,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Future<void> _loadEvents() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final eventsJson = prefs.getStringList('poker_events') ?? [];
-      
+      final eventsData = await CalendarEventService.getUserEvents();
+
       setState(() {
-        events = eventsJson
-            .map((json) => PokerEvent.fromJson(jsonDecode(json)))
+        events = eventsData
+            .map((data) => PokerEvent.fromJson(data))
             .toList();
       });
     } catch (e) {
@@ -34,16 +32,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  // No longer needed - Firebase handles saves automatically
+  // Kept for backward compatibility, but does nothing
   Future<void> _saveEvents() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final eventsJson = events
-          .map((event) => jsonEncode(event.toJson()))
-          .toList();
-      await prefs.setStringList('poker_events', eventsJson);
-    } catch (e) {
-      print('Error saving events: $e');
-    }
+    // Events are saved to Firebase when created, no action needed
   }
 
   List<PokerEvent> _getEventsForDate(DateTime date) {
@@ -246,28 +238,47 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (titleController.text.isNotEmpty) {
-                  final newEvent = PokerEvent(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    title: titleController.text,
-                    type: selectedType,
-                    location: locationController.text,
-                    date: DateTime(
-                      selectedDate.year,
-                      selectedDate.month,
-                      selectedDate.day,
-                      selectedTime.hour,
-                      selectedTime.minute,
-                    ),
-                    buyIn: double.tryParse(buyInController.text) ?? 0.0,
+                  final eventDate = DateTime(
+                    selectedDate.year,
+                    selectedDate.month,
+                    selectedDate.day,
+                    selectedTime.hour,
+                    selectedTime.minute,
                   );
-                  
-                  setState(() {
-                    events.add(newEvent);
-                  });
-                  _saveEvents();
-                  Navigator.pop(context);
+
+                  try {
+                    // Save to Firebase
+                    final eventId = await CalendarEventService.createEvent(
+                      title: titleController.text,
+                      type: selectedType,
+                      location: locationController.text,
+                      date: eventDate,
+                      buyIn: double.tryParse(buyInController.text) ?? 0.0,
+                    );
+
+                    // Add to local list with Firebase ID
+                    final newEvent = PokerEvent(
+                      id: eventId,
+                      title: titleController.text,
+                      type: selectedType,
+                      location: locationController.text,
+                      date: eventDate,
+                      buyIn: double.tryParse(buyInController.text) ?? 0.0,
+                    );
+
+                    setState(() {
+                      events.add(newEvent);
+                    });
+
+                    Navigator.pop(context);
+                  } catch (e) {
+                    print('Error creating event: $e');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to create event: $e')),
+                    );
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
