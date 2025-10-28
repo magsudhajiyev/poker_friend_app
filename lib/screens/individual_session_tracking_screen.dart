@@ -686,7 +686,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         builder: (context) => PokerHandScreen(
           smallBlind: _currentSmallBlind,
           bigBlind: _currentBigBlind,
-          levelDuration: 15, // Default for individual sessions
           numberOfPlayers: 6, // Default active players
           gameType: widget.gameType,
           hasBBante: _currentHasBBante,

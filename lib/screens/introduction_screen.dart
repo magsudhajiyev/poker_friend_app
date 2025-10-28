@@ -18,7 +18,6 @@ class IntroductionScreen extends StatefulWidget {
 class _IntroductionScreenState extends State<IntroductionScreen> {
   int smallBlind = 1;
   int bigBlind = 2;
-  int levelDuration = 15;
   int numberOfPlayers = 6;
   GameType gameType = GameType.cash;
   bool bbAnteEnabled = false;
@@ -132,15 +131,6 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                           bigBlind = value;
                         });
                       }),
-                    ),
-                    _buildSettingCard(
-                      title: 'Duration',
-                      value: '${levelDuration}m',
-                      iconPath: 'icons/clock.png',
-                      onDecrement: () {
-                        if (levelDuration > 5) setState(() => levelDuration -= 5);
-                      },
-                      onIncrement: () => setState(() => levelDuration += 5),
                     ),
                     _buildSettingCard(
                       title: 'Players',
@@ -310,7 +300,6 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                               builder: (context) => PokerHandScreen(
                                 smallBlind: smallBlind,
                                 bigBlind: bigBlind,
-                                levelDuration: levelDuration,
                                 numberOfPlayers: numberOfPlayers,
                                 gameType: gameType,
                                 hasBBante: bbAnteEnabled,

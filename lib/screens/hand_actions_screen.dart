@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../utils/poker_positions.dart';
 import '../models/game_types.dart';
+import '../services/ai_analyzer_service.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -13,6 +14,156 @@ class HandActionsScreen extends StatefulWidget {
 }
 
 class _HandActionsScreenState extends State<HandActionsScreen> {
+  Map<String, dynamic>? _aiAnalysis;
+  bool _isAnalyzing = false;
+  String? _analysisError;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingAnalysis();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadExistingAnalysis() async {
+    try {
+      final sessionId = widget.hand['sessionId'] as String?;
+      final handId = widget.hand['id'] as String?;
+
+      if (sessionId != null && handId != null) {
+        final analysis = await AIAnalyzerService.getAnalysis(
+          sessionId: sessionId,
+          handId: handId,
+        );
+
+        if (analysis != null && mounted) {
+          setState(() {
+            _aiAnalysis = analysis;
+          });
+        }
+      }
+    } catch (e) {
+      // Silently fail - analysis will be loaded on demand
+    }
+  }
+
+  Future<void> _analyzeHand() async {
+    // Check if hero has hole cards
+    final ourHoleCards = widget.hand['ourHoleCards'] as Map<String, dynamic>?;
+    final card1 = ourHoleCards?['card1'] as String?;
+    final card2 = ourHoleCards?['card2'] as String?;
+
+    if (card1 == null || card2 == null || card1.isEmpty || card2.isEmpty) {
+      // Show error dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Color(0xFF1F1F23),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.orange, size: 28),
+                SizedBox(width: 12),
+                Text(
+                  'Missing Hero Cards',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'AI analysis requires your hole cards to be recorded. This hand cannot be analyzed because hero cards are missing.',
+              style: TextStyle(
+                color: Color(0xFF9A9A9A),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'OK',
+                  style: TextStyle(
+                    color: Color(0xFF5AC95A),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isAnalyzing = true;
+      _analysisError = null;
+    });
+
+    try {
+      // Prepare hand data for analysis
+      final handData = AIAnalyzerService.prepareHandDataForAnalysis(widget.hand);
+
+      // Call AI analyzer
+      final analysis = await AIAnalyzerService.analyzeHand(
+        handId: handData['handId'] as String,
+        handData: handData,
+      );
+
+      // Save to Firebase
+      final sessionId = widget.hand['sessionId'] as String?;
+      final handId = widget.hand['id'] as String?;
+
+      if (sessionId != null && handId != null) {
+        await AIAnalyzerService.saveAnalysis(
+          sessionId: sessionId,
+          handId: handId,
+          analysis: analysis,
+        );
+      }
+
+      if (mounted) {
+        setState(() {
+          _aiAnalysis = analysis;
+          _isAnalyzing = false;
+        });
+
+        // Auto-scroll to show the analysis results
+        Future.delayed(Duration(milliseconds: 300), () {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _analysisError = e.toString();
+          _isAnalyzing = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final actions = List<Map<String, dynamic>>.from(widget.hand['actions'] ?? []);
@@ -84,22 +235,40 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             // Content
             Expanded(
               child: SingleChildScrollView(
+                controller: _scrollController,
                 padding: EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Hand Summary Cards
                     _buildHandSummaryCards(),
-                    
+
                     SizedBox(height: 24),
-                    
+
                     // Hero Cards and Winner Info
                     _buildHeroCardsAndWinner(),
-                    
+
                     SizedBox(height: 24),
-                    
+
                     // Street-by-street action table
                     _buildStreetByStreetTable(),
+
+                    SizedBox(height: 24),
+
+                    // AI Analyzer Button
+                    _buildAIAnalyzerButton(),
+
+                    // AI Analysis Results
+                    if (_aiAnalysis != null) ...[
+                      SizedBox(height: 24),
+                      _buildAIAnalysisResults(),
+                    ],
+
+                    // Analysis Error
+                    if (_analysisError != null) ...[
+                      SizedBox(height: 24),
+                      _buildAnalysisError(),
+                    ],
                   ],
                 ),
               ),
@@ -1059,5 +1228,452 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       return Colors.red;
     }
     return Colors.black;
+  }
+
+  Widget _buildAIAnalyzerButton() {
+    // Check if hero has hole cards
+    final ourHoleCards = widget.hand['ourHoleCards'] as Map<String, dynamic>?;
+    final card1 = ourHoleCards?['card1'] as String?;
+    final card2 = ourHoleCards?['card2'] as String?;
+    final hasHeroCards = card1 != null && card2 != null && card1.isNotEmpty && card2.isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: (_isAnalyzing || !hasHeroCards) ? null : _analyzeHand,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: !hasHeroCards
+              ? Color(0xFF9A9A9A)
+              : (_aiAnalysis != null ? Color(0xFF8B5CF6) : Color(0xFF5AC95A)),
+          padding: EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+          disabledBackgroundColor: Color(0xFF9A9A9A).withOpacity(0.3),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_isAnalyzing) ...[
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 12),
+              Text(
+                'Analyzing Hand...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ] else if (!hasHeroCards) ...[
+              Icon(
+                Icons.block,
+                color: Color(0xFF9A9A9A),
+              ),
+              SizedBox(width: 12),
+              Text(
+                'Hero Cards Missing',
+                style: TextStyle(
+                  color: Color(0xFF9A9A9A),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ] else ...[
+              Icon(
+                _aiAnalysis != null ? Icons.refresh : Icons.psychology,
+                color: Colors.white,
+              ),
+              SizedBox(width: 12),
+              Text(
+                _aiAnalysis != null ? 'Re-analyze Hand' : 'AI Analyzer',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalysisError() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: Colors.red, size: 24),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Analysis Failed',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  _analysisError ?? 'Unknown error',
+                  style: TextStyle(
+                    color: Color(0xFF9A9A9A),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAIAnalysisResults() {
+    if (_aiAnalysis == null) return SizedBox.shrink();
+
+    final correct = _aiAnalysis!['correct'] as bool? ?? false;
+    final severity = _aiAnalysis!['severity'] as String? ?? 'unknown';
+    final gtoAnalysis = _aiAnalysis!['gtoAnalysis'] as Map<String, dynamic>?;
+    final aiAnalysis = _aiAnalysis!['aiAnalysis'] as Map<String, dynamic>?;
+    final processingTime = _aiAnalysis!['processingTimeMs'] as int? ?? 0;
+
+    // Determine if this is a preflop-only hand or went postflop
+    final actions = List<Map<String, dynamic>>.from(widget.hand['actions'] ?? []);
+    final wentPostflop = actions.any((action) {
+      final street = action['street'] as String? ?? 'preflop';
+      return street != 'preflop';
+    });
+
+    Color severityColor;
+    IconData severityIcon;
+    switch (severity.toLowerCase()) {
+      case 'optimal':
+        severityColor = Color(0xFF5AC95A);
+        severityIcon = Icons.check_circle;
+        break;
+      case 'minor':
+        severityColor = Color(0xFFFFD700);
+        severityIcon = Icons.warning;
+        break;
+      case 'major':
+        severityColor = Colors.orange;
+        severityIcon = Icons.error;
+        break;
+      case 'critical':
+        severityColor = Colors.red;
+        severityIcon = Icons.dangerous;
+        break;
+      default:
+        severityColor = Color(0xFF9A9A9A);
+        severityIcon = Icons.help;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Text(
+          'AI Analysis',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 16),
+
+        // Overall Result
+        Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Color(0xFF1F1F23),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: severityColor),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: severityColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(severityIcon, color: severityColor, size: 28),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          correct ? 'Correct Play' : 'Mistake Detected',
+                          style: TextStyle(
+                            color: severityColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Severity: ${severity.toUpperCase()}',
+                          style: TextStyle(
+                            color: Color(0xFF9A9A9A),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // GTO Analysis
+        if (gtoAnalysis != null) ...[
+          SizedBox(height: 16),
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Color(0xFF1F1F23),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: wentPostflop ? Color(0xFFFFD700) : Color(0xFF2A2A2E)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.bar_chart, color: Color(0xFF8B5CF6), size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      wentPostflop ? 'GTO Baseline (Preflop Only)' : 'GTO Baseline',
+                      style: TextStyle(
+                        color: Color(0xFF8B5CF6),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Postflop disclaimer
+                if (wentPostflop) ...[
+                  SizedBox(height: 12),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFFFD700).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Color(0xFFFFD700).withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Color(0xFFFFD700), size: 16),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'GTO analysis is reliable for preflop decisions only. Postflop analysis is AI-generated commentary.',
+                            style: TextStyle(
+                              color: Color(0xFFFFD700),
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                SizedBox(height: 12),
+                _buildInfoRow('Recommended', gtoAnalysis['recommendedAction'] ?? 'N/A'),
+                SizedBox(height: 8),
+                _buildInfoRow('In Range', (gtoAnalysis['heroInRange'] ?? false) ? 'Yes' : 'No'),
+                if (gtoAnalysis['rangePercentile'] != null) ...[
+                  SizedBox(height: 8),
+                  _buildInfoRow('Range %', '${gtoAnalysis['rangePercentile']}%'),
+                ],
+                SizedBox(height: 12),
+                Text(
+                  gtoAnalysis['reasoning'] ?? '',
+                  style: TextStyle(
+                    color: Color(0xFF9A9A9A),
+                    fontSize: 13,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        // AI Analysis
+        if (aiAnalysis != null) ...[
+          SizedBox(height: 16),
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Color(0xFF1F1F23),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Color(0xFF2A2A2E)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.psychology, color: Color(0xFF5AC95A), size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        wentPostflop ? 'AI Insights (Postflop Commentary)' : 'AI Insights',
+                        style: TextStyle(
+                          color: Color(0xFF5AC95A),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                if (aiAnalysis['reasoning'] != null) ...[
+                  Text(
+                    aiAnalysis['reasoning'],
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                ],
+                if (aiAnalysis['optimalAction'] != null) ...[
+                  _buildHighlightedText('Optimal Play', aiAnalysis['optimalAction']),
+                  SizedBox(height: 12),
+                ],
+                if (aiAnalysis['exploitativeAdjustment'] != null) ...[
+                  _buildHighlightedText('Exploitative Adjustment', aiAnalysis['exploitativeAdjustment']),
+                  SizedBox(height: 12),
+                ],
+                if (aiAnalysis['learningPoint'] != null) ...[
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFFFD700).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Color(0xFFFFD700).withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.lightbulb, color: Color(0xFFFFD700), size: 20),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            aiAnalysis['learningPoint'],
+                            style: TextStyle(
+                              color: Color(0xFFFFD700),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+
+        // Processing Time
+        SizedBox(height: 12),
+        Center(
+          child: Text(
+            'Analysis completed in ${(processingTime / 1000).toStringAsFixed(2)}s',
+            style: TextStyle(
+              color: Color(0xFF9A9A9A),
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Color(0xFF9A9A9A),
+            fontSize: 13,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHighlightedText(String title, String content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: Color(0xFF5AC95A),
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          content,
+          style: TextStyle(
+            color: Color(0xFF9A9A9A),
+            fontSize: 13,
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
   }
 }

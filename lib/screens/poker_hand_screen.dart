@@ -24,7 +24,6 @@ import 'session_history_screen.dart';
 class PokerHandScreen extends StatefulWidget {
   final int smallBlind;
   final int bigBlind;
-  final int levelDuration;
   final int numberOfPlayers;
   final GameType gameType;
   final bool hasBBante;
@@ -48,7 +47,6 @@ class PokerHandScreen extends StatefulWidget {
     super.key,
     required this.smallBlind,
     required this.bigBlind,
-    required this.levelDuration,
     required this.numberOfPlayers,
     this.gameType = GameType.cash,
     this.hasBBante = false,
@@ -605,7 +603,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       builder: (context) => _SettingsDialog(
         currentSmallBlind: sessionManager.smallBlind,
         currentBigBlind: sessionManager.bigBlind,
-        currentLevelDuration: widget.levelDuration,
         useButtonMode: useButtonMode,
         currentHasBBante: gameState.hasBBante,
         gameType: widget.gameType,
@@ -635,13 +632,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             ).catchError((e) {});
           }
           // Note: These changes will take effect immediately for new hands
-        },
-        onLevelDurationChanged: (duration) {
-          // Note: levelDuration is a final widget property,
-          // so we can't update it directly. This would need
-          // to be handled at the parent widget level or stored
-          // in preferences for the next session.
-          prefs.setInt('level_duration', duration);
         },
         onButtonModeToggled: (value) async {
           setState(() {
@@ -4253,24 +4243,20 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
 class _SettingsDialog extends StatefulWidget {
   final int currentSmallBlind;
   final int currentBigBlind;
-  final int currentLevelDuration;
   final bool useButtonMode;
   final bool currentHasBBante;
   final GameType gameType;
   final Function(int smallBlind, int bigBlind, bool hasBBante) onBlindsChanged;
-  final Function(int) onLevelDurationChanged;
   final Function(bool) onButtonModeToggled;
 
   const _SettingsDialog({
     Key? key,
     required this.currentSmallBlind,
     required this.currentBigBlind,
-    required this.currentLevelDuration,
     required this.useButtonMode,
     required this.currentHasBBante,
     required this.gameType,
     required this.onBlindsChanged,
-    required this.onLevelDurationChanged,
     required this.onButtonModeToggled,
   }) : super(key: key);
 
@@ -4279,13 +4265,10 @@ class _SettingsDialog extends StatefulWidget {
 }
 
 class _SettingsDialogState extends State<_SettingsDialog> {
-  static const int LEVEL_DURATION_INCREMENT = 5;
-  static const int MIN_LEVEL_DURATION = 5;
   static const int MIN_SMALL_BLIND = 1;
 
   late int smallBlind;
   late int bigBlind;
-  late int levelDuration;
   late bool useButtonMode;
   late bool hasBBante;
 
@@ -4294,7 +4277,6 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     super.initState();
     smallBlind = widget.currentSmallBlind;
     bigBlind = widget.currentBigBlind;
-    levelDuration = widget.currentLevelDuration;
     useButtonMode = widget.useButtonMode;
     hasBBante = widget.currentHasBBante;
   }
@@ -4639,41 +4621,6 @@ class _SettingsDialogState extends State<_SettingsDialog> {
               ),
             const SizedBox(height: 24),
 
-            // Level duration section
-            Text(
-              'Tournament Settings',
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildNumberAdjuster(
-              'Level Duration (min)',
-              levelDuration,
-              () {
-                setState(() {
-                  levelDuration += LEVEL_DURATION_INCREMENT;
-                });
-              },
-              () {
-                if (levelDuration > MIN_LEVEL_DURATION) {
-                  setState(() {
-                    levelDuration -= LEVEL_DURATION_INCREMENT;
-                  });
-                }
-              },
-              () {
-                _showBlindInputDialog('Level Duration (minutes)', levelDuration, (value) {
-                  setState(() {
-                    levelDuration = value;
-                  });
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-
             // Interface settings section
             Text(
               'Interface',
@@ -4711,7 +4658,6 @@ class _SettingsDialogState extends State<_SettingsDialog> {
         ElevatedButton(
           onPressed: () {
             widget.onBlindsChanged(smallBlind, bigBlind, hasBBante);
-            widget.onLevelDurationChanged(levelDuration);
             widget.onButtonModeToggled(useButtonMode);
             Navigator.pop(context);
           },

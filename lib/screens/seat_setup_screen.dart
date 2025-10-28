@@ -1295,7 +1295,6 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
           builder: (context) => PokerHandScreen(
             smallBlind: widget.smallBlind!,
             bigBlind: widget.bigBlind!,
-            levelDuration: 15,
             numberOfPlayers: 9,
             gameType: widget.gameType ?? GameType.cash,
             hasBBante: widget.hasBBante ?? false,
