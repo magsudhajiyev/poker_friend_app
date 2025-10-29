@@ -28,8 +28,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   int totalSessions = 0;
   int totalPlayTime = 0;
 
-  // Chart data
-  List<SessionChartData> sessionChartData = [];
+  // Positional statistics
+  Map<String, PositionalStats> positionalStats = {};
 
   // Loading state details
   String loadingMessage = 'Loading statistics...';
@@ -71,7 +71,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     winRate = 0.0;
     totalSessions = 0;
     totalPlayTime = 0;
-    sessionChartData.clear();
 
     try {
       setState(() {
@@ -106,29 +105,121 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         winRate = (userStats.wonHands / handsPlayed) * 100;
       }
 
+      print('📊 Stats from UserStatsService: Total Hands: $totalHands, Hands Played: $handsPlayed, Won: ${userStats.wonHands}, Win Rate: ${winRate.toStringAsFixed(1)}%');
+
       setState(() {
-        loadingMessage = 'Loading session chart data...';
+        loadingMessage = 'Calculating positional stats...';
       });
 
-      // Get sessions for chart data only
-      final sessions = await FirebaseService.getAllSessions();
-      for (int i = 0; i < sessions.length; i++) {
-        final session = sessions[i];
-        if (session['startTime'] != null) {
-          sessionChartData.add(SessionChartData(
-            date: DateTime.parse(session['startTime']),
-            sessionNumber: i + 1,
-            totalHands: session['totalHands'] ?? 0,
-            gameType: session['gameType'] ?? 'cash',
-          ));
-        }
-      }
-
-      print('📊 Stats from UserStatsService: Total Hands: $totalHands, Hands Played: $handsPlayed, Won: ${userStats.wonHands}, Win Rate: ${winRate.toStringAsFixed(1)}%');
+      // Calculate positional statistics
+      await _calculatePositionalStats();
 
     } catch (e) {
       print('❌ Error calculating statistics: $e');
       throw e;
+    }
+  }
+
+  Future<void> _calculatePositionalStats() async {
+    // Initialize stats for common positions
+    positionalStats = {
+      'UTG': PositionalStats(),
+      'MP': PositionalStats(),
+      'CO': PositionalStats(),
+      'BTN': PositionalStats(),
+      'SB': PositionalStats(),
+      'BB': PositionalStats(),
+    };
+
+    try {
+      final userId = AuthService.userId;
+      if (userId == null) return;
+
+      // Get recent sessions only (limit to 100 for performance)
+      final sessions = await FirebaseService.getAllSessions();
+      final recentSessions = sessions.take(100).toList();
+
+      // Process sessions in batches for better performance
+      for (final session in recentSessions) {
+        final sessionId = session['id'] as String;
+        final ourSeatNumber = session['ourSeatNumber'] as int?;
+        if (ourSeatNumber == null) continue;
+
+        // Get hands for this session
+        List<Map<String, dynamic>> hands;
+        try {
+          hands = await FirebaseService.getSessionHands(sessionId);
+        } catch (e) {
+          continue; // Skip this session if we can't load hands
+        }
+
+        // Process each hand
+        for (final hand in hands) {
+          final actions = hand['actions'] as List<dynamic>?;
+          if (actions == null || actions.isEmpty) continue;
+
+          // Quick scan to find our position and stats
+          String? ourPosition;
+          bool playerVPIP = false;
+          bool playerPFR = false;
+          bool playerPlayed = false;
+
+          // Single pass through actions
+          for (final action in actions) {
+            final actionMap = action as Map<String, dynamic>;
+
+            // Check if this is our action
+            if (actionMap['isCurrentUser'] != true) continue;
+
+            // Get position from first action
+            ourPosition ??= actionMap['playerPosition'] as String?;
+
+            playerPlayed = true;
+
+            // Only process preflop actions for VPIP/PFR
+            final street = actionMap['street'] as String?;
+            if (street?.toLowerCase().trim() != 'preflop') continue;
+
+            final actionType = actionMap['action']?.toString().toLowerCase();
+
+            // VPIP check
+            if (actionType == 'call' || actionType == 'bet' || actionType == 'raise') {
+              playerVPIP = true;
+            }
+
+            // PFR check
+            if (actionType == 'raise' || actionType == 'bet') {
+              playerPFR = true;
+            }
+          }
+
+          // Update stats if we found our position
+          if (ourPosition != null && positionalStats.containsKey(ourPosition)) {
+            final stats = positionalStats[ourPosition]!;
+            stats.totalHands++;
+
+            if (playerPlayed) stats.playedHands++;
+            if (playerVPIP) stats.vpipHands++;
+            if (playerPFR) stats.pfrHands++;
+
+            // Check if we won
+            final winnerId = hand['winnerId'] as int?;
+            if (winnerId == ourSeatNumber) {
+              stats.wonHands++;
+            }
+          }
+        }
+      }
+
+      print('📊 Positional Stats (${recentSessions.length} sessions):');
+      positionalStats.forEach((position, stats) {
+        if (stats.totalHands > 0) {
+          print('  $position: ${stats.totalHands} hands, VPIP: ${stats.vpipPercentage.toStringAsFixed(1)}%, PFR: ${stats.pfrPercentage.toStringAsFixed(1)}%, Win: ${stats.winRate.toStringAsFixed(1)}%');
+        }
+      });
+
+    } catch (e) {
+      print('❌ Error calculating positional stats: $e');
     }
   }
 
@@ -139,7 +230,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     int sessionPfrHands = 0;
     int sessionThreeBetHands = 0;
     int sessionWonHands = 0;
-    SessionChartData? chartData;
 
     try {
       // Calculate play time
@@ -148,14 +238,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         final end = DateTime.parse(session['endTime']);
         totalPlayTime += end.difference(start).inMinutes;
       }
-
-      // Add to chart data
-      chartData = SessionChartData(
-        date: DateTime.parse(session['startTime']),
-        sessionNumber: sessionIndex + 1,
-        totalHands: session['totalHands'] ?? 0,
-        gameType: session['gameType'] ?? 'cash',
-      );
 
       // Get hands for this session
       final sessionId = session['id'] as String;
@@ -197,7 +279,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       'pfrHands': sessionPfrHands,
       'threeBetHands': sessionThreeBetHands,
       'wonHands': sessionWonHands,
-      'chartData': chartData,
     };
   }
 
@@ -464,13 +545,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       children: [
         _buildOverallStats(),
         SizedBox(height: 24),
-        if (sessionChartData.isNotEmpty) ...[
-          _buildSessionChart(),
-          SizedBox(height: 24),
-        ] else ...[
-          _buildEmptySessionChart(),
-          SizedBox(height: 24),
-        ],
         _buildPositionalStats(),
         SizedBox(height: 24),
         _buildSessionStats(),
@@ -560,136 +634,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  Widget _buildEmptySessionChart() {
-    return Container(
-      padding: EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Color(0xFF5AC95A).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Image.asset(
-                  'icons/progress.png',
-                  width: 20,
-                  height: 20,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.trending_up,
-                      color: Color(0xFF5AC95A),
-                      size: 20,
-                    );
-                  },
-                ),
-              ),
-              SizedBox(width: 16),
-              Text(
-                'Session Progress',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20),
-          Container(
-            height: 150,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.analytics_outlined,
-                    color: Color(0xFF9A9A9A),
-                    size: 48,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Start playing a session to record the data',
-                    style: TextStyle(
-                      color: Color(0xFF9A9A9A),
-                      fontSize: 16,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSessionChart() {
-    return Container(
-      padding: EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Color(0xFF5AC95A).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Image.asset(
-                  'icons/progress.png',
-                  width: 20,
-                  height: 20,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.trending_up,
-                      color: Color(0xFF5AC95A),
-                      size: 20,
-                    );
-                  },
-                ),
-              ),
-              SizedBox(width: 16),
-              Text(
-                'Session Progress',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20),
-          Text(
-            'Chart would be implemented here with real data',
-            style: TextStyle(
-              color: Color(0xFF9A9A9A),
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPositionalStats() {
+    final hasData = positionalStats.values.any((stats) => stats.totalHands > 0);
+
     return Container(
       padding: EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -733,33 +681,206 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             ],
           ),
           SizedBox(height: 20),
-          Container(
-            height: 100,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.table_rows_outlined,
-                    color: Color(0xFF9A9A9A),
-                    size: 32,
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Start playing a session to record the data',
-                    style: TextStyle(
+          if (!hasData)
+            Container(
+              height: 100,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.table_rows_outlined,
                       color: Color(0xFF9A9A9A),
-                      fontSize: 16,
+                      size: 32,
                     ),
-                    textAlign: TextAlign.center,
+                    SizedBox(height: 12),
+                    Text(
+                      'Start playing a session to record the data',
+                      style: TextStyle(
+                        color: Color(0xFF9A9A9A),
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            // Header row
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              decoration: BoxDecoration(
+                color: Color(0xFF161618),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'Position',
+                      style: TextStyle(
+                        color: Color(0xFF9A9A9A),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Hands',
+                      style: TextStyle(
+                        color: Color(0xFF9A9A9A),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'VPIP',
+                      style: TextStyle(
+                        color: Color(0xFF9A9A9A),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'PFR',
+                      style: TextStyle(
+                        color: Color(0xFF9A9A9A),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Win%',
+                      style: TextStyle(
+                        color: Color(0xFF9A9A9A),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
+            SizedBox(height: 12),
+            // Position rows
+            ...['BTN', 'CO', 'MP', 'UTG', 'SB', 'BB'].map((position) {
+              final stats = positionalStats[position]!;
+              if (stats.totalHands == 0) return SizedBox.shrink();
+
+              return Container(
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                margin: EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Color(0xFF161618).withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF5AC95A).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          position,
+                          style: TextStyle(
+                            color: Color(0xFF5AC95A),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '${stats.totalHands}',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '${stats.vpipPercentage.toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          color: _getStatColor(stats.vpipPercentage, isVPIP: true),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '${stats.pfrPercentage.toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          color: _getStatColor(stats.pfrPercentage, isPFR: true),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '${stats.winRate.toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          color: _getStatColor(stats.winRate, isWinRate: true),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
         ],
       ),
     );
+  }
+
+  Color _getStatColor(double value, {bool isVPIP = false, bool isPFR = false, bool isWinRate = false}) {
+    if (isWinRate) {
+      if (value >= 50) return Color(0xFF5AC95A); // Green for good win rate
+      if (value >= 30) return Colors.white; // White for okay
+      return Color(0xFFFF6B6B); // Red for low win rate
+    }
+
+    if (isVPIP) {
+      if (value >= 15 && value <= 30) return Color(0xFF5AC95A); // Green for solid VPIP
+      if (value < 10 || value > 40) return Color(0xFFFF6B6B); // Red for too tight or loose
+      return Colors.white; // White for acceptable
+    }
+
+    if (isPFR) {
+      if (value >= 12 && value <= 25) return Color(0xFF5AC95A); // Green for good PFR
+      if (value < 8 || value > 35) return Color(0xFFFF6B6B); // Red for too passive or aggressive
+      return Colors.white; // White for acceptable
+    }
+
+    return Colors.white;
   }
 
   Widget _buildSessionStats() {
@@ -871,17 +992,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
 }
 
-class SessionChartData {
-  final DateTime date;
-  final int sessionNumber;
-  final int totalHands;
-  final String gameType;
+class PositionalStats {
+  int totalHands = 0;
+  int vpipHands = 0;
+  int pfrHands = 0;
+  int wonHands = 0;
+  int playedHands = 0;
 
-  SessionChartData({
-    required this.date,
-    required this.sessionNumber,
-    required this.totalHands,
-    required this.gameType,
-  });
+  double get vpipPercentage => totalHands > 0 ? (vpipHands / totalHands) * 100 : 0.0;
+  double get pfrPercentage => totalHands > 0 ? (pfrHands / totalHands) * 100 : 0.0;
+  double get winRate => playedHands > 0 ? (wonHands / playedHands) * 100 : 0.0;
 }
 
