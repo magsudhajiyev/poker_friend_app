@@ -32,14 +32,14 @@ class OpponentStatsService {
       if (stats != null) {
         // Also cache locally for offline access
         await _saveStatsToLocal(stats);
-        return stats;
       }
+      // Return Firebase result (even if null - means no stats exist)
+      return stats;
     } catch (e) {
       print('⚠️ Firebase stats load failed, using local storage: $e');
+      // Only fallback to local storage on actual errors
+      return await _getStatsFromLocal(opponentId);
     }
-
-    // Fallback to local storage
-    return await _getStatsFromLocal(opponentId);
   }
 
   /// Save or update opponent stats
@@ -208,15 +208,13 @@ class OpponentStatsService {
     try {
       // Try Firebase first
       final firebaseStats = await _getAllStatsFromFirebase();
-      if (firebaseStats.isNotEmpty) {
-        return firebaseStats;
-      }
+      // Return Firebase result (even if empty - means no stats exist)
+      return firebaseStats;
     } catch (e) {
       print('⚠️ Firebase bulk load failed, using local storage: $e');
+      // Only fallback to local storage on actual errors
+      return await _getAllStatsFromLocal();
     }
-
-    // Fallback to local storage
-    return await _getAllStatsFromLocal();
   }
 
   /// Process hand data and return appropriate deltas for stats update
