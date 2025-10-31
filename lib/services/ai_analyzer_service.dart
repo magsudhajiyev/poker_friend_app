@@ -18,16 +18,31 @@ class AIAnalyzerService {
         'handData': handData,
       };
 
+      // DEBUG: Log the request body being sent to poker engine
+      print('🎲 ===== AI ANALYZER REQUEST =====');
+      print('🎲 Endpoint: $baseUrl/analyze-hand');
+      print('🎲 Request Body:');
+      print(jsonEncode(requestBody));
+      print('🎲 ================================');
+
       final response = await http.post(
         Uri.parse('$baseUrl/analyze-hand'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       ).timeout(Duration(seconds: 30));
 
+      // DEBUG: Log the response
+      print('🎲 ===== AI ANALYZER RESPONSE =====');
+      print('🎲 Status Code: ${response.statusCode}');
       if (response.statusCode == 200) {
+        print('🎲 Response Body:');
+        print(response.body);
+        print('🎲 ==================================');
         final analysis = jsonDecode(response.body) as Map<String, dynamic>;
         return analysis;
       } else {
+        print('🎲 Error Response: ${response.body}');
+        print('🎲 ==================================');
         throw Exception('Failed to analyze hand: ${response.statusCode}');
       }
     } catch (e) {
@@ -133,26 +148,36 @@ class AIAnalyzerService {
     final playerCount = hand['playerCount'] as int? ?? 6;
     final heroPosition = hand['heroPosition'] as int? ?? 1;
 
-    // Try to extract stack information from actions
+    // CRITICAL: Always get stack from the START OF THE HAND (preflop), not current street
+    // The AI analyzer needs to know the initial stack to properly analyze the hand
     Map<int, double> playerStacks = {};
-    for (final action in actions) {
-      final actionMap = action as Map<String, dynamic>;
-      final seat = actionMap['player'] ?? actionMap['playerSeat'];
-      final stack = actionMap['playerStack'] ?? actionMap['stack'];
-      if (seat != null && stack != null) {
-        playerStacks[seat as int] = (stack as num).toDouble();
-      }
-    }
+    Map<int, bool> stackFound = {}; // Track if we've found the initial stack for each player
 
-    // Check if hand has initialStacks
+    // First, try to use initialStacks if available (most reliable)
     final initialStacks = hand['initialStacks'] as Map<String, dynamic>?;
     if (initialStacks != null) {
       initialStacks.forEach((key, value) {
         final seat = int.tryParse(key);
         if (seat != null && value != null) {
           playerStacks[seat] = (value as num).toDouble();
+          stackFound[seat] = true;
         }
       });
+    }
+
+    // If initialStacks not available, get stacks from the FIRST action of each player (preflop)
+    if (playerStacks.isEmpty) {
+      for (final action in actions) {
+        final actionMap = action as Map<String, dynamic>;
+        final seat = actionMap['player'] ?? actionMap['playerSeat'];
+        final stack = actionMap['playerStack'] ?? actionMap['stack'];
+
+        // Only get the first occurrence of each player's stack (initial stack)
+        if (seat != null && stack != null && !(stackFound[seat as int] ?? false)) {
+          playerStacks[seat] = (stack as num).toDouble();
+          stackFound[seat] = true;
+        }
+      }
     }
 
     // For each seat except hero
@@ -176,8 +201,15 @@ class AIAnalyzerService {
       });
     }
 
-    // Get hero stack
+    // Get hero stack (initial stack at start of hand)
     final heroStack = playerStacks[heroPosition] ?? 200.0;
+
+    // DEBUG: Log hero stack calculation
+    print('🎲 DEBUG: Initial Stack Calculation (Start of Hand)');
+    print('🎲   Current Street Being Analyzed: $street');
+    print('🎲   Hero Position: $heroPosition');
+    print('🎲   Hero INITIAL Stack: $heroStack');
+    print('🎲   All Player INITIAL Stacks: $playerStacks');
 
     // Get hero's position name from the first action of hero (most reliable)
     String? heroPositionName;

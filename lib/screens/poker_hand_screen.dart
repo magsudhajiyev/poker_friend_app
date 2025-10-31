@@ -2357,6 +2357,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         gameState.buttonPosition = nextButton;
       }
 
+      // CRITICAL: Refund all pot contributions back to players before resetting
+      // This ensures stacks remain correct when skipping incomplete hands
+      for (var player in gameState.players) {
+        if (player.isActive) {
+          // Calculate total contribution (current round + previous rounds)
+          final totalContribution = player.betThisRound + player.totalContribution;
+          if (totalContribution > 0) {
+            // Refund the contribution back to stack
+            player.currentStack += totalContribution;
+            addAction("💵 Refunded ${_formatCurrency(totalContribution)} to Player ${player.playerId}");
+          }
+        }
+      }
+
       // Reset all players
       for (var player in gameState.players) {
         player.reset();
@@ -3494,10 +3508,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         : {};
     final double sharePerWinner = winnerResult['sharePerWinner'] ?? potAmount;
 
-    
+
     // Then show hole cards dialog
     await _showHoleCardsDialog();
-    
+
+    // Show opponent hole cards dialog for showdown situations
+    await _showOpponentCardsDialog(activePlayers, winners);
+
     setState(() {
       if (isChoppedPot) {
         // Get current stack for our seat to track in session history
@@ -3835,6 +3852,105 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       if (holeCards.isComplete) {
         addAction("🂠 Your cards: ${holeCards.card1} ${holeCards.card2}");
+      }
+    }
+  }
+
+  Future<void> _showOpponentCardsDialog(List<int> activePlayers, List<int> winners) async {
+    // Only show opponent cards dialog if hand reached showdown (not if everyone folded)
+    if (activePlayers.length <= 1) {
+      return; // No showdown, everyone folded
+    }
+
+    // Get opponents (exclude our seat if we're one of the active players)
+    final ourSeat = sessionManager.ourSeatNumber;
+    final opponents = activePlayers.where((p) => p != ourSeat).toList();
+
+    if (opponents.isEmpty) {
+      return; // No opponents to show cards for
+    }
+
+    // Collect used cards (board + hero cards)
+    Set<String> usedCards = {};
+    BoardCards? boardCards;
+    HoleCards? ourCards;
+
+    if (sessionManager.currentHand != null) {
+      boardCards = sessionManager.currentHand?.boardCards;
+      ourCards = sessionManager.currentHand?.ourHoleCards;
+    } else if (sessionManager.completedHands.isNotEmpty) {
+      boardCards = sessionManager.completedHands.last.boardCards;
+      ourCards = sessionManager.completedHands.last.ourHoleCards;
+    }
+
+    if (boardCards != null) {
+      if (boardCards.flop.isNotEmpty) usedCards.addAll(boardCards.flop);
+      if (boardCards.turn != null && boardCards.turn!.isNotEmpty) usedCards.add(boardCards.turn!);
+      if (boardCards.river != null && boardCards.river!.isNotEmpty) usedCards.add(boardCards.river!);
+    }
+
+    if (ourCards != null && ourCards.isComplete) {
+      usedCards.add(ourCards.card1!);
+      usedCards.add(ourCards.card2!);
+    }
+
+    // Get existing opponent cards if any
+    Map<int, HoleCards>? existingCards = sessionManager.currentHand?.showdownData?.playerCards;
+
+    // Loop through each opponent and show HoleCardsDialog
+    Map<int, HoleCards> opponentCards = {};
+
+    for (int opponentId in opponents) {
+      final opponentName = sessionManager.getPlayerNameWithPosition(opponentId);
+
+      // Show dialog for this opponent
+      final cards = await showDialog<HoleCards>(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => HoleCardsDialog(
+          title: '$opponentName Hole Cards',
+          usedCards: usedCards,
+          existingCards: existingCards?[opponentId],
+        ),
+      );
+
+      // If user cancelled/skipped, stop collecting cards
+      if (cards == null) {
+        break;
+      }
+
+      // If cards were selected, add them to the collection and update usedCards
+      if (cards.isComplete) {
+        opponentCards[opponentId] = cards;
+        usedCards.add(cards.card1!);
+        usedCards.add(cards.card2!);
+      }
+    }
+
+    // Save opponent cards to showdown data
+    if (opponentCards.isNotEmpty) {
+      if (sessionManager.currentHand != null) {
+        // Initialize showdown data if it doesn't exist
+        sessionManager.currentHand!.showdownData ??= ShowdownData();
+        sessionManager.currentHand!.reachedShowdown = true;
+
+        // Add opponent cards to showdown data
+        opponentCards.forEach((playerId, cards) {
+          if (cards.isComplete) {
+            sessionManager.currentHand!.showdownData!.playerCards[playerId] = cards;
+            addAction("🂠 ${sessionManager.getPlayerNameWithPosition(playerId)}: ${cards.card1} ${cards.card2}");
+          }
+        });
+      } else if (sessionManager.completedHands.isNotEmpty) {
+        // For completed hands
+        sessionManager.completedHands.last.showdownData ??= ShowdownData();
+        sessionManager.completedHands.last.reachedShowdown = true;
+
+        opponentCards.forEach((playerId, cards) {
+          if (cards.isComplete) {
+            sessionManager.completedHands.last.showdownData!.playerCards[playerId] = cards;
+          }
+        });
       }
     }
   }

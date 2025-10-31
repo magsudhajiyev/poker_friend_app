@@ -281,30 +281,47 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   Widget _buildHeroCardsAndWinner() {
     final ourHoleCardsData = widget.hand['ourHoleCards'];
-    final winnerId = widget.hand['winnerId'];
+    final showdownData = widget.hand['showdownData'];
     final playerNamesData = widget.hand['playerNames'];
-    
+
     String? heroCard1;
     String? heroCard2;
     if (ourHoleCardsData != null && ourHoleCardsData is Map) {
       heroCard1 = ourHoleCardsData['card1'];
       heroCard2 = ourHoleCardsData['card2'];
     }
-    
-    // Get winner name
-    String? winnerName;
-    if (winnerId != null && playerNamesData != null && playerNamesData is Map) {
-      winnerName = playerNamesData[winnerId.toString()];
+
+    // Get opponent cards from showdown data
+    Map<int, Map<String, String?>>? opponentCards;
+    if (showdownData != null && showdownData is Map) {
+      final playerCardsData = showdownData['playerCards'];
+      if (playerCardsData != null && playerCardsData is Map) {
+        opponentCards = {};
+        playerCardsData.forEach((key, value) {
+          if (value != null && value is Map) {
+            final playerId = int.tryParse(key.toString());
+            if (playerId != null) {
+              opponentCards![playerId] = {
+                'card1': value['card1'] as String?,
+                'card2': value['card2'] as String?,
+              };
+            }
+          }
+        });
+      }
     }
-    
-    if ((heroCard1 == null && heroCard2 == null) && winnerId == null) {
+
+    final bool hasHeroCards = (heroCard1 != null || heroCard2 != null);
+    final bool hasOpponentCards = opponentCards != null && opponentCards.isNotEmpty;
+
+    if (!hasHeroCards && !hasOpponentCards) {
       return SizedBox.shrink(); // Don't show section if no data
     }
-    
+
     return Row(
       children: [
         // Hero Cards
-        if (heroCard1 != null || heroCard2 != null)
+        if (hasHeroCards)
           Expanded(
             child: Container(
               padding: EdgeInsets.all(16),
@@ -343,16 +360,109 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               ),
             ),
           ),
-        
-        if ((heroCard1 != null || heroCard2 != null) && winnerId != null)
+
+        if (hasHeroCards && hasOpponentCards)
           SizedBox(width: 16),
-        
-        // Winner Info
-        if (winnerId != null || (widget.hand['isChoppedPot'] == true))
+
+        // Opponent Cards (replaces Winner Card)
+        if (hasOpponentCards)
           Expanded(
-            child: _buildWinnerCard(),
+            child: _buildOpponentCardsCard(opponentCards!, playerNamesData),
           ),
       ],
+    );
+  }
+
+  Widget _buildOpponentCardsCard(Map<int, Map<String, String?>> opponentCards, dynamic playerNamesData) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFF8B5CF6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.people, color: Color(0xFF8B5CF6), size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Opponent Cards',
+                style: TextStyle(
+                  color: Color(0xFF8B5CF6),
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          // Show each opponent's cards
+          ...opponentCards.entries.map((entry) {
+            final playerId = entry.key;
+            final cards = entry.value;
+            final card1 = cards['card1'];
+            final card2 = cards['card2'];
+
+            if (card1 == null || card2 == null) {
+              return SizedBox.shrink();
+            }
+
+            String? playerName;
+            if (playerNamesData != null && playerNamesData is Map) {
+              playerName = playerNamesData[playerId.toString()];
+            }
+            playerName ??= 'Player $playerId';
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      playerName,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  _buildSmallCard(card1),
+                  SizedBox(width: 4),
+                  _buildSmallCard(card2),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmallCard(String card) {
+    return Container(
+      width: 28,
+      height: 38,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Center(
+        child: Text(
+          card,
+          style: TextStyle(
+            color: _getCardColor(card),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
     );
   }
 
@@ -631,14 +741,82 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ),
         SizedBox(width: 12),
         Expanded(
-          child: _buildSummaryCard(
-            'Time',
-            DateFormat('HH:mm').format(startTime),
-            Icons.access_time,
-            Color(0xFFFF9500),
-          ),
+          child: _buildTimeAndWinnerCard(startTime, widget.hand),
         ),
       ],
+    );
+  }
+
+  // Combined Time and Winner Card
+  Widget _buildTimeAndWinnerCard(DateTime startTime, Map<String, dynamic> hand) {
+    final winnerId = hand['winnerId'];
+    final isChoppedPot = hand['isChoppedPot'] == true;
+    final playerNamesData = hand['playerNames'];
+    final potAmount = (hand['potAmount'] ?? 0).toDouble();
+    final gameTypeStr = hand['gameType'] ?? 'cash';
+    final choppedWinners = hand['choppedWinners'] as List<dynamic>?;
+
+    String? winnerText;
+    if (isChoppedPot && choppedWinners != null && choppedWinners.isNotEmpty) {
+      // Chopped pot - show multiple winners
+      List<String> winnerNames = choppedWinners.map<String>((w) {
+        if (playerNamesData != null && playerNamesData is Map) {
+          return (playerNamesData[w.toString()] ?? 'P$w') as String;
+        }
+        return 'P$w';
+      }).toList();
+      winnerText = 'Chopped: ${winnerNames.join(', ')}';
+    } else if (winnerId != null) {
+      // Single winner
+      if (playerNamesData != null && playerNamesData is Map) {
+        final name = playerNamesData[winnerId.toString()] ?? 'Player $winnerId';
+        winnerText = 'Winner: $name';
+      } else {
+        winnerText = 'Winner: P$winnerId';
+      }
+    }
+
+    // Only show card if there's a winner
+    if (winnerText == null) {
+      return SizedBox.shrink();
+    }
+
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFF2A2A2E)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Color(0xFFFF9500).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.emoji_events,
+              color: Color(0xFFFF9500),
+              size: 20,
+            ),
+          ),
+          SizedBox(height: 12),
+          Text(
+            winnerText,
+            style: TextStyle(
+              color: Color(0xFF5AC95A),
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
@@ -1511,7 +1689,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 ],
 
                 SizedBox(height: 12),
-                _buildInfoRow('Recommended', gtoAnalysis['recommendedAction'] ?? 'N/A'),
+                _buildInfoRow('Recommended', _extractRecommendedAction(gtoAnalysis['recommendedAction']) ?? 'N/A'),
                 SizedBox(height: 8),
                 _buildInfoRow('In Range', (gtoAnalysis['heroInRange'] ?? false) ? 'Yes' : 'No'),
                 if (gtoAnalysis['rangePercentile'] != null) ...[
@@ -1627,6 +1805,22 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ),
       ],
     );
+  }
+
+  /// Helper method to extract recommended action from various data formats
+  String? _extractRecommendedAction(dynamic recommendedAction) {
+    if (recommendedAction == null) return null;
+
+    // If it's already a string, return it
+    if (recommendedAction is String) return recommendedAction;
+
+    // If it's a Map, try to extract the 'action' field
+    if (recommendedAction is Map) {
+      return recommendedAction['action']?.toString();
+    }
+
+    // Fallback: convert to string
+    return recommendedAction.toString();
   }
 
   Widget _buildInfoRow(String label, String value) {

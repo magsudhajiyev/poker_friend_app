@@ -1822,9 +1822,22 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
     double maxProfit = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
 
     // Add padding to min/max
-    final range = maxProfit - minProfit;
-    minProfit = minProfit - (range * 0.1);
-    maxProfit = maxProfit + (range * 0.1);
+    double range = maxProfit - minProfit;
+
+    // Ensure minimum range to avoid zero interval error
+    if (range < 0.01) {
+      // If all values are the same, create a range around that value
+      final centerValue = minProfit;
+      final minRange = 100.0; // Minimum range of $100
+      minProfit = centerValue - (minRange / 2);
+      maxProfit = centerValue + (minRange / 2);
+      range = minRange;
+    } else {
+      // Add 10% padding to min/max
+      minProfit = minProfit - (range * 0.1);
+      maxProfit = maxProfit + (range * 0.1);
+      range = maxProfit - minProfit;
+    }
 
     return Container(
       padding: EdgeInsets.all(24),
@@ -1884,7 +1897,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: (maxProfit - minProfit) / 4,
+                  horizontalInterval: range / 4,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: Color(0xFF9A9A9A).withOpacity(0.1),
@@ -1926,7 +1939,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: (maxProfit - minProfit) / 4,
+                      interval: range / 4,
                       reservedSize: 42,
                       getTitlesWidget: (value, meta) {
                         return Text(

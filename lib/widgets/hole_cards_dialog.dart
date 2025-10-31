@@ -4,11 +4,13 @@ import '../models/hand_state_machine.dart';
 class HoleCardsDialog extends StatefulWidget {
   final HoleCards? existingCards;
   final Set<String> usedCards; // Board cards to exclude from selection
+  final String title; // Dialog title
 
   const HoleCardsDialog({
     Key? key,
     this.existingCards,
     this.usedCards = const {},
+    this.title = 'Your Hole Cards',
   }) : super(key: key);
 
   @override
@@ -41,7 +43,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Color(0xFF1F1F23),
-      title: Text('Your Hole Cards', style: TextStyle(color: Colors.white)),
+      title: Text(widget.title, style: TextStyle(color: Colors.white)),
       content: Container(
         width: double.maxFinite,
         child: Column(
