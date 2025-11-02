@@ -4260,7 +4260,22 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       return; // No opponents to show cards for
     }
 
-    await LoggerService.info('✅ Showing opponent cards dialog for ${opponents.length} opponent(s): $opponents');
+    // Reorder opponents: winners first, then others
+    // This ensures winner's cards are collected first (they must show)
+    List<int> reorderedOpponents = [];
+    List<int> nonWinners = [];
+
+    for (int opponentId in opponents) {
+      if (winners.contains(opponentId)) {
+        reorderedOpponents.add(opponentId);
+      } else {
+        nonWinners.add(opponentId);
+      }
+    }
+    reorderedOpponents.addAll(nonWinners);
+
+    await LoggerService.info('✅ Showing opponent cards dialog for ${reorderedOpponents.length} opponent(s)');
+    await LoggerService.debug('  Reordered (winners first): $reorderedOpponents');
 
     // Collect used cards (board + hero cards)
     Set<String> usedCards = {};
@@ -4292,23 +4307,26 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Loop through each opponent and show HoleCardsDialog
     Map<int, HoleCards> opponentCards = {};
 
-    for (int opponentId in opponents) {
+    for (int opponentId in reorderedOpponents) {
       final opponentName = sessionManager.getPlayerNameWithPosition(opponentId);
+      final isWinner = winners.contains(opponentId);
+      final titleSuffix = isWinner ? ' (Winner)' : '';
 
       // Show dialog for this opponent
       final cards = await showDialog<HoleCards>(
         context: context,
         barrierDismissible: true,
         builder: (context) => HoleCardsDialog(
-          title: '$opponentName Hole Cards',
+          title: '$opponentName Hole Cards$titleSuffix',
           usedCards: usedCards,
           existingCards: existingCards?[opponentId],
         ),
       );
 
-      // If user cancelled/skipped, stop collecting cards
+      // If user cancelled/skipped, continue to next opponent (don't break entire loop)
       if (cards == null) {
-        break;
+        await LoggerService.debug('  Skipped opponent $opponentId ($opponentName) - continuing to next opponent');
+        continue;
       }
 
       // If cards were selected, add them to the collection and update usedCards
@@ -4316,6 +4334,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         opponentCards[opponentId] = cards;
         usedCards.add(cards.card1!);
         usedCards.add(cards.card2!);
+        await LoggerService.debug('  Collected cards for opponent $opponentId: ${cards.card1} ${cards.card2}');
       }
     }
 

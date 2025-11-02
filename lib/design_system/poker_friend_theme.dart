@@ -18,10 +18,12 @@ class PokerFriendColors {
 
   // Dark Scale
   static const Color dark1 = Color(0xFF161618);
+  static const Color dark2 = Color(0xFF1C1C1F);
   static const Color dark3 = Color(0xFF232326);
   static const Color dark4 = Color(0xFF28282C);
   static const Color dark5 = Color(0xFF2E2E32);
   static const Color dark6 = Color(0xFF34343A);
+  static const Color dark7 = Color(0xFF464652);
   static const Color dark8 = Color(0xFF5842C3);
   static const Color dark9 = Color(0xFF706F78);
   static const Color dark10 = Color(0xFF7E7D86);

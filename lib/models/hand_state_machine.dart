@@ -736,8 +736,8 @@ class PokerSessionManager {
       turnPot: hand.turnPot,
       riverPot: hand.riverPot,
       winnerId: hand.winnerId,
-      heroPositionName: hand.heroPositionName,
-      heroSeatNumber: hand.heroSeatNumber,
+      // heroPositionName: hand.heroPositionName,  // TODO: Add to local_storage_service.dart
+      // heroSeatNumber: hand.heroSeatNumber,  // TODO: Add to local_storage_service.dart
       playerNames: playerNames,
       smallBlind: smallBlind,
       bigBlind: bigBlind,
