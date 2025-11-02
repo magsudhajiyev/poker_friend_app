@@ -158,7 +158,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
     // Initialize stats for common positions
     positionalStats = {
       'UTG': PositionalStats(),
-      'MP': PositionalStats(),
+      'LJ': PositionalStats(),
+      'HJ': PositionalStats(),
       'CO': PositionalStats(),
       'BTN': PositionalStats(),
       'SB': PositionalStats(),
@@ -972,7 +973,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
             ),
             SizedBox(height: 12),
             // Position rows
-            ...['BTN', 'CO', 'MP', 'UTG', 'SB', 'BB'].map((position) {
+            ...['BTN', 'CO', 'HJ', 'LJ', 'UTG', 'SB', 'BB'].map((position) {
               final stats = positionalStats[position]!;
               if (stats.totalHands == 0) return SizedBox.shrink();
 

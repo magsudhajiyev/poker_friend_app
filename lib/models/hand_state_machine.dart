@@ -6,6 +6,7 @@ import '../services/local_storage_service.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
 import '../services/user_stats_service.dart';
+import '../services/logger_service.dart';
 import '../utils/poker_positions.dart';
 
 enum HandState {
@@ -184,9 +185,10 @@ class HandRecord {
   double flopPot = 0;
   double turnPot = 0;
   double riverPot = 0;
-  
+
   int? winnerId;
-  int? heroPosition;
+  String? heroPositionName; // Position name (UTG, BTN, etc.) calculated once at hand start
+  int? heroSeatNumber; // Hero's seat number for player comparison
 
   // Chopped pot fields
   bool isChoppedPot = false;
@@ -212,7 +214,8 @@ class HandRecord {
     this.turnPot = 0,
     this.riverPot = 0,
     this.winnerId,
-    this.heroPosition,
+    this.heroPositionName,
+    this.heroSeatNumber,
   }) : actions = actions ?? [];
 
   void addAction(ActionRecord action) {
@@ -243,6 +246,10 @@ class HandRecord {
 
   void setBoardCards(BoardCards cards) {
     boardCards = cards;
+    print('🎴 Board cards SET on hand #$handNumber:');
+    print('   Flop: ${cards.flop}');
+    print('   Turn: ${cards.turn}');
+    print('   River: ${cards.river}');
   }
 
   Map<String, dynamic> toMap() {
@@ -264,7 +271,8 @@ class HandRecord {
       'turnPot': turnPot,
       'riverPot': riverPot,
       'winnerId': winnerId,
-      'heroPosition': heroPosition,
+      'heroPositionName': heroPositionName,
+      'heroSeatNumber': heroSeatNumber,
       'isChoppedPot': isChoppedPot,
       'choppedWinners': choppedWinners,
       'individualShares': individualShares?.map((key, value) => MapEntry(key.toString(), value)),
@@ -291,7 +299,8 @@ class HandRecord {
       turnPot: (map['turnPot'] ?? 0).toDouble(),
       riverPot: (map['riverPot'] ?? 0).toDouble(),
       winnerId: map['winnerId'],
-      heroPosition: map['heroPosition'],
+      heroPositionName: map['heroPositionName'] as String?,
+      heroSeatNumber: map['heroSeatNumber'] as int?,
     );
 
     // Set chopped pot fields
@@ -477,7 +486,37 @@ class PokerSessionManager {
       startTime: DateTime.now(),
     );
     currentHand!.state = HandState.inProgress;
-    
+
+    // CRITICAL: Explicitly ensure board cards are null for new hand
+    currentHand!.boardCards = null;
+    currentHand!.ourHoleCards = null;
+
+    LoggerService.info('Hand #$handNumber started - board cards and hole cards cleared');
+
+    // CRITICAL: Calculate and store hero position ONCE at hand start
+    if (ourSeatNumber != null) {
+      final heroPos = PokerPositions.getPositionNameForActivePlayers(
+        ourSeatNumber!,
+        buttonPosition,
+        activeSeats.toList(),
+      );
+      currentHand!.heroPositionName = heroPos;
+      currentHand!.heroSeatNumber = ourSeatNumber;
+
+      // Log position calculation for debugging
+      LoggerService.logPositionCalculation({
+        'handNumber': handNumber,
+        'heroSeat': ourSeatNumber,
+        'buttonPosition': buttonPosition,
+        'activeSeats': activeSeats.toList().toString(),
+        'playerCount': playerCount,
+        'calculatedPosition': heroPos,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+    } else {
+      LoggerService.warning('Hand #$handNumber started but ourSeatNumber is null - cannot calculate position');
+    }
+
   }
 
   // Record an action
@@ -583,8 +622,7 @@ class PokerSessionManager {
       currentHand!.winnerId = winnerId;
     }
 
-    // Set hero position
-    currentHand!.heroPosition = ourSeatNumber;
+    // Note: heroPositionName is already set at hand start, don't overwrite it
 
     // Track stack history if current stack is provided
     if (currentStack != null) {
@@ -640,8 +678,7 @@ class PokerSessionManager {
     currentHand!.individualShares = individualShares;
     currentHand!.sharePerWinner = sharePerWinner;
 
-    // Set hero position
-    currentHand!.heroPosition = ourSeatNumber;
+    // Note: heroPositionName is already set at hand start, don't overwrite it
 
     // Track stack history if current stack is provided
     if (currentStack != null) {
@@ -695,7 +732,8 @@ class PokerSessionManager {
       turnPot: hand.turnPot,
       riverPot: hand.riverPot,
       winnerId: hand.winnerId,
-      heroPosition: hand.heroPosition,
+      heroPositionName: hand.heroPositionName,
+      heroSeatNumber: hand.heroSeatNumber,
       playerNames: playerNames,
       smallBlind: smallBlind,
       bigBlind: bigBlind,
@@ -726,7 +764,8 @@ class PokerSessionManager {
         turnPot: hand.turnPot,
         riverPot: hand.riverPot,
         winnerId: hand.winnerId,
-        heroPosition: hand.heroPosition,
+        heroPositionName: hand.heroPositionName,
+        heroSeatNumber: ourSeatNumber,
         playerNames: playerNames,
         smallBlind: smallBlind,
         bigBlind: bigBlind,
@@ -877,7 +916,7 @@ class PokerSessionManager {
               totalHandsDelta: 1, // Always count total hands dealt
               vpipDelta: vpipDelta,
               pfrDelta: pfrDelta,
-              wonHandsDelta: (hand.winnerId != null && hand.winnerId == hand.heroPosition) ? 1 : 0,
+              wonHandsDelta: (hand.winnerId != null && hand.winnerId == ourSeatNumber) ? 1 : 0, // Compare with seat number, not position name
             );
           }
         }

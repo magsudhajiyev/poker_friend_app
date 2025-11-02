@@ -270,7 +270,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Your Position: ${PokerPositions.getPositionName(hand['heroPosition'] ?? 1, hand['buttonPosition'], hand['playerCount'])}',
+                      'Your Position: ${hand['heroPositionName'] ?? PokerPositions.getPositionName(hand['heroPosition'] ?? 1, hand['buttonPosition'], hand['playerCount'])}',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -318,23 +318,20 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 Expanded(
                   child: _buildHandStat('Actions', '${actions.length}'),
                 ),
-                Container(
-                  width: 1,
-                  height: 30,
-                  color: Color(0xFF2A2A2E),
-                ),
-                Expanded(
-                  child: _buildHandStat('Duration', '${actions.isNotEmpty ? actions.length * 5 : 0}s'),
-                ),
+                // Show hero cards if available
+                if (_hasHeroCards(hand)) ...[
+                  Container(
+                    width: 1,
+                    height: 30,
+                    color: Color(0xFF2A2A2E),
+                  ),
+                  Expanded(
+                    child: _buildHeroCardsColumn(hand),
+                  ),
+                ],
               ],
             ),
           ),
-          
-          // Hole Cards if available
-          if (hand['holeCard1'] != null || hand['holeCard2'] != null) ...[
-            SizedBox(height: 16),
-            _buildHoleCardsSection(hand),
-          ],
         ],
         ),
       ),
@@ -361,6 +358,80 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  bool _hasHeroCards(Map<String, dynamic> hand) {
+    final ourHoleCards = hand['ourHoleCards'] as Map<String, dynamic>?;
+    if (ourHoleCards == null) return false;
+    return ourHoleCards['card1'] != null || ourHoleCards['card2'] != null;
+  }
+
+  Widget _buildHeroCardsColumn(Map<String, dynamic> hand) {
+    final ourHoleCards = hand['ourHoleCards'] as Map<String, dynamic>?;
+    final card1 = ourHoleCards?['card1'] as String?;
+    final card2 = ourHoleCards?['card2'] as String?;
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (card1 != null) _buildMiniCard(card1),
+            if (card1 != null && card2 != null) SizedBox(width: 4),
+            if (card2 != null) _buildMiniCard(card2),
+          ],
+        ),
+        SizedBox(height: 4),
+        Text(
+          'Hero Cards',
+          style: TextStyle(
+            color: Color(0xFF9A9A9A),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniCard(String? card) {
+    if (card == null || card.isEmpty) return SizedBox.shrink();
+
+    final suit = card.length > 1 ? card.substring(1) : '';
+    final rank = card.isNotEmpty ? card[0] : '';
+
+    // Determine if suit is red (hearts, diamonds) or black (spades, clubs)
+    final isRedSuit = suit == '♥' || suit == '♦';
+    final cardColor = isRedSuit ? Colors.red : Colors.black;
+
+    return Container(
+      width: 24,
+      height: 32,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Color(0xFF2A2A2E), width: 0.5),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            rank,
+            style: TextStyle(
+              color: cardColor,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            suit,
+            style: TextStyle(
+              color: cardColor,
+              fontSize: 8,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

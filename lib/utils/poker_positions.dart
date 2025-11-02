@@ -25,8 +25,6 @@ class PokerPositions {
         return _get8HandedPosition(position);
       case 9: // 9-handed
         return _get9HandedPosition(position);
-      case 10: // 10-handed (full ring)
-        return _get10HandedPosition(position);
       default:
         // For unusual player counts, use generic position names
         return _getGenericPosition(position, playerCount);
@@ -89,8 +87,6 @@ class PokerPositions {
         return _get8HandedPosition(relativePosition);
       case 9: // 9-handed
         return _get9HandedPosition(relativePosition);
-      case 10: // 10-handed (full ring)
-        return _get10HandedPosition(relativePosition);
       default:
         return _getGenericPosition(relativePosition, activePlayerCount);
     }
@@ -181,25 +177,9 @@ class PokerPositions {
       case 3: return 'UTG';
       case 4: return 'UTG+1';
       case 5: return 'UTG+2';
-      case 6: return 'MP';
+      case 6: return 'LJ';
       case 7: return 'HJ';
       case 8: return 'CO';
-      default: return 'P$position';
-    }
-  }
-
-  static String _get10HandedPosition(int position) {
-    switch (position) {
-      case 0: return 'BTN';
-      case 1: return 'SB';
-      case 2: return 'BB';
-      case 3: return 'UTG';
-      case 4: return 'UTG+1';
-      case 5: return 'UTG+2';
-      case 6: return 'MP1';
-      case 7: return 'MP2';
-      case 8: return 'HJ';
-      case 9: return 'CO';
       default: return 'P$position';
     }
   }
@@ -231,11 +211,8 @@ class PokerPositions {
         return 'Under The Gun +1 - Second to act pre-flop';
       case 'UTG+2':
         return 'Under The Gun +2 - Third to act pre-flop';
-      case 'MP':
-      case 'MP1':
-        return 'Middle Position - Moderate position strength';
-      case 'MP2':
-        return 'Middle Position 2 - Late middle position';
+      case 'LJ':
+        return 'LoJack - Three seats right of button';
       case 'HJ':
         return 'Hijack - Two seats right of button';
       case 'CO':
@@ -280,8 +257,8 @@ class PokerPositions {
   /// Check if a name is a standard position name
   static bool isPositionName(String name) {
     final standardPositions = [
-      'BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 
-      'MP', 'MP1', 'MP2', 'HJ', 'CO', 'BTN/SB'
+      'BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2',
+      'LJ', 'HJ', 'CO', 'BTN/SB'
     ];
     
     // Also check for generic position patterns like P1, P2, etc.

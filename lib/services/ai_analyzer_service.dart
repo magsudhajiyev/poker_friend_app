@@ -2,12 +2,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth_service.dart';
+import 'logger_service.dart';
 
 class AIAnalyzerService {
   static const String baseUrl = 'http://localhost:8080/api/v1';
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Analyze a poker hand using the backend AI service
+  /// IMPORTANT: Only sends PREFLOP data for GTO analysis
   static Future<Map<String, dynamic>> analyzeHand({
     required String handId,
     required Map<String, dynamic> handData,
@@ -19,11 +21,20 @@ class AIAnalyzerService {
       };
 
       // DEBUG: Log the request body being sent to poker engine
-      print('🎲 ===== AI ANALYZER REQUEST =====');
-      print('🎲 Endpoint: $baseUrl/analyze-hand');
-      print('🎲 Request Body:');
-      print(jsonEncode(requestBody));
-      print('🎲 ================================');
+      await LoggerService.info('🎲 ===== AI ANALYZER REQUEST (PREFLOP ONLY) =====');
+      await LoggerService.info('🎲 Endpoint: $baseUrl/analyze-hand');
+      await LoggerService.info('🎲 Request Body:');
+
+      // Pretty-print JSON for readability
+      const encoder = JsonEncoder.withIndent('  ');
+      final prettyJson = encoder.convert(requestBody);
+
+      // Split into lines and log each one (to avoid truncation)
+      for (final line in prettyJson.split('\n')) {
+        await LoggerService.debug('  $line');
+      }
+
+      await LoggerService.info('🎲 ================================');
 
       final response = await http.post(
         Uri.parse('$baseUrl/analyze-hand'),
@@ -32,20 +43,31 @@ class AIAnalyzerService {
       ).timeout(Duration(seconds: 30));
 
       // DEBUG: Log the response
-      print('🎲 ===== AI ANALYZER RESPONSE =====');
-      print('🎲 Status Code: ${response.statusCode}');
+      await LoggerService.info('🎲 ===== AI ANALYZER RESPONSE =====');
+      await LoggerService.info('🎲 Status Code: ${response.statusCode}');
+
       if (response.statusCode == 200) {
-        print('🎲 Response Body:');
-        print(response.body);
-        print('🎲 ==================================');
-        final analysis = jsonDecode(response.body) as Map<String, dynamic>;
-        return analysis;
+        await LoggerService.info('🎲 Response Body:');
+
+        // Pretty-print response JSON
+        const encoder = JsonEncoder.withIndent('  ');
+        final responseJson = jsonDecode(response.body);
+        final prettyResponse = encoder.convert(responseJson);
+
+        // Split into lines and log each one
+        for (final line in prettyResponse.split('\n')) {
+          await LoggerService.debug('  $line');
+        }
+
+        await LoggerService.info('🎲 ==================================');
+        return responseJson as Map<String, dynamic>;
       } else {
-        print('🎲 Error Response: ${response.body}');
-        print('🎲 ==================================');
+        await LoggerService.error('🎲 Error Response: ${response.body}');
+        await LoggerService.info('🎲 ==================================');
         throw Exception('Failed to analyze hand: ${response.statusCode}');
       }
     } catch (e) {
+      await LoggerService.error('🎲 AI Analyzer Exception: $e');
       throw Exception('Failed to analyze hand: $e');
     }
   }
@@ -108,7 +130,29 @@ class AIAnalyzerService {
     }
   }
 
-  /// Convert hand data to the format expected by the backend
+  /// Convert hand data to the PREFLOP-ONLY format expected by the backend
+  ///
+  /// New Request Structure:
+  /// {
+  ///   "handId": "hand_123",
+  ///   "gameType": "tournament",  // or "cash"
+  ///   "hero": {
+  ///     "seat": 7,
+  ///     "position": "BB",
+  ///     "cards": ["Kc", "4s"],
+  ///     "stackBB": 248.75
+  ///   },
+  ///   "activePlayers": [
+  ///     {"seat": 8, "position": "UTG", "stackBB": 247.6},
+  ///     {"seat": 9, "position": "CO", "stackBB": 248.5},
+  ///     ...
+  ///   ],
+  ///   "preflopActions": [
+  ///     {"seat": 8, "position": "UTG", "action": "fold"},
+  ///     {"seat": 9, "position": "CO", "action": "fold"},
+  ///     ...
+  ///   ]
+  /// }
   static Map<String, dynamic> prepareHandDataForAnalysis(
     Map<String, dynamic> hand,
   ) {
@@ -122,57 +166,39 @@ class AIAnalyzerService {
       if (card2 != null) heroCards.add(_convertCardFormat(card2));
     }
 
-    // Determine the street (get the latest street from actions)
-    String street = 'preflop';
-    final actions = hand['actions'] as List<dynamic>? ?? [];
-    if (actions.isNotEmpty) {
-      final lastAction = actions.last as Map<String, dynamic>;
-      street = lastAction['street'] as String? ?? 'preflop';
-    }
+    // Get blinds
+    final smallBlind = (hand['smallBlind'] ?? 1) as int;
+    final bigBlind = (hand['bigBlind'] ?? 2) as int;
 
-    // Build actions list
-    List<Map<String, dynamic>> formattedActions = [];
-    for (final action in actions) {
-      final actionMap = action as Map<String, dynamic>;
-      formattedActions.add({
-        'seat': actionMap['player'] ?? actionMap['playerSeat'],
-        'action': _convertActionFormat(actionMap['action'] as String? ?? ''),
-        if (actionMap['amount'] != null) 'amount': actionMap['amount'],
-        if (actionMap['playerPosition'] != null) 'position': actionMap['playerPosition'],  // Include pre-calculated position
-      });
-    }
+    // Get hero seat number and position
+    final heroSeatNumber = hand['heroSeatNumber'] as int?;
+    final heroPosition = hand['heroPositionName'] as String? ?? 'UNK';
 
-    // Build opponents list
-    List<Map<String, dynamic>> opponents = [];
-    final playerNames = hand['playerNames'] as Map<String, dynamic>? ?? {};
+    // Get button position and player count for position calculation
+    final buttonPosition = hand['buttonPosition'] ?? 1;
     final playerCount = hand['playerCount'] as int? ?? 6;
-    final heroPosition = hand['heroPosition'] as int? ?? 1;
 
-    // CRITICAL: Always get stack from the START OF THE HAND (preflop), not current street
-    // The AI analyzer needs to know the initial stack to properly analyze the hand
+    // Get all actions
+    final actions = hand['actions'] as List<dynamic>? ?? [];
+
+    // CRITICAL: Get initial stacks (at start of hand, preflop)
     Map<int, double> playerStacks = {};
-    Map<int, bool> stackFound = {}; // Track if we've found the initial stack for each player
-
-    // First, try to use initialStacks if available (most reliable)
     final initialStacks = hand['initialStacks'] as Map<String, dynamic>?;
     if (initialStacks != null) {
       initialStacks.forEach((key, value) {
         final seat = int.tryParse(key);
         if (seat != null && value != null) {
           playerStacks[seat] = (value as num).toDouble();
-          stackFound[seat] = true;
         }
       });
-    }
-
-    // If initialStacks not available, get stacks from the FIRST action of each player (preflop)
-    if (playerStacks.isEmpty) {
+    } else {
+      // Fallback: get stacks from first action of each player
+      Map<int, bool> stackFound = {};
       for (final action in actions) {
         final actionMap = action as Map<String, dynamic>;
         final seat = actionMap['player'] ?? actionMap['playerSeat'];
         final stack = actionMap['playerStack'] ?? actionMap['stack'];
 
-        // Only get the first occurrence of each player's stack (initial stack)
         if (seat != null && stack != null && !(stackFound[seat as int] ?? false)) {
           playerStacks[seat] = (stack as num).toDouble();
           stackFound[seat] = true;
@@ -180,95 +206,165 @@ class AIAnalyzerService {
       }
     }
 
-    // For each seat except hero
-    for (int seat = 1; seat <= playerCount; seat++) {
-      if (seat == heroPosition) continue;
+    // Get hero stack
+    final heroStack = heroSeatNumber != null
+        ? playerStacks[heroSeatNumber] ?? 200.0
+        : 200.0;
 
-      final playerName = playerNames[seat.toString()] ?? 'Player $seat';
-      final stackSize = playerStacks[seat] ?? 200.0; // Default to 200 if not found
+    // Calculate hero stack in BB
+    final heroStackBB = heroStack / bigBlind;
 
-      opponents.add({
-        'seat': seat,
-        'name': playerName,
-        'stack': stackSize,
-        'stats': {
-          'vpip': 25.0, // Default stats
-          'pfr': 18.0,
-          'three_bet': 7.0,
-          'aggression': 1.5,
-          'playing_style': 'TAG',
-        },
-      });
-    }
+    // Get active player names and positions
+    final playerNames = hand['playerNames'] as Map<String, dynamic>? ?? {};
 
-    // Get hero stack (initial stack at start of hand)
-    final heroStack = playerStacks[heroPosition] ?? 200.0;
+    // Build activePlayers list with positions and stacks in BB
+    List<Map<String, dynamic>> activePlayers = [];
 
-    // DEBUG: Log hero stack calculation
-    print('🎲 DEBUG: Initial Stack Calculation (Start of Hand)');
-    print('🎲   Current Street Being Analyzed: $street');
-    print('🎲   Hero Position: $heroPosition');
-    print('🎲   Hero INITIAL Stack: $heroStack');
-    print('🎲   All Player INITIAL Stacks: $playerStacks');
-
-    // Get hero's position name from the first action of hero (most reliable)
-    String? heroPositionName;
+    // Get list of active seats from actions or playerNames
+    Set<int> activeSeats = {};
     for (final action in actions) {
       final actionMap = action as Map<String, dynamic>;
       final seat = actionMap['player'] ?? actionMap['playerSeat'];
-      if (seat == heroPosition) {
-        heroPositionName = actionMap['playerPosition'] as String?;
-        if (heroPositionName != null) break;
+      if (seat != null) {
+        activeSeats.add(seat as int);
       }
     }
 
-    // Extract and convert board cards
-    List<String> boardCards = [];
-    final boardCardsData = hand['boardCards'] as Map<String, dynamic>?;
-    if (boardCardsData != null) {
-      // Add flop cards
-      final flop = boardCardsData['flop'] as List<dynamic>?;
-      if (flop != null) {
-        for (final card in flop) {
-          if (card != null && card is String) {
-            boardCards.add(_convertCardFormat(card));
-          }
+    // If no actions yet, use playerNames
+    if (activeSeats.isEmpty) {
+      playerNames.forEach((key, value) {
+        final seat = int.tryParse(key);
+        if (seat != null && value != null && value.toString().isNotEmpty) {
+          activeSeats.add(seat);
+        }
+      });
+    }
+
+    // Build active players list with positions
+    for (final seat in activeSeats) {
+      // Get position for this seat - use stored position from action if available
+      String? position;
+      for (final action in actions) {
+        final actionMap = action as Map<String, dynamic>;
+        final actionSeat = actionMap['player'] ?? actionMap['playerSeat'];
+        if (actionSeat == seat) {
+          position = actionMap['playerPosition'] as String?;
+          if (position != null) break;
         }
       }
 
-      // Add turn card
-      final turn = boardCardsData['turn'] as String?;
-      if (turn != null && turn.isNotEmpty) {
-        boardCards.add(_convertCardFormat(turn));
+      // If position not found in actions, calculate it
+      if (position == null) {
+        position = _calculatePosition(seat, buttonPosition, activeSeats.toList());
       }
 
-      // Add river card
-      final river = boardCardsData['river'] as String?;
-      if (river != null && river.isNotEmpty) {
-        boardCards.add(_convertCardFormat(river));
-      }
+      final stackSize = playerStacks[seat] ?? 200.0;
+      final stackBB = stackSize / bigBlind;
+
+      activePlayers.add({
+        'seat': seat,
+        'position': position,
+        'stackBB': double.parse(stackBB.toStringAsFixed(2)),
+      });
     }
 
+    // Sort active players by seat number for consistency
+    activePlayers.sort((a, b) => (a['seat'] as int).compareTo(b['seat'] as int));
+
+    // Build PREFLOP actions only
+    List<Map<String, dynamic>> preflopActions = [];
+    for (final action in actions) {
+      final actionMap = action as Map<String, dynamic>;
+      final street = actionMap['street'] as String? ?? 'preflop';
+
+      // ONLY include preflop actions
+      if (street != 'preflop') continue;
+
+      final seat = actionMap['player'] ?? actionMap['playerSeat'];
+      final position = actionMap['playerPosition'];
+      final actionType = _convertActionFormat(actionMap['action'] as String? ?? '');
+
+      // Skip post_sb and post_bb actions (they're automatic)
+      if (actionType == 'post_sb' || actionType == 'post_bb') continue;
+
+      final actionData = {
+        'seat': seat,
+        'position': position,
+        'action': actionType,
+      };
+
+      // Add amount for raises (in BB)
+      if (actionType == 'raise' && actionMap['amount'] != null) {
+        final amountChips = (actionMap['amount'] as num).toDouble();
+        final amountBB = amountChips / bigBlind;
+        actionData['sizeBB'] = double.parse(amountBB.toStringAsFixed(2));
+      }
+
+      preflopActions.add(actionData);
+    }
+
+    // Determine game type
+    final isCashGame = hand['isCashGame'] as bool? ?? true;
+    final gameType = isCashGame ? 'cash' : 'tournament';
+
+    // Build the simplified request body
     final result = {
       'handId': hand['id'] ?? hand['handNumber']?.toString() ?? 'unknown',
-      'street': street,
-      'heroSeat': heroPosition,
-      'heroPosition': heroPositionName,  // Send hero's position name directly
-      'heroCards': heroCards,
-      'heroStack': heroStack,
-      'buttonPosition': hand['buttonPosition'] ?? 1,
-      'playerCount': playerCount,  // CRITICAL: Backend needs this to calculate position correctly
-      'blinds': {
-        'sb': hand['smallBlind'] ?? 1,
-        'bb': hand['bigBlind'] ?? 2,
+      'gameType': gameType,
+      'hero': {
+        'seat': heroSeatNumber,
+        'position': heroPosition,
+        'cards': heroCards,
+        'stackBB': double.parse(heroStackBB.toStringAsFixed(2)),
       },
-      'pot': (hand['potAmount'] ?? hand['pot'] ?? 0).toDouble(),
-      if (boardCards.isNotEmpty) 'board': boardCards,  // Only include if there are board cards
-      'actions': formattedActions,
-      'opponents': opponents,
+      'activePlayers': activePlayers,
+      'preflopActions': preflopActions,
     };
 
     return result;
+  }
+
+  /// Calculate position for a seat based on button and active seats
+  static String _calculatePosition(int seat, int buttonPosition, List<int> activeSeats) {
+    final sortedSeats = List<int>.from(activeSeats)..sort();
+    final playerCount = sortedSeats.length;
+
+    // Find button index in sorted seats
+    int buttonIndex = sortedSeats.indexOf(buttonPosition);
+    if (buttonIndex == -1) {
+      buttonIndex = 0;
+    }
+
+    // Find seat index
+    int seatIndex = sortedSeats.indexOf(seat);
+    if (seatIndex == -1) {
+      return 'UNK';
+    }
+
+    // Calculate relative position
+    int relativePosition = (seatIndex - buttonIndex + playerCount) % playerCount;
+
+    // Map to position names based on player count
+    switch (playerCount) {
+      case 2:
+        return relativePosition == 0 ? 'BTN' : 'BB';
+      case 3:
+        return ['BTN', 'SB', 'BB'][relativePosition];
+      case 4:
+        return ['BTN', 'SB', 'BB', 'UTG'][relativePosition];
+      case 5:
+        return ['BTN', 'SB', 'BB', 'UTG', 'CO'][relativePosition];
+      case 6:
+        return ['BTN', 'SB', 'BB', 'UTG', 'HJ', 'CO'][relativePosition];
+      case 7:
+        return ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'HJ', 'CO'][relativePosition];
+      case 8:
+        return ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'HJ', 'CO'][relativePosition];
+      case 9:
+        return ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'LJ', 'HJ', 'CO'][relativePosition];
+      default:
+        return 'P${relativePosition + 1}';
+    }
   }
 
   /// Convert card format from UI format (e.g., "A♥") to backend format (e.g., "Ah")

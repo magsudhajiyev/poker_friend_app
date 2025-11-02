@@ -170,7 +170,11 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final startTime = DateTime.parse(widget.hand['startTime']);
     final buttonPosition = widget.hand['buttonPosition'] ?? 1;
     final playerCount = widget.hand['playerCount'] ?? 6;
-    final heroPosition = widget.hand['heroPosition'] ?? 1;
+    // New fields for position tracking
+    final heroPositionName = widget.hand['heroPositionName'] as String?;
+    final heroSeatNumber = widget.hand['heroSeatNumber'] as int?;
+    // Old field for backward compatibility
+    final heroPosition = heroSeatNumber ?? widget.hand['heroPosition'] ?? 1;
     
     return Scaffold(
       backgroundColor: Color(0xFF161618),
@@ -218,7 +222,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'Your Position: ${PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)}',
+                          'Your Position: ${heroPositionName ?? PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Color(0xFF9A9A9A),
@@ -1531,6 +1535,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
     final correct = _aiAnalysis!['correct'] as bool? ?? false;
     final severity = _aiAnalysis!['severity'] as String? ?? 'unknown';
+    final scenarioCovered = _aiAnalysis!['scenarioCovered'] as bool? ?? true;
     final gtoAnalysis = _aiAnalysis!['gtoAnalysis'] as Map<String, dynamic>?;
     final aiAnalysis = _aiAnalysis!['aiAnalysis'] as Map<String, dynamic>?;
     final processingTime = _aiAnalysis!['processingTimeMs'] as int? ?? 0;
@@ -1631,85 +1636,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           ),
         ),
 
-        // GTO Analysis
-        if (gtoAnalysis != null) ...[
-          SizedBox(height: 16),
-          Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Color(0xFF1F1F23),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: wentPostflop ? Color(0xFFFFD700) : Color(0xFF2A2A2E)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.bar_chart, color: Color(0xFF8B5CF6), size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      wentPostflop ? 'GTO Baseline (Preflop Only)' : 'GTO Baseline',
-                      style: TextStyle(
-                        color: Color(0xFF8B5CF6),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Postflop disclaimer
-                if (wentPostflop) ...[
-                  SizedBox(height: 12),
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFFFD700).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Color(0xFFFFD700).withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Color(0xFFFFD700), size: 16),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'GTO analysis is reliable for preflop decisions only. Postflop analysis is AI-generated commentary.',
-                            style: TextStyle(
-                              color: Color(0xFFFFD700),
-                              fontSize: 12,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                SizedBox(height: 12),
-                _buildInfoRow('Recommended', _extractRecommendedAction(gtoAnalysis['recommendedAction']) ?? 'N/A'),
-                SizedBox(height: 8),
-                _buildInfoRow('In Range', (gtoAnalysis['heroInRange'] ?? false) ? 'Yes' : 'No'),
-                if (gtoAnalysis['rangePercentile'] != null) ...[
-                  SizedBox(height: 8),
-                  _buildInfoRow('Range %', '${gtoAnalysis['rangePercentile']}%'),
-                ],
-                SizedBox(height: 12),
-                Text(
-                  gtoAnalysis['reasoning'] ?? '',
-                  style: TextStyle(
-                    color: Color(0xFF9A9A9A),
-                    fontSize: 13,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-
         // AI Analysis
         if (aiAnalysis != null) ...[
           SizedBox(height: 16),
@@ -1729,7 +1655,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        wentPostflop ? 'AI Insights (Postflop Commentary)' : 'AI Insights',
+                        'AI Insights (Preflop Only)',
                         style: TextStyle(
                           color: Color(0xFF5AC95A),
                           fontSize: 16,
@@ -1737,6 +1663,25 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                         ),
                       ),
                     ),
+                    // Show range % when available
+                    if (scenarioCovered && gtoAnalysis != null && gtoAnalysis['rangePercentile'] != null) ...[
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF8B5CF6).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Color(0xFF8B5CF6).withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          'Range: ${gtoAnalysis['rangePercentile']}%',
+                          style: TextStyle(
+                            color: Color(0xFF8B5CF6),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 SizedBox(height: 12),

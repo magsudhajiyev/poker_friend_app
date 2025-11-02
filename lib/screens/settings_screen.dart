@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
 import '../design_system/poker_friend_theme.dart';
+import '../services/logger_service.dart';
+import 'debug_hand_viewer.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -292,6 +296,96 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
 
+                SizedBox(height: 24),
+
+                // Debug Logs Card
+                Container(
+                  padding: EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: PokerFriendColors.dark3,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: PokerFriendColors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.bug_report,
+                              color: PokerFriendColors.red,
+                              size: 20,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Debug Logs',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'View session logs for debugging',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: PokerFriendColors.dark9,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+
+                      // View Logs Button
+                      _buildLogButton(
+                        icon: Icons.text_snippet,
+                        label: 'View Logs',
+                        onPressed: _viewLogs,
+                      ),
+                      SizedBox(height: 12),
+
+                      // Share Logs Button
+                      _buildLogButton(
+                        icon: Icons.share,
+                        label: 'Share Logs',
+                        onPressed: _shareLogs,
+                      ),
+                      SizedBox(height: 12),
+
+                      // Clear Logs Button
+                      _buildLogButton(
+                        icon: Icons.delete_outline,
+                        label: 'Clear Logs',
+                        onPressed: _clearLogs,
+                        isDestructive: true,
+                      ),
+                      SizedBox(height: 12),
+
+                      // Debug Hand Viewer Button
+                      _buildLogButton(
+                        icon: Icons.search,
+                        label: 'Debug Hand Viewer',
+                        onPressed: _openDebugHandViewer,
+                      ),
+                    ],
+                  ),
+                ),
+
                 SizedBox(height: 100), // Space for bottom navigation
               ],
             ),
@@ -299,6 +393,267 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildLogButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    bool isDestructive = false,
+  }) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: PokerFriendColors.dark1,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDestructive
+                ? PokerFriendColors.red.withOpacity(0.3)
+                : PokerFriendColors.dark4,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isDestructive ? PokerFriendColors.red : Colors.white,
+              size: 20,
+            ),
+            SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                color: isDestructive ? PokerFriendColors.red : Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Spacer(),
+            Icon(
+              Icons.chevron_right,
+              color: PokerFriendColors.dark7,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _viewLogs() async {
+    try {
+      final logs = await LoggerService.exportLogs();
+      final logSize = await LoggerService.getLogFileSize();
+
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          backgroundColor: PokerFriendColors.dark2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            constraints: BoxConstraints(maxHeight: 600),
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.text_snippet,
+                      color: PokerFriendColors.red,
+                      size: 24,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Session Logs',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Size: ${logSize.toStringAsFixed(2)} MB',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: PokerFriendColors.dark9,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: PokerFriendColors.dark1,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        logs,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontFamily: 'monospace',
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await Clipboard.setData(ClipboardData(text: logs));
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Logs copied to clipboard'),
+                              backgroundColor: PokerFriendColors.dark3,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: PokerFriendColors.dark3,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text('Copy to Clipboard'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading logs: $e'),
+          backgroundColor: PokerFriendColors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _shareLogs() async {
+    try {
+      final logPath = await LoggerService.getLogFilePath();
+      if (logPath != null) {
+        await Share.shareXFiles(
+          [XFile(logPath)],
+          subject: 'Poker Logger Session Logs',
+          text: 'Session logs from Poker Logger app',
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No log file found'),
+            backgroundColor: PokerFriendColors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error sharing logs: $e'),
+          backgroundColor: PokerFriendColors.red,
+        ),
+      );
+    }
+  }
+
+  void _openDebugHandViewer() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DebugHandViewerScreen()),
+    );
+  }
+
+  Future<void> _clearLogs() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: PokerFriendColors.dark2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'Clear All Logs?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'This will permanently delete all session logs. This action cannot be undone.',
+          style: TextStyle(color: PokerFriendColors.dark9),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: PokerFriendColors.dark9),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: PokerFriendColors.red,
+            ),
+            child: Text('Clear Logs'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await LoggerService.clearLogs();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logs cleared successfully'),
+            backgroundColor: PokerFriendColors.dark3,
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error clearing logs: $e'),
+            backgroundColor: PokerFriendColors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildFeatureText(String text) {

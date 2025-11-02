@@ -100,7 +100,8 @@ class FirebaseService {
     double? turnPot,
     double? riverPot,
     int? winnerId,
-    int? heroPosition,
+    String? heroPositionName,
+    int? heroSeatNumber, // Seat number for stats comparison
     Map<int, String>? playerNames,
     int? smallBlind,
     int? bigBlind,
@@ -164,8 +165,12 @@ class FirebaseService {
         handData['winnerId'] = winnerId;
       }
       
-      if (heroPosition != null) {
-        handData['heroPosition'] = heroPosition;
+      if (heroPositionName != null) {
+        handData['heroPositionName'] = heroPositionName;
+      }
+
+      if (heroSeatNumber != null) {
+        handData['heroSeatNumber'] = heroSeatNumber;
       }
       
       if (playerNames != null) {
@@ -226,9 +231,8 @@ class FirebaseService {
       // Update user statistics incrementally (performance optimization)
       await _updateUserStatsFromHand(
         actions: actions,
-        heroPosition: heroPosition,
-        buttonPosition: buttonPosition,
-        playerCount: playerCount,
+        heroPositionName: heroPositionName,
+        heroSeatNumber: heroSeatNumber,
         winnerId: winnerId,
         playerNames: playerNames,
       );
@@ -913,14 +917,13 @@ class FirebaseService {
   /// Update user statistics from hand data incrementally
   static Future<void> _updateUserStatsFromHand({
     required List<Map<String, dynamic>> actions,
-    required int? heroPosition,
-    required int buttonPosition,
-    required int playerCount,
+    required String? heroPositionName,
+    required int? heroSeatNumber,
     required int? winnerId,
     required Map<int, String>? playerNames,
   }) async {
     final userId = AuthService.userId;
-    if (userId == null || heroPosition == null) return;
+    if (userId == null || heroPositionName == null || heroSeatNumber == null) return;
 
     try {
       // Initialize user stats if they don't exist
@@ -933,11 +936,11 @@ class FirebaseService {
       bool didThreeBet = false;
       bool didWin = false;
 
-      // Get position name for this hand
-      final positionName = _getPositionName(heroPosition, buttonPosition, playerCount);
+      // Use the already-calculated position name (no need to recalculate)
+      final positionName = heroPositionName;
 
-      // Check if user won this hand
-      if (winnerId != null && winnerId == heroPosition) {
+      // Check if user won this hand (compare seat numbers)
+      if (winnerId != null && winnerId == heroSeatNumber) {
         didWin = true;
       }
 
@@ -947,7 +950,7 @@ class FirebaseService {
         final actionType = action['action']?.toString().toLowerCase() ?? '';
         final street = action['street']?.toString().toLowerCase() ?? '';
 
-        if (playerId != heroPosition) continue;
+        if (playerId != heroSeatNumber) continue;
 
         if (street == 'preflop') {
           if (actionType == 'bet' || actionType == 'call' || actionType == 'raise') {
@@ -964,7 +967,7 @@ class FirebaseService {
 
       // Check for 3-bet
       if (didPlay) {
-        final raiseCount = _countPreflopRaises(actions, heroPosition);
+        final raiseCount = _countPreflopRaises(actions, heroSeatNumber);
         if (raiseCount >= 2) {
           didThreeBet = true;
         }

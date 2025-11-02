@@ -85,6 +85,25 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     return false; // No actions taken yet, button can be moved
   }
 
+  /// Check if seat activation/deactivation should be locked
+  /// Seats are locked during an active hand to prevent corruption of hand data
+  /// Seats can be changed: before hand starts, or after hand completes
+  /// Hand is considered "started" when UTG (first player to act) has made their action
+  bool _areSeatChangesLocked() {
+    // If no gameState available, allow changes
+    if (widget.gameState == null) return false;
+
+    // Check if any active player has acted (hasActed = true)
+    // This is more reliable than checking action records
+    for (final player in widget.gameState!.players) {
+      if (player.isActive && player.hasActed) {
+        return true; // At least one player has acted, lock seats
+      }
+    }
+
+    return false; // No players have acted yet, allow seat changes
+  }
+
   @override
   void initState() {
     super.initState();
@@ -292,73 +311,90 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                     topRight: Radius.circular(20),
                   ),
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFcb5242).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$seatNumber',
-                          style: TextStyle(
-                            color: Color(0xFFcb5242),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                    Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFcb5242).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '$seatNumber',
+                              style: TextStyle(
+                                color: Color(0xFFcb5242),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Seat $seatNumber',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Seat $seatNumber',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                _getPositionForActiveSeat(seatNumber),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF9A9A9A),
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            _getPositionForActiveSeat(seatNumber),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF9A9A9A),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Active toggle
-                    Switch(
-                      value: isActive,
-                      activeColor: Color(0xFFcb5242),
-                      inactiveThumbColor: Colors.white,
-                      inactiveTrackColor: Color(0xFF2A2A2E),
-                      onChanged: (value) {
-                        setState(() {
-                          seatActive[seatNumber] = value;
-                          if (value) {
-                            if (nameControllers[seatNumber]!.text.isEmpty) {
-                              nameControllers[seatNumber]!.text = 'Player $seatNumber';
+                        ),
+                        // Active toggle
+                        Switch(
+                          value: isActive,
+                          activeColor: Color(0xFFcb5242),
+                          inactiveThumbColor: Colors.white,
+                          inactiveTrackColor: Color(0xFF2A2A2E),
+                          onChanged: _areSeatChangesLocked() ? null : (value) {
+                            setState(() {
+                              seatActive[seatNumber] = value;
+                              if (value) {
+                                if (nameControllers[seatNumber]!.text.isEmpty) {
+                                  nameControllers[seatNumber]!.text = 'Player $seatNumber';
+                                }
+                              }
+                            });
+                            Navigator.pop(context);
+                            if (value) {
+                              // Reopen dialog to edit
+                              Future.delayed(Duration(milliseconds: 100), () {
+                                _showSeatDialog(seatNumber);
+                              });
                             }
-                          }
-                        });
-                        Navigator.pop(context);
-                        if (value) {
-                          // Reopen dialog to edit
-                          Future.delayed(Duration(milliseconds: 100), () {
-                            _showSeatDialog(seatNumber);
-                          });
-                        }
-                      },
+                          },
+                        ),
+                      ],
                     ),
+                    if (_areSeatChangesLocked())
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          '⚠️ Cannot change seats during active hand',
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 11,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -370,66 +406,82 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // My Seat selection (always available)
-                      InkWell(
-                          onTap: () {
-                            setState(() {
-                              // Restore defaults for previous seat before selecting new one
-                              _restoreDefaultsForPreviousSeat(selectedSeat);
+                      Opacity(
+                        opacity: _areSeatChangesLocked() ? 0.5 : 1.0,
+                        child: InkWell(
+                            onTap: _areSeatChangesLocked() ? null : () {
+                              setState(() {
+                                // Restore defaults for previous seat before selecting new one
+                                _restoreDefaultsForPreviousSeat(selectedSeat);
 
-                              selectedSeat = seatNumber;
-                              _autoInsertUsernameForSeat(seatNumber);
+                                selectedSeat = seatNumber;
+                                _autoInsertUsernameForSeat(seatNumber);
 
-                              // Set the user's stack from session setup
-                              if (widget.isIndividualSession && widget.individualCurrentStack != null) {
-                                stackControllers[seatNumber]?.text = widget.isCashGame
-                                  ? widget.individualCurrentStack!.toStringAsFixed(2)
-                                  : widget.individualCurrentStack!.toInt().toString();
-                              } else if (widget.startingStack != null) {
-                                stackControllers[seatNumber]?.text = widget.gameType == GameType.cash
-                                  ? widget.startingStack!.toStringAsFixed(2)
-                                  : widget.startingStack!.toInt().toString();
-                              }
-                            });
-                            // Close and reopen dialog to refresh with updated name
-                            Navigator.pop(context);
-                            Future.delayed(Duration(milliseconds: 100), () {
-                              _showSeatDialog(seatNumber);
-                            });
-                          },
-                          child: Container(
-                            padding: EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: selectedSeat == seatNumber
-                                ? Color(0xFFcb5242).withOpacity(0.1)
-                                : Color(0xFF1F1F23),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
+                                // Set the user's stack from session setup
+                                if (widget.isIndividualSession && widget.individualCurrentStack != null) {
+                                  stackControllers[seatNumber]?.text = widget.isCashGame
+                                    ? widget.individualCurrentStack!.toStringAsFixed(2)
+                                    : widget.individualCurrentStack!.toInt().toString();
+                                } else if (widget.startingStack != null) {
+                                  stackControllers[seatNumber]?.text = widget.gameType == GameType.cash
+                                    ? widget.startingStack!.toStringAsFixed(2)
+                                    : widget.startingStack!.toInt().toString();
+                                }
+                              });
+                              // Close and reopen dialog to refresh with updated name
+                              Navigator.pop(context);
+                              Future.delayed(Duration(milliseconds: 100), () {
+                                _showSeatDialog(seatNumber);
+                              });
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
                                 color: selectedSeat == seatNumber
-                                  ? Color(0xFFcb5242)
-                                  : Color(0xFF2A2A2E),
+                                  ? Color(0xFFcb5242).withOpacity(0.1)
+                                  : Color(0xFF1F1F23),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: selectedSeat == seatNumber
+                                    ? Color(0xFFcb5242)
+                                    : Color(0xFF2A2A2E),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    selectedSeat == seatNumber ? Icons.check_circle : Icons.circle_outlined,
+                                    color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Color(0xFF9A9A9A),
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'This is my seat',
+                                    style: TextStyle(
+                                      color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  selectedSeat == seatNumber ? Icons.check_circle : Icons.circle_outlined,
-                                  color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Color(0xFF9A9A9A),
-                                  size: 20,
-                                ),
-                                SizedBox(width: 12),
-                                Text(
-                                  'This is my seat',
-                                  style: TextStyle(
-                                    color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
+                          ),
+                      ),
+                      SizedBox(height: 16),
+                      if (_areSeatChangesLocked())
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: Text(
+                            '⚠️ Cannot change your seat during active hand',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange,
+                              height: 1.4,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
-                      SizedBox(height: 16),
                       // Player name
                       Autocomplete<String>(
                         initialValue: TextEditingValue(text: nameControllers[seatNumber]!.text),
@@ -460,17 +512,23 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               controller: controller,
                               focusNode: focusNode,
                               onEditingComplete: onEditingComplete,
-                              style: TextStyle(color: Colors.white, fontSize: 16),
+                              enabled: !_areSeatChangesLocked(),
+                              style: TextStyle(
+                                color: _areSeatChangesLocked() ? Colors.white.withOpacity(0.5) : Colors.white,
+                                fontSize: 16,
+                              ),
                               decoration: InputDecoration(
                                 labelText: 'Player Name',
                                 labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                                hintText: 'Enter player name',
+                                hintText: _areSeatChangesLocked() ? 'Locked during active hand' : 'Enter player name',
                                 hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                suffixIcon: allOpponents.isNotEmpty
-                                    ? Icon(Icons.search, size: 18, color: Color(0xFF9A9A9A))
-                                    : null,
+                                suffixIcon: _areSeatChangesLocked()
+                                    ? Icon(Icons.lock, size: 18, color: Colors.orange)
+                                    : (allOpponents.isNotEmpty
+                                        ? Icon(Icons.search, size: 18, color: Color(0xFF9A9A9A))
+                                        : null),
                               ),
                               textCapitalization: TextCapitalization.words,
                               onChanged: (value) {
@@ -613,17 +671,26 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                         ),
                         child: TextField(
                           controller: stackControllers[seatNumber],
+                          enabled: !_areSeatChangesLocked(),
                           keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          style: TextStyle(
+                            color: _areSeatChangesLocked() ? Colors.white.withOpacity(0.5) : Colors.white,
+                            fontSize: 16,
+                          ),
                           decoration: InputDecoration(
                             labelText: widget.isCashGame ? 'Buy-in Amount (\$)' : 'Starting Chips',
                             labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                            hintText: widget.isCashGame ? '100.00' : '1500',
+                            hintText: _areSeatChangesLocked()
+                                ? 'Locked during active hand'
+                                : (widget.isCashGame ? '100.00' : '1500'),
                             hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
                             prefixText: widget.isCashGame ? '\$ ' : '',
                             prefixStyle: TextStyle(color: Color(0xFF9A9A9A)),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            suffixIcon: _areSeatChangesLocked()
+                                ? Icon(Icons.lock, size: 18, color: Colors.orange)
+                                : null,
                           ),
                           onChanged: (value) {
                             // Validate input format
@@ -691,76 +758,93 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            // Restore defaults for previous seat before selecting new one
-                            _restoreDefaultsForPreviousSeat(selectedSeat);
+                      Opacity(
+                        opacity: _areSeatChangesLocked() ? 0.5 : 1.0,
+                        child: InkWell(
+                          onTap: _areSeatChangesLocked() ? null : () {
+                            setState(() {
+                              // Restore defaults for previous seat before selecting new one
+                              _restoreDefaultsForPreviousSeat(selectedSeat);
 
-                            // Activate this seat when selecting it as user's seat
-                            seatActive[seatNumber] = true;
-                            selectedSeat = seatNumber;
-                            _autoInsertUsernameForSeat(seatNumber);
+                              // Activate this seat when selecting it as user's seat
+                              seatActive[seatNumber] = true;
+                              selectedSeat = seatNumber;
+                              _autoInsertUsernameForSeat(seatNumber);
 
-                            // Set the user's stack from session setup
-                            if (widget.isIndividualSession && widget.individualCurrentStack != null) {
-                              stackControllers[seatNumber]?.text = widget.isCashGame
-                                  ? widget.individualCurrentStack!.toStringAsFixed(2)
-                                  : widget.individualCurrentStack!.toInt().toString();
-                            } else if (widget.startingStack != null) {
-                              stackControllers[seatNumber]?.text = widget.gameType == GameType.cash
-                                  ? widget.startingStack!.toStringAsFixed(2)
-                                  : widget.startingStack!.toInt().toString();
-                            }
-                          });
-                          // Close and reopen dialog to refresh
-                          Navigator.pop(context);
-                          Future.delayed(Duration(milliseconds: 100), () {
-                            _showSeatDialog(seatNumber);
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: selectedSeat == seatNumber
-                                ? Color(0xFFcb5242).withOpacity(0.1)
-                                : Color(0xFF1F1F23),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
+                              // Set the user's stack from session setup
+                              if (widget.isIndividualSession && widget.individualCurrentStack != null) {
+                                stackControllers[seatNumber]?.text = widget.isCashGame
+                                    ? widget.individualCurrentStack!.toStringAsFixed(2)
+                                    : widget.individualCurrentStack!.toInt().toString();
+                              } else if (widget.startingStack != null) {
+                                stackControllers[seatNumber]?.text = widget.gameType == GameType.cash
+                                    ? widget.startingStack!.toStringAsFixed(2)
+                                    : widget.startingStack!.toInt().toString();
+                              }
+                            });
+                            // Close and reopen dialog to refresh
+                            Navigator.pop(context);
+                            Future.delayed(Duration(milliseconds: 100), () {
+                              _showSeatDialog(seatNumber);
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
                               color: selectedSeat == seatNumber
-                                  ? Color(0xFFcb5242)
-                                  : Color(0xFF2A2A2E),
+                                  ? Color(0xFFcb5242).withOpacity(0.1)
+                                  : Color(0xFF1F1F23),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: selectedSeat == seatNumber
+                                    ? Color(0xFFcb5242)
+                                    : Color(0xFF2A2A2E),
+                              ),
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                selectedSeat == seatNumber ? Icons.check_circle : Icons.circle_outlined,
-                                color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Color(0xFF9A9A9A),
-                                size: 20,
-                              ),
-                              SizedBox(width: 12),
-                              Text(
-                                'This is my seat',
-                                style: TextStyle(
-                                  color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  selectedSeat == seatNumber ? Icons.check_circle : Icons.circle_outlined,
+                                  color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Color(0xFF9A9A9A),
+                                  size: 20,
                                 ),
-                              ),
-                            ],
+                                SizedBox(width: 12),
+                                Text(
+                                  'This is my seat',
+                                  style: TextStyle(
+                                    color: selectedSeat == seatNumber ? Color(0xFFcb5242) : Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                       SizedBox(height: 16),
-                      Text(
-                        'This seat is currently empty. Select it as your seat to activate it, or toggle the switch above to assign another player.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF9A9A9A),
-                          height: 1.4,
+                      if (_areSeatChangesLocked())
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: Text(
+                            '⚠️ Cannot change seats during active hand. Complete or skip the current hand first.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange,
+                              height: 1.4,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        )
+                      else
+                        Text(
+                          'This seat is currently empty. Select it as your seat to activate it, or toggle the switch above to assign another player.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF9A9A9A),
+                            height: 1.4,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

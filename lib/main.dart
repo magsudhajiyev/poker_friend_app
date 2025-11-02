@@ -4,6 +4,7 @@ import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth_wrapper.dart';
 import 'services/notification_service.dart';
+import 'services/logger_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,16 @@ void main() async {
   } catch (e) {
     print('Notification initialization failed: $e');
     // Continue without notifications for now
+  }
+
+  // Initialize logger service for debugging
+  try {
+    await LoggerService.initialize();
+    await LoggerService.info('App started - Logger initialized');
+    print('Logger service initialized successfully');
+  } catch (e) {
+    print('Logger initialization failed: $e');
+    // Continue without logger
   }
 
   runApp(PokerTrackerApp());

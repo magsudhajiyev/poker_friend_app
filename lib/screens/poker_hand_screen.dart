@@ -19,6 +19,7 @@ import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
+import '../services/logger_service.dart';
 import 'session_history_screen.dart';
 
 class PokerHandScreen extends StatefulWidget {
@@ -246,16 +247,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // Auto-start the hand
     actions.add("🔥 Session started - Firebase ID: ${sessionManager.sessionId?.substring(0, 8)}...");
-    actions.add("Game started. Blinds: ${widget.smallBlind}/${widget.bigBlind}");
+    actions.add("Game started. Blinds: ${sessionManager.smallBlind}/${sessionManager.bigBlind}");
 
     // Add blind posting actions
     List<int> activePlayers = gameState.getActivePlayers();
     if (activePlayers.length > 2) {
-      actions.add("Player ${gameState.effectiveSBPosition} posts small blind \$${widget.smallBlind}");
-      actions.add("Player ${gameState.effectiveBBPosition} posts big blind \$${widget.bigBlind}");
+      actions.add("Player ${gameState.effectiveSBPosition} posts small blind \$${sessionManager.smallBlind}");
+      actions.add("Player ${gameState.effectiveBBPosition} posts big blind \$${sessionManager.bigBlind}");
 
       if (widget.hasBBante) {
-        actions.add("Player ${gameState.effectiveBBPosition} posts ante \$${widget.bigBlind} for all players");
+        actions.add("Player ${gameState.effectiveBBPosition} posts ante \$${sessionManager.bigBlind} for all players");
       }
     }
 
@@ -328,7 +329,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     
     // Auto-start the hand
     actions.add("🔥 Session started - Firebase ID: ${sessionManager.sessionId?.substring(0, 8)}...");
-    actions.add("Game started. Blinds: ${widget.smallBlind}/${widget.bigBlind}");
+    actions.add("Game started. Blinds: ${sessionManager.smallBlind}/${sessionManager.bigBlind}");
     actions.add("Your seat: #$ourSeat (${sessionManager.getOurPosition(gameState.buttonPosition) ?? 'UNK'})");
     actions.add(gameState.getGameStateInfo());
     actions.add(_getToActMessage());
@@ -2391,6 +2392,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       sessionManager.actualBBSeat = gameState.effectiveBBPosition;
       sessionManager.buttonPosition = gameState.buttonPosition;
 
+      // CRITICAL: Restart the hand in session manager to recalculate positions
+      // This is necessary if players were added/removed since the hand originally started
+      sessionManager.startHand(
+        gameState.handNumber,
+        gameState.buttonPosition,
+        sbSeat: gameState.effectiveSBPosition,
+        bbSeat: gameState.effectiveBBPosition,
+      );
+
       // Set initial action order manually (can't call private _setInitialActionOrder)
       List<int> activePlayers = gameState.getActivePlayers();
       if (activePlayers.length >= 2) {
@@ -2679,6 +2689,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   void _showAllInBoardCardsDialog() async {
+    await LoggerService.info('🎲 _showAllInBoardCardsDialog() called - All-in board selection');
+
     // Collect hole cards to exclude from board card selection
     List<String> excludedCards = [];
     final ourHoleCards = sessionManager.currentHand?.ourHoleCards;
@@ -2715,8 +2727,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
 
   void _showWinnerSelectionForAllIn() async {
+    await LoggerService.info('🏆 _showWinnerSelectionForAllIn() called - Winner selection for all-in');
+
     // Get active players and their names
     final activePlayers = gameState.getActivePlayers();
+    await LoggerService.debug('  Active players: $activePlayers (count: ${activePlayers.length})');
     List<String> playerNames = [];
 
     for (int playerId in activePlayers) {
@@ -2746,7 +2761,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   void _processAllInWinnerResult(Map<String, dynamic> winnerResult) {
+    LoggerService.info('💰 _processAllInWinnerResult() called - Processing all-in winner');
     final isChoppedPot = winnerResult['isChoppedPot'] as bool? ?? false;
+    LoggerService.debug('  isChoppedPot: $isChoppedPot');
 
     // Mark hand as completed and use the standard finalization flow
     _allInHandCompleted = true;
@@ -2776,6 +2793,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     Future.delayed(Duration(milliseconds: 500), () async {
       // Show hole cards dialog first
       await _showHoleCardsDialog();
+
+      // Get active players and winners for opponent cards dialog
+      final activePlayers = gameState.getActivePlayers();
+      final List<int> winners;
+      if (isChoppedPot) {
+        winners = List<int>.from(winnerResult['winnerIds'] ?? []);
+      } else {
+        final winnerId = winnerResult['winnerId'] as int? ?? winnerResult['winner'] as int?;
+        winners = winnerId != null ? [winnerId] : [];
+      }
+
+      // Show opponent hole cards dialog for showdown situations
+      await _showOpponentCardsDialog(activePlayers, winners);
 
       // Now complete the hand with proper winner info
       if (isChoppedPot) {
@@ -2855,6 +2885,17 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     if (_shouldShowAllInBoardDialog()) {
       _showAllInBoardCardsDialog();
       return;
+    }
+
+    // Log what board cards exist before showing dialog
+    final currentBoardCards = sessionManager.currentHand?.boardCards;
+    if (currentBoardCards != null) {
+      print('🎴 Board cards dialog opening - existing cards found:');
+      print('   Flop: ${currentBoardCards.flop}');
+      print('   Turn: ${currentBoardCards.turn}');
+      print('   River: ${currentBoardCards.river}');
+    } else {
+      print('🎴 Board cards dialog opening - NO existing cards (clean slate)');
     }
 
     // Regular street-by-street dialog
@@ -2942,8 +2983,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           buyInAmount: widget.buyInAmount ?? sessionManager.totalBuyIn, // Initial buy-in amount (money)
           startingStack: sessionManager.initialStartingStack ?? sessionManager.totalBuyIn, // Starting chips (MTT) or buy-in (cash)
           gameType: widget.gameType,
-          smallBlind: widget.smallBlind,
-          bigBlind: widget.bigBlind,
+          smallBlind: sessionManager.smallBlind, // Use current blinds from sessionManager, not widget
+          bigBlind: sessionManager.bigBlind, // Use current blinds from sessionManager, not widget
           hasBBante: gameState.hasBBante,
           currentStack: currentStack,
           sessionId: sessionManager.sessionId,
@@ -3338,14 +3379,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   void _completeHandAutomatically() async {
+    await LoggerService.info('🤖 _completeHandAutomatically() called - Auto-completing hand');
+
     // Save pot amount BEFORE distributing
     final potAmount = gameState.currentPot;
+    await LoggerService.debug('  Pot amount: \$${potAmount.toStringAsFixed(2)}');
 
     // Get the remaining active player
     List<int> activePlayers = _getActivePlayers();
+    await LoggerService.debug('  Active players: $activePlayers (count: ${activePlayers.length})');
 
     // If only one player remains, award pot automatically without dialog
     if (activePlayers.length == 1) {
+      await LoggerService.info('  ✅ Single winner path - awarding pot without dialogs');
       final winnerId = activePlayers[0];
       final winnerName = sessionManager.getPlayerName(winnerId);
 
@@ -3404,6 +3450,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       });
     } else {
       // Multiple players remain, show winner selection dialog
+      await LoggerService.info('  ↪️ Multiple players path - calling completeHand()');
       completeHand();
     }
   }
@@ -3459,13 +3506,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   void completeHand() async {
+    await LoggerService.info('═══ completeHand() called ═══');
+
     // Save the pot amount BEFORE showing any dialogs
     final potAmount = gameState.currentPot;
+    await LoggerService.debug('  Pot amount: \$${potAmount.toStringAsFixed(2)}');
 
     // First, show winner selection dialog - ALWAYS show it
     List<int> activePlayers = _getActivePlayers();
+    await LoggerService.debug('  Active players from _getActivePlayers(): $activePlayers');
 
     if (activePlayers.isEmpty) {
+      await LoggerService.warning('  No active players found - using all ${gameState.numberOfPlayers} players');
       // If no active players, get all players for selection
       activePlayers = List.generate(gameState.numberOfPlayers, (i) => i + 1);
     }
@@ -3508,9 +3560,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         : {};
     final double sharePerWinner = winnerResult['sharePerWinner'] ?? potAmount;
 
+    await LoggerService.debug('  Winner selection result: isChoppedPot=$isChoppedPot, winners=$winners');
 
     // Then show hole cards dialog
     await _showHoleCardsDialog();
+
+    await LoggerService.info('About to call _showOpponentCardsDialog with activePlayers=$activePlayers');
 
     // Show opponent hole cards dialog for showdown situations
     await _showOpponentCardsDialog(activePlayers, winners);
@@ -3857,18 +3912,29 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   Future<void> _showOpponentCardsDialog(List<int> activePlayers, List<int> winners) async {
+    // Log function entry
+    await LoggerService.info('_showOpponentCardsDialog called');
+    await LoggerService.debug('  activePlayers: $activePlayers (count: ${activePlayers.length})');
+    await LoggerService.debug('  winners: $winners');
+    await LoggerService.debug('  ourSeat: ${sessionManager.ourSeatNumber}');
+
     // Only show opponent cards dialog if hand reached showdown (not if everyone folded)
     if (activePlayers.length <= 1) {
+      await LoggerService.warning('❌ Opponent cards dialog SKIPPED - activePlayers.length <= 1');
       return; // No showdown, everyone folded
     }
 
     // Get opponents (exclude our seat if we're one of the active players)
     final ourSeat = sessionManager.ourSeatNumber;
     final opponents = activePlayers.where((p) => p != ourSeat).toList();
+    await LoggerService.debug('  opponents (after excluding hero): $opponents');
 
     if (opponents.isEmpty) {
+      await LoggerService.warning('❌ Opponent cards dialog SKIPPED - no opponents (all were hero)');
       return; // No opponents to show cards for
     }
+
+    await LoggerService.info('✅ Showing opponent cards dialog for ${opponents.length} opponent(s): $opponents');
 
     // Collect used cards (board + hero cards)
     Set<String> usedCards = {};
@@ -3957,12 +4023,21 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
   void _handleHandComplete() {
     // Hand complete - show winner selection dialog first
+    LoggerService.info('🏁 _handleHandComplete() called - Complete Hand button pressed');
+    final allInPlayers = gameState.getAllInPlayers();
+    final activePlayers = gameState.getActivePlayers();
+    final playersWhoCanAct = gameState.getPlayersWhoCanAct();
+    LoggerService.debug('  All-in players: $allInPlayers (count: ${allInPlayers.length})');
+    LoggerService.debug('  Active players: $activePlayers (count: ${activePlayers.length})');
+    LoggerService.debug('  Players who can act: $playersWhoCanAct (count: ${playersWhoCanAct.length})');
     completeHand();
   }
 
   List<int> _getActivePlayers() {
     // Get players who haven't folded from the game state
-    return gameState.getActivePlayers();
+    final activePlayers = gameState.getActivePlayers();
+    LoggerService.debug('_getActivePlayers() returned: $activePlayers');
+    return activePlayers;
   }
 
   Future<void> _showShowdownDialog(List<int> activePlayers) async {
