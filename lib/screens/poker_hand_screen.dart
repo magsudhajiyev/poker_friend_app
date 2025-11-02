@@ -1166,10 +1166,28 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
               child: ElevatedButton.icon(
                 onPressed: endStreetManually,
                 icon: const Icon(Icons.skip_next_outlined),
-                label: Text('End ${gameState.getCurrentStreetName()} Betting', 
+                label: Text('End ${gameState.getCurrentStreetName()} Betting',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+
+          // Undo Last Action Button
+          if (_canUndoLastAction())
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _undoLastAction,
+                icon: const Icon(Icons.undo_outlined),
+                label: const Text('Undo Last Action',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
@@ -2281,7 +2299,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // Get current player stack before action
     final currentPlayerStack = gameState.getPlayerStack(gameState.currentPlayer);
-    
+
     // Record action in session manager BEFORE performing it
     sessionManager.recordAction(
       gameState.currentPlayer,
@@ -2294,7 +2312,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // Perform action with specified amount
     String result = gameState.performActionWithAmount(action, amount);
-    
+
     // Split result into individual lines and add each as separate action
     for (String line in result.split('\n')) {
       if (line.trim().isNotEmpty) {
@@ -2457,7 +2475,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // Get current player stack before action
     final currentPlayerStack = gameState.getPlayerStack(gameState.currentPlayer);
-    
+
+    // For call actions, calculate the amount being called
+    double? actionAmount;
+    if (action == PlayerAction.call) {
+      final player = gameState.players[gameState.currentPlayer - 1];
+      final callAmount = gameState.getCurrentBet() - player.betThisRound;
+      actionAmount = callAmount.clamp(0.0, player.currentStack);
+    }
+
     // Record action in session manager BEFORE performing it
     sessionManager.recordAction(
       gameState.currentPlayer,
@@ -2465,10 +2491,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       gameState.currentRound,
       gameState.buttonPosition,
       playerStack: currentPlayerStack,
+      amount: actionAmount,
     );
 
     String result = gameState.performAction(action);
-    
+
     // Split result into individual lines and add each as separate action
     for (String line in result.split('\n')) {
       if (line.trim().isNotEmpty) {
@@ -3352,6 +3379,305 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         addAction("Press 'Next Street' button to continue");
       }
     });
+  }
+
+  /// Check if undo is allowed
+  /// Returns true if there are actions that can be undone (non-blind posts)
+  bool _canUndoLastAction() {
+    if (sessionManager.currentHand == null ||
+        sessionManager.currentHand!.actions.isEmpty) {
+      return false;
+    }
+
+    // Don't allow undo if hand is completed
+    if (sessionManager.currentHand!.state != HandState.inProgress) {
+      return false;
+    }
+
+    // Don't allow undo if betting round is complete (they need to advance first)
+    if (gameState.bettingRoundComplete) {
+      return false;
+    }
+
+    // Find the last non-blind action
+    final actions = sessionManager.currentHand!.actions;
+    for (int i = actions.length - 1; i >= 0; i--) {
+      final action = actions[i];
+      // Allow undo for any action except blind posts
+      if (action.action != PlayerAction.none) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// Undo the last action and restore game state
+  void _undoLastAction() {
+    if (!_canUndoLastAction()) {
+      addAction("⚠️ Cannot undo: no actions to undo");
+      _triggerInvalidActionVibration();
+      return;
+    }
+
+    final actions = sessionManager.currentHand!.actions;
+
+    // Find the last non-blind action
+    int lastActionIndex = -1;
+    for (int i = actions.length - 1; i >= 0; i--) {
+      final action = actions[i];
+      if (action.action != PlayerAction.none) {
+        lastActionIndex = i;
+        break;
+      }
+    }
+
+    if (lastActionIndex == -1) {
+      addAction("⚠️ Cannot undo: no actions to undo");
+      _triggerInvalidActionVibration();
+      return;
+    }
+
+    setState(() {
+      final undoneAction = actions[lastActionIndex];
+      final playerId = undoneAction.player;
+      final action = undoneAction.action;
+      final amount = undoneAction.amount ?? 0.0;
+
+      // Get the player state
+      final player = gameState.players[playerId - 1];
+
+      // Restore player state based on action type
+      switch (action) {
+        case PlayerAction.fold:
+          // Restore fold state
+          player.hasFolded = false;
+          player.hasActed = false;
+          player.lastAction = PlayerAction.none;
+          break;
+
+        case PlayerAction.check:
+          // Restore check state
+          player.hasActed = false;
+          player.lastAction = PlayerAction.none;
+          // Recalculate hasCalledCurrentBet based on remaining actions
+          _recalculatePlayerCallStatus(playerId, lastActionIndex);
+          break;
+
+        case PlayerAction.call:
+          // Calculate what the player had bet BEFORE this call
+          double previousBetThisRound = _getPreviousBetThisRound(playerId, lastActionIndex);
+
+          // Calculate the additional amount that was added to pot
+          double additionalAmount = amount - previousBetThisRound;
+          if (additionalAmount < 0) additionalAmount = 0;
+
+          // Restore stack (add back only the additional amount)
+          player.currentStack += additionalAmount;
+          player.isAllIn = false;
+
+          // Restore bet tracking to previous value
+          player.betThisRound = previousBetThisRound;
+
+          // Restore pot (subtract only the additional amount)
+          gameState.currentPot -= additionalAmount;
+          if (gameState.currentPot < 0) gameState.currentPot = 0;
+
+          // Restore player status
+          player.hasActed = false;
+          player.hasCalledCurrentBet = false;
+          player.lastAction = PlayerAction.none;
+          break;
+
+        case PlayerAction.bet:
+        case PlayerAction.raise:
+          // Calculate what the player had bet BEFORE this bet/raise
+          double previousBetThisRound = _getPreviousBetThisRound(playerId, lastActionIndex);
+
+          // Calculate the additional amount that was added to pot
+          double additionalAmount = amount - previousBetThisRound;
+          if (additionalAmount < 0) additionalAmount = 0;
+
+          // Restore stack (add back only the additional amount)
+          player.currentStack += additionalAmount;
+          player.isAllIn = false;
+
+          // Restore bet tracking to previous value
+          player.betThisRound = previousBetThisRound;
+
+          // Restore pot (subtract only the additional amount)
+          gameState.currentPot -= additionalAmount;
+          if (gameState.currentPot < 0) gameState.currentPot = 0;
+
+          // Restore player status
+          player.hasActed = false;
+          player.hasCalledCurrentBet = false;
+          player.lastAction = PlayerAction.none;
+
+          // Recalculate currentBet based on remaining bets/raises
+          _recalculateCurrentBet(lastActionIndex);
+
+          // Recalculate hasBetThisRound
+          _recalculateHasBetThisRound(lastActionIndex);
+
+          // Recalculate other players' hasCalledCurrentBet status
+          _recalculateAllPlayersCallStatus(lastActionIndex);
+          break;
+
+        default:
+          break;
+      }
+
+      // Remove the action from the list
+      actions.removeAt(lastActionIndex);
+
+      // Set current player back to the player who made the undone action
+      gameState.currentPlayer = playerId;
+
+      // Reset betting round complete flag
+      gameState.bettingRoundComplete = false;
+
+      // Log the undo
+      final playerName = sessionManager.getPlayerNameWithPosition(playerId);
+      addAction("↩️ Undone: $playerName's ${action.name}");
+      addAction(_getToActMessage());
+    });
+  }
+
+  /// Get the amount a player had bet BEFORE a specific action index
+  /// This looks at all previous actions in the same street by the same player
+  double _getPreviousBetThisRound(int playerId, int beforeIndex) {
+    final actions = sessionManager.currentHand!.actions;
+    if (beforeIndex <= 0) return 0.0;
+
+    // Get the street of the action we're undoing
+    final undoingStreet = actions[beforeIndex].street;
+
+    double totalBet = 0.0;
+
+    // Look through all actions before this one
+    for (int i = 0; i < beforeIndex; i++) {
+      final action = actions[i];
+
+      // Only consider actions by this player in the same street
+      if (action.player == playerId && action.street == undoingStreet) {
+        // For bet/raise/call actions, use the amount
+        if (action.action == PlayerAction.bet ||
+            action.action == PlayerAction.raise ||
+            action.action == PlayerAction.call) {
+          if (action.amount != null) {
+            // The amount represents the total bet at that point, not additional
+            // So we just take the latest value
+            totalBet = action.amount!;
+          }
+        }
+      }
+    }
+
+    return totalBet;
+  }
+
+  /// Recalculate hasCalledCurrentBet for a specific player based on remaining actions
+  void _recalculatePlayerCallStatus(int playerId, int upToIndex) {
+    final player = gameState.players[playerId - 1];
+    final actions = sessionManager.currentHand!.actions;
+
+    // Check if this player has called/raised/checked after the last bet/raise
+    bool hasCalledAfterLastBet = false;
+    for (int i = 0; i < upToIndex; i++) {
+      final action = actions[i];
+      if (action.player == playerId) {
+        if (action.action == PlayerAction.call ||
+            action.action == PlayerAction.raise ||
+            action.action == PlayerAction.bet ||
+            action.action == PlayerAction.check) {
+          hasCalledAfterLastBet = true;
+        }
+      }
+    }
+
+    player.hasCalledCurrentBet = hasCalledAfterLastBet;
+  }
+
+  /// Recalculate currentBet based on remaining bets/raises
+  void _recalculateCurrentBet(int upToIndex) {
+    final actions = sessionManager.currentHand!.actions;
+    double maxBet = 0;
+
+    for (int i = 0; i < upToIndex; i++) {
+      final action = actions[i];
+      if (action.action == PlayerAction.bet || action.action == PlayerAction.raise) {
+        if (action.amount != null && action.amount! > maxBet) {
+          maxBet = action.amount!;
+        }
+      }
+    }
+
+    gameState.currentBet = maxBet;
+  }
+
+  /// Recalculate hasBetThisRound based on remaining actions
+  void _recalculateHasBetThisRound(int upToIndex) {
+    final actions = sessionManager.currentHand!.actions;
+    bool hasBet = false;
+
+    for (int i = 0; i < upToIndex; i++) {
+      final action = actions[i];
+      if (action.action == PlayerAction.bet || action.action == PlayerAction.raise) {
+        hasBet = true;
+        break;
+      }
+    }
+
+    gameState.hasBetThisRound = hasBet;
+  }
+
+  /// Recalculate all players' hasCalledCurrentBet status
+  void _recalculateAllPlayersCallStatus(int upToIndex) {
+    final actions = sessionManager.currentHand!.actions;
+
+    // Reset all players first
+    for (var player in gameState.players) {
+      if (!player.hasFolded) {
+        player.hasCalledCurrentBet = false;
+      }
+    }
+
+    // Find the last bet/raise before upToIndex
+    int lastBetIndex = -1;
+    for (int i = upToIndex - 1; i >= 0; i--) {
+      final action = actions[i];
+      if (action.action == PlayerAction.bet || action.action == PlayerAction.raise) {
+        lastBetIndex = i;
+        break;
+      }
+    }
+
+    // If there was a bet/raise, mark players who have called/raised after it
+    if (lastBetIndex >= 0) {
+      final bettor = actions[lastBetIndex].player;
+      final bettorPlayer = gameState.players[bettor - 1];
+      bettorPlayer.hasCalledCurrentBet = true;
+
+      for (int i = lastBetIndex + 1; i < upToIndex; i++) {
+        final action = actions[i];
+        if (action.action == PlayerAction.call ||
+            action.action == PlayerAction.raise ||
+            action.action == PlayerAction.bet) {
+          final player = gameState.players[action.player - 1];
+          player.hasCalledCurrentBet = true;
+        }
+      }
+    } else {
+      // No bet this round - check if players have checked
+      for (int i = 0; i < upToIndex; i++) {
+        final action = actions[i];
+        if (action.action == PlayerAction.check) {
+          final player = gameState.players[action.player - 1];
+          player.hasCalledCurrentBet = true;
+        }
+      }
+    }
   }
 
   void addAction(String action) {

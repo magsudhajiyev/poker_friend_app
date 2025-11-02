@@ -569,19 +569,23 @@ class PokerSessionManager {
 
     currentHand!.addAction(actionRecord);
 
-    // Optionally save action to Firebase immediately for real-time tracking
-    if (sessionId != null && !sessionId!.startsWith('offline_')) {
-      FirebaseService.saveAction(
-        sessionId: sessionId!,
-        handNumber: currentHand!.handNumber,
-        player: player,
-        action: action.name,
-        street: street.name,
-        buttonPosition: buttonPosition,
-      ).catchError((e) {
-        print('Failed to save action real-time: $e');
-      });
-    }
+    // DISABLED: Don't save actions to Firebase immediately
+    // Actions are stored in memory and only saved when hand completes
+    // This allows proper undo functionality without database complications
+    //
+    // // Optionally save action to Firebase immediately for real-time tracking
+    // if (sessionId != null && !sessionId!.startsWith('offline_')) {
+    //   FirebaseService.saveAction(
+    //     sessionId: sessionId!,
+    //     handNumber: currentHand!.handNumber,
+    //     player: player,
+    //     action: action.name,
+    //     street: street.name,
+    //     buttonPosition: buttonPosition,
+    //   ).catchError((e) {
+    //     print('Failed to save action real-time: $e');
+    //   });
+    // }
 
     print('Action recorded: Player $player ${action.name} on ${street.name}');
   }
