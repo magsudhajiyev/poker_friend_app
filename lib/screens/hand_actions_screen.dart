@@ -6,8 +6,9 @@ import '../services/ai_analyzer_service.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
+  final int? ourSeat;
 
-  const HandActionsScreen({Key? key, required this.hand}) : super(key: key);
+  const HandActionsScreen({Key? key, required this.hand, this.ourSeat}) : super(key: key);
 
   @override
   _HandActionsScreenState createState() => _HandActionsScreenState();
@@ -173,8 +174,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     // New fields for position tracking
     final heroPositionName = widget.hand['heroPositionName'] as String?;
     final heroSeatNumber = widget.hand['heroSeatNumber'] as int?;
-    // Old field for backward compatibility
-    final heroPosition = heroSeatNumber ?? widget.hand['heroPosition'] ?? 1;
+    // Old field for backward compatibility - prefer widget.ourSeat from navigation
+    final heroPosition = widget.ourSeat ?? heroSeatNumber ?? widget.hand['heroPosition'] ?? 1;
     
     return Scaffold(
       backgroundColor: Color(0xFF161618),
@@ -478,7 +479,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final playerNamesData = widget.hand['playerNames'];
     final potAmount = (widget.hand['potAmount'] ?? 0).toDouble();
     final gameTypeStr = widget.hand['gameType'] ?? 'cash';
-    final heroPosition = widget.hand['heroPosition'];
+    final heroPosition = widget.ourSeat ?? widget.hand['heroPosition'];
 
     String formatAmount(double amount) {
       if (gameTypeStr == 'cash') {
@@ -870,7 +871,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final boardCardsData = widget.hand['boardCards'];
     final buttonPosition = widget.hand['buttonPosition'] ?? 1;
     final playerCount = widget.hand['playerCount'] ?? 6;
-    final heroPosition = widget.hand['heroPosition'];
+    final heroPosition = widget.ourSeat ?? widget.hand['heroPosition'];
     final playerNamesData = widget.hand['playerNames'];
     final winnerId = widget.hand['winnerId'];
     final gameTypeStr = widget.hand['gameType'] ?? 'cash';

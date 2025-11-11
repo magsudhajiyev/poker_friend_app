@@ -515,10 +515,11 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
   }
 
   void _navigateToHandActions(Map<String, dynamic> hand) {
+    final ourSeat = widget.session['ourSeat'] as int?;
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => HandActionsScreen(hand: hand),
+        builder: (context) => HandActionsScreen(hand: hand, ourSeat: ourSeat),
       ),
     );
   }

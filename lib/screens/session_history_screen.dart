@@ -439,7 +439,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     );
   }
 
-  void _showHandDetails(Map<String, dynamic> hand) {
+  void _showHandDetails(Map<String, dynamic> hand, {int? ourSeat}) {
     final actions = List<Map<String, dynamic>>.from(hand['actions'] ?? []);
     final boardCards = hand['boardCards'] as Map<String, dynamic>?;
     
@@ -527,11 +527,26 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                     }
                   }
                   
+                  // Check if this is the hero's action
+                  final isHero = ourSeat != null && playerSeat == ourSeat;
+
                   return Padding(
                     padding: EdgeInsets.symmetric(vertical: 2),
-                    child: Text(
-                      '${_getActionIcon(action['action'])} $displayName ${_formatAction(action['action'])} (${_formatStreet(action['street'])})',
-                      style: TextStyle(fontFamily: 'monospace'),
+                    child: RichText(
+                      text: TextSpan(
+                        style: TextStyle(fontFamily: 'monospace', color: Colors.white),
+                        children: [
+                          TextSpan(text: '${_getActionIcon(action['action'])} '),
+                          TextSpan(
+                            text: displayName,
+                            style: TextStyle(
+                              color: isHero ? Color(0xFF5AC95A) : Colors.white,
+                              fontWeight: isHero ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                          TextSpan(text: ' ${_formatAction(action['action'])} (${_formatStreet(action['street'])})'),
+                        ],
+                      ),
                     ),
                   );
                 }).toList(),
