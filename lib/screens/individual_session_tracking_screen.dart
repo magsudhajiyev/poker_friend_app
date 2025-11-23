@@ -70,6 +70,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   int _currentBigBlind = 0;
   bool _currentHasBBante = false;
 
+  // Track if blinds were explicitly changed by user
+  bool _blindsWereChanged = false;
+
   // Display mode
   bool _showBBMode = false;
 
@@ -187,10 +190,13 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             _handsLogged = sessionData['handsLogged'] ?? 0;
             _biggestPot = sessionData['biggestPot']?.toDouble() ?? 0.0;
 
-            // Load blinds from database (they might have been updated during session)
-            _currentSmallBlind = sessionData['smallBlind'] ?? _currentSmallBlind;
-            _currentBigBlind = sessionData['bigBlind'] ?? _currentBigBlind;
-            _currentHasBBante = sessionData['hasBBante'] ?? _currentHasBBante;
+            // Load blinds from database ONLY if NOT from active session
+            // When from active session, we want to keep the current blinds passed from poker_hand_screen
+            if (!widget.isFromActiveSession) {
+              _currentSmallBlind = sessionData['smallBlind'] ?? _currentSmallBlind;
+              _currentBigBlind = sessionData['bigBlind'] ?? _currentBigBlind;
+              _currentHasBBante = sessionData['hasBBante'] ?? _currentHasBBante;
+            }
 
             // Load average growth for tournaments
             if (widget.gameType == GameType.tournament) {
@@ -536,7 +542,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   Future<void> _showUpdateBlindsDialog() async {
     final smallBlindController = TextEditingController(text: _currentSmallBlind.toString());
     final bigBlindController = TextEditingController(text: _currentBigBlind.toString());
-    bool tempHasBBante = _currentHasBBante;
 
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -590,28 +595,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 ),
               ),
             ),
-            // Ante switch only for tournaments
-            if (widget.gameType == GameType.tournament) ...[
-              SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'BB Ante',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Switch(
-                    value: tempHasBBante,
-                    onChanged: (value) => setState(() => tempHasBBante = value),
-                    activeColor: PokerFriendColors.red,
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
         actions: [
@@ -632,7 +615,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 Navigator.pop(context, {
                   'smallBlind': smallBlind,
                   'bigBlind': bigBlind,
-                  'hasBBante': tempHasBBante,
                 });
               }
             },
@@ -650,7 +632,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       setState(() {
         _currentSmallBlind = result['smallBlind']!;
         _currentBigBlind = result['bigBlind']!;
-        _currentHasBBante = result['hasBBante']!;
+        // BB Ante remains unchanged - it's set once at session start
+        _blindsWereChanged = true; // Mark that blinds were explicitly changed
       });
 
       // Update session in Firebase with new blinds
@@ -668,14 +651,21 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   // Navigate to hand logging
   Future<void> _logHand() async {
     if (widget.isFromActiveSession) {
-      // If called from an active poker session, return with updated stack and blinds
-      Navigator.pop(context, {
+      // If called from an active poker session, return with updated stack
+      // Only return blinds if they were explicitly changed by the user
+      final Map<String, dynamic> result = {
         'updatedStack': _currentStack,
         'totalBuyIn': _totalBuyIn,
-        'smallBlind': _currentSmallBlind,
-        'bigBlind': _currentBigBlind,
-        'hasBBante': _currentHasBBante,
-      });
+      };
+
+      // Only include blinds if they were explicitly changed
+      if (_blindsWereChanged) {
+        result['smallBlind'] = _currentSmallBlind;
+        result['bigBlind'] = _currentBigBlind;
+        result['hasBBante'] = _currentHasBBante;
+      }
+
+      Navigator.pop(context, result);
       return;
     }
 

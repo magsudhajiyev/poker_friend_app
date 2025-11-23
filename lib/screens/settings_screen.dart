@@ -14,7 +14,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool useButtonMode = false;
   bool autoAdvanceStreets = false;
 
   @override
@@ -26,16 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      useButtonMode = prefs.getBool('use_button_mode') ?? false;
       autoAdvanceStreets = prefs.getBool('auto_advance_streets') ?? false;
-    });
-  }
-
-  Future<void> _saveButtonMode(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('use_button_mode', value);
-    setState(() {
-      useButtonMode = value;
     });
   }
 
@@ -107,101 +97,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                 ),
-
-                // Input Method Card
-                Container(
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              useButtonMode ? Icons.smart_button : Icons.touch_app,
-                              color: PokerFriendColors.red,
-                              size: 20,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Input Method',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  useButtonMode ? 'Action Buttons' : 'Gesture Mode',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: PokerFriendColors.dark9,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: useButtonMode,
-                            onChanged: _saveButtonMode,
-                            activeColor: PokerFriendColors.red,
-                            inactiveThumbColor: Colors.white,
-                            inactiveTrackColor: PokerFriendColors.dark4,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: PokerFriendColors.dark1,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              useButtonMode ? 'Button Mode Features:' : 'Gesture Mode Features:',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            if (useButtonMode) ...[
-                              _buildFeatureText('• Tap action buttons to play hands'),
-                              _buildFeatureText('• Clear visual feedback for each action'),
-                              _buildFeatureText('• Perfect for new users'),
-                            ] else ...[
-                              _buildFeatureText('• Draw gestures on the screen'),
-                              _buildFeatureText('• Tap = Bet/Raise, Circle = Call, X = Fold'),
-                              _buildFeatureText('• Faster input for experienced users'),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 24),
 
                 // Game Flow Card
                 Container(

@@ -75,7 +75,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   int _tapCount = 0;
   late PokerGameState gameState;
   late PokerSessionManager sessionManager;
-  bool useButtonMode = false;
   bool autoAdvanceStreets = false;
   bool _allInHandCompleted = false;
   
@@ -134,33 +133,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   Future<void> _loadButtonModeSetting() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      useButtonMode = prefs.getBool('use_button_mode') ?? false;
       autoAdvanceStreets = prefs.getBool('auto_advance_streets') ?? false;
     });
-  }
-
-  void _handleButtonAction(PlayerAction action) {
-    _performPokerAction(action);
-  }
-
-  Set<PlayerAction> _getAvailableActions() {
-    Set<PlayerAction> actions = {PlayerAction.fold}; // Fold is always available
-    
-    // Use existing game state logic
-    if (gameState.isValidAction(PlayerAction.check)) {
-      actions.add(PlayerAction.check);
-    }
-    if (gameState.isValidAction(PlayerAction.call)) {
-      actions.add(PlayerAction.call);
-    }
-    if (gameState.isValidAction(PlayerAction.bet)) {
-      actions.add(PlayerAction.bet);
-    }
-    if (gameState.isValidAction(PlayerAction.raise)) {
-      actions.add(PlayerAction.raise);
-    }
-    
-    return actions;
   }
 
   Future<void> _initializeWithSeatInfo(int seat, int buttonPosition) async {
@@ -604,7 +578,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       builder: (context) => _SettingsDialog(
         currentSmallBlind: sessionManager.smallBlind,
         currentBigBlind: sessionManager.bigBlind,
-        useButtonMode: useButtonMode,
         currentHasBBante: gameState.hasBBante,
         gameType: widget.gameType,
         onBlindsChanged: (smallBlind, bigBlind, hasBBante) async {
@@ -633,12 +606,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             ).catchError((e) {});
           }
           // Note: These changes will take effect immediately for new hands
-        },
-        onButtonModeToggled: (value) async {
-          setState(() {
-            useButtonMode = value;
-          });
-          await prefs.setBool('use_button_mode', value);
         },
       ),
     );
@@ -1055,30 +1022,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                     borderRadius: BorderRadius.circular(PokerFriendRadius.l),
                     child: Stack(
                   children: [
-                    // Conditional input area: drawing pad or action buttons
-                    if (useButtonMode) ...[
-                      // Action buttons mode
-                      Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2),
-                            ],
-                          ),
-                        ),
-                        child: ActionButtonGrid(
-                          onActionSelected: _handleButtonAction,
-                          availableActions: _getAvailableActions(),
-                        ),
-                      ),
-                    ] else ...[
-                      // Drawing area mode
-                      GestureDetector(
+                    // Drawing area for gesture input
+                    GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTapUp: (details) => _isDragBetting ? _completeDragBetting() : handleTap(),
                         onPanStart: (details) {
@@ -1127,15 +1072,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           ),
                         ),
                       ),
-                    ],
-                    
-                    // Gesture Guide Icon (only in drawing mode)
-                    if (!useButtonMode)
-                      Positioned(
-                        top: 16,
-                        right: 16,
-                        child: _buildGestureIcon(context),
-                      ),
+
+                    // Gesture Guide Icon
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: _buildGestureIcon(context),
+                    ),
                     
                     // Drag Betting Amount Display (top-left corner)
                     if (_isDragBetting && (_pendingAction == PlayerAction.bet || _pendingAction == PlayerAction.raise))
@@ -3039,7 +2982,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       if (result['smallBlind'] != null && result['bigBlind'] != null) {
         final newSmallBlind = result['smallBlind'] as int;
         final newBigBlind = result['bigBlind'] as int;
-        final newHasBBante = result['hasBBante'] as bool? ?? false;
 
         setState(() {
           // Update sessionManager blinds
@@ -3049,7 +2991,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           // Update gameState blinds
           gameState.smallBlind = newSmallBlind;
           gameState.bigBlind = newBigBlind;
-          gameState.hasBBante = newHasBBante;
+          // BB Ante remains unchanged - it's set once at session start
         });
 
         // Save blinds to preferences for persistence
@@ -4779,21 +4721,17 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
 class _SettingsDialog extends StatefulWidget {
   final int currentSmallBlind;
   final int currentBigBlind;
-  final bool useButtonMode;
   final bool currentHasBBante;
   final GameType gameType;
   final Function(int smallBlind, int bigBlind, bool hasBBante) onBlindsChanged;
-  final Function(bool) onButtonModeToggled;
 
   const _SettingsDialog({
     Key? key,
     required this.currentSmallBlind,
     required this.currentBigBlind,
-    required this.useButtonMode,
     required this.currentHasBBante,
     required this.gameType,
     required this.onBlindsChanged,
-    required this.onButtonModeToggled,
   }) : super(key: key);
 
   @override
@@ -4805,7 +4743,6 @@ class _SettingsDialogState extends State<_SettingsDialog> {
 
   late int smallBlind;
   late int bigBlind;
-  late bool useButtonMode;
   late bool hasBBante;
 
   @override
@@ -4813,7 +4750,6 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     super.initState();
     smallBlind = widget.currentSmallBlind;
     bigBlind = widget.currentBigBlind;
-    useButtonMode = widget.useButtonMode;
     hasBBante = widget.currentHasBBante;
   }
 
@@ -5122,61 +5058,6 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 });
               },
             ),
-            const SizedBox(height: 16),
-
-            // BB Ante switch (only for tournaments)
-            if (widget.gameType == GameType.tournament)
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Color(0xFF1F1F23),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'BB Ante',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Switch(
-                      value: hasBBante,
-                      onChanged: (value) {
-                        setState(() {
-                          hasBBante = value;
-                        });
-                      },
-                      activeColor: Color(0xFF5AC95A),
-                    ),
-                  ],
-                ),
-              ),
-            const SizedBox(height: 24),
-
-            // Interface settings section
-            Text(
-              'Interface',
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildToggle(
-              'Button View',
-              'Switch between button grid and drawing pad',
-              useButtonMode,
-              (value) {
-                setState(() {
-                  useButtonMode = value;
-                });
-              },
-            ),
           ],
         ),
       ),
@@ -5194,7 +5075,6 @@ class _SettingsDialogState extends State<_SettingsDialog> {
         ElevatedButton(
           onPressed: () {
             widget.onBlindsChanged(smallBlind, bigBlind, hasBBante);
-            widget.onButtonModeToggled(useButtonMode);
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
