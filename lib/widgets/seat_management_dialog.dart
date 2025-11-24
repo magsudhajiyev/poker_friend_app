@@ -784,7 +784,13 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                       final option = options.elementAt(index);
                                                       final opponent = allOpponents.firstWhere(
                                                         (o) => o.name == option,
-                                                        orElse: () => allOpponents.first,
+                                                        orElse: () => Opponent(
+                                                          id: '',
+                                                          name: option,
+                                                          notes: '',
+                                                          createdAt: DateTime.now(),
+                                                          lastSeenAt: DateTime.now(),
+                                                        ),
                                                       );
                                                       
                                                       return Container(
@@ -799,10 +805,14 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                             option,
                                                             style: TextStyle(color: Colors.white, fontSize: 14),
                                                           ),
-                                                          subtitle: Text(
-                                                            opponent.playingStyle, 
-                                                            style: TextStyle(fontSize: 11, color: Color(0xFF9A9A9A)),
-                                                          ),
+                                                          subtitle: opponent.notes != null && opponent.notes!.isNotEmpty
+                                                              ? Text(
+                                                                  opponent.notes!,
+                                                                  style: TextStyle(fontSize: 11, color: Color(0xFF9A9A9A)),
+                                                                  maxLines: 1,
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                )
+                                                              : null,
                                                           leading: Container(
                                                             width: 12,
                                                             height: 12,
