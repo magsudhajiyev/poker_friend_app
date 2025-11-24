@@ -102,6 +102,7 @@ class BankrollService {
           'pfr': 0.0,
           'threeBet': 0.0,
           'aggressionFactor': 0.0,
+          'handsPlayed': 0,
         };
       }
 
@@ -119,6 +120,7 @@ class BankrollService {
           'pfr': 0.0,
           'threeBet': 0.0,
           'aggressionFactor': 0.0,
+          'handsPlayed': 0,
         };
       }
 
@@ -196,6 +198,7 @@ class BankrollService {
         'pfr': 0.0,
         'threeBet': 0.0,
         'aggressionFactor': 0.0,
+        'handsPlayed': 0,
       };
     }
   }
