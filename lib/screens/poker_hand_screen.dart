@@ -13,6 +13,7 @@ import '../widgets/showdown_dialog.dart';
 import 'seat_setup_screen.dart';
 import '../widgets/action_button_grid.dart';
 import '../widgets/winner_selection_dialog.dart';
+import '../widgets/multi_pot_winner_dialog.dart';
 import '../models/poker_game_state.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
@@ -2711,18 +2712,63 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     final potAmount = gameState.currentPot;
 
-    final winnerResult = await showDialog<Map<String, dynamic>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => WinnerSelectionDialog(
-        activePlayers: activePlayers,
-        playerNames: playerNames,
-        potAmount: potAmount,
-        gameType: widget.gameType,
-        buttonPosition: gameState.buttonPosition,
-        playerCount: gameState.numberOfPlayers,
-      ),
-    );
+    // Check if we need side pot calculation
+    // Log each player's state for debugging
+    await LoggerService.debug('  Player states before side pot calculation:');
+    for (var player in gameState.players) {
+      if (player.isActive && !player.hasFolded) {
+        final totalContrib = player.totalContribution + player.betThisRound;
+        await LoggerService.debug('    P${player.playerId}: active=${player.isActive}, folded=${player.hasFolded}, '
+            'totalContrib=${player.totalContribution}, betThisRound=${player.betThisRound}, '
+            'total=${totalContrib}, stack=${player.currentStack}');
+      }
+    }
+
+    List<SidePot> sidePots = SidePotCalculator.calculateSidePots(gameState.players);
+    await LoggerService.debug('  Side pots calculated: ${sidePots.length} pots');
+    for (var pot in sidePots) {
+      await LoggerService.debug('    ${pot.toString()}');
+    }
+
+    Map<String, dynamic>? winnerResult;
+
+    // Show multi-pot dialog if there are 2+ pots (main + side), otherwise show regular dialog
+    if (sidePots.length >= 2) {
+      await LoggerService.info('  Showing multi-pot winner dialog with ${sidePots.length} pots');
+
+      // Create player ID to name map
+      Map<int, String> playerIdToName = {};
+      for (int playerId in activePlayers) {
+        playerIdToName[playerId] = sessionManager.getPlayerNameWithPosition(playerId);
+      }
+
+      winnerResult = await showDialog<Map<String, dynamic>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => MultiPotWinnerDialog(
+          sidePots: sidePots,
+          playerNames: playerNames,
+          playerIdToName: playerIdToName,
+          gameType: widget.gameType,
+          buttonPosition: gameState.buttonPosition,
+          playerCount: gameState.numberOfPlayers,
+        ),
+      );
+    } else {
+      await LoggerService.debug('  Showing regular winner selection dialog (${sidePots.length} pot)');
+      winnerResult = await showDialog<Map<String, dynamic>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => WinnerSelectionDialog(
+          activePlayers: activePlayers,
+          playerNames: playerNames,
+          potAmount: potAmount,
+          gameType: widget.gameType,
+          buttonPosition: gameState.buttonPosition,
+          playerCount: gameState.numberOfPlayers,
+        ),
+      );
+    }
 
     if (winnerResult != null) {
       // Process the winner result and complete the hand
@@ -2732,122 +2778,259 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
   void _processAllInWinnerResult(Map<String, dynamic> winnerResult) {
     LoggerService.info('💰 _processAllInWinnerResult() called - Processing all-in winner');
-    final isChoppedPot = winnerResult['isChoppedPot'] as bool? ?? false;
-    LoggerService.debug('  isChoppedPot: $isChoppedPot');
 
-    // Mark hand as completed and use the standard finalization flow
-    _allInHandCompleted = true;
-    setState(() {});
-    addAction("✅ All-in hand completed!");
+    // Check if this is a multi-pot scenario
+    final bool isMultiPot = winnerResult.containsKey('potResults');
 
-    if (isChoppedPot) {
-      // Handle chopped pot
-      final winnerIds = List<int>.from(winnerResult['winnerIds'] ?? []);
-      final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
-      final individualShares = winnerResult['individualShares'] as Map<int, double>?;
-      final sharePerWinner = winnerResult['sharePerWinner'] as double?;
+    if (isMultiPot) {
+      // Handle multi-pot scenario
+      LoggerService.info('  Processing multi-pot winner result');
 
-      addAction("🏆 Chopped pot between ${winnerIds.length} players");
+      _allInHandCompleted = true;
+      setState(() {});
+      addAction("✅ All-in hand completed!");
+
+      final Map<int, Map<String, dynamic>> potResults =
+          Map<int, Map<String, dynamic>>.from(winnerResult['potResults']);
+      final List<SidePot> resultSidePots =
+          List<SidePot>.from(winnerResult['sidePots']);
+
+      // Collect all unique winners across all pots for showdown dialogs
+      Set<int> allWinners = {};
+      for (var potResult in potResults.values) {
+        if (potResult['isChoppedPot'] == true) {
+          allWinners.addAll(List<int>.from(potResult['winners']));
+        } else {
+          allWinners.add(potResult['winner'] as int);
+        }
+      }
+
+      // Show hole cards dialog first, then complete the hand with winner info
+      Future.delayed(Duration(milliseconds: 500), () async {
+        // Show hole cards dialog first
+        await _showHoleCardsDialog();
+
+        final activePlayers = gameState.getActivePlayers();
+        await LoggerService.info('About to call _showOpponentCardsDialog with activePlayers=$activePlayers');
+
+        // Show opponent hole cards dialog for showdown situations
+        await _showOpponentCardsDialog(activePlayers, allWinners.toList());
+
+        setState(() {
+          // Distribute each pot to its winner(s)
+          List<String> potLogs = [];
+          double totalDistributed = 0.0;
+
+          for (int potIndex = 0; potIndex < resultSidePots.length; potIndex++) {
+            final potResult = potResults[potIndex]!;
+            final sidePot = resultSidePots[potIndex];
+            final potName = potIndex == 0 ? 'Main Pot' : 'Side Pot $potIndex';
+
+            if (potResult['isChoppedPot'] == true) {
+              final winners = List<int>.from(potResult['winners']);
+              final individualShares = Map<int, double>.from(potResult['individualShares']);
+
+              for (int winnerId in winners) {
+                final winnerShare = individualShares[winnerId]!;
+                final winnerPlayer = gameState.players[winnerId - 1];
+                winnerPlayer.currentStack += winnerShare;
+                totalDistributed += winnerShare;
+              }
+
+              List<String> winnerDetails = winners.map((id) {
+                final name = sessionManager.getPlayerNameWithPosition(id);
+                final amount = individualShares[id]!;
+                return '$name (${_formatCurrency(amount)})';
+              }).toList();
+              potLogs.add("🏆 $potName chopped: ${winnerDetails.join(', ')}");
+            } else {
+              final winnerId = potResult['winner'] as int;
+              final potAmount = potResult['potAmount'] as double;
+              final winnerPlayer = gameState.players[winnerId - 1];
+              winnerPlayer.currentStack += potAmount;
+              totalDistributed += potAmount;
+
+              String winnerName = sessionManager.getPlayerNameWithPosition(winnerId);
+              potLogs.add("🏆 $potName: $winnerName wins ${_formatCurrency(potAmount)}");
+            }
+          }
+
+          // Reset the pot after distributing all pots
+          gameState.currentPot = 0.0;
+
+          // Add action logs for all pots
+          for (String log in potLogs) {
+            actions.add(log);
+          }
+
+          // Complete hand in session manager
+          final ourSeat = sessionManager.ourSeatNumber;
+          final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+
+          // For multi-pot, complete with the primary winner (first pot's winner)
+          final firstPotResult = potResults[0]!;
+          if (firstPotResult['isChoppedPot'] == true) {
+            final winners = List<int>.from(firstPotResult['winners']);
+            final individualShares = Map<int, double>.from(firstPotResult['individualShares']);
+            sessionManager.completeCurrentHandWithChop(
+              potAmount: totalDistributed,
+              winnerIds: winners,
+              individualShares: individualShares,
+              currentStack: currentStack,
+            );
+          } else {
+            sessionManager.completeCurrentHand(
+              potAmount: totalDistributed,
+              winnerId: firstPotResult['winner'] as int,
+              currentStack: currentStack,
+            );
+          }
+        });
+
+        // Check for busted players and start next hand
+        await _checkForBustedPlayers();
+
+        setState(() {
+          // Reset all-in completion flag for new hand
+          _allInHandCompleted = false;
+
+          // Start new hand in game state
+          gameState.startNewHand();
+
+          // Start new hand in session manager
+          sessionManager.startHand(
+            gameState.handNumber,
+            gameState.buttonPosition,
+            sbSeat: gameState.effectiveSBPosition,
+            bbSeat: gameState.effectiveBBPosition,
+          );
+
+          actions.clear(); // Clear actions for new hand
+          actions.add("💾 Hand #${gameState.handNumber - 1} saved");
+          actions.add("Hand #${gameState.handNumber} started");
+          actions.add(gameState.getGameStateInfo());
+          actions.add(_getToActMessage());
+        });
+      });
     } else {
-      // Handle single winner
-      final winnerId = winnerResult['winnerId'] as int? ?? winnerResult['winner'] as int?;
-      final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
+      // Handle single-pot scenario (existing logic)
+      final isChoppedPot = winnerResult['isChoppedPot'] as bool? ?? false;
+      LoggerService.debug('  isChoppedPot: $isChoppedPot');
 
-      if (winnerId != null) {
-        final winnerName = sessionManager.getPlayerNameWithPosition(winnerId);
-        addAction("🏆 Winner: $winnerName");
-      }
-    }
+      // Mark hand as completed and use the standard finalization flow
+      _allInHandCompleted = true;
+      setState(() {});
+      addAction("✅ All-in hand completed!");
 
-    // Show hole cards dialog first, then complete the hand with winner info
-    Future.delayed(Duration(milliseconds: 500), () async {
-      // Show hole cards dialog first
-      await _showHoleCardsDialog();
-
-      // Get active players and winners for opponent cards dialog
-      final activePlayers = gameState.getActivePlayers();
-      final List<int> winners;
       if (isChoppedPot) {
-        winners = List<int>.from(winnerResult['winnerIds'] ?? []);
-      } else {
-        final winnerId = winnerResult['winnerId'] as int? ?? winnerResult['winner'] as int?;
-        winners = winnerId != null ? [winnerId] : [];
-      }
-
-      // Show opponent hole cards dialog for showdown situations
-      await _showOpponentCardsDialog(activePlayers, winners);
-
-      // Now complete the hand with proper winner info
-      if (isChoppedPot) {
+        // Handle chopped pot
         final winnerIds = List<int>.from(winnerResult['winnerIds'] ?? []);
         final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
         final individualShares = winnerResult['individualShares'] as Map<int, double>?;
         final sharePerWinner = winnerResult['sharePerWinner'] as double?;
 
-        // Get current stack for our seat to track in session history
-        final ourSeat = sessionManager.ourSeatNumber;
-        final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
-
-        sessionManager.completeCurrentHandWithChop(
-          potAmount: potAmount,
-          winnerIds: winnerIds,
-          individualShares: individualShares,
-          sharePerWinner: sharePerWinner,
-          currentStack: currentStack,
-        );
-
-        // Update winners' stacks in game state to prevent them being marked as busted
-        for (int winnerId in winnerIds) {
-          final winnerPlayer = gameState.players[winnerId - 1];
-          final winnerShare = individualShares?[winnerId] ?? (sharePerWinner ?? (potAmount / winnerIds.length));
-          winnerPlayer.currentStack += winnerShare;
-        }
+        addAction("🏆 Chopped pot between ${winnerIds.length} players");
       } else {
+        // Handle single winner
         final winnerId = winnerResult['winnerId'] as int? ?? winnerResult['winner'] as int?;
         final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
 
         if (winnerId != null) {
+          final winnerName = sessionManager.getPlayerNameWithPosition(winnerId);
+          addAction("🏆 Winner: $winnerName");
+        }
+      }
+
+      // Show hole cards dialog first, then complete the hand with winner info
+      Future.delayed(Duration(milliseconds: 500), () async {
+        // Show hole cards dialog first
+        await _showHoleCardsDialog();
+
+        // Get active players and winners for opponent cards dialog
+        final activePlayers = gameState.getActivePlayers();
+        final List<int> winners;
+        if (isChoppedPot) {
+          winners = List<int>.from(winnerResult['winnerIds'] ?? []);
+        } else {
+          final winnerId = winnerResult['winnerId'] as int? ?? winnerResult['winner'] as int?;
+          winners = winnerId != null ? [winnerId] : [];
+        }
+
+        // Show opponent hole cards dialog for showdown situations
+        await _showOpponentCardsDialog(activePlayers, winners);
+
+        // Now complete the hand with proper winner info
+        if (isChoppedPot) {
+          final winnerIds = List<int>.from(winnerResult['winnerIds'] ?? []);
+          final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
+          final individualShares = winnerResult['individualShares'] as Map<int, double>?;
+          final sharePerWinner = winnerResult['sharePerWinner'] as double?;
+
           // Get current stack for our seat to track in session history
           final ourSeat = sessionManager.ourSeatNumber;
           final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
 
-          sessionManager.completeCurrentHand(
+          sessionManager.completeCurrentHandWithChop(
             potAmount: potAmount,
-            winnerId: winnerId,
+            winnerIds: winnerIds,
+            individualShares: individualShares,
+            sharePerWinner: sharePerWinner,
             currentStack: currentStack,
           );
 
-          // Update winner's stack in game state to prevent them being marked as busted
-          final winnerPlayer = gameState.players[winnerId - 1];
-          winnerPlayer.currentStack += potAmount;
+          // Update winners' stacks in game state to prevent them being marked as busted
+          for (int winnerId in winnerIds) {
+            final winnerPlayer = gameState.players[winnerId - 1];
+            final winnerShare = individualShares?[winnerId] ?? (sharePerWinner ?? (potAmount / winnerIds.length));
+            winnerPlayer.currentStack += winnerShare;
+          }
+        } else {
+          final winnerId = winnerResult['winnerId'] as int? ?? winnerResult['winner'] as int?;
+          final potAmount = winnerResult['potAmount'] as double? ?? gameState.currentPot;
+
+          if (winnerId != null) {
+            // Get current stack for our seat to track in session history
+            final ourSeat = sessionManager.ourSeatNumber;
+            final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+
+            sessionManager.completeCurrentHand(
+              potAmount: potAmount,
+              winnerId: winnerId,
+              currentStack: currentStack,
+            );
+
+            // Update winner's stack in game state to prevent them being marked as busted
+            final winnerPlayer = gameState.players[winnerId - 1];
+            winnerPlayer.currentStack += potAmount;
+          }
         }
-      }
 
-      // Check for busted players and start next hand
-      await _checkForBustedPlayers();
+        // Check for busted players and start next hand
+        await _checkForBustedPlayers();
 
-      setState(() {
-        // Reset all-in completion flag for new hand
-        _allInHandCompleted = false;
+        setState(() {
+          // Reset all-in completion flag for new hand
+          _allInHandCompleted = false;
 
-        // Start new hand in game state
-        gameState.startNewHand();
+          // Start new hand in game state
+          gameState.startNewHand();
 
-        // Start new hand in session manager
-        sessionManager.startHand(
-          gameState.handNumber,
-          gameState.buttonPosition,
-          sbSeat: gameState.effectiveSBPosition,
-          bbSeat: gameState.effectiveBBPosition,
-        );
+          // Start new hand in session manager
+          sessionManager.startHand(
+            gameState.handNumber,
+            gameState.buttonPosition,
+            sbSeat: gameState.effectiveSBPosition,
+            bbSeat: gameState.effectiveBBPosition,
+          );
 
-        actions.clear(); // Clear actions for new hand
-        actions.add("💾 Hand #${gameState.handNumber - 1} saved");
-        actions.add("Hand #${gameState.handNumber} started");
-        actions.add(gameState.getGameStateInfo());
-        actions.add(_getToActMessage());
+          actions.clear(); // Clear actions for new hand
+          actions.add("💾 Hand #${gameState.handNumber - 1} saved");
+          actions.add("Hand #${gameState.handNumber} started");
+          actions.add(gameState.getGameStateInfo());
+          actions.add(_getToActMessage());
+        });
       });
-    });
+    }
   }
 
   void _showBoardCardsDialog(BettingRound round) {
@@ -3798,20 +3981,64 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       playerNames.add(playerName);
     }
 
+    // Check if we need side pot calculation
+    // Log each player's state for debugging
+    await LoggerService.debug('  Player states before side pot calculation:');
+    for (var player in gameState.players) {
+      if (player.isActive && !player.hasFolded) {
+        final totalContrib = player.totalContribution + player.betThisRound;
+        await LoggerService.debug('    P${player.playerId}: active=${player.isActive}, folded=${player.hasFolded}, '
+            'totalContrib=${player.totalContribution}, betThisRound=${player.betThisRound}, '
+            'total=${totalContrib}, stack=${player.currentStack}');
+      }
+    }
+
+    List<SidePot> sidePots = SidePotCalculator.calculateSidePots(gameState.players);
+    await LoggerService.debug('  Side pots calculated: ${sidePots.length} pots');
+    for (var pot in sidePots) {
+      await LoggerService.debug('    ${pot.toString()}');
+    }
+
     Map<String, dynamic>? winnerResult;
-    // ALWAYS show winner selection dialog
-    winnerResult = await showDialog<Map<String, dynamic>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => WinnerSelectionDialog(
-        activePlayers: activePlayers,
-        playerNames: playerNames,
-        potAmount: potAmount, // Use saved pot amount
-        gameType: widget.gameType, // Pass game type
-        buttonPosition: gameState.buttonPosition,
-        playerCount: gameState.numberOfPlayers,
-      ),
-    );
+
+    // Show multi-pot dialog if there are 2+ pots (main + side), otherwise show regular dialog
+    if (sidePots.length >= 2) {
+      await LoggerService.info('  Showing multi-pot winner dialog with ${sidePots.length} pots');
+
+      // Create player ID to name map
+      Map<int, String> playerIdToName = {};
+      for (int playerId in activePlayers) {
+        playerIdToName[playerId] = sessionManager.getPlayerNameWithPosition(playerId);
+      }
+
+      winnerResult = await showDialog<Map<String, dynamic>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => MultiPotWinnerDialog(
+          sidePots: sidePots,
+          playerNames: playerNames,
+          playerIdToName: playerIdToName,
+          gameType: widget.gameType,
+          buttonPosition: gameState.buttonPosition,
+          playerCount: gameState.numberOfPlayers,
+        ),
+      );
+    } else {
+      await LoggerService.debug('  Showing regular winner selection dialog (${sidePots.length} pot)');
+      // ALWAYS show winner selection dialog
+      winnerResult = await showDialog<Map<String, dynamic>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => WinnerSelectionDialog(
+          activePlayers: activePlayers,
+          playerNames: playerNames,
+          potAmount: potAmount, // Use saved pot amount
+          gameType: widget.gameType, // Pass game type
+          buttonPosition: gameState.buttonPosition,
+          playerCount: gameState.numberOfPlayers,
+        ),
+      );
+    }
 
     // User can cancel the dialog if they want to continue the hand
     if (winnerResult == null) {
@@ -3819,24 +4046,123 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       return;
     }
 
-    final bool isChoppedPot = winnerResult['isChoppedPot'] ?? false;
-    final List<int> winners = isChoppedPot
-        ? List<int>.from(winnerResult['winners'] ?? [])
-        : [winnerResult['winner'] as int];
-    final Map<int, double> individualShares = isChoppedPot && winnerResult['individualShares'] != null
-        ? Map<int, double>.from(winnerResult['individualShares'])
-        : {};
-    final double sharePerWinner = winnerResult['sharePerWinner'] ?? potAmount;
+    // Check if this is a multi-pot scenario
+    final bool isMultiPot = winnerResult.containsKey('potResults');
 
-    await LoggerService.debug('  Winner selection result: isChoppedPot=$isChoppedPot, winners=$winners');
+    if (isMultiPot) {
+      await LoggerService.info('  Processing multi-pot winner result');
 
-    // Then show hole cards dialog
-    await _showHoleCardsDialog();
+      final Map<int, Map<String, dynamic>> potResults =
+          Map<int, Map<String, dynamic>>.from(winnerResult['potResults']);
+      final List<SidePot> resultSidePots =
+          List<SidePot>.from(winnerResult['sidePots']);
 
-    await LoggerService.info('About to call _showOpponentCardsDialog with activePlayers=$activePlayers');
+      // Collect all unique winners across all pots for showdown dialogs
+      Set<int> allWinners = {};
+      for (var potResult in potResults.values) {
+        if (potResult['isChoppedPot'] == true) {
+          allWinners.addAll(List<int>.from(potResult['winners']));
+        } else {
+          allWinners.add(potResult['winner'] as int);
+        }
+      }
 
-    // Show opponent hole cards dialog for showdown situations
-    await _showOpponentCardsDialog(activePlayers, winners);
+      // Then show hole cards dialog
+      await _showHoleCardsDialog();
+
+      await LoggerService.info('About to call _showOpponentCardsDialog with activePlayers=$activePlayers');
+
+      // Show opponent hole cards dialog for showdown situations
+      await _showOpponentCardsDialog(activePlayers, allWinners.toList());
+
+      setState(() {
+        // Distribute each pot to its winner(s)
+        List<String> potLogs = [];
+        double totalDistributed = 0.0;
+
+        for (int potIndex = 0; potIndex < resultSidePots.length; potIndex++) {
+          final potResult = potResults[potIndex]!;
+          final sidePot = resultSidePots[potIndex];
+          final potName = potIndex == 0 ? 'Main Pot' : 'Side Pot $potIndex';
+
+          if (potResult['isChoppedPot'] == true) {
+            final winners = List<int>.from(potResult['winners']);
+            final individualShares = Map<int, double>.from(potResult['individualShares']);
+
+            for (int winnerId in winners) {
+              final winnerShare = individualShares[winnerId]!;
+              _distributePotToWinner(winnerId, winnerShare);
+              totalDistributed += winnerShare;
+            }
+
+            List<String> winnerDetails = winners.map((id) {
+              final name = sessionManager.getPlayerNameWithPosition(id);
+              final amount = individualShares[id]!;
+              return '$name (${_formatCurrency(amount)})';
+            }).toList();
+            potLogs.add("🏆 $potName chopped: ${winnerDetails.join(', ')}");
+          } else {
+            final winnerId = potResult['winner'] as int;
+            final potAmount = potResult['potAmount'] as double;
+            _distributePotToWinner(winnerId, potAmount);
+            totalDistributed += potAmount;
+
+            String winnerName = sessionManager.getPlayerNameWithPosition(winnerId);
+            potLogs.add("🏆 $potName: $winnerName wins ${_formatCurrency(potAmount)}");
+          }
+        }
+
+        // Reset the pot after distributing all pots
+        gameState.currentPot = 0.0;
+
+        // Add action logs for all pots
+        for (String log in potLogs) {
+          actions.add(log);
+        }
+
+        // Complete hand in session manager
+        final ourSeat = sessionManager.ourSeatNumber;
+        final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : null;
+
+        // For multi-pot, complete with the primary winner (first pot's winner)
+        final firstPotResult = potResults[0]!;
+        if (firstPotResult['isChoppedPot'] == true) {
+          final winners = List<int>.from(firstPotResult['winners']);
+          final individualShares = Map<int, double>.from(firstPotResult['individualShares']);
+          sessionManager.completeCurrentHandWithChop(
+            potAmount: totalDistributed,
+            winnerIds: winners,
+            individualShares: individualShares,
+            currentStack: currentStack,
+          );
+        } else {
+          sessionManager.completeCurrentHand(
+            potAmount: totalDistributed,
+            winnerId: firstPotResult['winner'] as int,
+            currentStack: currentStack,
+          );
+        }
+      });
+    } else {
+      // Regular single-pot scenario
+      final bool isChoppedPot = winnerResult['isChoppedPot'] ?? false;
+      final List<int> winners = isChoppedPot
+          ? List<int>.from(winnerResult['winners'] ?? [])
+          : [winnerResult['winner'] as int];
+      final Map<int, double> individualShares = isChoppedPot && winnerResult['individualShares'] != null
+          ? Map<int, double>.from(winnerResult['individualShares'])
+          : {};
+      final double sharePerWinner = winnerResult['sharePerWinner'] ?? potAmount;
+
+      await LoggerService.debug('  Winner selection result: isChoppedPot=$isChoppedPot, winners=$winners');
+
+      // Then show hole cards dialog
+      await _showHoleCardsDialog();
+
+      await LoggerService.info('About to call _showOpponentCardsDialog with activePlayers=$activePlayers');
+
+      // Show opponent hole cards dialog for showdown situations
+      await _showOpponentCardsDialog(activePlayers, winners);
 
     setState(() {
       if (isChoppedPot) {
@@ -3894,6 +4220,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         actions.add("🏆 $winnerName wins ${_formatCurrency(potAmount)}");
       }
     });
+    } // Close the else block for regular single-pot scenario
 
     // For individual sessions, return to the session tracking screen
     if (widget.isIndividualSession) {

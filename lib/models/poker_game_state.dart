@@ -1290,9 +1290,12 @@ class PokerGameState {
             anteAmount = 0.0;
           }
           currentBet = bbAmount; // Adjust current bet if BB is all-in for less
+        } else {
+          // Normal case: BB has enough chips
+          currentBet = bbAmount; // Current bet is just the BB portion (not including ante)
         }
 
-        bbPlayer.betThisRound = bbAmount; // Only the BB portion counts as bet
+        bbPlayer.betThisRound = totalBBPost; // Track full amount (BB + ante) for side pot calculation
         bbPlayer.currentStack -= totalBBPost;
         bbPlayer._updateAllInStatus();
         currentPot += totalBBPost;
@@ -1331,9 +1334,12 @@ class PokerGameState {
               anteAmount = 0.0;
             }
             currentBet = bbAmount; // Adjust current bet if BB is all-in for less
+          } else {
+            // Normal case: BB has enough chips
+            currentBet = bbAmount; // Current bet is just the BB portion (not including ante)
           }
 
-          nextBBPlayer.betThisRound = bbAmount; // Only the BB portion counts as bet
+          nextBBPlayer.betThisRound = totalBBPost; // Track full amount (BB + ante) for side pot calculation
           nextBBPlayer.currentStack -= totalBBPost;
           nextBBPlayer._updateAllInStatus();
           currentPot += totalBBPost;
@@ -1397,10 +1403,13 @@ class PokerGameState {
             bbAmount = totalBBPost;
             anteAmount = 0.0;
           }
-          currentBet = bbAmount;
+          currentBet = bbAmount; // Adjust current bet if BB is all-in for less
+        } else {
+          // Normal case: BB has enough chips
+          currentBet = bbAmount; // Current bet is just the BB portion (not including ante)
         }
 
-        bbPlayer.betThisRound = bbAmount; // Only the BB portion counts as bet
+        bbPlayer.betThisRound = totalBBPost; // Track full amount (BB + ante) for side pot calculation
         bbPlayer.currentStack -= totalBBPost;
         bbPlayer._updateAllInStatus();
         currentPot += totalBBPost;
@@ -1615,8 +1624,9 @@ class SidePotCalculator {
     }
 
     // Create a list of player contributions with their IDs
+    // IMPORTANT: Include both totalContribution AND betThisRound to get full hand contribution
     List<MapEntry<int, double>> contributions = activePlayers
-        .map((p) => MapEntry(p.playerId, p.totalContribution))
+        .map((p) => MapEntry(p.playerId, p.totalContribution + p.betThisRound))
         .toList();
 
     // Sort by contribution amount (lowest first)
