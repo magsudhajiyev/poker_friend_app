@@ -5326,9 +5326,9 @@ class _SettingsDialogState extends State<_SettingsDialog> {
               () {
                 setState(() {
                   smallBlind++;
-                  // Ensure big blind is at least double the small blind
-                  if (bigBlind < smallBlind * 2) {
-                    bigBlind = smallBlind * 2;
+                  // Ensure big blind is at least equal to small blind
+                  if (bigBlind < smallBlind) {
+                    bigBlind = smallBlind;
                   }
                 });
               },
@@ -5336,9 +5336,9 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 if (smallBlind > MIN_SMALL_BLIND) {
                   setState(() {
                     smallBlind--;
-                    // Ensure big blind maintains proper relationship
-                    if (bigBlind < smallBlind * 2) {
-                      bigBlind = smallBlind * 2;
+                    // Ensure big blind is at least equal to small blind
+                    if (bigBlind < smallBlind) {
+                      bigBlind = smallBlind;
                     }
                   });
                 }
@@ -5347,9 +5347,9 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 _showBlindInputDialog('Small Blind', smallBlind, (value) {
                   setState(() {
                     smallBlind = value;
-                    // Ensure big blind is at least double the small blind
-                    if (bigBlind < smallBlind * 2) {
-                      bigBlind = smallBlind * 2;
+                    // Ensure big blind is at least equal to small blind
+                    if (bigBlind < smallBlind) {
+                      bigBlind = smallBlind;
                     }
                   });
                 });
@@ -5365,8 +5365,8 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 });
               },
               () {
-                // Big blind must be at least double the small blind
-                if (bigBlind > smallBlind * 2) {
+                // Big blind must be at least equal to small blind
+                if (bigBlind > smallBlind) {
                   setState(() {
                     bigBlind--;
                   });
@@ -5375,11 +5375,11 @@ class _SettingsDialogState extends State<_SettingsDialog> {
               () {
                 _showBlindInputDialog('Big Blind', bigBlind, (value) {
                   setState(() {
-                    // Ensure big blind is at least double the small blind
-                    if (value >= smallBlind * 2) {
+                    // Ensure big blind is at least equal to small blind
+                    if (value >= smallBlind) {
                       bigBlind = value;
                     } else {
-                      bigBlind = smallBlind * 2;
+                      bigBlind = smallBlind;
                     }
                   });
                 });

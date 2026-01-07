@@ -165,15 +165,15 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                       onDecrement: () {
                         if (smallBlind > 1) {
                           setState(() => smallBlind--);
-                          if (bigBlind <= smallBlind) {
-                            setState(() => bigBlind = smallBlind + 1);
+                          if (bigBlind < smallBlind) {
+                            setState(() => bigBlind = smallBlind);
                           }
                         }
                       },
                       onIncrement: () {
                         setState(() => smallBlind++);
-                        if (bigBlind <= smallBlind) {
-                          setState(() => bigBlind = smallBlind * 2);
+                        if (bigBlind < smallBlind) {
+                          setState(() => bigBlind = smallBlind);
                         }
                       },
                     ),
@@ -182,7 +182,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                       value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
                       icon: Icons.monetization_on_outlined,
                       onDecrement: () {
-                        if (bigBlind > smallBlind + 1) {
+                        if (bigBlind > smallBlind) {
                           setState(() => bigBlind--);
                         }
                       },
