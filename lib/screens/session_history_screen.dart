@@ -411,7 +411,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
             ),
             if (duration != null)
               Text(
-                'Duration: ${duration} minutes',
+                'Duration: ${_formatDuration(duration)}',
                 style: TextStyle(
                   color: Color(0xFF9A9A9A),
                   fontSize: 14,
@@ -1002,6 +1002,16 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     }
   }
 
+
+  String _formatDuration(int minutes) {
+    if (minutes >= 60) {
+      final hours = minutes ~/ 60;
+      final remainingMinutes = minutes % 60;
+      return '${hours}h ${remainingMinutes}min';
+    } else {
+      return '$minutes min';
+    }
+  }
 
   String _formatBlinds(Map<String, dynamic> session) {
     final smallBlind = session['smallBlind'] ?? 0;
