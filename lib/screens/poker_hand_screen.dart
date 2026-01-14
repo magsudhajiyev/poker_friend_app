@@ -37,6 +37,12 @@ class PokerHandScreen extends StatefulWidget {
   final String? individualSessionId;
   final double? individualTotalBuyIn;
 
+  // Quick stack update parameters (for individual session)
+  final Map<int, double>? preConfiguredStacks;
+  final int? preConfiguredButtonPosition;
+  final Map<int, String>? preConfiguredPlayerNames;
+  final bool skipTableSetup;
+
   // Full session parameters
   final String? sessionName;
   final double? buyInAmount;
@@ -57,6 +63,10 @@ class PokerHandScreen extends StatefulWidget {
     this.individualCurrentStack,
     this.individualSessionId,
     this.individualTotalBuyIn,
+    this.preConfiguredStacks,
+    this.preConfiguredButtonPosition,
+    this.preConfiguredPlayerNames,
+    this.skipTableSetup = false,
     this.sessionName,
     this.buyInAmount,
     this.startingStack,
@@ -78,7 +88,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   late PokerSessionManager sessionManager;
   bool autoAdvanceStreets = false;
   bool _allInHandCompleted = false;
-  
+
+  // Track user's starting stack for accurate win/loss calculation
+  double? _userStartingStack;
+
   // Drag betting state
   bool _isDragBetting = false;
   PlayerAction? _pendingAction;
@@ -122,8 +135,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     
     // Start session and first hand
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // If we have pre-configured stacks and button (from quick stack update), use those
+      if (widget.skipTableSetup &&
+          widget.preConfiguredStacks != null &&
+          widget.preConfiguredButtonPosition != null) {
+        _initializeWithPreConfiguredData(
+          widget.preConfiguredStacks!,
+          widget.preConfiguredButtonPosition!,
+          widget.preConfiguredPlayerNames,
+        );
+      }
       // If we have initial seat info from session setup, skip seat selection
-      if (widget.initialSeat != null && widget.initialButtonPosition != null) {
+      else if (widget.initialSeat != null && widget.initialButtonPosition != null) {
         _initializeWithSeatInfo(widget.initialSeat!, widget.initialButtonPosition!);
       } else {
         _initializeSession();
@@ -234,6 +257,127 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         actions.add("Player ${gameState.effectiveBBPosition} posts ante \$${sessionManager.bigBlind} for all players");
       }
     }
+
+    setState(() {});
+  }
+
+  Future<void> _initializeWithPreConfiguredData(
+    Map<int, double> playerStacks,
+    int buttonPosition,
+    Map<int, String>? playerNames,
+  ) async {
+    // Initialize with pre-configured stacks and button from quick stack update
+    // This skips the table selection UI entirely
+
+    // Get user's name to identify which seat they selected for themselves
+    String ourName = "You"; // Default name
+    try {
+      final user = AuthService.currentUser;
+      if (user != null && user.displayName?.isNotEmpty == true) {
+        ourName = user.displayName!;
+      }
+    } catch (e) {
+      // Use default if auth fails
+    }
+
+    // CRITICAL: Find which seat the user selected for themselves in Quick Stack Update
+    // Look through playerNames to find if user's name was assigned to any seat
+    int? ourSeatFromNames;
+    if (playerNames != null) {
+      for (var entry in playerNames.entries) {
+        if (entry.value == ourName) {
+          ourSeatFromNames = entry.key;
+          break;
+        }
+      }
+    }
+
+    // Set our seat number: use the seat where user placed themselves, or default to first active seat
+    if (ourSeatFromNames != null) {
+      sessionManager.ourSeatNumber = ourSeatFromNames;
+    } else {
+      // User didn't select themselves, default to first active seat with a stack
+      int? firstActiveSeat;
+      for (var entry in playerStacks.entries) {
+        if (entry.value > 0) {
+          firstActiveSeat = entry.key;
+          break;
+        }
+      }
+      sessionManager.ourSeatNumber = firstActiveSeat ?? 1;
+    }
+
+    // Apply ALL pre-configured player names from quick stack update
+    // This includes the user's name if they selected themselves
+    if (playerNames != null) {
+      for (var entry in playerNames.entries) {
+        final seatNumber = entry.key;
+        final playerName = entry.value;
+        if (seatNumber >= 1 && seatNumber <= 9 && playerName.isNotEmpty) {
+          sessionManager.setPlayerName(seatNumber, playerName);
+        }
+      }
+    }
+
+    // If user didn't select themselves in any seat, set their name to ourSeatNumber
+    if (ourSeatFromNames == null && sessionManager.ourSeatNumber != null) {
+      sessionManager.setPlayerName(sessionManager.ourSeatNumber!, ourName);
+    }
+
+    // Initialize ALL player stacks and active status
+    for (int i = 1; i <= 9; i++) {
+      if (playerStacks.containsKey(i) && playerStacks[i]! > 0) {
+        // Active player - set their stack
+        gameState.setPlayerStack(i, playerStacks[i]!);
+        gameState.setPlayerActive(i, true);
+        // Make sure session manager knows this seat is active
+        if (!sessionManager.activeSeats.contains(i)) {
+          sessionManager.activeSeats.add(i);
+        }
+      } else {
+        // Inactive player - set stack to 0 and mark inactive
+        gameState.setPlayerStack(i, 0.0);
+        gameState.setPlayerActive(i, false);
+        // Make sure session manager knows this seat is inactive
+        sessionManager.activeSeats.remove(i);
+      }
+    }
+
+    // CRITICAL: NOW set button position AFTER players are initialized
+    gameState.buttonPosition = buttonPosition;
+
+    // CRITICAL: Complete initialization and calculate action order
+    gameState.finalizeInitialization();
+
+    // Initialize pot with blinds - this will deduct blinds from stacks and add to pot
+    gameState.initializePot();
+
+    // Get initial stack for our seat to track in session history
+    final sessionSeat = sessionManager.ourSeatNumber;
+    final initialStack = sessionSeat != null ? gameState.players[sessionSeat - 1].currentStack : (widget.individualCurrentStack ?? widget.startingStack);
+
+    // CRITICAL: Store user's actual starting stack for accurate win/loss calculation
+    // This reflects what they actually started with (including manual adjustments in Quick Stack Update)
+    _userStartingStack = initialStack;
+
+    // Start the session and hand (CRITICAL for proper action order)
+    await sessionManager.startSession(initialStack: initialStack);
+
+    sessionManager.startHand(
+      gameState.handNumber,
+      gameState.buttonPosition,
+      sbSeat: gameState.effectiveSBPosition,
+      bbSeat: gameState.effectiveBBPosition,
+    );
+
+    // Add action messages with proper context
+    if (!widget.isIndividualSession) {
+      actions.add("🔥 Session started - Firebase ID: ${sessionManager.sessionId?.substring(0, 8)}...");
+    }
+    actions.add("Game started. Blinds: ${sessionManager.smallBlind}/${sessionManager.bigBlind}");
+    actions.add("Your seat: #${sessionManager.ourSeatNumber} (${sessionManager.getOurPosition(gameState.buttonPosition) ?? 'UNK'})");
+    actions.add(gameState.getGameStateInfo());
+    actions.add(_getToActMessage());
 
     setState(() {});
   }
@@ -3872,6 +4016,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         Navigator.pop(context, {
           'completed': true,
           'finalStack': finalStack,
+          'startingStack': _userStartingStack ?? finalStack,
           'potSize': potAmount,
           'smallBlind': sessionManager.smallBlind,
           'bigBlind': sessionManager.bigBlind,
@@ -3921,6 +4066,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       Navigator.pop(context, {
         'completed': true,
         'finalStack': finalStack,
+        'startingStack': _userStartingStack ?? finalStack,
         'potSize': potSize,
         'smallBlind': sessionManager.smallBlind,
         'bigBlind': sessionManager.bigBlind,
@@ -4233,6 +4379,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       Navigator.pop(context, {
         'completed': true,
         'finalStack': finalStack,
+        'startingStack': _userStartingStack ?? finalStack,
         'potSize': potSize,
         'smallBlind': sessionManager.smallBlind,
         'bigBlind': sessionManager.bigBlind,
@@ -4710,6 +4857,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       Navigator.pop(context, {
         'completed': true,
         'finalStack': finalStack,
+        'startingStack': _userStartingStack ?? finalStack,
         'potSize': potSize,
         'smallBlind': sessionManager.smallBlind,
         'bigBlind': sessionManager.bigBlind,

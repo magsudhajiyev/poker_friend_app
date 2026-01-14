@@ -5,7 +5,9 @@ import '../design_system/poker_friend_theme.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/auth_service.dart';
 import 'poker_hand_screen.dart';
+import 'quick_stack_update_screen.dart';
 
 class IndividualSessionTrackingScreen extends StatefulWidget {
   final String sessionName;
@@ -75,6 +77,11 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   // Display mode
   bool _showBBMode = false;
+
+  // Quick stack update tracking
+  int _lastButtonPosition = 1; // Default button at player 1
+  Map<int, double> _lastPlayerStacks = {}; // Track last known stacks
+  Map<int, String> _lastPlayerNames = {}; // Track player names
 
   @override
   void initState() {
@@ -669,14 +676,84 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       return;
     }
 
-    // Navigate to PokerHandScreen with individual session context
+    // CRITICAL: Get user's name for tracking stack across position changes
+    String userName = 'You';
+    try {
+      final user = AuthService.currentUser;
+      if (user != null && user.displayName?.isNotEmpty == true) {
+        userName = user.displayName!;
+      }
+    } catch (e) {}
+
+    // Step 1: Navigate to Quick Stack Update Screen
+    // Pass user's current stack and name so it auto-applies to whichever seat they select
+    final stackResult = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuickStackUpdateScreen(
+          smallBlind: _currentSmallBlind,
+          bigBlind: _currentBigBlind,
+          numberOfPlayers: 9, // Support all 9 seats
+          gameType: widget.gameType,
+          currentStacks: _lastPlayerStacks.isNotEmpty ? _lastPlayerStacks : null,
+          currentButtonPosition: _lastButtonPosition,
+          playerNames: _lastPlayerNames.isNotEmpty ? _lastPlayerNames : null,
+          userCurrentStack: _currentStack, // CRITICAL: Pass user's current stack
+          userName: userName, // CRITICAL: Pass user's name to detect when they seat themselves
+        ),
+      ),
+    );
+
+    // User cancelled
+    if (stackResult == null) return;
+
+    // Extract stacks, button position, and player names
+    final Map<int, double> playerStacks = Map<int, double>.from(stackResult['playerStacks']);
+    final int buttonPosition = stackResult['buttonPosition'];
+    final Map<int, String>? playerNames = stackResult['playerNames'] != null
+        ? Map<int, String>.from(stackResult['playerNames'])
+        : null;
+
+    // Save for next time
+    setState(() {
+      _lastPlayerStacks = playerStacks;
+      _lastButtonPosition = buttonPosition;
+      if (playerNames != null) {
+        // Merge new names with existing names
+        _lastPlayerNames.addAll(playerNames);
+      }
+    });
+
+    // Build complete player names map (merge previous names with new names)
+    Map<int, String> completePlayerNames = Map<int, String>.from(_lastPlayerNames);
+    if (playerNames != null) {
+      completePlayerNames.addAll(playerNames);
+    }
+
+    // CRITICAL: Update user's current stack from their selected seat
+    // The QuickStackUpdateScreen already auto-applied user's stack to their selected seat
+    // So we just need to read it back from wherever they seated themselves
+    int? userSeat;
+    for (var entry in completePlayerNames.entries) {
+      if (entry.value == userName) {
+        userSeat = entry.key;
+        break;
+      }
+    }
+
+    // Update _currentStack from user's seat (already contains manual adjustments from Quick Stack Update)
+    if (userSeat != null && playerStacks.containsKey(userSeat)) {
+      _currentStack = playerStacks[userSeat]!;
+    }
+
+    // Step 2: Navigate to PokerHandScreen with pre-configured stacks, button, and player names
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
         builder: (context) => PokerHandScreen(
           smallBlind: _currentSmallBlind,
           bigBlind: _currentBigBlind,
-          numberOfPlayers: 6, // Default active players
+          numberOfPlayers: 9, // Support all 9 seats
           gameType: widget.gameType,
           hasBBante: _currentHasBBante,
           ante: _currentHasBBante ? _currentBigBlind : 0,
@@ -684,6 +761,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           individualCurrentStack: _currentStack,
           individualSessionId: _sessionId,
           individualTotalBuyIn: _totalBuyIn, // Pass total buy-in for proper tracking
+          preConfiguredStacks: playerStacks,
+          preConfiguredButtonPosition: buttonPosition,
+          preConfiguredPlayerNames: completePlayerNames.isNotEmpty ? completePlayerNames : null,
+          skipTableSetup: true,
         ),
       ),
     );
@@ -691,13 +772,16 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     if (result != null && result['completed'] == true) {
       // Hand was completed, update our stack
       final newStack = result['finalStack'] as double?;
+      final startingStack = result['startingStack'] as double?;
       if (newStack != null) {
-        final previousStack = _currentStack;
-        final stackChange = newStack - previousStack;
+        // CRITICAL: Use actual starting stack (from Quick Stack Update) as baseline
+        // Not session-level _currentStack, which may differ from manual adjustments
+        final actualStartingStack = startingStack ?? _currentStack;
+        final stackChange = newStack - actualStartingStack;
 
         // Calculate incremental average growth for tournaments
-        if (widget.gameType == GameType.tournament && previousStack > 0) {
-          final handGrowth = ((newStack - previousStack) / previousStack) * 100;
+        if (widget.gameType == GameType.tournament && actualStartingStack > 0) {
+          final handGrowth = ((newStack - actualStartingStack) / actualStartingStack) * 100;
           // Update running average: newAvg = (oldAvg * n + newValue) / (n + 1)
           _averageGrowth = (_averageGrowth * _handsLogged + handGrowth) / (_handsLogged + 1);
         }
