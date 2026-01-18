@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../models/opponent_stats.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
 import '../widgets/global_loading_spinner.dart';
+import '../widgets/global_bottom_nav_bar.dart';
+import '../widgets/global_top_header.dart';
 import 'opponent_detail_screen.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
@@ -103,171 +106,168 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 375),
-            margin: EdgeInsets.symmetric(horizontal: 24),
+      backgroundColor: Colors.black,
+      extendBody: true,
+      body: Stack(
+        children: [
+          // Green gradient background overlay at top
+          Positioned(
+            left: -98,
+            top: -148,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 132, sigmaY: 132),
+                child: Container(
+                  width: 595,
+                  height: 727,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFFABFFB4).withOpacity(0.6),
+                        const Color(0xFF006434).withOpacity(0.6),
+                        const Color(0xFF000000).withOpacity(0.6),
+                      ],
+                      stops: [0.0, 0.32, 1.0],
+                    ),
+                    borderRadius: BorderRadius.all(Radius.elliptical(297.5, 363.5)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Section - matching home screen style
+                // Top Header Bar - Fixed
                 Padding(
-                  padding: EdgeInsets.fromLTRB(0, 32, 0, 32),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Opponents',
-                            style: TextStyle(
-                              fontSize: 32,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: GlobalTopHeader(currentScreen: 'opponents'),
+                ),
+                const SizedBox(height: 28),
+
+                // Opponents Header Section - Fixed
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 32),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Opponents',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 28,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.56,
+                                  height: 1.0,
+                                ),
+                              ),
+                              SizedBox(height: 7),
+                              Text(
+                                '${opponents.length} tracked players',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 16,
+                                  color: Color(0xFFFFFFFF).withOpacity(0.8),
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: -0.32,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Add opponent button
+                        GestureDetector(
+                          onTap: _showAddOpponentDialog,
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.add,
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.5,
+                              size: 24,
                             ),
                           ),
-                          SizedBox(height: 4),
-                          Text(
-                            '${opponents.length} tracked players',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF9A9A9A),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            margin: EdgeInsets.only(right: 12),
-                            decoration: BoxDecoration(
-                              color: Color(0xFF1F1F23),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: IconButton(
-                              onPressed: () => Navigator.pop(context),
-                              icon: Icon(
-                                Icons.arrow_back,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 44,
-                            height: 44,
-                            margin: EdgeInsets.only(right: 12),
-                            decoration: BoxDecoration(
-                              color: Color(0xFF1F1F23),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: IconButton(
-                              onPressed: _showAnalyticsDialog,
-                              icon: Icon(
-                                Icons.analytics,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF1F1F23),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: IconButton(
-                              onPressed: () => _loadOpponents(useCache: false),
-                              icon: Icon(
-                                Icons.refresh,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Search bar
-                Container(
-                  margin: EdgeInsets.only(bottom: 24),
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: TextField(
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'Search opponents...',
-                      hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Color(0xFF9A9A9A),
-                        size: 20,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 15),
+                        ),
+                      ],
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        searchQuery = value;
-                      });
-                    },
                   ),
                 ),
-                
-                // Main content
-                Container(
-                  height: MediaQuery.of(context).size.height - 300,
-                  child: _buildBody(),
+
+                // Search bar - Fixed
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    margin: EdgeInsets.only(bottom: 24),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: BackdropFilter(
+                        filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF546165).withOpacity(0.74),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: TextField(
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontFamily: 'Inter',
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Search opponents...',
+                              hintStyle: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontFamily: 'Inter',
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: Colors.white.withOpacity(0.7),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(vertical: 15),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                searchQuery = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Scrollable opponent cards list
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildBody(),
+                  ),
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
-      floatingActionButton: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFcb5242), Color(0xFFb8442f)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0xFFcb5242).withOpacity(0.3),
-              blurRadius: 15,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: _showAddOpponentDialog,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: Icon(
-            Icons.person_add,
-            color: Colors.white,
-            size: 28,
-          ),
-        ),
-      ),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'opponents'),
     );
   }
 
@@ -393,7 +393,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.zero,
+      padding: EdgeInsets.only(bottom: 20),
       itemCount: displayOpponents.length,
       itemBuilder: (context, index) {
         final opponent = displayOpponents[index];
@@ -404,169 +404,202 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
 
   Widget _buildOpponentCard(Opponent opponent) {
     final cardColor = _getColorForOpponent(opponent.color);
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: InkWell(
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OpponentDetailScreen(opponent: opponent),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Color(0xFF546165).withOpacity(0.74),
+              borderRadius: BorderRadius.circular(12),
             ),
-          );
-          // Only reload if opponent was modified (invalidate cache)
-          if (result == true) {
-            _loadOpponents(useCache: false);
-          }
-        },
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  // Color indicator and avatar
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: cardColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
+            child: InkWell(
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OpponentDetailScreen(opponent: opponent),
                   ),
-                  SizedBox(width: 16),
-                  // Name and playing style
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                );
+                // Only reload if opponent was modified (invalidate cache)
+                if (result == true) {
+                  _loadOpponents(useCache: false);
+                }
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                child: Column(
+                  children: [
+                    // Top section: User info + hands count
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          opponent.name,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        // Left: CardIcon + Name/Style
+                        Row(
+                          children: [
+                            // Color indicator avatar
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: cardColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(55),
+                              ),
+                              child: Center(
+                                child: Container(
+                                  width: 18,
+                                  height: 18,
+                                  decoration: BoxDecoration(
+                                    color: cardColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            // Name and playing style column
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  opponent.name,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 18,
+                                    color: Color(0xFFFFFFFF).withOpacity(0.84),
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 0,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                Text(
+                                  opponentStats[opponent.name]?.playingStyle ?? 'No Data',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12,
+                                    color: _getStyleColor(opponentStats[opponent.name]?.playerType ?? PlayerType.unknown).withOpacity(0.84),
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: 0,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        SizedBox(height: 2),
-                        Text(
-                          opponentStats[opponent.name]?.playingStyle ?? 'No Data',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: _getStyleColor(opponentStats[opponent.name]?.playerType ?? PlayerType.unknown),
-                            fontWeight: FontWeight.w600,
-                          ),
+                        // Right: Hands count
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${opponentHandsCounts[opponent.name] ?? 0}',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 18,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0,
+                                height: 1.4,
+                              ),
+                            ),
+                            Text(
+                              'Hands',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                  // Stats summary
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${opponentHandsCounts[opponent.name] ?? 0}',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+
+                    SizedBox(height: 24),
+
+                    // Bottom section: Last seen + action buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Left: Last seen
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.visibility_outlined,
+                              size: 18,
+                              color: Color(0xFFFFFFFF).withOpacity(0.84),
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Last Seen: ${DateFormat('MMM dd').format(opponent.lastSeenAt)}',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 12,
+                                color: Color(0xFFFFFFFF).withOpacity(0.84),
+                                fontWeight: FontWeight.w400,
+                                letterSpacing: 0,
+                                height: 1.3,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      Text(
-                        'hands',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF9A9A9A),
+                        // Right: Action buttons
+                        Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 28.5,
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: Icon(Icons.edit, size: 18, color: Colors.white),
+                                onPressed: () => _showEditOpponentDialog(opponent),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: Color(0xFFB63131),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 28.5,
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: Icon(Icons.delete, size: 18, color: Colors.white),
+                                onPressed: () => _showDeleteConfirmation(opponent),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              
-              if (opponent.notes != null && opponent.notes!.isNotEmpty) ...[
-                SizedBox(height: 16),
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF161618),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    opponent.notes!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF9A9A9A),
-                      fontStyle: FontStyle.italic,
+                      ],
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ],
                 ),
-              ],
-              
-              SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Last seen: ${DateFormat('MMM dd').format(opponent.lastSeenAt)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF9A9A9A),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF161618),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: IconButton(
-                          icon: Icon(Icons.edit, size: 16, color: Color(0xFF9A9A9A)),
-                          onPressed: () => _showEditOpponentDialog(opponent),
-                          padding: EdgeInsets.zero,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: IconButton(
-                          icon: Icon(Icons.delete, size: 16, color: Colors.red),
-                          onPressed: () => _showDeleteConfirmation(opponent),
-                          padding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -627,114 +660,306 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     final notesController = TextEditingController(text: opponent?.notes ?? '');
     OpponentColor selectedColor = opponent?.color ?? OpponentColor.blue;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      transitionAnimationController: AnimationController(
+        duration: const Duration(milliseconds: 600),
+        vsync: Navigator.of(context) as TickerProvider,
+      )..forward(),
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(isEditing ? 'Edit Opponent' : 'Add Opponent'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Opponent Name',
-                    border: OutlineInputBorder(),
-                  ),
-                  autofocus: true,
+        builder: (context, setSheetState) {
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.elasticOut,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xFF1a2925),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: notesController,
-                  decoration: InputDecoration(
-                    labelText: 'Notes (optional)',
-                    border: OutlineInputBorder(),
+              ),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
                   ),
-                  maxLines: 3,
-                ),
-                SizedBox(height: 16),
-                // Color selection
-                Text('Color Tag:', style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: OpponentColor.values.map((color) {
-                    return GestureDetector(
-                      onTap: () {
-                        setDialogState(() {
-                          selectedColor = color;
-                        });
-                      },
-                      child: Container(
-                        width: 32,
-                        height: 32,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Drag handle line
+                      Container(
+                        width: 80,
+                        height: 2,
+                        margin: EdgeInsets.only(top: 14),
                         decoration: BoxDecoration(
-                          color: _getColorForOpponent(color),
-                          shape: BoxShape.circle,
-                          border: selectedColor == color
-                              ? Border.all(color: Colors.black, width: 2)
-                              : null,
+                          color: Colors.white.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(1),
                         ),
                       ),
-                    );
-                  }).toList(),
+
+                      SizedBox(height: 38),
+
+                      // Title
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            isEditing ? 'Edit Opponent' : 'Add Opponent',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              letterSpacing: 0,
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 24),
+
+                      // Input fields
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          children: [
+                            // Opponent Name field
+                            Container(
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: nameController,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Opponent Name',
+                                  hintStyle: TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Colors.white.withOpacity(0.5),
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(height: 18),
+
+                            // Notes field
+                            Container(
+                              height: 150,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: notesController,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Notes (Optional)',
+                                  hintStyle: TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Colors.white.withOpacity(0.5),
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.all(16),
+                                ),
+                                maxLines: 6,
+                                maxLength: null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 24),
+
+                      // Color picker section
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Pick a color:',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: -0.28,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: OpponentColor.values.map((color) {
+                                final isSelected = selectedColor == color;
+                                return GestureDetector(
+                                  onTap: () {
+                                    setSheetState(() {
+                                      selectedColor = color;
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: _getColorForOpponent(color),
+                                      shape: BoxShape.circle,
+                                      border: isSelected
+                                          ? Border.all(
+                                              color: Colors.white,
+                                              width: 3,
+                                            )
+                                          : null,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 56),
+
+                      // Update button
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final name = nameController.text.trim();
+                              if (name.isEmpty) return;
+
+                              try {
+                                final newOpponent = isEditing
+                                    ? opponent!.copyWith(
+                                        name: name,
+                                        notes: notesController.text.trim().isEmpty
+                                            ? null
+                                            : notesController.text.trim(),
+                                        color: selectedColor,
+                                      )
+                                    : OpponentService.createNewOpponent(
+                                        name: name,
+                                        notes: notesController.text.trim().isEmpty
+                                            ? null
+                                            : notesController.text.trim(),
+                                        color: selectedColor,
+                                      );
+
+                                await OpponentService.saveOpponent(newOpponent);
+                                Navigator.pop(context);
+                                _loadOpponents(useCache: false);
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(isEditing
+                                        ? 'Opponent updated successfully'
+                                        : 'Opponent added successfully'),
+                                    backgroundColor: Color(0xFFA5EC44),
+                                  ),
+                                );
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFFA5EC44),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              'Update',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 16),
+
+                      // Cancel button
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 24),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                if (name.isEmpty) return;
-
-                try {
-                  final newOpponent = isEditing
-                      ? opponent!.copyWith(
-                          name: name,
-                          notes: notesController.text.trim().isEmpty 
-                              ? null 
-                              : notesController.text.trim(),
-                          color: selectedColor,
-                        )
-                      : OpponentService.createNewOpponent(
-                          name: name,
-                          notes: notesController.text.trim().isEmpty 
-                              ? null 
-                              : notesController.text.trim(),
-                          color: selectedColor,
-                        );
-
-                  await OpponentService.saveOpponent(newOpponent);
-                  Navigator.pop(context);
-                  _loadOpponents(useCache: false); // Invalidate cache
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(isEditing 
-                          ? 'Opponent updated successfully' 
-                          : 'Opponent added successfully'),
-                      backgroundColor: Color(0xFFcb5242),
-                    ),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              child: Text(isEditing ? 'Update' : 'Add'),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
