@@ -21,6 +21,8 @@ import '../services/stats_verification_service.dart';
 import '../screens/auth_screen.dart';
 import '../widgets/loading_screen.dart';
 import '../services/calendar_event_service.dart';
+import '../widgets/global_bottom_nav_bar.dart';
+import '../widgets/global_top_header.dart';
 
 /// Experimental home screen with new design
 class HomeScreenExperimental extends StatefulWidget {
@@ -316,7 +318,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                       const SizedBox(height: 16),
 
                       // Top Header Bar
-                      _buildTopHeader(),
+                      GlobalTopHeader(currentScreen: 'home'),
 
                       const SizedBox(height: 24),
 
@@ -352,7 +354,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home'),
     );
   }
 
@@ -374,13 +376,13 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
               // Already on home screen
             },
           ),
-          // Stats Icon
+          // Opponents Icon
           IconButton(
-            icon: Icon(Icons.bar_chart_rounded, color: Colors.white, size: 28),
+            icon: Icon(Icons.group, color: Colors.white, size: 28),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => StatisticsScreen()),
+                MaterialPageRoute(builder: (context) => MyOpponentsScreen()),
               );
             },
           ),
@@ -459,26 +461,56 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
             ),
           ),
 
-          // Notification Bell Icon
-          GestureDetector(
-            onTap: () {
-              // TODO: Navigate to notifications
-            },
-            child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.notifications,
-                  color: Colors.white,
-                  size: 26,
+          // Right side icons
+          Row(
+            children: [
+              // Statistics Icon
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => StatisticsScreen()),
+                  );
+                },
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.bar_chart_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 12),
+              // Notification Bell Icon
+              GestureDetector(
+                onTap: () {
+                  // TODO: Navigate to notifications
+                },
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.notifications,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

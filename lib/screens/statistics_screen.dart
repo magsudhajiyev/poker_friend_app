@@ -14,6 +14,9 @@ import 'profile_screen.dart';
 import 'logging_mode_selection_screen.dart';
 import 'session_history_screen.dart';
 import 'home_screen_experimental.dart';
+import 'my_opponents_screen.dart';
+import '../widgets/global_bottom_nav_bar.dart';
+import '../widgets/global_top_header.dart';
 
 class StatisticsScreen extends StatefulWidget {
   @override
@@ -452,25 +455,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             child: LoadingWrapper(
               isLoading: isLoading,
               loadingMessage: loadingMessage,
-              child: Column(
-                children: [
-                  // Top Header Bar
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: _buildTopHeader(),
-                  ),
-                  const SizedBox(height: 24),
-                  // Overview Content
-                  Expanded(
-                    child: _buildOverviewTab(),
-                  ),
-                ],
-              ),
+              child: _buildOverviewTab(),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'statistics'),
     );
   }
 
@@ -503,28 +493,89 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             ),
           ),
         ),
-        // Notification Bell Icon
-        GestureDetector(
-          onTap: () {
-            // TODO: Navigate to notifications
-          },
-          child: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Icon(
-                Icons.notifications,
-                color: Colors.white,
-                size: 26,
+        // Right side icons
+        Row(
+          children: [
+            // Statistics Icon
+            GestureDetector(
+              onTap: () {
+                // Already on statistics screen
+              },
+              child: Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.bar_chart_rounded,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: 12),
+            // Notification Bell Icon
+            GestureDetector(
+              onTap: () {
+                // TODO: Navigate to notifications
+              },
+              child: Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.notifications,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildStatisticsHeader() {
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Statistics',
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: 'Inter',
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.56,
+              height: 1.0, // line-height: 28px / font-size: 28px = 1.0
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            'Overall performance',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontFamily: 'Inter',
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              letterSpacing: -0.32,
+              height: 1.0, // line-height: 16px / font-size: 16px = 1.0
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -549,11 +600,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               );
             },
           ),
-          // Stats Icon - highlighted
+          // Opponents Icon
           IconButton(
-            icon: Icon(Icons.bar_chart_rounded, color: const Color(0xFFA5EC44), size: 28),
+            icon: Icon(Icons.group, color: Colors.white, size: 28),
             onPressed: () {
-              // Already on stats screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyOpponentsScreen()),
+              );
             },
           ),
           // Center Plus Button
@@ -601,16 +655,36 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildOverviewTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildOverallStats(),
-          SizedBox(height: 24),
-          _buildPositionalStats(),
-          SizedBox(height: 24),
-          _buildSessionStats(),
-          SizedBox(height: 100),
+          // Top Header Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: GlobalTopHeader(currentScreen: 'statistics'),
+          ),
+          const SizedBox(height: 28),
+          // Statistics Header Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: _buildStatisticsHeader(),
+          ),
+          const SizedBox(height: 16),
+          // Content with padding
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildOverallStats(),
+                SizedBox(height: 24),
+                _buildPositionalStats(),
+                SizedBox(height: 24),
+                _buildSessionStats(),
+                SizedBox(height: 100),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -622,8 +696,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 16,
+      crossAxisSpacing: 8,
+      mainAxisSpacing: 8,
       childAspectRatio: 1.1,
       children: [
         _buildStatCard('Total Hands', totalHands.toString(), iconPath: 'icons/hole_cards.png'),
@@ -638,59 +712,63 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildStatCard(String label, String value, {String? iconPath}) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(20),
+        color: Color(0xFF1d2a27),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
+          // Icon with circular background
+          if (iconPath != null)
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-              if (iconPath != null)
-                Image.asset(
-                  iconPath,
-                  width: 40,
-                  height: 40,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Color(0xFF5AC95A).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.analytics,
-                        color: Color(0xFF5AC95A),
-                        size: 20,
-                      ),
-                    );
-                  },
-                ),
-            ],
+              padding: EdgeInsets.all(8),
+              child: Image.asset(
+                iconPath,
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.analytics,
+                    color: Color(0xFF5AC95A),
+                    size: 20,
+                  );
+                },
+              ),
+            ),
+          const SizedBox(height: 8),
+          // Label text
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withOpacity(0.84),
+              height: 1.4,
+              letterSpacing: 0,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
           Spacer(),
+          // Value text
           Text(
             value,
             style: TextStyle(
-              fontSize: 28,
+              fontFamily: 'Inter',
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
               color: Colors.white,
-              fontWeight: FontWeight.bold,
+              height: 1.4,
+              letterSpacing: 0,
             ),
           ),
         ],
@@ -703,10 +781,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final hasData = positionalStats.values.any((stats) => stats.totalHands > 0);
 
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(20),
+        color: Color(0xFF1d2a27),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -949,10 +1027,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildSessionStats() {
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(20),
+        color: Color(0xFF1d2a27),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
