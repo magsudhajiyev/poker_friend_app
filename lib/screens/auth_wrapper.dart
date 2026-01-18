@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
-import 'auth_screen.dart';
-import 'home_screen.dart';
+import 'intro_screen.dart';
+import 'home_screen_experimental.dart';
 
 class AuthWrapper extends StatelessWidget {
   @override
@@ -55,11 +55,11 @@ class AuthWrapper extends StatelessWidget {
         
         // User is signed in
         if (snapshot.hasData && snapshot.data != null) {
-          return HomeScreen();
+          return HomeScreenExperimental();
         }
         
         // User is not signed in
-        return AuthScreen();
+        return IntroScreen();
       },
     );
   }

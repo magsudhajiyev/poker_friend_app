@@ -642,10 +642,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       if (confirm == true) {
                         await AuthService.signOut();
-                        // AuthWrapper's StreamBuilder will automatically navigate to AuthScreen
                         if (mounted) {
-                          // Pop all screens to go back to root (AuthWrapper)
-                          Navigator.of(context).popUntil((route) => route.isFirst);
+                          // Navigate to AuthScreen and remove all routes
+                          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
                         }
                       }
                     },

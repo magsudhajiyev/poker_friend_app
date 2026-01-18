@@ -50,7 +50,10 @@ class PokerTrackerApp extends StatelessWidget {
     return MaterialApp(
       title: 'Poker Hand Tracker',
       theme: AppTheme.lightTheme,
-      home: AuthWrapper(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => AuthWrapper(),
+      },
       debugShowCheckedModeBanner: false,
     );
   }
