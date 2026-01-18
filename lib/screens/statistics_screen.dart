@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,10 @@ import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
 import '../services/user_stats_service.dart';
 import '../widgets/global_loading_spinner.dart';
+import 'profile_screen.dart';
+import 'logging_mode_selection_screen.dart';
+import 'session_history_screen.dart';
+import 'home_screen_experimental.dart';
 
 class StatisticsScreen extends StatefulWidget {
   @override
@@ -412,89 +417,184 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
-      body: LoadingWrapper(
-        isLoading: isLoading,
-        loadingMessage: loadingMessage,
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header Section
-              Padding(
-                padding: EdgeInsets.fromLTRB(24, 32, 24, 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Statistics',
-                          style: TextStyle(
-                            fontSize: 32,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Advanced Analytics',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF9A9A9A),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+      backgroundColor: Colors.black,
+      extendBody: true,
+      body: Stack(
+        children: [
+          // Green gradient background overlay at top
+          Positioned(
+            left: -98,
+            top: -148,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 132, sigmaY: 132),
+                child: Container(
+                  width: 595,
+                  height: 727,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFFABFFB4).withOpacity(0.6),
+                        const Color(0xFF006434).withOpacity(0.6),
+                        const Color(0xFF000000).withOpacity(0.6),
                       ],
+                      stops: [0.0, 0.32, 1.0],
                     ),
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          margin: EdgeInsets.only(right: 12),
-                          decoration: BoxDecoration(
-                            color: Color(0xFF1F1F23),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: IconButton(
-                            onPressed: () => Navigator.pop(context),
-                            icon: Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF1F1F23),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: IconButton(
-                            onPressed: isLoading ? null : _loadStatistics,
-                            icon: Icon(
-                              Icons.refresh,
-                              color: isLoading ? Colors.grey : Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    borderRadius: BorderRadius.all(Radius.elliptical(297.5, 363.5)),
+                  ),
                 ),
               ),
-              // Overview Content
-              Expanded(
-                child: _buildOverviewTab(),
+            ),
+          ),
+          SafeArea(
+            child: LoadingWrapper(
+              isLoading: isLoading,
+              loadingMessage: loadingMessage,
+              child: Column(
+                children: [
+                  // Top Header Bar
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: _buildTopHeader(),
+                  ),
+                  const SizedBox(height: 24),
+                  // Overview Content
+                  Expanded(
+                    child: _buildOverviewTab(),
+                  ),
+                ],
               ),
-            ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildTopHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Profile Picture
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ProfileScreen()),
+            );
+          },
+          child: Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: ClipOval(
+              child: Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
           ),
         ),
+        // Notification Bell Icon
+        GestureDetector(
+          onTap: () {
+            // TODO: Navigate to notifications
+          },
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Icon(
+                Icons.notifications,
+                color: Colors.white,
+                size: 26,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      height: 70,
+      decoration: BoxDecoration(
+        color: const Color(0xFF2D2D2D),
+        borderRadius: BorderRadius.circular(35),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Home Icon
+          IconButton(
+            icon: Icon(Icons.home, color: Colors.white, size: 28),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreenExperimental()),
+              );
+            },
+          ),
+          // Stats Icon - highlighted
+          IconButton(
+            icon: Icon(Icons.bar_chart_rounded, color: const Color(0xFFA5EC44), size: 28),
+            onPressed: () {
+              // Already on stats screen
+            },
+          ),
+          // Center Plus Button
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFFA5EC44),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: Icon(Icons.add, color: Colors.black, size: 32),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
+                );
+              },
+            ),
+          ),
+          // Game/Cards Icon
+          IconButton(
+            icon: Icon(Icons.style, color: Colors.white, size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
+              );
+            },
+          ),
+          // Profile Icon
+          IconButton(
+            icon: Icon(Icons.person, color: Colors.white, size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileScreen()),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

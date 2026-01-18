@@ -289,12 +289,12 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                       end: Alignment.bottomCenter,
                       colors: [
                         const Color(0xFFABFFB4).withOpacity(0.6),
-                        const Color(0xFF006434),
-                        const Color(0xFF000000),
+                        const Color(0xFF006434).withOpacity(0.6),
+                        const Color(0xFF000000).withOpacity(0.6),
                       ],
                       stops: [0.0, 0.32, 1.0],
                     ),
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.all(Radius.elliptical(297.5, 363.5)),
                   ),
                 ),
               ),
@@ -459,58 +459,26 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
             ),
           ),
 
-          // Right side icons container
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Stats/Analytics Icon
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => StatisticsScreen()),
-                  );
-                },
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.bar_chart_rounded,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
+          // Notification Bell Icon
+          GestureDetector(
+            onTap: () {
+              // TODO: Navigate to notifications
+            },
+            child: Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.notifications,
+                  color: Colors.white,
+                  size: 26,
                 ),
               ),
-              const SizedBox(width: 12),
-
-              // Notification Bell Icon
-              GestureDetector(
-                onTap: () {
-                  // TODO: Navigate to notifications
-                },
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.notifications,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
