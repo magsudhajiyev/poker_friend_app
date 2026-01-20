@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import '../models/opponent.dart';
 import '../models/opponent_stats.dart';
 import '../services/opponent_service.dart';
@@ -6,6 +7,8 @@ import '../services/local_storage_service.dart';
 import '../services/firebase_service.dart';
 import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
+import '../widgets/global_top_header.dart';
+import '../widgets/global_bottom_nav_bar.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
   final Opponent opponent;
@@ -21,9 +24,6 @@ class OpponentDetailScreen extends StatefulWidget {
 
 class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   late Opponent _opponent;
-  bool _isEditing = false;
-  late TextEditingController _nameController;
-  late TextEditingController _notesController;
   Map<String, dynamic>? _statistics;
   OpponentStats? _opponentStats; // Store the actual OpponentStats object
   bool _isLoadingStats = true;
@@ -32,16 +32,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   void initState() {
     super.initState();
     _opponent = widget.opponent;
-    _nameController = TextEditingController(text: _opponent.name);
-    _notesController = TextEditingController(text: _opponent.notes ?? '');
     _loadStatistics();
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _notesController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadStatistics() async {
@@ -285,34 +276,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     }
   }
 
-  Future<void> _saveChanges() async {
-    if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Name cannot be empty')),
-      );
-      return;
-    }
-
-    final updatedOpponent = _opponent.copyWith(
-      name: _nameController.text.trim(),
-      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-    );
-
-    try {
-      await OpponentService.saveOpponent(updatedOpponent);
-      setState(() {
-        _opponent = updatedOpponent;
-        _isEditing = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Opponent updated successfully')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating opponent: $e')),
-      );
-    }
-  }
 
   Color _getColorForOpponent(OpponentColor color) {
     switch (color) {
@@ -338,118 +301,45 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Modern Header
-            Container(
-              padding: EdgeInsets.fromLTRB(24, 20, 24, 20),
-              decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
-              ),
-              child: Row(
-                children: [
-                  // Back button
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF161618),
-                      borderRadius: BorderRadius.circular(12),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Green gradient background overlay at top
+          Positioned(
+            left: -98,
+            top: -148,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 132, sigmaY: 132),
+                child: Container(
+                  width: 595,
+                  height: 727,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFFABFFB4).withOpacity(0.6),
+                        const Color(0xFF006434).withOpacity(0.6),
+                        const Color(0xFF000000).withOpacity(0.6),
+                      ],
+                      stops: [0.0, 0.32, 1.0],
                     ),
-                    child: IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
+                    borderRadius: BorderRadius.all(Radius.elliptical(297.5, 363.5)),
                   ),
-                  
-                  // Title section
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            _isEditing ? 'Edit Opponent' : _opponent.name,
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Player Statistics',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF9A9A9A),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  
-                  // Action button
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: _isEditing ? Color(0xFF5AC95A) : Color(0xFF161618),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconButton(
-                      onPressed: _isEditing ? _saveChanges : () {
-                        setState(() {
-                          _isEditing = true;
-                        });
-                      },
-                      icon: Icon(
-                        _isEditing ? Icons.check : Icons.edit,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
-                  ),
-                  
-                  if (_isEditing) ...[
-                    SizedBox(width: 8),
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Color(0xFF161618),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _isEditing = false;
-                            _nameController.text = _opponent.name;
-                            _notesController.text = _opponent.notes ?? '';
-                          });
-                        },
-                        icon: Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
-            
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+            // Global Top Header
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 20, 16, 24),
+              child: GlobalTopHeader(currentScreen: 'opponent_detail'),
+            ),
+
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -461,413 +351,346 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     const SizedBox(height: 16),
                     _buildStatisticsCard(),
                     const SizedBox(height: 16),
+                    _buildActionDistributionCard(),
+                    const SizedBox(height: 16),
                     _buildHandsButton(),
+                    const SizedBox(height: 20), // Bottom padding for nav bar
                   ],
                 ),
               ),
             ),
+
+            // Global Bottom Navigation Bar
+            GlobalBottomNavBar(currentScreen: 'opponent_detail'),
           ],
         ),
+      ),
+        ],
       ),
     );
   }
 
   Widget _buildBasicInfoCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    final cardColor = _getColorForOpponent(_opponent.color);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Color(0xFF546165).withOpacity(0.74),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: _getColorForOpponent(_opponent.color),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: _getColorForOpponent(_opponent.color).withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      _opponent.name.isNotEmpty ? _opponent.name[0].toUpperCase() : 'O',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                // Top section: User info + hands count
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Left: CardIcon + Name/Style
+                    Row(
+                      children: [
+                        // Color indicator avatar
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: cardColor.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(55),
+                          ),
+                          child: Center(
+                            child: Container(
+                              width: 18,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                color: cardColor,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        // Name and playing style column
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _opponent.name,
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 18,
+                                color: Color(0xFFFFFFFF).withOpacity(0.84),
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0,
+                                height: 1.4,
+                              ),
+                            ),
+                            Text(
+                              _opponentStats?.playingStyle ?? 'No Data',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 12,
+                                color: Color(0xFFFFFFFF).withOpacity(0.84),
+                                fontWeight: FontWeight.w400,
+                                letterSpacing: 0,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    // Right: Hands count
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${_statistics?['totalHands'] ?? 0}',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0,
+                            height: 1.4,
+                          ),
+                        ),
+                        Text(
+                          'Hands',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 24),
+
+                // Bottom section: Last seen
+                Row(
+                  children: [
+                    Icon(
+                      Icons.visibility_outlined,
+                      size: 18,
+                      color: Color(0xFFFFFFFF).withOpacity(0.84),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Last Seen: ${_opponent.lastSeenAt.toString().split(' ')[0]}',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        color: Color(0xFFFFFFFF).withOpacity(0.84),
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 0,
+                        height: 1.3,
                       ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                // Additional info rows
+                if (_opponent.notes != null && _opponent.notes!.isNotEmpty) ...[
+                  SizedBox(height: 16),
+                  Row(
                     children: [
-                      Text(
-                        'Player Information',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                      Icon(
+                        Icons.notes,
+                        size: 18,
+                        color: Color(0xFFFFFFFF).withOpacity(0.84),
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Playing Style: ${_opponentStats?.playingStyle ?? 'No Data'}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF9A9A9A),
+                      SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          _opponent.notes!,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12,
+                            color: Color(0xFFFFFFFF).withOpacity(0.84),
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 0,
+                            height: 1.3,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                if (_isEditing)
-                  _buildColorSelector(),
+                ],
               ],
             ),
-            const SizedBox(height: 20),
-            if (_isEditing) ...[
-              Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFF161618),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Color(0xFF2A2A2E)),
-                ),
-                child: TextField(
-                  controller: _nameController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Player Name',
-                    labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFF161618),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Color(0xFF2A2A2E)),
-                ),
-                child: TextField(
-                  controller: _notesController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Notes',
-                    labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(16),
-                  ),
-                  maxLines: 3,
-                ),
-              ),
-            ] else ...[
-              _buildInfoRowWithCustomIcon('icons/id.png', 'Name', _opponent.name),
-              if (_opponent.notes != null && _opponent.notes!.isNotEmpty)
-                _buildInfoRowWithCustomIcon('icons/notepad.png', 'Notes', _opponent.notes!),
-              _buildInfoRowWithCustomIcon('icons/calendar.png', 'First Seen',
-                  _opponent.createdAt.toString().split(' ')[0]),
-              _buildInfoRowWithCustomIcon('icons/clock.png', 'Last Seen',
-                  _opponent.lastSeenAt.toString().split(' ')[0]),
-            ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: Color(0xFF161618),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 18, color: Color(0xFF9A9A9A)),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 80,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF9A9A9A),
-                fontSize: 14,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildColorSelector() {
-    return PopupMenuButton<OpponentColor>(
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: _getColorForOpponent(_opponent.color),
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.grey),
-        ),
-      ),
-      onSelected: (color) {
-        setState(() {
-          _opponent = _opponent.copyWith(color: color);
-        });
-      },
-      itemBuilder: (context) => OpponentColor.values.map((color) {
-        return PopupMenuItem<OpponentColor>(
-          value: color,
-          child: Row(
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: _getColorForOpponent(color),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(color.displayName),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
 
   Widget _buildStatisticsCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    if (_isLoadingStats) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFFA5EC44),
+        ),
+      );
+    }
+
+    if (_statistics == null) {
+      return Container(
+        padding: EdgeInsets.all(20),
+        child: Text(
+          'No statistics available',
+          style: TextStyle(
+            color: Color(0xFF9A9A9A),
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title
+        Text(
+          'STATISTICS',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 18,
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0,
+            height: 1.4,
+          ),
+        ),
+        SizedBox(height: 8),
+        // Grid
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 1.2,
           children: [
-            Row(
-              children: [
-                Image.asset('icons/stats.png', width: 28, height: 28),
-                SizedBox(width: 12),
-                Text(
-                  'Statistics',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            if (_isLoadingStats)
-              Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF5AC95A),
-                ),
-              )
-            else if (_statistics != null) ...[
-              // Stats are loaded from OpponentStats - no need to update Opponent model
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 120,
-                      child: _buildStatItem('Hands Played', '${_statistics!['totalHands']}', iconPath: 'icons/hands_played.png'),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: SizedBox(
-                      height: 120,
-                      child: _buildStatItem('Sessions', '${_statistics!['totalSessions']}', iconPath: 'icons/session.png'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 120,
-                      child: _buildStatItem('VPIP', '${_formatStat(_statistics!['vpip'])}%', iconPath: 'icons/vpip.png'),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: SizedBox(
-                      height: 120,
-                      child: _buildStatItem('PFR', '${_formatStat(_statistics!['pfr'])}%', iconPath: 'icons/bet.png'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 120,
-                      child: _buildStatItem('Aggression', _formatAggression(_statistics!['aggression']), iconPath: 'icons/aggression.png'),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: SizedBox(
-                      height: 120,
-                      child: _buildStatItem('Fold %', '${_formatStat(_statistics!['foldPercentage'])}%', iconPath: 'icons/fold.png'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Container(
-                height: 1,
-                color: Color(0xFF2A2A2E),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Image.asset('icons/action_distribution.png', width: 28, height: 28),
-                  SizedBox(width: 8),
-                  Text(
-                    'Action Distribution',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 120,
-                      child: _buildStatItem('Call', '${_formatStat(_statistics!['callPercentage'])}%', iconPath: 'icons/play_style/calling_station.png'),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: SizedBox(
-                      height: 120,
-                      child: _buildStatItem('Bet', '${_formatStat(_statistics!['betPercentage'])}%', iconPath: 'icons/bet_with_chips.png'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 120,
-                      child: _buildStatItem('Raise', '${_formatStat(_statistics!['raisePercentage'])}%', iconPath: 'icons/bet.png'),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: SizedBox(
-                      height: 120,
-                      child: _buildStatItem('Check', '${_formatStat(_statistics!['checkPercentage'])}%', iconPath: 'icons/check.png'),
-                    ),
-                  ),
-                ],
-              ),
-            ] else
-              Text(
-                'No statistics available',
-                style: TextStyle(
-                  color: Color(0xFF9A9A9A),
-                  fontSize: 14,
-                ),
-              ),
+            _buildStatCard('Hands Played', '${_statistics!['totalHands']}', 'icons/hands_played.png'),
+            _buildStatCard('Sessions', '${_statistics!['totalSessions']}', 'icons/session.png'),
+            _buildStatCard('VPIP', '${_formatStat(_statistics!['vpip'])}%', 'icons/vpip.png'),
+            _buildStatCard('PFR', '${_formatStat(_statistics!['pfr'])}%', 'icons/bet.png'),
+            _buildStatCard('Aggression', _formatAggression(_statistics!['aggression']), 'icons/aggression.png'),
+            _buildStatCard('Fold %', '${_formatStat(_statistics!['foldPercentage'])}%', 'icons/fold.png'),
           ],
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildStatItem(String label, String value, {String? iconPath}) {
+  Widget _buildStatCard(String label, String value, String iconPath) {
     return Container(
-      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFF161618),
+        color: Color(0xFF1d2a27),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFF2A2A2E)),
       ),
+      padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Icon + Label section
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Image.asset(
+                iconPath,
+                width: 32,
+                height: 32,
+              ),
+              SizedBox(height: 8),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white,
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Color(0xFFFFFFFF).withOpacity(0.84),
                   fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                  height: 1.4,
                 ),
               ),
-              if (iconPath != null)
-                Image.asset(
-                  iconPath,
-                  width: 32,
-                  height: 32,
-                ),
             ],
           ),
           Spacer(),
+          // Value section
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontFamily: 'Inter',
+              fontSize: 20,
               color: Colors.white,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0,
+              height: 1.4,
             ),
           ),
         ],
       ),
+    );
+  }
+
+
+  Widget _buildActionDistributionCard() {
+    if (_isLoadingStats) {
+      return SizedBox.shrink();
+    }
+
+    if (_statistics == null) {
+      return SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title
+        Text(
+          'ACTION DISTRIBUTION',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 18,
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0,
+            height: 1.4,
+          ),
+        ),
+        SizedBox(height: 8),
+        // Grid
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 1.2,
+          children: [
+            _buildStatCard('Call', '${_formatStat(_statistics!['callPercentage'])}%', 'icons/play_style/calling_station.png'),
+            _buildStatCard('Bet', '${_formatStat(_statistics!['betPercentage'])}%', 'icons/bet_with_chips.png'),
+            _buildStatCard('Raise', '${_formatStat(_statistics!['raisePercentage'])}%', 'icons/bet.png'),
+            _buildStatCard('Check', '${_formatStat(_statistics!['checkPercentage'])}%', 'icons/check.png'),
+            _buildStatCard('Fold', '${_formatStat(_statistics!['foldPercentage'])}%', 'icons/fold.png'),
+            _buildStatCard('Aggression', _formatAggression(_statistics!['aggression']), 'icons/aggression.png'),
+          ],
+        ),
+      ],
     );
   }
 
@@ -894,97 +717,81 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   // Stats are stored in OpponentStats only, not in Opponent model
 
   Widget _buildHandsButton() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Image.asset('icons/history.png', width: 28, height: 28),
-                SizedBox(width: 12),
-                Text(
-                  'Hand History',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title
+        Text(
+          'HAND HISTORY',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 18,
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0,
+            height: 1.4,
+          ),
+        ),
+        SizedBox(height: 7),
+        // Description
+        Text(
+          'View all hands played with this opponent',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 16,
+            color: Color(0xFFFFFFFF).withOpacity(0.8),
+            fontWeight: FontWeight.w400,
+            letterSpacing: -0.32,
+            height: 1.0,
+          ),
+        ),
+        SizedBox(height: 32),
+        // Button
+        SizedBox(
+          width: double.infinity,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(100),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'View all hands played with this opponent',
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF9A9A9A),
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xFFcb5242),
-                      Color(0xFFb8442f),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0xFFcb5242).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => OpponentHandsScreen(
-                            opponent: _opponent,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset('icons/history.png', width: 20, height: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'View Hand History',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(100),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OpponentHandsScreen(
+                        opponent: _opponent,
                       ),
                     ),
+                  );
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'View Hand History',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.black,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
