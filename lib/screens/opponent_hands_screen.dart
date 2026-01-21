@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../services/local_storage_service.dart';
@@ -6,6 +7,7 @@ import '../services/firebase_service.dart';
 import '../widgets/loading_screen.dart';
 import '../utils/poker_positions.dart';
 import 'hand_actions_screen.dart';
+import '../widgets/global_top_header.dart';
 
 class OpponentHandsScreen extends StatefulWidget {
   final Opponent opponent;
@@ -248,81 +250,59 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Modern Header
-            Container(
-              padding: EdgeInsets.fromLTRB(24, 20, 24, 20),
-              decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
-              ),
-              child: Row(
-                children: [
-                  // Back button
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF161618),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  // Header info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${widget.opponent.name} History',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          totalHandsCount != null
-                              ? 'Showing ${hands.length} of ${totalHandsCount} hands'
-                              : hands.length > 0
-                                  ? 'Showing ${hands.length} hands'
-                                  : 'No hands played together',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF9A9A9A),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Green gradient background overlay at top
+          Positioned(
+            left: -98,
+            top: -148,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 132, sigmaY: 132),
+                child: Container(
+                  width: 595,
+                  height: 727,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFFABFFB4).withOpacity(0.6),
+                        const Color(0xFF006434).withOpacity(0.6),
+                        const Color(0xFF000000).withOpacity(0.6),
                       ],
+                      stops: [0.0, 0.32, 1.0],
                     ),
+                    borderRadius: BorderRadius.all(Radius.elliptical(297.5, 363.5)),
                   ),
-                ],
+                ),
               ),
             ),
-            
-            // Content
-            Expanded(
-              child: isLoading
-                  ? LoadingScreen(message: "Loading hand history...")
-                  : error != null
-                      ? _buildErrorState()
-                      : hands.isEmpty
-                          ? _buildEmptyState()
-                          : _buildHandsList(),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                // Global Top Header
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16, 20, 16, 24),
+                  child: GlobalTopHeader(currentScreen: 'opponent_hands'),
+                ),
+
+                // Content
+                Expanded(
+                  child: isLoading
+                      ? LoadingScreen(message: "Loading hand history...")
+                      : error != null
+                          ? _buildErrorState()
+                          : hands.isEmpty
+                              ? _buildEmptyState()
+                              : _buildHandsList(),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

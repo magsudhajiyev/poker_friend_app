@@ -330,17 +330,17 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                       // Stats Grid
                       _buildStatsGrid(),
 
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 28),
 
                       // Earnings Chart
                       _buildEarningsCard(),
 
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 28),
 
                       // Recent Sessions
                       _buildRecentSessionsCard(),
 
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 28),
 
                       // Upcoming Events
                       _buildUpcomingEventsCard(),
@@ -518,167 +518,156 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
   }
 
   Widget _buildGoalSection() {
-    return Column(
-      children: [
-        Text(
-          'Goal',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 36,
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-            letterSpacing: -2,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '\$',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              currentBankroll.toStringAsFixed(0),
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              ' / ',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              bankrollGoal.toStringAsFixed(0),
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.70),
-                fontSize: 32,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF022F00),
+            Color(0xFF079500),
           ],
+          stops: [0.0, 1.0],
         ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.20),
-            borderRadius: BorderRadius.circular(90),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '\$',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w500,
-                ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Wallet Balance label
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: Text(
+              'Wallet Balance',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: Colors.white,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0,
+                height: 1.0,
               ),
-              const SizedBox(width: 4),
-              Text(
-                '${(bankrollGoal - currentBankroll).toStringAsFixed(0)} left',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ],
+          SizedBox(height: 16),
+          // Main balance text
+          Text(
+            '\$${currentBankroll.toStringAsFixed(0)} of \$${bankrollGoal.toStringAsFixed(0)}',
+            style: TextStyle(
+              fontFamily: 'RobotoMono',
+              fontSize: 38,
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+              height: 1.0,
+            ),
+          ),
+          SizedBox(height: 14),
+          // Remaining balance text
+          Text(
+            '\$${(bankrollGoal - currentBankroll).toStringAsFixed(0)} left',
+            style: TextStyle(
+              fontFamily: 'RobotoMono',
+              fontSize: 16,
+              color: Color(0xFFC2EFBA),
+              fontWeight: FontWeight.w500,
+              letterSpacing: -1.0,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildStatsGrid() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStatCard(
-          'Sessions',
-          '${playerStats['totalSessions'] ?? 0}',
-          iconAsset: 'assets/session.png',
+        // Recent Activity title
+        Text(
+          'RECENT ACTIVITY',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Color(0xFF87ED81),
+            fontWeight: FontWeight.w400,
+            letterSpacing: 1.0,
+            height: 1.0,
+          ),
         ),
-        const SizedBox(height: 8),
-        _buildStatCard(
-          'Win Rate',
-          '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
-          iconAsset: 'assets/trophy.png',
-        ),
-        const SizedBox(height: 8),
-        _buildStatCard(
-          'Hours',
-          '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(1)}',
-          iconAsset: 'assets/clock.png',
-        ),
-        const SizedBox(height: 8),
-        _buildStatCard(
-          'Play Style',
-          _getPlayStyleName(),
-          iconAsset: _getPlayStyleIcon(),
+        SizedBox(height: 12),
+        // Stats cards with dividers
+        Column(
+          children: [
+            _buildStatCard(
+              'Sessions',
+              '${playerStats['totalSessions'] ?? 0}',
+              iconAsset: 'assets/session.png',
+            ),
+            _buildDivider(),
+            _buildStatCard(
+              'Win Rate',
+              '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
+              iconAsset: 'assets/trophy.png',
+            ),
+            _buildDivider(),
+            _buildStatCard(
+              'Hours',
+              '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(1)}',
+              iconAsset: 'assets/clock.png',
+            ),
+            _buildDivider(),
+            _buildStatCard(
+              'Play Style',
+              _getPlayStyleName(),
+              iconAsset: _getPlayStyleIcon(),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      height: 1,
+      margin: EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Colors.white.withOpacity(0.1),
+            Colors.white.withOpacity(0.3),
+            Colors.white.withOpacity(0.1),
+          ],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
     );
   }
 
   Widget _buildStatCard(String title, String value, {IconData? icon, String? iconAsset}) {
     return Container(
       width: double.infinity,
-      height: 68,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C2926),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: iconAsset != null
-                    ? Image.asset(
-                        iconAsset,
-                        fit: BoxFit.contain,
-                      )
-                    : Icon(
-                        icon ?? Icons.help_outline,
-                        color: const Color(0xFFA5EC44),
-                        size: 40,
-                      ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.84),
-                  fontSize: 18,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w500,
+            ),
           ),
           Text(
             value,
@@ -696,223 +685,238 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
   }
 
   Widget _buildEarningsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1D2A27),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'EARNINGS',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.84),
-                  fontSize: 16,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w600,
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row with title and avg badge
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'EARNINGS',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: Color(0xFF87ED81),
+                fontWeight: FontWeight.w400,
+                letterSpacing: 1.0,
+                height: 1.0,
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0x7FA5EC44),
-                  borderRadius: BorderRadius.circular(40),
-                ),
-                child: Text(
-                  'Avg \$${avgEarnings.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF009548),
+                borderRadius: BorderRadius.circular(40),
               ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              _buildLegendItem('Tournament', const Color(0xFF006AFF)),
-              const SizedBox(width: 17),
-              _buildLegendItem('Cash Game', const Color(0xFFA5EC44)),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Container(
-            height: 167,
-            child: earningsChartData.isEmpty
-                ? Center(
-                    child: Text(
-                      'No earnings data yet',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.40),
-                        fontSize: 16,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w500,
-                      ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Avg',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0,
+                      height: 1.2,
                     ),
-                  )
-                : CustomPaint(
-                    painter: EarningsChartPainter(earningsChartData),
-                    size: Size.infinite,
                   ),
-          ),
-        ],
-      ),
+                  SizedBox(width: 4),
+                  Text(
+                    '\$${avgEarnings.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      fontFamily: 'RobotoMono',
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        // Legend
+        Row(
+          children: [
+            _buildLegendItem('Tournament', const Color(0xFF00C3FF)),
+            const SizedBox(width: 17),
+            _buildLegendItem('Cash Game', const Color(0xFF44EC49)),
+          ],
+        ),
+        const SizedBox(height: 24),
+        // Chart
+        Container(
+          height: 167,
+          child: earningsChartData.isEmpty
+              ? Center(
+                  child: Text(
+                    'No earnings data yet',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.40),
+                      fontSize: 16,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                )
+              : CustomPaint(
+                  painter: EarningsChartPainter(earningsChartData),
+                  size: Size.infinite,
+                ),
+        ),
+      ],
     );
   }
 
   Widget _buildRecentSessionsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1D2A27),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'RECENT',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row with title and view all
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'RECENT SESSIONS',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: Color(0xFF87ED81),
+                fontWeight: FontWeight.w400,
+                letterSpacing: 1.0,
+                height: 1.0,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
+                );
+              },
+              child: Text(
+                'View All',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.84),
-                  fontSize: 16,
                   fontFamily: 'Inter',
-                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  color: Color(0xFFC9C9C9),
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                  height: 1.2,
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.24),
-                    borderRadius: BorderRadius.circular(40),
-                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        // Content
+        recentSessions.isEmpty
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32.0),
                   child: Text(
-                    'View all',
+                    'No sessions yet',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.40),
+                      fontSize: 16,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
+              )
+            : Column(
+                children: recentSessions.map((session) => _buildSessionItem(session)).toList(),
               ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          recentSessions.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Text(
-                      'No sessions yet',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.40),
-                        fontSize: 16,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                )
-              : Column(
-                  children: recentSessions.map((session) => _buildSessionItem(session)).toList(),
-                ),
-        ],
-      ),
+      ],
     );
   }
 
   Widget _buildUpcomingEventsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF181818),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'UPCOMING EVENTS',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row with title and view all
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'UPCOMING EVENTS',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: Color(0xFF87ED81),
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1.0,
+                height: 1.0,
+              ),
+            ),
+            GestureDetector(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CalendarScreen()),
+                );
+                _loadData();
+              },
+              child: Text(
+                'View All',
                 style: TextStyle(
-                  color: Color(0xFFFFFFFD),
-                  fontSize: 16,
                   fontFamily: 'Inter',
-                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  color: Color(0xFFC9C9C9),
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                  height: 1.2,
                 ),
               ),
-              GestureDetector(
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CalendarScreen()),
-                  );
-                  _loadData();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.24),
-                    borderRadius: BorderRadius.circular(40),
-                  ),
-                  child: Text(
-                    'View all',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Content
+        upcomingEvents.isEmpty
+            ? Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0xFF3D3D3D).withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 44),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: 32,
+                      color: Color(0xFFEBFFE4),
                     ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          upcomingEvents.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Text(
-                      'No Upcoming Events',
+                    const SizedBox(height: 14),
+                    Text(
+                      'No upcoming events',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.40),
-                        fontSize: 16,
+                        color: Color(0xFFEBFFE4),
+                        fontSize: 14,
                         fontFamily: 'Inter',
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0,
+                        height: 1.0,
                       ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                )
-              : Column(
-                  children: upcomingEvents.take(3).map((event) => _buildEventItem(event)).toList(),
+                  ],
                 ),
-        ],
-      ),
+              )
+            : Column(
+                children: upcomingEvents.take(3).map((event) => _buildEventItem(event)).toList(),
+              ),
+      ],
     );
   }
 
@@ -938,86 +942,87 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-        decoration: BoxDecoration(
-          color: Colors.black,
+        margin: const EdgeInsets.only(bottom: 12),
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: Image.asset(
-                        'assets/session.png',
-                        fit: BoxFit.contain,
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xFF546165).withOpacity(0.74),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          sessionName,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      sessionName.length > 20 ? '${sessionName.substring(0, 20)}...' : sessionName,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.84),
-                        fontSize: 18,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w500,
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white.withOpacity(0.5),
+                        size: 16,
                       ),
-                    ),
-                  ],
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white.withOpacity(0.5),
-                  size: 18,
-                ),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: Text(
+                          DateFormat('MMM dd, yyyy').format(createdAt),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.84),
+                            fontSize: 12,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: Text(
+                          DateFormat('HH:mm').format(createdAt),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.84),
+                            fontSize: 12,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.24),
-                    borderRadius: BorderRadius.circular(40),
-                  ),
-                  child: Text(
-                    DateFormat('MMM dd, yyyy').format(createdAt),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 7),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.24),
-                    borderRadius: BorderRadius.circular(40),
-                  ),
-                  child: Text(
-                    DateFormat('HH:mm').format(createdAt),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1047,84 +1052,96 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.black,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top row: Event Name and Buy-in
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  event['title'] ?? 'Event',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Color(0xFF546165).withOpacity(0.74),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
               ),
-              if (buyIn.isNotEmpty)
-                Text(
-                  buyIn,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Bottom row: Date and Time pills
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Color(0xFF3D3D3D),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  formattedDate,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (formattedTime.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF3D3D3D),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    formattedTime,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row: Event Name and Buy-in
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        event['title'] ?? 'Event',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (buyIn.isNotEmpty)
+                      Text(
+                        buyIn,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
                 ),
-            ],
+                const SizedBox(height: 12),
+                // Bottom row: Date and Time pills
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(40),
+                      ),
+                      child: Text(
+                        formattedDate,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.84),
+                          fontSize: 12,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (formattedTime.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: Text(
+                          formattedTime,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.84),
+                            fontSize: 12,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1137,7 +1154,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
           height: 7,
           decoration: BoxDecoration(
             color: color,
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(3.5),
           ),
         ),
         const SizedBox(width: 6),
@@ -1145,10 +1162,10 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
           label,
           style: TextStyle(
             color: Colors.white,
-            fontSize: 14,
+            fontSize: 12,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w400,
-            letterSpacing: -0.28,
+            letterSpacing: -0.24,
           ),
         ),
       ],

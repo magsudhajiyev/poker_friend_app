@@ -20,9 +20,14 @@ class GlobalBottomNavBar extends StatelessWidget {
       margin: const EdgeInsets.all(20),
       height: 70,
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2D2D),
-        borderRadius: BorderRadius.circular(35),
+        color: const Color(0xFF1E1E1E).withOpacity(0.1),
+        border: Border.all(
+          color: const Color(0xFF292F29),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(70),
       ),
+      padding: const EdgeInsets.all(10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
