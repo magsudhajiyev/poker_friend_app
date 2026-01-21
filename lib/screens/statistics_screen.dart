@@ -669,7 +669,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: _buildStatisticsHeader(),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 28),
           // Content with padding
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -692,83 +692,85 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
 
   Widget _buildOverallStats() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 8,
-      mainAxisSpacing: 8,
-      childAspectRatio: 1.1,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStatCard('Total Hands', totalHands.toString(), iconPath: 'icons/hole_cards.png'),
-        _buildStatCard('Hands Played', handsPlayed.toString(), iconPath: 'icons/hands_played.png'),
-        _buildStatCard('VPIP', '${vpip.toStringAsFixed(1)}%', iconPath: 'icons/vpip.png'),
-        _buildStatCard('PFR', '${pfr.toStringAsFixed(1)}%', iconPath: 'icons/bet.png'),
-        _buildStatCard('3-Bet', '${threeBet.toStringAsFixed(1)}%', iconPath: 'icons/3bet.png'),
-        _buildStatCard('Win Rate', '${winRate.toStringAsFixed(1)}%', iconPath: 'icons/throphy.png'),
+        // Recent Activity title
+        Text(
+          'RECENT ACTIVITY',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Color(0xFF87ED81),
+            fontWeight: FontWeight.w400,
+            letterSpacing: 1.0,
+            height: 1.0,
+          ),
+        ),
+        SizedBox(height: 12),
+        // Stats cards with dividers
+        Column(
+          children: [
+            _buildStatCard('Total Hands', totalHands.toString()),
+            _buildDivider(),
+            _buildStatCard('Hands Played', handsPlayed.toString()),
+            _buildDivider(),
+            _buildStatCard('VPIP', '${vpip.toStringAsFixed(1)}%'),
+            _buildDivider(),
+            _buildStatCard('PFR', '${pfr.toStringAsFixed(1)}%'),
+            _buildDivider(),
+            _buildStatCard('3-Bet', '${threeBet.toStringAsFixed(1)}%'),
+            _buildDivider(),
+            _buildStatCard('Win Rate', '${winRate.toStringAsFixed(1)}%'),
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      height: 1,
+      margin: EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Colors.white.withOpacity(0.1),
+            Colors.white.withOpacity(0.3),
+            Colors.white.withOpacity(0.1),
+          ],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
     );
   }
 
   Widget _buildStatCard(String label, String value, {String? iconPath}) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Color(0xFF1d2a27),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Icon with circular background
-          if (iconPath != null)
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              padding: EdgeInsets.all(8),
-              child: Image.asset(
-                iconPath,
-                width: 32,
-                height: 32,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.analytics,
-                    color: Color(0xFF5AC95A),
-                    size: 20,
-                  );
-                },
-              ),
-            ),
-          const SizedBox(height: 8),
-          // Label text
           Text(
             label,
             style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
               fontFamily: 'Inter',
-              fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.white.withOpacity(0.84),
-              height: 1.4,
-              letterSpacing: 0,
             ),
-            overflow: TextOverflow.ellipsis,
           ),
-          Spacer(),
-          // Value text
           Text(
             value,
+            textAlign: TextAlign.right,
             style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
               color: Colors.white,
-              height: 1.4,
-              letterSpacing: 0,
+              fontSize: 18,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -780,74 +782,54 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Widget _buildPositionalStats() {
     final hasData = positionalStats.values.any((stats) => stats.totalHands > 0);
 
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Color(0xFF1d2a27),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Color(0xFF5AC95A).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Image.asset(
-                  'icons/stats.png',
-                  width: 20,
-                  height: 20,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.table_chart,
-                      color: Color(0xFF5AC95A),
-                      size: 20,
-                    );
-                  },
-                ),
-              ),
-              SizedBox(width: 16),
-              Text(
-                'Positional Statistics',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title
+        Text(
+          'POSITIONAL STATISTICS',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Color(0xFF87ED81),
+            fontWeight: FontWeight.w500,
+            letterSpacing: 1.0,
+            height: 1.0,
           ),
-          SizedBox(height: 20),
-          if (!hasData)
-            Container(
-              height: 100,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.table_rows_outlined,
-                      color: Color(0xFF9A9A9A),
-                      size: 32,
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'Start playing a session to record the data',
-                      style: TextStyle(
-                        color: Color(0xFF9A9A9A),
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+        ),
+        SizedBox(height: 16),
+        // Content
+        if (!hasData)
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Color(0xFF3D3D3D).withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 44),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.table_chart,
+                  size: 24,
+                  color: Colors.white.withOpacity(0.6),
                 ),
-              ),
-            )
+                const SizedBox(height: 14),
+                Text(
+                  'Start playing a session to record the data',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 12,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 1.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          )
           else ...[
             // Header row
             Container(
@@ -998,8 +980,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               );
             }).toList(),
           ],
-        ],
-      ),
+      ],
     );
   }
 
@@ -1026,51 +1007,32 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildSessionStats() {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Color(0xFF1d2a27),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Color(0xFF5AC95A).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Image.asset(
-                  'icons/clock.png',
-                  width: 20,
-                  height: 20,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.access_time,
-                      color: Color(0xFF5AC95A),
-                      size: 20,
-                    );
-                  },
-                ),
-              ),
-              SizedBox(width: 16),
-              Text(
-                'Session Statistics',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title
+        Text(
+          'SESSION STATISTICS',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Color(0xFF87ED81),
+            fontWeight: FontWeight.w500,
+            letterSpacing: 1.0,
+            height: 1.0,
           ),
-          SizedBox(height: 24),
-          if (totalSessions > 0) ...[
-            Row(
+        ),
+        SizedBox(height: 16),
+        // Content
+        if (totalSessions > 0)
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Color(0xFF1d2a27),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildSessionStatItem('Sessions', totalSessions.toString()),
@@ -1078,34 +1040,39 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 _buildSessionStatItem('Avg Session', totalSessions > 0 ? '${(totalPlayTime / totalSessions).toStringAsFixed(0)}m' : '0m'),
               ],
             ),
-          ] else ...[
-            Container(
-              height: 80,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.timer_outlined,
-                      color: Color(0xFF9A9A9A),
-                      size: 24,
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Start playing a session to record the data',
-                      style: TextStyle(
-                        color: Color(0xFF9A9A9A),
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
+          )
+        else
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Color(0xFF3D3D3D).withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8),
             ),
-          ],
-        ],
-      ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 44),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.access_time,
+                  size: 24,
+                  color: Colors.white.withOpacity(0.6),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Start playing a session to record the data',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 12,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 1.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
