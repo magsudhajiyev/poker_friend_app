@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import '../design_system/poker_friend_theme.dart';
+import '../widgets/global_bottom_nav_bar.dart';
 import 'introduction_screen.dart';
 import 'individual_session_setup_screen.dart';
 
@@ -9,14 +11,44 @@ class LoggingModeSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PokerFriendColors.dark1,
-      body: SafeArea(
-        child: Container(
-          constraints: BoxConstraints(maxWidth: 375),
-          margin: EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Green gradient background overlay at top
+          Positioned(
+            left: -98,
+            top: -148,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 132, sigmaY: 132),
+                child: Container(
+                  width: 595,
+                  height: 727,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFFABFFB4).withOpacity(0.6),
+                        const Color(0xFF006434).withOpacity(0.6),
+                        const Color(0xFF000000).withOpacity(0.6),
+                      ],
+                      stops: [0.0, 0.32, 1.0],
+                    ),
+                    borderRadius: BorderRadius.all(Radius.elliptical(297.5, 363.5)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 375),
+                margin: EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               // Header Section
               Padding(
                 padding: EdgeInsets.fromLTRB(0, 32, 0, 48),
@@ -67,51 +99,49 @@ class LoggingModeSelectionScreen extends StatelessWidget {
               ),
 
               // Mode Selection Cards
-              Expanded(
-                child: Column(
-                  children: [
-                    // Full Logging Mode Card
-                    _buildModeCard(
-                      context: context,
-                      title: 'Full Logging Mode',
-                      subtitle: 'Complete session tracking',
-                      description: 'Track entire poker sessions with multiple hands, detailed statistics, and comprehensive analysis.',
-                      iconPath: 'icons/notebook.png',
-                      features: [
-                        'Multi-hand session tracking',
-                        'Real-time statistics',
-                        'Detailed hand history',
-                        'Session analytics'
-                      ],
-                      onTap: () => _navigateToMode(context, LoggingMode.full),
-                    ),
+              // Full Logging Mode Card
+              _buildModeCard(
+                context: context,
+                title: 'Full Logging Mode',
+                subtitle: 'Complete session tracking',
+                description: 'Track entire poker sessions with multiple hands, detailed statistics, and comprehensive analysis.',
+                iconPath: 'icons/notebook.png',
+                features: [
+                  'Multi-hand session tracking',
+                  'Real-time statistics',
+                  'Detailed hand history',
+                  'Session analytics'
+                ],
+                onTap: () => _navigateToMode(context, LoggingMode.full),
+              ),
 
-                    SizedBox(height: 24),
+              SizedBox(height: 24),
 
-                    // Individual Logging Mode Card
-                    _buildModeCard(
-                      context: context,
-                      title: 'Individual Logging Mode',
-                      subtitle: 'Single hand tracking',
-                      description: 'Log individual hands quickly and efficiently. Perfect for spot tracking or specific hand analysis.',
-                      iconPath: 'icons/notepad.png',
-                      features: [
-                        'Single hand focus',
-                        'Quick logging',
-                        'Hand analysis',
-                        'Instant results'
-                      ],
-                      onTap: () => _navigateToMode(context, LoggingMode.individual),
-                    ),
+              // Individual Logging Mode Card
+              _buildModeCard(
+                context: context,
+                title: 'Individual Logging Mode',
+                subtitle: 'Single hand tracking',
+                description: 'Log individual hands quickly and efficiently. Perfect for spot tracking or specific hand analysis.',
+                iconPath: 'icons/notepad.png',
+                features: [
+                  'Single hand focus',
+                  'Quick logging',
+                  'Hand analysis',
+                  'Instant results'
+                ],
+                onTap: () => _navigateToMode(context, LoggingMode.individual),
+              ),
 
-                    Spacer(),
+              SizedBox(height: 120),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: ''),
     );
   }
 
@@ -124,127 +154,113 @@ class LoggingModeSelectionScreen extends StatelessWidget {
     required List<String> features,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: PokerFriendColors.dark3,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: PokerFriendColors.dark4,
-            width: 1,
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Color(0xFF3D3D3D).withOpacity(0.5),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      padding: EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title and subtitle
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 24,
+                  color: Color(0xFF87ED81),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.0,
+                  height: 1.0,
+                ),
+              ),
+              SizedBox(height: 7),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                  height: 1.0,
+                ),
+              ),
+            ],
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Row
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  child: Image.asset(
-                    iconPath,
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.contain,
-                  ),
+          SizedBox(height: 32),
+          // Features section
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Features:',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 1.0,
+                  height: 1.0,
                 ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: PokerFriendColors.dark9,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: PokerFriendColors.dark9,
-                  size: 16,
-                ),
-              ],
-            ),
-
-            SizedBox(height: 16),
-
-            // Description
-            Text(
-              description,
-              style: TextStyle(
-                fontSize: 15,
-                color: PokerFriendColors.dark10,
-                height: 1.4,
               ),
-            ),
-
-            SizedBox(height: 16),
-
-            // Features List
-            Container(
-              padding: EdgeInsets.all(16),
+              SizedBox(height: 14),
+              ...features.map((feature) => Padding(
+                padding: EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '• $feature',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 1.0,
+                    height: 1.0,
+                  ),
+                ),
+              )).toList(),
+            ],
+          ),
+          SizedBox(height: 32),
+          // Log in button
+          GestureDetector(
+            onTap: onTap,
+            child: Container(
+              width: double.infinity,
               decoration: BoxDecoration(
-                color: PokerFriendColors.dark1,
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(60),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Features:',
+                    'Log in',
                     style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Inter',
+                      fontSize: 18,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 1.0,
+                      height: 1.5,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  ...features.map((feature) => Padding(
-                    padding: EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: PokerFriendColors.red,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          feature,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: PokerFriendColors.dark10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )).toList(),
+                  Icon(
+                    Icons.arrow_forward,
+                    color: Colors.black,
+                    size: 24,
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
