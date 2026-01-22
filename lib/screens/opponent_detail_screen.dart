@@ -9,6 +9,7 @@ import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
 import '../widgets/global_top_header.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../design_system/design_system.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
   final Opponent opponent;
@@ -304,33 +305,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Green gradient background overlay at top
-          Positioned(
-            left: -98,
-            top: -148,
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 132, sigmaY: 132),
-                child: Container(
-                  width: 595,
-                  height: 727,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        const Color(0xFFABFFB4).withOpacity(0.6),
-                        const Color(0xFF006434).withOpacity(0.6),
-                        const Color(0xFF000000).withOpacity(0.6),
-                      ],
-                      stops: [0.0, 0.32, 1.0],
-                    ),
-                    borderRadius: BorderRadius.all(Radius.elliptical(297.5, 363.5)),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          GradientBackground(),
           SafeArea(
             child: Column(
               children: [
