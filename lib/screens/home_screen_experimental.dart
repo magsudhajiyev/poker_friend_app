@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/introduction_screen.dart';
 import '../screens/logging_mode_selection_screen.dart';
@@ -22,7 +23,7 @@ import '../screens/auth_screen.dart';
 import '../widgets/loading_screen.dart';
 import '../services/calendar_event_service.dart';
 import '../widgets/global_bottom_nav_bar.dart';
-import '../widgets/global_top_header.dart';
+import '../design_system/design_system.dart';
 
 /// Experimental home screen with new design
 class HomeScreenExperimental extends StatefulWidget {
@@ -313,12 +314,28 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: 16),
 
                       // Top Header Bar
-                      GlobalTopHeader(currentScreen: 'home'),
+                      MainScreenHeader(
+                        username: userName,
+                        title: 'Home', // Fallback if no username
+                        subtitle: 'Welcome back',
+                        showLeftIcon: true,
+                        leftIcon: Icons.bar_chart_rounded,
+                        onLeftPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => StatisticsScreen()),
+                          );
+                        },
+                        rightIcon: Icons.notifications,
+                        onRightPressed: () {
+                          // TODO: Navigate to notifications
+                        },
+                      ),
 
                       const SizedBox(height: 24),
 
@@ -519,13 +536,15 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
 
   Widget _buildGoalSection() {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          // 144deg in CSS = approx Alignment(0.6, -0.8) to Alignment(-0.6, 0.8)
+          begin: Alignment(0.6, -0.8),
+          end: Alignment(-0.6, 0.8),
           colors: [
-            Color(0xFF022F00),
-            Color(0xFF079500),
+            Color(0xFF022F00), // rgba(2, 47, 0, 1)
+            Color(0xFF079500), // rgba(7, 149, 0, 1)
           ],
           stops: [0.0, 1.0],
         ),
@@ -543,7 +562,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
               borderRadius: BorderRadius.circular(40),
             ),
             child: Text(
-              'Wallet Balance',
+              'Bankroll',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 12,
@@ -558,8 +577,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
           // Main balance text
           Text(
             '\$${currentBankroll.toStringAsFixed(0)} of \$${bankrollGoal.toStringAsFixed(0)}',
-            style: TextStyle(
-              fontFamily: 'RobotoMono',
+            style: GoogleFonts.robotoMono(
               fontSize: 38,
               color: Colors.white,
               fontWeight: FontWeight.w700,
@@ -571,8 +589,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
           // Remaining balance text
           Text(
             '\$${(bankrollGoal - currentBankroll).toStringAsFixed(0)} left',
-            style: TextStyle(
-              fontFamily: 'RobotoMono',
+            style: GoogleFonts.robotoMono(
               fontSize: 16,
               color: Color(0xFFC2EFBA),
               fontWeight: FontWeight.w500,
@@ -726,8 +743,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                   SizedBox(width: 4),
                   Text(
                     '\$${avgEarnings.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      fontFamily: 'RobotoMono',
+                    style: GoogleFonts.robotoMono(
                       fontSize: 12,
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
