@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/profile_screen.dart';
 import '../screens/statistics_screen.dart';
+import '../design_system/components.dart';
 
 class GlobalTopHeader extends StatelessWidget {
   final String currentScreen;
@@ -75,25 +76,11 @@ class GlobalTopHeader extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             // Notification Bell Icon
-            GestureDetector(
-              onTap: () {
+            GlassyIconButton(
+              icon: Icons.notifications,
+              onPressed: () {
                 // TODO: Navigate to notifications
               },
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.notifications,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-              ),
             ),
           ],
         ),

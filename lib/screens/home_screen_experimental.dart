@@ -299,7 +299,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                         title: 'Home', // Fallback if no username
                         subtitle: 'Welcome back',
                         showLeftIcon: true,
-                        leftIcon: Icons.bar_chart_rounded,
+                        leftIcon: Icons.bar_chart,
                         onLeftPressed: () {
                           Navigator.push(
                             context,
@@ -317,7 +317,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                       // Goal Section
                       _buildGoalSection(),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 40),
 
                       // Stats Grid
                       _buildStatsGrid(),
@@ -473,7 +473,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                   ),
                   child: Center(
                     child: Icon(
-                      Icons.bar_chart_rounded,
+                      Icons.bar_chart,
                       color: Colors.white,
                       size: 26,
                     ),
@@ -514,14 +514,19 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          // 144deg in CSS = approx Alignment(0.6, -0.8) to Alignment(-0.6, 0.8)
-          begin: Alignment(0.6, -0.8),
-          end: Alignment(-0.6, 0.8),
+          // 144deg in CSS = Alignment(-0.8, -0.6) to Alignment(0.8, 0.6)
+          begin: Alignment(-0.8, -0.6),
+          end: Alignment(0.8, 0.6),
           colors: [
-            Color(0xFF022F00), // rgba(2, 47, 0, 1)
-            Color(0xFF079500), // rgba(7, 149, 0, 1)
+            Color(0xFF022F00), // rgba(2, 47, 0, 1) - darkest
+            Color(0xFF033800), // Very subtle step
+            Color(0xFF044100), // Very subtle step
+            Color(0xFF054A00), // Very subtle step
+            Color(0xFF055300), // Very subtle step
+            Color(0xFF065C00), // Very subtle step
+            Color(0xFF076500), // Softer bright green
           ],
-          stops: [0.0, 1.0],
+          stops: [0.0, 0.25, 0.4, 0.55, 0.7, 0.85, 1.0],
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -593,7 +598,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
             height: 1.0,
           ),
         ),
-        SizedBox(height: 12),
+        SizedBox(height: 20),
         // Stats cards with dividers
         Column(
           children: [
@@ -629,7 +634,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
   Widget _buildDivider() {
     return Container(
       height: 1,
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.centerLeft,
@@ -796,7 +801,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
-                  color: Color(0xFFC9C9C9),
+                  color: Colors.white,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0,
                   height: 1.2,
@@ -808,22 +813,34 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
         const SizedBox(height: 18),
         // Content
         recentSessions.isEmpty
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 32.0),
-                  child: Text(
-                    'No sessions yet',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.40),
-                      fontSize: 16,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
+            ? Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0x4C2C3E2E), // #2c3e2e4c
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                child: Text(
+                  'No sessions yet',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.40),
+                    fontSize: 16,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               )
-            : Column(
-                children: recentSessions.map((session) => _buildSessionItem(session)).toList(),
+            : Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0x4C2C3E2E), // #2c3e2e4c
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: _buildSessionsList(),
+                ),
               ),
       ],
     );
@@ -861,7 +878,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
-                  color: Color(0xFFC9C9C9),
+                  color: Colors.white,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0,
                   height: 1.2,
@@ -870,16 +887,16 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
         // Content
         upcomingEvents.isEmpty
             ? Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Color(0xFF3D3D3D).withOpacity(0.5),
+                  color: Color(0x4C2C3E2E), // #2c3e2e4c
                   borderRadius: BorderRadius.circular(8),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 44),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -904,11 +921,52 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                   ],
                 ),
               )
-            : Column(
-                children: upcomingEvents.take(3).map((event) => _buildEventItem(event)).toList(),
+            : Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0x4C2C3E2E), // #2c3e2e4c
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: _buildEventsList(),
+                ),
               ),
       ],
     );
+  }
+
+  List<Widget> _buildSessionsList() {
+    List<Widget> widgets = [];
+    final sessions = recentSessions.take(3).toList();
+
+    for (int i = 0; i < sessions.length; i++) {
+      widgets.add(_buildSessionItem(sessions[i]));
+
+      // Add divider between sessions (not after the last one)
+      if (i < sessions.length - 1) {
+        widgets.add(
+          Container(
+            height: 1,
+            margin: EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.3),
+                  Colors.white.withOpacity(0.1),
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return widgets;
   }
 
   Widget _buildSessionItem(Map<String, dynamic> session) {
@@ -922,6 +980,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
     }
 
     final createdAt = _parseSessionDate(session);
+    final formattedDate = DateFormat('MMM dd, h:mma').format(createdAt).toLowerCase();
 
     return GestureDetector(
       onTap: () {
@@ -932,103 +991,92 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
           ),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xFF546165).withOpacity(0.74),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
-                  width: 1,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left side: Session info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  sessionName,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 20,
+                    color: Color(0xFFF8FFF7),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
+                    height: 1.2,
+                  ),
                 ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          sessionName,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white.withOpacity(0.5),
-                        size: 16,
-                      ),
-                    ],
+                const SizedBox(height: 6),
+                Text(
+                  formattedDate,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    color: Color(0xFFF8FFF7),
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0,
+                    height: 1.2,
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child: Text(
-                          DateFormat('MMM dd, yyyy').format(createdAt),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.84),
-                            fontSize: 12,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child: Text(
-                          DateFormat('HH:mm').format(createdAt),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.84),
-                            fontSize: 12,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ),
+          // Right side: Arrow icon
+          Icon(
+            Icons.arrow_forward_ios,
+            color: Color(0xFF87ED81),
+            size: 18,
+          ),
+        ],
       ),
     );
   }
 
+  List<Widget> _buildEventsList() {
+    List<Widget> widgets = [];
+    final events = upcomingEvents.take(3).toList();
+
+    for (int i = 0; i < events.length; i++) {
+      widgets.add(_buildEventItem(events[i]));
+
+      // Add divider between events (not after the last one)
+      if (i < events.length - 1) {
+        widgets.add(
+          Container(
+            height: 1,
+            margin: EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.3),
+                  Colors.white.withOpacity(0.1),
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return widgets;
+  }
+
   Widget _buildEventItem(Map<String, dynamic> event) {
     String formattedDate = '';
-    String formattedTime = '';
     try {
       final dateTime = DateTime.parse(event['date']);
-      formattedDate = DateFormat('MMM dd, yyyy').format(dateTime);
-      formattedTime = DateFormat('HH:mm').format(dateTime);
+      formattedDate = DateFormat('MMM dd, h:mma').format(dateTime).toLowerCase();
     } catch (e) {
       formattedDate = event['date'] ?? '';
-      formattedTime = '';
     }
 
     // Get buy-in amount from event
@@ -1042,98 +1090,54 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
       }
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Color(0xFF546165).withOpacity(0.74),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-                width: 1,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left side: Event info
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                event['title'] ?? 'Event',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 20,
+                  color: Color(0xFFF8FFF7),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0,
+                  height: 1.2,
+                ),
               ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Top row: Event Name and Buy-in
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        event['title'] ?? 'Event',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    if (buyIn.isNotEmpty)
-                      Text(
-                        buyIn,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                  ],
+              const SizedBox(height: 6),
+              Text(
+                formattedDate,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Color(0xFFF8FFF7),
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                  height: 1.2,
                 ),
-                const SizedBox(height: 12),
-                // Bottom row: Date and Time pills
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(40),
-                      ),
-                      child: Text(
-                        formattedDate,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.84),
-                          fontSize: 12,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (formattedTime.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child: Text(
-                          formattedTime,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.84),
-                            fontSize: 12,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      ),
+        // Right side: Buy-in price
+        if (buyIn.isNotEmpty)
+          Text(
+            buyIn,
+            style: GoogleFonts.robotoMono(
+              fontSize: 22,
+              color: Color(0xFF87ED81),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
+              height: 1.0,
+            ),
+          ),
+      ],
     );
   }
 
