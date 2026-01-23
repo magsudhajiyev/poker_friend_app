@@ -50,6 +50,10 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
   double avgEarnings = 0.0;
   bool isLoadingData = true;
 
+  // Context menu state
+  String? _selectedEventId;
+  Offset? _popupPosition;
+
   @override
   void initState() {
     super.initState();
@@ -259,7 +263,6 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
       final events = await CalendarEventService.getUpcomingEvents();
       return events;
     } catch (e) {
-      print('❌ Error loading calendar events: $e');
       return [];
     }
   }
@@ -344,6 +347,31 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
               ),
             ),
           ),
+
+          // Blur overlay when popup is visible
+          if (_selectedEventId != null)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedEventId = null;
+                  _popupPosition = null;
+                });
+              },
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                child: Container(
+                  color: Colors.black.withOpacity(0.0),
+                ),
+              ),
+            ),
+
+          // Positioned popup menu
+          if (_selectedEventId != null && _popupPosition != null)
+            Positioned(
+              left: _popupPosition!.dx,
+              top: _popupPosition!.dy,
+              child: _buildEventContextMenu(),
+            ),
         ],
       ),
       bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home'),
@@ -887,7 +915,7 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
             ),
           ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         // Content
         upcomingEvents.isEmpty
             ? Container(
@@ -896,24 +924,24 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                   color: Color(0x4C2C3E2E), // #2c3e2e4c
                   borderRadius: BorderRadius.circular(8),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 44),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.calendar_today,
-                      size: 32,
-                      color: Color(0xFFEBFFE4),
+                      size: 24,
+                      color: Color(0xFFF8FFF7),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 8),
                     Text(
                       'No upcoming events',
                       style: TextStyle(
-                        color: Color(0xFFEBFFE4),
+                        color: Color(0xFFF8FFF7),
                         fontSize: 14,
                         fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 1.0,
                         height: 1.0,
                       ),
                       textAlign: TextAlign.center,
@@ -1071,6 +1099,8 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
   }
 
   Widget _buildEventItem(Map<String, dynamic> event) {
+    final GlobalKey eventKey = GlobalKey();
+
     String formattedDate = '';
     try {
       final dateTime = DateTime.parse(event['date']);
@@ -1090,10 +1120,31 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
       }
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    return GestureDetector(
+      key: eventKey,
+      behavior: HitTestBehavior.opaque,
+      onLongPress: () {
+        // Get the position of the card
+        final RenderBox renderBox = eventKey.currentContext!.findRenderObject() as RenderBox;
+        final cardPosition = renderBox.localToGlobal(Offset.zero);
+        final cardSize = renderBox.size;
+
+        // Position popup at top-right of the card
+        final popupX = cardPosition.dx + cardSize.width - 184 - 16; // 184px menu width, 16px margin
+        final popupY = cardPosition.dy;
+
+        setState(() {
+          _selectedEventId = event['id'];
+          _popupPosition = Offset(popupX, popupY);
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        color: Colors.transparent,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
         // Left side: Event info
         Expanded(
           child: Column(
@@ -1138,7 +1189,647 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
             ),
           ),
       ],
+        ),
+      ),
     );
+  }
+
+  Widget _buildEventContextMenu() {
+    if (_selectedEventId == null) return SizedBox.shrink();
+
+    // Find the event data
+    final event = upcomingEvents.firstWhere(
+      (e) => e['id'] == _selectedEventId,
+      orElse: () => {},
+    );
+
+    if (event.isEmpty) return SizedBox.shrink();
+
+    final eventTitle = event['title'] ?? 'Event';
+
+    return AnimatedScale(
+      scale: _selectedEventId != null ? 1.0 : 0.0,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+      child: AnimatedOpacity(
+        opacity: _selectedEventId != null ? 1.0 : 0.0,
+        duration: Duration(milliseconds: 300),
+        child: Container(
+          width: 184,
+          decoration: BoxDecoration(
+            color: Color(0xFF131613),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Event title
+              Text(
+                eventTitle,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0,
+                  height: 1.2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 14),
+
+              // Menu items
+              Column(
+                children: [
+                  // Edit Event
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedEventId = null;
+                        _popupPosition = null;
+                      });
+                      _showEditEventDialog(event);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Edit Event',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: Color(0xFFEBFFEF),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0,
+                              height: 1.2,
+                            ),
+                          ),
+                          Icon(
+                            Icons.edit,
+                            color: Color(0xFFEBFFEF),
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Divider
+                  Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          Colors.white.withOpacity(0.1),
+                          Colors.white.withOpacity(0.3),
+                          Colors.white.withOpacity(0.1),
+                        ],
+                        stops: [0.0, 0.5, 1.0],
+                      ),
+                    ),
+                  ),
+
+                  // Delete Event
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedEventId = null;
+                        _popupPosition = null;
+                      });
+                      _handleDeleteEvent(event['id'], event['title'] ?? 'Event');
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Delete Event',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: Color(0xFFEBFFEF),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0,
+                              height: 1.2,
+                            ),
+                          ),
+                          Icon(
+                            Icons.delete,
+                            color: Color(0xFFEBFFEF),
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showEditEventDialog(Map<String, dynamic> event) {
+    final titleController = TextEditingController(text: event['title'] ?? '');
+    final locationController = TextEditingController(text: event['location'] ?? '');
+    final buyInController = TextEditingController(text: event['buyIn']?.toString() ?? '');
+
+    DateTime selectedDate = DateTime.parse(event['date']);
+    String selectedType = event['type'] ?? 'Tournament';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.85,
+              decoration: BoxDecoration(
+                color: Color(0xFF1F1F23),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Column(
+                children: [
+                  // Header
+                  Container(
+                    padding: EdgeInsets.all(20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Edit Event',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Form fields
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title field
+                          Text('Event Title', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          SizedBox(height: 8),
+                          TextField(
+                            controller: titleController,
+                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: 'Enter event title',
+                              hintStyle: TextStyle(color: Colors.white30),
+                              filled: true,
+                              fillColor: Color(0xFF2A2A2E),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 20),
+
+                          // Type dropdown
+                          Text('Event Type', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          SizedBox(height: 8),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF2A2A2E),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: selectedType,
+                                isExpanded: true,
+                                dropdownColor: Color(0xFF2A2A2E),
+                                style: TextStyle(color: Colors.white),
+                                items: ['Tournament', 'Cash Game', 'Home Game', 'Online']
+                                    .map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setModalState(() {
+                                    selectedType = newValue!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 20),
+
+                          // Location field
+                          Text('Location', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          SizedBox(height: 8),
+                          TextField(
+                            controller: locationController,
+                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: 'Enter location',
+                              hintStyle: TextStyle(color: Colors.white30),
+                              filled: true,
+                              fillColor: Color(0xFF2A2A2E),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 20),
+
+                          // Date picker
+                          Text('Date & Time', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              final DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: selectedDate,
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime(2100),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: ThemeData.dark().copyWith(
+                                      colorScheme: ColorScheme.dark(
+                                        primary: Color(0xFF5AC95A),
+                                        onPrimary: Colors.white,
+                                        surface: Color(0xFF1F1F23),
+                                        onSurface: Colors.white,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null) {
+                                final TimeOfDay? time = await showTimePicker(
+                                  context: context,
+                                  initialTime: TimeOfDay.fromDateTime(selectedDate),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: ThemeData.dark().copyWith(
+                                        colorScheme: ColorScheme.dark(
+                                          primary: Color(0xFF5AC95A),
+                                          onPrimary: Colors.white,
+                                          surface: Color(0xFF1F1F23),
+                                          onSurface: Colors.white,
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
+                                );
+                                if (time != null) {
+                                  setModalState(() {
+                                    selectedDate = DateTime(
+                                      picked.year,
+                                      picked.month,
+                                      picked.day,
+                                      time.hour,
+                                      time.minute,
+                                    );
+                                  });
+                                }
+                              }
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF2A2A2E),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    DateFormat('MMM dd, yyyy - h:mm a').format(selectedDate),
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  Icon(Icons.calendar_today, color: Colors.white70, size: 20),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 20),
+
+                          // Buy-in field
+                          Text('Buy-in Amount', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          SizedBox(height: 8),
+                          TextField(
+                            controller: buyInController,
+                            keyboardType: TextInputType.numberWithOptions(decimal: true),
+                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: 'Enter buy-in amount',
+                              hintStyle: TextStyle(color: Colors.white30),
+                              prefixText: '\$ ',
+                              prefixStyle: TextStyle(color: Colors.white),
+                              filled: true,
+                              fillColor: Color(0xFF2A2A2E),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 30),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Save button
+                  Container(
+                    padding: EdgeInsets.all(20),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          await CalendarEventService.updateEvent(
+                            eventId: event['id'],
+                            title: titleController.text,
+                            type: selectedType,
+                            location: locationController.text,
+                            date: selectedDate,
+                            buyIn: double.tryParse(buyInController.text) ?? 0.0,
+                          );
+
+                          Navigator.pop(context);
+                          _loadData(); // Reload data to show updated event
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Event updated successfully'),
+                              backgroundColor: Color(0xFF5AC95A),
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error updating event: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF5AC95A),
+                        minimumSize: Size(double.infinity, 56),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Save Changes',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _handleDeleteEvent(String eventId, String eventName) {
+    _showDeleteConfirmationDialog(eventId, eventName);
+  }
+
+  void _showDeleteConfirmationDialog(String eventId, String eventName) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOut,
+          )),
+          child: child,
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            // Blurred backdrop
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.0),
+                  ),
+                ),
+              ),
+            ),
+
+            // Dialog content
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+              // Main dialog container
+              Container(
+                decoration: BoxDecoration(
+                  color: Color(0xFF131613),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                padding: EdgeInsets.only(top: 24),
+                child: Column(
+                  children: [
+                    // Title section
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Delete $eventName?',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0,
+                          height: 1.2,
+                          decoration: TextDecoration.none,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    SizedBox(height: 24),
+
+                    // Description section
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Are you sure you want to delete "$eventName"?',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.24,
+                          height: 1.7,
+                          decoration: TextDecoration.none,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    SizedBox(height: 16),
+
+                    // Divider
+                    Container(
+                      height: 1,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+
+                    SizedBox(height: 4),
+
+                    // Delete button
+                    GestureDetector(
+                      onTap: () async {
+                        Navigator.pop(context); // Close dialog
+                        await _performDeleteEvent(eventId);
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                        child: Text(
+                          'Delete',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16,
+                            color: Color(0xFFD55A41), // Red color
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0,
+                            height: 1.2,
+                            decoration: TextDecoration.none,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 8),
+
+              // Cancel button (separate container)
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFF131613),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                  width: double.infinity,
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0,
+                      height: 1.2,
+                      decoration: TextDecoration.none,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 16), // Bottom safe area padding
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _performDeleteEvent(String eventId) async {
+    try {
+      // Delete the event
+      await CalendarEventService.deleteEvent(eventId);
+
+      // Reload data to show updated list
+      await _loadData();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Event deleted successfully'),
+          backgroundColor: Color(0xFF5AC95A),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error deleting event: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   Widget _buildLegendItem(String label, Color color) {
