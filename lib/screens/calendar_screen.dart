@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
 import '../services/calendar_event_service.dart';
 import '../services/notification_service.dart';
+import '../design_system/design_system.dart';
+import '../widgets/global_bottom_nav_bar.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -21,19 +24,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Future<void> _loadEvents() async {
     try {
-      print('📅 Calendar screen: Loading events...');
       final eventsData = await CalendarEventService.getUserEvents();
-      print('📅 Calendar screen: Loaded ${eventsData.length} events');
 
       setState(() {
         events = eventsData
             .map((data) => PokerEvent.fromJson(data))
             .toList();
       });
-
-      print('📅 Calendar screen: Parsed ${events.length} PokerEvent objects');
     } catch (e) {
-      print('❌ Calendar screen error loading events: $e');
+      // Handle error silently or show user-friendly message
     }
   }
 
@@ -308,62 +307,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: EdgeInsets.fromLTRB(24, 32, 24, 0),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  SizedBox(width: 16),
-                  Text(
-                    'Poker Calendar',
-                    style: TextStyle(
-                      fontSize: 32,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  Spacer(),
-                  IconButton(
-                    icon: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Color(0xFF5AC95A),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    onPressed: _showAddEventDialog,
-                  ),
-                ],
-              ),
-            ),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          GradientBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                MainScreenHeader(
+                  title: 'Poker Calendar',
+                  showLeftIcon: true,
+                  leftIcon: Icons.arrow_back_rounded,
+                  onLeftPressed: () => Navigator.pop(context),
+                  rightIcon: Icons.add_rounded,
+                  onRightPressed: _showAddEventDialog,
+                ),
             
             // Calendar Month Navigation
             Padding(
-              padding: EdgeInsets.all(24),
+              padding: EdgeInsets.symmetric(horizontal: 18),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.chevron_left, color: Colors.white, size: 28),
+                    icon: Icon(Icons.chevron_left, color: Color(0xFFEBEBEB), size: 20),
                     onPressed: () {
                       setState(() {
                         currentMonth = DateTime(
@@ -376,13 +344,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   Text(
                     DateFormat('MMMM yyyy').format(currentMonth),
                     style: TextStyle(
-                      fontSize: 24,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
+                      fontSize: 18,
+                      color: Color(0xFFEBEBEB),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.18,
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.chevron_right, color: Colors.white, size: 28),
+                    icon: Icon(Icons.chevron_right, color: Color(0xFFEBEBEB), size: 20),
                     onPressed: () {
                       setState(() {
                         currentMonth = DateTime(
@@ -394,6 +364,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                 ],
               ),
+            ),
+
+            // Horizontal Divider
+            Container(
+              margin: EdgeInsets.only(left: 17.3, top: 24),
+              width: 360,
+              height: 1,
+              color: Color(0xFFEBEBEB).withOpacity(0.2),
             ),
             
             // Calendar Grid
@@ -433,9 +411,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ],
                 ),
               ),
-          ],
+            ],
+          ),
         ),
+        ],
       ),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'calendar'),
     );
   }
 
@@ -448,17 +429,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Column(
       children: [
         // Weekday headers
-        Container(
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
           child: Row(
-            children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+            children: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
                 .map((day) => Expanded(
                       child: Center(
                         child: Text(
                           day,
                           style: TextStyle(
-                            color: Color(0xFF9A9A9A),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
+                            fontFamily: 'Inter',
+                            color: Color(0xFFEBEBEB),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            letterSpacing: 0,
                           ),
                         ),
                       ),
