@@ -55,6 +55,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final locationController = TextEditingController();
     final buyInController = TextEditingController();
     TimeOfDay selectedTime = TimeOfDay.now();
+    DateTime dialogSelectedDate = selectedDate;
     String selectedType = 'Tournament';
 
     showGeneralDialog(
@@ -94,18 +95,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
             Align(
               alignment: Alignment.bottomCenter,
               child: StatefulBuilder(
-                builder: (context, setDialogState) => Container(
-                  margin: EdgeInsets.all(16),
-                  width: 361,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF000300),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  padding: EdgeInsets.fromLTRB(24, 32, 24, 32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                builder: (context, setDialogState) => Material(
+                  color: Colors.transparent,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                    ),
+                    child: Container(
+                      margin: EdgeInsets.all(16),
+                      width: 361,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF000300),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      padding: EdgeInsets.fromLTRB(24, 32, 24, 32),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                       // Title
                       Text(
                         'Add Poker Event',
@@ -228,7 +236,50 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                       ),
                       SizedBox(height: 16),
-                
+
+                      // Date Picker
+                      GestureDetector(
+                        onTap: () async {
+                          final date = await _showCustomDatePicker(
+                            context,
+                            dialogSelectedDate,
+                          );
+                          if (date != null) {
+                            setDialogState(() {
+                              dialogSelectedDate = date;
+                            });
+                          }
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          height: 48,
+                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF181D1B),
+                            border: Border.all(color: Colors.transparent),
+                            borderRadius: BorderRadius.circular(58),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today, color: Color(0x99EBFFEF), size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                DateFormat('MMM dd, yyyy').format(dialogSelectedDate),
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Color(0x99EBFFEF),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              Spacer(),
+                              Icon(Icons.keyboard_arrow_down, color: Color(0x99EBFFEF), size: 18),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+
                       // Time Picker
                       GestureDetector(
                         onTap: () async {
@@ -312,9 +363,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   return;
                                 }
                                 final eventDate = DateTime(
-                                  selectedDate.year,
-                                  selectedDate.month,
-                                  selectedDate.day,
+                                  dialogSelectedDate.year,
+                                  dialogSelectedDate.month,
+                                  dialogSelectedDate.day,
                                   selectedTime.hour,
                                   selectedTime.minute,
                                 );
@@ -373,10 +424,417 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                     ],
                   ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
           ],
+        );
+      },
+    );
+  }
+
+  Future<DateTime?> _showCustomDatePicker(BuildContext context, DateTime initialDate) async {
+    DateTime displayMonth = DateTime(initialDate.year, initialDate.month);
+    DateTime? selectedDate = initialDate;
+
+    return await showGeneralDialog<DateTime>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: Duration(milliseconds: 200),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return StatefulBuilder(
+          builder: (context, setPickerState) {
+            // Calculate calendar data
+            final daysInMonth = DateTime(displayMonth.year, displayMonth.month + 1, 0).day;
+            final firstDayOfMonth = DateTime(displayMonth.year, displayMonth.month, 1);
+            final startingWeekday = firstDayOfMonth.weekday % 7; // 0 = Sunday
+
+            return Stack(
+              children: [
+                // Blurred backdrop
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                      child: Container(
+                        color: Colors.black.withOpacity(0.0),
+                      ),
+                    ),
+                  ),
+                ),
+                // Date picker content
+                Center(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      width: 312,
+                      margin: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF000300),
+                        border: Border.all(color: Color(0x4CFFFFFF)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Header
+                          Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Select date:',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Color(0xFFBDBDBD),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Spacer(),
+                                // Clear button
+                                GestureDetector(
+                                  onTap: () {
+                                    setPickerState(() {
+                                      selectedDate = DateTime.now();
+                                      displayMonth = DateTime(selectedDate!.year, selectedDate!.month);
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.close, color: Color(0xFFD55A41), size: 12),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Clear',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color(0xFFD55A41),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                // Today button
+                                GestureDetector(
+                                  onTap: () {
+                                    final today = DateTime.now();
+                                    setPickerState(() {
+                                      selectedDate = DateTime(today.year, today.month, today.day);
+                                      displayMonth = DateTime(today.year, today.month);
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Color(0xFFFFFFFF).withOpacity(0.3)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.today, color: Color(0xFFFAFAFA), size: 12),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Today',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color(0xFFFAFAFA),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                // Close button
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Icon(Icons.close, color: Color(0xFFFAFAFA), size: 16),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 4),
+
+                          // Calendar body
+                          Container(
+                            width: 296,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF171C19),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: EdgeInsets.all(8),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Year/Month selector
+                                SizedBox(
+                                  width: 280,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                    // Year button
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            '${displayMonth.year}',
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              color: Color(0xFFFAFAFA),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          SizedBox(width: 4),
+                                          Icon(Icons.keyboard_arrow_down, color: Color(0xFFFAFAFA), size: 16),
+                                        ],
+                                      ),
+                                    ),
+                                    // Month navigation
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.chevron_left, color: Color(0xFFFAFAFA), size: 16),
+                                          onPressed: () {
+                                            setPickerState(() {
+                                              displayMonth = DateTime(displayMonth.year, displayMonth.month - 1);
+                                            });
+                                          },
+                                          padding: EdgeInsets.all(8),
+                                          constraints: BoxConstraints(),
+                                        ),
+                                        Text(
+                                          DateFormat('MMMM').format(displayMonth),
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color(0xFFFAFAFA),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(Icons.chevron_right, color: Color(0xFFFAFAFA), size: 16),
+                                          onPressed: () {
+                                            setPickerState(() {
+                                              displayMonth = DateTime(displayMonth.year, displayMonth.month + 1);
+                                            });
+                                          },
+                                          padding: EdgeInsets.all(8),
+                                          constraints: BoxConstraints(),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                  ),
+                                ),
+
+                                SizedBox(height: 2),
+
+                                // Week day labels
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF191F1B),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                                          .map((day) => Expanded(
+                                                child: Container(
+                                                  height: 24,
+                                                  decoration: BoxDecoration(
+                                                    color: Color(0x0DFFFFFF),
+                                                  ),
+                                                  child: Center(
+                                                    child: Text(
+                                                      day,
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color: Color(0xFFBDBDBD),
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.w400,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ))
+                                          .toList(),
+                                    ),
+                                  ),
+                                ),
+
+                                SizedBox(height: 2),
+
+                                // Calendar grid
+                                GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 7,
+                                    childAspectRatio: 1.0,
+                                    crossAxisSpacing: 0,
+                                    mainAxisSpacing: 0,
+                                  ),
+                                  itemCount: 42,
+                                  itemBuilder: (context, index) {
+                                    // Show previous month days
+                                    if (index < startingWeekday) {
+                                      final prevMonth = DateTime(displayMonth.year, displayMonth.month - 1);
+                                      final daysInPrevMonth = DateTime(prevMonth.year, prevMonth.month + 1, 0).day;
+                                      final prevMonthDay = daysInPrevMonth - (startingWeekday - index - 1);
+
+                                      return Container(
+                                        child: Center(
+                                          child: Text(
+                                            prevMonthDay.toString(),
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              color: Color(0x66FAFAFA), // Grayed out
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+                                    final dayNumber = index - startingWeekday + 1;
+                                    if (dayNumber > daysInMonth) {
+                                      return Container(); // Empty cell
+                                    }
+
+                                    final date = DateTime(displayMonth.year, displayMonth.month, dayNumber);
+                                    final isSelected = selectedDate != null &&
+                                        selectedDate!.year == date.year &&
+                                        selectedDate!.month == date.month &&
+                                        selectedDate!.day == date.day;
+                                    final isToday = DateTime.now().year == date.year &&
+                                        DateTime.now().month == date.month &&
+                                        DateTime.now().day == date.day;
+
+                                    return GestureDetector(
+                                      onTap: () {
+                                        setPickerState(() {
+                                          selectedDate = date;
+                                        });
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? Color(0xFF5AC95A)
+                                              : (isToday ? Color(0xFF2A2A2E) : Colors.transparent),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: isToday && !isSelected
+                                              ? Border.all(color: Color(0xFF5AC95A), width: 1)
+                                              : null,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            dayNumber.toString(),
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              color: isSelected ? Colors.black : Color(0xFFFAFAFA),
+                                              fontSize: 12,
+                                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 8),
+
+                          // Footer buttons
+                          Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Row(
+                              children: [
+                                // Cancel button
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Container(
+                                    width: 88,
+                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Color(0xFFFFFFFF).withOpacity(0.3)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'Cancel',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          color: Color(0xFFFAFAFA),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                // Done button
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.pop(context, selectedDate),
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFBAFF9A),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          'Done',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Colors.black,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
