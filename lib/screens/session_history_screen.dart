@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import 'session_hands_screen.dart';
 import 'session_analytics_screen.dart';
+import '../design_system/design_system.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -45,7 +47,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   Future<void> _loadSessions() async {
     try {
-      print('📊 DEBUG: _loadSessions called');
       setState(() {
         isLoading = true;
         error = null;
@@ -53,17 +54,11 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
       List<Map<String, dynamic>> loadedSessions;
       try {
-        print('📊 DEBUG: Attempting to load from Firebase...');
         // Try Firebase first
         loadedSessions = await FirebaseService.getAllSessions();
-        print('📊 DEBUG: Loaded ${loadedSessions.length} sessions from Firebase');
-        print('📊 DEBUG: Firebase sessions: ${loadedSessions.map((s) => '${s['id']?.substring(0, 8)}...(${s['sessionName'] ?? 'unnamed'})')}');
       } catch (e) {
         // Fallback to local storage
-        print('📊 DEBUG: Firebase failed, trying local storage: $e');
         loadedSessions = await LocalStorageService.getUserSessions();
-        print('📊 DEBUG: Loaded ${loadedSessions.length} sessions from local storage');
-        print('📊 DEBUG: Local sessions: ${loadedSessions.map((s) => '${s['id']?.substring(0, 8)}...(${s['sessionName'] ?? 'unnamed'})')}');
       }
       
       setState(() {
@@ -84,17 +79,15 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   }
 
   void _scrollToSession(String sessionId) {
-    print('📊 DEBUG: _scrollToSession called with sessionId: $sessionId');
     // Wait a bit for the UI to render
     Future.delayed(Duration(milliseconds: 300), () {
       final targetIndex = sessions.indexWhere((session) => session['id'] == sessionId);
-      print('📊 DEBUG: Found target session at index: $targetIndex');
-      
+
       if (targetIndex != -1) {
         // Calculate approximate position (each session card is roughly 120px + margins)
         const double itemHeight = 140.0;
         final double scrollOffset = targetIndex * itemHeight;
-        
+
         // Scroll to the session with animation
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
@@ -102,10 +95,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
             duration: Duration(milliseconds: 800),
             curve: Curves.easeInOut,
           );
-          print('📊 DEBUG: Scrolled to offset: $scrollOffset');
         }
-      } else {
-        print('📊 DEBUG: Target session not found!');
       }
     });
   }
@@ -113,119 +103,57 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
-      body: SafeArea(
-        child: Column(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          GradientBackground(),
+          SafeArea(
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            Padding(
-              padding: EdgeInsets.fromLTRB(24, 32, 24, 24),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      'Session History',
-                      style: TextStyle(
-                        fontSize: 32,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.refresh,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    onPressed: _loadSessions,
-                  ),
-                  PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert, color: Colors.white),
-                    color: Color(0xFF1F1F23),
-                    onSelected: (value) {
-                      if (value == 'clear') {
-                        _showClearConfirmation();
-                      } else if (value == 'sync') {
-                        _syncLocalToFirebase();
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem<String>(
-                        value: 'sync',
-                        child: Row(
-                          children: [
-                            Icon(Icons.cloud_upload, color: Colors.blue),
-                            SizedBox(width: 8),
-                            Text('Sync to Cloud', style: TextStyle(color: Colors.white)),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'clear',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_forever, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Clear All Sessions', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            MainScreenHeader(
+              title: 'Session History',
+              showLeftIcon: true,
+              leftIcon: Icons.arrow_back_rounded,
+              onLeftPressed: () => Navigator.pop(context),
+              rightIcon: Icons.refresh_rounded,
+              onRightPressed: _loadSessions,
             ),
+            SizedBox(height: 16),
             // Tab Bar
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 24),
+              margin: EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(16),
+                color: Color(0x17FFFFFF),
+                borderRadius: BorderRadius.circular(58),
               ),
               child: TabBar(
                 controller: _tabController,
                 indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Color(0xFFcb5242),
+                  borderRadius: BorderRadius.circular(63),
+                  color: Color(0xFFBAFF9A),
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
+                indicatorPadding: EdgeInsets.all(5),
                 dividerColor: Colors.transparent,
-                labelColor: Colors.white,
-                unselectedLabelColor: Color(0xFF9A9A9A),
-                labelStyle: TextStyle(fontWeight: FontWeight.w600),
+                labelColor: Color(0xFF000000),
+                unselectedLabelColor: Color(0xFFFFFFFF),
+                labelStyle: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -1.0,
+                ),
+                unselectedLabelStyle: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -1.0,
+                ),
                 tabs: [
-                  Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset('icons/cash.png', width: 20, height: 20),
-                        SizedBox(width: 8),
-                        Text('Cash'),
-                      ],
-                    ),
-                  ),
-                  Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset('icons/podium.png', width: 20, height: 20),
-                        SizedBox(width: 8),
-                        Text('Tournament'),
-                      ],
-                    ),
-                  ),
+                  Tab(text: 'Cash'),
+                  Tab(text: 'Tournament'),
                 ],
               ),
             ),
@@ -241,7 +169,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               ),
             ),
           ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -292,49 +222,61 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     }
 
     if (sessionList.isEmpty) {
-      return Center(
+      return Padding(
+        padding: EdgeInsets.only(left: 16, right: 16, bottom: 32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: double.infinity,
               decoration: BoxDecoration(
-                color: Color(0xFF2A2A2E),
-                borderRadius: BorderRadius.circular(20),
+                color: Color(0x4C2C3E2E),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(
-                  gameType == 'Cash' ? 'icons/cash.png' : 'icons/podium.png',
-                  width: 40,
-                  height: 40,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.sports_esports,
-                      color: Color(0xFF9A9A9A),
-                      size: 40,
-                    );
-                  },
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'No $gameType Sessions',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Play some $gameType poker hands and they will appear here!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
-                fontSize: 16,
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 44),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Icon
+                  Image.asset(
+                    gameType == 'Cash' ? 'icons/cash.png' : 'icons/podium.png',
+                    width: 48,
+                    height: 48,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.sports_esports,
+                        color: Color(0xFFF8FFF7),
+                        size: 48,
+                      );
+                    },
+                  ),
+                  SizedBox(height: 14),
+                  // Title
+                  Text(
+                    'No $gameType Sessions',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: Color(0xFFF8FFF7),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 14),
+                  // Description
+                  Text(
+                    'Play some $gameType Poker hands to see the results',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: Color(0xFFF8FFF7),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -768,29 +710,24 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         isLoading = true;
         error = null;
       });
-      
-      print('🗑️ DEBUG: Starting to clear all user sessions...');
-      
+
       // Clear from Firebase first
       try {
         await FirebaseService.clearUserSessions();
-        print('🗑️ DEBUG: Firebase sessions cleared successfully');
       } catch (e) {
-        print('🗑️ DEBUG: Error clearing Firebase sessions: $e');
         // Continue with local clearing even if Firebase fails
       }
-      
+
       // Clear from local storage
       try {
         await LocalStorageService.clearUserSessions();
-        print('🗑️ DEBUG: Local sessions cleared successfully');
       } catch (e) {
-        print('🗑️ DEBUG: Error clearing local sessions: $e');
+        // Ignore error
       }
-      
+
       // Refresh the sessions list
       await _loadSessions();
-      
+
       // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -800,8 +737,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           ),
         );
       }
-      
-      print('🗑️ DEBUG: All sessions cleared and UI refreshed');
     } catch (e) {
       setState(() {
         error = 'Failed to clear sessions: $e';
