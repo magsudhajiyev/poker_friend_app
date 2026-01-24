@@ -5,6 +5,7 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
+import '../widgets/global_bottom_nav_bar.dart';
 import 'session_hands_screen.dart';
 import 'session_analytics_screen.dart';
 import '../design_system/design_system.dart';
@@ -173,6 +174,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           ),
         ],
       ),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'sessions'),
     );
   }
 
