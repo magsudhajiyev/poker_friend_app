@@ -373,7 +373,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
               height: 1,
               color: Color(0xFFEBEBEB).withOpacity(0.2),
             ),
-            
+
+            SizedBox(height: 24),
+
             // Calendar Grid
             Expanded(
               child: Container(
