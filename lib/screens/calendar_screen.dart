@@ -57,250 +57,328 @@ class _CalendarScreenState extends State<CalendarScreen> {
     TimeOfDay selectedTime = TimeOfDay.now();
     String selectedType = 'Tournament';
 
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: Color(0xFF1F1F23),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            'Add Poker Event',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOut,
+          )),
+          child: child,
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            // Blurred backdrop
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.0),
+                  ),
+                ),
+              ),
             ),
-          ),
-          content: Container(
-            width: double.maxFinite,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                // Event Type Selector
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            // Dialog content
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: StatefulBuilder(
+                builder: (context, setDialogState) => Container(
+                  margin: EdgeInsets.all(16),
+                  width: 361,
                   decoration: BoxDecoration(
-                    color: Color(0xFF2A2A2E),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Color(0xFF000300),
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: selectedType,
-                      dropdownColor: Color(0xFF2A2A2E),
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      items: ['Tournament', 'Cash Game', 'Home Game', 'Online']
-                          .map((type) => DropdownMenuItem(
-                                value: type,
-                                child: Text(type),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setDialogState(() {
-                          selectedType = value!;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
+                  padding: EdgeInsets.fromLTRB(24, 32, 24, 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        'Add Poker Event',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                        ),
+                      ),
+                      SizedBox(height: 32),
+                      // Event Type Selector
+                      Container(
+                        width: double.infinity,
+                        height: 48,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: Color(0x0AFFFFFF),
+                          border: Border.all(color: Color(0xFF13321B)),
+                          borderRadius: BorderRadius.circular(58),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedType,
+                            dropdownColor: Color(0xFF000300),
+                            icon: Icon(Icons.keyboard_arrow_down, color: Color(0x99EBFFEF), size: 18),
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Color(0x99EBFFEF),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              height: 1.2,
+                            ),
+                            items: ['Tournament', 'Cash Game', 'Home Game', 'Online']
+                                .map((type) => DropdownMenuItem(
+                                      value: type,
+                                      child: Text(type),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              setDialogState(() {
+                                selectedType = value!;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
                 
-                // Title Field
-                TextField(
-                  controller: titleController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Event title',
-                    hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF5AC95A)),
-                    ),
-                    filled: true,
-                    fillColor: Color(0xFF2A2A2E),
-                  ),
-                ),
-                SizedBox(height: 16),
+                      // Location/Venue Field
+                      TextField(
+                        controller: locationController,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0x99EBFFEF),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Location/Venue',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0x99EBFFEF),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(58),
+                            borderSide: BorderSide(color: Color(0xFF13321B)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(58),
+                            borderSide: BorderSide(color: Color(0xFF13321B)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(58),
+                            borderSide: BorderSide(color: Color(0xFF13321B)),
+                          ),
+                          filled: true,
+                          fillColor: Color(0x0AFFFFFF),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+
+                      // Buy-in Field
+                      TextField(
+                        controller: buyInController,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0x99EBFFEF),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Buy in amount',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0x99EBFFEF),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(58),
+                            borderSide: BorderSide(color: Color(0xFF13321B)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(58),
+                            borderSide: BorderSide(color: Color(0xFF13321B)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(58),
+                            borderSide: BorderSide(color: Color(0xFF13321B)),
+                          ),
+                          filled: true,
+                          fillColor: Color(0x0AFFFFFF),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        ),
+                      ),
+                      SizedBox(height: 16),
                 
-                // Location Field
-                TextField(
-                  controller: locationController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Location/Venue',
-                    hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF5AC95A)),
-                    ),
-                    filled: true,
-                    fillColor: Color(0xFF2A2A2E),
-                  ),
-                ),
-                SizedBox(height: 16),
-                
-                // Buy-in Field
-                TextField(
-                  controller: buyInController,
-                  keyboardType: TextInputType.number,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Buy-in amount',
-                    hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                    prefixText: '\$ ',
-                    prefixStyle: TextStyle(color: Color(0xFF5AC95A)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF5AC95A)),
-                    ),
-                    filled: true,
-                    fillColor: Color(0xFF2A2A2E),
-                  ),
-                ),
-                SizedBox(height: 16),
-                
-                // Time Picker
-                GestureDetector(
-                  onTap: () async {
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime: selectedTime,
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.dark(
-                              primary: Color(0xFF5AC95A),
-                              surface: Color(0xFF1F1F23),
+                      // Time Picker
+                      GestureDetector(
+                        onTap: () async {
+                          final time = await showTimePicker(
+                            context: context,
+                            initialTime: selectedTime,
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: ColorScheme.dark(
+                                    primary: Color(0xFF5AC95A),
+                                    surface: Color(0xFF000300),
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (time != null) {
+                            setDialogState(() {
+                              selectedTime = time;
+                            });
+                          }
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          height: 48,
+                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Color(0x0AFFFFFF),
+                            border: Border.all(color: Color(0xFF13321B)),
+                            borderRadius: BorderRadius.circular(58),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.access_time, color: Color(0x99EBFFEF), size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                selectedTime.format(context),
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Color(0x99EBFFEF),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              Spacer(),
+                              Icon(Icons.keyboard_arrow_down, color: Color(0x99EBFFEF), size: 18),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 32),
+                      // Buttons
+                      Row(
+                        children: [
+                          // Cancel Button
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.fromLTRB(32, 12, 8, 12),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.5,
+                                ),
+                              ),
                             ),
                           ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (time != null) {
-                      setDialogState(() {
-                        selectedTime = time;
-                      });
-                    }
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF2A2A2E),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.access_time, color: Color(0xFF5AC95A)),
-                        SizedBox(width: 12),
-                        Text(
-                          selectedTime.format(context),
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                        Spacer(),
-                        Icon(Icons.arrow_drop_down, color: Color(0xFF9A9A9A)),
-                      ],
-                    ),
+                          // Add Event Button
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (titleController.text.isEmpty && locationController.text.isEmpty) {
+                                  return;
+                                }
+                                final eventDate = DateTime(
+                                  selectedDate.year,
+                                  selectedDate.month,
+                                  selectedDate.day,
+                                  selectedTime.hour,
+                                  selectedTime.minute,
+                                );
+
+                                try {
+                                  // Save to Firebase
+                                  final eventId = await CalendarEventService.createEvent(
+                                    title: titleController.text.isEmpty ? selectedType : titleController.text,
+                                    type: selectedType,
+                                    location: locationController.text,
+                                    date: eventDate,
+                                    buyIn: double.tryParse(buyInController.text) ?? 0.0,
+                                  );
+
+                                  // Add to local list with Firebase ID
+                                  final newEvent = PokerEvent(
+                                    id: eventId,
+                                    title: titleController.text.isEmpty ? selectedType : titleController.text,
+                                    type: selectedType,
+                                    location: locationController.text,
+                                    date: eventDate,
+                                    buyIn: double.tryParse(buyInController.text) ?? 0.0,
+                                  );
+
+                                  setState(() {
+                                    events.add(newEvent);
+                                  });
+
+                                  Navigator.pop(context);
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed to create event: $e')),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFFBAFF9A),
+                                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: Text(
+                                'Add Event',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: Color(0xFF9A9A9A)),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (titleController.text.isNotEmpty) {
-                  final eventDate = DateTime(
-                    selectedDate.year,
-                    selectedDate.month,
-                    selectedDate.day,
-                    selectedTime.hour,
-                    selectedTime.minute,
-                  );
-
-                  try {
-                    // Save to Firebase
-                    final eventId = await CalendarEventService.createEvent(
-                      title: titleController.text,
-                      type: selectedType,
-                      location: locationController.text,
-                      date: eventDate,
-                      buyIn: double.tryParse(buyInController.text) ?? 0.0,
-                    );
-
-                    // Add to local list with Firebase ID
-                    final newEvent = PokerEvent(
-                      id: eventId,
-                      title: titleController.text,
-                      type: selectedType,
-                      location: locationController.text,
-                      date: eventDate,
-                      buyIn: double.tryParse(buyInController.text) ?? 0.0,
-                    );
-
-                    setState(() {
-                      events.add(newEvent);
-                    });
-
-                    Navigator.pop(context);
-                  } catch (e) {
-                    print('Error creating event: $e');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to create event: $e')),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF5AC95A),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'Add Event',
-                style: TextStyle(color: Colors.white),
               ),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 
