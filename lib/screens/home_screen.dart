@@ -1123,199 +1123,391 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final buyInController = TextEditingController(text: event['buyIn'].toString());
 
     final eventDate = DateTime.parse(event['date']);
-    DateTime selectedDate = eventDate;
+    DateTime dialogSelectedDate = eventDate;
     TimeOfDay selectedTime = TimeOfDay(hour: eventDate.hour, minute: eventDate.minute);
     String selectedType = event['type'] ?? 'Tournament';
 
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: Color(0xFF1F1F23),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            'Edit Event',
-            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Event Type Selector
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF2A2A2E),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: selectedType,
-                      dropdownColor: Color(0xFF2A2A2E),
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      items: ['Tournament', 'Cash Game', 'Home Game', 'Online']
-                          .map((type) => DropdownMenuItem(
-                                value: type,
-                                child: Text(type),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setDialogState(() => selectedType = value!);
-                      },
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: titleController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Event Name',
-                    labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                    filled: true,
-                    fillColor: Color(0xFF2A2A2E),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: locationController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Location',
-                    labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                    filled: true,
-                    fillColor: Color(0xFF2A2A2E),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: buyInController,
-                  keyboardType: TextInputType.number,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Buy-in (\$)',
-                    labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                    filled: true,
-                    fillColor: Color(0xFF2A2A2E),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-                InkWell(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(Duration(days: 365)),
-                    );
-                    if (date != null) {
-                      setDialogState(() => selectedDate = date);
-                    }
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF2A2A2E),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today, color: Colors.white),
-                        SizedBox(width: 12),
-                        Text(
-                          DateFormat('MMM dd, yyyy').format(selectedDate),
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-                InkWell(
-                  onTap: () async {
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime: selectedTime,
-                    );
-                    if (time != null) {
-                      setDialogState(() => selectedTime = time);
-                    }
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF2A2A2E),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.access_time, color: Colors.white),
-                        SizedBox(width: 12),
-                        Text(
-                          selectedTime.format(context),
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: Colors.white)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final title = titleController.text.trim();
-                if (title.isEmpty) return;
-
-                final eventDateTime = DateTime(
-                  selectedDate.year,
-                  selectedDate.month,
-                  selectedDate.day,
-                  selectedTime.hour,
-                  selectedTime.minute,
-                );
-
-                // Update the event
-                await _updateEvent(
-                  event['id'],
-                  title,
-                  selectedType,
-                  locationController.text.trim(),
-                  eventDateTime,
-                  double.tryParse(buyInController.text) ?? 0.0,
-                );
-
-                Navigator.pop(context);
-                _loadData(); // Reload to show updated event
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFcb5242),
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: Duration(milliseconds: 200),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.95, end: 1.0).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOut,
               ),
-              child: Text('Save', style: TextStyle(color: Colors.white)),
+            ),
+            child: child,
+          ),
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            // Blurred backdrop
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.0),
+                  ),
+                ),
+              ),
+            ),
+            // Dialog content
+            Center(
+              child: StatefulBuilder(
+                builder: (context, setDialogState) => Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    margin: EdgeInsets.all(16),
+                    width: 361,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.85,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF000300),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    padding: EdgeInsets.fromLTRB(24, 32, 24, 32),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title and Close button
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Edit Event',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.2,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 32),
+
+                          // Event Type Selector
+                          Container(
+                            width: double.infinity,
+                            height: 48,
+                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: Color(0x0AFFFFFF),
+                              border: Border.all(color: Color(0xFF13321B)),
+                              borderRadius: BorderRadius.circular(58),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: selectedType,
+                                dropdownColor: Color(0xFF000300),
+                                icon: Icon(Icons.keyboard_arrow_down, color: Color(0x99EBFFEF), size: 18),
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Color(0x99EBFFEF),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.2,
+                                ),
+                                items: ['Tournament', 'Cash Game', 'Home Game', 'Online']
+                                    .map((type) => DropdownMenuItem(
+                                          value: type,
+                                          child: Text(type),
+                                        ))
+                                    .toList(),
+                                onChanged: (value) {
+                                  setDialogState(() {
+                                    selectedType = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+
+                          // Event Name Field
+                          TextField(
+                            controller: titleController,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Color(0x99EBFFEF),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Event Name',
+                              hintStyle: TextStyle(
+                                fontFamily: 'Inter',
+                                color: Color(0x99EBFFEF),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(58),
+                                borderSide: BorderSide(color: Color(0xFF13321B)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(58),
+                                borderSide: BorderSide(color: Color(0xFF13321B)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(58),
+                                borderSide: BorderSide(color: Color(0xFF13321B)),
+                              ),
+                              filled: true,
+                              fillColor: Color(0x0AFFFFFF),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+
+                          // Location/Venue Field
+                          TextField(
+                            controller: locationController,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Color(0x99EBFFEF),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Location/Venue',
+                              hintStyle: TextStyle(
+                                fontFamily: 'Inter',
+                                color: Color(0x99EBFFEF),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(58),
+                                borderSide: BorderSide(color: Color(0xFF13321B)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(58),
+                                borderSide: BorderSide(color: Color(0xFF13321B)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(58),
+                                borderSide: BorderSide(color: Color(0xFF13321B)),
+                              ),
+                              filled: true,
+                              fillColor: Color(0x0AFFFFFF),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+
+                          // Buy-in Field
+                          TextField(
+                            controller: buyInController,
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Color(0x99EBFFEF),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Buy in amount',
+                              hintStyle: TextStyle(
+                                fontFamily: 'Inter',
+                                color: Color(0x99EBFFEF),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(58),
+                                borderSide: BorderSide(color: Color(0xFF13321B)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(58),
+                                borderSide: BorderSide(color: Color(0xFF13321B)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(58),
+                                borderSide: BorderSide(color: Color(0xFF13321B)),
+                              ),
+                              filled: true,
+                              fillColor: Color(0x0AFFFFFF),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+
+                          // Date Picker
+                          GestureDetector(
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: dialogSelectedDate,
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime(2100),
+                              );
+                              if (date != null) {
+                                setDialogState(() {
+                                  dialogSelectedDate = date;
+                                });
+                              }
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              height: 48,
+                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF181D1B),
+                                border: Border.all(color: Colors.transparent),
+                                borderRadius: BorderRadius.circular(58),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.calendar_today, color: Color(0x99EBFFEF), size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    DateFormat('MMM dd, yyyy').format(dialogSelectedDate),
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Color(0x99EBFFEF),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Icon(Icons.keyboard_arrow_down, color: Color(0x99EBFFEF), size: 18),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+
+                          // Time Picker
+                          GestureDetector(
+                            onTap: () async {
+                              final time = await showTimePicker(
+                                context: context,
+                                initialTime: selectedTime,
+                              );
+                              if (time != null) {
+                                setDialogState(() {
+                                  selectedTime = time;
+                                });
+                              }
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              height: 48,
+                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF181D1B),
+                                border: Border.all(color: Colors.transparent),
+                                borderRadius: BorderRadius.circular(58),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.access_time, color: Color(0x99EBFFEF), size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    selectedTime.format(context),
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Color(0x99EBFFEF),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Icon(Icons.keyboard_arrow_down, color: Color(0x99EBFFEF), size: 18),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 32),
+
+                          // Save Changes Button
+                          GestureDetector(
+                            onTap: () async {
+                              final title = titleController.text.trim();
+                              if (title.isEmpty) return;
+
+                              final eventDateTime = DateTime(
+                                dialogSelectedDate.year,
+                                dialogSelectedDate.month,
+                                dialogSelectedDate.day,
+                                selectedTime.hour,
+                                selectedTime.minute,
+                              );
+
+                              try {
+                                await _updateEvent(
+                                  event['id'],
+                                  title,
+                                  selectedType,
+                                  locationController.text.trim(),
+                                  eventDateTime,
+                                  double.tryParse(buyInController.text) ?? 0.0,
+                                );
+
+                                Navigator.pop(context);
+                                _loadData();
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Failed to update event: $e')),
+                                );
+                              }
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Color(0xFFBAFF9A),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                              child: Center(
+                                child: Text(
+                                  'Save Changes',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 
