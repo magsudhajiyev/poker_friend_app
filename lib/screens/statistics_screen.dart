@@ -521,39 +521,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  Widget _buildStatisticsHeader() {
-    return SizedBox(
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Statistics',
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'Inter',
-              fontSize: 28,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.56,
-              height: 1.0, // line-height: 28px / font-size: 28px = 1.0
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            'Overall performance',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontFamily: 'Inter',
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              letterSpacing: -0.32,
-              height: 1.0, // line-height: 16px / font-size: 16px = 1.0
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildBottomNavigationBar() {
     return Container(
@@ -634,16 +601,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Header Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: GlobalTopHeader(currentScreen: 'statistics'),
-          ),
-          const SizedBox(height: 28),
-          // Statistics Header Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: _buildStatisticsHeader(),
+          // Main Screen Header with glassmorphic blur
+          MainScreenHeader(
+            title: 'Statistics',
+            subtitle: 'Advanced Analytics',
+            leftIcon: Icons.arrow_back_rounded,
+            onLeftPressed: () => Navigator.pop(context),
+            rightIcon: Icons.refresh_rounded,
+            onRightPressed: _loadStatistics,
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
           ),
           const SizedBox(height: 28),
           // Content with padding
@@ -653,9 +619,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildOverallStats(),
-                SizedBox(height: 24),
+                SizedBox(height: 40),
                 _buildPositionalStats(),
-                SizedBox(height: 24),
+                SizedBox(height: 40),
                 _buildSessionStats(),
                 SizedBox(height: 100),
               ],
@@ -677,13 +643,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           style: TextStyle(
             fontFamily: 'Inter',
             fontSize: 12,
-            color: Color(0xFF87ED81),
+            color: Colors.white,
             fontWeight: FontWeight.w400,
             letterSpacing: 1.0,
             height: 1.0,
           ),
         ),
-        SizedBox(height: 12),
+        SizedBox(height: 24),
         // Stats cards with dividers
         Column(
           children: [
@@ -707,19 +673,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Widget _buildDivider() {
     return Container(
       height: 1,
-      margin: EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.3),
-            Colors.white.withOpacity(0.1),
-          ],
-          stops: [0.0, 0.5, 1.0],
-        ),
-      ),
+      margin: EdgeInsets.symmetric(vertical: 16),
+      color: Color(0x1AFFFFFF), // #ffffff1a - matches Figma design
     );
   }
 
@@ -767,7 +722,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           style: TextStyle(
             fontFamily: 'Inter',
             fontSize: 12,
-            color: Color(0xFF87ED81),
+            color: Colors.white,
             fontWeight: FontWeight.w500,
             letterSpacing: 1.0,
             height: 1.0,
@@ -779,7 +734,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Color(0xFF3D3D3D).withOpacity(0.5),
+              color: Color(0x4C2C3E2E), // #2c3e2e4c - matches Figma design
               borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 44),
@@ -789,13 +744,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 Icon(
                   Icons.table_chart,
                   size: 24,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                 ),
                 const SizedBox(height: 14),
                 Text(
                   'Start playing a session to record the data',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                     fontSize: 12,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,
@@ -992,7 +947,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           style: TextStyle(
             fontFamily: 'Inter',
             fontSize: 12,
-            color: Color(0xFF87ED81),
+            color: Colors.white,
             fontWeight: FontWeight.w500,
             letterSpacing: 1.0,
             height: 1.0,
@@ -1021,7 +976,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Color(0xFF3D3D3D).withOpacity(0.5),
+              color: Color(0x4C2C3E2E), // #2c3e2e4c - matches Figma design
               borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 44),
@@ -1031,13 +986,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 Icon(
                   Icons.access_time,
                   size: 24,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                 ),
                 const SizedBox(height: 14),
                 Text(
                   'Start playing a session to record the data',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                     fontSize: 12,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,

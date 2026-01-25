@@ -18,62 +18,26 @@ class LoggingModeSelectionScreen extends StatelessWidget {
           GradientBackground(),
           SafeArea(
             child: SingleChildScrollView(
-              child: Container(
-                constraints: BoxConstraints(maxWidth: 375),
-                margin: EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-              // Header Section
-              Padding(
-                padding: EdgeInsets.fromLTRB(0, 32, 0, 48),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Main Screen Header with glassmorphic blur
+                  MainScreenHeader(
+                    title: 'Choose Mode',
+                    subtitle: 'Select your logging preference',
+                    rightIcon: Icons.close_rounded,
+                    onRightPressed: () => Navigator.pop(context),
+                    showLeftIcon: false,
+                    padding: const EdgeInsets.all(16),
+                  ),
+
+                  // Mode Selection Cards
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Choose Mode',
-                          style: TextStyle(
-                            fontSize: 32,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Select your logging preference',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: PokerFriendColors.dark9,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: PokerFriendColors.dark3,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: Icon(
-                          Icons.close_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Mode Selection Cards
+                        const SizedBox(height: 16),
               // Full Logging Mode Card
               _buildModeCard(
                 context: context,
@@ -108,9 +72,11 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                 onTap: () => _navigateToMode(context, LoggingMode.individual),
               ),
 
-              SizedBox(height: 120),
-                  ],
-                ),
+                        SizedBox(height: 120),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -132,7 +98,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Color(0xFF3D3D3D).withOpacity(0.5),
+        color: Color(0x4C2C3E2E), // #2c3e2e4c - matches Figma design
         borderRadius: BorderRadius.circular(24),
       ),
       padding: EdgeInsets.all(24),
@@ -147,8 +113,8 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 24,
-                  color: Color(0xFF87ED81),
+                  fontSize: 22,
+                  color: Colors.white,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.0,
                   height: 1.0,
@@ -160,7 +126,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 14,
-                  color: Colors.white,
+                  color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0,
                   height: 1.0,
@@ -178,7 +144,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 14,
-                  color: Colors.white,
+                  color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                   fontWeight: FontWeight.w500,
                   letterSpacing: 1.0,
                   height: 1.0,
@@ -192,7 +158,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,
-                    color: Colors.white,
+                    color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                     fontWeight: FontWeight.w400,
                     letterSpacing: 1.0,
                     height: 1.0,
@@ -216,7 +182,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Log in',
+                    'Start',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 18,
