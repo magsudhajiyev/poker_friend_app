@@ -155,14 +155,17 @@ class BankrollService {
       final avgWeeklyEarnings = totalProfit / (sessions.length > 0 ? (sessions.length / 2.0) : 1.0);
 
       // Calculate VPIP, PFR, 3-bet percentages for play style detection
-      final vpip = userStats.handsPlayed > 0
-          ? (userStats.vpipCount / userStats.handsPlayed) * 100
+      // IMPORTANT: Denominator must be totalHands (all hands dealt), NOT handsPlayed
+      // VPIP = "Voluntarily Put money In Pot" - percentage of ALL dealt hands where player VPIP'd
+      // Using handsPlayed would give inflated values (e.g., 100% if player only records VPIP hands)
+      final vpip = userStats.totalHands > 0
+          ? (userStats.vpipCount / userStats.totalHands) * 100
           : 0.0;
-      final pfr = userStats.handsPlayed > 0
-          ? (userStats.pfrCount / userStats.handsPlayed) * 100
+      final pfr = userStats.totalHands > 0
+          ? (userStats.pfrCount / userStats.totalHands) * 100
           : 0.0;
-      final threeBet = userStats.handsPlayed > 0
-          ? (userStats.threeBetCount / userStats.handsPlayed) * 100
+      final threeBet = userStats.totalHands > 0
+          ? (userStats.threeBetCount / userStats.totalHands) * 100
           : 0.0;
 
       // Calculate aggression factor

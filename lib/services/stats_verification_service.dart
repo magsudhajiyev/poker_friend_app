@@ -147,20 +147,15 @@ class StatsVerificationService {
                   }
                 }
 
-                // Check for 3-bet (need to count raises in the hand)
-                if (actionLower == 'raise') {
-                  int raiseCount = ourActions
-                      .where((a) =>
-                        a['street']?.toString().toLowerCase() == 'preflop' &&
-                        (a['action']?.toString().toLowerCase() == 'raise' ||
-                         a['action']?.toString().toLowerCase() == 'bet'))
-                      .length;
-                  if (raiseCount >= 2) {
-                    didThreeBet = true;
-                  }
-                }
+                // 3-bet detection is done after processing all actions
               }
             }
+          }
+
+          // Check for 3-bet using correct logic:
+          // 3-bet = hero raised AFTER seeing an opponent's raise
+          if (didPlay) {
+            didThreeBet = _didPlayerThreeBet(actions, ourSeat);
           }
 
           // Update counters
@@ -257,6 +252,18 @@ class StatsVerificationService {
         _compareValues('3-Bet Count', threeBetCountCalc, userStats.threeBetCount);
         _compareValues('Play Time (min)', totalPlayTimeMinutes, userStats.totalPlayTimeMinutes);
         print('');
+
+        // Check for double-counting pattern
+        _checkDoubleCountingPattern(
+          totalHandsCalc: totalHandsCalc,
+          handsPlayedCalc: handsPlayedCalc,
+          vpipCountCalc: vpipCountCalc,
+          pfrCountCalc: pfrCountCalc,
+          dbTotalHands: userStats.totalHands,
+          dbHandsPlayed: userStats.handsPlayed,
+          dbVpipCount: userStats.vpipCount,
+          dbPfrCount: userStats.pfrCount,
+        );
       }
 
       print('='*80);
@@ -295,5 +302,101 @@ class StatsVerificationService {
     final match = calculated == database;
     final icon = match ? '✅' : '❌';
     print('$icon $label: Calculated=$calculated, Database=$database ${match ? "" : "⚠️ MISMATCH!"}');
+  }
+
+  /// Detect if player made a 3-bet (re-raised AFTER seeing an opponent's raise)
+  static bool _didPlayerThreeBet(List<dynamic> actions, int playerSeatNumber) {
+    bool sawOpponentRaise = false;
+
+    for (final action in actions) {
+      final street = action['street']?.toString().toLowerCase() ?? '';
+      if (street != 'preflop') continue;
+
+      final playerId = action['player'] as int?;
+      final actionType = action['action']?.toString().toLowerCase() ?? '';
+
+      // Only look at raise actions
+      if (actionType != 'raise') continue;
+
+      if (playerId != playerSeatNumber) {
+        // Opponent raised
+        sawOpponentRaise = true;
+      } else if (sawOpponentRaise) {
+        // Hero raised AFTER seeing an opponent raise = 3-bet
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Check if database values show a double-counting pattern
+  ///
+  /// Double-counting typically shows as:
+  /// - Database values ≈ 2x calculated values
+  /// - All stats inflated by similar ratio
+  static void _checkDoubleCountingPattern({
+    required int totalHandsCalc,
+    required int handsPlayedCalc,
+    required int vpipCountCalc,
+    required int pfrCountCalc,
+    required int dbTotalHands,
+    required int dbHandsPlayed,
+    required int dbVpipCount,
+    required int dbPfrCount,
+  }) {
+    print('');
+    print('='*80);
+    print('🔍 DOUBLE-COUNTING DETECTION:');
+    print('='*80);
+
+    if (totalHandsCalc == 0) {
+      print('⚠️  Cannot check for double-counting: no hands calculated');
+      return;
+    }
+
+    // Calculate ratios
+    final totalHandsRatio = totalHandsCalc > 0 ? dbTotalHands / totalHandsCalc : 0.0;
+    final handsPlayedRatio = handsPlayedCalc > 0 ? dbHandsPlayed / handsPlayedCalc : 0.0;
+    final vpipRatio = vpipCountCalc > 0 ? dbVpipCount / vpipCountCalc : 0.0;
+    final pfrRatio = pfrCountCalc > 0 ? dbPfrCount / pfrCountCalc : 0.0;
+
+    print('Ratio Analysis (DB / Calculated):');
+    print('   Total Hands: ${totalHandsRatio.toStringAsFixed(2)}x');
+    print('   Hands Played: ${handsPlayedRatio.toStringAsFixed(2)}x');
+    print('   VPIP Count: ${vpipRatio.toStringAsFixed(2)}x');
+    print('   PFR Count: ${pfrRatio.toStringAsFixed(2)}x');
+    print('');
+
+    // Check for consistent ~2x inflation (within 10% of 2.0)
+    final ratios = [totalHandsRatio, handsPlayedRatio, vpipRatio, pfrRatio]
+        .where((r) => r > 0)
+        .toList();
+
+    if (ratios.isEmpty) {
+      print('✅ No ratios to analyze');
+      return;
+    }
+
+    final avgRatio = ratios.reduce((a, b) => a + b) / ratios.length;
+    final isDoubleCount = avgRatio >= 1.8 && avgRatio <= 2.2;
+
+    if (isDoubleCount) {
+      print('⚠️  WARNING: DOUBLE-COUNTING DETECTED!');
+      print('   Average ratio: ${avgRatio.toStringAsFixed(2)}x (close to 2x)');
+      print('');
+      print('   This indicates stats were being incremented twice per hand.');
+      print('   Common causes:');
+      print('   1. FirebaseService._updateUserStatsFromHand() AND');
+      print('   2. PokerSessionManager._updateOptimizedStats() both updating');
+      print('');
+      print('   FIX: Run UserStatsService.recalculateUserStats(userId) to repair');
+    } else if (avgRatio > 1.1) {
+      print('⚠️  WARNING: Stats appear inflated (${avgRatio.toStringAsFixed(2)}x)');
+      print('   Consider running recalculation to repair');
+    } else {
+      print('✅ No double-counting pattern detected');
+      print('   Average ratio: ${avgRatio.toStringAsFixed(2)}x (expected: 1.0x)');
+    }
+    print('');
   }
 }

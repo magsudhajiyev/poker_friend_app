@@ -911,18 +911,18 @@ class PokerSessionManager {
             raiseDelta: raiseDelta,
           );
         } else {
-          // Update user stats - need to get current user ID
-          final currentUser = FirebaseAuth.instance.currentUser;
-          if (currentUser != null) {
-            await UserStatsService.updateStatsAtomic(
-              userId: currentUser.uid,
-              handsDelta: playedPastPreflop ? 1 : 0, // Only count if player saw flop/turn/river
-              totalHandsDelta: 1, // Always count total hands dealt
-              vpipDelta: vpipDelta,
-              pfrDelta: pfrDelta,
-              wonHandsDelta: (hand.winnerId != null && hand.winnerId == ourSeatNumber) ? 1 : 0, // Compare with seat number, not position name
-            );
-          }
+          // DO NOT update user stats here - already done in FirebaseService.saveHand()
+          // via _updateUserStatsFromHand(). This block was causing DOUBLE-COUNTING
+          // of stats (stats were being incremented twice per hand).
+          // See: https://github.com/anthropics/claude-code/issues/stats-double-counting
+          //
+          // The correct stats update flow is:
+          // 1. PokerSessionManager._saveHandToFirebase() calls FirebaseService.saveHand()
+          // 2. FirebaseService.saveHand() calls _updateUserStatsFromHand() - INCREMENT #1 (correct)
+          // 3. This _updateOptimizedStats() method should ONLY update opponent stats
+          //
+          // Previously this block also called UserStatsService.updateStatsAtomic() - INCREMENT #2 (DUPLICATE!)
+          // which caused all stats to be ~2x the actual values.
         }
       }
     } catch (e) {

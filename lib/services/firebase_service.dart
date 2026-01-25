@@ -847,19 +847,26 @@ class FirebaseService {
             break;
         }
 
-        // Detect 3-bet (simplified logic - can be enhanced)
-        if (actionLower == 'raise' && isPreflop) {
-          final raiseCount = _countPreflopRaises(actions, playerId);
-          if (raiseCount >= 2) {
-            deltas['threeBetDelta'] = (deltas['threeBetDelta'] ?? 0) + 1;
-          }
-        }
+        // Note: 3-bet detection is done per-hand, not per-action
+        // We'll check this after processing all actions for this opponent
       }
 
       // Set hand delta to 1 for each opponent that participated in this hand
+      // Also check for 3-bet using proper detection logic
       for (final opponentId in handParticipants) {
         if (opponentDeltas.containsKey(opponentId)) {
           opponentDeltas[opponentId]!['handsDelta'] = 1;
+
+          // Find the opponent's seat number for 3-bet detection
+          final opponent = savedOpponents.firstWhere((o) => o.id == opponentId);
+          final opponentSeat = playerNames.entries
+              .where((e) => e.value == opponent.name)
+              .map((e) => e.key)
+              .firstOrNull;
+
+          if (opponentSeat != null && _didPlayerThreeBet(actions, opponentSeat)) {
+            opponentDeltas[opponentId]!['threeBetDelta'] = 1;
+          }
         }
       }
 
@@ -901,7 +908,7 @@ class FirebaseService {
            actionType == 'ante';
   }
 
-  /// Helper to count preflop raises for 3-bet detection
+  /// Helper to count preflop raises for 3-bet detection (DEPRECATED - kept for compatibility)
   static int _countPreflopRaises(List<Map<String, dynamic>> actions, int playerId) {
     int count = 0;
     for (final action in actions) {
@@ -912,6 +919,38 @@ class FirebaseService {
       }
     }
     return count;
+  }
+
+  /// Detect if a player made a 3-bet (re-raised AFTER seeing an opponent's raise)
+  ///
+  /// A 3-bet is when:
+  /// 1. An opponent raises preflop
+  /// 2. The player then raises (re-raises) after seeing that raise
+  ///
+  /// This is different from just counting how many times a player raised.
+  /// A player can only make ONE 3-bet per hand (by definition).
+  static bool _didPlayerThreeBet(List<Map<String, dynamic>> actions, int playerSeatNumber) {
+    bool sawOpponentRaise = false;
+
+    for (final action in actions) {
+      final street = action['street']?.toString().toLowerCase() ?? '';
+      if (street != 'preflop') continue;
+
+      final playerId = action['player'] as int?;
+      final actionType = action['action']?.toString().toLowerCase() ?? '';
+
+      // Only look at raise actions (not bets - opening bet is not a raise)
+      if (actionType != 'raise') continue;
+
+      if (playerId != playerSeatNumber) {
+        // Opponent raised
+        sawOpponentRaise = true;
+      } else if (sawOpponentRaise) {
+        // Hero raised AFTER seeing an opponent raise = 3-bet
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Update user statistics from hand data incrementally
@@ -952,12 +991,20 @@ class FirebaseService {
 
         if (playerId != heroSeatNumber) continue;
 
+        // didPlay = any voluntary action (not just blind posts)
+        // This includes: call, bet, raise, check on any street
+        if (actionType == 'call' || actionType == 'bet' || actionType == 'raise' || actionType == 'check') {
+          didPlay = true;
+        }
+
+        // VPIP and PFR only apply to preflop
         if (street == 'preflop') {
           if (actionType == 'bet' || actionType == 'call' || actionType == 'raise') {
-            didPlay = true;
+            // VPIP = voluntarily put money in (excludes blind posts)
             if (!_isBlindAction(action)) {
               didVpip = true;
             }
+            // PFR = preflop raise
             if (actionType == 'bet' || actionType == 'raise') {
               didPfr = true;
             }
@@ -965,12 +1012,9 @@ class FirebaseService {
         }
       }
 
-      // Check for 3-bet
+      // Check for 3-bet (re-raise after seeing opponent's raise)
       if (didPlay) {
-        final raiseCount = _countPreflopRaises(actions, heroSeatNumber);
-        if (raiseCount >= 2) {
-          didThreeBet = true;
-        }
+        didThreeBet = _didPlayerThreeBet(actions, heroSeatNumber);
       }
 
       // Prepare deltas for atomic update
