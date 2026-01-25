@@ -5,6 +5,7 @@ import 'individual_session_tracking_screen.dart';
 import 'logging_mode_selection_screen.dart';
 import 'seat_setup_screen.dart';
 import '../models/hand_state_machine.dart';
+import '../design_system/design_system.dart';
 
 class IndividualSessionSetupScreen extends StatefulWidget {
   final LoggingMode? loggingMode;
@@ -65,446 +66,506 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PokerFriendColors.dark1,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 375),
-            margin: EdgeInsets.symmetric(horizontal: 24),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          GradientBackground(),
+          SafeArea(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Section
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 32, 0, 32),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
+                // Header
+                MainScreenHeader(
+                  title: 'Session Setup',
+                  subtitle: widget.loggingMode == LoggingMode.full
+                      ? 'Full session tracking'
+                      : 'Individual session tracking',
+                  rightIcon: Icons.close_rounded,
+                  onRightPressed: () => Navigator.pop(context),
+                  showLeftIcon: false,
+                  padding: const EdgeInsets.all(16),
+                ),
+
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Session Setup',
-                            style: TextStyle(
-                              fontSize: 32,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            widget.loggingMode == LoggingMode.full
-                              ? 'Full session tracking'
-                              : 'Individual session tracking',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: PokerFriendColors.dark9,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: PokerFriendColors.dark3,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(
-                            Icons.close_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Session Name Input
-                _buildInputCard(
-                  title: 'Session Name',
-                  iconPath: 'icons/pencil.png',
-                  child: TextField(
-                    controller: _sessionNameController,
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'e.g., "Friday Night Poker"',
-                      hintStyle: TextStyle(color: PokerFriendColors.dark9),
-                      filled: true,
-                      fillColor: PokerFriendColors.dark1,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    onChanged: (value) => setState(() {}),
-                  ),
-                ),
-
-                SizedBox(height: 24),
-
-                // Game Type Selection - moved here after session name
-                Container(
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            child: Image.asset(
-                              'icons/game_type.png',
-                              width: 40,
-                              height: 40,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Text(
-                            'Game Type',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _GameTypeButton(
-                              gameType: GameType.cash,
-                              selectedGameType: gameType,
-                              onTap: () => setState(() {
-                                gameType = GameType.cash;
-                                _updateStackForGameType();
-                              }),
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: _GameTypeButton(
-                              gameType: GameType.tournament,
-                              selectedGameType: gameType,
-                              onTap: () => setState(() {
-                                gameType = GameType.tournament;
-                                _updateStackForGameType();
-                              }),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 24),
-
-                // Buy-in Amount Input
-                _buildInputCard(
-                  title: 'Buy-in Amount',
-                  iconPath: 'icons/cash.png',
-                  child: TextField(
-                    controller: _buyInController,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'Enter buy-in amount',
-                      hintStyle: TextStyle(color: PokerFriendColors.dark9),
-                      prefixText: '\$ ',
-                      prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
-                      filled: true,
-                      fillColor: PokerFriendColors.dark1,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    onChanged: (value) {
-                      setState(() {});
-                      _updateStackForGameType();
-                    },
-                  ),
-                ),
-
-                SizedBox(height: 24),
-
-                // Starting Stack Input - only show for MTT
-                if (gameType == GameType.tournament) ...[
-                  _buildInputCard(
-                    title: 'Starting Stack',
-                    iconPath: 'icons/ante.png',
-                    child: TextField(
-                      controller: _startingStackController,
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      decoration: InputDecoration(
-                        hintText: 'Enter chip stack',
-                        hintStyle: TextStyle(color: PokerFriendColors.dark9),
-                        filled: true,
-                        fillColor: PokerFriendColors.dark1,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                      onChanged: (value) => setState(() {}),
-                    ),
-                  ),
-                  SizedBox(height: 24),
-                ],
-
-                // Cash game explanation
-                if (gameType == GameType.cash)
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    margin: EdgeInsets.only(bottom: 24),
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.dark3,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: PokerFriendColors.dark4, width: 1),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline, color: PokerFriendColors.red, size: 20),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'In cash games, your starting stack equals your buy-in amount.',
-                            style: TextStyle(
-                              color: PokerFriendColors.dark10,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Blinds Settings - Grid Layout
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.0,
-                  children: [
-                    _buildBlindCard(
-                      title: 'Small Blind',
-                      value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
-                      iconPath: 'icons/small_blind.png',
-                      onDecrement: () => setState(() {
-                        if (smallBlind > 1) {
-                          smallBlind--;
-                          _smallBlindController.text = smallBlind.toString();
-                        }
-                      }),
-                      onIncrement: () => setState(() {
-                        smallBlind++;
-                        _smallBlindController.text = smallBlind.toString();
-                      }),
-                      onValueTap: () => _showBlindInputDialog('Small Blind', smallBlind, (value) {
-                        setState(() {
-                          smallBlind = value;
-                          _smallBlindController.text = smallBlind.toString();
-                        });
-                      }),
-                    ),
-                    _buildBlindCard(
-                      title: 'Big Blind',
-                      value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
-                      iconPath: 'icons/big_blind.png',
-                      onDecrement: () => setState(() {
-                        if (bigBlind > 1) {
-                          bigBlind--;
-                          _bigBlindController.text = bigBlind.toString();
-                        }
-                      }),
-                      onIncrement: () => setState(() {
-                        bigBlind++;
-                        _bigBlindController.text = bigBlind.toString();
-                      }),
-                      onValueTap: () => _showBlindInputDialog('Big Blind', bigBlind, (value) {
-                        setState(() {
-                          bigBlind = value;
-                          _bigBlindController.text = bigBlind.toString();
-                        });
-                      }),
-                    ),
-                  ],
-                ),
-
-                // Ante Card (only for tournaments)
-                if (gameType == GameType.tournament) ...[
-                  SizedBox(height: 16),
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.dark3,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
+                          // Session Name Input
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Image.asset(
-                                  'icons/ante.png',
-                                  width: 32,
-                                  height: 32,
-                                ),
-                                SizedBox(width: 12),
                                 Text(
-                                  'BB Ante',
+                                  'Session Name',
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Inter',
+                                    fontSize: 18,
+                                    color: Color(0xFFF7FFF7),
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0,
+                                    height: 1.0,
                                   ),
+                                ),
+                                SizedBox(height: 16),
+                                TextField(
+                                  controller: _sessionNameController,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: 0,
+                                    height: 1.2,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: 'e.g., "Friday Night Poker"',
+                                    hintStyle: TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Color(0x99EBFFEF), // #ebffef99
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                      letterSpacing: 0,
+                                      height: 1.2,
+                                    ),
+                                    filled: true,
+                                    fillColor: Color(0x0AFFFFFF), // #ffffff0a
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(58),
+                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(58),
+                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(58),
+                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                    ),
+                                    contentPadding: EdgeInsets.fromLTRB(20, 14, 14, 14),
+                                  ),
+                                  onChanged: (value) => setState(() {}),
                                 ),
                               ],
                             ),
-                            Switch(
-                              value: hasBBante,
-                              onChanged: (value) => setState(() => hasBBante = value),
-                              activeColor: PokerFriendColors.red,
-                              trackColor: MaterialStateProperty.all(
-                                hasBBante ? PokerFriendColors.red.withOpacity(0.3) : PokerFriendColors.dark4,
+                          ),
+
+                          // Section Divider
+                          Container(
+                            height: 1,
+                            color: Color(0xFF214027), // #214027
+                          ),
+
+                          SizedBox(height: 32),
+
+                          // Game Type Selection
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Choose Game Type',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 18,
+                                  color: Color(0xFFF7FFF7),
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0,
+                                  height: 1.0,
+                                ),
+                              ),
+                              SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _GameTypeButton(
+                                      gameType: GameType.cash,
+                                      selectedGameType: gameType,
+                                      onTap: () => setState(() {
+                                        gameType = GameType.cash;
+                                        _updateStackForGameType();
+                                      }),
+                                    ),
+                                  ),
+                                  SizedBox(width: 16),
+                                  Expanded(
+                                    child: _GameTypeButton(
+                                      gameType: GameType.tournament,
+                                      selectedGameType: gameType,
+                                      onTap: () => setState(() {
+                                        gameType = GameType.tournament;
+                                        _updateStackForGameType();
+                                      }),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: 32),
+
+                          // Section Divider
+                          Container(
+                            height: 1,
+                            color: Color(0xFF214028), // #214028
+                          ),
+
+                          // Buy-in Amount Section with padding
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: 32),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Buy-in Amount',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 18,
+                                    color: Color(0xFFF7FFF7),
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0,
+                                    height: 1.0,
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                TextField(
+                                  controller: _buyInController,
+                                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: 0,
+                                    height: 1.2,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter buy-in amount',
+                                    hintStyle: TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Color(0x99EBFFF0), // #ebfff099
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                      letterSpacing: 0,
+                                      height: 1.2,
+                                    ),
+                                    prefixText: '\$ ',
+                                    prefixStyle: TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                      letterSpacing: 0,
+                                      height: 1.2,
+                                    ),
+                                    filled: true,
+                                    fillColor: Color(0x0AFFFFFF), // #ffffff0a
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(58),
+                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(58),
+                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(58),
+                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                    ),
+                                    contentPadding: EdgeInsets.fromLTRB(20, 14, 14, 14),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {});
+                                    _updateStackForGameType();
+                                  },
+                                ),
+                                // Cash game explanation - 24px gap after input
+                                if (gameType == GameType.cash) ...[
+                                  SizedBox(height: 24),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(Icons.info_outline, color: Color(0xFFB9FF99), size: 24),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'In cash games your starting stack equals your buy-in amount.',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color(0xFFC2C8C2), // #c2c8c2
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w400,
+                                            letterSpacing: 0,
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+
+                          // Starting Stack Input - only show for MTT
+                          if (gameType == GameType.tournament) ...[
+                            // Section Divider
+                            Container(
+                              height: 1,
+                              color: Color(0xFF214028), // #214028
+                            ),
+
+                            // Starting Stack with padding
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 32),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Starting Stack',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 18,
+                                      color: Color(0xFFF7FFF7),
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  TextField(
+                                    controller: _startingStackController,
+                                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                      letterSpacing: 0,
+                                      height: 1.2,
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter chip stack',
+                                      hintStyle: TextStyle(
+                                        fontFamily: 'Inter',
+                                        color: Color(0x99EBFFF0), // #ebfff099
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
+                                        letterSpacing: 0,
+                                        height: 1.2,
+                                      ),
+                                      filled: true,
+                                      fillColor: Color(0x0AFFFFFF), // #ffffff0a
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(58),
+                                        borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(58),
+                                        borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(58),
+                                        borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                      ),
+                                      contentPadding: EdgeInsets.fromLTRB(20, 14, 14, 14),
+                                    ),
+                                    onChanged: (value) => setState(() {}),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                        ),
-                        if (hasBBante) ...[
-                          SizedBox(height: 8),
-                          Text(
-                            'Big blind posts ante for all players',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: PokerFriendColors.dark9,
+
+                          // Section Divider
+                          Container(
+                            height: 1,
+                            color: Color(0xFF214028), // #214028
+                          ),
+
+                          SizedBox(height: 24),
+
+                          // Blinds Settings - Grid Layout
+                          GridView.count(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 1.0,
+                            children: [
+                              _buildBlindCard(
+                                title: 'Small Blind',
+                                value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
+                                onDecrement: () => setState(() {
+                                  if (smallBlind > 1) {
+                                    smallBlind--;
+                                    _smallBlindController.text = smallBlind.toString();
+                                  }
+                                }),
+                                onIncrement: () => setState(() {
+                                  smallBlind++;
+                                  _smallBlindController.text = smallBlind.toString();
+                                }),
+                                onValueTap: () => _showBlindInputDialog('Small Blind', smallBlind, (value) {
+                                  setState(() {
+                                    smallBlind = value;
+                                    _smallBlindController.text = smallBlind.toString();
+                                  });
+                                }),
+                              ),
+                              _buildBlindCard(
+                                title: 'Big Blind',
+                                value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
+                                onDecrement: () => setState(() {
+                                  if (bigBlind > 1) {
+                                    bigBlind--;
+                                    _bigBlindController.text = bigBlind.toString();
+                                  }
+                                }),
+                                onIncrement: () => setState(() {
+                                  bigBlind++;
+                                  _bigBlindController.text = bigBlind.toString();
+                                }),
+                                onValueTap: () => _showBlindInputDialog('Big Blind', bigBlind, (value) {
+                                  setState(() {
+                                    bigBlind = value;
+                                    _bigBlindController.text = bigBlind.toString();
+                                  });
+                                }),
+                              ),
+                            ],
+                          ),
+
+                          // BB Ante Section (only for tournaments)
+                          if (gameType == GameType.tournament) ...[
+                            SizedBox(height: 16),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(color: Color(0xFF214028), width: 1),
+                                  bottom: BorderSide(color: Color(0xFF214028), width: 1),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'BB Ante',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 18,
+                                      color: Color(0xFFF7FFF7), // #f7fff7
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () => setState(() => hasBBante = !hasBBante),
+                                    child: Container(
+                                      width: 48,
+                                      padding: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Color(0x0AFFFFFF), // #ffffff0a
+                                        border: Border.all(color: Color(0xFF13321B), width: 1),
+                                        borderRadius: BorderRadius.circular(58),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.white.withOpacity(0.4),
+                                            offset: Offset(0, 1),
+                                            blurRadius: 0,
+                                            spreadRadius: 0,
+                                          ),
+                                          BoxShadow(
+                                            color: Colors.white.withOpacity(0.32),
+                                            offset: Offset(1, 0),
+                                            blurRadius: 0,
+                                            spreadRadius: 0,
+                                          ),
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.13),
+                                            offset: Offset(0, -1),
+                                            blurRadius: 1,
+                                            spreadRadius: 0,
+                                          ),
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.11),
+                                            offset: Offset(-1, 0),
+                                            blurRadius: 1,
+                                            spreadRadius: 0,
+                                          ),
+                                        ],
+                                      ),
+                                      child: AnimatedAlign(
+                                        duration: Duration(milliseconds: 200),
+                                        alignment: hasBBante ? Alignment.centerRight : Alignment.centerLeft,
+                                        child: Container(
+                                          width: 18,
+                                          height: 18,
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFFBAFF9A), // #baff9a
+                                            borderRadius: BorderRadius.circular(9),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          SizedBox(height: 32),
+
+                          // Start Button
+                          GestureDetector(
+                            onTap: isFormValid ? _startSession : null,
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: isFormValid ? Color(0xFFB9FF99) : Color(0x1AFFFFFF),
+                                borderRadius: BorderRadius.circular(60),
+                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Start Session',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 18,
+                                      color: isFormValid ? Colors.black : Color(0xFF9A9A9A),
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0,
+                                      height: 27 / 18, // line-height: 27px
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Icon(
+                                    Icons.arrow_forward,
+                                    color: isFormValid ? Colors.black : Color(0xFF9A9A9A),
+                                    size: 24,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
+
+                          SizedBox(height: 100),
                         ],
-                      ],
-                    ),
-                  ),
-                ],
-
-                SizedBox(height: 32),
-
-                // Start Button
-                Container(
-                  width: double.infinity,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    gradient: isFormValid
-                      ? LinearGradient(
-                          colors: [PokerFriendColors.red, Color(0xFFb8442f)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : null,
-                    color: isFormValid ? null : PokerFriendColors.dark4,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: ElevatedButton(
-                    onPressed: isFormValid ? _startSession : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.play_arrow_rounded,
-                          color: isFormValid ? Colors.white : PokerFriendColors.dark9,
-                          size: 28,
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          'START SESSION',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isFormValid ? Colors.white : PokerFriendColors.dark9,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),
-
-                SizedBox(height: 100),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInputCard({
-    required String title,
-    required String iconPath,
-    required Widget child,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                child: Image.asset(
-                  iconPath,
-                  width: 40,
-                  height: 40,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              SizedBox(width: 16),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16),
-          child,
         ],
       ),
     );
@@ -513,92 +574,141 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
   Widget _buildBlindCard({
     required String title,
     required String value,
-    required String iconPath,
     required VoidCallback onDecrement,
     required VoidCallback onIncrement,
     VoidCallback? onValueTap,
   }) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(20),
+        color: Color(0x4C2B3E2E), // #2b3e2e4c
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Image.asset(
-                iconPath,
-                width: 32,
-                height: 32,
-              ),
-            ],
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1.0,
+              height: 1.0,
+            ),
+            textAlign: TextAlign.center,
           ),
-          Spacer(),
+          SizedBox(height: 10),
           GestureDetector(
             onTap: onValueTap,
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: onValueTap != null ? BoxDecoration(
+              width: double.infinity,
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: PokerFriendColors.red.withOpacity(0.3)),
-              ) : null,
+                border: Border.all(color: Color(0x1AFFFFFF), width: 1), // #ffffff1a
+              ),
               child: Text(
                 value,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontFamily: 'RobotoMono',
+                  fontSize: 18,
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -1.0,
+                  height: 1.0,
                 ),
+                textAlign: TextAlign.center,
               ),
             ),
           ),
-          SizedBox(height: 12),
+          SizedBox(height: 10),
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: onDecrement,
-                  child: Container(
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.dark1,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.remove,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+              GestureDetector(
+                onTap: onDecrement,
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0x1400FF66), // #00ff6614
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white, width: 0.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.4),
+                        offset: Offset(0, 1),
+                        blurRadius: 0,
+                        spreadRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.32),
+                        offset: Offset(1, 0),
+                        blurRadius: 0,
+                        spreadRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.13),
+                        offset: Offset(0, -1),
+                        blurRadius: 1,
+                        spreadRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.11),
+                        offset: Offset(-1, 0),
+                        blurRadius: 1,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.remove,
+                    color: Colors.white,
+                    size: 18,
                   ),
                 ),
               ),
-              SizedBox(width: 8),
-              Expanded(
-                child: GestureDetector(
-                  onTap: onIncrement,
-                  child: Container(
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.red,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.add,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+              SizedBox(width: 10),
+              GestureDetector(
+                onTap: onIncrement,
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0x1400FF66), // #00ff6614
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white, width: 0.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.4),
+                        offset: Offset(0, 1),
+                        blurRadius: 0,
+                        spreadRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.32),
+                        offset: Offset(1, 0),
+                        blurRadius: 0,
+                        spreadRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.13),
+                        offset: Offset(0, -1),
+                        blurRadius: 1,
+                        spreadRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.11),
+                        offset: Offset(-1, 0),
+                        blurRadius: 1,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.add,
+                    color: Colors.white,
+                    size: 18,
                   ),
                 ),
               ),
@@ -616,23 +726,45 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: PokerFriendColors.dark3,
+          backgroundColor: Color(0xFF1F1F23),
           title: Text(
             title,
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(
+              fontFamily: 'Inter',
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(
+              fontFamily: 'Inter',
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
             decoration: InputDecoration(
               hintText: 'Enter value',
-              hintStyle: TextStyle(color: PokerFriendColors.dark9),
+              hintStyle: TextStyle(
+                fontFamily: 'Inter',
+                color: Color(0xFF9A9A9A),
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
               filled: true,
-              fillColor: PokerFriendColors.dark1,
+              fillColor: Color(0x0AFFFFFF),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(color: Color(0xFF13321B)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Color(0xFF13321B)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Color(0xFFB9FF99)),
               ),
             ),
             autofocus: true,
@@ -642,7 +774,11 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               onPressed: () => Navigator.pop(context),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: PokerFriendColors.dark9),
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  color: Color(0xFF9A9A9A),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             TextButton(
@@ -655,7 +791,11 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               },
               child: Text(
                 'OK',
-                style: TextStyle(color: PokerFriendColors.red),
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  color: Color(0xFFB9FF99),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -749,38 +889,42 @@ class _GameTypeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSelected = gameType == selectedGameType;
+    final isCash = gameType == GameType.cash;
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isSelected ? PokerFriendColors.red : PokerFriendColors.dark1,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? PokerFriendColors.red : PokerFriendColors.dark4,
-            width: 1,
-          ),
+          color: isSelected ? Color(0x4C6DE17F) : Color(0x4C2B3E2E), // #6de17f4c selected, #2b3e2e4c unselected
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              gameType.displayName,
+              isCash ? 'Cash Game\n ' : 'MTT\n(Tournament)',
               style: TextStyle(
+                fontFamily: 'Inter',
                 fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+                color: isCash ? Color(0xFFCDE63B) : Color(0xFF76C527), // #cde63b for cash, #76c527 for MTT
+                fontWeight: FontWeight.w700,
+                letterSpacing: -1.0,
+                height: 1.0,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
-              gameType == GameType.cash ? 'Ring Game' : 'Multi-Table',
+              isCash ? 'Ring Game' : 'Multi-table',
               style: TextStyle(
-                fontSize: 12,
-                color: isSelected ? Colors.white.withOpacity(0.8) : PokerFriendColors.dark9,
+                fontFamily: 'Inter',
+                fontSize: 16,
+                color: Color(0xFFE4FFE3), // #e4ffe3
+                fontWeight: FontWeight.w400,
+                letterSpacing: -1.0,
+                height: 1.0,
               ),
               textAlign: TextAlign.center,
             ),
