@@ -5,6 +5,7 @@ import '../services/calendar_event_service.dart';
 import '../services/notification_service.dart';
 import '../design_system/design_system.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../widgets/event_success_popup.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -51,6 +52,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _showAddEventDialog() {
+    final outerContext = context; // Capture outer context for success popup
     final titleController = TextEditingController();
     final locationController = TextEditingController();
     final buyInController = TextEditingController();
@@ -430,7 +432,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     events.add(newEvent);
                                   });
 
-                                  Navigator.pop(context);
+                                  Navigator.pop(context); // Close add event dialog
+
+                                  // Show success popup
+                                  if (!mounted) return;
+                                  final action = await EventSuccessPopup.show(outerContext);
+
+                                  if (action == 'add_another' && mounted) {
+                                    _showAddEventDialog();
+                                  }
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text('Failed to create event: $e')),

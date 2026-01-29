@@ -52,6 +52,9 @@ app.*.map.json
 ios/GoogleService-Info.plist
 android/app/google-services.json
 
+# Environment variables (contain API keys and secrets)
+.env
+
 # Development diary and notes
 diary/
 

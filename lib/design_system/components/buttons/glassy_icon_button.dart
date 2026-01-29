@@ -13,8 +13,16 @@ import 'dart:ui' as ui;
 ///   onPressed: () => showNotifications(),
 /// )
 /// ```
+/// Or with image asset:
+/// ```dart
+/// GlassyIconButton(
+///   imagePath: 'icons/flat_icons/bell.png',
+///   onPressed: () => showNotifications(),
+/// )
+/// ```
 class GlassyIconButton extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? imagePath;
   final VoidCallback onPressed;
   final double? size;
   final double? iconSize;
@@ -23,13 +31,14 @@ class GlassyIconButton extends StatelessWidget {
 
   const GlassyIconButton({
     super.key,
-    required this.icon,
+    this.icon,
+    this.imagePath,
     required this.onPressed,
     this.size,
     this.iconSize,
     this.backgroundColor,
     this.iconColor,
-  });
+  }) : assert(icon != null || imagePath != null, 'Either icon or imagePath must be provided');
 
   @override
   Widget build(BuildContext context) {
@@ -54,11 +63,18 @@ class GlassyIconButton extends StatelessWidget {
               splashColor: Colors.white.withOpacity(0.1),
               highlightColor: Colors.white.withOpacity(0.05),
               child: Center(
-                child: Icon(
-                  icon,
-                  size: buttonIconSize,
-                  color: iconColor ?? Colors.white,
-                ),
+                child: imagePath != null
+                    ? Image.asset(
+                        imagePath!,
+                        width: buttonIconSize,
+                        height: buttonIconSize,
+                        color: iconColor ?? Colors.white,
+                      )
+                    : Icon(
+                        icon,
+                        size: buttonIconSize,
+                        color: iconColor ?? Colors.white,
+                      ),
               ),
             ),
           ),

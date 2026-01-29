@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
 import '../services/session_result_service.dart';
 import '../screens/settings_screen.dart';
+import '../screens/subscription_debug_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -541,6 +542,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+
+                // Subscription Debug Card (DEV ONLY - Remove in production)
+                Container(
+                  width: double.infinity,
+                  margin: EdgeInsets.only(bottom: 24),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SubscriptionDebugScreen()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF1F1F23),
+                      padding: EdgeInsets.all(20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        side: BorderSide(color: Color(0xFFE67E22).withOpacity(0.3)),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFE67E22).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            Icons.bug_report,
+                            color: Color(0xFFE67E22),
+                            size: 24,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Subscription Debug',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                'DEV ONLY',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFFE67E22),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: Color(0xFFE67E22),
+                          size: 16,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 

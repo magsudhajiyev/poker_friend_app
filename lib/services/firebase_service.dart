@@ -858,7 +858,17 @@ class FirebaseService {
           opponentDeltas[opponentId]!['handsDelta'] = 1;
 
           // Find the opponent's seat number for 3-bet detection
-          final opponent = savedOpponents.firstWhere((o) => o.id == opponentId);
+          // Use defensive programming: handle case where opponent might not be found
+          // This can happen if the opponent list changes between operations or due to data inconsistencies
+          final opponent = savedOpponents.where((o) => o.id == opponentId).firstOrNull;
+          
+          if (opponent == null) {
+            // Opponent not found - log warning but continue processing other opponents
+            // This prevents silent failures while maintaining resilience
+            print('Warning: Opponent with ID $opponentId not found in savedOpponents, skipping 3-bet detection');
+            continue;
+          }
+          
           final opponentSeat = playerNames.entries
               .where((e) => e.value == opponent.name)
               .map((e) => e.key)

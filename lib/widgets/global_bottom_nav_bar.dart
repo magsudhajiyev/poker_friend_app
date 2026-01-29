@@ -17,103 +17,152 @@ class GlobalBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(20),
-      height: 70,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E).withOpacity(0.1),
-        border: Border.all(
-          color: const Color(0xFF292F29),
-          width: 1,
-        ),
-        borderRadius: BorderRadius.circular(70),
-      ),
-      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.only(bottom: 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Home Icon
-          IconButton(
-            icon: Icon(
-              Icons.home,
-              color: currentScreen == 'home' ? const Color(0xFFA5EC44) : Colors.white,
-              size: 28,
-            ),
-            onPressed: () {
-              if (currentScreen != 'home') {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreenExperimental()),
-                );
-              }
-            },
-          ),
-          // Opponents Icon
-          IconButton(
-            icon: Icon(
-              Icons.group,
-              color: currentScreen == 'opponents' ? const Color(0xFFA5EC44) : Colors.white,
-              size: 28,
-            ),
-            onPressed: () {
-              if (currentScreen != 'opponents') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MyOpponentsScreen()),
-                );
-              }
-            },
-          ),
-          // Center Plus Button
           Container(
-            width: 56,
-            height: 56,
+            width: 268,
             decoration: BoxDecoration(
-              color: const Color(0xFFA5EC44),
-              shape: BoxShape.circle,
+              color: const Color(0xFF1E1E1E),
+              border: Border.all(
+                color: const Color(0xFF292F29),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(70),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x40000000),
+                  blurRadius: 74,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
-            child: IconButton(
-              icon: Icon(Icons.add, color: Colors.black, size: 32),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
-                );
-              },
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Home Icon
+                _buildNavItem(
+                  iconPath: 'icons/flat_icons/home.png',
+                  isActive: currentScreen == 'home',
+                  onTap: () {
+                    if (currentScreen != 'home') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeScreenExperimental()),
+                      );
+                    }
+                  },
+                ),
+                // Opponents Icon
+                _buildNavItem(
+                  iconPath: 'icons/flat_icons/people.png',
+                  isActive: currentScreen == 'opponents',
+                  onTap: () {
+                    if (currentScreen != 'opponents') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MyOpponentsScreen()),
+                      );
+                    }
+                  },
+                ),
+                // Center Plus Button
+                _buildPlusButton(context),
+                // Game/Sessions Icon
+                _buildNavItem(
+                  iconPath: 'icons/flat_icons/cards.png',
+                  isActive: currentScreen == 'sessions',
+                  onTap: () {
+                    if (currentScreen != 'sessions') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
+                      );
+                    }
+                  },
+                ),
+                // Profile Icon
+                _buildNavItem(
+                  iconPath: 'icons/flat_icons/user.png',
+                  isActive: currentScreen == 'profile',
+                  onTap: () {
+                    if (currentScreen != 'profile') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ProfileScreen()),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
-          ),
-          // Game/Sessions Icon
-          IconButton(
-            icon: Icon(
-              Icons.style,
-              color: currentScreen == 'sessions' ? const Color(0xFFA5EC44) : Colors.white,
-              size: 28,
-            ),
-            onPressed: () {
-              if (currentScreen != 'sessions') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
-                );
-              }
-            },
-          ),
-          // Profile Icon
-          IconButton(
-            icon: Icon(
-              Icons.person,
-              color: currentScreen == 'profile' ? const Color(0xFFA5EC44) : Colors.white,
-              size: 28,
-            ),
-            onPressed: () {
-              if (currentScreen != 'profile') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ProfileScreen()),
-                );
-              }
-            },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required String iconPath,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Opacity(
+            opacity: isActive ? 1.0 : 0.6,
+            child: Image.asset(
+              iconPath,
+              width: 24,
+              height: 24,
+              color: isActive ? const Color(0xFF011100) : Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlusButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
+        );
+      },
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: const Color(0xFFA5EC44),
+          shape: BoxShape.circle,
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0xD903350B),
+              blurRadius: 2,
+              offset: Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Image.asset(
+            'icons/flat_icons/plus.png',
+            width: 24,
+            height: 24,
+            color: const Color(0xFF011100),
+          ),
+        ),
       ),
     );
   }

@@ -302,14 +302,14 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                         title: 'Home', // Fallback if no username
                         subtitle: 'Welcome back',
                         showLeftIcon: true,
-                        leftIcon: Icons.bar_chart,
+                        leftImagePath: 'icons/flat_icons/stats.png',
                         onLeftPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => StatisticsScreen()),
                           );
                         },
-                        rightIcon: Icons.notifications,
+                        rightImagePath: 'icons/flat_icons/bell.png',
                         onRightPressed: () {
                           // TODO: Navigate to notifications
                         },
@@ -500,10 +500,11 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Icon(
-                      Icons.bar_chart,
+                    child: Image.asset(
+                      'icons/flat_icons/stats.png',
                       color: Colors.white,
-                      size: 26,
+                      width: 26,
+                      height: 26,
                     ),
                   ),
                 ),
@@ -522,10 +523,11 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Icon(
-                      Icons.notifications,
+                    child: Image.asset(
+                      'icons/flat_icons/bell.png',
                       color: Colors.white,
-                      size: 26,
+                      width: 26,
+                      height: 26,
                     ),
                   ),
                 ),

@@ -24,8 +24,10 @@ class MainScreenHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final IconData? leftIcon;
+  final String? leftImagePath;
   final VoidCallback? onLeftPressed;
   final IconData? rightIcon;
+  final String? rightImagePath;
   final VoidCallback? onRightPressed;
   final bool showLeftIcon;
   final EdgeInsets? padding;
@@ -36,8 +38,10 @@ class MainScreenHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.leftIcon,
+    this.leftImagePath,
     this.onLeftPressed,
     this.rightIcon,
+    this.rightImagePath,
     this.onRightPressed,
     this.showLeftIcon = true,
     this.padding,
@@ -104,16 +108,18 @@ class MainScreenHeader extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (showLeftIcon && leftIcon != null && onLeftPressed != null) ...[
+                  if (showLeftIcon && (leftIcon != null || leftImagePath != null) && onLeftPressed != null) ...[
                     GlassyIconButton(
-                      icon: leftIcon!,
+                      icon: leftIcon,
+                      imagePath: leftImagePath,
                       onPressed: onLeftPressed!,
                     ),
                     const SizedBox(width: 4),
                   ],
-                  if (rightIcon != null && onRightPressed != null)
+                  if ((rightIcon != null || rightImagePath != null) && onRightPressed != null)
                     GlassyIconButton(
-                      icon: rightIcon!,
+                      icon: rightIcon,
+                      imagePath: rightImagePath,
                       onPressed: onRightPressed!,
                     ),
                 ],
