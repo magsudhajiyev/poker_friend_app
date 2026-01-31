@@ -1626,35 +1626,54 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildRecentSessionsList() {
     if (recentSessions.isEmpty) {
       return Container(
-        height: 120,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/session.png',
-                width: 64,
-                height: 64,
-                fit: BoxFit.contain,
+        padding: EdgeInsets.symmetric(vertical: 44, horizontal: 8),
+        decoration: BoxDecoration(
+          color: Color(0xFF2B2B2B),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon (24x24)
+            Image.asset(
+              'icons/flat_icons/deuce.png',
+              width: 24,
+              height: 24,
+              color: Colors.white,
+            ),
+            SizedBox(height: 20),
+            // Text content - centered, 200px width
+            SizedBox(
+              width: 200,
+              child: Column(
+                children: [
+                  Text(
+                    'No recent sessions',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      height: 1.46,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Start your first poker session!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w400,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 8),
-              Text(
-                'No sessions yet',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF9A9A9A),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                'Start your first poker session!',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF9A9A9A),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }

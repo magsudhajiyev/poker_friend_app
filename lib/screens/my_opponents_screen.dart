@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../models/opponent_stats.dart';
@@ -7,7 +6,6 @@ import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
 import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
-import '../widgets/global_top_header.dart';
 import 'opponent_detail_screen.dart';
 import '../design_system/design_system.dart';
 
@@ -117,116 +115,104 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Header Bar - Fixed
+                // Header Section with title + back/add buttons
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: GlobalTopHeader(currentScreen: 'opponents'),
-                ),
-                const SizedBox(height: 28),
-
-                // Opponents Header Section - Fixed
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 32),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Opponents',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 28,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.56,
-                                  height: 1.0,
-                                ),
-                              ),
-                              SizedBox(height: 7),
-                              Text(
-                                '${opponents.length} tracked players',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 16,
-                                  color: Color(0xFFFFFFFF).withOpacity(0.8),
-                                  fontWeight: FontWeight.w400,
-                                  letterSpacing: -0.32,
-                                  height: 1.0,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Add opponent button
-                        GestureDetector(
-                          onTap: _showAddOpponentDialog,
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.add,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left: Title + subtitle
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Opponents',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 24,
                               color: Colors.white,
-                              size: 24,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.48,
+                              height: 1.0,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                          SizedBox(height: 6),
+                          Text(
+                            '${opponents.length} tracked players',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              color: Color(0xFFFFFFFF).withOpacity(0.8),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: -0.24,
+                              height: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Right: Back + Add buttons
+                      Row(
+                        children: [
+                          GlassyIconButton(
+                            imagePath: 'icons/flat_icons/back.png',
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          SizedBox(width: 4),
+                          GlassyIconButton(
+                            imagePath: 'icons/flat_icons/plus.png',
+                            onPressed: _showAddOpponentDialog,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
 
-                // Search bar - Fixed
+                // Search bar - Fixed (pill shape with border)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
                     margin: EdgeInsets.only(bottom: 24),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: BackdropFilter(
-                        filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF546165).withOpacity(0.74),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: TextField(
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontFamily: 'Inter',
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'Search opponents...',
-                              hintStyle: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
-                                fontFamily: 'Inter',
-                              ),
-                              prefixIcon: Icon(
-                                Icons.search,
-                                color: Colors.white.withOpacity(0.7),
-                                size: 20,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(vertical: 15),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                searchQuery = value;
-                              });
-                            },
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Color(0xFF1A2925),
+                      borderRadius: BorderRadius.circular(90),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    ),
+                    child: TextField(
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'Inter',
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search opponents...',
+                        hintStyle: TextStyle(
+                          color: Colors.white.withOpacity(0.5),
+                          fontFamily: 'Inter',
+                        ),
+                        prefixIcon: Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: Image.asset(
+                            'icons/flat_icons/search.png',
+                            width: 20,
+                            height: 20,
+                            color: Colors.white.withOpacity(0.7),
                           ),
                         ),
+                        prefixIconConstraints: BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 15),
                       ),
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value;
+                        });
+                      },
                     ),
                   ),
                 ),
@@ -305,65 +291,82 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
 
     if (displayOpponents.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: Icon(Icons.people_outline, color: Color(0xFF9A9A9A), size: 32),
-            ),
-            SizedBox(height: 16),
-            Text(
-              searchQuery.isEmpty ? 'No Opponents Yet' : 'No Results',
-              style: TextStyle(
-                fontSize: 24,
+        child: Container(
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 280),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icon section
+              Image.asset(
+                'icons/flat_icons/people.png',
+                width: 44,
+                height: 44,
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              searchQuery.isEmpty 
-                ? 'Add opponents to track their playing styles and statistics!'
-                : 'Try a different search term',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
-                fontSize: 16,
-              ),
-            ),
-            if (searchQuery.isEmpty) ...[
-              SizedBox(height: 16),
-              Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFFcb5242), Color(0xFFb8442f)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ElevatedButton.icon(
-                  onPressed: _showAddOpponentDialog,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                  ),
-                  icon: Icon(Icons.person_add, color: Colors.white),
-                  label: Text(
-                    'Add Opponent',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                  ),
+              SizedBox(height: 20),
+              // Text section with horizontal padding
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 62),
+                child: Column(
+                  children: [
+                    Text(
+                      searchQuery.isEmpty ? 'No Opponents Yet' : 'No Results',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        height: 1.5, // line-height: 24px / 16px
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      searchQuery.isEmpty
+                        ? 'Add opponents to track their playing styles and statistics!'
+                        : 'Try a different search term',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        color: Color(0xFFF8FFF7),
+                        fontWeight: FontWeight.w400,
+                        height: 1.5, // line-height: 18px / 12px
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              if (searchQuery.isEmpty) ...[
+                SizedBox(height: 50),
+                // Button section
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _showAddOpponentDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFFBAFF9A), // --secondary-100
+                      foregroundColor: Color(0xFF011100), // --primary-100
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'Add Opponent',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF011100), // --primary-100
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       );
     }
@@ -383,112 +386,70 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
 
     return Container(
       margin: EdgeInsets.only(bottom: 16),
-      child: ClipRRect(
+      decoration: BoxDecoration(
+        color: Color(0xFF1A2925),
         borderRadius: BorderRadius.circular(12),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Color(0xFF546165).withOpacity(0.74),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: InkWell(
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => OpponentDetailScreen(opponent: opponent),
-                  ),
-                );
-                // Only reload if opponent was modified (invalidate cache)
-                if (result == true) {
-                  _loadOpponents(useCache: false);
-                }
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-                child: Column(
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OpponentDetailScreen(opponent: opponent),
+              ),
+            );
+            // Only reload if opponent was modified (invalidate cache)
+            if (result == true) {
+              _loadOpponents(useCache: false);
+            }
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+            child: Column(
+              children: [
+                // Top section: User info + hands count
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Top section: User info + hands count
+                    // Left: CardIcon + Name/Style
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Left: CardIcon + Name/Style
-                        Row(
-                          children: [
-                            // Color indicator avatar
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: cardColor.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(55),
-                              ),
-                              child: Center(
-                                child: Container(
-                                  width: 18,
-                                  height: 18,
-                                  decoration: BoxDecoration(
-                                    color: cardColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            // Name and playing style column
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  opponent.name,
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 18,
-                                    color: Color(0xFFFFFFFF).withOpacity(0.84),
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: 0,
-                                    height: 1.4,
-                                  ),
-                                ),
-                                Text(
-                                  opponentStats[opponent.name]?.playingStyle ?? 'No Data',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 12,
-                                    color: _getStyleColor(opponentStats[opponent.name]?.playerType ?? PlayerType.unknown).withOpacity(0.84),
-                                    fontWeight: FontWeight.w400,
-                                    letterSpacing: 0,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        // Color indicator avatar (28px solid circle)
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: cardColor,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                        // Right: Hands count
+                        SizedBox(width: 8),
+                        // Name and playing style column
                         Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${opponentHandsCounts[opponent.name] ?? 0}',
+                              opponent.name,
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 18,
-                                color: Colors.white,
+                                color: Color(0xFFFFFFFF),
                                 fontWeight: FontWeight.w500,
                                 letterSpacing: 0,
                                 height: 1.4,
                               ),
                             ),
                             Text(
-                              'Hands',
+                              opponentStats[opponent.name]?.playingStyle ?? 'No Data',
                               style: TextStyle(
                                 fontFamily: 'Inter',
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                                color: _getStyleColor(opponentStats[opponent.name]?.playerType ?? PlayerType.unknown),
+                                fontWeight: FontWeight.w400,
                                 letterSpacing: 0,
                                 height: 1.4,
                               ),
@@ -497,84 +458,119 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                         ),
                       ],
                     ),
-
-                    SizedBox(height: 24),
-
-                    // Bottom section: Last seen + action buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // Right: Hands count
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        // Left: Last seen
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.visibility_outlined,
-                              size: 18,
-                              color: Color(0xFFFFFFFF).withOpacity(0.84),
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              'Last Seen: ${DateFormat('MMM dd').format(opponent.lastSeenAt)}',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12,
-                                color: Color(0xFFFFFFFF).withOpacity(0.84),
-                                fontWeight: FontWeight.w400,
-                                letterSpacing: 0,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          '${opponentHandsCounts[opponent.name] ?? 0}',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0,
+                            height: 1.4,
+                          ),
                         ),
-                        // Right: Action buttons
-                        Row(
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 28.5,
-                                  ),
-                                ],
-                              ),
-                              child: IconButton(
-                                icon: Icon(Icons.edit, size: 18, color: Colors.white),
-                                onPressed: () => _showEditOpponentDialog(opponent),
-                                padding: EdgeInsets.zero,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: Color(0xFFB63131),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 28.5,
-                                  ),
-                                ],
-                              ),
-                              child: IconButton(
-                                icon: Icon(Icons.delete, size: 18, color: Colors.white),
-                                onPressed: () => _showDeleteConfirmation(opponent),
-                                padding: EdgeInsets.zero,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'Hands',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 0,
+                            height: 1.4,
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
-              ),
+
+                SizedBox(height: 24),
+
+                // Bottom section: Last seen + action buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Left: Last seen
+                    Row(
+                      children: [
+                        Image.asset(
+                          'icons/flat_icons/eye.png',
+                          width: 18,
+                          height: 18,
+                          color: Color(0xFFFFFFFF).withOpacity(0.8),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Last Seen: ${DateFormat('MMM dd').format(opponent.lastSeenAt)}',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 10,
+                            color: Color(0xFFFFFFFF).withOpacity(0.8),
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 0,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Right: Action buttons
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => _showEditOpponentDialog(opponent),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF1A291A), // --primary-90
+                              borderRadius: BorderRadius.circular(70),
+                            ),
+                            child: Center(
+                              child: Image.asset(
+                                'icons/flat_icons/edit.png',
+                                width: 20,
+                                height: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => _showDeleteConfirmation(opponent),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Color(0xFFB63131),
+                              borderRadius: BorderRadius.circular(70),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0x33000000), // #00000033
+                                  blurRadius: 24,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Image.asset(
+                                'icons/flat_icons/bin.png',
+                                width: 20,
+                                height: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -886,7 +882,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                               elevation: 0,
                             ),
                             child: Text(
-                              'Update',
+                              isEditing ? 'Update' : 'Add Opponent',
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 16,
@@ -944,41 +940,127 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
 
 
   void _showDeleteConfirmation(Opponent opponent) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete Opponent?'),
-        content: Text('Are you sure you want to delete "${opponent.name}"? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                await OpponentService.deleteOpponent(opponent.id);
-                Navigator.pop(context);
-                _loadOpponents(useCache: false); // Invalidate cache
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Opponent deleted successfully'),
-                    backgroundColor: Colors.orange,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Main card with title, description, and delete button
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0xFF131613), // --background
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 24),
+                    // Title
+                    Text(
+                      'Delete opponents?',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        height: 1.2,
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    // Description
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Are you sure you want to delete "${opponent.name}"?\nThis action can not be undone',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                          letterSpacing: 0.24,
+                          height: 1.7,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Divider line
+                    Container(
+                      height: 1,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+                    // Delete button
+                    GestureDetector(
+                      onTap: () async {
+                        try {
+                          await OpponentService.deleteOpponent(opponent.id);
+                          Navigator.pop(context);
+                          _loadOpponents(useCache: false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Opponent deleted successfully'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error deleting opponent: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                        child: Text(
+                          'Delete',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFD55A41), // --error
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 8),
+              // Cancel button (separate card)
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF131613), // --background
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error deleting opponent: $e'),
-                    backgroundColor: Colors.red,
+                  child: Text(
+                    'Cancel',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      height: 1.2,
+                    ),
                   ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Delete', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
+import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../models/opponent_stats.dart';
 import '../services/opponent_service.dart';
@@ -7,7 +7,6 @@ import '../services/local_storage_service.dart';
 import '../services/firebase_service.dart';
 import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
-import '../widgets/global_top_header.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
 
@@ -26,19 +25,31 @@ class OpponentDetailScreen extends StatefulWidget {
 class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   late Opponent _opponent;
   Map<String, dynamic>? _statistics;
-  OpponentStats? _opponentStats; // Store the actual OpponentStats object
+  OpponentStats? _opponentStats;
   bool _isLoadingStats = true;
+  int _totalOpponents = 0;
 
   @override
   void initState() {
     super.initState();
     _opponent = widget.opponent;
     _loadStatistics();
+    _loadTotalOpponents();
+  }
+
+  Future<void> _loadTotalOpponents() async {
+    try {
+      final opponents = await OpponentService.getAllOpponents();
+      setState(() {
+        _totalOpponents = opponents.length;
+      });
+    } catch (e) {
+      // Ignore errors
+    }
   }
 
   Future<void> _loadStatistics() async {
     try {
-      // Load stats from optimized structure - no recalculation needed!
       final stats = await _calculateOpponentStatistics(_opponent.name);
       final opponentStats = await OpponentStatsService.getOpponentStats(_opponent.name);
       setState(() {
@@ -56,17 +67,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   Future<Map<String, dynamic>> _calculateOpponentStatistics(String opponentName) async {
     try {
-      // 🚀 OPTIMIZED: Fast O(1) stats lookup from dedicated table
       final optimizedStats = await OpponentStatsService.getOpponentStats(opponentName);
 
       if (optimizedStats != null) {
         print('✅ Using optimized stats for $opponentName (${optimizedStats.handsPlayed} hands)');
         final legacyMap = optimizedStats.toLegacyStatsMap();
-        print('🔍 DEBUG: Legacy map for $opponentName: totalHands=${legacyMap['totalHands']}, totalSessions=${legacyMap['totalSessions']}');
         return legacyMap;
       } else {
         print('⚠️ No optimized stats found for $opponentName - calculating from hand data');
-        // Fall back to legacy calculation method
         return await _calculateLegacyOpponentStatistics(opponentName);
       }
     } catch (e) {
@@ -86,10 +94,8 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     }
   }
 
-  /// Legacy calculation method used as fallback when optimized stats not available
   Future<Map<String, dynamic>> _calculateLegacyOpponentStatistics(String opponentName) async {
     try {
-      // Initialize counters
       int totalHands = 0;
       int totalSessions = 0;
       int vpipHands = 0;
@@ -104,30 +110,22 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
       Set<String> sessionsPlayed = <String>{};
 
-      // Get all sessions
       List<Map<String, dynamic>> sessions;
       try {
         sessions = await FirebaseService.getAllSessions();
-        print('🔍 DEBUG: Found ${sessions.length} sessions from Firebase');
       } catch (e) {
         sessions = await LocalStorageService.getUserSessions();
-        print('🔍 DEBUG: Found ${sessions.length} sessions from local storage');
       }
 
-      // Process each session
       for (final session in sessions) {
         final sessionId = session['id'] as String;
         final playerNames = session['playerNames'] as Map<String, dynamic>?;
 
         if (playerNames != null) {
-          // Check if opponent played in this session
           bool opponentInSession = false;
-          print('🔍 DEBUG: Session $sessionId has players: ${playerNames.values.toList()}');
           for (final playerName in playerNames.values) {
-            print('🔍 DEBUG: Comparing "${playerName.toString().toLowerCase()}" with "${opponentName.toLowerCase()}"');
             if (playerName.toString().toLowerCase() == opponentName.toLowerCase()) {
               opponentInSession = true;
-              print('✅ DEBUG: Found $opponentName in session $sessionId');
               break;
             }
           }
@@ -135,23 +133,18 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           if (opponentInSession) {
             sessionsPlayed.add(sessionId);
 
-            // Get hands for this session
             List<Map<String, dynamic>> hands;
             try {
               hands = await FirebaseService.getSessionHands(sessionId);
-              print('🔍 DEBUG: Found ${hands.length} hands in Firebase for session $sessionId');
             } catch (e) {
               hands = await LocalStorageService.getSessionHands(sessionId);
-              print('🔍 DEBUG: Found ${hands.length} hands in local storage for session $sessionId');
             }
 
-            // Process each hand
             for (final hand in hands) {
               bool opponentInThisHand = false;
               bool vpipThisHand = false;
               bool pfrThisHand = false;
 
-              // Process actions if available
               if (hand['actions'] != null) {
                 final actions = hand['actions'] as List<dynamic>;
                 String currentStreet = 'preflop';
@@ -172,7 +165,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     opponentInThisHand = true;
                     final actionKey = actionType.toLowerCase();
 
-                    // Count action types
                     switch (actionKey) {
                       case 'fold':
                         foldCount++;
@@ -209,7 +201,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 }
               }
 
-              // Only count the hand if opponent participated
               if (opponentInThisHand) {
                 totalHands++;
                 if (vpipThisHand) vpipHands++;
@@ -222,7 +213,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
       totalSessions = sessionsPlayed.length;
 
-      // Calculate percentages
       final vpip = totalHands > 0 ? (vpipHands / totalHands * 100) : 0.0;
       final pfr = totalHands > 0 ? (pfrHands / totalHands * 100) : 0.0;
       final foldPercentage = totalHands > 0 ? (foldCount / totalHands * 100) : 0.0;
@@ -233,8 +223,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
       final totalActions = aggressiveActions + passiveActions;
       final aggression = totalActions > 0 ? (aggressiveActions / totalActions) : 0.0;
-
-      print('📊 Calculated legacy stats for $opponentName: $totalHands hands, VPIP: ${vpip.toStringAsFixed(1)}%, PFR: ${pfr.toStringAsFixed(1)}%');
 
       return {
         'totalHands': totalHands,
@@ -299,6 +287,25 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     }
   }
 
+  Color _getStyleColor(PlayerType playerType) {
+    switch (playerType) {
+      case PlayerType.tightAggressive:
+      case PlayerType.tagRegular:
+        return Colors.green;
+      case PlayerType.looseAggressive:
+        return Colors.orange;
+      case PlayerType.tightPassive:
+        return Colors.blue;
+      case PlayerType.loosePassive:
+      case PlayerType.calling_station:
+        return Colors.red;
+      case PlayerType.maniac:
+        return Colors.purple;
+      case PlayerType.unknown:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -309,37 +316,75 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           SafeArea(
             child: Column(
               children: [
-            // Global Top Header
-            Padding(
-              padding: EdgeInsets.fromLTRB(16, 20, 16, 24),
-              child: GlobalTopHeader(currentScreen: 'opponent_detail'),
-            ),
-
-            // Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildBasicInfoCard(),
-                    const SizedBox(height: 16),
-                    _buildStatisticsCard(),
-                    const SizedBox(height: 16),
-                    _buildActionDistributionCard(),
-                    const SizedBox(height: 16),
-                    _buildHandsButton(),
-                    const SizedBox(height: 20), // Bottom padding for nav bar
-                  ],
+                // Header Section (same as Opponents screen)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left: Title + subtitle
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Opponents',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 24,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.48,
+                              height: 1.0,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            '$_totalOpponents tracked players',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              color: Color(0xFFFFFFFF).withOpacity(0.8),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: -0.24,
+                              height: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Right: Back button only
+                      GlassyIconButton(
+                        imagePath: 'icons/flat_icons/back.png',
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
 
-            // Global Bottom Navigation Bar
-            GlobalBottomNavBar(currentScreen: 'opponent_detail'),
-          ],
-        ),
-      ),
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildBasicInfoCard(),
+                        const SizedBox(height: 32),
+                        _buildStatisticsSection(),
+                        const SizedBox(height: 32),
+                        _buildActionDistributionSection(),
+                        const SizedBox(height: 32),
+                        _buildHandHistorySection(),
+                        const SizedBox(height: 100), // Bottom padding for nav bar
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Global Bottom Navigation Bar
+                GlobalBottomNavBar(currentScreen: 'opponent_detail'),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -348,99 +393,55 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   Widget _buildBasicInfoCard() {
     final cardColor = _getColorForOpponent(_opponent.color);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Color(0xFF546165).withOpacity(0.74),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFF1A2925),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        child: Column(
+          children: [
+            // Top section: User info + hands count
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Top section: User info + hands count
+                // Left: CardIcon + Name/Style
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Left: CardIcon + Name/Style
-                    Row(
-                      children: [
-                        // Color indicator avatar
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: cardColor.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(55),
-                          ),
-                          child: Center(
-                            child: Container(
-                              width: 18,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: cardColor,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        // Name and playing style column
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _opponent.name,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 18,
-                                color: Color(0xFFFFFFFF).withOpacity(0.84),
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0,
-                                height: 1.4,
-                              ),
-                            ),
-                            Text(
-                              _opponentStats?.playingStyle ?? 'No Data',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12,
-                                color: Color(0xFFFFFFFF).withOpacity(0.84),
-                                fontWeight: FontWeight.w400,
-                                letterSpacing: 0,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                    // Color indicator avatar (28px solid circle)
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                    // Right: Hands count
+                    SizedBox(width: 8),
+                    // Name and playing style column
                     Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${_statistics?['totalHands'] ?? 0}',
+                          _opponent.name,
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 18,
-                            color: Colors.white,
+                            color: Color(0xFFFFFFFF),
                             fontWeight: FontWeight.w500,
                             letterSpacing: 0,
                             height: 1.4,
                           ),
                         ),
                         Text(
-                          'Hands',
+                          _opponentStats?.playingStyle ?? 'No Data',
                           style: TextStyle(
                             fontFamily: 'Inter',
-                            fontSize: 14,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            color: _getStyleColor(_opponentStats?.playerType ?? PlayerType.unknown),
+                            fontWeight: FontWeight.w400,
                             letterSpacing: 0,
                             height: 1.4,
                           ),
@@ -449,24 +450,59 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     ),
                   ],
                 ),
-
-                SizedBox(height: 24),
-
-                // Bottom section: Last seen
-                Row(
+                // Right: Hands count
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Icon(
-                      Icons.visibility_outlined,
-                      size: 18,
-                      color: Color(0xFFFFFFFF).withOpacity(0.84),
-                    ),
-                    SizedBox(width: 4),
                     Text(
-                      'Last Seen: ${_opponent.lastSeenAt.toString().split(' ')[0]}',
+                      '${_statistics?['totalHands'] ?? 0}',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0,
+                        height: 1.4,
+                      ),
+                    ),
+                    Text(
+                      'Hands',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 12,
-                        color: Color(0xFFFFFFFF).withOpacity(0.84),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 0,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+
+            SizedBox(height: 24),
+
+            // Bottom section: Last seen + action buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Left: Last seen
+                Row(
+                  children: [
+                    Image.asset(
+                      'icons/flat_icons/eye.png',
+                      width: 18,
+                      height: 18,
+                      color: Color(0xFFFFFFFF).withOpacity(0.8),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Last Seen: ${DateFormat('MMM dd').format(_opponent.lastSeenAt)}',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 10,
+                        color: Color(0xFFFFFFFF).withOpacity(0.8),
                         fontWeight: FontWeight.w400,
                         letterSpacing: 0,
                         height: 1.3,
@@ -474,49 +510,106 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     ),
                   ],
                 ),
-
-                // Additional info rows
-                if (_opponent.notes != null && _opponent.notes!.isNotEmpty) ...[
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.notes,
-                        size: 18,
-                        color: Color(0xFFFFFFFF).withOpacity(0.84),
-                      ),
-                      SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          _opponent.notes!,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 12,
-                            color: Color(0xFFFFFFFF).withOpacity(0.84),
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 0,
-                            height: 1.3,
+                // Right: Action buttons
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => _showEditOpponentDialog(),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF1A291A), // --primary-90
+                          borderRadius: BorderRadius.circular(70),
+                        ),
+                        child: Center(
+                          child: Image.asset(
+                            'icons/flat_icons/edit.png',
+                            width: 20,
+                            height: 20,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => _showDeleteConfirmation(),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFB63131),
+                          borderRadius: BorderRadius.circular(70),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x33000000),
+                              blurRadius: 24,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Image.asset(
+                            'icons/flat_icons/bin.png',
+                            width: 20,
+                            height: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-          ),
+
+            // Notes section (if available)
+            if (_opponent.notes != null && _opponent.notes!.isNotEmpty) ...[
+              SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.notes_outlined,
+                      size: 16,
+                      color: Color(0xFFFFFFFF).withOpacity(0.6),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _opponent.notes!,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: Color(0xFFFFFFFF).withOpacity(0.8),
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 0,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
   }
 
-
-
-  Widget _buildStatisticsCard() {
+  Widget _buildStatisticsSection() {
     if (_isLoadingStats) {
       return Center(
         child: CircularProgressIndicator(
-          color: Color(0xFFA5EC44),
+          color: Color(0xFFBAFF9A),
         ),
       );
     }
@@ -537,84 +630,96 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title
+        // Section header
         Text(
-          'STATISTICS',
+          'Statistics',
           style: TextStyle(
             fontFamily: 'Inter',
-            fontSize: 18,
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0,
-            height: 1.4,
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFFBAFF9A), // --secondary-100
+            letterSpacing: 1.0,
+            height: 1.0,
           ),
         ),
-        SizedBox(height: 8),
-        // Grid
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 1.2,
-          children: [
-            _buildStatCard('Hands Played', '${_statistics!['totalHands']}', 'icons/hands_played.png'),
-            _buildStatCard('Sessions', '${_statistics!['totalSessions']}', 'icons/session.png'),
-            _buildStatCard('VPIP', '${_formatStat(_statistics!['vpip'])}%', 'icons/vpip.png'),
-            _buildStatCard('PFR', '${_formatStat(_statistics!['pfr'])}%', 'icons/bet.png'),
-            _buildStatCard('Aggression', _formatAggression(_statistics!['aggression']), 'icons/aggression.png'),
-            _buildStatCard('Fold %', '${_formatStat(_statistics!['foldPercentage'])}%', 'icons/fold.png'),
-          ],
-        ),
+        SizedBox(height: 12),
+        // List items with dividers
+        _buildStatListItem('Hands Played', '${_statistics!['totalHands']}'),
+        _buildDivider(),
+        _buildStatListItem('Sessions', '${_statistics!['totalSessions']}'),
+        _buildDivider(),
+        _buildStatListItem('VPIP', '${_formatStat(_statistics!['vpip'])}%'),
+        _buildDivider(),
+        _buildStatListItem('PFR', '${_formatStat(_statistics!['pfr'])}%'),
+        _buildDivider(),
+        _buildStatListItem('Aggression', _formatAggression(_statistics!['aggression'])),
+        _buildDivider(),
+        _buildStatListItem('Fold', '${_formatStat(_statistics!['foldPercentage'])}%'),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, String value, String iconPath) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFF1d2a27),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon + Label section
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.asset(
-                iconPath,
-                width: 32,
-                height: 32,
-              ),
-              SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16,
-                  color: Color(0xFFFFFFFF).withOpacity(0.84),
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0,
-                  height: 1.4,
-                ),
-              ),
-            ],
+  Widget _buildActionDistributionSection() {
+    if (_isLoadingStats || _statistics == null) {
+      return SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Text(
+          'Action Distribution',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFFBAFF9A), // --secondary-100
+            letterSpacing: 1.0,
+            height: 1.0,
           ),
-          Spacer(),
-          // Value section
+        ),
+        SizedBox(height: 12),
+        // List items with dividers
+        _buildStatListItem('Call', '${_formatStat(_statistics!['callPercentage'])}%'),
+        _buildDivider(),
+        _buildStatListItem('Bet', '${_formatStat(_statistics!['betPercentage'])}%'),
+        _buildDivider(),
+        _buildStatListItem('Raise', '${_formatStat(_statistics!['raisePercentage'])}%'),
+        _buildDivider(),
+        _buildStatListItem('Check', '${_formatStat(_statistics!['checkPercentage'])}%'),
+        _buildDivider(),
+        _buildStatListItem('Fold', '${_formatStat(_statistics!['foldPercentage'])}%'),
+        _buildDivider(),
+        _buildStatListItem('Aggression', _formatAggression(_statistics!['aggression'])),
+      ],
+    );
+  }
+
+  Widget _buildStatListItem(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Colors.white,
+              height: 1.0,
+            ),
+          ),
           Text(
             value,
             style: TextStyle(
               fontFamily: 'Inter',
-              fontSize: 20,
-              color: Colors.white,
+              fontSize: 14,
               fontWeight: FontWeight.w500,
-              letterSpacing: 0,
-              height: 1.4,
+              color: Color(0xFFBAFF9A), // --secondary-100
+              height: 1.0,
             ),
           ),
         ],
@@ -622,50 +727,181 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     );
   }
 
+  Widget _buildDivider() {
+    return Container(
+      height: 1,
+      color: Colors.white.withOpacity(0.1),
+    );
+  }
 
-  Widget _buildActionDistributionCard() {
-    if (_isLoadingStats) {
-      return SizedBox.shrink();
-    }
-
-    if (_statistics == null) {
-      return SizedBox.shrink();
-    }
-
+  Widget _buildHandHistorySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Title
         Text(
-          'ACTION DISTRIBUTION',
+          'Hand History',
           style: TextStyle(
             fontFamily: 'Inter',
-            fontSize: 18,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
             color: Colors.white,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0,
-            height: 1.4,
+            height: 1.5,
           ),
         ),
-        SizedBox(height: 8),
-        // Grid
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 1.2,
-          children: [
-            _buildStatCard('Call', '${_formatStat(_statistics!['callPercentage'])}%', 'icons/play_style/calling_station.png'),
-            _buildStatCard('Bet', '${_formatStat(_statistics!['betPercentage'])}%', 'icons/bet_with_chips.png'),
-            _buildStatCard('Raise', '${_formatStat(_statistics!['raisePercentage'])}%', 'icons/bet.png'),
-            _buildStatCard('Check', '${_formatStat(_statistics!['checkPercentage'])}%', 'icons/check.png'),
-            _buildStatCard('Fold', '${_formatStat(_statistics!['foldPercentage'])}%', 'icons/fold.png'),
-            _buildStatCard('Aggression', _formatAggression(_statistics!['aggression']), 'icons/aggression.png'),
-          ],
+        SizedBox(height: 4),
+        // Description
+        Text(
+          'View all hands played with this opponent',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFFF8FFF7),
+          ),
+        ),
+        SizedBox(height: 24),
+        // Button
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            onPressed: () {
+              // Check if there are hands before navigating
+              final totalHands = _statistics?['totalHands'] ?? 0;
+              if (totalHands == 0) {
+                _showNoHandsFoundDialog();
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OpponentHandsScreen(
+                      opponent: _opponent,
+                    ),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFFBAFF9A), // --secondary-100
+              foregroundColor: Color(0xFF011100), // --primary-100
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              'View Hand History',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF011100), // --primary-100
+              ),
+            ),
+          ),
         ),
       ],
+    );
+  }
+
+  void _showNoHandsFoundDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Color(0xFF131613), // --background
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Close button at top right
+              Align(
+                alignment: Alignment.topRight,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Image.asset(
+                    'icons/flat_icons/close.png',
+                    width: 24,
+                    height: 24,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              SizedBox(height: 8),
+              // Sad face icon
+              Image.asset(
+                'icons/flat_icons/sad_face.png',
+                width: 44,
+                height: 44,
+                color: Colors.white,
+              ),
+              SizedBox(height: 20),
+              // Title
+              Text(
+                'No Hands Found',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  height: 1.5,
+                ),
+              ),
+              SizedBox(height: 12),
+              // Description
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 62),
+                child: Text(
+                  'You haven\'t played any hands with "${_opponent.name}" yet',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFFF8FFF7),
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              SizedBox(height: 50),
+              // Close button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFBAFF9A), // --secondary-100
+                    foregroundColor: Color(0xFF011100), // --primary-100
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Close',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF011100), // --primary-100
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -688,117 +924,422 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     return '-';
   }
 
-  // REMOVED: _updateOpponentStoredStats() is no longer needed
-  // Stats are stored in OpponentStats only, not in Opponent model
+  void _showEditOpponentDialog() {
+    final nameController = TextEditingController(text: _opponent.name);
+    final notesController = TextEditingController(text: _opponent.notes ?? '');
+    OpponentColor selectedColor = _opponent.color;
 
-  Widget _buildHandsButton() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Title
-        Text(
-          'HAND HISTORY',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 18,
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0,
-            height: 1.4,
-          ),
-        ),
-        SizedBox(height: 7),
-        // Description
-        Text(
-          'View all hands played with this opponent',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 16,
-            color: Color(0xFFFFFFFF).withOpacity(0.8),
-            fontWeight: FontWeight.w400,
-            letterSpacing: -0.32,
-            height: 1.0,
-          ),
-        ),
-        SizedBox(height: 32),
-        // Button
-        SizedBox(
-          width: double.infinity,
-          child: Container(
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Container(
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(100),
+              color: Color(0xFF1a2925),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(100),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => OpponentHandsScreen(
-                        opponent: _opponent,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Drag handle line
+                    Container(
+                      width: 80,
+                      height: 2,
+                      margin: EdgeInsets.only(top: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(1),
                       ),
                     ),
-                  );
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'View Hand History',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Colors.black,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0,
-                          height: 1.2,
+
+                    SizedBox(height: 38),
+
+                    // Title
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Edit Opponent',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            letterSpacing: 0,
+                            height: 1.2,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    SizedBox(height: 24),
+
+                    // Input fields
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        children: [
+                          // Opponent Name field
+                          Container(
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: nameController,
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Opponent Name',
+                                hintStyle: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Colors.white.withOpacity(0.5),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 18),
+
+                          // Notes field
+                          Container(
+                            height: 150,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: notesController,
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Notes (Optional)',
+                                hintStyle: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Colors.white.withOpacity(0.5),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.all(16),
+                              ),
+                              maxLines: 6,
+                              maxLength: null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 24),
+
+                    // Color picker section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Pick a color:',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: -0.28,
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: OpponentColor.values.map((color) {
+                              final isSelected = selectedColor == color;
+                              return GestureDetector(
+                                onTap: () {
+                                  setSheetState(() {
+                                    selectedColor = color;
+                                  });
+                                },
+                                child: Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: _getColorForOpponent(color),
+                                    shape: BoxShape.circle,
+                                    border: isSelected
+                                        ? Border.all(
+                                            color: Colors.white,
+                                            width: 3,
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 56),
+
+                    // Update button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final name = nameController.text.trim();
+                            if (name.isEmpty) return;
+
+                            try {
+                              final updatedOpponent = _opponent.copyWith(
+                                name: name,
+                                notes: notesController.text.trim().isEmpty
+                                    ? null
+                                    : notesController.text.trim(),
+                                color: selectedColor,
+                              );
+
+                              await OpponentService.saveOpponent(updatedOpponent);
+                              Navigator.pop(context);
+
+                              setState(() {
+                                _opponent = updatedOpponent;
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Opponent updated successfully'),
+                                  backgroundColor: Color(0xFFA5EC44),
+                                ),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFFA5EC44),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Update',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 16),
+
+                    // Cancel button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 24),
+                  ],
                 ),
               ),
             ),
-          ),
-        ),
-      ],
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildInfoRowWithCustomIcon(String iconPath, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        children: [
-          Image.asset(iconPath, width: 32, height: 32),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 80,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF9A9A9A),
-                fontSize: 14,
+  void _showDeleteConfirmation() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Main card with title, description, and delete button
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0xFF131613), // --background
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 24),
+                    // Title
+                    Text(
+                      'Delete opponent?',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        height: 1.2,
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    // Description
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Are you sure you want to delete "${_opponent.name}"?\nThis action can not be undone',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                          letterSpacing: 0.24,
+                          height: 1.7,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Divider line
+                    Container(
+                      height: 1,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+                    // Delete button
+                    GestureDetector(
+                      onTap: () async {
+                        try {
+                          await OpponentService.deleteOpponent(_opponent.id);
+                          Navigator.pop(context); // Close dialog
+                          Navigator.pop(context, true); // Go back with result
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Opponent deleted successfully'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error deleting opponent: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                        child: Text(
+                          'Delete',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFD55A41), // --error
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              SizedBox(height: 8),
+              // Cancel button (separate card)
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF131613), // --background
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

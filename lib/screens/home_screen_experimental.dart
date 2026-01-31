@@ -845,20 +845,54 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
         recentSessions.isEmpty
             ? Container(
                 width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 44, horizontal: 8),
                 decoration: BoxDecoration(
-                  color: Color(0x4C2C3E2E), // #2c3e2e4c
-                  borderRadius: BorderRadius.circular(8),
+                  color: Color(0xFF2B2B2B),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                child: Text(
-                  'No sessions yet',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.40),
-                    fontSize: 16,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon (24x24)
+                    Image.asset(
+                      'icons/flat_icons/deuce.png',
+                      width: 24,
+                      height: 24,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 20),
+                    // Text content - centered, 200px width
+                    SizedBox(
+                      width: 200,
+                      child: Column(
+                        children: [
+                          Text(
+                            'No recent sessions',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              height: 1.46,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Start your first poker session!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               )
             : Container(
@@ -922,31 +956,52 @@ class _HomeScreenExperimentalState extends State<HomeScreenExperimental> with Ti
         upcomingEvents.isEmpty
             ? Container(
                 width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 44, horizontal: 8),
                 decoration: BoxDecoration(
-                  color: Color(0x4C2C3E2E), // #2c3e2e4c
-                  borderRadius: BorderRadius.circular(8),
+                  color: Color(0xFF2B2B2B),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 44),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 24,
-                      color: Color(0xFFF8FFF7),
+                    // Icon (24x24)
+                    Image.asset(
+                      'icons/flat_icons/calendar_edit.png',
+                      width: 24,
+                      height: 24,
+                      color: Colors.white,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No upcoming events',
-                      style: TextStyle(
-                        color: Color(0xFFF8FFF7),
-                        fontSize: 14,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 1.0,
-                        height: 1.0,
+                    const SizedBox(height: 20),
+                    // Text content - centered, 200px width
+                    SizedBox(
+                      width: 200,
+                      child: Column(
+                        children: [
+                          Text(
+                            'No upcoming events',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              height: 1.46,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Schedule your first event!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
