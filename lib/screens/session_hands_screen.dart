@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:intl/intl.dart';
+import '../design_system/components/backgrounds/gradient_background.dart';
+import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../services/firebase_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
@@ -33,7 +36,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
       });
 
       final loadedHands = await FirebaseService.getSessionHands(widget.session['id']);
-      
+
       setState(() {
         hands = loadedHands;
         isLoading = false;
@@ -49,74 +52,72 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Modern Header
-            Container(
-              padding: EdgeInsets.fromLTRB(24, 20, 24, 20),
-              decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
-              ),
-              child: Row(
-                children: [
-                  // Back button
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF161618),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 20,
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          GradientBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                // Glassmorphic Header
+                ClipRect(
+                  child: BackdropFilter(
+                    filter: ui.ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                    child: Container(
+                      padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+                      decoration: BoxDecoration(
+                        color: Color(0x03FFFFFF),
+                      ),
+                      child: Row(
+                        children: [
+                          // Back button
+                          GlassyIconButton(
+                            icon: Icons.arrow_back,
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          SizedBox(width: 12),
+                          // Session info
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.session['sessionName'] != null &&
+                                  widget.session['sessionName'].isNotEmpty
+                                      ? widget.session['sessionName']
+                                      : 'Session ${widget.session['id'].substring(0, 8)}...',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '${hands.length} hands logged',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  SizedBox(width: 16),
-                  // Session info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.session['sessionName'] != null && 
-                          widget.session['sessionName'].isNotEmpty 
-                              ? widget.session['sessionName']
-                              : 'Session ${widget.session['id'].substring(0, 8)}...',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          '${hands.length} hands logged',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF9A9A9A),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+
+                // Content
+                Expanded(
+                  child: _buildBody(),
+                ),
+              ],
             ),
-            
-            // Content
-            Expanded(
-              child: _buildBody(),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -213,7 +214,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.all(24),
+      padding: EdgeInsets.all(16),
       itemCount: hands.length,
       itemBuilder: (context, index) => _buildHandCard(hands[index], index + 1),
     );
@@ -228,11 +229,11 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     return GestureDetector(
       onTap: () => _navigateToHandActions(hand),
       child: Container(
-        margin: EdgeInsets.only(bottom: 16),
-        padding: EdgeInsets.all(20),
+        margin: EdgeInsets.only(bottom: 12),
+        padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Color(0xFF1F1F23),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isStarred ? Colors.amber.withOpacity(0.5) : Color(0xFF2A2A2E),
             width: isStarred ? 2 : 1,
@@ -248,15 +249,15 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
               Stack(
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [Color(0xFF5AC95A), Color(0xFF4CAF50)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
                       child: Text(
@@ -264,7 +265,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -272,11 +273,11 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                   // Star badge
                   if (isStarred)
                     Positioned(
-                      top: -4,
-                      right: -4,
+                      top: -3,
+                      right: -3,
                       child: Container(
-                        width: 20,
-                        height: 20,
+                        width: 16,
+                        height: 16,
                         decoration: BoxDecoration(
                           color: Colors.amber,
                           shape: BoxShape.circle,
@@ -284,13 +285,13 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                         child: Icon(
                           Icons.star,
                           color: Colors.white,
-                          size: 12,
+                          size: 10,
                         ),
                       ),
                     ),
                 ],
               ),
-              SizedBox(width: 16),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,15 +301,15 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                        fontSize: 14,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: 2),
                     Text(
                       '${actions.length} actions • ${DateFormat('HH:mm:ss').format(startTime)}',
                       style: TextStyle(
                         color: Color(0xFF9A9A9A),
-                        fontSize: 14,
+                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -317,19 +318,19 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
               Icon(
                 Icons.arrow_forward_ios,
                 color: Color(0xFF9A9A9A),
-                size: 16,
+                size: 14,
               ),
             ],
           ),
 
-          SizedBox(height: 16),
+          SizedBox(height: 12),
 
           // Hand Info Grid
           Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Color(0xFF161618),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
@@ -338,7 +339,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 ),
                 Container(
                   width: 1,
-                  height: 30,
+                  height: 24,
                   color: Color(0xFF2A2A2E),
                 ),
                 Expanded(
@@ -348,7 +349,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 if (_hasHeroCards(hand)) ...[
                   Container(
                     width: 1,
-                    height: 30,
+                    height: 24,
                     color: Color(0xFF2A2A2E),
                   ),
                   Expanded(
@@ -361,10 +362,10 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
 
           // Tags row (if any)
           if (tags.isNotEmpty) ...[
-            SizedBox(height: 12),
+            SizedBox(height: 10),
             Wrap(
-              spacing: 8,
-              runSpacing: 6,
+              spacing: 6,
+              runSpacing: 4,
               children: tags.map((tag) => _buildTagBadge(tag)).toList(),
             ),
           ],
@@ -401,10 +402,10 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: Color(0xFFBAFF9A).withOpacity(0.15),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: Color(0xFFBAFF9A).withOpacity(0.4),
           width: 1,
@@ -415,14 +416,14 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
         children: [
           Icon(
             tagIcon,
-            size: 12,
+            size: 10,
             color: Color(0xFFBAFF9A),
           ),
           SizedBox(width: 4),
           Text(
             tag,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               color: Color(0xFFBAFF9A),
               fontWeight: FontWeight.w500,
             ),
@@ -439,16 +440,16 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
           value,
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: 2),
         Text(
           label,
           style: TextStyle(
             color: Color(0xFF9A9A9A),
-            fontSize: 12,
+            fontSize: 10,
           ),
         ),
       ],
@@ -472,16 +473,16 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (card1 != null) _buildMiniCard(card1),
-            if (card1 != null && card2 != null) SizedBox(width: 4),
+            if (card1 != null && card2 != null) SizedBox(width: 3),
             if (card2 != null) _buildMiniCard(card2),
           ],
         ),
-        SizedBox(height: 4),
+        SizedBox(height: 2),
         Text(
           'Hero Cards',
           style: TextStyle(
             color: Color(0xFF9A9A9A),
-            fontSize: 12,
+            fontSize: 10,
           ),
         ),
       ],
@@ -499,11 +500,11 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     final cardColor = isRedSuit ? Colors.red : Colors.black;
 
     return Container(
-      width: 24,
-      height: 32,
+      width: 20,
+      height: 26,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(3),
         border: Border.all(color: Color(0xFF2A2A2E), width: 0.5),
       ),
       child: Column(
@@ -513,94 +514,17 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
             rank,
             style: TextStyle(
               color: cardColor,
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: FontWeight.bold,
+              height: 1.0,
             ),
           ),
           Text(
             suit,
             style: TextStyle(
               color: cardColor,
-              fontSize: 8,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHoleCardsSection(Map<String, dynamic> hand) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color(0xFF161618),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Hole Cards',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 8),
-          Row(
-            children: [
-              if (hand['holeCard1'] != null) _buildCard(hand['holeCard1']),
-              if (hand['holeCard1'] != null && hand['holeCard2'] != null) SizedBox(width: 8),
-              if (hand['holeCard2'] != null) _buildCard(hand['holeCard2']),
-              if (hand['holeCard1'] == null && hand['holeCard2'] == null)
-                Text(
-                  'No cards recorded', 
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic, 
-                    color: Color(0xFF9A9A9A),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCard(String? card) {
-    if (card == null || card.isEmpty) return SizedBox.shrink();
-    
-    final suit = card.length > 1 ? card.substring(1) : '';
-    final rank = card.isNotEmpty ? card[0] : '';
-    
-    Color suitColor = Colors.white;
-    if (suit == '♥' || suit == '♦') suitColor = Colors.red;
-    
-    return Container(
-      width: 32,
-      height: 44,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Color(0xFF2A2A2E)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            rank,
-            style: TextStyle(
-              color: suitColor == Colors.red ? Colors.red : Colors.black,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            suit,
-            style: TextStyle(
-              color: suitColor,
-              fontSize: 10,
+              fontSize: 7,
+              height: 1.0,
             ),
           ),
         ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
+import '../design_system/components/backgrounds/gradient_background.dart';
+import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../utils/poker_positions.dart';
 import '../models/game_types.dart';
 import '../services/ai_analyzer_service.dart';
@@ -223,82 +225,74 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     
     return Scaffold(
       backgroundColor: Color(0xFF161618),
-      body: SafeArea(
-        child: Column(
+      body: Stack(
+        children: [
+          GradientBackground(),
+          SafeArea(
+            child: Column(
           children: [
-            // Modern Header
-            Container(
-              padding: EdgeInsets.fromLTRB(24, 20, 24, 20),
-              decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
-              ),
-              child: Row(
-                children: [
-                  // Back button
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF161618),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
+            // Glassmorphic Header
+            ClipRect(
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  decoration: BoxDecoration(
+                    color: Color(0x03FFFFFF),
                   ),
-                  SizedBox(width: 16),
-                  // Hand info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Hand #${widget.hand['handNumber'] ?? 'N/A'}',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                  child: Row(
+                    children: [
+                      // Back button
+                      GlassyIconButton(
+                        icon: Icons.arrow_back,
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      SizedBox(width: 12),
+                      // Hand info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Hand #${widget.hand['handNumber'] ?? 'N/A'}',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Your Position: ${heroPositionName ?? PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Star button
+                      GestureDetector(
+                        onTap: _toggleStar,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _isStarred ? Color(0x33FFD700) : Color(0x1AFFFFFF),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            _isStarred ? Icons.star : Icons.star_border,
+                            color: _isStarred ? Colors.amber : Colors.white,
+                            size: 22,
                           ),
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Your Position: ${heroPositionName ?? PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF9A9A9A),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Star button
-                  GestureDetector(
-                    onTap: _toggleStar,
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: _isStarred ? Colors.amber.withOpacity(0.15) : Color(0xFF161618),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _isStarred ? Colors.amber : Color(0xFF2A2A2E),
-                          width: 1,
-                        ),
                       ),
-                      child: Icon(
-                        _isStarred ? Icons.star : Icons.star_border,
-                        color: _isStarred ? Colors.amber : Color(0xFF9A9A9A),
-                        size: 24,
-                      ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
             
@@ -306,49 +300,49 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             Expanded(
               child: SingleChildScrollView(
                 controller: _scrollController,
-                padding: EdgeInsets.all(24),
+                padding: EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Tags row (if any)
                     if (_tags.isNotEmpty) ...[
                       _buildTagsSection(),
-                      SizedBox(height: 16),
+                      SizedBox(height: 12),
                     ],
 
                     // Notes section (if any)
                     if (_notes != null && _notes!.isNotEmpty) ...[
                       _buildNotesSection(),
-                      SizedBox(height: 16),
+                      SizedBox(height: 12),
                     ],
 
-                    // Hand Summary Cards
+                    // Hand Summary Stats (compact)
                     _buildHandSummaryCards(),
 
-                    SizedBox(height: 24),
+                    SizedBox(height: 16),
 
                     // Hero Cards and Winner Info
                     _buildHeroCardsAndWinner(),
 
-                    SizedBox(height: 24),
+                    SizedBox(height: 16),
 
                     // Street-by-street action table
                     _buildStreetByStreetTable(),
 
-                    SizedBox(height: 24),
+                    SizedBox(height: 16),
 
                     // AI Analyzer Button
                     _buildAIAnalyzerButton(),
 
                     // AI Analysis Results
                     if (_aiAnalysis != null) ...[
-                      SizedBox(height: 24),
+                      SizedBox(height: 16),
                       _buildAIAnalysisResults(),
                     ],
 
                     // Analysis Error
                     if (_analysisError != null) ...[
-                      SizedBox(height: 24),
+                      SizedBox(height: 16),
                       _buildAnalysisError(),
                     ],
                   ],
@@ -357,6 +351,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             ),
           ],
         ),
+          ),
+        ],
       ),
     );
   }
@@ -406,10 +402,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         if (hasHeroCards)
           Expanded(
             child: Container(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Color(0xFF5AC95A)),
               ),
               child: Column(
@@ -417,24 +413,24 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.style, color: Color(0xFF5AC95A), size: 20),
-                      SizedBox(width: 8),
+                      Icon(Icons.style, color: Color(0xFF5AC95A), size: 16),
+                      SizedBox(width: 6),
                       Text(
                         'Your Cards',
                         style: TextStyle(
                           color: Color(0xFF5AC95A),
-                          fontSize: 14,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 12),
+                  SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (heroCard1 != null) _buildCard(heroCard1),
-                      if (heroCard1 != null && heroCard2 != null) SizedBox(width: 12),
+                      if (heroCard1 != null && heroCard2 != null) SizedBox(width: 8),
                       if (heroCard2 != null) _buildCard(heroCard2),
                     ],
                   ),
@@ -444,7 +440,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           ),
 
         if (hasHeroCards && hasOpponentCards)
-          SizedBox(width: 16),
+          SizedBox(width: 12),
 
         // Opponent Cards (replaces Winner Card)
         if (hasOpponentCards)
@@ -457,10 +453,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   Widget _buildOpponentCardsCard(Map<int, Map<String, String?>> opponentCards, dynamic playerNamesData) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFF8B5CF6)),
       ),
       child: Column(
@@ -468,19 +464,19 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.people, color: Color(0xFF8B5CF6), size: 20),
-              SizedBox(width: 8),
+              Icon(Icons.people, color: Color(0xFF8B5CF6), size: 16),
+              SizedBox(width: 6),
               Text(
                 'Opponent Cards',
                 style: TextStyle(
                   color: Color(0xFF8B5CF6),
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 12),
+          SizedBox(height: 8),
           // Show each opponent's cards
           ...opponentCards.entries.map((entry) {
             final playerId = entry.key;
@@ -499,7 +495,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             playerName ??= 'Player $playerId';
 
             return Padding(
-              padding: EdgeInsets.only(bottom: 8),
+              padding: EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
                   Expanded(
@@ -508,12 +504,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                       playerName,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 13,
+                        fontSize: 12,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: 6),
                   _buildSmallCard(card1),
                   SizedBox(width: 4),
                   _buildSmallCard(card2),
@@ -528,8 +524,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   Widget _buildSmallCard(String card) {
     return Container(
-      width: 28,
-      height: 38,
+      width: 24,
+      height: 32,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(4),
@@ -540,7 +536,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           card,
           style: TextStyle(
             color: _getCardColor(card),
-            fontSize: 12,
+            fontSize: 10,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -548,398 +544,94 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
-  Widget _buildWinnerCard() {
-    final isChoppedPot = widget.hand['isChoppedPot'] == true;
-    final winnerId = widget.hand['winnerId'];
-    final choppedWinners = widget.hand['choppedWinners'] as List<dynamic>?;
-    final individualShares = widget.hand['individualShares'] as Map<String, dynamic>?;
-    final playerNamesData = widget.hand['playerNames'];
-    final potAmount = (widget.hand['potAmount'] ?? 0).toDouble();
-    final gameTypeStr = widget.hand['gameType'] ?? 'cash';
-    final heroPosition = widget.ourSeat ?? widget.hand['heroPosition'];
-
-    String formatAmount(double amount) {
-      if (gameTypeStr == 'cash') {
-        return '\$${amount.toStringAsFixed(2)}';
-      } else {
-        return '${amount.toInt()}';
-      }
-    }
-
-    String getPlayerName(int playerId) {
-      if (playerNamesData != null && playerNamesData is Map) {
-        return playerNamesData[playerId.toString()] ?? 'Player $playerId';
-      }
-      return 'Player $playerId';
-    }
-
-    // ALWAYS prioritize chopped pot display over single winner
-    if (isChoppedPot) {
-      // Chopped pot display - get winners from choppedWinners or fallback to winnerId
-      List<int> winners = [];
-      if (choppedWinners != null && choppedWinners.isNotEmpty) {
-        winners = choppedWinners.map((w) => w as int).toList();
-      } else if (winnerId != null) {
-        // Fallback: if no choppedWinners but marked as chopped, at least show the winnerId
-        winners = [winnerId];
-      }
-
-      return Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Color(0xFF1F1F23),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.orange),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.call_split, color: Colors.orange, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  'Chopped Pot',
-                  style: TextStyle(
-                    color: Colors.orange,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            if (individualShares != null && individualShares.isNotEmpty) ...[
-              ...individualShares.entries.map((entry) {
-                final playerId = int.parse(entry.key);
-                final amount = (entry.value as num).toDouble();
-                final playerName = getPlayerName(playerId);
-                final isHero = heroPosition != null && playerId == heroPosition;
-
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 2),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            playerName,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          if (isHero)
-                            Text(
-                              'You won!',
-                              style: TextStyle(
-                                color: Color(0xFFFFD700),
-                                fontSize: 11,
-                              ),
-                            ),
-                        ],
-                      ),
-                      Text(
-                        formatAmount(amount),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ] else if (winners.isNotEmpty) ...[
-              // Fallback to equal shares
-              ...winners.map((winnerIdInt) {
-                final playerName = getPlayerName(winnerIdInt);
-                final shareAmount = potAmount / winners.length;
-                final isHero = heroPosition != null && winnerIdInt == heroPosition;
-
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 2),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            playerName,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          if (isHero)
-                            Text(
-                              'You won!',
-                              style: TextStyle(
-                                color: Color(0xFFFFD700),
-                                fontSize: 11,
-                              ),
-                            ),
-                        ],
-                      ),
-                      Text(
-                        formatAmount(shareAmount),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ] else ...[
-              // No winners data available
-              Text(
-                'Chopped pot - winner details not available',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ],
-        ),
-      );
-    } else if (winnerId != null) {
-      // Single winner display
-      final winnerName = getPlayerName(winnerId);
-      final isHero = heroPosition != null && winnerId == heroPosition;
-
-      return Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Color(0xFF1F1F23),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Color(0xFFFFD700)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 20),
-                SizedBox(width: 8),
-                Text(
-                  'Winner',
-                  style: TextStyle(
-                    color: Color(0xFFFFD700),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            Text(
-              winnerName,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (isHero)
-              Text(
-                'You won!',
-                style: TextStyle(
-                  color: Color(0xFFFFD700),
-                  fontSize: 12,
-                ),
-              ),
-          ],
-        ),
-      );
-    } else {
-      return SizedBox.shrink();
-    }
-  }
-
   Widget _buildHandSummaryCards() {
-    
     final pot = widget.hand['potAmount'] ?? widget.hand['pot'] ?? 0;
-    final startTime = DateTime.parse(widget.hand['startTime']);
-    
-    // Get blinds and game type from session data
     final smallBlind = widget.hand['smallBlind'] ?? 1;
     final bigBlind = widget.hand['bigBlind'] ?? 2;
     final gameTypeStr = widget.hand['gameType'] ?? 'cash';
-    
-    // Convert string to GameType enum for proper currency formatting
     final gameType = GameTypeExtension.fromString(gameTypeStr);
-    
-    // Debug what we're actually getting
-    print('🎯 GAME TYPE DEBUG:');
-    print('  Raw gameTypeStr: "$gameTypeStr"');
-    print('  Converted gameType: ${gameType.name}');
-    print('  Should show \$? ${gameType == GameType.cash}');
-    
-    // Format blinds display - only show $ for cash games
-    String blindsText;
-    if (gameType == GameType.cash) {
-      blindsText = '\$${smallBlind}/\$${bigBlind}';
-    } else {
-      blindsText = '${smallBlind}/${bigBlind}';
+
+    // Format values
+    String potText = gameType == GameType.cash
+        ? '\$${pot.toStringAsFixed(0)}'
+        : '${pot.toStringAsFixed(0)}';
+    String blindsText = gameType == GameType.cash
+        ? '\$${smallBlind}/\$${bigBlind}'
+        : '${smallBlind}/${bigBlind}';
+    String? winnerText = _getWinnerText();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFF2A2A2E)),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _buildCompactStat('POT', potText)),
+          Container(width: 1, height: 32, color: Color(0xFF2A2A2E)),
+          Expanded(child: _buildCompactStat('BLINDS', blindsText)),
+          if (winnerText != null) ...[
+            Container(width: 1, height: 32, color: Color(0xFF2A2A2E)),
+            Expanded(child: _buildCompactStat('WINNER', winnerText, isWinner: true)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String? _getWinnerText() {
+    final isChoppedPot = widget.hand['isChoppedPot'] == true;
+    final winnerId = widget.hand['winnerId'];
+    final choppedWinners = widget.hand['choppedWinners'] as List<dynamic>?;
+    final playerNamesData = widget.hand['playerNames'];
+
+    if (isChoppedPot && choppedWinners != null && choppedWinners.isNotEmpty) {
+      if (choppedWinners.length <= 2) {
+        List<String> names = choppedWinners.map((w) {
+          if (playerNamesData is Map) {
+            return (playerNamesData[w.toString()] ?? 'P$w') as String;
+          }
+          return 'P$w';
+        }).toList();
+        return names.join(', ');
+      }
+      return '${choppedWinners.length} players';
+    } else if (winnerId != null) {
+      if (playerNamesData is Map) {
+        return playerNamesData[winnerId.toString()] ?? 'P$winnerId';
+      }
+      return 'P$winnerId';
     }
-    
-    // Format pot display - only show $ for cash games
-    String potText;
-    if (gameType == GameType.cash) {
-      potText = '\$${pot.toStringAsFixed(0)}';
-    } else {
-      potText = '${pot.toStringAsFixed(0)}';
-    }
-    
-    return Row(
+    return null;
+  }
+
+  Widget _buildCompactStat(String label, String value, {bool isWinner = false}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Expanded(
-          child: _buildSummaryCard(
-            'Pot Size',
-            potText,
-            Icons.account_balance_wallet,
-            Color(0xFF5AC95A),
+        Text(
+          value,
+          style: TextStyle(
+            color: isWinner ? Color(0xFFFFD700) : Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
           ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(width: 12),
-        Expanded(
-          child: _buildSummaryCard(
-            'Blinds',
-            blindsText,
-            Icons.visibility,
-            Color(0xFF8B5CF6),
+        SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            color: Color(0xFF9A9A9A),
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
           ),
-        ),
-        SizedBox(width: 12),
-        Expanded(
-          child: _buildTimeAndWinnerCard(startTime, widget.hand),
         ),
       ],
-    );
-  }
-
-  // Combined Time and Winner Card
-  Widget _buildTimeAndWinnerCard(DateTime startTime, Map<String, dynamic> hand) {
-    final winnerId = hand['winnerId'];
-    final isChoppedPot = hand['isChoppedPot'] == true;
-    final playerNamesData = hand['playerNames'];
-    final potAmount = (hand['potAmount'] ?? 0).toDouble();
-    final gameTypeStr = hand['gameType'] ?? 'cash';
-    final choppedWinners = hand['choppedWinners'] as List<dynamic>?;
-
-    String? winnerText;
-    if (isChoppedPot && choppedWinners != null && choppedWinners.isNotEmpty) {
-      // Chopped pot - show multiple winners
-      List<String> winnerNames = choppedWinners.map<String>((w) {
-        if (playerNamesData != null && playerNamesData is Map) {
-          return (playerNamesData[w.toString()] ?? 'P$w') as String;
-        }
-        return 'P$w';
-      }).toList();
-      winnerText = 'Chopped: ${winnerNames.join(', ')}';
-    } else if (winnerId != null) {
-      // Single winner
-      if (playerNamesData != null && playerNamesData is Map) {
-        final name = playerNamesData[winnerId.toString()] ?? 'Player $winnerId';
-        winnerText = 'Winner: $name';
-      } else {
-        winnerText = 'Winner: P$winnerId';
-      }
-    }
-
-    // Only show card if there's a winner
-    if (winnerText == null) {
-      return SizedBox.shrink();
-    }
-
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFF2A2A2E)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Color(0xFFFF9500).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.emoji_events,
-              color: Color(0xFFFF9500),
-              size: 20,
-            ),
-          ),
-          SizedBox(height: 12),
-          Text(
-            winnerText,
-            style: TextStyle(
-              color: Color(0xFF5AC95A),
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFF2A2A2E)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              color: Color(0xFF9A9A9A),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1116,13 +808,13 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
   
   Widget _buildStreetSection(String streetName, List<String>? cards, List<Map<String, dynamic>> actions,
-                            int buttonPosition, int playerCount, int? heroPosition, 
+                            int buttonPosition, int playerCount, int? heroPosition,
                             Map<String, String> playerNamesMap, int? winnerId, String gameType, dynamic potAmount) {
     return Container(
-      margin: EdgeInsets.only(bottom: 20),
+      margin: EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFF2A2A2E)),
       ),
       child: Column(
@@ -1130,12 +822,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         children: [
           // Street header with cards
           Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Color(0xFF161618),
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
             child: Row(
@@ -1147,15 +839,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                       streetName,
                       style: TextStyle(
                         color: Color(0xFF5AC95A),
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
+                        letterSpacing: 1.0,
                       ),
                     ),
                     if (cards != null && cards.isNotEmpty) ...[
-                      SizedBox(width: 16),
+                      SizedBox(width: 12),
                       ...cards.map((card) => Padding(
-                        padding: EdgeInsets.only(right: 8),
+                        padding: EdgeInsets.only(right: 6),
                         child: _buildCard(card),
                       )),
                     ],
@@ -1164,17 +856,17 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 // Pot amount on the right side
                 if (potAmount != null && (potAmount as double) > 0)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: Color(0xFF5AC95A).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Color(0xFF5AC95A).withOpacity(0.3)),
                     ),
                     child: Text(
                       _formatPotAmount(potAmount as double, gameType),
                       style: TextStyle(
                         color: Color(0xFF5AC95A),
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1182,7 +874,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               ],
             ),
           ),
-          
+
           // Action table
           _buildActionTable(actions, buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType),
         ],
@@ -1193,7 +885,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   Widget _buildActionTable(List<Map<String, dynamic>> actions, int buttonPosition, int playerCount,
                           int? heroPosition, Map<String, String> playerNamesMap, int? winnerId, String gameType) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(10),
       child: Table(
         columnWidths: {
           0: FlexColumnWidth(2.5), // Player (Position)
@@ -1219,15 +911,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       ),
     );
   }
-  
+
   Widget _buildTableHeader(String text) {
     return Container(
-      padding: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: 8),
       child: Text(
         text,
         style: TextStyle(
           color: Color(0xFF9A9A9A),
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.5,
         ),
@@ -1450,18 +1142,18 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       children: [
         // Player column
         Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: 6),
           child: Row(
             children: [
               if (isWinner)
-                Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 14),
-              if (isWinner) SizedBox(width: 4),
+                Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 12),
+              if (isWinner) SizedBox(width: 3),
               Expanded(
                 child: Text(
                   playerDisplay,
                   style: TextStyle(
                     color: isHero ? Color(0xFF5AC95A) : Colors.white,
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: isHero ? FontWeight.w600 : FontWeight.normal,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -1472,35 +1164,35 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ),
         // Stack column
         Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: 6),
           child: Text(
             stack > 0 ? '${gameType == GameType.cash ? '\$' : ''}$stack' : '-',
             style: TextStyle(
               color: Color(0xFF9A9A9A),
-              fontSize: 12,
+              fontSize: 11,
             ),
           ),
         ),
         // Action column
         Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: 6),
           child: Text(
             _isAllInAction(action) ? 'ALL IN' : actionType.toUpperCase(),
             style: TextStyle(
               color: actionColor,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
         // Amount column
         Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: 6),
           child: Text(
             amount != null ? '${gameType == GameType.cash ? '\$' : ''}$amount' : '-',
             style: TextStyle(
               color: Color(0xFF9A9A9A),
-              fontSize: 12,
+              fontSize: 11,
             ),
           ),
         ),
@@ -1511,25 +1203,25 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   Widget _buildCard(String? card) {
     if (card == null || card.isEmpty) return SizedBox.shrink();
-    
+
     final suit = card.length > 1 ? card.substring(1) : '';
     final rank = card.isNotEmpty ? card[0] : '';
-    
+
     Color suitColor = Colors.white;
     if (suit == '♥' || suit == '♦') suitColor = Colors.red;
-    
+
     return Container(
-      width: 36,
-      height: 50,
+      width: 30,
+      height: 40,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Color(0xFF2A2A2E)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: Offset(0, 2),
+            blurRadius: 3,
+            offset: Offset(0, 1),
           ),
         ],
       ),
@@ -1540,38 +1232,19 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             rank,
             style: TextStyle(
               color: suitColor == Colors.red ? Colors.red : Colors.black,
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 2),
+          SizedBox(height: 1),
           Text(
             suit,
             style: TextStyle(
               color: suitColor == Colors.red ? Colors.red : Colors.black,
-              fontSize: 12,
+              fontSize: 10,
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildHiddenCard() {
-    return Container(
-      width: 36,
-      height: 50,
-      decoration: BoxDecoration(
-        color: Color(0xFF2A2A2E),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFF3A3A3E)),
-      ),
-      child: Center(
-        child: Icon(
-          Icons.help_outline,
-          color: Color(0xFF9A9A9A),
-          size: 16,
-        ),
       ),
     );
   }
@@ -1929,45 +1602,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Helper method to extract recommended action from various data formats
-  String? _extractRecommendedAction(dynamic recommendedAction) {
-    if (recommendedAction == null) return null;
-
-    // If it's already a string, return it
-    if (recommendedAction is String) return recommendedAction;
-
-    // If it's a Map, try to extract the 'action' field
-    if (recommendedAction is Map) {
-      return recommendedAction['action']?.toString();
-    }
-
-    // Fallback: convert to string
-    return recommendedAction.toString();
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Color(0xFF9A9A9A),
-            fontSize: 13,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ],

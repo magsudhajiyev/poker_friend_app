@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:fl_chart/fl_chart.dart';
-import '../design_system/poker_friend_theme.dart';
+import '../design_system/components/backgrounds/gradient_background.dart';
+import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
@@ -190,10 +192,11 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   Widget _buildSessionOverview() {
     return Container(
       margin: EdgeInsets.all(16),
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(16),
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Color(0xFF2A2A2E), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,20 +204,23 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           // Session Title
           Row(
             children: [
-              Image.asset('icons/session.png', width: 24, height: 24),
-              SizedBox(width: 12),
-              Text(
-                widget.sessionData['sessionName'] ?? 'Poker Session',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+              Image.asset('icons/session.png', width: 20, height: 20),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  widget.sessionData['sessionName'] ?? 'Poker Session',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
 
-          SizedBox(height: 16),
+          SizedBox(height: 12),
 
           // Key Metrics Row
           Row(
@@ -226,7 +232,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                   'icons/wallet_original.png',
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: 8),
               Expanded(
                 child: _buildMetricCardWithAsset(
                   'Final Stack',
@@ -237,7 +243,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             ],
           ),
 
-          SizedBox(height: 12),
+          SizedBox(height: 8),
 
           // Profit/Loss (Cash) or Avg Growth (Tournament) and Duration Row
           Row(
@@ -249,10 +255,10 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                     ? '${_profitLoss >= 0 ? '+' : ''}${_formatCurrency(_profitLoss)}'
                     : '${_profitLoss >= 0 ? '+' : ''}${_profitLoss.toStringAsFixed(2)}',
                   'icons/progress.png',
-                  textColor: _profitLoss >= 0 ? PokerFriendColors.green : PokerFriendColors.red,
+                  textColor: _profitLoss >= 0 ? Color(0xFF5AC95A) : Color(0xFFFF6B6B),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: 8),
               Expanded(
                 child: _buildMetricCardWithAsset(
                   'Duration',
@@ -263,14 +269,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             ],
           ),
 
-          SizedBox(height: 16),
+          SizedBox(height: 12),
 
           // Session Details
           Container(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: PokerFriendColors.dark4,
-              borderRadius: BorderRadius.circular(8),
+              color: Color(0xFF161618),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
               children: [
@@ -285,23 +291,23 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
   Widget _buildMetricCardWithAsset(String title, String value, String assetPath, {Color? textColor}) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark1,
-        borderRadius: BorderRadius.circular(12),
+        color: Color(0xFF161618),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Image.asset(assetPath, width: 20, height: 20),
+              Image.asset(assetPath, width: 16, height: 16),
               SizedBox(width: 6),
               Text(
                 title,
                 style: TextStyle(
-                  color: PokerFriendColors.dark10,
-                  fontSize: 12,
+                  color: Color(0xFF9A9A9A),
+                  fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -312,7 +318,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             value,
             style: TextStyle(
               color: textColor ?? Colors.white,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -323,23 +329,23 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
   Widget _buildMetricCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark1,
-        borderRadius: BorderRadius.circular(12),
+        color: Color(0xFF161618),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 16),
+              Icon(icon, color: color, size: 14),
               SizedBox(width: 6),
               Text(
                 title,
                 style: TextStyle(
-                  color: PokerFriendColors.dark10,
-                  fontSize: 12,
+                  color: Color(0xFF9A9A9A),
+                  fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -350,7 +356,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             value,
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -361,22 +367,22 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
             style: TextStyle(
-              color: PokerFriendColors.dark9,
-              fontSize: 14,
+              color: Color(0xFF9A9A9A),
+              fontSize: 12,
             ),
           ),
           Text(
             value,
             style: TextStyle(
               color: Colors.white,
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -388,30 +394,31 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   Widget _buildStackChart() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16),
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(16),
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Color(0xFF2A2A2E), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Image.asset('icons/stats.png', width: 24, height: 24),
-              SizedBox(width: 12),
+              Image.asset('icons/stats.png', width: 20, height: 20),
+              SizedBox(width: 10),
               Text(
                 'Stack Growth',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
 
-          SizedBox(height: 20),
+          SizedBox(height: 16),
 
           // Chart Container
           Container(
@@ -473,7 +480,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                       return Text(
                         _formatCurrency(value),
                         style: TextStyle(
-                          color: PokerFriendColors.dark9,
+                          color: Color(0xFF9A9A9A),
                           fontSize: 10,
                         ),
                       );
@@ -503,7 +510,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                     horizontalInterval: spots.isNotEmpty ? (spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) / 5) : 100,
                     getDrawingHorizontalLine: (value) {
                       return FlLine(
-                        color: PokerFriendColors.dark6,
+                        color: Color(0xFF2A2A2E),
                         strokeWidth: 1,
                       );
                     },
@@ -544,7 +551,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                               child: Text(
                                 label,
                                 style: TextStyle(
-                                  color: PokerFriendColors.dark9,
+                                  color: Color(0xFF9A9A9A),
                                   fontSize: 10,
                                 ),
                               ),
@@ -557,7 +564,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                   ),
                   borderData: FlBorderData(
                     show: true,
-                    border: Border.all(color: PokerFriendColors.dark6),
+                    border: Border.all(color: Color(0xFF2A2A2E)),
                   ),
                   minX: 0,
                   maxX: (spots.length - 1).toDouble(),
@@ -569,8 +576,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                       isCurved: true,
                       gradient: LinearGradient(
                         colors: _profitLoss >= 0
-                          ? [PokerFriendColors.green.withOpacity(0.3), PokerFriendColors.green]
-                          : [PokerFriendColors.red.withOpacity(0.3), PokerFriendColors.red],
+                          ? [Color(0xFF5AC95A).withOpacity(0.3), Color(0xFF5AC95A)]
+                          : [Color(0xFFFF6B6B).withOpacity(0.3), Color(0xFFFF6B6B)],
                       ),
                       barWidth: 3,
                       isStrokeCapRound: true,
@@ -580,15 +587,15 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                           radius: 4,
                           color: Colors.white,
                           strokeWidth: 2,
-                          strokeColor: _profitLoss >= 0 ? PokerFriendColors.green : PokerFriendColors.red,
+                          strokeColor: _profitLoss >= 0 ? Color(0xFF5AC95A) : Color(0xFFFF6B6B),
                         ),
                       ),
                       belowBarData: BarAreaData(
                         show: true,
                         gradient: LinearGradient(
                           colors: _profitLoss >= 0
-                            ? [PokerFriendColors.green.withOpacity(0.1), Colors.transparent]
-                            : [PokerFriendColors.red.withOpacity(0.1), Colors.transparent],
+                            ? [Color(0xFF5AC95A).withOpacity(0.1), Colors.transparent]
+                            : [Color(0xFFFF6B6B).withOpacity(0.1), Colors.transparent],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -611,14 +618,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         children: [
           Icon(
             Icons.show_chart,
-            color: PokerFriendColors.dark6,
+            color: Color(0xFF2A2A2E),
             size: 48,
           ),
           SizedBox(height: 12),
           Text(
             'No Stack History Available',
             style: TextStyle(
-              color: PokerFriendColors.dark9,
+              color: Color(0xFF9A9A9A),
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -627,7 +634,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           Text(
             'Stack changes will be tracked in future sessions',
             style: TextStyle(
-              color: PokerFriendColors.dark8,
+              color: Color(0xFF6A6A6E),
               fontSize: 12,
             ),
           ),
@@ -647,109 +654,85 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     final bool analysisFailed =
         _analysisStatus == SessionAnalyticsService.statusFailed;
 
+    // Determine button color based on state
+    final Color buttonColor = analysisFailed
+        ? Color(0xFFFF6B6B)
+        : Color(0xFFBAFF9A);
+    final Color textColor = analysisFailed ? Colors.white : Colors.black;
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: analysisComplete
-                    ? [PokerFriendColors.green, PokerFriendColors.green.withOpacity(0.8)]
-                    : analysisFailed
-                        ? [PokerFriendColors.red, PokerFriendColors.red.withOpacity(0.8)]
-                        : [Color(0xFF6B4EFF), Color(0xFF6B4EFF).withOpacity(0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          GestureDetector(
+            onTap: !hasEnoughHands || isAnalyzing
+                ? null
+                : analysisComplete
+                    ? _viewAnalysisResults
+                    : _requestFullAnalysis,
+            child: Container(
+              width: double.infinity,
+              height: 48,
+              decoration: BoxDecoration(
+                color: (!hasEnoughHands || isAnalyzing)
+                    ? buttonColor.withOpacity(0.5)
+                    : buttonColor,
+                borderRadius: BorderRadius.circular(10),
               ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ElevatedButton(
-              onPressed: !hasEnoughHands || isAnalyzing
-                  ? null
-                  : analysisComplete
-                      ? _viewAnalysisResults
-                      : _requestFullAnalysis,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                shadowColor: Colors.transparent,
-                disabledBackgroundColor: Colors.transparent,
-                disabledForegroundColor: Colors.white70,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: isAnalyzing
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          'Analyzing... ${(_analysisProgress * 100).toInt()}%',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          analysisComplete
-                              ? Icons.analytics
-                              : analysisFailed
-                                  ? Icons.refresh
-                                  : Icons.auto_graph,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          analysisComplete
-                              ? 'View GTO Analysis'
-                              : analysisFailed
-                                  ? 'Retry Analysis'
-                                  : 'Request Full GTO Analysis',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        if (!analysisComplete && !analysisFailed) ...[
-                          SizedBox(width: 8),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
+              child: Center(
+                child: isAnalyzing
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(textColor),
                             ),
-                            child: Text(
-                              'PREMIUM',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'Analyzing... ${(_analysisProgress * 100).toInt()}%',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: textColor,
                             ),
                           ),
                         ],
-                      ],
-                    ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            analysisComplete
+                                ? Icons.analytics
+                                : analysisFailed
+                                    ? Icons.refresh
+                                    : Icons.auto_graph,
+                            color: textColor,
+                            size: 20,
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            analysisComplete
+                                ? 'View GTO Analysis'
+                                : analysisFailed
+                                    ? 'Retry Analysis'
+                                    : 'Request Full GTO Analysis',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: textColor,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
             ),
           ),
 
@@ -759,7 +742,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             Text(
               _analysisError!,
               style: TextStyle(
-                color: PokerFriendColors.red,
+                color: Color(0xFFFF6B6B),
                 fontSize: 12,
               ),
               textAlign: TextAlign.center,
@@ -772,7 +755,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             Text(
               'Log at least 1 hand to enable full analysis',
               style: TextStyle(
-                color: PokerFriendColors.dark9,
+                color: Color(0xFF9A9A9A),
                 fontSize: 12,
               ),
             ),
@@ -781,7 +764,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             Text(
               'Analyze ${_hands.length} hands for GTO compliance, leaks & coaching',
               style: TextStyle(
-                color: PokerFriendColors.dark9,
+                color: Color(0xFF9A9A9A),
                 fontSize: 12,
               ),
             ),
@@ -900,7 +883,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Full analytics dashboard coming soon!'),
-        backgroundColor: PokerFriendColors.green,
+        backgroundColor: Color(0xFF5AC95A),
       ),
     );
   }
@@ -908,43 +891,32 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   Widget _buildLoggedHandsButton() {
     return Container(
       margin: EdgeInsets.all(16),
-      child: Container(
-        width: double.infinity,
-        height: 60,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [PokerFriendColors.blue, PokerFriendColors.blue.withOpacity(0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      child: GestureDetector(
+        onTap: _navigateToLoggedHands,
+        child: Container(
+          width: double.infinity,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Color(0xFFBAFF9A),
+            borderRadius: BorderRadius.circular(10),
           ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: ElevatedButton(
-          onPressed: _navigateToLoggedHands,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFcb5242),
-            foregroundColor: Colors.white,
-            shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.style_outlined, color: Colors.white, size: 24),
-              SizedBox(width: 12),
-              Text(
-                'View Logged Hands',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.style_outlined, color: Colors.black, size: 20),
+                SizedBox(width: 10),
+                Text(
+                  'View Logged Hands',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
                 ),
-              ),
-              SizedBox(width: 8),
-              Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -969,54 +941,97 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PokerFriendColors.dark1,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Session Analytics',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: _isLoading
-        ? Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(PokerFriendColors.red),
-            ),
-          )
-        : SingleChildScrollView(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          GradientBackground(),
+          SafeArea(
             child: Column(
               children: [
-                // Session Overview
-                _buildSessionOverview(),
+                // Glassmorphic Header
+                ClipRect(
+                  child: BackdropFilter(
+                    filter: ui.ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                    child: Container(
+                      padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+                      decoration: BoxDecoration(
+                        color: Color(0x03FFFFFF),
+                      ),
+                      child: Row(
+                        children: [
+                          GlassyIconButton(
+                            icon: Icons.arrow_back,
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Session Analytics',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '${_hands.length} hands logged',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Content
+                Expanded(
+                  child: _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5AC95A)),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            // Session Overview
+                            _buildSessionOverview(),
 
-                SizedBox(height: 16),
+                            SizedBox(height: 16),
 
-                // Stack Chart
-                _buildStackChart(),
+                            // Stack Chart
+                            _buildStackChart(),
 
-                SizedBox(height: 16),
+                            SizedBox(height: 16),
 
-                // Request Full Analysis Button (Premium Feature)
-                _buildFullAnalysisButton(),
+                            // Request Full Analysis Button (Premium Feature)
+                            _buildFullAnalysisButton(),
 
-                SizedBox(height: 16),
+                            SizedBox(height: 16),
 
-                // Logged Hands Button
-                _buildLoggedHandsButton(),
+                            // Logged Hands Button
+                            _buildLoggedHandsButton(),
 
-                SizedBox(height: 32),
+                            SizedBox(height: 32),
+                          ],
+                        ),
+                      ),
+                ),
               ],
             ),
           ),
+        ],
+      ),
     );
   }
 }
