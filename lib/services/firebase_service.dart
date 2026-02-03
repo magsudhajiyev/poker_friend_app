@@ -75,7 +75,6 @@ class FirebaseService {
 
       final sessionRef = await _firestore.collection(_sessionsCollection).add(sessionData);
       
-      print('Session created with ID: ${sessionRef.id} for user: $userId');
       return sessionRef.id;
     } catch (e) {
       print('Error creating session: $e');
@@ -111,6 +110,10 @@ class FirebaseService {
     List<int>? choppedWinners,
     Map<int, double>? individualShares,
     double? sharePerWinner,
+    // Hand annotations
+    bool? isStarred,
+    List<String>? tags,
+    String? notes,
   }) async {
     try {
       final handData = {
@@ -206,6 +209,19 @@ class FirebaseService {
         handData['sharePerWinner'] = sharePerWinner;
       }
 
+      // Add hand annotations
+      if (isStarred != null) {
+        handData['isStarred'] = isStarred;
+      }
+
+      if (tags != null && tags.isNotEmpty) {
+        handData['tags'] = tags;
+      }
+
+      if (notes != null && notes.isNotEmpty) {
+        handData['notes'] = notes;
+      }
+
       // Save to session's subcollection instead of top-level collection
       // Use timestamp to ensure unique document ID even if handNumber repeats
       final handDocId = 'hand_${handNumber}_${DateTime.now().millisecondsSinceEpoch}';
@@ -242,6 +258,44 @@ class FirebaseService {
     }
   }
 
+  // Update hand annotations (star, tags, notes)
+  static Future<void> updateHandAnnotations({
+    required String sessionId,
+    required String handId,
+    bool? isStarred,
+    List<String>? tags,
+    String? notes,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{};
+
+      if (isStarred != null) {
+        updateData['isStarred'] = isStarred;
+      }
+
+      if (tags != null) {
+        updateData['tags'] = tags;
+      }
+
+      if (notes != null) {
+        updateData['notes'] = notes;
+      }
+
+      if (updateData.isEmpty) return;
+
+      await _firestore
+          .collection(_sessionsCollection)
+          .doc(sessionId)
+          .collection(_handsCollection)
+          .doc(handId)
+          .update(updateData);
+
+    } catch (e) {
+      print('Error updating hand annotations: $e');
+      rethrow;
+    }
+  }
+
   // Save an action during a hand (real-time updates)
   static Future<void> saveAction({
     required String sessionId,
@@ -262,7 +316,6 @@ class FirebaseService {
         'timestamp': FieldValue.serverTimestamp(),
       });
       
-      print('Action saved: Player $player $action on $street');
     } catch (e) {
       print('Error saving action: $e');
       // Don't rethrow - action logging shouldn't break the game
@@ -298,7 +351,6 @@ class FirebaseService {
         }
       }
 
-      print('Session $sessionId ended');
     } catch (e) {
       print('Error ending session: $e');
       rethrow;
@@ -333,6 +385,7 @@ class FirebaseService {
         final data = doc.data();
         return {
           'id': doc.id,
+          'sessionId': sessionId, // Include sessionId for updates
           ...data,
           'startTime': data['startTime']?.toDate()?.toIso8601String() ?? DateTime.now().toIso8601String(),
           'endTime': data['endTime']?.toDate()?.toIso8601String(),
@@ -346,7 +399,6 @@ class FirebaseService {
 
   // Mock hand data for offline testing  
   static List<Map<String, dynamic>> _getMockHandData() {
-    print('Returning mock offline hand data');
     return [
       {
         'id': 'hand_1',
@@ -409,10 +461,8 @@ class FirebaseService {
         'message': 'Firebase connection test successful',
       });
       
-      print('Firebase connection test successful');
       return true;
     } catch (e) {
-      print('Firebase connection test failed: $e');
       return false;
     }
   }
@@ -471,7 +521,6 @@ class FirebaseService {
 
   // Mock data for offline testing
   static List<Map<String, dynamic>> _getMockOfflineData() {
-    print('Returning mock offline session data');
     return [
       {
         'id': 'offline_demo_1',
@@ -544,7 +593,6 @@ class FirebaseService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       
-      print('Session name updated: $sessionId -> $sessionName');
     } catch (e) {
       print('Error updating session name: $e');
       rethrow;
@@ -585,7 +633,6 @@ class FirebaseService {
 
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
 
-      print('Session updated: $sessionId (totalHands: $totalHands, stackHistory entries: ${stackHistory?.length ?? 0})');
     } catch (e) {
       print('Error updating session: $e');
       rethrow;

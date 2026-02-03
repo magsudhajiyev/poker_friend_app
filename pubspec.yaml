@@ -29,6 +29,7 @@ dependencies:
   http: ^1.2.0
   share_plus: ^10.1.2
   google_fonts: ^6.1.0
+  uuid: ^4.3.3
 
 
 flutter:
@@ -37,6 +38,7 @@ flutter:
     - assets/
     - assets/play_style/
     - icons/
+    - icons/flat_icons/
     - icons/play_style/
     - logo.png
 

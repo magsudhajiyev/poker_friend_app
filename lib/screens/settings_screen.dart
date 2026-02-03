@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../services/logger_service.dart';
+import '../services/test_data_seed_service.dart';
 import 'debug_hand_viewer.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -277,6 +278,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         label: 'Debug Hand Viewer',
                         onPressed: _openDebugHandViewer,
                       ),
+                      SizedBox(height: 12),
+
+                      // Seed Test Data Button
+                      _buildLogButton(
+                        icon: Icons.data_array,
+                        label: 'Seed Test Data (50 Hands)',
+                        onPressed: _seedTestData,
+                      ),
+                      SizedBox(height: 12),
+
+                      // Cleanup Test Data Button
+                      _buildLogButton(
+                        icon: Icons.delete_sweep,
+                        label: 'Cleanup Test Data',
+                        onPressed: _cleanupTestData,
+                        isDestructive: true,
+                      ),
                     ],
                   ),
                 ),
@@ -544,6 +562,202 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error clearing logs: $e'),
+            backgroundColor: PokerFriendColors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _seedTestData() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: PokerFriendColors.dark2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'Seed Test Data?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This will create:',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '• 5 opponents (FISH, TAG, LAG, NIT, MANIAC)\n'
+              '• 1 session with 50 hands\n'
+              '• Various scenarios (opens, 3bets, 4bets, mistakes)',
+              style: TextStyle(color: PokerFriendColors.dark9, height: 1.5),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Use this for testing Session Analytics.',
+              style: TextStyle(color: PokerFriendColors.dark9),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: PokerFriendColors.dark9),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: PokerFriendColors.green,
+            ),
+            child: Text('Seed Data'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => Center(
+            child: Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: PokerFriendColors.dark2,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: PokerFriendColors.green),
+                  SizedBox(height: 16),
+                  Text(
+                    'Seeding test data...',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        await TestDataSeedService.seedTestData(force: true);
+
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading dialog
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Test data seeded successfully! Check History for the new session.'),
+            backgroundColor: PokerFriendColors.green,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error seeding test data: $e'),
+            backgroundColor: PokerFriendColors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _cleanupTestData() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: PokerFriendColors.dark2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'Cleanup Test Data?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'This will delete all test opponents (FISH Mike, TAG Sarah, etc.) and the test session with 50 hands.',
+          style: TextStyle(color: PokerFriendColors.dark9),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: PokerFriendColors.dark9),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: PokerFriendColors.red,
+            ),
+            child: Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => Center(
+            child: Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: PokerFriendColors.dark2,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: PokerFriendColors.red),
+                  SizedBox(height: 16),
+                  Text(
+                    'Cleaning up test data...',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        await TestDataSeedService.cleanupTestData();
+
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading dialog
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Test data cleaned up successfully!'),
+            backgroundColor: PokerFriendColors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error cleaning up test data: $e'),
             backgroundColor: PokerFriendColors.red,
           ),
         );

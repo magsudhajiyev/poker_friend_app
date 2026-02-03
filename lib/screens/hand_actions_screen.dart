@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../utils/poker_positions.dart';
 import '../models/game_types.dart';
 import '../services/ai_analyzer_service.dart';
+import '../services/firebase_service.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -20,9 +21,18 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   String? _analysisError;
   final ScrollController _scrollController = ScrollController();
 
+  // Star and tags state
+  late bool _isStarred;
+  late List<String> _tags;
+  String? _notes;
+
   @override
   void initState() {
     super.initState();
+    // Initialize star and tags from hand data
+    _isStarred = widget.hand['isStarred'] == true;
+    _tags = (widget.hand['tags'] as List<dynamic>?)?.cast<String>() ?? [];
+    _notes = widget.hand['notes'] as String?;
     _loadExistingAnalysis();
   }
 
@@ -30,6 +40,40 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _toggleStar() async {
+    final newStarredState = !_isStarred;
+    setState(() {
+      _isStarred = newStarredState;
+    });
+
+    // Save to Firebase
+    try {
+      final sessionId = widget.hand['sessionId'] as String?;
+      final handId = widget.hand['id'] as String?;
+
+      if (sessionId != null && handId != null) {
+        await FirebaseService.updateHandAnnotations(
+          sessionId: sessionId,
+          handId: handId,
+          isStarred: newStarredState,
+        );
+      }
+    } catch (e) {
+      // Revert on error
+      if (mounted) {
+        setState(() {
+          _isStarred = !newStarredState;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update star status'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadExistingAnalysis() async {
@@ -233,6 +277,27 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                       ],
                     ),
                   ),
+                  // Star button
+                  GestureDetector(
+                    onTap: _toggleStar,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: _isStarred ? Colors.amber.withOpacity(0.15) : Color(0xFF161618),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _isStarred ? Colors.amber : Color(0xFF2A2A2E),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(
+                        _isStarred ? Icons.star : Icons.star_border,
+                        color: _isStarred ? Colors.amber : Color(0xFF9A9A9A),
+                        size: 24,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -245,6 +310,18 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Tags row (if any)
+                    if (_tags.isNotEmpty) ...[
+                      _buildTagsSection(),
+                      SizedBox(height: 16),
+                    ],
+
+                    // Notes section (if any)
+                    if (_notes != null && _notes!.isNotEmpty) ...[
+                      _buildNotesSection(),
+                      SizedBox(height: 16),
+                    ],
+
                     // Hand Summary Cards
                     _buildHandSummaryCards(),
 
@@ -859,6 +936,111 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             style: TextStyle(
               color: Color(0xFF9A9A9A),
               fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTagsSection() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      children: _tags.map((tag) => _buildTagBadge(tag)).toList(),
+    );
+  }
+
+  Widget _buildTagBadge(String tag) {
+    // Get icon for tag
+    IconData tagIcon;
+    switch (tag) {
+      case 'Bluff':
+        tagIcon = Icons.psychology;
+        break;
+      case 'Value':
+        tagIcon = Icons.attach_money;
+        break;
+      case 'Mistake':
+        tagIcon = Icons.error_outline;
+        break;
+      case 'Cooler':
+        tagIcon = Icons.ac_unit;
+        break;
+      case 'Hero Call':
+        tagIcon = Icons.shield;
+        break;
+      case 'Exploit':
+        tagIcon = Icons.gps_fixed;
+        break;
+      default:
+        tagIcon = Icons.label;
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Color(0xFFBAFF9A).withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Color(0xFFBAFF9A).withOpacity(0.4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            tagIcon,
+            size: 14,
+            color: Color(0xFFBAFF9A),
+          ),
+          SizedBox(width: 6),
+          Text(
+            tag,
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFFBAFF9A),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotesSection() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF1F1F23),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFF2A2A2E)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.note, color: Color(0xFF9A9A9A), size: 18),
+              SizedBox(width: 8),
+              Text(
+                'Notes',
+                style: TextStyle(
+                  color: Color(0xFF9A9A9A),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Text(
+            _notes!,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              height: 1.4,
             ),
           ),
         ],

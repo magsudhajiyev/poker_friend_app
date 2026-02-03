@@ -4,6 +4,8 @@ import '../design_system/poker_friend_theme.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/session_analytics_service.dart';
+import '../services/auth_service.dart';
 import 'session_hands_screen.dart';
 
 class SessionAnalyticsScreen extends StatefulWidget {
@@ -28,6 +30,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   double _totalInvested = 0.0;
   double _finalStack = 0.0;
   double _profitLoss = 0.0;
+
+  // Full Analysis Job State
+  bool _isRequestingAnalysis = false;
+  String? _analysisJobId;
+  String? _analysisSessionId;
+  String _analysisStatus = '';
+  double _analysisProgress = 0.0;
+  String? _analysisError;
 
   @override
   void initState() {
@@ -626,6 +636,275 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     );
   }
 
+  Widget _buildFullAnalysisButton() {
+    // Determine button state based on analysis status
+    final bool hasEnoughHands = _hands.length >= 1;
+    final bool isAnalyzing = _isRequestingAnalysis ||
+        _analysisStatus == SessionAnalyticsService.statusPending ||
+        _analysisStatus == SessionAnalyticsService.statusProcessing;
+    final bool analysisComplete =
+        _analysisStatus == SessionAnalyticsService.statusCompleted;
+    final bool analysisFailed =
+        _analysisStatus == SessionAnalyticsService.statusFailed;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            height: 60,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: analysisComplete
+                    ? [PokerFriendColors.green, PokerFriendColors.green.withOpacity(0.8)]
+                    : analysisFailed
+                        ? [PokerFriendColors.red, PokerFriendColors.red.withOpacity(0.8)]
+                        : [Color(0xFF6B4EFF), Color(0xFF6B4EFF).withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ElevatedButton(
+              onPressed: !hasEnoughHands || isAnalyzing
+                  ? null
+                  : analysisComplete
+                      ? _viewAnalysisResults
+                      : _requestFullAnalysis,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shadowColor: Colors.transparent,
+                disabledBackgroundColor: Colors.transparent,
+                disabledForegroundColor: Colors.white70,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: isAnalyzing
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          'Analyzing... ${(_analysisProgress * 100).toInt()}%',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          analysisComplete
+                              ? Icons.analytics
+                              : analysisFailed
+                                  ? Icons.refresh
+                                  : Icons.auto_graph,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          analysisComplete
+                              ? 'View GTO Analysis'
+                              : analysisFailed
+                                  ? 'Retry Analysis'
+                                  : 'Request Full GTO Analysis',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (!analysisComplete && !analysisFailed) ...[
+                          SizedBox(width: 8),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'PREMIUM',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+            ),
+          ),
+
+          // Error message if analysis failed
+          if (_analysisError != null) ...[
+            SizedBox(height: 8),
+            Text(
+              _analysisError!,
+              style: TextStyle(
+                color: PokerFriendColors.red,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+
+          // Info text
+          if (!hasEnoughHands) ...[
+            SizedBox(height: 8),
+            Text(
+              'Log at least 1 hand to enable full analysis',
+              style: TextStyle(
+                color: PokerFriendColors.dark9,
+                fontSize: 12,
+              ),
+            ),
+          ] else if (!analysisComplete && !isAnalyzing && !analysisFailed) ...[
+            SizedBox(height: 8),
+            Text(
+              'Analyze ${_hands.length} hands for GTO compliance, leaks & coaching',
+              style: TextStyle(
+                color: PokerFriendColors.dark9,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _requestFullAnalysis() async {
+    final userId = AuthService.userId;
+    if (userId == null) {
+      setState(() {
+        _analysisError = 'Please sign in to use this feature';
+      });
+      return;
+    }
+
+    if (_hands.isEmpty) {
+      setState(() {
+        _analysisError = 'No hands to analyze';
+      });
+      return;
+    }
+
+    setState(() {
+      _isRequestingAnalysis = true;
+      _analysisError = null;
+      _analysisProgress = 0.0;
+    });
+
+    try {
+      // Determine game type
+      final gameType = widget.sessionData['gameType'];
+      final isCashGame = gameType == 'cash' || gameType == GameType.cash.name;
+
+      // Create session and queue job
+      final result = await SessionAnalyticsService.createSession(
+        userId: userId,
+        sessionName: widget.sessionData['sessionName'] ?? 'Poker Session',
+        gameType: isCashGame ? 'cash' : 'mtt',
+        hands: _hands,
+        stakes: widget.sessionData['stakes'],
+        tableSize: widget.sessionData['tableSize'],
+        startedAt: widget.sessionData['startTime'] != null
+            ? DateTime.tryParse(widget.sessionData['startTime'])
+            : null,
+        endedAt: widget.sessionData['endTime'] != null
+            ? DateTime.tryParse(widget.sessionData['endTime'])
+            : null,
+      );
+
+      setState(() {
+        _analysisSessionId = result['id'];  // API returns 'id' not 'session_id'
+        _analysisJobId = result['id'];  // Use session ID for job lookup
+        _analysisStatus = result['job_status'] ?? SessionAnalyticsService.statusProcessing;
+        _analysisProgress = (result['job_progress'] ?? 0.0) / 100.0;
+        _isRequestingAnalysis = false;
+      });
+
+      // Start polling for progress
+      _pollJobProgress();
+    } catch (e) {
+      setState(() {
+        _isRequestingAnalysis = false;
+        _analysisError = e.toString().replaceAll('Exception: ', '');
+        _analysisStatus = SessionAnalyticsService.statusFailed;
+      });
+    }
+  }
+
+  Future<void> _pollJobProgress() async {
+    final userId = AuthService.userId;
+    if (userId == null || _analysisSessionId == null) return;
+
+    while (_analysisStatus == SessionAnalyticsService.statusProcessing ||
+        _analysisStatus == SessionAnalyticsService.statusPending) {
+      try {
+        await Future.delayed(Duration(seconds: 2));
+
+        final progress = await SessionAnalyticsService.getJobProgress(
+          userId: userId,
+          sessionId: _analysisSessionId!,
+        );
+
+        if (!mounted) return;
+
+        setState(() {
+          _analysisStatus = progress['status'] ?? '';
+          // API returns progress_pct directly, not nested
+          _analysisProgress = (progress['progress_pct'] ?? 0.0) / 100.0;
+        });
+
+        if (_analysisStatus == SessionAnalyticsService.statusCompleted) {
+          // Analysis complete - could show a notification
+          break;
+        } else if (_analysisStatus == SessionAnalyticsService.statusFailed) {
+          setState(() {
+            _analysisError = progress['last_error'] ?? 'Analysis failed';
+          });
+          break;
+        }
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _analysisError = 'Failed to get progress: ${e.toString()}';
+        });
+        break;
+      }
+    }
+  }
+
+  void _viewAnalysisResults() {
+    // TODO: Navigate to full analysis results screen
+    // For now, show a snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Full analytics dashboard coming soon!'),
+        backgroundColor: PokerFriendColors.green,
+      ),
+    );
+  }
+
   Widget _buildLoggedHandsButton() {
     return Container(
       margin: EdgeInsets.all(16),
@@ -723,6 +1002,11 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
                 // Stack Chart
                 _buildStackChart(),
+
+                SizedBox(height: 16),
+
+                // Request Full Analysis Button (Premium Feature)
+                _buildFullAnalysisButton(),
 
                 SizedBox(height: 16),
 

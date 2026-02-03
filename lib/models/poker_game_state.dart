@@ -1,3 +1,4 @@
+import 'dart:math';
 import '../utils/poker_positions.dart';
 
 enum PlayerAction {
@@ -175,7 +176,6 @@ class PokerGameState {
 
   // CRITICAL: Method to complete initialization and trigger action order calculation
   void finalizeInitialization() {
-    print('🎮 DEBUG: Finalizing initialization and calculating action order');
     _isInitializing = false;
     if (currentRound == BettingRound.preflop && !bettingRoundComplete) {
       _setInitialActionOrder();
@@ -183,13 +183,10 @@ class PokerGameState {
   }
 
   void _setInitialActionOrder() {
-    print('🎮 DEBUG: Setting initial action order - Button: $buttonPosition');
 
     List<int> activePlayers = getActivePlayers();
-    print('🎮 DEBUG: Active players: $activePlayers');
 
     if (activePlayers.length < 2) {
-      print('ERROR: Less than 2 active players for action order');
       currentPlayer = activePlayers.isNotEmpty ? activePlayers[0] : 1;
       return;
     }
@@ -198,11 +195,9 @@ class PokerGameState {
       // Heads up: button posts small blind and acts first preflop
       if (activePlayers.contains(buttonPosition)) {
         currentPlayer = buttonPosition;
-        print('🎮 DEBUG: Heads-up: Button acts first (Player $currentPlayer)');
       } else {
         // Find first active player
         currentPlayer = activePlayers[0];
-        print('🎮 DEBUG: Heads-up: Button not active, Player $currentPlayer acts first');
       }
     } else {
       // Multi-way: UTG (Under The Gun) acts first
@@ -210,26 +205,21 @@ class PokerGameState {
       _effectiveSBPosition = _findSBSeatFromActivePlayers(activePlayers);
       _effectiveBBPosition = _findBBSeatFromActivePlayers(activePlayers);
 
-      print('🎮 DEBUG: Effective SB: $_effectiveSBPosition, BB: $_effectiveBBPosition');
 
       // UTG is the first active player after BB
       int utgPosition = _findNextActivePlayerAfter(_effectiveBBPosition);
 
       currentPlayer = utgPosition;
-      print('🎮 DEBUG: Multi-way: UTG acts first (Player $currentPlayer)');
     }
 
-    print('🎮 DEBUG: Initial action order set, current player: $currentPlayer');
   }
 
   int _getPositionFromButton(int seatsLeft) {
     // Validate inputs
     if (seatsLeft < 0) {
-      print('ERROR: Invalid seatsLeft $seatsLeft in _getPositionFromButton');
       return buttonPosition;
     }
     if (buttonPosition < 1 || buttonPosition > numberOfPlayers) {
-      print('ERROR: Invalid buttonPosition $buttonPosition in _getPositionFromButton');
       return 1;
     }
 
@@ -240,7 +230,6 @@ class PokerGameState {
     for (int i = 0; i < seatsLeft; i++) {
       position = (position % numberOfPlayers) + 1;
     }
-    print('🎮 DEBUG: _getPositionFromButton($seatsLeft) from button $buttonPosition = $position');
     return position;
   }
 
@@ -259,7 +248,6 @@ class PokerGameState {
     }
 
     // No active players found - return the starting position as fallback
-    print('⚠️ WARNING: No active players found when searching from position $startingPosition');
     return startingPosition;
   }
 
@@ -278,7 +266,6 @@ class PokerGameState {
     }
 
     // No active players found - return the starting position as fallback
-    print('⚠️ WARNING: No active players found when searching after position $startingPosition');
     return startingPosition;
   }
 
@@ -287,26 +274,20 @@ class PokerGameState {
     // Get list of active players
     List<int> activePlayers = getActivePlayers();
     if (activePlayers.length < 2) {
-      print('⚠️ WARNING: Less than 2 active players in _determineEffectiveBBPosition');
       return activePlayers.isNotEmpty ? activePlayers.first : 1;
     }
 
-    print('🎮 DEBUG: _determineEffectiveBBPosition - buttonPosition: $buttonPosition, activePlayers: $activePlayers');
 
     // Find BB position using active players only
     int bbSeat = _findBBSeatFromActivePlayers(activePlayers);
-    print('🎮 DEBUG: _determineEffectiveBBPosition - calculated BB seat: $bbSeat');
 
     PlayerState bbPlayer = _getPlayer(bbSeat);
-    print('🎮 DEBUG: _determineEffectiveBBPosition - bbPlayer isActive: ${bbPlayer.isActive}, stack: ${bbPlayer.currentStack}');
 
     if (bbPlayer.isActive && bbPlayer.currentStack > 0) {
-      print('🎮 DEBUG: _determineEffectiveBBPosition - returning BB seat: $bbSeat');
       return bbSeat;
     } else {
       // Find next active player to post BB
       int nextBB = _findNextActivePlayer(bbSeat);
-      print('🎮 DEBUG: _determineEffectiveBBPosition - BB not active, returning next active: $nextBB');
       return nextBB;
     }
   }
@@ -370,7 +351,6 @@ class PokerGameState {
     try {
       return players.firstWhere((p) => p.playerId == playerId);
     } catch (e) {
-      print('Error: Player $playerId not found. Available players: ${players.map((p) => p.playerId).toList()}');
       // Return a default player state to prevent crash
       return PlayerState(
         playerId: playerId,
@@ -387,7 +367,6 @@ class PokerGameState {
     
     // Validate input
     if (fromPlayer < 1 || fromPlayer > numberOfPlayers) {
-      print('ERROR: Invalid fromPlayer $fromPlayer in _getNextActivePlayer');
       return 1; // Return player 1 as fallback
     }
     
@@ -397,7 +376,6 @@ class PokerGameState {
       
       // Failsafe: prevent infinite loop if no valid next player exists
       if (attempts > numberOfPlayers) {
-        print('WARNING: No valid next player found after checking all players');
         // Return original player if no other valid player found
         return fromPlayer;
       }
@@ -784,17 +762,14 @@ class PokerGameState {
 
   bool _isBettingRoundComplete() {
     List<PlayerState> activePlayers = players.where((p) => p.isActive && !p.hasFolded).toList();
-    print('🎮 DEBUG: Checking betting round completion. Active players: ${activePlayers.map((p) => p.playerId).toList()}');
 
     // If only one player left, round is complete
     if (activePlayers.length <= 1) {
-      print('🎮 DEBUG: Round complete - only ${activePlayers.length} player(s) remaining');
       return true;
     }
 
     // Check for all-in scenarios first
     if (areAllPlayersAllIn()) {
-      print('🎮 DEBUG: Round complete - all remaining players are all-in');
       return true;
     }
 
@@ -802,26 +777,20 @@ class PokerGameState {
     if (currentRound == BettingRound.preflop && activePlayers.length >= 2) {
       // Use the effective BB position (who actually posted the blind)
       PlayerState bbPlayer = _getPlayer(_effectiveBBPosition);
-      print('🎮 DEBUG: Preflop check - Effective BB: $_effectiveBBPosition, hasFolded: ${bbPlayer.hasFolded}, hasActed: ${bbPlayer.hasActed}');
 
       // If BB has folded, they don't need to act
       if (bbPlayer.hasFolded) {
-        print('🎮 DEBUG: BB has folded, checking if all other active players are ready');
         // BB folded, check if all other active players have acted and called current bet
         for (PlayerState player in activePlayers) {
-          print('🎮 DEBUG: Player ${player.playerId}: hasActed=${player.hasActed}, hasCalledCurrentBet=${player.hasCalledCurrentBet}');
           if (!player.hasActed || (!player.hasCalledCurrentBet && hasBetThisRound)) {
-            print('🎮 DEBUG: Player ${player.playerId} still needs to act or call');
             return false;
           }
         }
-        print('🎮 DEBUG: Round complete - BB folded and all others ready');
         return true;
       }
 
       // If there was betting action (raises), BB must act
       if (hasBetThisRound && !bbPlayer.hasActed) {
-        print('🎮 DEBUG: Round incomplete - BB needs to act on betting action');
         return false;
       }
 
@@ -830,7 +799,6 @@ class PokerGameState {
         // All players except BB must have acted
         for (PlayerState player in activePlayers) {
           if (player.playerId != _effectiveBBPosition && !player.hasActed) {
-            print('🎮 DEBUG: Round incomplete - Player ${player.playerId} hasn\'t acted yet');
             return false;
           }
         }
@@ -842,30 +810,25 @@ class PokerGameState {
             break;
           }
         }
-        print('🎮 DEBUG: No betting action - all acted: $allHaveActed');
         return allHaveActed;
       }
 
       // There was betting - check if everyone has called current bet
       for (PlayerState player in activePlayers) {
         if (!player.hasCalledCurrentBet) {
-          print('🎮 DEBUG: Round incomplete - Player ${player.playerId} hasn\'t called current bet');
           return false;
         }
       }
-      print('🎮 DEBUG: Round complete - all players called current bet');
       return true;
     }
 
     // Post-flop: all active players must have called current bet
     for (PlayerState player in activePlayers) {
       if (!player.hasCalledCurrentBet) {
-        print('🎮 DEBUG: Post-flop incomplete - Player ${player.playerId} hasn\'t called current bet');
         return false;
       }
     }
 
-    print('🎮 DEBUG: Round complete - post-flop all players ready');
     return true;
   }
 
@@ -928,7 +891,6 @@ class PokerGameState {
         // Fallback if somehow no player found (shouldn't happen)
         if (!foundActivePlayer && playersWhoCanAct.isNotEmpty) {
           currentPlayer = playersWhoCanAct.first;
-          print('WARNING: Fallback to first available player: $currentPlayer');
         }
       }
       
@@ -991,7 +953,6 @@ class PokerGameState {
 
         // Button position moved successfully
       } else {
-        print('ERROR: No active players found for button movement!');
       }
     } else {
     }
@@ -1593,6 +1554,50 @@ class PokerGameState {
   String getPlayerPositionName(int playerId) {
     List<int> activePlayers = getActivePlayers();
     return PokerPositions.getPositionNameForActivePlayers(playerId, buttonPosition, activePlayers);
+  }
+
+  // === Pot & Stack Info Panel Helper Methods ===
+
+  /// Get effective stack (minimum stack among active non-folded players who can still act)
+  double getEffectiveStackForInfoPanel() {
+    final activePlayers = players
+        .where((p) => p.isActive && !p.hasFolded)
+        .toList();
+    if (activePlayers.isEmpty) return 0;
+    return activePlayers.map((p) => p.currentStack + p.betThisRound).reduce(min);
+  }
+
+  /// Get SPR (Stack-to-Pot Ratio) based on effective stack
+  double getSPR() {
+    if (currentPot <= 0) return 0;
+    final effStack = getEffectiveStackForInfoPanel();
+    return effStack / currentPot;
+  }
+
+  /// Get pot odds as percentage (when facing a bet)
+  /// Returns null if not facing a bet
+  double? getPotOdds(int heroSeat) {
+    final hero = players.firstWhere(
+      (p) => p.playerId == heroSeat,
+      orElse: () => PlayerState(playerId: -1),
+    );
+    if (hero.playerId == -1) return null;
+
+    final toCall = currentBet - hero.betThisRound;
+    if (toCall <= 0) return null; // Not facing a bet
+
+    final potAfterCall = currentPot + toCall;
+    return (toCall / potAfterCall) * 100;
+  }
+
+  /// Get amount hero needs to call
+  double getToCall(int heroSeat) {
+    final hero = players.firstWhere(
+      (p) => p.playerId == heroSeat,
+      orElse: () => PlayerState(playerId: -1),
+    );
+    if (hero.playerId == -1) return 0;
+    return max(0.0, currentBet - hero.betThisRound);
   }
 }
 

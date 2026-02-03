@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import '../models/hand_state_machine.dart';
+import '../design_system/design_system.dart';
 
 class AllInBoardCardsDialog extends StatefulWidget {
   final List<String> excludedCards; // Hole cards to exclude from selection
@@ -20,6 +22,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
   Set<String> _currentlySelected = {};
 
   String? _selectedRank; // Track selected rank for two-step selection
+  int? _selectedRankRow; // Track which row the selected rank is in (0, 1, or 2)
   int? _targetSlotIndex; // Track which slot is being filled
 
   final List<String> _suits = ['♠', '♥', '♦', '♣'];
@@ -59,49 +62,140 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Color(0xFF1F1F23),
-      title: Text('All-In Board Cards', style: TextStyle(color: Colors.white)),
-      content: Container(
-        width: double.maxFinite,
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.75,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Complete all 5 community cards:',
-                style: TextStyle(color: Colors.grey[300], fontSize: 14),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: 400,
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.glassyCardColor(),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.whiteBorder(),
+                width: 1,
               ),
-              SizedBox(height: 16),
-
-              // Show currently selected cards
-              _buildSelectedCardsRow(),
-
-              SizedBox(height: 20),
-
-              // Rank-then-suit selection
-              _buildRankAndSuitSelection(),
-            ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.accentGreen.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.casino,
+                          color: AppColors.accentGreen,
+                          size: 20,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'All-In Board Cards',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Complete all 5 community cards:',
+                            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                          ),
+                          SizedBox(height: 12),
+                          // Show currently selected cards
+                          _buildSelectedCardsRow(),
+                          SizedBox(height: 16),
+                          // Rank-then-suit selection
+                          _buildRankAndSuitSelection(),
+                          SizedBox(height: 20),
+                          // Actions
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: AppColors.whiteBorder()),
+                                  ),
+                                  child: TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text(
+                                      'Cancel',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.6),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Container(
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: _canSave() ? Color(0xFFBAFF9A) : Colors.grey[700],
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: TextButton(
+                                    onPressed: _canSave() ? () => _saveCards() : null,
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Save Cards',
+                                      style: TextStyle(
+                                        color: _canSave() ? Colors.black : Colors.white.withOpacity(0.5),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Cancel', style: TextStyle(color: Colors.grey)),
-        ),
-        ElevatedButton(
-          onPressed: _canSave() ? () => _saveCards() : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF5AC95A),
-            disabledBackgroundColor: Colors.grey[600],
-          ),
-          child: Text('Save Cards'),
-        ),
-      ],
     );
   }
 
@@ -109,14 +203,14 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
     return Container(
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFF161618),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFF2A2A2E)),
+        color: Colors.black.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.whiteBorder()),
       ),
       child: Column(
         children: [
           // Flop cards
-          Text('Flop', style: TextStyle(fontSize: 12, color: Colors.white70)),
+          Text('Flop', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
           SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -135,14 +229,14 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
             children: [
               Column(
                 children: [
-                  Text('Turn', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                  Text('Turn', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
                   SizedBox(height: 4),
                   _buildCardSlot(3),
                 ],
               ),
               Column(
                 children: [
-                  Text('River', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                  Text('River', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
                   SizedBox(height: 4),
                   _buildCardSlot(4),
                 ],
@@ -178,10 +272,10 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
         width: 50,
         height: 70,
         decoration: BoxDecoration(
-          color: isEmpty ? Colors.grey[800] : isPreFilled ? Color(0xFF2A4A2A) : Colors.white,
+          color: isEmpty ? Colors.black.withOpacity(0.3) : isPreFilled ? Color(0xFF2A4A2A) : Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isEmpty ? Colors.grey[600]! : isPreFilled ? Color(0xFF3A5A3A) : Colors.grey[300]!,
+            color: isEmpty ? AppColors.whiteBorder() : isPreFilled ? Color(0xFF3A5A3A) : Colors.grey[300]!,
             width: 2,
           ),
         ),
@@ -190,7 +284,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
                 child: Text(
                   '?',
                   style: TextStyle(
-                    color: Colors.grey[500],
+                    color: Colors.white.withOpacity(0.4),
                     fontSize: 20,
                   ),
                 ),
@@ -211,50 +305,52 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
 
   Widget _buildRankAndSuitSelection() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFF2A2A2E),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFF3A3A3E)),
+        color: Colors.black.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.whiteBorder()),
       ),
       child: Column(
         children: [
-          // Rank selection
-          _buildRankSelection(),
-          SizedBox(height: 20),
-          // Suit selection (only shown after rank is selected)
-          if (_selectedRank != null) _buildSuitSelection(),
+          // Row 1: A, K, Q, J, T
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: _ranks.sublist(0, 5).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
+          ),
+          // Suit selection after row 1
+          if (_selectedRank != null && _selectedRankRow == 0) ...[
+            SizedBox(height: 8),
+            _buildSuitSelection(),
+          ],
+          SizedBox(height: 8),
+          // Row 2: 9, 8, 7, 6, 5
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: _ranks.sublist(5, 10).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
+          ),
+          // Suit selection after row 2
+          if (_selectedRank != null && _selectedRankRow == 1) ...[
+            SizedBox(height: 8),
+            _buildSuitSelection(),
+          ],
+          SizedBox(height: 8),
+          // Row 3: 4, 3, 2 (centered)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(child: Container()), // Spacer before
+              ..._ranks.sublist(10, 13).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
+              Expanded(child: Container()), // Spacer after
+            ],
+          ),
+          // Suit selection after row 3
+          if (_selectedRank != null && _selectedRankRow == 2) ...[
+            SizedBox(height: 8),
+            _buildSuitSelection(),
+          ],
         ],
       ),
-    );
-  }
-
-  Widget _buildRankSelection() {
-    return Column(
-      children: [
-        // Row 1: A, K, Q, J, T
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: _ranks.sublist(0, 5).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
-        ),
-        SizedBox(height: 12),
-        // Row 2: 9, 8, 7, 6, 5
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: _ranks.sublist(5, 10).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
-        ),
-        SizedBox(height: 12),
-        // Row 3: 4, 3, 2
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ..._ranks.sublist(10, 13).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
-            // Add empty spacers to balance the row
-            Expanded(child: Container()),
-            Expanded(child: Container()),
-          ],
-        ),
-      ],
     );
   }
 
@@ -265,26 +361,25 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
       child: GestureDetector(
         onTap: () => _selectRank(rank),
         child: Container(
-          // Remove fixed width, let Expanded control it
-          height: 70,
-        decoration: BoxDecoration(
-          color: Color(0xFF3A3A3E),
-          border: Border.all(
-            color: Color(0xFF4A4A4E),
-            width: 2,
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+            border: Border.all(
+              color: AppColors.whiteBorder(),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
           ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: Text(
-            rank,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          child: Center(
+            child: Text(
+              rank,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
-        ),
         ),
       ),
     );
@@ -309,53 +404,52 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
       child: GestureDetector(
         onTap: isExcluded ? null : () => _selectSuit(suit),
         child: Container(
-          // Remove fixed width, let Expanded control it
-          height: 85,
-        decoration: BoxDecoration(
-          color: isExcluded ? Color(0xFF2A2A2E) : Color(0xFF3A3A3E),
-          border: Border.all(
-            color: isExcluded ? Color(0xFF3A3A3E) : Color(0xFF4A4A4E),
-            width: 2,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Stack(
-          children: [
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _selectedRank!,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: isExcluded ? Colors.grey[600] : suitColor,
-                    ),
-                  ),
-                  Text(
-                    suit,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: isExcluded ? Colors.grey[600] : suitColor,
-                    ),
-                  ),
-                ],
-              ),
+          height: 70,
+          decoration: BoxDecoration(
+            color: isExcluded ? Colors.black.withOpacity(0.1) : Colors.black.withOpacity(0.3),
+            border: Border.all(
+              color: isExcluded ? Colors.grey[700]! : AppColors.whiteBorder(),
+              width: 1,
             ),
-            if (isExcluded)
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Icon(
-                  Icons.close,
-                  color: Colors.red[400],
-                  size: 16,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Stack(
+            children: [
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _selectedRank!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isExcluded ? Colors.grey[600] : suitColor,
+                      ),
+                    ),
+                    Text(
+                      suit,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: isExcluded ? Colors.grey[600] : suitColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-          ],
-        ),
+              if (isExcluded)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Icon(
+                    Icons.close,
+                    color: Colors.red[400],
+                    size: 14,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -364,6 +458,16 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
   void _selectRank(String rank) {
     setState(() {
       _selectedRank = rank;
+
+      // Determine which row this rank is in
+      int rankIndex = _ranks.indexOf(rank);
+      if (rankIndex < 5) {
+        _selectedRankRow = 0; // Row 1: A, K, Q, J, T
+      } else if (rankIndex < 10) {
+        _selectedRankRow = 1; // Row 2: 9, 8, 7, 6, 5
+      } else {
+        _selectedRankRow = 2; // Row 3: 4, 3, 2
+      }
 
       // Find next empty slot that's not pre-filled
       for (int i = 0; i < _selectedCards.length; i++) {
@@ -394,6 +498,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
 
       // Reset selection state
       _selectedRank = null;
+      _selectedRankRow = null;
       _targetSlotIndex = null;
     });
   }

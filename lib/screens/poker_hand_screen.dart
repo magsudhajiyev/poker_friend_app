@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 import '../design_system/poker_friend_theme.dart';
+import '../design_system/design_system.dart';
 import '../widgets/drawing_painter.dart';
 import '../widgets/board_cards_dialog.dart';
 import '../widgets/all_in_board_cards_dialog.dart';
 import '../widgets/hole_cards_dialog.dart';
+import '../widgets/hand_review_dialog.dart';
 import 'individual_session_tracking_screen.dart';
 import '../widgets/showdown_dialog.dart';
 import 'seat_setup_screen.dart';
@@ -80,7 +83,6 @@ class PokerHandScreen extends StatefulWidget {
 }
 
 class _PokerHandScreenState extends State<PokerHandScreen> {
-  List<String> actions = [];
   List<Offset> points = [];
   Timer? _tapTimer;
   int _tapCount = 0;
@@ -244,17 +246,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     );
 
     // Auto-start the hand
-    actions.add("🔥 Session started - Firebase ID: ${sessionManager.sessionId?.substring(0, 8)}...");
-    actions.add("Game started. Blinds: ${sessionManager.smallBlind}/${sessionManager.bigBlind}");
 
     // Add blind posting actions
     List<int> activePlayers = gameState.getActivePlayers();
     if (activePlayers.length > 2) {
-      actions.add("Player ${gameState.effectiveSBPosition} posts small blind \$${sessionManager.smallBlind}");
-      actions.add("Player ${gameState.effectiveBBPosition} posts big blind \$${sessionManager.bigBlind}");
 
       if (widget.hasBBante) {
-        actions.add("Player ${gameState.effectiveBBPosition} posts ante \$${sessionManager.bigBlind} for all players");
       }
     }
 
@@ -372,12 +369,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // Add action messages with proper context
     if (!widget.isIndividualSession) {
-      actions.add("🔥 Session started - Firebase ID: ${sessionManager.sessionId?.substring(0, 8)}...");
     }
-    actions.add("Game started. Blinds: ${sessionManager.smallBlind}/${sessionManager.bigBlind}");
-    actions.add("Your seat: #${sessionManager.ourSeatNumber} (${sessionManager.getOurPosition(gameState.buttonPosition) ?? 'UNK'})");
-    actions.add(gameState.getGameStateInfo());
-    actions.add(_getToActMessage());
 
     setState(() {});
   }
@@ -447,11 +439,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     );
     
     // Auto-start the hand
-    actions.add("🔥 Session started - Firebase ID: ${sessionManager.sessionId?.substring(0, 8)}...");
-    actions.add("Game started. Blinds: ${sessionManager.smallBlind}/${sessionManager.bigBlind}");
-    actions.add("Your seat: #$ourSeat (${sessionManager.getOurPosition(gameState.buttonPosition) ?? 'UNK'})");
-    actions.add(gameState.getGameStateInfo());
-    actions.add(_getToActMessage());
     
     
     setState(() {});
@@ -478,59 +465,89 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: PokerFriendColors.dark3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            'Stop Session?',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            'Are you sure you want to stop this session? All hands will be saved.',
-            style: TextStyle(
-              color: PokerFriendColors.dark10,
-              fontSize: 16,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, false); // Cancel
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: PokerFriendColors.dark10,
-                  fontSize: 16,
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: GlassyCard(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.stop_circle_outlined,
+                  color: Color(0xFFFF6B6B),
+                  size: 48,
                 ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context, true); // Confirm
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: PokerFriendColors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                SizedBox(height: 16),
+                Text(
+                  'Stop Session?',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              child: Text(
-                'Stop Session',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                SizedBox(height: 12),
+                Text(
+                  'Are you sure you want to stop this session? All hands will be saved.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 14,
+                  ),
                 ),
-              ),
+                SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFFF6B6B),
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          'Stop',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -587,7 +604,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         if (newButtonPosition != previousButton) {
           gameState.buttonPosition = newButtonPosition;
           sessionManager.buttonPosition = newButtonPosition;
-          addAction("🔘 Button moved to Player $newButtonPosition");
+          // Button moved to Player $newButtonPosition
         }
       }
 
@@ -667,7 +684,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         } while (nextPlayer != previousCurrentPlayer);
 
         gameState.currentPlayer = nextPlayer;
-        addAction("⏭️ Player ${previousCurrentPlayer} removed - Player ${nextPlayer} to act");
+        // addAction removed
       } else if ((buttonChanged || activeCountChanged) && !gameState.bettingRoundComplete) {
         // Button or active players changed, recalculate who should act
         if (activePlayers.length >= 2) {
@@ -690,7 +707,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
             // Log with position name
             final playerName = sessionManager.getPlayerNameWithPosition(utgPosition);
-            addAction("🔄 Positions recalculated - $playerName to act");
+            // addAction removed
           } else {
             // Postflop: first active player after button who hasn't folded
             int nextPlayer = gameState.buttonPosition;
@@ -705,11 +722,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             } while (attempts < gameState.numberOfPlayers);
 
             final playerName = sessionManager.getPlayerNameWithPosition(gameState.currentPlayer);
-            addAction("🔄 Positions recalculated - $playerName to act");
+            // addAction removed
           }
         }
       } else if (currentPlayerStillActive && !buttonChanged) {
-        addAction("👥 Player configuration updated");
+        // addAction removed
       }
     });
   }
@@ -820,142 +837,110 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     final theme = Theme.of(context);
     
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Modern Header
-            Container(
-              padding: EdgeInsets.fromLTRB(24, 20, 24, 20),
-              decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
-              ),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Gradient background from design system
+          GradientBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                // Modern Header with glassmorphic style
+                Container(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: Row(
                 children: [
-                  // Back button
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF161618),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
+                  // Back button - glassmorphic style
+                  GlassyIconButton(
+                    icon: Icons.arrow_back,
+                    onPressed: () => Navigator.pop(context),
+                    size: 40,
+                    iconSize: 20,
                   ),
-                  
+
                   // Title section
                   Expanded(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Column(
                         children: [
                           Text(
                             'Hand #${gameState.handNumber}',
                             style: TextStyle(
-                              fontSize: 20,
+                              fontFamily: 'Inter',
+                              fontSize: 18,
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
+                          SizedBox(height: 2),
                           Text(
                             '${gameState.currentRound.name.toUpperCase()} • ${gameState.getActivePlayers().length} players',
                             style: TextStyle(
+                              fontFamily: 'Inter',
                               fontSize: 12,
-                              color: Color(0xFF9A9A9A),
-                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withOpacity(0.6),
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  
-                  // Action buttons
+
+                  // Action buttons - glassmorphic style
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        margin: EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF161618),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: IconButton(
-                          onPressed: _skipCurrentAction,
-                          icon: Icon(
-                            Icons.skip_next,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          padding: EdgeInsets.zero,
-                          tooltip: 'Skip',
-                        ),
+                      GlassyIconButton(
+                        icon: Icons.skip_next,
+                        onPressed: _skipCurrentAction,
+                        size: 38,
+                        iconSize: 18,
                       ),
+                      SizedBox(width: 8),
                       if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river)
-                        Container(
-                          width: 40,
-                          height: 40,
-                          margin: EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: IconButton(
+                        Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: GlassyIconButton(
+                            icon: Icons.fast_forward,
                             onPressed: nextStreet,
-                            icon: Icon(
-                              Icons.skip_next,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                            padding: EdgeInsets.zero,
+                            size: 38,
+                            iconSize: 18,
+                            backgroundColor: Color(0xFF87ED81).withOpacity(0.3),
                           ),
                         ),
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: IconButton(
-                          onPressed: _allInHandCompleted ? null : completeHand,
-                          icon: Icon(
-                            Icons.check,
-                            color: _allInHandCompleted ? Colors.grey : Colors.white,
-                            size: 18,
-                          ),
-                          padding: EdgeInsets.zero,
-                        ),
+                      GlassyIconButton(
+                        icon: Icons.check,
+                        onPressed: _allInHandCompleted ? () {} : completeHand,
+                        size: 38,
+                        iconSize: 18,
+                        backgroundColor: _allInHandCompleted
+                            ? Colors.grey.withOpacity(0.3)
+                            : Color(0xFF87ED81).withOpacity(0.3),
+                        iconColor: _allInHandCompleted ? Colors.grey : Colors.white,
                       ),
                     ],
                   ),
-                  
-                  // Menu button
-                  Container(
-                    width: 40,
-                    height: 40,
-                    margin: EdgeInsets.only(left: 8),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF161618),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: PopupMenuButton<String>(
-                      icon: Icon(
-                        Icons.more_vert,
-                        color: Colors.white,
-                        size: 18,
+
+                  SizedBox(width: 8),
+
+                  // Menu button - glassmorphic style
+                  ClipOval(
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: Color(0x1AFFFFFF),
+                        shape: BoxShape.circle,
                       ),
-                      color: Color(0xFF1F1F23),
+                      child: PopupMenuButton<String>(
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      color: AppColors.glassyCardBase,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -1020,7 +1005,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                             value: 'rebuy',
                             child: Row(
                               children: [
-                                Icon(Icons.add_circle_outline, color: Color(0xFF5AC95A), size: 18),
+                                Icon(Icons.add_circle_outline, color: AppColors.accentGreen, size: 18),
                                 const SizedBox(width: 12),
                                 Text(
                                   'Rebuy',
@@ -1058,6 +1043,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                       ],
                     ),
                   ),
+                ),
                 ],
               ),
             ),
@@ -1069,9 +1055,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 ? // All-in situation: Show single unified card
                   Container(
                     decoration: BoxDecoration(
-                      color: Color(0xFF5AC95A).withOpacity(0.2),
+                      color: AppColors.accentGreen.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(PokerFriendRadius.l),
-                      border: Border.all(color: Color(0xFF5AC95A), width: 2),
+                      border: Border.all(color: AppColors.accentGreen, width: 2),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(PokerFriendSpacing.m),
@@ -1080,7 +1066,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         children: [
                           Icon(
                             Icons.casino,
-                            color: Color(0xFF5AC95A),
+                            color: AppColors.accentGreen,
                             size: 24,
                           ),
                           const SizedBox(width: 12),
@@ -1097,7 +1083,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           Text(
                             '• POT: ${gameState.formatCurrency(gameState.currentPot)}',
                             style: TextStyle(
-                              color: Color(0xFF5AC95A),
+                              color: AppColors.accentGreen,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1106,50 +1092,114 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                       ),
                     ),
                   )
-                : // Normal situation: Show three cards
+                : // Normal situation: Show three compact cards
                   Row(
                     children: [
                       Expanded(
                         child: Container(
-                          height: 105, // Increased height to accommodate text
+                          height: 56,
                           decoration: BoxDecoration(
-                            color: Color(0xFF1F1F23),
-                            borderRadius: BorderRadius.circular(PokerFriendRadius.l),
-                            border: Border.all(color: Color(0xFF2A2A2E), width: 1),
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.whiteBorder(), width: 1),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0), // Reduced padding
-                            child: _buildInfoItemWithAsset(context, 'Pot', gameState.formatCurrency(gameState.currentPot), 'icons/pot.png'),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Pot',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                gameState.formatCurrency(gameState.currentPot),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      SizedBox(width: PokerFriendSpacing.xxs),
+                      SizedBox(width: 6),
                       Expanded(
                         child: Container(
-                          height: 105, // Increased height to accommodate text
+                          height: 56,
                           decoration: BoxDecoration(
-                            color: Color(0xFF1F1F23),
-                            borderRadius: BorderRadius.circular(PokerFriendRadius.l),
-                            border: Border.all(color: Color(0xFF2A2A2E), width: 1),
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.whiteBorder(), width: 1),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0), // Reduced padding
-                            child: _buildInfoItemWithAsset(context, 'To Act', _getCurrentPlayerNameSafely(), 'icons/player.png'),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'To Act',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4),
+                                child: Text(
+                                  _getCurrentPlayerNameSafely(),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      SizedBox(width: PokerFriendSpacing.xxs),
+                      SizedBox(width: 6),
                       Expanded(
                         child: Container(
-                          height: 105, // Increased height to accommodate text
+                          height: 56,
                           decoration: BoxDecoration(
-                            color: Color(0xFF1F1F23),
-                            borderRadius: BorderRadius.circular(PokerFriendRadius.l),
-                            border: Border.all(color: Color(0xFF2A2A2E), width: 1),
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.whiteBorder(), width: 1),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0), // Reduced padding
-                            child: _buildInfoItemWithAsset(context, 'Stack', _getCurrentPlayerStackSafely(), 'icons/wallet.png'),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Stack',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                _getCurrentPlayerStackSafely(),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -1210,7 +1260,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         child: Container(
                           width: double.infinity,
                           height: double.infinity,
-                          color: PokerFriendColors.dark3,
+                          color: Colors.black.withOpacity(0.4),
                           child: CustomPaint(
                             painter: DrawingPainter(points: points),
                             size: Size.infinite,
@@ -1257,9 +1307,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 label: Text('End ${gameState.getCurrentStreetName()} Betting',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Color(0xFFBAFF9A),
+                  foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ),
@@ -1275,66 +1328,76 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 label: const Text('Undo Last Action',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Color(0xFFBAFF9A),
+                  foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ),
 
-          // Action Log
+          // Pot & Stack Info Panel (compact)
           Container(
-            margin: const EdgeInsets.all(16),
-            height: 140,
-            child: Card(
-              color: theme.colorScheme.primaryContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F1F23),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF2A2A2E)),
+            ),
+            child: Column(
+              children: [
+                // Stats Row (no header to save space)
+                Row(
                   children: [
-                    Row(
+                    // Pot Size
+                    Expanded(child: _buildInfoStat('POT', _formatPotAmount(gameState.currentPot))),
+                    Container(width: 1, height: 28, color: const Color(0xFF2A2A2E)),
+                    // Effective Stack
+                    Expanded(child: _buildInfoStat('EFF', _formatPotAmount(gameState.getEffectiveStackForInfoPanel()))),
+                    Container(width: 1, height: 28, color: const Color(0xFF2A2A2E)),
+                    // SPR
+                    Expanded(child: _buildInfoStat('SPR', gameState.getSPR().toStringAsFixed(1))),
+                  ],
+                ),
+                // Pot Odds Row (only shown when facing a bet)
+                if (_shouldShowPotOdds()) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF9500).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(
-                          Icons.history_outlined,
-                          color: theme.colorScheme.onPrimaryContainer,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
                         Text(
-                          'Action Log',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w600,
+                          'To Call: ${_formatPotAmount(gameState.getToCall(sessionManager.ourSeatNumber ?? 1))}',
+                          style: const TextStyle(color: Color(0xFFFF9500), fontSize: 12),
+                        ),
+                        Text(
+                          'Odds: ${gameState.getPotOdds(sessionManager.ourSeatNumber ?? 1)?.toStringAsFixed(1) ?? "0"}%',
+                          style: const TextStyle(
+                            color: Color(0xFFFF9500),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: ListView.builder(
-                        reverse: true,
-                        itemCount: actions.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 2),
-                            child: Text(
-                              actions[actions.length - 1 - index],
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onPrimaryContainer.withOpacity(0.9),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                ],
+              ],
             ),
           ),
             ],
           ),
         ),
+        ],  // Stack children
+      ),  // Stack
     );
   }
 
@@ -1366,6 +1429,46 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         ),
       ],
     );
+  }
+
+  // === Pot & Stack Info Panel Helpers ===
+
+  Widget _buildInfoStat(String label, String value) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF9A9A9A),
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool _shouldShowPotOdds() {
+    if (sessionManager.ourSeatNumber == null) return false;
+    final toCall = gameState.getToCall(sessionManager.ourSeatNumber!);
+    return toCall > 0;
+  }
+
+  String _formatPotAmount(double amount) {
+    if (sessionManager.gameType == GameType.cash) {
+      return '\$${amount.toStringAsFixed(0)}';
+    }
+    return amount.toStringAsFixed(0);
   }
 
   Widget _buildInfoItemWithAsset(BuildContext context, String label, String value, String assetPath) {
@@ -1841,208 +1944,212 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => Dialog(
           backgroundColor: Colors.transparent,
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 320),
-            decoration: BoxDecoration(
-              color: Color(0xFF161618),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Color(0xFFcb5242).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.attach_money,
-                          color: Color(0xFFcb5242),
-                          size: 18,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        action == PlayerAction.raise ? 'Raise Amount' : 'Bet Amount',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 320),
+                decoration: BoxDecoration(
+                  color: AppColors.glassyCardColor(),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.whiteBorder(),
+                    width: 1,
                   ),
                 ),
-                // Content
-                Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Min: ${widget.gameType == GameType.cash ? '\$${effectiveMinBet.toStringAsFixed(2)}' : effectiveMinBet.toInt()} • Max: ${widget.gameType == GameType.cash ? '\$${maxBet.toStringAsFixed(2)}' : maxBet.toInt()}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF9A9A9A),
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Color(0xFF1F1F23),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Color(0xFF2A2A2E)),
-                        ),
-                        child: TextField(
-                          controller: amountController,
-                          autofocus: true,
-                          keyboardType: TextInputType.numberWithOptions(
-                            decimal: widget.gameType == GameType.cash,
-                          ),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          decoration: InputDecoration(
-                            prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
-                            prefixStyle: TextStyle(
-                              color: Color(0xFF9A9A9A),
-                              fontSize: 24,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      // Multiplier buttons - dynamic based on context
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          ..._buildDynamicMultiplierButtons(
-                            isPreflop: isPreflop,
-                            hasVoluntaryBet: hasVoluntaryBet,
-                            currentPot: currentPot,
-                            bigBlind: bigBlind,
-                            minBet: effectiveMinBet,
-                            maxBet: maxBet,
-                            amountController: amountController,
-                            setState: setState,
-                          ),
-                          // All-In button
-                          _buildAllInButton(maxBet, amountController, setState),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              // Actions
-              Container(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: Container(
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF1F1F23),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.pop(context, null);
-                          },
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              color: Color(0xFF9A9A9A),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                    // Header
+                    Container(
+                      padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.accentGreen.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.attach_money,
+                              color: AppColors.accentGreen,
+                              size: 18,
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        height: 44,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0xFFcb5242), Color(0xFFb8442f)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            final text = amountController.text.trim();
-                            double? amount;
-                            try {
-                              amount = double.parse(text);
-                              if (amount < effectiveMinBet || amount > maxBet) {
-                                // Show error
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Amount must be between ${effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} and ${maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
-                                    ),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                                return;
-                              }
-                            } catch (e) {
-                              // Show error
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Please enter a valid number'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                              return;
-                            }
-                            Navigator.pop(context, amount);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Confirm',
+                          SizedBox(width: 12),
+                          Text(
+                            action == PlayerAction.raise ? 'Raise Amount' : 'Bet Amount',
                             style: TextStyle(
+                              fontSize: 18,
                               color: Colors.white,
-                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
+                        ],
+                      ),
+                    ),
+                    // Content
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Min: ${widget.gameType == GameType.cash ? '\$${effectiveMinBet.toStringAsFixed(2)}' : effectiveMinBet.toInt()} • Max: ${widget.gameType == GameType.cash ? '\$${maxBet.toStringAsFixed(2)}' : maxBet.toInt()}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.6),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.whiteBorder()),
+                            ),
+                            child: TextField(
+                              controller: amountController,
+                              autofocus: true,
+                              keyboardType: TextInputType.numberWithOptions(
+                                decimal: widget.gameType == GameType.cash,
+                              ),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              decoration: InputDecoration(
+                                prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
+                                prefixStyle: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 24,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          // Multiplier buttons - dynamic based on context
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              ..._buildDynamicMultiplierButtons(
+                                isPreflop: isPreflop,
+                                hasVoluntaryBet: hasVoluntaryBet,
+                                currentPot: currentPot,
+                                bigBlind: bigBlind,
+                                minBet: effectiveMinBet,
+                                maxBet: maxBet,
+                                amountController: amountController,
+                                setState: setState,
+                              ),
+                              // All-In button
+                              _buildAllInButton(maxBet, amountController, setState),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Actions
+                    Container(
+                      padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.whiteBorder()),
+                              ),
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context, null);
+                                },
+                                child: Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.6),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              height: 44,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  final text = amountController.text.trim();
+                                  double? amount;
+                                  try {
+                                    amount = double.parse(text);
+                                    if (amount < effectiveMinBet || amount > maxBet) {
+                                      // Show error
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Amount must be between ${effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} and ${maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                  } catch (e) {
+                                    // Show error
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Please enter a valid number'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  Navigator.pop(context, amount);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Confirm',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              ],
             ),
           ),
         ),
@@ -2123,14 +2230,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Color(0xFF1F1F23),
+          color: Colors.black.withOpacity(0.3),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Color(0xFF2A2A2E)),
+          border: Border.all(color: AppColors.whiteBorder()),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: Color(0xFFcb5242),
+            color: AppColors.accentGreen,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -2174,14 +2281,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Color(0xFF1F1F23),
+          color: Colors.black.withOpacity(0.3),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Color(0xFF2A2A2E)),
+          border: Border.all(color: AppColors.whiteBorder()),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: Color(0xFFcb5242),
+            color: AppColors.accentGreen,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -2207,12 +2314,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFcb5242), Color(0xFFb8442f)],
+            colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Color(0xFFcb5242)),
+          border: Border.all(color: AppColors.gradientGreenEnd),
         ),
         child: Text(
           'All-In',
@@ -2256,14 +2363,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Color(0xFF1F1F23),
+          color: Colors.black.withOpacity(0.3),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Color(0xFF2A2A2E)),
+          border: Border.all(color: AppColors.whiteBorder()),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: Color(0xFFcb5242),
+            color: AppColors.accentGreen,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -2373,7 +2480,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
   void _performPokerActionWithAmount(PlayerAction action, double amount) {
     if (gameState.bettingRoundComplete) {
-      addAction("Betting round is complete. Press 'Next Street' to continue.");
+      // addAction removed
       _triggerInvalidActionVibration();
       return;
     }
@@ -2381,7 +2488,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Check if action is valid before performing it
     if (!gameState.isValidAction(action)) {
       _triggerInvalidActionVibration();
-      addAction("Invalid action: ${action.name}. ${_getValidActionsHint()}");
+      // addAction removed
       return;
     }
 
@@ -2404,7 +2511,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Split result into individual lines and add each as separate action
     for (String line in result.split('\n')) {
       if (line.trim().isNotEmpty) {
-        addAction(line.trim());
+        // addAction removed
       }
     }
     
@@ -2412,7 +2519,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     if (result.contains("Hand ends: Only one player remaining")) {
       // Use a post frame callback to avoid calling setState during build
       _schedulePostFrameAction(() {
-        addAction("🏆 Hand completed automatically - only one player remaining");
+        // addAction removed
         _completeHandAutomatically();
       });
     } else {
@@ -2425,20 +2532,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         _schedulePostFrameAction(() {
           if (gameState.shouldAutoAdvanceToShowdown()) {
             // This is an all-in situation - show all-in board dialog
-            addAction("🎯 All-in situation detected - no more actions possible");
+            // addAction removed
             _showAllInBoardCardsDialog();
           } else if (gameState.areAllPlayersAllIn()) {
-            addAction("🎯 All players all-in - auto-advancing to next street...");
+            // addAction removed
             nextStreet();
           } else if (autoAdvanceStreets) {
-            addAction("🚀 Auto-advancing to next street...");
+            // addAction removed
             nextStreet();
           }
         });
       } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
         // Handle edge case: all-in detected but betting round not marked complete yet
         _schedulePostFrameAction(() {
-          addAction("🎯 All players all-in - ending betting round...");
+          // addAction removed
           gameState.bettingRoundComplete = true;
           setState(() {});
         });
@@ -2473,7 +2580,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           if (totalContribution > 0) {
             // Refund the contribution back to stack
             player.currentStack += totalContribution;
-            addAction("💵 Refunded ${_formatCurrency(totalContribution)} to Player ${player.playerId}");
+            // addAction removed
           }
         }
       }
@@ -2539,17 +2646,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       }
 
       // Clear actions and add skip message
-      actions.clear();
-      actions.add("⏭️ Hand skipped - Button moved to Player ${gameState.buttonPosition}");
-      actions.add("Hand #${gameState.handNumber} ready");
-      actions.add(gameState.getGameStateInfo());
-      actions.add(_getToActMessage());
     });
   }
 
   void _performPokerAction(PlayerAction action) {
     if (gameState.bettingRoundComplete) {
-      addAction("Betting round is complete. Press 'Next Street' to continue.");
+      // addAction removed
       _triggerInvalidActionVibration();
       return;
     }
@@ -2557,7 +2659,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Check if action is valid before performing it
     if (!gameState.isValidAction(action)) {
       _triggerInvalidActionVibration();
-      addAction("Invalid action: ${action.name}. ${_getValidActionsHint()}");
+      // addAction removed
       return;
     }
 
@@ -2587,7 +2689,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Split result into individual lines and add each as separate action
     for (String line in result.split('\n')) {
       if (line.trim().isNotEmpty) {
-        addAction(line.trim());
+        // addAction removed
       }
     }
     
@@ -2595,7 +2697,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     if (result.contains("Hand ends: Only one player remaining")) {
       // Use a post frame callback to avoid calling setState during build
       _schedulePostFrameAction(() {
-        addAction("🏆 Hand completed automatically - only one player remaining");
+        // addAction removed
         _completeHandAutomatically();
       });
     } else {
@@ -2608,20 +2710,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         _schedulePostFrameAction(() {
           if (gameState.shouldAutoAdvanceToShowdown()) {
             // This is an all-in situation - show all-in board dialog
-            addAction("🎯 All-in situation detected - no more actions possible");
+            // addAction removed
             _showAllInBoardCardsDialog();
           } else if (gameState.areAllPlayersAllIn()) {
-            addAction("🎯 All players all-in - auto-advancing to next street...");
+            // addAction removed
             nextStreet();
           } else if (autoAdvanceStreets) {
-            addAction("🚀 Auto-advancing to next street...");
+            // addAction removed
             nextStreet();
           }
         });
       } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
         // Handle edge case: all-in detected but betting round not marked complete yet
         _schedulePostFrameAction(() {
-          addAction("🎯 All players all-in - ending betting round...");
+          // addAction removed
           gameState.bettingRoundComplete = true;
           setState(() {});
         });
@@ -2751,7 +2853,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // Check if this is an all-in situation where no one can act
     if (gameState.shouldAutoAdvanceToShowdown()) {
-      addAction("🎯 All-in situation - selecting all board cards");
+      // addAction removed
       _showAllInBoardCardsDialog();
       return;
     }
@@ -2827,7 +2929,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     if (result != null && sessionManager.currentHand != null) {
       sessionManager.currentHand!.setBoardCards(result);
-      addAction("🃏 All board cards selected: ${result.flop.join(' ')} ${result.turn} ${result.river}");
+      // addAction removed
 
       // Skip to river (since we have all cards now)
       gameState.currentRound = BettingRound.river;
@@ -2932,7 +3034,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       _allInHandCompleted = true;
       setState(() {});
-      addAction("✅ All-in hand completed!");
+      // addAction removed
 
       final Map<int, Map<String, dynamic>> potResults =
           Map<int, Map<String, dynamic>>.from(winnerResult['potResults']);
@@ -3004,7 +3106,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
           // Add action logs for all pots
           for (String log in potLogs) {
-            actions.add(log);
           }
 
           // Complete hand in session manager
@@ -3049,11 +3150,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             bbSeat: gameState.effectiveBBPosition,
           );
 
-          actions.clear(); // Clear actions for new hand
-          actions.add("💾 Hand #${gameState.handNumber - 1} saved");
-          actions.add("Hand #${gameState.handNumber} started");
-          actions.add(gameState.getGameStateInfo());
-          actions.add(_getToActMessage());
         });
       });
     } else {
@@ -3064,7 +3160,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       // Mark hand as completed and use the standard finalization flow
       _allInHandCompleted = true;
       setState(() {});
-      addAction("✅ All-in hand completed!");
+      // addAction removed
 
       if (isChoppedPot) {
         // Handle chopped pot
@@ -3073,7 +3169,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         final individualShares = winnerResult['individualShares'] as Map<int, double>?;
         final sharePerWinner = winnerResult['sharePerWinner'] as double?;
 
-        addAction("🏆 Chopped pot between ${winnerIds.length} players");
+        // addAction removed
       } else {
         // Handle single winner
         final winnerId = winnerResult['winnerId'] as int? ?? winnerResult['winner'] as int?;
@@ -3081,7 +3177,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
         if (winnerId != null) {
           final winnerName = sessionManager.getPlayerNameWithPosition(winnerId);
-          addAction("🏆 Winner: $winnerName");
+          // addAction removed
         }
       }
 
@@ -3167,11 +3263,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             bbSeat: gameState.effectiveBBPosition,
           );
 
-          actions.clear(); // Clear actions for new hand
-          actions.add("💾 Hand #${gameState.handNumber - 1} saved");
-          actions.add("Hand #${gameState.handNumber} started");
-          actions.add(gameState.getGameStateInfo());
-          actions.add(_getToActMessage());
         });
       });
     }
@@ -3187,12 +3278,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Log what board cards exist before showing dialog
     final currentBoardCards = sessionManager.currentHand?.boardCards;
     if (currentBoardCards != null) {
-      print('🎴 Board cards dialog opening - existing cards found:');
-      print('   Flop: ${currentBoardCards.flop}');
-      print('   Turn: ${currentBoardCards.turn}');
-      print('   River: ${currentBoardCards.river}');
     } else {
-      print('🎴 Board cards dialog opening - NO existing cards (clean slate)');
     }
 
     // Regular street-by-street dialog
@@ -3247,17 +3333,17 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     switch (round) {
       case BettingRound.flop:
         if (cards.flop.isNotEmpty) {
-          addAction("Flop: ${cards.flop.join(' ')}");
+          // addAction removed
         }
         break;
       case BettingRound.turn:
         if (cards.turn != null) {
-          addAction("Turn: ${cards.turn}");
+          // addAction removed
         }
         break;
       case BettingRound.river:
         if (cards.river != null) {
-          addAction("River: ${cards.river}");
+          // addAction removed
         }
         break;
       default:
@@ -3340,76 +3426,145 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     return await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: PokerFriendColors.red, size: 24),
-            SizedBox(width: 12),
-            Text(
-              'Confirm Rebuy',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+            child: Container(
+              constraints: BoxConstraints(maxWidth: 340),
+              decoration: BoxDecoration(
+                color: AppColors.glassyCardColor(),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppColors.whiteBorder(),
+                  width: 1,
+                ),
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'You currently have ${formatStackValue(currentStack)} remaining.',
-              style: TextStyle(
-                color: PokerFriendColors.dark10,
-                fontSize: 16,
-              ),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Proceeding with a rebuy will replace your current stack. Are you sure you want to continue?',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: PokerFriendColors.dark10,
-                fontSize: 16,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  Container(
+                    padding: EdgeInsets.all(24),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.orange,
+                            size: 20,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          'Confirm Rebuy',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Content
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'You currently have ${formatStackValue(currentStack)} remaining.',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 15,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Proceeding with a rebuy will replace your current stack. Are you sure you want to continue?',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 24),
+                        // Actions
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.whiteBorder()),
+                                ),
+                                child: TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.6),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Container(
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Proceed',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: PokerFriendColors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Text(
-              'Proceed with Rebuy',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -3433,185 +3588,258 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: PokerFriendColors.dark3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(Icons.add_circle_outline, color: PokerFriendColors.red, size: 24),
-              SizedBox(width: 12),
-              Text(
-                'Rebuy',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 340),
+                decoration: BoxDecoration(
+                  color: AppColors.glassyCardColor(),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.whiteBorder(),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Container(
+                      padding: EdgeInsets.all(24),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.accentGreen.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.add_circle_outline,
+                              color: AppColors.accentGreen,
+                              size: 20,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Rebuy',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Content
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Enter rebuy details for the tournament',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 14,
+                            ),
+                          ),
+                          SizedBox(height: 20),
+
+                          // Rebuy Amount Input
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.whiteBorder()),
+                            ),
+                            child: TextField(
+                              controller: rebuyAmountController,
+                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                              style: TextStyle(color: Colors.white, fontSize: 16),
+                              decoration: InputDecoration(
+                                labelText: 'Rebuy Amount',
+                                labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                prefixText: '\$ ',
+                                prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 16),
+
+                          // Stack Size Input
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.whiteBorder()),
+                            ),
+                            child: TextField(
+                              controller: stackSizeController,
+                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                              style: TextStyle(color: Colors.white, fontSize: 16),
+                              decoration: InputDecoration(
+                                labelText: 'New Stack Size',
+                                labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                hintText: 'Chip count after rebuy',
+                                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 20),
+
+                          // Current session info
+                          Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.whiteBorder()),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Session Info',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Total Invested: \$${sessionManager.totalBuyIn.toStringAsFixed(2)}',
+                                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                                ),
+                                Text(
+                                  'Rebuys: ${sessionManager.getRebuyCount()}',
+                                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 24),
+
+                          // Actions
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.whiteBorder()),
+                                  ),
+                                  child: TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      'Cancel',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.6),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Container(
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      final rebuyAmount = double.tryParse(rebuyAmountController.text);
+                                      final stackSize = double.tryParse(stackSizeController.text);
+
+                                      if (rebuyAmount != null && stackSize != null && rebuyAmount > 0 && stackSize > 0) {
+                                        // Add rebuy to session manager
+                                        sessionManager.addRebuy(
+                                          amount: rebuyAmount,
+                                          stack: stackSize,
+                                        );
+
+                                        // Update the player's current stack in game state
+                                        final ourSeat = sessionManager.ourSeatNumber;
+                                        if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+                                          setState(() {
+                                            gameState.players[ourSeat - 1].currentStack = stackSize;
+                                          });
+                                        }
+
+                                        Navigator.pop(context);
+
+                                        // Show confirmation
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Rebuy added: \$${rebuyAmount.toStringAsFixed(2)} (Stack: ${stackSize.toStringAsFixed(0)})'),
+                                            backgroundColor: AppColors.gradientGreenEnd,
+                                          ),
+                                        );
+                                      } else {
+                                        // Show error
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Please enter valid amounts'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Add Rebuy',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-          content: Container(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Enter rebuy details for the tournament',
-                  style: TextStyle(
-                    color: PokerFriendColors.dark10,
-                    fontSize: 16,
-                  ),
-                ),
-                SizedBox(height: 20),
-
-                // Rebuy Amount Input
-                TextField(
-                  controller: rebuyAmountController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                  decoration: InputDecoration(
-                    labelText: 'Rebuy Amount',
-                    labelStyle: TextStyle(color: PokerFriendColors.dark9),
-                    prefixText: '\$ ',
-                    prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
-                    filled: true,
-                    fillColor: PokerFriendColors.dark1,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                ),
-
-                SizedBox(height: 16),
-
-                // Stack Size Input
-                TextField(
-                  controller: stackSizeController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                  decoration: InputDecoration(
-                    labelText: 'New Stack Size',
-                    labelStyle: TextStyle(color: PokerFriendColors.dark9),
-                    hintText: 'Chip count after rebuy',
-                    hintStyle: TextStyle(color: PokerFriendColors.dark8),
-                    filled: true,
-                    fillColor: PokerFriendColors.dark1,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                ),
-
-                SizedBox(height: 20),
-
-                // Current session info
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: PokerFriendColors.dark4, width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Session Info',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Total Invested: \$${sessionManager.totalBuyIn.toStringAsFixed(2)}',
-                        style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
-                      ),
-                      Text(
-                        'Rebuys: ${sessionManager.getRebuyCount()}',
-                        style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: PokerFriendColors.dark10,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final rebuyAmount = double.tryParse(rebuyAmountController.text);
-                final stackSize = double.tryParse(stackSizeController.text);
-
-                if (rebuyAmount != null && stackSize != null && rebuyAmount > 0 && stackSize > 0) {
-                  // Add rebuy to session manager
-                  sessionManager.addRebuy(
-                    amount: rebuyAmount,
-                    stack: stackSize,
-                  );
-
-                  // Update the player's current stack in game state
-                  final ourSeat = sessionManager.ourSeatNumber;
-                  if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
-                    setState(() {
-                      gameState.players[ourSeat - 1].currentStack = stackSize;
-                    });
-                  }
-
-                  Navigator.pop(context);
-
-                  // Show confirmation
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Rebuy added: \$${rebuyAmount.toStringAsFixed(2)} (Stack: ${stackSize.toStringAsFixed(0)})'),
-                      backgroundColor: PokerFriendColors.red,
-                    ),
-                  );
-                } else {
-                  // Show error
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Please enter valid amounts'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: PokerFriendColors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Add Rebuy',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
         );
       },
     );
@@ -3630,22 +3858,22 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       if (streetTransitionResult.isNotEmpty) {
         for (String line in streetTransitionResult.split('\n')) {
           if (line.trim().isNotEmpty) {
-            addAction(line.trim());
+            // addAction removed
           }
         }
       }
 
-      addAction("--- ${gameState.getCurrentStreetName()} ---");
-      addAction(_getToActMessage());
+      // addAction removed
+      // addAction removed
     });
   }
 
   void endStreetManually() {
     setState(() {
       gameState.bettingRoundComplete = true;
-      addAction("--- Street ended manually ---");
+      // addAction removed
       if (gameState.currentRound != BettingRound.river) {
-        addAction("Press 'Next Street' button to continue");
+        // addAction removed
       }
     });
   }
@@ -3684,7 +3912,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   /// Undo the last action and restore game state
   void _undoLastAction() {
     if (!_canUndoLastAction()) {
-      addAction("⚠️ Cannot undo: no actions to undo");
+      // addAction removed
       _triggerInvalidActionVibration();
       return;
     }
@@ -3702,7 +3930,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
 
     if (lastActionIndex == -1) {
-      addAction("⚠️ Cannot undo: no actions to undo");
+      // addAction removed
       _triggerInvalidActionVibration();
       return;
     }
@@ -3798,7 +4026,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       }
 
       // Remove the action from the list
-      actions.removeAt(lastActionIndex);
 
       // Set current player back to the player who made the undone action
       gameState.currentPlayer = playerId;
@@ -3808,8 +4035,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       // Log the undo
       final playerName = sessionManager.getPlayerNameWithPosition(playerId);
-      addAction("↩️ Undone: $playerName's ${action.name}");
-      addAction(_getToActMessage());
+      // addAction removed
+      // addAction removed
     });
   }
 
@@ -3949,16 +4176,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
   }
 
-  void addAction(String action) {
-    setState(() {
-      actions.add("${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')} - $action");
-      // Keep only the last 20 actions to avoid overflow
-      if (actions.length > 20) {
-        actions.removeAt(0);
-      }
-    });
-  }
-
   void _checkForAutomaticHandEnd() {
     // Check if everyone has folded to BB preflop
     if (gameState.currentRound == BettingRound.preflop) {
@@ -3966,7 +4183,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       if (activePlayers.length == 1) {
         // Only one player left - automatically end the hand
         _schedulePostFrameAction(() {
-          addAction("🏆 Everyone folded - hand completed automatically");
+          // addAction removed
           _completeHandAutomatically();
         });
       }
@@ -3994,10 +4211,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       final winnerPlayer = gameState.players[winnerId - 1];
       winnerPlayer.currentStack += potAmount;
 
-      addAction("🏆 $winnerName wins \$${potAmount.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} (last player standing)");
+      // addAction removed
 
       // Show hole cards dialog BEFORE completing the hand
-      addAction("✅ Hand completed!");
+      // addAction removed
       await _showHoleCardsDialog();
 
       // Now complete hand in session manager (hole cards are already saved to currentHand)
@@ -4038,11 +4255,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           bbSeat: gameState.effectiveBBPosition,
         );
 
-        actions.clear();
-        actions.add("💾 Hand #${gameState.handNumber - 1} saved");
-        actions.add("Hand #${gameState.handNumber} started");
-        actions.add(gameState.getGameStateInfo());
-        actions.add(_getToActMessage());
       });
     } else {
       // Multiple players remain, show winner selection dialog
@@ -4052,7 +4264,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   void _showCardSelectionForNextHand() async {
-    addAction("✅ Hand completed!");
+    // addAction removed
 
     // Show hole cards dialog for the completed hand
     await _showHoleCardsDialog();
@@ -4094,11 +4306,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         bbSeat: gameState.effectiveBBPosition,
       );
 
-      actions.clear(); // Clear actions for new hand
-      actions.add("💾 Hand #${gameState.handNumber - 1} saved");
-      actions.add("Hand #${gameState.handNumber} started");
-      actions.add(gameState.getGameStateInfo());
-      actions.add(_getToActMessage());
     });
   }
 
@@ -4188,7 +4395,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // User can cancel the dialog if they want to continue the hand
     if (winnerResult == null) {
-      addAction("❌ Winner selection cancelled - hand continues");
+      // addAction removed
       return;
     }
 
@@ -4263,7 +4470,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
         // Add action logs for all pots
         for (String log in potLogs) {
-          actions.add(log);
         }
 
         // Complete hand in session manager
@@ -4340,11 +4546,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             final amount = individualShares[id] ?? sharePerWinner;
             return '$name (${_formatCurrency(amount)})';
           }).toList();
-          actions.add("🏆 Pot chopped: ${winnerDetails.join(', ')}");
         } else {
           String winnerNames = winners.map((id) =>
             sessionManager.getPlayerNameWithPosition(id)).join(', ');
-          actions.add("🏆 Pot chopped between $winnerNames - ${_formatCurrency(sharePerWinner)} each");
         }
       } else {
         // Get current stack for our seat to track in session history
@@ -4363,7 +4567,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
         // Add action log for single winner
         String winnerName = sessionManager.getPlayerNameWithPosition(winners.first);
-        actions.add("🏆 $winnerName wins ${_formatCurrency(potAmount)}");
       }
     });
     } // Close the else block for regular single-pot scenario
@@ -4408,13 +4611,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       );
 
       // Clear actions for new hand but keep the winner announcement
-      String lastWinnerAction = actions.isNotEmpty ? actions.last : '';
-      actions.clear();
-      if (lastWinnerAction.isNotEmpty) actions.add(lastWinnerAction);
-      actions.add("💾 Hand #${gameState.handNumber - 1} saved to Firebase");
-      actions.add("Hand #${gameState.handNumber} started");
-      actions.add(gameState.getGameStateInfo());
-      actions.add(_getToActMessage());
     });
   }
 
@@ -4456,7 +4652,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       if (attempts < gameState.numberOfPlayers) {
         gameState.buttonPosition = nextButton;
-        addAction("🔄 Button moved to Player $nextButton (active seat)");
+        // addAction removed
       }
     }
   }
@@ -4474,18 +4670,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     if (activePlayerCount < 2) {
       // End game if less than 2 players
-      addAction("⚠️ Game cannot continue with less than 2 players");
+      // addAction removed
       return;
     }
 
-    addAction("📍 Position adjustment: $removedPosition left the table (${activePlayerCount} players remain)");
+    // addAction removed
 
     // The position adjustment happens automatically when the next hand starts
     // because getPositionName() calculates positions based on active players
     // But we log it here for clarity
     String nextBBSeat = _findNextBBAfterRemoval(removedPlayerId);
     if (nextBBSeat.isNotEmpty) {
-      addAction("🎯 Next hand: $nextBBSeat will be BB due to position shift");
+      // addAction removed
     }
   }
 
@@ -4539,9 +4735,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // Check if removed player was supposed to be SB or BB
     if (removedPlayerId == sbPosition) {
-      addAction("⚠️ Small blind seat empty - next hand will start with BB only");
+      // addAction removed
     } else if (removedPlayerId == bbPosition) {
-      addAction("⚠️ Big blind seat empty - adjusting blind positions");
+      // addAction removed
     }
   }
 
@@ -4579,7 +4775,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         if (result['action'] == 'rebuy') {
           double rebuyAmount = result['amount'] ?? 100.0;
           gameState.setPlayerStack(playerId, rebuyAmount);
-          addAction("💰 $playerName rebuys for ${gameState.formatCurrency(rebuyAmount)}");
+          // addAction removed
         } else if (result['action'] == 'leave') {
           // Mark player as completely inactive (seat empty)
           PlayerState player = gameState.players[playerId - 1];
@@ -4597,7 +4793,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           // Adjust positions after player removal
           _adjustPositionsAfterPlayerLeaves(playerId);
 
-          addAction("👋 $playerName leaves the table");
+          // addAction removed
 
           // If this was SB or BB, note special blind situation
           _checkSpecialBlindSituation(playerId);
@@ -4611,6 +4807,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     Set<String> usedCards = {};
     BoardCards? boardCards;
     HoleCards? existingHoleCards;
+    bool existingIsStarred = false;
+    List<String> existingTags = [];
+    String? existingNotes;
 
     // IMPORTANT: When called for a hand that's about to be completed, currentHand still exists
     // So we should use currentHand (not completedHands.last) to avoid showing previous hand's cards
@@ -4618,10 +4817,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       // Use the current hand being played/completed
       boardCards = sessionManager.currentHand?.boardCards;
       existingHoleCards = sessionManager.currentHand?.ourHoleCards;
+      existingIsStarred = sessionManager.currentHand?.isStarred ?? false;
+      existingTags = sessionManager.currentHand?.tags ?? [];
+      existingNotes = sessionManager.currentHand?.notes;
     } else if (sessionManager.completedHands.isNotEmpty) {
       // Fallback to last completed hand (for editing after hand is fully complete)
       boardCards = sessionManager.completedHands.last.boardCards;
       existingHoleCards = sessionManager.completedHands.last.ourHoleCards;
+      existingIsStarred = sessionManager.completedHands.last.isStarred;
+      existingTags = sessionManager.completedHands.last.tags;
+      existingNotes = sessionManager.completedHands.last.notes;
     }
 
     if (boardCards != null) {
@@ -4630,25 +4835,49 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       if (boardCards.river != null && boardCards.river!.isNotEmpty) usedCards.add(boardCards.river!);
     }
 
-    final holeCards = await showDialog<HoleCards>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      barrierDismissible: true,
-      builder: (context) => HoleCardsDialog(
+      barrierDismissible: false,
+      builder: (context) => HandReviewDialog(
         existingCards: existingHoleCards,
         usedCards: usedCards,
+        existingIsStarred: existingIsStarred,
+        existingTags: existingTags,
+        existingNotes: existingNotes,
       ),
     );
 
-    if (holeCards != null) {
-      // Save hole cards to the current hand (or last completed if current doesn't exist)
+    if (result != null) {
+      // Save data to the current hand (or last completed if current doesn't exist)
       if (sessionManager.currentHand != null) {
-        sessionManager.currentHand!.ourHoleCards = holeCards;
+        // Apply hole cards
+        if (result['holeCards'] != null) {
+          sessionManager.currentHand!.ourHoleCards = result['holeCards'];
+        }
+        // Apply annotations
+        sessionManager.currentHand!.isStarred = result['isStarred'] ?? false;
+        sessionManager.currentHand!.tags = List<String>.from(result['tags'] ?? []);
+        sessionManager.currentHand!.notes = result['notes'];
       } else if (sessionManager.completedHands.isNotEmpty) {
-        sessionManager.completedHands.last.ourHoleCards = holeCards;
+        if (result['holeCards'] != null) {
+          sessionManager.completedHands.last.ourHoleCards = result['holeCards'];
+        }
+        sessionManager.completedHands.last.isStarred = result['isStarred'] ?? false;
+        sessionManager.completedHands.last.tags = List<String>.from(result['tags'] ?? []);
+        sessionManager.completedHands.last.notes = result['notes'];
       }
 
-      if (holeCards.isComplete) {
-        addAction("🂠 Your cards: ${holeCards.card1} ${holeCards.card2}");
+      // Log actions
+      final holeCards = result['holeCards'] as HoleCards?;
+      if (holeCards != null && holeCards.isComplete) {
+        // addAction removed
+      }
+      if (result['isStarred'] == true) {
+        // addAction removed
+      }
+      final tags = result['tags'] as List<String>?;
+      if (tags != null && tags.isNotEmpty) {
+        // addAction removed
       }
     }
   }
@@ -4726,14 +4955,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     for (int opponentId in reorderedOpponents) {
       final opponentName = sessionManager.getPlayerNameWithPosition(opponentId);
       final isWinner = winners.contains(opponentId);
-      final titleSuffix = isWinner ? ' (Winner)' : '';
 
       // Show dialog for this opponent
       final cards = await showDialog<HoleCards>(
         context: context,
         barrierDismissible: true,
         builder: (context) => HoleCardsDialog(
-          title: '$opponentName Hole Cards$titleSuffix',
+          playerName: opponentName,
+          isWinner: isWinner,
           usedCards: usedCards,
           existingCards: existingCards?[opponentId],
         ),
@@ -4765,7 +4994,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         opponentCards.forEach((playerId, cards) {
           if (cards.isComplete) {
             sessionManager.currentHand!.showdownData!.playerCards[playerId] = cards;
-            addAction("🂠 ${sessionManager.getPlayerNameWithPosition(playerId)}: ${cards.card1} ${cards.card2}");
+            // addAction removed
           }
         });
       } else if (sessionManager.completedHands.isNotEmpty) {
@@ -4819,9 +5048,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       sessionManager.currentHand!.reachedShowdown = true;
       
       if (showdownData.winner != null) {
-        addAction("🏆 Winner: ${sessionManager.getPlayerName(showdownData.winner!)}");
+        // addAction removed
         if (showdownData.handDescription != null) {
-          addAction("💪 ${showdownData.handDescription}");
+          // addAction removed
         }
         
         // Distribute pot to winner
@@ -4832,7 +5061,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       for (int player in activePlayers) {
         final playerCards = showdownData.playerCards[player];
         if (playerCards != null && playerCards.isComplete) {
-          addAction("🂠 ${sessionManager.getPlayerName(player)}: ${playerCards.card1} ${playerCards.card2}");
+          // addAction removed
         }
       }
     }
@@ -4841,7 +5070,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   void _finalizeHand() async {
-    addAction("✅ Hand completed!");
+    // addAction removed
 
     // Show hole cards dialog for the completed hand
     await _showHoleCardsDialog();
@@ -4885,11 +5114,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         bbSeat: gameState.effectiveBBPosition,
       );
 
-      actions.clear(); // Clear actions for new hand
-      actions.add("💾 Hand #${gameState.handNumber - 1} saved");
-      actions.add("Hand #${gameState.handNumber} started");
-      actions.add(gameState.getGameStateInfo());
-      actions.add(_getToActMessage());
     });
   }
 
@@ -4971,13 +5195,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 width: 6,
                 margin: EdgeInsets.symmetric(horizontal: 17),
                 decoration: BoxDecoration(
-                  color: Color(0xFF2A2A2E),
+                  color: Colors.black.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(3),
-                  border: Border.all(color: Color(0xFF3A3A3E), width: 1),
+                  border: Border.all(color: AppColors.whiteBorder(), width: 1),
                 ),
               ),
             ),
-            
+
             // Progress fill (from bottom to current position)
             Positioned(
               left: 17,
@@ -4986,7 +5210,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 width: 6,
                 height: barHeight * _dragBarPosition,
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.6),
+                  color: AppColors.accentGreen.withOpacity(0.6),
                   borderRadius: BorderRadius.vertical(
                     bottom: Radius.circular(3),
                     top: _dragBarPosition < 1.0 ? Radius.zero : Radius.circular(3),
@@ -5003,7 +5227,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 width: 16,
                 height: 16,
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  color: AppColors.accentGreen,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                   boxShadow: [
@@ -5078,117 +5302,191 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Color(0xFF1F1F23),
-      title: Column(
-        children: [
-          Icon(
-            Icons.warning,
-            color: Colors.orange,
-            size: 48,
-          ),
-          SizedBox(height: 16),
-          Text(
-            '${widget.playerName} is busted!',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Choose an option:',
-            style: TextStyle(color: Colors.white70),
-          ),
-          SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => setState(() => _isRebuy = true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _isRebuy ? Colors.green : Colors.grey[700],
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: Text(
-                    'Rebuy',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => setState(() => _isRebuy = false),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: !_isRebuy ? Colors.red : Colors.grey[700],
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: Text(
-                    'Leave',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (_isRebuy) ...[
-            const SizedBox(height: 24),
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: widget.isCashGame ? 'Rebuy Amount (\$)' : 'Rebuy Chips',
-                labelStyle: TextStyle(color: Colors.white70),
-                prefixText: widget.isCashGame ? '\$' : '',
-                prefixStyle: TextStyle(color: Colors.white),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white30),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.green),
-                ),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 340),
+            decoration: BoxDecoration(
+              color: AppColors.glassyCardColor(),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.whiteBorder(),
+                width: 1,
               ),
             ),
-          ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            if (_isRebuy) {
-              double amount = double.tryParse(_amountController.text) ?? 100.0;
-              Navigator.pop(context, {
-                'action': 'rebuy',
-                'amount': amount,
-              });
-            } else {
-              Navigator.pop(context, {
-                'action': 'leave',
-              });
-            }
-          },
-          child: Text(
-            'Confirm',
-            style: TextStyle(
-              color: _isRebuy ? Colors.green : Colors.red,
-              fontWeight: FontWeight.bold,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          Icons.warning,
+                          color: Colors.orange,
+                          size: 32,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        '${widget.playerName} is busted!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Content
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Choose an option:',
+                        style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: _isRebuy ? AppColors.gradientGreenEnd : Colors.black.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: _isRebuy ? AppColors.gradientGreenEnd : AppColors.whiteBorder(),
+                                ),
+                              ),
+                              child: TextButton(
+                                onPressed: () => setState(() => _isRebuy = true),
+                                child: Text(
+                                  'Rebuy',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: !_isRebuy ? Colors.red : Colors.black.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: !_isRebuy ? Colors.red : AppColors.whiteBorder(),
+                                ),
+                              ),
+                              child: TextButton(
+                                onPressed: () => setState(() => _isRebuy = false),
+                                child: Text(
+                                  'Leave',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_isRebuy) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.whiteBorder()),
+                          ),
+                          child: TextField(
+                            controller: _amountController,
+                            keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
+                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: widget.isCashGame ? 'Rebuy Amount (\$)' : 'Rebuy Chips',
+                              labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                              prefixText: widget.isCashGame ? '\$' : '',
+                              prefixStyle: TextStyle(color: Colors.white),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                      SizedBox(height: 24),
+                      // Confirm button
+                      Container(
+                        width: double.infinity,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: _isRebuy
+                              ? [AppColors.gradientGreenEnd, AppColors.gradientGreenStart]
+                              : [Colors.red.shade700, Colors.red.shade900],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_isRebuy) {
+                              double amount = double.tryParse(_amountController.text) ?? 100.0;
+                              Navigator.pop(context, {
+                                'action': 'rebuy',
+                                'amount': amount,
+                              });
+                            } else {
+                              Navigator.pop(context, {
+                                'action': 'leave',
+                              });
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Confirm',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -5233,68 +5531,121 @@ class _SettingsDialogState extends State<_SettingsDialog> {
 
     final result = await showDialog<int>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFF161618),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          'Enter $title',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          style: TextStyle(color: Colors.white, fontSize: 18),
-          decoration: InputDecoration(
-            hintText: 'Enter value',
-            hintStyle: TextStyle(color: Colors.white30),
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Color(0xFF5AC95A)),
-            ),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Color(0xFF5AC95A), width: 2),
-            ),
-          ),
-          onSubmitted: (value) {
-            final intValue = int.tryParse(value);
-            if (intValue != null && intValue > 0) {
-              Navigator.pop(context, intValue);
-            }
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF9A9A9A)),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final intValue = int.tryParse(controller.text);
-              if (intValue != null && intValue > 0) {
-                Navigator.pop(context, intValue);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF5AC95A),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+            child: Container(
+              constraints: BoxConstraints(maxWidth: 300),
+              decoration: BoxDecoration(
+                color: AppColors.glassyCardColor(),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppColors.whiteBorder(),
+                  width: 1,
+                ),
+              ),
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Enter $title',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.whiteBorder()),
+                    ),
+                    child: TextField(
+                      controller: controller,
+                      keyboardType: TextInputType.number,
+                      autofocus: true,
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                      decoration: InputDecoration(
+                        hintText: 'Enter value',
+                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                      onSubmitted: (value) {
+                        final intValue = int.tryParse(value);
+                        if (intValue != null && intValue > 0) {
+                          Navigator.pop(context, intValue);
+                        }
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.whiteBorder()),
+                          ),
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Container(
+                          height: 44,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              final intValue = int.tryParse(controller.text);
+                              if (intValue != null && intValue > 0) {
+                                Navigator.pop(context, intValue);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'OK',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            child: Text(
-              'OK',
-              style: TextStyle(color: Colors.white),
-            ),
           ),
-        ],
+        ),
       ),
     );
 
@@ -5307,9 +5658,9 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
+        color: Colors.black.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFF2A2A2E)),
+        border: Border.all(color: AppColors.whiteBorder()),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -5333,7 +5684,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 onPressed: onDecrement,
                 icon: Icon(Icons.remove, color: Colors.white, size: 20),
                 style: IconButton.styleFrom(
-                  backgroundColor: Color(0xFF161618),
+                  backgroundColor: Colors.black.withOpacity(0.3),
                   minimumSize: Size(36, 36),
                   padding: EdgeInsets.zero,
                 ),
@@ -5346,15 +5697,15 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                   constraints: BoxConstraints(minWidth: 50),
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Color(0xFF161618),
+                    color: Colors.black.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Color(0xFF5AC95A).withOpacity(0.3)),
+                    border: Border.all(color: AppColors.accentGreen.withOpacity(0.3)),
                   ),
                   child: Text(
                     value.toString(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Color(0xFF5AC95A),
+                      color: AppColors.accentGreen,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -5366,7 +5717,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 onPressed: onIncrement,
                 icon: Icon(Icons.add, color: Colors.white, size: 20),
                 style: IconButton.styleFrom(
-                  backgroundColor: Color(0xFF161618),
+                  backgroundColor: Colors.black.withOpacity(0.3),
                   minimumSize: Size(36, 36),
                   padding: EdgeInsets.zero,
                 ),
@@ -5383,9 +5734,9 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
+        color: Colors.black.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFF2A2A2E)),
+        border: Border.all(color: AppColors.whiteBorder()),
       ),
       child: Row(
         children: [
@@ -5405,7 +5756,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Color(0xFF9A9A9A),
+                    color: Colors.white.withOpacity(0.6),
                     fontSize: 12,
                   ),
                 ),
@@ -5415,9 +5766,9 @@ class _SettingsDialogState extends State<_SettingsDialog> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: Color(0xFF5AC95A),
-            activeTrackColor: Color(0xFF5AC95A).withOpacity(0.5),
-            inactiveTrackColor: Color(0xFF2A2A2E),
+            activeThumbColor: AppColors.accentGreen,
+            activeTrackColor: AppColors.accentGreen.withOpacity(0.5),
+            inactiveTrackColor: Colors.black.withOpacity(0.3),
           ),
         ],
       ),
@@ -5426,47 +5777,76 @@ class _SettingsDialogState extends State<_SettingsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Color(0xFF161618),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      title: Row(
-        children: [
-          Icon(Icons.settings, color: Color(0xFF5AC95A), size: 24),
-          const SizedBox(width: 12),
-          Text(
-            'Game Settings',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Blind adjustments section
-            Text(
-              'Blind Levels',
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 360),
+            decoration: BoxDecoration(
+              color: AppColors.glassyCardColor(),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.whiteBorder(),
+                width: 1,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Changes take effect on the next hand',
-              style: TextStyle(
-                color: Color(0xFF9A9A9A).withOpacity(0.7),
-                fontSize: 11,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: EdgeInsets.all(24),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.accentGreen.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.settings, color: AppColors.accentGreen, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Game Settings',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Content
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Blind adjustments section
+                        Text(
+                          'Blind Levels',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Changes take effect on the next hand',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
             const SizedBox(height: 12),
             _buildNumberAdjuster(
               'Small Blind',
@@ -5532,45 +5912,78 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                   });
                 });
               },
+                        ),
+                        SizedBox(height: 24),
+                        // Actions
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.whiteBorder()),
+                                ),
+                                child: TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.6),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Container(
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    widget.onBlindsChanged(smallBlind, bigBlind, hasBBante);
+                                    Navigator.pop(context);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Apply',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Cancel',
-            style: TextStyle(
-              color: Color(0xFF9A9A9A),
-              fontSize: 16,
-            ),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            widget.onBlindsChanged(smallBlind, bigBlind, hasBBante);
-            Navigator.pop(context);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF5AC95A),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-          child: Text(
-            'Apply',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
     );
   }
-
-
 }

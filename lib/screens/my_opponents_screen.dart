@@ -55,21 +55,22 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
       final loadedOpponents = await OpponentService.getAllOpponents();
 
       // PARALLEL LOADING: Load all opponent stats simultaneously instead of sequentially
+      // Use opponent.id (not name) since stats are stored by ID in Firebase
       final statsFutures = loadedOpponents.map((opponent) =>
-        OpponentStatsService.getOpponentStats(opponent.name)
+        OpponentStatsService.getOpponentStats(opponent.id)
       ).toList();
 
       final allStats = await Future.wait(statsFutures);
 
-      // Build lookup maps
+      // Build lookup maps keyed by opponent ID
       final handsCounts = <String, int>{};
       final statsMap = <String, OpponentStats>{};
       for (int i = 0; i < loadedOpponents.length; i++) {
         final opponent = loadedOpponents[i];
         final stats = allStats[i];
-        handsCounts[opponent.name] = stats?.handsPlayed ?? 0;
+        handsCounts[opponent.id] = stats?.handsPlayed ?? 0;
         if (stats != null) {
-          statsMap[opponent.name] = stats;
+          statsMap[opponent.id] = stats;
         }
       }
 
@@ -96,7 +97,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     if (searchQuery.isEmpty) return opponents;
     return opponents.where((opponent) {
       final nameMatch = opponent.name.toLowerCase().contains(searchQuery.toLowerCase());
-      final stats = opponentStats[opponent.name];
+      final stats = opponentStats[opponent.id];
       final styleMatch = stats?.playingStyle.toLowerCase().contains(searchQuery.toLowerCase()) ?? false;
       return nameMatch || styleMatch;
     }).toList();
@@ -444,11 +445,11 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                               ),
                             ),
                             Text(
-                              opponentStats[opponent.name]?.playingStyle ?? 'No Data',
+                              opponentStats[opponent.id]?.playingStyle ?? 'No Data',
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 12,
-                                color: _getStyleColor(opponentStats[opponent.name]?.playerType ?? PlayerType.unknown),
+                                color: _getStyleColor(opponentStats[opponent.id]?.playerType ?? PlayerType.unknown),
                                 fontWeight: FontWeight.w400,
                                 letterSpacing: 0,
                                 height: 1.4,
@@ -463,7 +464,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          '${opponentHandsCounts[opponent.name] ?? 0}',
+                          '${opponentHandsCounts[opponent.id] ?? 0}',
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 18,

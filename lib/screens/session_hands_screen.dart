@@ -222,7 +222,9 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
   Widget _buildHandCard(Map<String, dynamic> hand, int handNumber) {
     final actions = hand['actions'] as List<dynamic>? ?? [];
     final startTime = DateTime.parse(hand['startTime']);
-    
+    final isStarred = hand['isStarred'] == true;
+    final tags = (hand['tags'] as List<dynamic>?)?.cast<String>() ?? [];
+
     return GestureDetector(
       onTap: () => _navigateToHandActions(hand),
       child: Container(
@@ -232,8 +234,8 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
           color: Color(0xFF1F1F23),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Color(0xFF2A2A2E),
-            width: 1,
+            color: isStarred ? Colors.amber.withOpacity(0.5) : Color(0xFF2A2A2E),
+            width: isStarred ? 2 : 1,
           ),
         ),
         child: Column(
@@ -242,27 +244,51 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
           // Hand Header
           Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF5AC95A), Color(0xFF4CAF50)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    '#$handNumber',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+              // Hand number with star overlay if starred
+              Stack(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF5AC95A), Color(0xFF4CAF50)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '#$handNumber',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  // Star badge
+                  if (isStarred)
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Colors.amber,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.star,
+                          color: Colors.white,
+                          size: 12,
+                        ),
+                      ),
+                    ),
+                ],
               ),
               SizedBox(width: 16),
               Expanded(
@@ -295,9 +321,9 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
               ),
             ],
           ),
-          
+
           SizedBox(height: 16),
-          
+
           // Hand Info Grid
           Container(
             padding: EdgeInsets.all(16),
@@ -332,8 +358,76 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
               ],
             ),
           ),
+
+          // Tags row (if any)
+          if (tags.isNotEmpty) ...[
+            SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: tags.map((tag) => _buildTagBadge(tag)).toList(),
+            ),
+          ],
         ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTagBadge(String tag) {
+    // Get icon for tag
+    IconData tagIcon;
+    switch (tag) {
+      case 'Bluff':
+        tagIcon = Icons.psychology;
+        break;
+      case 'Value':
+        tagIcon = Icons.attach_money;
+        break;
+      case 'Mistake':
+        tagIcon = Icons.error_outline;
+        break;
+      case 'Cooler':
+        tagIcon = Icons.ac_unit;
+        break;
+      case 'Hero Call':
+        tagIcon = Icons.shield;
+        break;
+      case 'Exploit':
+        tagIcon = Icons.gps_fixed;
+        break;
+      default:
+        tagIcon = Icons.label;
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Color(0xFFBAFF9A).withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Color(0xFFBAFF9A).withOpacity(0.4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            tagIcon,
+            size: 12,
+            color: Color(0xFFBAFF9A),
+          ),
+          SizedBox(width: 4),
+          Text(
+            tag,
+            style: TextStyle(
+              fontSize: 11,
+              color: Color(0xFFBAFF9A),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -514,13 +608,15 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     );
   }
 
-  void _navigateToHandActions(Map<String, dynamic> hand) {
+  void _navigateToHandActions(Map<String, dynamic> hand) async {
     final ourSeat = widget.session['ourSeat'] as int?;
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => HandActionsScreen(hand: hand, ourSeat: ourSeat),
       ),
     );
+    // Refresh data when returning (in case star was toggled)
+    _loadHands();
   }
 }

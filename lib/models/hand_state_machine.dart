@@ -196,6 +196,11 @@ class HandRecord {
   Map<int, double>? individualShares;
   double? sharePerWinner;
 
+  // Hand annotations (for review/tagging)
+  bool isStarred = false;
+  List<String> tags = [];
+  String? notes;
+
   HandRecord({
     required this.handNumber,
     required this.buttonPosition,
@@ -228,7 +233,6 @@ class HandRecord {
     );
 
     if (isDuplicate) {
-      print('Duplicate action detected and ignored: Player ${action.player} ${action.action.name} on ${action.street.name}');
       return;
     }
 
@@ -246,10 +250,6 @@ class HandRecord {
 
   void setBoardCards(BoardCards cards) {
     boardCards = cards;
-    print('🎴 Board cards SET on hand #$handNumber:');
-    print('   Flop: ${cards.flop}');
-    print('   Turn: ${cards.turn}');
-    print('   River: ${cards.river}');
   }
 
   Map<String, dynamic> toMap() {
@@ -277,6 +277,10 @@ class HandRecord {
       'choppedWinners': choppedWinners,
       'individualShares': individualShares?.map((key, value) => MapEntry(key.toString(), value)),
       'sharePerWinner': sharePerWinner,
+      // Hand annotations
+      'isStarred': isStarred,
+      'tags': tags,
+      'notes': notes,
     };
   }
 
@@ -315,6 +319,11 @@ class HandRecord {
           )
         : null;
     hand.sharePerWinner = map['sharePerWinner']?.toDouble();
+
+    // Set annotation fields
+    hand.isStarred = map['isStarred'] ?? false;
+    hand.tags = List<String>.from(map['tags'] ?? []);
+    hand.notes = map['notes'];
 
     return hand;
   }
@@ -528,7 +537,6 @@ class PokerSessionManager {
     {double? playerStack, double? amount}
   ) {
     if (currentHand == null || currentHand!.state != HandState.inProgress) {
-      print('Warning: No active hand to record action');
       return;
     }
 
@@ -587,7 +595,6 @@ class PokerSessionManager {
     //   });
     // }
 
-    print('Action recorded: Player $player ${action.name} on ${street.name}');
   }
 
   // Save pot amount at the end of each street
@@ -656,7 +663,6 @@ class PokerSessionManager {
     // Update session with latest hand count
     _updateSessionProgress();
 
-    print('Hand #${currentHand!.handNumber} completed with pot: $potAmount, winner: $winnerId');
     currentHand = null;
   }
 
@@ -709,7 +715,6 @@ class PokerSessionManager {
     // Update session with latest hand count
     _updateSessionProgress();
 
-    print('Hand #${currentHand!.handNumber} completed as chopped pot: $potAmount between ${winnerIds.length} players');
     currentHand = null;
   }
 
@@ -747,9 +752,13 @@ class PokerSessionManager {
       choppedWinners: hand.choppedWinners,
       individualShares: hand.individualShares,
       sharePerWinner: hand.sharePerWinner,
+      // Hand annotations
+      isStarred: hand.isStarred,
+      tags: hand.tags,
+      notes: hand.notes,
     );
 
-    
+
     try {
       // Try to save to Firebase as well
       await FirebaseService.saveHand(
@@ -779,16 +788,17 @@ class PokerSessionManager {
         choppedWinners: hand.choppedWinners,
         individualShares: hand.individualShares,
         sharePerWinner: hand.sharePerWinner,
+        // Hand annotations
+        isStarred: hand.isStarred,
+        tags: hand.tags,
+        notes: hand.notes,
       );
-      
+
       hand.markSaved();
-      print('Hand #${hand.handNumber} saved to both Firebase and local storage');
 
       // Update optimized stats for all participants
       await _updateOptimizedStats(hand);
     } catch (e) {
-      print('Failed to save hand to Firebase: $e');
-      print('Hand #${hand.handNumber} saved to local storage only');
       // Mark as saved since we have it locally
       hand.markSaved();
 
@@ -926,7 +936,6 @@ class PokerSessionManager {
         }
       }
     } catch (e) {
-      print('Error updating optimized stats: $e');
     }
   }
 
@@ -955,7 +964,6 @@ class PokerSessionManager {
         totalBuyIn: totalBuyIn,
       );
     } catch (e) {
-      print('Failed to update session in Firebase: $e');
     }
 
     // Always update local storage with stack history and totalBuyIn
@@ -986,16 +994,13 @@ class PokerSessionManager {
               final opponent = await OpponentService.findOpponentByName(playerName);
               if (opponent != null) {
                 await OpponentService.updateLastSeen(opponent.id);
-                print('📊 Updated opponent $playerName lastSeenAt');
               }
             } catch (e) {
-              print('Failed to update lastSeenAt for opponent $playerName: $e');
             }
           }
         }
       }
     } catch (e) {
-      print('Error updating opponent timestamps: $e');
     }
   }
 
@@ -1026,16 +1031,11 @@ class PokerSessionManager {
     if (sessionId != null && !sessionId!.startsWith('offline_')) {
       try {
         await FirebaseService.endSession(sessionId!);
-        print('Session ended in both Firebase and local storage');
       } catch (e) {
-        print('Failed to end session in Firebase: $e');
-        print('Session ended in local storage only');
       }
     } else {
-      print('Session ended in local storage');
     }
 
-    print('Session ended. Total hands: ${completedHands.length}');
   }
 
   // Add a rebuy to the session
@@ -1056,7 +1056,6 @@ class PokerSessionManager {
     // Add stack history entry for rebuy
     _addStackHistoryEntry(stack, 'rebuy', amount, completedHands.length + 1);
 
-    print('Rebuy added: \$${amount.toStringAsFixed(2)}, New stack: ${stack.toStringAsFixed(2)}, Total invested: \$${totalBuyIn.toStringAsFixed(2)}');
 
     // Update session immediately with new totalBuyIn
     _updateSessionProgress();
@@ -1082,7 +1081,6 @@ class PokerSessionManager {
       try {
         await _saveHandToFirebase(hand);
       } catch (e) {
-        print('Retry failed for hand #${hand.handNumber}: $e');
       }
     }
   }

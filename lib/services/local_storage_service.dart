@@ -19,7 +19,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 11,
+      version: 12,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -132,6 +132,12 @@ class LocalStorageService {
           await db.execute('ALTER TABLE sessions ADD COLUMN buyInAmount REAL');
           await db.execute('ALTER TABLE sessions ADD COLUMN totalBuyIn REAL');
         }
+        if (oldVersion < 12) {
+          // Add hand annotation columns for review/tagging
+          await db.execute('ALTER TABLE hands ADD COLUMN isStarred INTEGER DEFAULT 0');
+          await db.execute('ALTER TABLE hands ADD COLUMN tags TEXT');
+          await db.execute('ALTER TABLE hands ADD COLUMN notes TEXT');
+        }
       },
     );
   }
@@ -211,6 +217,10 @@ class LocalStorageService {
     List<int>? choppedWinners,
     Map<int, double>? individualShares,
     double? sharePerWinner,
+    // Hand annotations
+    bool? isStarred,
+    List<String>? tags,
+    String? notes,
   }) async {
     try {
       final db = await database;
@@ -250,6 +260,10 @@ class LocalStorageService {
           'choppedWinners': choppedWinners != null ? _safeJsonEncode(choppedWinners) : null,
           'individualShares': individualShares != null ? _safeJsonEncode(_convertKeysToStrings(individualShares)) : null,
           'sharePerWinner': sharePerWinner,
+          // Hand annotations
+          'isStarred': (isStarred == true) ? 1 : 0,
+          'tags': tags != null && tags.isNotEmpty ? _safeJsonEncode(tags) : null,
+          'notes': notes,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
