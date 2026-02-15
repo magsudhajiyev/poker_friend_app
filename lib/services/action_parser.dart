@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// Detected poker action from speech.
 class ParsedAction {
   final String action;
@@ -21,28 +19,26 @@ class ParsedAction {
 /// Parses transcriptions into poker actions.
 /// Expects English input (Soniox translates all languages to English).
 class ActionParser {
-  // English number words to digits
+  // English and Polish number words to digits
   static const Map<String, String> _numberWords = {
-    'one': '1',
-    'two': '2',
-    'three': '3',
-    'four': '4',
-    'five': '5',
-    'six': '6',
-    'seven': '7',
-    'eight': '8',
-    'nine': '9',
-    'ten': '10',
-    'fifteen': '15',
-    'twenty': '20',
-    'thirty': '30',
-    'forty': '40',
-    'fifty': '50',
-    'sixty': '60',
-    'seventy': '70',
-    'eighty': '80',
-    'ninety': '90',
-    'hundred': '100',
+    // English
+    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
+    'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10',
+    'eleven': '11', 'twelve': '12', 'thirteen': '13', 'fourteen': '14',
+    'fifteen': '15', 'sixteen': '16', 'seventeen': '17', 'eighteen': '18',
+    'nineteen': '19', 'twenty': '20', 'thirty': '30', 'forty': '40',
+    'fifty': '50', 'sixty': '60', 'seventy': '70', 'eighty': '80',
+    'ninety': '90', 'hundred': '100', 'thousand': '1000',
+
+    // Polish
+    'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5',
+    'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10',
+    'jedenaście': '11', 'dwanaście': '12', 'trzynaście': '13', 'czternaście': '14',
+    'piętnaście': '15', 'szesnaście': '16', 'siedemnaście': '17', 'osiemnaście': '18',
+    'dziewiętnaście': '19', 'dwadzieścia': '20', 'trzydzieści': '30',
+    'czterdzieści': '40', 'pięćdziesiąt': '50', 'sześćdziesiąt': '60',
+    'siedemdziesiąt': '70', 'osiemdziesiąt': '80', 'dziewięćdziesiąt': '90',
+    'sto': '100', 'tysiąc': '1000',
   };
 
   // Patterns with their action types and amount group index
@@ -84,11 +80,18 @@ class ActionParser {
   ];
 
   /// Convert number words to digits (e.g., "five" → "5").
+  /// Sorts by word length descending so "sixty" is replaced before "six".
   static String _normalizeNumbers(String text) {
     var result = text;
-    _numberWords.forEach((word, digit) {
-      result = result.replaceAll(word, digit);
-    });
+
+    // Sort by length descending so longer words are replaced first
+    // This prevents "sixty" becoming "6ty" when "six" is replaced first
+    final sortedWords = _numberWords.keys.toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+
+    for (final word in sortedWords) {
+      result = result.replaceAll(word, _numberWords[word]!);
+    }
     return result;
   }
 
@@ -135,10 +138,6 @@ class ActionParser {
           amount: match.amount,
         ));
       }
-    }
-
-    if (actions.isNotEmpty) {
-      debugPrint('ActionParser: "$transcript" -> $actions');
     }
 
     return actions;

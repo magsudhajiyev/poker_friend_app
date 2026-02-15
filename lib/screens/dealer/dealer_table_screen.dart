@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../config/app_config.dart';
 import '../../models/club.dart';
@@ -69,11 +70,22 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   bool _isVoiceMode = false;
   bool _isListening = false;
   String _partialTranscript = '';
+
+  // Pending action state for bet/raise waiting for amount
+  String? _pendingActionType; // 'bet' or 'raise'
+  DateTime? _pendingActionTime;
+  static const int _pendingActionTimeoutMs = 3000; // 3 second timeout
   String _connectionStatus = 'disconnected';
   DetectedPokerAction? _lastDetectedAction;
   StreamSubscription? _actionSubscription;
   StreamSubscription? _partialSubscription;
   StreamSubscription? _statusSubscription;
+
+  // Dealer Voice Authority state tracking
+  VoiceSessionState _voiceState = VoiceSessionState.uninitialized;
+  String? _lockedDealerName;
+  String? _lockedTableName;
+  bool _isHoldingActions = false;
 
   @override
   void initState() {
@@ -309,11 +321,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     String? transcript,
     double? confidence,
   }) async {
-    debugPrint('=== PERFORM ACTION ===');
-    debugPrint('Action: $action, Amount: $amount');
-    debugPrint('_isHandActive: $_isHandActive');
     if (!_isHandActive) {
-      debugPrint('EARLY RETURN: Hand is not active');
       return;
     }
 
@@ -332,7 +340,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     );
 
     // Perform action in game state (handles progression, pot, etc.)
-    debugPrint('Performing action on game state...');
     if (amount != null && (action == PlayerAction.bet || action == PlayerAction.raise)) {
       _gameState!.performActionWithAmount(action, amount);
     } else if (action == PlayerAction.call) {
@@ -340,7 +347,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     } else {
       _gameState!.performAction(action);
     }
-    debugPrint('Action performed. Current player now: ${_gameState!.currentPlayer}');
 
     // Log action to Firebase for real-time player sync
     final handId = _dealerSession.currentHandId;
@@ -1678,20 +1684,16 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Voice mode toggle - more prominent
+                // Voice mode toggle - shows current state
                 GestureDetector(
                   onTap: () => _toggleVoiceMode(),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: _isVoiceMode
-                          ? (_isListening ? Colors.green.shade600 : Colors.orange.shade600)
-                          : Colors.blueGrey.shade700,
+                      color: _getVoiceModeColor(),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: _isVoiceMode
-                            ? (_isListening ? Colors.green.shade400 : Colors.orange.shade400)
-                            : Colors.blueGrey.shade500,
+                        color: _getVoiceModeBorderColor(),
                         width: 2,
                       ),
                     ),
@@ -1699,17 +1701,13 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          _isVoiceMode
-                              ? (_isListening ? Icons.mic : Icons.mic_off)
-                              : Icons.touch_app,
+                          _getVoiceModeIcon(),
                           color: Colors.white,
                           size: 18,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          _isVoiceMode
-                              ? (_isListening ? 'LISTENING' : 'MIC OFF')
-                              : 'TAP',
+                          _getVoiceModeLabel(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -1768,89 +1766,390 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     );
   }
 
-  /// Build voice action UI with push-to-talk button
+  /// Build voice action UI based on current voice session state
   Widget _buildVoiceActionUI() {
     // Show last detected action briefly
     if (_lastDetectedAction != null) {
       return _buildLastActionFeedback(_lastDetectedAction!);
     }
 
-    return Column(
-      children: [
-        // Large push-to-talk button
-        GestureDetector(
-          onTapDown: (_) => _startContinuousListening(),
-          onTapUp: (_) => _stopContinuousListening(),
-          onTapCancel: () => _stopContinuousListening(),
-          child: Container(
-            width: double.infinity,
-            height: 80,
-            decoration: BoxDecoration(
-              color: _isListening ? Colors.green.shade700 : Colors.grey.shade800,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _isListening ? Colors.green : Colors.grey.shade600,
-                width: 2,
+    // State-based UI
+    switch (_voiceState) {
+      case VoiceSessionState.uninitialized:
+        return _buildStartVoiceModeUI();
+      case VoiceSessionState.calibrating:
+        return _buildCalibrationUI();
+      case VoiceSessionState.dealerLocked:
+        return _buildDealerLockedUI();
+      case VoiceSessionState.connectionLost:
+        return _buildConnectionLostUI();
+      case VoiceSessionState.rotating:
+        return _buildRotatingUI();
+    }
+  }
+
+  /// Build UI to start voice mode
+  Widget _buildStartVoiceModeUI() {
+    return GestureDetector(
+      onTap: _startContinuousListening,
+      child: Container(
+        width: double.infinity,
+        height: 80,
+        decoration: BoxDecoration(
+          color: Colors.blueGrey.shade800,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.blueGrey.shade600, width: 2),
+        ),
+        child: const Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.mic_none, color: Colors.white, size: 32),
+              SizedBox(width: 12),
+              Text(
+                'TAP TO START VOICE MODE',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                ),
               ),
-              boxShadow: _isListening
-                  ? [
-                      BoxShadow(
-                        color: Colors.green.withValues(alpha: 0.4),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    _isListening ? Icons.mic : Icons.mic_none,
-                    color: Colors.white,
-                    size: 32,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    _isListening ? 'LISTENING...' : 'HOLD TO SPEAK',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        // Show partial transcript while listening
-        if (_isListening && _partialTranscript.isNotEmpty)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              _partialTranscript,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-        const SizedBox(height: 4),
-        Text(
-          'Say: fold, check, call, bet [amount], raise [amount], all-in',
-          style: const TextStyle(color: Colors.white54, fontSize: 11),
-        ),
-      ],
+      ),
     );
+  }
+
+  /// Build calibration UI - waiting for dealer to announce
+  Widget _buildCalibrationUI() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade800,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Calibrating...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Please announce: "Table [number], dealer [name]"',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              // Cancel button
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white70),
+                onPressed: _stopContinuousListening,
+                tooltip: 'Cancel',
+              ),
+            ],
+          ),
+          // Show partial transcript during calibration
+          if (_partialTranscript.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _partialTranscript,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Build dealer locked UI - ready to receive commands
+  Widget _buildDealerLockedUI() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _isHoldingActions ? Colors.amber.shade700 : Colors.green.shade700,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          // Status row
+          Row(
+            children: [
+              Icon(
+                _isHoldingActions ? Icons.pause : Icons.mic,
+                color: Colors.white,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isHoldingActions ? 'Actions Paused' : 'Listening',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Dealer: ${_lockedDealerName ?? 'Unknown'} • ${_lockedTableName ?? 'Table'}',
+                      style: const TextStyle(color: Colors.white70, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              // Hold Action Toggle
+              IconButton(
+                icon: Icon(
+                  _isHoldingActions ? Icons.play_arrow : Icons.pause,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  _realtimeSpeechService.toggleHoldAction();
+                  setState(() => _isHoldingActions = !_isHoldingActions);
+                },
+                tooltip: _isHoldingActions ? 'Resume Actions' : 'Hold Actions',
+              ),
+              // Recalibrate
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.white70),
+                onPressed: _recalibrateDealer,
+                tooltip: 'Recalibrate',
+              ),
+              // Stop button
+              IconButton(
+                icon: const Icon(Icons.stop, color: Colors.white70),
+                onPressed: _stopContinuousListening,
+                tooltip: 'Stop Voice Mode',
+              ),
+            ],
+          ),
+          // Transcript
+          if (_partialTranscript.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _partialTranscript,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ],
+          // Help text
+          const SizedBox(height: 8),
+          const Text(
+            'Say: fold, check, call, bet [amount], raise [amount], all-in',
+            style: TextStyle(color: Colors.white54, fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build connection lost UI
+  Widget _buildConnectionLostUI() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.shade800,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 2,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Connection Lost',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Attempting to reconnect...',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          // Manual reconnect
+          ElevatedButton(
+            onPressed: () => _realtimeSpeechService.startStreaming(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.red.shade800,
+            ),
+            child: const Text('Reconnect'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build rotating dealer UI
+  Widget _buildRotatingUI() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.purple.shade800,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 2,
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Text(
+              'Rotating Dealer...',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Recalibrate dealer voice
+  void _recalibrateDealer() {
+    _realtimeSpeechService.recalibrate();
+    setState(() {
+      _voiceState = VoiceSessionState.calibrating;
+      _lockedDealerName = null;
+      _lockedTableName = null;
+      _partialTranscript = '';
+    });
+  }
+
+  /// Get voice mode button color based on state
+  Color _getVoiceModeColor() {
+    if (!_isVoiceMode) return Colors.blueGrey.shade700;
+
+    switch (_voiceState) {
+      case VoiceSessionState.uninitialized:
+        return Colors.blueGrey.shade700;
+      case VoiceSessionState.calibrating:
+        return Colors.orange.shade600;
+      case VoiceSessionState.dealerLocked:
+        return _isHoldingActions ? Colors.amber.shade700 : Colors.green.shade600;
+      case VoiceSessionState.connectionLost:
+        return Colors.red.shade600;
+      case VoiceSessionState.rotating:
+        return Colors.purple.shade600;
+    }
+  }
+
+  /// Get voice mode button border color based on state
+  Color _getVoiceModeBorderColor() {
+    if (!_isVoiceMode) return Colors.blueGrey.shade500;
+
+    switch (_voiceState) {
+      case VoiceSessionState.uninitialized:
+        return Colors.blueGrey.shade500;
+      case VoiceSessionState.calibrating:
+        return Colors.orange.shade400;
+      case VoiceSessionState.dealerLocked:
+        return _isHoldingActions ? Colors.amber.shade500 : Colors.green.shade400;
+      case VoiceSessionState.connectionLost:
+        return Colors.red.shade400;
+      case VoiceSessionState.rotating:
+        return Colors.purple.shade400;
+    }
+  }
+
+  /// Get voice mode icon based on state
+  IconData _getVoiceModeIcon() {
+    if (!_isVoiceMode) return Icons.touch_app;
+
+    switch (_voiceState) {
+      case VoiceSessionState.uninitialized:
+        return Icons.mic_none;
+      case VoiceSessionState.calibrating:
+        return Icons.settings_voice;
+      case VoiceSessionState.dealerLocked:
+        return _isHoldingActions ? Icons.pause : Icons.mic;
+      case VoiceSessionState.connectionLost:
+        return Icons.signal_wifi_off;
+      case VoiceSessionState.rotating:
+        return Icons.sync;
+    }
+  }
+
+  /// Get voice mode label based on state
+  String _getVoiceModeLabel() {
+    if (!_isVoiceMode) return 'TAP';
+
+    switch (_voiceState) {
+      case VoiceSessionState.uninitialized:
+        return 'OFF';
+      case VoiceSessionState.calibrating:
+        return 'CALIB';
+      case VoiceSessionState.dealerLocked:
+        return _isHoldingActions ? 'PAUSED' : 'LIVE';
+      case VoiceSessionState.connectionLost:
+        return 'LOST';
+      case VoiceSessionState.rotating:
+        return 'ROTATE';
+    }
   }
 
   /// Show brief feedback when action is detected and executed
@@ -1894,7 +2193,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   /// Toggle voice mode on/off (shows/hides push-to-talk button)
   Future<void> _toggleVoiceMode() async {
     try {
-      debugPrint('Toggle voice mode: current=$_isVoiceMode');
       if (_isVoiceMode) {
         // Turn off voice mode - stop any active listening
         await _stopContinuousListening();
@@ -1904,9 +2202,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         // Actual streaming starts when button is held
         if (mounted) setState(() => _isVoiceMode = true);
       }
-    } catch (e, stack) {
-      debugPrint('Error toggling voice mode: $e');
-      debugPrint('Stack: $stack');
+    } catch (e) {
       _showError('Voice mode error: $e');
       if (mounted) setState(() => _isVoiceMode = false);
     }
@@ -1915,22 +2211,27 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   /// Start continuous listening using real-time WebSocket streaming
   Future<void> _startContinuousListening() async {
     try {
-      debugPrint('Starting real-time speech streaming...');
-
       // Subscribe to action stream from realtime service
       _actionSubscription?.cancel();
       _actionSubscription = _realtimeSpeechService.actionStream.listen(
         _onActionDetected,
-        onError: (e) => debugPrint('Action stream error: $e'),
+        onError: (e) {},
       );
 
       // Subscribe to partial results for UI feedback
       _partialSubscription?.cancel();
       _partialSubscription = _realtimeSpeechService.partialStream.listen(
         (partial) {
-          if (mounted) setState(() => _partialTranscript = partial);
+          if (mounted) {
+            setState(() => _partialTranscript = partial);
+
+            // Check if this completes a pending bet/raise action
+            if (_pendingActionType != null) {
+              _checkForPendingAmount(partial);
+            }
+          }
         },
-        onError: (e) => debugPrint('Partial stream error: $e'),
+        onError: (e) {},
       );
 
       // Subscribe to status stream for connection state
@@ -1938,36 +2239,65 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       _statusSubscription = _realtimeSpeechService.statusStream.listen(
         (status) {
           if (mounted) {
-            setState(() => _connectionStatus = status);
-            debugPrint('Real-time speech status: $status');
+            setState(() {
+              _connectionStatus = status;
+              _voiceState = _realtimeSpeechService.state;
+              _isHoldingActions = _realtimeSpeechService.isHoldingActions;
+            });
+
+            // Handle dealer locked event
+            if (status.startsWith('dealer_locked:')) {
+              final parts = status.split(':');
+              if (parts.length >= 3) {
+                setState(() {
+                  _lockedDealerName = parts[1];
+                  _lockedTableName = parts[2];
+                });
+                _showSuccess('Dealer locked: ${parts[1]} at table ${parts[2]}');
+              }
+            } else if (status == 'calibration_failed:no_speakers') {
+              _showError('No speakers detected - please speak clearly');
+            } else if (status == 'calibration_failed:content_mismatch') {
+              _showError('Please say: "Table [number], dealer [name]"');
+            } else if (status == 'connection_lost') {
+              _showError('Connection lost - attempting to recover...');
+            } else if (status == 'grace_period_expired') {
+              _showError('Connection timeout - recalibration required');
+            } else if (status == 'connection_recovered') {
+              _showSuccess('Connection recovered!');
+            } else if (status.startsWith('action_held:')) {
+              final transcript = status.substring('action_held:'.length);
+              _showAutoCorrection('Action held', transcript);
+            }
           }
         },
-        onError: (e) => debugPrint('Status stream error: $e'),
+        onError: (e) {},
       );
 
-      debugPrint('Starting real-time speech streaming...');
       final started = await _realtimeSpeechService.startStreaming();
-      debugPrint('Real-time speech streaming started: $started');
 
-      if (mounted) setState(() => _isListening = started);
+      if (mounted) {
+        setState(() {
+          _isListening = started;
+          _voiceState = _realtimeSpeechService.state;
+        });
+      }
 
       if (!started) {
         _showError('Failed to start streaming - check server connection and microphone');
       }
-    } catch (e, stack) {
-      debugPrint('Error starting real-time speech: $e');
-      debugPrint('Stack: $stack');
+    } catch (e) {
       _showError('Failed to start voice: $e');
       if (mounted) {
         setState(() {
           _isVoiceMode = false;
           _isListening = false;
+          _voiceState = VoiceSessionState.uninitialized;
         });
       }
     }
   }
 
-  /// Stop continuous listening
   /// Stop continuous listening
   /// Waits for final results before cancelling subscriptions
   Future<void> _stopContinuousListening() async {
@@ -1986,21 +2316,21 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       _isListening = false;
       _partialTranscript = '';
       _connectionStatus = 'stopped';
+      _voiceState = VoiceSessionState.uninitialized;
+      _lockedDealerName = null;
+      _lockedTableName = null;
+      _isHoldingActions = false;
     });
   }
 
   /// Handle detected action from speech
   Future<void> _onActionDetected(DetectedPokerAction action) async {
-    debugPrint('=== ACTION DETECTED FROM SPEECH ===');
-    debugPrint('Action: ${action.action}, Amount: ${action.amount}');
-    debugPrint('_isHandActive: $_isHandActive');
-
     if (!_isHandActive) {
-      debugPrint('SKIPPING: Hand not active');
       return;
     }
 
-    debugPrint('Voice action detected: ${action.action} (amount: ${action.amount})');
+    // Haptic feedback for action detection
+    HapticFeedback.mediumImpact();
 
     // Show the detected action briefly
     setState(() => _lastDetectedAction = action);
@@ -2016,20 +2346,86 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     });
   }
 
-  /// Execute a detected voice action
-  Future<void> _executeVoiceAction(DetectedPokerAction action) async {
-    debugPrint('=== VOICE ACTION EXECUTION ===');
-    debugPrint('Action to execute: ${action.action}');
-    debugPrint('_gameState is null: ${_gameState == null}');
-    debugPrint('_isHandActive: $_isHandActive');
+  // Number words for extracting amounts from partial transcripts
+  static const Map<String, String> _numberWords = {
+    // English
+    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
+    'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10',
+    'eleven': '11', 'twelve': '12', 'thirteen': '13', 'fourteen': '14',
+    'fifteen': '15', 'sixteen': '16', 'seventeen': '17', 'eighteen': '18',
+    'nineteen': '19', 'twenty': '20', 'thirty': '30', 'forty': '40',
+    'fifty': '50', 'sixty': '60', 'seventy': '70', 'eighty': '80',
+    'ninety': '90', 'hundred': '100', 'thousand': '1000',
+    // Polish
+    'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5',
+    'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10',
+    'jedenaście': '11', 'dwanaście': '12', 'trzynaście': '13', 'czternaście': '14',
+    'piętnaście': '15', 'szesnaście': '16', 'siedemnaście': '17', 'osiemnaście': '18',
+    'dziewiętnaście': '19', 'dwadzieścia': '20', 'trzydzieści': '30',
+    'czterdzieści': '40', 'pięćdziesiąt': '50', 'sześćdziesiąt': '60',
+    'siedemdziesiąt': '70', 'osiemdziesiąt': '80', 'dziewięćdziesiąt': '90',
+    'sto': '100', 'tysiąc': '1000',
+  };
 
-    if (_gameState == null) {
-      debugPrint('ERROR: Cannot execute voice action - game state is null');
+  /// Extract a number from transcript (handles Polish and English number words)
+  /// Sorts by word length descending so "sixty" is replaced before "six".
+  double? _extractNumber(String transcript) {
+    var text = transcript.toLowerCase();
+
+    // Sort by length descending so longer words are replaced first
+    // This prevents "sixty" becoming "6ty" when "six" is replaced first
+    final sortedWords = _numberWords.keys.toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+
+    for (final word in sortedWords) {
+      text = text.replaceAll(word, _numberWords[word]!);
+    }
+
+    // Extract first number found
+    final match = RegExp(r'\d+').firstMatch(text);
+    if (match != null) {
+      return double.tryParse(match.group(0)!);
+    }
+    return null;
+  }
+
+  /// Check if a partial transcript contains an amount for a pending action
+  void _checkForPendingAmount(String transcript) {
+    if (_pendingActionType == null) return;
+
+    // Check timeout
+    if (_pendingActionTime != null &&
+        DateTime.now().difference(_pendingActionTime!).inMilliseconds > _pendingActionTimeoutMs) {
+      _pendingActionType = null;
+      _pendingActionTime = null;
       return;
     }
 
-    if (!_isHandActive) {
-      debugPrint('ERROR: Cannot execute voice action - hand is not active');
+    // Try to extract a number from the transcript
+    final amount = _extractNumber(transcript);
+    if (amount != null && amount > 0) {
+
+      // Create the complete action
+      final action = DetectedPokerAction(
+        action: _pendingActionType!,
+        amount: amount,
+        confidence: 1.0,
+        transcript: transcript,
+        matchScore: 100,
+      );
+
+      // Clear pending state
+      _pendingActionType = null;
+      _pendingActionTime = null;
+
+      // Execute the action
+      _executeVoiceAction(action);
+    }
+  }
+
+  /// Execute a detected voice action
+  Future<void> _executeVoiceAction(DetectedPokerAction action) async {
+    if (_gameState == null || !_isHandActive) {
       return;
     }
 
@@ -2069,48 +2465,50 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         }
         break;
       case 'bet':
+        // If no amount, store as pending and wait for amount to be transcribed
+        if (amount == null) {
+          _pendingActionType = 'bet';
+          _pendingActionTime = DateTime.now();
+          return; // Don't execute yet, wait for amount
+        }
         // Auto-correct: if bet is invalid, try raise instead
         if (!_gameState!.isValidAction(PlayerAction.bet)) {
           if (_gameState!.isValidAction(PlayerAction.raise)) {
             playerAction = PlayerAction.raise;
             _showAutoCorrection('bet', 'raise');
-            if (amount == null) {
-              amount = await _showAmountDialog('Raise to');
-              if (amount == null || amount <= 0) return;
-            }
           } else {
             _showError('Cannot bet or raise');
             return;
           }
         } else {
           playerAction = PlayerAction.bet;
-          if (amount == null) {
-            amount = await _showAmountDialog('Bet amount');
-            if (amount == null || amount <= 0) return;
-          }
         }
+        // Clear pending state since we're executing
+        _pendingActionType = null;
+        _pendingActionTime = null;
         break;
       case 'raise':
+        // If no amount, store as pending and wait for amount to be transcribed
+        if (amount == null) {
+          _pendingActionType = 'raise';
+          _pendingActionTime = DateTime.now();
+          return; // Don't execute yet, wait for amount
+        }
         // Auto-correct: if raise is invalid, try bet instead
         if (!_gameState!.isValidAction(PlayerAction.raise)) {
           if (_gameState!.isValidAction(PlayerAction.bet)) {
             playerAction = PlayerAction.bet;
             _showAutoCorrection('raise', 'bet');
-            if (amount == null) {
-              amount = await _showAmountDialog('Bet amount');
-              if (amount == null || amount <= 0) return;
-            }
           } else {
             _showError('Cannot raise or bet');
             return;
           }
         } else {
           playerAction = PlayerAction.raise;
-          if (amount == null) {
-            amount = await _showAmountDialog('Raise to');
-            if (amount == null || amount <= 0) return;
-          }
         }
+        // Clear pending state since we're executing
+        _pendingActionType = null;
+        _pendingActionTime = null;
         break;
       case 'all-in':
         final canBet = _gameState!.isValidAction(PlayerAction.bet);
@@ -2125,14 +2523,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     }
 
     // Execute the action
-    debugPrint('Calling _performAction with: $playerAction, amount: $amount');
     await _performAction(
       playerAction,
       amount: amount,
       transcript: action.transcript,
       confidence: action.confidence,
     );
-    debugPrint('_performAction completed');
   }
 
   Widget _buildActionButton(String label, Color color, VoidCallback onTap) {
