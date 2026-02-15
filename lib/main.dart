@@ -5,9 +5,17 @@ import 'theme/app_theme.dart';
 import 'screens/auth_wrapper.dart';
 import 'services/notification_service.dart';
 import 'services/logger_service.dart';
+import 'config/env_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment configuration
+  try {
+    await EnvConfig.load();
+  } catch (e) {
+    print('Environment config load failed: $e');
+  }
 
   try {
     await Firebase.initializeApp(

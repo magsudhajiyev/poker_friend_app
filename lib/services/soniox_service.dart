@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import '../config/env_config.dart';
 import 'continuous_speech_service.dart'; // For DetectedPokerAction class
 import 'action_parser.dart';
 
@@ -63,7 +63,6 @@ class SonioxService {
   static SonioxService get instance => _instance;
 
   static const String _wsUrl = 'wss://stt-rt.soniox.com/transcribe-websocket';
-  static const String _apiKey = 'd6b70a1463e1c697ae879aefa9b7e0586e1c8b027cc165b58614798fc9fb6ada';
 
   WebSocketChannel? _channel;
   StreamSubscription? _wsSubscription;
@@ -111,7 +110,7 @@ class SonioxService {
 
       // Send configuration with poker context
       final config = {
-        'api_key': _apiKey,
+        'api_key': EnvConfig.sonioxApiKey,
         'model': 'stt-rt-preview',
         'audio_format': 's16le',
         'sample_rate': 16000,
