@@ -1,0 +1,926 @@
+import 'dart:async';
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import '../../models/seat_assignment.dart';
+import '../../models/dealer_session.dart';
+import '../../services/seat_service.dart';
+import '../../services/dealer_service.dart';
+import '../../services/websocket_service.dart';
+import '../../services/auth_service.dart';
+
+/// Screen for players to view the live poker session
+class LiveSessionScreen extends StatefulWidget {
+  final String clubId;
+  final String tableId;
+  final int seatNumber;
+  final String tableName;
+  final String clubName;
+
+  const LiveSessionScreen({
+    Key? key,
+    required this.clubId,
+    required this.tableId,
+    required this.seatNumber,
+    required this.tableName,
+    required this.clubName,
+  }) : super(key: key);
+
+  @override
+  State<LiveSessionScreen> createState() => _LiveSessionScreenState();
+}
+
+class _LiveSessionScreenState extends State<LiveSessionScreen> {
+  final WebSocketService _wsService = WebSocketService.instance;
+
+  // Session state
+  Map<int, SeatAssignment> _seats = {};
+  List<Map<String, dynamic>> _recentActions = [];
+  double _potAmount = 0;
+  int? _currentPlayerSeat;
+  int _buttonPosition = 1;
+  String _currentStreet = 'preflop';
+  int _handNumber = 0;
+  bool _isHandActive = false;
+
+  // Dealer session info
+  DealerSession? _dealerSession;
+  String? _currentHandId;
+
+  // Subscriptions
+  StreamSubscription? _seatSubscription;
+  StreamSubscription? _sessionSubscription;
+  StreamSubscription? _handSubscription;
+
+  bool _isLoading = true;
+  String? _error;
+  bool _sessionEnded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
+  @override
+  void dispose() {
+    _seatSubscription?.cancel();
+    _sessionSubscription?.cancel();
+    _handSubscription?.cancel();
+    _wsService.leaveTable(widget.tableId);
+    super.dispose();
+  }
+
+  Future<void> _initialize() async {
+    try {
+      // Load initial seat data
+      _seats = await SeatService.getTableSeats(
+        clubId: widget.clubId,
+        tableId: widget.tableId,
+      );
+
+      // Subscribe to seat updates (Firestore real-time)
+      _seatSubscription = SeatService.watchTableSeats(
+        clubId: widget.clubId,
+        tableId: widget.tableId,
+      ).listen((seats) {
+        if (mounted) {
+          setState(() {
+            _seats = seats;
+          });
+        }
+      });
+
+      // Subscribe to dealer session updates (Firestore real-time)
+      _sessionSubscription = DealerService.watchActiveSessionForTable(
+        clubId: widget.clubId,
+        tableId: widget.tableId,
+      ).listen((session) {
+        if (!mounted) return;
+
+        if (session == null && _dealerSession != null && !_sessionEnded) {
+          // Session was ended
+          _sessionEnded = true;
+          _showSessionEnded();
+          return;
+        }
+
+        if (session != null) {
+          final oldHandId = _currentHandId;
+          final newHandId = session.currentHandId;
+
+          setState(() {
+            _dealerSession = session;
+            _currentHandId = newHandId;
+          });
+
+          // If hand changed, start watching the new hand
+          if (newHandId != oldHandId) {
+            _handSubscription?.cancel();
+            if (newHandId != null) {
+              _watchCurrentHand(session.id, newHandId);
+            } else {
+              // Hand was completed, show result if we had one
+              setState(() {
+                _isHandActive = false;
+              });
+            }
+          }
+        }
+      });
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _watchCurrentHand(String sessionId, String handId) {
+    _handSubscription = DealerService.watchCurrentHand(sessionId, handId).listen((handData) {
+      if (!mounted || handData == null) return;
+
+      final actions = (handData['actions'] as List<dynamic>?) ?? [];
+      final status = handData['status'] as String?;
+      final handNumber = handData['handNumber'] as int? ?? 0;
+      final buttonPos = handData['buttonPosition'] as int? ?? _buttonPosition;
+      final smallBlind = (handData['smallBlind'] as num?)?.toDouble() ?? 1;
+      final bigBlind = (handData['bigBlind'] as num?)?.toDouble() ?? 2;
+      final hasBBante = handData['hasBBante'] as bool? ?? false;
+
+      // Calculate pot from actions + blinds
+      double calculatedPot = smallBlind + bigBlind;
+      if (hasBBante) {
+        calculatedPot += bigBlind;
+      }
+
+      // Track bets per player to handle raises correctly
+      final Map<int, double> playerBets = {};
+
+      // Convert actions and calculate pot
+      final recentActions = <Map<String, dynamic>>[];
+      for (final a in actions) {
+        final action = a as Map<String, dynamic>;
+        final actionType = action['action'] as String?;
+        final amount = (action['amount'] as num?)?.toDouble();
+        final seat = action['player'] as int?;
+
+        recentActions.add({
+          'seat_number': seat,
+          'action': actionType,
+          'amount': amount,
+          'player_name': action['playerName'],
+        });
+
+        // Calculate pot contribution based on action
+        if (seat != null && actionType != null) {
+          switch (actionType) {
+            case 'call':
+              if (amount != null) {
+                calculatedPot += amount;
+                playerBets[seat] = (playerBets[seat] ?? 0) + amount;
+              }
+              break;
+            case 'bet':
+            case 'raise':
+              if (amount != null) {
+                // Amount is the total bet, calculate the additional contribution
+                final previousBet = playerBets[seat] ?? 0;
+                final contribution = amount - previousBet;
+                if (contribution > 0) {
+                  calculatedPot += contribution;
+                  playerBets[seat] = amount;
+                }
+              }
+              break;
+            case 'all-in':
+              if (amount != null) {
+                calculatedPot += amount;
+                playerBets[seat] = (playerBets[seat] ?? 0) + amount;
+              }
+              break;
+          }
+        }
+      }
+
+      // Use stored potAmount if hand is completed (it's more accurate)
+      final storedPot = (handData['potAmount'] as num?)?.toDouble() ?? 0;
+      final finalPot = status == 'completed' ? storedPot : calculatedPot;
+
+      setState(() {
+        _recentActions = recentActions.length > 10
+            ? recentActions.sublist(recentActions.length - 10)
+            : recentActions;
+        _potAmount = finalPot;
+        _handNumber = handNumber;
+        _buttonPosition = buttonPos;
+        _isHandActive = status == 'active';
+
+        // Determine current player (simplified - last action's next player)
+        if (recentActions.isNotEmpty) {
+          final lastAction = recentActions.last;
+          final lastSeat = lastAction['seat_number'] as int?;
+          if (lastSeat != null) {
+            // Simple next player calculation
+            final occupiedSeats = _seats.entries
+                .where((e) => e.value.isOccupied)
+                .map((e) => e.key)
+                .toList()
+              ..sort();
+            if (occupiedSeats.isNotEmpty) {
+              final idx = occupiedSeats.indexOf(lastSeat);
+              _currentPlayerSeat = occupiedSeats[(idx + 1) % occupiedSeats.length];
+            }
+          }
+        }
+      });
+
+      // Check if hand was completed
+      if (status == 'completed' && _isHandActive) {
+        final winnerId = handData['winnerId'] as int?;
+        if (winnerId != null) {
+          _showHandResult({
+            'winner_seat': winnerId,
+            'pot_amount': finalPot,
+          });
+        }
+      }
+    });
+  }
+
+  void _showHandResult(Map<String, dynamic> data) {
+    final winnerSeat = data['winner_seat'];
+    final potAmount = data['pot_amount'];
+    final winnerName = _seats[winnerSeat]?.playerName ?? 'Seat $winnerSeat';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$winnerName wins \$$potAmount'),
+        backgroundColor: Colors.green.shade700,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showSessionEnded() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: const Text(
+          'Session Ended',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'The dealer has ended this session.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _leaveTable() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: const Text(
+          'Leave Table?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Are you sure you want to leave this table?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await SeatService.leaveSeat(
+          clubId: widget.clubId,
+          tableId: widget.tableId,
+          seatNumber: widget.seatNumber,
+        );
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to leave: ${e.toString()}'),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D1117),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF161B22),
+        elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.tableName,
+              style: const TextStyle(fontSize: 18),
+            ),
+            Text(
+              widget.clubName,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.white54,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.exit_to_app),
+            onPressed: _leaveTable,
+            tooltip: 'Leave Table',
+          ),
+        ],
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+            const SizedBox(height: 16),
+            Text(
+              _error!,
+              style: const TextStyle(color: Colors.white70),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Go Back'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        // Pot display
+        _buildPotDisplay(),
+
+        // Table visualization
+        Expanded(
+          flex: 3,
+          child: _buildTableView(),
+        ),
+
+        // Action feed
+        Expanded(
+          flex: 2,
+          child: _buildActionFeed(),
+        ),
+
+        // My seat info
+        _buildMySeatInfo(),
+      ],
+    );
+  }
+
+  Widget _buildPotDisplay() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      color: const Color(0xFF161B22),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          // Hand number
+          Column(
+            children: [
+              Text(
+                'HAND',
+                style: TextStyle(
+                  color: Colors.purple.withValues(alpha: 0.7),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                _handNumber > 0 ? '#$_handNumber' : '--',
+                style: const TextStyle(
+                  color: Colors.purple,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          // Pot amount
+          Column(
+            children: [
+              Text(
+                'POT',
+                style: TextStyle(
+                  color: Colors.amber.withValues(alpha: 0.7),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                '\$${_potAmount.toStringAsFixed(0)}',
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          // Status
+          Column(
+            children: [
+              Text(
+                'STATUS',
+                style: TextStyle(
+                  color: (_isHandActive ? Colors.green : Colors.grey).withValues(alpha: 0.7),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                _isHandActive ? 'LIVE' : 'WAITING',
+                style: TextStyle(
+                  color: _isHandActive ? Colors.green : Colors.grey,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableView() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final centerX = constraints.maxWidth / 2;
+        final centerY = constraints.maxHeight / 2;
+        // Use consistent proportions with dealer screen (80% width, 70% height)
+        final tableWidth = constraints.maxWidth * 0.80;
+        final tableHeight = constraints.maxHeight * 0.70;
+        // Match the seat positioning radii (0.42 width, 0.38 height)
+        final radiusX = constraints.maxWidth * 0.42;
+        final radiusY = constraints.maxHeight * 0.38;
+
+        return Stack(
+          children: [
+            // Table - matching dealer screen design
+            Center(
+              child: Container(
+                width: tableWidth,
+                height: tableHeight,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 30,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 10),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      spreadRadius: -5,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const RadialGradient(
+                      center: Alignment.center,
+                      radius: 0.8,
+                      colors: [
+                        Color(0xFF0F6B33),
+                        Color(0xFF0D5D2D),
+                        Color(0xFF0A4A24),
+                      ],
+                      stops: [0.0, 0.6, 1.0],
+                    ),
+                    borderRadius: BorderRadius.circular(200),
+                    border: Border.all(
+                      color: const Color(0xFF2A2A2E),
+                      width: 6,
+                    ),
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(194),
+                      border: Border.all(
+                        color: const Color(0xFF1A1A1E).withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '\$${_potAmount.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                            ),
+                          ),
+                          const Text('POT', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Seats positioned around the table
+            ..._buildSeatsAroundTable(centerX, centerY, radiusX, radiusY),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildSeatsAroundTable(double centerX, double centerY, double radiusX, double radiusY) {
+    // Use the same elliptical positioning as dealer screen
+    // 9 seats with 40 degree spacing, starting at 225 degrees (top-left)
+    final double startAngle = math.pi * 1.25; // 225 degrees
+    final double angleStep = (2 * math.pi) / 9; // 40 degrees per seat
+
+    return List.generate(9, (i) {
+      final seatNumber = i + 1;
+      final angle = startAngle + (angleStep * (seatNumber - 1));
+      final x = centerX + radiusX * math.cos(angle) - 32;
+      final y = centerY + radiusY * math.sin(angle) - 32;
+
+      final assignment = _seats[seatNumber];
+      final isOccupied = assignment?.isOccupied ?? false;
+      final isMySeat = seatNumber == widget.seatNumber;
+      final isCurrentPlayer = seatNumber == _currentPlayerSeat;
+      final isButton = seatNumber == _buttonPosition;
+      final chipStack = assignment?.chipStack ?? 0;
+
+      return Positioned(
+        left: x,
+        top: y,
+        child: _buildSeat(
+          seatNumber: seatNumber,
+          playerName: assignment?.playerName,
+          isOccupied: isOccupied,
+          isMySeat: isMySeat,
+          isCurrentPlayer: isCurrentPlayer,
+          isButton: isButton,
+          chipStack: chipStack,
+        ),
+      );
+    });
+  }
+
+  Widget _buildSeat({
+    required int seatNumber,
+    String? playerName,
+    required bool isOccupied,
+    required bool isMySeat,
+    required bool isCurrentPlayer,
+    bool isButton = false,
+    double chipStack = 0,
+  }) {
+    Color bgColor;
+    Color borderColor;
+
+    if (!isOccupied) {
+      bgColor = const Color(0xFF2A2A3A);
+      borderColor = const Color(0xFF3A3A4A);
+    } else if (isMySeat) {
+      bgColor = const Color(0xFF1E3A8F);
+      borderColor = Colors.blue;
+    } else if (isCurrentPlayer) {
+      bgColor = const Color(0xFF4A3A00);
+      borderColor = Colors.amber;
+    } else {
+      bgColor = const Color(0xFF1E3A5F);
+      borderColor = const Color(0xFF2E5A8F);
+    }
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: bgColor,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: borderColor,
+              width: (isMySeat || isCurrentPlayer) ? 3 : 2,
+            ),
+            boxShadow: isCurrentPlayer
+                ? [BoxShadow(color: Colors.amber.withValues(alpha: 0.5), blurRadius: 15)]
+                : (isMySeat
+                    ? [BoxShadow(color: Colors.blue.withValues(alpha: 0.5), blurRadius: 10)]
+                    : null),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                seatNumber.toString(),
+                style: TextStyle(
+                  color: isOccupied ? Colors.white : Colors.white38,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (isOccupied) ...[
+                Text(
+                  _truncateName(playerName ?? ''),
+                  style: const TextStyle(color: Colors.white70, fontSize: 9),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (chipStack > 0)
+                  Text(
+                    '\$${chipStack.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      color: isMySeat ? Colors.lightBlueAccent : Colors.greenAccent,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              ],
+            ],
+          ),
+        ),
+        // Dealer button badge
+        if (isButton && isOccupied)
+          Positioned(
+            right: -4,
+            top: -4,
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.black, width: 2),
+              ),
+              child: const Center(
+                child: Text(
+                  'D',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _truncateName(String name) {
+    if (name.length <= 6) return name;
+    return '${name.substring(0, 5)}..';
+  }
+
+  Widget _buildActionFeed() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.history, color: Colors.white54, size: 18),
+              SizedBox(width: 8),
+              Text(
+                'Recent Actions',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const Divider(color: Colors.white12),
+          Expanded(
+            child: _recentActions.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Waiting for action...',
+                      style: TextStyle(color: Colors.white38),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _recentActions.length,
+                    reverse: true,
+                    itemBuilder: (context, index) {
+                      final action = _recentActions[_recentActions.length - 1 - index];
+                      return _buildActionItem(action);
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionItem(Map<String, dynamic> action) {
+    final seatNumber = action['seat_number'];
+    final actionType = action['action'];
+    final amount = action['amount'];
+    final playerName = _seats[seatNumber]?.playerName ?? 'Seat $seatNumber';
+
+    String actionText = '$playerName $actionType';
+    if (amount != null && amount > 0) {
+      actionText += ' \$${amount.toStringAsFixed(0)}';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Text(
+        actionText,
+        style: TextStyle(
+          color: _getActionColor(actionType),
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  Color _getActionColor(String action) {
+    switch (action.toLowerCase()) {
+      case 'fold':
+        return Colors.red.shade300;
+      case 'check':
+        return Colors.grey.shade400;
+      case 'call':
+        return Colors.green.shade300;
+      case 'bet':
+      case 'raise':
+        return Colors.amber.shade300;
+      case 'all-in':
+        return Colors.purple.shade300;
+      default:
+        return Colors.white70;
+    }
+  }
+
+  Widget _buildMySeatInfo() {
+    final mySeat = _seats[widget.seatNumber];
+    final myStack = mySeat?.chipStack ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade900,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                widget.seatNumber.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Your Seat',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    myStack > 0 ? 'Stack: \$${myStack.toStringAsFixed(0)}' : 'Waiting for dealer...',
+                    style: TextStyle(
+                      color: myStack > 0 ? Colors.greenAccent : Colors.white54,
+                      fontSize: 14,
+                      fontWeight: myStack > 0 ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Live indicator
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _dealerSession != null
+                    ? Colors.green.withValues(alpha: 0.2)
+                    : Colors.grey.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _dealerSession != null ? Colors.green : Colors.grey,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _dealerSession != null ? Colors.green : Colors.grey,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _dealerSession != null ? 'LIVE' : 'OFFLINE',
+                    style: TextStyle(
+                      color: _dealerSession != null ? Colors.green : Colors.grey,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

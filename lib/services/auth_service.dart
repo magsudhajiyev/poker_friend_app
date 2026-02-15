@@ -1,7 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/account_type.dart';
 
 class AuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Cached account type
+  static AccountType? _cachedAccountType;
+  static String? _cachedAccountTypeUserId;  // Track which user the cache is for
   
   // Get current user
   static User? get currentUser => _auth.currentUser;
@@ -56,6 +63,7 @@ class AuthService {
   // Sign out
   static Future<void> signOut() async {
     try {
+      clearAccountTypeCache();  // Clear cached account type
       await _auth.signOut();
       print('User signed out');
     } catch (e) {
@@ -144,7 +152,7 @@ class AuthService {
   
   // Check if email is verified
   static bool get isEmailVerified => currentUser?.emailVerified ?? false;
-  
+
   // Send email verification
   static Future<void> sendEmailVerification() async {
     try {
@@ -153,6 +161,81 @@ class AuthService {
     } catch (e) {
       print('Email verification error: $e');
       throw 'Failed to send verification email. Please try again.';
+    }
+  }
+
+  // ==================== Account Type Methods ====================
+
+  /// Get the account type for the current user
+  /// Returns AccountType.player by default
+  static Future<AccountType> getAccountType() async {
+    final uid = userId;
+    if (uid == null) return AccountType.player;
+
+    // Return cached value if it's for the same user
+    if (_cachedAccountType != null && _cachedAccountTypeUserId == uid) {
+      return _cachedAccountType!;
+    }
+
+    try {
+      // Check the dealers collection for this user
+      final doc = await _firestore.collection('dealers').doc(uid).get();
+
+      if (doc.exists) {
+        final data = doc.data();
+        final typeString = data?['accountType'] as String?;
+        _cachedAccountType = AccountTypeExtension.fromString(typeString);
+      } else {
+        _cachedAccountType = AccountType.player;
+      }
+      _cachedAccountTypeUserId = uid;
+      return _cachedAccountType!;
+    } catch (e) {
+      print('Error getting account type: $e');
+      return AccountType.player;
+    }
+  }
+
+  /// Clear the cached account type (call on sign out)
+  static void clearAccountTypeCache() {
+    _cachedAccountType = null;
+    _cachedAccountTypeUserId = null;
+  }
+
+  /// Check if current user is a dealer
+  static Future<bool> get isDealer async {
+    final accountType = await getAccountType();
+    return accountType == AccountType.dealer || accountType == AccountType.admin;
+  }
+
+  /// Check if current user is an admin
+  static Future<bool> get isAdmin async {
+    final accountType = await getAccountType();
+    return accountType == AccountType.admin;
+  }
+
+  /// Check if current user is a regular player
+  static Future<bool> get isPlayer async {
+    final accountType = await getAccountType();
+    return accountType == AccountType.player;
+  }
+
+  /// Get the list of club IDs the dealer belongs to
+  static Future<List<String>> getDealerClubIds() async {
+    final uid = userId;
+    if (uid == null) return [];
+
+    try {
+      final doc = await _firestore.collection('dealers').doc(uid).get();
+      if (doc.exists) {
+        final data = doc.data();
+        final clubIds = data?['clubIds'] as List<dynamic>?;
+        return clubIds?.cast<String>() ?? [];
+      }
+      return [];
+    } catch (e) {
+      print('Error getting dealer club IDs: $e');
+      return [];
     }
   }
 }

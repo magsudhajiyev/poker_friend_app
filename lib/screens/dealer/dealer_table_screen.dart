@@ -1,0 +1,2440 @@
+import 'dart:async';
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import '../../config/app_config.dart';
+import '../../models/club.dart';
+import '../../models/poker_table.dart';
+import '../../models/dealer_session.dart';
+import '../../models/seat_assignment.dart';
+import '../../models/poker_game_state.dart';
+import '../../models/hand_state_machine.dart';
+import '../../models/game_types.dart';
+import '../../services/dealer_service.dart';
+import '../../services/seat_service.dart';
+import '../../services/websocket_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/qr_service.dart';
+import '../../services/continuous_speech_service.dart';
+import '../../services/soniox_service.dart';
+import '../../widgets/board_cards_dialog.dart';
+import '../../widgets/winner_selection_dialog.dart';
+import '../../widgets/multi_pot_winner_dialog.dart';
+import '../../widgets/showdown_dialog.dart';
+// Removed unused import: hole_cards_dialog.dart
+
+/// Main screen for dealers to log poker hands
+/// Uses PokerGameState and PokerSessionManager for consistent hand logging
+class DealerTableScreen extends StatefulWidget {
+  final DealerSession session;
+  final Club club;
+  final PokerTable table;
+
+  const DealerTableScreen({
+    Key? key,
+    required this.session,
+    required this.club,
+    required this.table,
+  }) : super(key: key);
+
+  @override
+  State<DealerTableScreen> createState() => _DealerTableScreenState();
+}
+
+class _DealerTableScreenState extends State<DealerTableScreen> {
+  final WebSocketService _wsService = WebSocketService.instance;
+
+  // Session tracking for club/dealer context
+  late DealerSession _dealerSession;
+  Map<int, SeatAssignment> _seatAssignments = {};
+  List<SeatAssignment> _pendingJoins = [];
+
+  // Core game logic - reusing established architecture
+  // Made nullable to handle initialization safely
+  PokerGameState? _gameState;
+  PokerSessionManager? _sessionManager;
+  bool _isGameStateInitialized = false;
+
+  StreamSubscription? _seatSubscription;
+  StreamSubscription? _sessionSubscription;
+  StreamSubscription? _pendingSubscription;
+
+  bool _isHandActive = false;
+  bool _isLoading = false;
+  bool _sessionStarted = false;
+
+  // Speech/voice mode state - real-time WebSocket streaming for lowest latency
+  // Using direct Soniox connection for minimal latency (~200ms vs ~2s)
+  final SonioxService _realtimeSpeechService = SonioxService.instance;
+  bool _isVoiceMode = false;
+  bool _isListening = false;
+  String _partialTranscript = '';
+  String _connectionStatus = 'disconnected';
+  DetectedPokerAction? _lastDetectedAction;
+  StreamSubscription? _actionSubscription;
+  StreamSubscription? _partialSubscription;
+  StreamSubscription? _statusSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _dealerSession = widget.session;
+    _initializeGameState();
+    _initialize();
+  }
+
+  void _initializeGameState() {
+    // Initialize PokerGameState with 9 seats (standard poker table)
+    _gameState = PokerGameState(
+      numberOfPlayers: 9,
+      smallBlind: _dealerSession.smallBlind,
+      bigBlind: _dealerSession.bigBlind,
+      isCashGame: _dealerSession.gameType == 'cash',
+      hasBBante: _dealerSession.hasBBante,
+    );
+
+    // Initialize PokerSessionManager for recording hands
+    _sessionManager = PokerSessionManager(
+      smallBlind: _dealerSession.smallBlind,
+      bigBlind: _dealerSession.bigBlind,
+      playerCount: 9,
+      gameType: _dealerSession.gameType == 'cash' ? GameType.cash : GameType.tournament,
+      sessionName: 'Dealer Session - ${widget.table.name}',
+    );
+
+    _isGameStateInitialized = true;
+  }
+
+  @override
+  void dispose() {
+    _seatSubscription?.cancel();
+    _sessionSubscription?.cancel();
+    _pendingSubscription?.cancel();
+    _actionSubscription?.cancel();
+    _partialSubscription?.cancel();
+    _statusSubscription?.cancel();
+
+    // Stop voice listening if active
+    if (_isListening) {
+      _realtimeSpeechService.stopStreaming();
+    }
+
+    // End session manager if active (with null check)
+    if (_sessionManager != null && _sessionManager!.sessionState == SessionState.active) {
+      _sessionManager!.endSession().catchError((e) {});
+    }
+
+    super.dispose();
+  }
+
+  Future<void> _initialize() async {
+    // Load seat assignments
+    _seatAssignments = await SeatService.getTableSeats(
+      clubId: widget.club.id,
+      tableId: widget.table.id,
+    );
+
+    // Initialize player stacks and active seats in both gameState and sessionManager
+    _syncPlayersFromSeats();
+
+    // Subscribe to seat updates
+    _seatSubscription = SeatService.watchTableSeats(
+      clubId: widget.club.id,
+      tableId: widget.table.id,
+    ).listen((seats) {
+      if (mounted) {
+        setState(() {
+          _seatAssignments = seats;
+          // Sync new players if not in hand
+          if (!_isHandActive) {
+            _syncPlayersFromSeats();
+          }
+        });
+      }
+    });
+
+    // Subscribe to pending join requests
+    _pendingSubscription = SeatService.watchPendingJoins(
+      clubId: widget.club.id,
+      tableId: widget.table.id,
+    ).listen((pending) {
+      if (mounted) {
+        setState(() {
+          _pendingJoins = pending;
+        });
+      }
+    });
+
+    // Subscribe to dealer session updates
+    _sessionSubscription = DealerService.watchSession(_dealerSession.id).listen((session) {
+      if (session != null && mounted) {
+        setState(() {
+          _dealerSession = session;
+        });
+      }
+    });
+
+    // Connect to WebSocket server for real-time updates
+    final serverUrl = AppConfig.serverUrl;
+    final userId = AuthService.userId;
+
+    if (!_wsService.isConnected) {
+      _wsService.connect(serverUrl, userId: userId);
+    }
+
+    _wsService.joinTable(
+      widget.table.id,
+      seatNumber: 0,
+      playerName: 'Dealer',
+    );
+
+    // Set initial button position from dealer session
+    _gameState!.buttonPosition = _dealerSession.buttonPosition;
+
+    setState(() {});
+  }
+
+  /// Sync players from seat assignments to game state and session manager
+  void _syncPlayersFromSeats() {
+    if (!_isGameStateInitialized || _gameState == null || _sessionManager == null) {
+      return; // Not yet initialized
+    }
+    _sessionManager!.activeSeats.clear();
+    _sessionManager!.playerNames.clear();
+    _sessionManager!.playerStacks.clear();
+
+    for (int i = 1; i <= 9; i++) {
+      final assignment = _seatAssignments[i];
+      if (assignment != null && assignment.isOccupied) {
+        final stack = assignment.chipStack ?? (_dealerSession.bigBlind * 100.0);
+
+        // Update PokerGameState
+        _gameState!.setPlayerStack(i, stack);
+        _gameState!.setPlayerActive(i, true);
+
+        // Update PokerSessionManager
+        _sessionManager!.activeSeats.add(i);
+        _sessionManager!.setPlayerName(i, assignment.playerName ?? 'Player $i');
+        _sessionManager!.setPlayerStack(i, stack);
+      } else {
+        // Inactive seat
+        _gameState!.setPlayerStack(i, 0.0);
+        _gameState!.setPlayerActive(i, false);
+      }
+    }
+  }
+
+  List<int> get _activePlayers => _gameState!.getActivePlayers();
+
+  Future<void> _startNewHand() async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Start session manager if not already started
+      if (!_sessionStarted) {
+        await _sessionManager!.startSession();
+        _sessionStarted = true;
+        // Only set button from dealer session for the first hand
+        // After that, _gameState.startNewHand() moves the button automatically
+        _gameState!.buttonPosition = _dealerSession.buttonPosition;
+      }
+
+      // Sync players before starting hand
+      _syncPlayersFromSeats();
+
+      // Finalize game state initialization and calculate blinds
+      _gameState!.finalizeInitialization();
+      _gameState!.initializePot();
+
+      // Start hand in session manager
+      _sessionManager!.startHand(
+        _gameState!.handNumber,
+        _gameState!.buttonPosition,
+        sbSeat: _gameState!.effectiveSBPosition,
+        bbSeat: _gameState!.effectiveBBPosition,
+      );
+
+      // Record the hand start in DealerService for Firebase sync
+      final handId = await DealerService.startHand(
+        sessionId: _dealerSession.id,
+        playerStacks: _getPlayerStacksMap(),
+        buttonPosition: _gameState!.buttonPosition,
+      );
+
+      // Emit WebSocket event
+      _wsService.emitHandStarted(
+        tableId: widget.table.id,
+        sessionId: _dealerSession.id,
+        handId: handId,
+        handNumber: _gameState!.handNumber,
+        buttonPosition: _gameState!.buttonPosition,
+        players: _getPlayerNamesMap(),
+      );
+
+      setState(() {
+        _isHandActive = true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showError('Failed to start hand: ${e.toString()}');
+    }
+  }
+
+  Map<int, double> _getPlayerStacksMap() {
+    final stacks = <int, double>{};
+    for (int i = 1; i <= 9; i++) {
+      if (_gameState!.players[i - 1].isActive) {
+        stacks[i] = _gameState!.players[i - 1].currentStack;
+      }
+    }
+    return stacks;
+  }
+
+  Map<int, String> _getPlayerNamesMap() {
+    final names = <int, String>{};
+    for (int seat in _sessionManager!.activeSeats) {
+      names[seat] = _sessionManager!.getPlayerName(seat);
+    }
+    return names;
+  }
+
+  /// Perform an action using the established game logic
+  /// [transcript] and [confidence] are optional and used for voice-logged actions
+  Future<void> _performAction(
+    PlayerAction action, {
+    double? amount,
+    String? transcript,
+    double? confidence,
+  }) async {
+    debugPrint('=== PERFORM ACTION ===');
+    debugPrint('Action: $action, Amount: $amount');
+    debugPrint('_isHandActive: $_isHandActive');
+    if (!_isHandActive) {
+      debugPrint('EARLY RETURN: Hand is not active');
+      return;
+    }
+
+    final currentSeat = _gameState!.currentPlayer;
+    final playerStack = _gameState!.getPlayerStack(currentSeat);
+    final playerName = _sessionManager!.getPlayerName(currentSeat);
+
+    // Record action in session manager (for Firebase/stats)
+    _sessionManager!.recordAction(
+      currentSeat,
+      action,
+      _gameState!.currentRound,
+      _gameState!.buttonPosition,
+      playerStack: playerStack,
+      amount: amount,
+    );
+
+    // Perform action in game state (handles progression, pot, etc.)
+    debugPrint('Performing action on game state...');
+    if (amount != null && (action == PlayerAction.bet || action == PlayerAction.raise)) {
+      _gameState!.performActionWithAmount(action, amount);
+    } else if (action == PlayerAction.call) {
+      _gameState!.performActionWithAmount(action, 0); // Call calculates internally
+    } else {
+      _gameState!.performAction(action);
+    }
+    debugPrint('Action performed. Current player now: ${_gameState!.currentPlayer}');
+
+    // Log action to Firebase for real-time player sync
+    final handId = _dealerSession.currentHandId;
+    if (handId != null && handId.isNotEmpty) {
+      try {
+        await DealerService.logAction(
+          sessionId: _dealerSession.id,
+          handId: handId,
+          seatNumber: currentSeat,
+          action: action.name,
+          amount: amount,
+          playerName: playerName,
+          transcript: transcript,
+          confidence: confidence,
+        );
+      } catch (e) {
+        // Log error but don't block the UI
+        debugPrint('Error logging action to Firebase: $e');
+      }
+    }
+
+    // Emit WebSocket event for real-time updates
+    _wsService.emitDealerAction(
+      tableId: widget.table.id,
+      sessionId: _dealerSession.id,
+      handId: handId ?? '',
+      seatNumber: currentSeat,
+      action: action.name,
+      amount: amount,
+      potAfter: _gameState!.currentPot,
+    );
+
+    setState(() {});
+
+    // Check if hand should end (everyone folded to one player)
+    if (_activePlayers.length <= 1 && _isHandActive) {
+      _completeHandAutomatically();
+      return;
+    }
+
+    // Check if betting round complete
+    if (_gameState!.bettingRoundComplete) {
+      _handleBettingRoundComplete();
+    }
+  }
+
+  void _handleBettingRoundComplete() {
+    // Check if we should auto-advance to showdown (all-in scenario)
+    if (_gameState!.shouldAutoAdvanceToShowdown()) {
+      _showAllInBoardCardsDialog();
+      return;
+    }
+
+    // Otherwise, advance to next street normally
+    if (_gameState!.currentRound != BettingRound.river) {
+      _advanceToNextStreet();
+    } else {
+      // River complete - show showdown/winner selection
+      _handleShowdown();
+    }
+  }
+
+  void _advanceToNextStreet() async {
+    // Save pot for completed street
+    _sessionManager!.savePotForStreet(_gameState!.currentRound, _gameState!.currentPot);
+
+    // Show board cards dialog based on next street
+    final nextRound = _getNextRound(_gameState!.currentRound);
+
+    final boardCards = await _showBoardCardsDialog(nextRound);
+    if (boardCards == null) {
+      // User cancelled - don't advance
+      return;
+    }
+
+    // Update board cards in session manager from the BoardCards object
+    if (_sessionManager!.currentHand != null) {
+      _sessionManager!.currentHand!.boardCards = boardCards;
+    }
+
+    // Advance game state to next street
+    _gameState!.startNewStreet(onStreetComplete: (round, pot) {
+      _sessionManager!.savePotForStreet(round, pot);
+    });
+
+    setState(() {});
+  }
+
+  BettingRound _getNextRound(BettingRound current) {
+    switch (current) {
+      case BettingRound.preflop:
+        return BettingRound.flop;
+      case BettingRound.flop:
+        return BettingRound.turn;
+      case BettingRound.turn:
+        return BettingRound.river;
+      case BettingRound.river:
+        return BettingRound.river;
+    }
+  }
+
+  Future<BoardCards?> _showBoardCardsDialog(BettingRound round) async {
+    return showDialog<BoardCards>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => BoardCardsDialog(
+        currentRound: round,
+        existingCards: _sessionManager!.currentHand?.boardCards,
+      ),
+    );
+  }
+
+  void _showAllInBoardCardsDialog() async {
+    // When all-in, we need to deal remaining board cards
+    final currentRound = _gameState!.currentRound;
+
+    // Show dialog to enter all remaining board cards at once
+    await showDialog<List<String>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: const Text('All-In - Enter Remaining Board', style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'All players are all-in. Enter the remaining board cards.',
+              style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Current street: ${currentRound.name.toUpperCase()}',
+              style: TextStyle(color: Colors.amber),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, <String>[]),
+            child: const Text('Skip Cards'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, <String>['Ac', 'Kc', 'Qc', '2h', '3d']), // Placeholder
+            child: const Text('Continue to Showdown'),
+          ),
+        ],
+      ),
+    );
+
+    // Auto-advance through remaining streets
+    while (_gameState!.currentRound != BettingRound.river) {
+      _gameState!.autoAdvanceToNextStreet();
+    }
+    _gameState!.bettingRoundComplete = true;
+
+    setState(() {});
+
+    // Go to showdown
+    _handleShowdown();
+  }
+
+  void _handleShowdown() async {
+    // Mark as reached showdown
+    if (_sessionManager!.currentHand != null) {
+      _sessionManager!.currentHand!.reachedShowdown = true;
+    }
+
+    // Get active players for winner selection
+    final activePlayers = _activePlayers;
+
+    if (activePlayers.length == 1) {
+      // Only one player left - they win automatically
+      _completeHandAutomatically();
+      return;
+    }
+
+    // Show showdown dialog for entering player cards (optional)
+    final showdownData = await showDialog<ShowdownData>(
+      context: context,
+      builder: (context) => ShowdownDialog(
+        playerCount: 9,
+        activePlayers: activePlayers,
+      ),
+    );
+
+    if (showdownData != null && _sessionManager!.currentHand != null) {
+      _sessionManager!.currentHand!.showdownData = showdownData;
+    }
+
+    // Check for side pots
+    final sidePots = _gameState!.calculateSidePots();
+
+    if (sidePots.length > 1) {
+      // Multiple side pots - show multi-pot winner dialog
+      await _showMultiPotWinnerDialog(sidePots);
+    } else {
+      // Single pot - show regular winner selection
+      await _showWinnerSelectionDialog();
+    }
+  }
+
+  void _completeHandAutomatically() async {
+    // Single winner - everyone else folded
+    final winner = _activePlayers.first;
+    await _completeHand(winner);
+  }
+
+  List<String> _getPlayerNamesList() {
+    return _activePlayers.map((seat) => _sessionManager!.getPlayerName(seat)).toList();
+  }
+
+  Future<void> _showWinnerSelectionDialog() async {
+    final activePlayers = _activePlayers;
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WinnerSelectionDialog(
+        activePlayers: activePlayers,
+        playerNames: _getPlayerNamesList(),
+        potAmount: _gameState!.currentPot,
+        buttonPosition: _gameState!.buttonPosition,
+        playerCount: 9,
+        gameType: _dealerSession.gameType == 'cash' ? GameType.cash : GameType.tournament,
+      ),
+    );
+
+    if (result != null) {
+      if (result['isChoppedPot'] == true) {
+        // Chopped pot
+        await _completeHandWithChop(
+          result['winners'] as List<int>,
+          result['individualShares'] as Map<int, double>?,
+        );
+      } else {
+        // Single winner
+        await _completeHand(result['winner'] as int);
+      }
+    }
+  }
+
+  Future<void> _showMultiPotWinnerDialog(List<SidePot> sidePots) async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => MultiPotWinnerDialog(
+        sidePots: sidePots,
+        playerNames: _getPlayerNamesList(),
+        playerIdToName: _getPlayerNamesMap(),
+        buttonPosition: _gameState!.buttonPosition,
+        playerCount: 9,
+        gameType: _dealerSession.gameType == 'cash' ? GameType.cash : GameType.tournament,
+      ),
+    );
+
+    if (result != null) {
+      // Process multi-pot result - potResults contains results per pot
+      final potResults = result['potResults'] as Map<int, Map<String, dynamic>>?;
+      if (potResults == null || potResults.isEmpty) return;
+
+      // Collect all winners and their shares across all pots
+      final allWinners = <int>{};
+      final allShares = <int, double>{};
+
+      for (final potResult in potResults.values) {
+        if (potResult['isChoppedPot'] == true) {
+          final winners = potResult['winners'] as List<int>;
+          final shares = potResult['individualShares'] as Map<int, double>;
+          allWinners.addAll(winners);
+          for (final entry in shares.entries) {
+            allShares[entry.key] = (allShares[entry.key] ?? 0) + entry.value;
+          }
+        } else {
+          final winner = potResult['winner'] as int;
+          final amount = potResult['potAmount'] as double;
+          allWinners.add(winner);
+          allShares[winner] = (allShares[winner] ?? 0) + amount;
+        }
+      }
+
+      if (allWinners.length > 1) {
+        await _completeHandWithChop(allWinners.toList(), allShares);
+      } else {
+        await _completeHand(allWinners.first);
+      }
+    }
+  }
+
+  Future<void> _completeHand(int winnerId) async {
+    if (!_isHandActive) return;
+
+    try {
+      // Get winner's stack for tracking
+      final winnerStack = _gameState!.getPlayerStack(winnerId) + _gameState!.currentPot;
+
+      // Complete hand in session manager (saves to Firebase, updates stats)
+      _sessionManager!.completeCurrentHand(
+        potAmount: _gameState!.currentPot,
+        winnerId: winnerId,
+        currentStack: winnerStack,
+      );
+
+      // Update winner's stack in game state
+      _gameState!.players[winnerId - 1].currentStack += _gameState!.currentPot;
+
+      // Update DealerService (for dealer_sessions collection)
+      await DealerService.completeHand(
+        sessionId: _dealerSession.id,
+        handId: _dealerSession.currentHandId ?? '',
+        winnerId: winnerId,
+        potAmount: _gameState!.currentPot,
+      );
+
+      // Emit WebSocket event
+      final winnerName = _sessionManager!.getPlayerName(winnerId);
+      _wsService.emitHandCompleted(
+        tableId: widget.table.id,
+        sessionId: _dealerSession.id,
+        handId: _dealerSession.currentHandId ?? '',
+        winnerSeat: winnerId,
+        potAmount: _gameState!.currentPot,
+        summary: '$winnerName wins \$${_gameState!.currentPot.toStringAsFixed(0)}',
+      );
+
+      // Prepare for next hand
+      _gameState!.startNewHand();
+
+      // Update seat chip stacks in Firebase
+      await _updateSeatChipStacks();
+
+      setState(() {
+        _isHandActive = false;
+      });
+
+      _showSuccess('$winnerName wins \$${_gameState!.currentPot.toStringAsFixed(0)}');
+    } catch (e) {
+      _showError('Failed to complete hand: ${e.toString()}');
+    }
+  }
+
+  Future<void> _completeHandWithChop(List<int> winnerIds, Map<int, double>? shares) async {
+    if (!_isHandActive) return;
+
+    try {
+      final sharePerWinner = shares != null
+          ? null
+          : _gameState!.currentPot / winnerIds.length;
+
+      // Complete hand with chop in session manager
+      _sessionManager!.completeCurrentHandWithChop(
+        potAmount: _gameState!.currentPot,
+        winnerIds: winnerIds,
+        individualShares: shares,
+        sharePerWinner: sharePerWinner,
+      );
+
+      // Update stacks for all winners
+      for (final winnerId in winnerIds) {
+        final share = shares?[winnerId] ?? sharePerWinner ?? 0;
+        _gameState!.players[winnerId - 1].currentStack += share;
+      }
+
+      // Update DealerService with chop info
+      await DealerService.completeHand(
+        sessionId: _dealerSession.id,
+        handId: _dealerSession.currentHandId ?? '',
+        winnerId: winnerIds.first,
+        potAmount: _gameState!.currentPot,
+        isChoppedPot: true,
+        choppedWinners: winnerIds,
+        individualShares: shares,
+      );
+
+      // Emit WebSocket event
+      final winnerNames = winnerIds.map((id) => _sessionManager!.getPlayerName(id)).join(', ');
+      _wsService.emitHandCompleted(
+        tableId: widget.table.id,
+        sessionId: _dealerSession.id,
+        handId: _dealerSession.currentHandId ?? '',
+        winnerSeat: winnerIds.first,
+        potAmount: _gameState!.currentPot,
+        summary: 'Chop: $winnerNames split \$${_gameState!.currentPot.toStringAsFixed(0)}',
+      );
+
+      // Prepare for next hand
+      _gameState!.startNewHand();
+
+      // Update seat chip stacks
+      await _updateSeatChipStacks();
+
+      setState(() {
+        _isHandActive = false;
+      });
+
+      _showSuccess('Pot chopped between $winnerNames');
+    } catch (e) {
+      _showError('Failed to complete hand: ${e.toString()}');
+    }
+  }
+
+  Future<void> _updateSeatChipStacks() async {
+    // Update chip stacks in Firebase for all active players
+    for (int i = 1; i <= 9; i++) {
+      if (_gameState!.players[i - 1].isActive) {
+        final stack = _gameState!.players[i - 1].currentStack;
+        final playerName = _sessionManager?.getPlayerName(i) ?? 'Player $i';
+
+        try {
+          await SeatService.updateChipStack(
+            clubId: widget.club.id,
+            tableId: widget.table.id,
+            seatNumber: i,
+            chipStack: stack,
+          );
+
+          // Emit to WebSocket for live event rankings
+          // Backend will check if table is in an event and broadcast rankings
+          _wsService.emitPlayerStackUpdate(
+            tableId: widget.table.id,
+            playerId: 'seat_${widget.table.id}_$i',
+            newStack: stack.toInt(),
+            playerName: playerName,
+            seatNumber: i,
+          );
+        } catch (e) {
+          // Ignore individual update failures
+        }
+      }
+    }
+  }
+
+  Future<void> _endSession() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: const Text('End Session?', style: TextStyle(color: Colors.white)),
+        content: const Text('Are you sure you want to end this session?',
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('End'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      // End session manager
+      if (_sessionManager!.sessionState == SessionState.active) {
+        await _sessionManager!.endSession();
+      }
+
+      // End dealer session
+      await DealerService.endSession(_dealerSession.id);
+
+      _wsService.emitSessionEnded(
+        tableId: widget.table.id,
+        sessionId: _dealerSession.id,
+        totalHands: _gameState!.handNumber - 1,
+      );
+
+      if (mounted) Navigator.pop(context);
+    }
+  }
+
+  void _showQRCodesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _QRCodesDialog(
+        clubId: widget.club.id,
+        tableId: widget.table.id,
+        tableName: widget.table.name,
+      ),
+    );
+  }
+
+  Future<double?> _showAmountDialog(String title) async {
+    double amount = _gameState!.bigBlind.toDouble();
+    final controller = TextEditingController(text: amount.toString());
+
+    return showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          style: const TextStyle(color: Colors.white),
+          autofocus: true,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.1),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            prefixText: '\$',
+            prefixStyle: const TextStyle(color: Colors.white),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, double.tryParse(controller.text)),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green.shade700),
+    );
+  }
+
+  void _showAutoCorrection(String detected, String corrected) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Auto-corrected "$detected" → "$corrected"'),
+        backgroundColor: Colors.amber.shade700,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _showApproveJoinDialog(SeatAssignment pending) async {
+    final controller = TextEditingController(
+      text: (_dealerSession.bigBlind * 100).toString(),
+    );
+
+    final chipStack = await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: Text(
+          'Approve ${pending.playerName ?? 'Player'}?',
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Seat ${pending.seatNumber}',
+              style: const TextStyle(color: Colors.white54),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Starting Chip Stack',
+                labelStyle: const TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.1),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                prefixText: '\$',
+                prefixStyle: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                await SeatService.rejectJoin(
+                  clubId: widget.club.id,
+                  tableId: widget.table.id,
+                  seatNumber: pending.seatNumber,
+                );
+                if (context.mounted) Navigator.pop(context);
+                _showSuccess('${pending.playerName} rejected');
+              } catch (e) {
+                _showError('Failed to reject: ${e.toString()}');
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Reject'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final stack = double.tryParse(controller.text);
+              if (stack != null && stack > 0) {
+                Navigator.pop(context, stack);
+              }
+            },
+            child: const Text('Approve'),
+          ),
+        ],
+      ),
+    );
+
+    if (chipStack != null) {
+      try {
+        await SeatService.approveJoin(
+          clubId: widget.club.id,
+          tableId: widget.table.id,
+          seatNumber: pending.seatNumber,
+          chipStack: chipStack,
+        );
+
+        // Update local game state
+        _gameState!.setPlayerStack(pending.seatNumber, chipStack);
+        _gameState!.setPlayerActive(pending.seatNumber, true);
+        _sessionManager!.activeSeats.add(pending.seatNumber);
+        _sessionManager!.setPlayerName(pending.seatNumber, pending.playerName ?? 'Player ${pending.seatNumber}');
+        _sessionManager!.setPlayerStack(pending.seatNumber, chipStack);
+
+        _showSuccess('${pending.playerName} joined with \$${chipStack.toStringAsFixed(0)}');
+      } catch (e) {
+        _showError('Failed to approve: ${e.toString()}');
+      }
+    }
+  }
+
+  Future<void> _showPlayerOptionsDialog(int seatNumber, String? playerName, double currentStack) async {
+    final stackController = TextEditingController(text: currentStack.toStringAsFixed(0));
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: Text(
+          playerName ?? 'Seat $seatNumber',
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Seat $seatNumber',
+              style: const TextStyle(color: Colors.white54, fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: stackController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Chip Stack',
+                labelStyle: const TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.1),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                prefixText: '\$',
+                prefixStyle: const TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.pop(context, 'remove'),
+                    icon: const Icon(Icons.person_remove, color: Colors.red),
+                    label: const Text('Remove', style: TextStyle(color: Colors.red)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.pop(context, 'save:${stackController.text}'),
+                    icon: const Icon(Icons.save),
+                    label: const Text('Save'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null) return;
+
+    if (result == 'remove') {
+      await _removePlayer(seatNumber, playerName);
+    } else if (result.startsWith('save:')) {
+      final newStack = double.tryParse(result.substring(5));
+      if (newStack != null && newStack >= 0) {
+        try {
+          await SeatService.updateChipStack(
+            clubId: widget.club.id,
+            tableId: widget.table.id,
+            seatNumber: seatNumber,
+            chipStack: newStack,
+          );
+          _gameState!.setPlayerStack(seatNumber, newStack);
+          _sessionManager!.setPlayerStack(seatNumber, newStack);
+          setState(() {});
+          _showSuccess('Updated ${playerName ?? 'player'} stack to \$${newStack.toStringAsFixed(0)}');
+        } catch (e) {
+          _showError('Failed to update stack: ${e.toString()}');
+        }
+      }
+    }
+  }
+
+  Future<void> _showAddPlayerDialog(int seatNumber) async {
+    final nameController = TextEditingController();
+    final stackController = TextEditingController(text: (_dealerSession.bigBlind * 100).toString());
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: Text(
+          'Add Player to Seat $seatNumber',
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              style: const TextStyle(color: Colors.white),
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Player Name',
+                labelStyle: const TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.1),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                hintText: 'Enter player name',
+                hintStyle: const TextStyle(color: Colors.white30),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: stackController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Starting Chip Stack',
+                labelStyle: const TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.1),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                prefixText: '\$',
+                prefixStyle: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              final stack = double.tryParse(stackController.text);
+              if (name.isNotEmpty && stack != null && stack > 0) {
+                Navigator.pop(context, {'name': name, 'stack': stack});
+              }
+            },
+            child: const Text('Add Player'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      try {
+        await SeatService.addManualPlayer(
+          clubId: widget.club.id,
+          tableId: widget.table.id,
+          seatNumber: seatNumber,
+          playerName: result['name'],
+          chipStack: result['stack'],
+        );
+
+        // Update local game state
+        _gameState!.setPlayerStack(seatNumber, result['stack']);
+        _gameState!.setPlayerActive(seatNumber, true);
+        _sessionManager!.activeSeats.add(seatNumber);
+        _sessionManager!.setPlayerName(seatNumber, result['name']);
+        _sessionManager!.setPlayerStack(seatNumber, result['stack']);
+
+        setState(() {});
+        _showSuccess('${result['name']} added to Seat $seatNumber');
+      } catch (e) {
+        _showError('Failed to add player: ${e.toString()}');
+      }
+    }
+  }
+
+  Future<void> _removePlayer(int seatNumber, String? playerName) async {
+    try {
+      await SeatService.removeSeatOccupant(
+        clubId: widget.club.id,
+        tableId: widget.table.id,
+        seatNumber: seatNumber,
+      );
+
+      // Update local game state
+      _gameState!.setPlayerActive(seatNumber, false);
+      _gameState!.setPlayerStack(seatNumber, 0);
+      _sessionManager!.activeSeats.remove(seatNumber);
+      _sessionManager!.playerStacks.remove(seatNumber);
+
+      setState(() {});
+      _showSuccess('${playerName ?? 'Player'} removed from Seat $seatNumber');
+    } catch (e) {
+      _showError('Failed to remove player: ${e.toString()}');
+    }
+  }
+
+  void _showPendingJoinsDialog() {
+    if (_pendingJoins.isEmpty) {
+      _showSuccess('No pending join requests');
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: const Text('Pending Join Requests', style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _pendingJoins.map((pending) {
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.orange,
+                child: Text(
+                  pending.seatNumber.toString(),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+              title: Text(
+                pending.playerName ?? 'Unknown',
+                style: const TextStyle(color: Colors.white),
+              ),
+              subtitle: Text(
+                'Seat ${pending.seatNumber}',
+                style: const TextStyle(color: Colors.white54),
+              ),
+              trailing: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showApproveJoinDialog(pending);
+                },
+                child: const Text('Review'),
+              ),
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Show loading if game state not initialized
+    if (!_isGameStateInitialized || _gameState == null || _sessionManager == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF0D1117),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF161B22),
+          title: Text(widget.table.name),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D1117),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF161B22),
+        title: Text(widget.table.name),
+        actions: [
+          // Pending join requests badge
+          if (_pendingJoins.isNotEmpty)
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.person_add),
+                  onPressed: _showPendingJoinsDialog,
+                  tooltip: 'Pending Join Requests',
+                ),
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      _pendingJoins.length.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          IconButton(
+            icon: const Icon(Icons.qr_code),
+            onPressed: _showQRCodesDialog,
+            tooltip: 'Show QR Codes',
+          ),
+          IconButton(
+            icon: const Icon(Icons.stop_circle_outlined),
+            onPressed: _endSession,
+            tooltip: 'End Session',
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          _buildGameInfo(),
+          Expanded(child: _buildTableView()),
+          if (_isHandActive) _buildActionButtons(),
+          if (!_isHandActive) _buildStartHandSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameInfo() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      color: const Color(0xFF161B22),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildInfoItem('POT', '\$${_gameState!.currentPot.toStringAsFixed(0)}', Colors.amber),
+          _buildInfoItem('STREET', _gameState!.currentRound.name.toUpperCase(), Colors.blue),
+          _buildInfoItem('BLINDS', '${_dealerSession.smallBlind}/${_dealerSession.bigBlind}', Colors.green),
+          _buildInfoItem('HAND', '#${_gameState!.handNumber}', Colors.purple),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(label, style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 10, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Text(value, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildTableView() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final centerX = constraints.maxWidth / 2;
+        final centerY = constraints.maxHeight / 2;
+        final tableWidth = constraints.maxWidth * 0.80;
+        final tableHeight = constraints.maxHeight * 0.70;
+        final radiusX = constraints.maxWidth * 0.42;
+        final radiusY = constraints.maxHeight * 0.38;
+
+        return Stack(
+          children: [
+            // Table
+            Center(
+              child: Container(
+                width: tableWidth,
+                height: tableHeight,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 30,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 10),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      spreadRadius: -5,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const RadialGradient(
+                      center: Alignment.center,
+                      radius: 0.8,
+                      colors: [
+                        Color(0xFF0F6B33),
+                        Color(0xFF0D5D2D),
+                        Color(0xFF0A4A24),
+                      ],
+                      stops: [0.0, 0.6, 1.0],
+                    ),
+                    borderRadius: BorderRadius.circular(200),
+                    border: Border.all(
+                      color: const Color(0xFF2A2A2E),
+                      width: 6,
+                    ),
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(194),
+                      border: Border.all(
+                        color: const Color(0xFF1A1A1E).withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '\$${_gameState!.currentPot.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                            ),
+                          ),
+                          const Text('POT', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Seats
+            ..._buildSeatsAroundTable(centerX, centerY, radiusX, radiusY),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildSeatsAroundTable(double centerX, double centerY, double radiusX, double radiusY) {
+    final double startAngle = math.pi * 1.25;
+    final double angleStep = (2 * math.pi) / 9;
+
+    return List.generate(9, (i) {
+      final seatNumber = i + 1;
+      final angle = startAngle + (angleStep * (seatNumber - 1));
+      final x = centerX + radiusX * math.cos(angle) - 35;
+      final y = centerY + radiusY * math.sin(angle) - 35;
+
+      final assignment = _seatAssignments[seatNumber];
+      final isOccupied = assignment?.isOccupied ?? false;
+      final isPending = assignment?.isPending ?? false;
+      final playerState = _gameState!.players[seatNumber - 1];
+      final isFolded = playerState.hasFolded;
+      final isCurrentPlayer = seatNumber == _gameState!.currentPlayer && _isHandActive;
+      final isButton = seatNumber == _gameState!.buttonPosition;
+      final stack = playerState.currentStack;
+      final bet = playerState.betThisRound;
+
+      return Positioned(
+        left: x,
+        top: y,
+        child: _buildSeat(
+          seatNumber: seatNumber,
+          playerName: assignment?.playerName ?? _sessionManager!.getPlayerName(seatNumber),
+          isOccupied: isOccupied || playerState.isActive,
+          isPending: isPending,
+          isFolded: isFolded,
+          isCurrentPlayer: isCurrentPlayer,
+          isButton: isButton,
+          stack: stack,
+          bet: bet,
+          onPendingTap: isPending && assignment != null
+              ? () => _showApproveJoinDialog(assignment)
+              : null,
+          onOccupiedTap: (isOccupied || playerState.isActive) && !_isHandActive && !isPending
+              ? () => _showPlayerOptionsDialog(seatNumber, assignment?.playerName, stack)
+              : null,
+          onEmptyTap: !isOccupied && !playerState.isActive && !isPending && !_isHandActive
+              ? () => _showAddPlayerDialog(seatNumber)
+              : null,
+        ),
+      );
+    });
+  }
+
+  Widget _buildSeat({
+    required int seatNumber,
+    String? playerName,
+    required bool isOccupied,
+    bool isPending = false,
+    required bool isFolded,
+    required bool isCurrentPlayer,
+    required bool isButton,
+    required double stack,
+    required double bet,
+    VoidCallback? onPendingTap,
+    VoidCallback? onOccupiedTap,
+    VoidCallback? onEmptyTap,
+  }) {
+    Color bgColor;
+    Color borderColor;
+
+    if (isPending) {
+      bgColor = Colors.orange.withValues(alpha: 0.3);
+      borderColor = Colors.orange;
+    } else if (!isOccupied) {
+      bgColor = const Color(0xFF2A2A3A);
+      borderColor = const Color(0xFF3A3A4A);
+    } else if (isFolded) {
+      bgColor = const Color(0xFF3A3A4A).withValues(alpha: 0.5);
+      borderColor = const Color(0xFF4A4A5A);
+    } else if (isCurrentPlayer) {
+      bgColor = const Color(0xFF4A3A00);
+      borderColor = Colors.amber;
+    } else {
+      bgColor = const Color(0xFF1E3A5F);
+      borderColor = const Color(0xFF2E5A8F);
+    }
+
+    return GestureDetector(
+      onTap: isPending
+          ? onPendingTap
+          : (isOccupied && _isHandActive && !isFolded
+              ? () => setState(() => _gameState!.currentPlayer = seatNumber)
+              : (isOccupied && !_isHandActive
+                  ? onOccupiedTap
+                  : (!isOccupied ? onEmptyTap : null))),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Main seat
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: bgColor,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: borderColor,
+                width: isPending ? 3 : (isCurrentPlayer ? 3 : 2),
+              ),
+              boxShadow: isPending
+                  ? [BoxShadow(color: Colors.orange.withValues(alpha: 0.5), blurRadius: 15)]
+                  : (isCurrentPlayer
+                      ? [BoxShadow(color: Colors.amber.withValues(alpha: 0.5), blurRadius: 15)]
+                      : null),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isPending) ...[
+                  Text(
+                    _truncateName(playerName ?? 'Player'),
+                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'PENDING',
+                    style: TextStyle(color: Colors.orange, fontSize: 8, fontWeight: FontWeight.bold),
+                  ),
+                ] else ...[
+                  Text(
+                    seatNumber.toString(),
+                    style: TextStyle(
+                      color: isOccupied ? Colors.white : Colors.white38,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (isOccupied) ...[
+                    Text(
+                      _truncateName(playerName ?? ''),
+                      style: TextStyle(color: isFolded ? Colors.white38 : Colors.white70, fontSize: 9),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '\$${stack.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        color: isFolded ? Colors.white38 : Colors.greenAccent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ],
+              ],
+            ),
+          ),
+          // Pending badge
+          if (isPending)
+            Positioned(
+              right: -4,
+              top: -4,
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Center(
+                  child: Icon(Icons.person_add, size: 12, color: Colors.white),
+                ),
+              ),
+            ),
+          // Dealer button
+          if (isButton && !isPending)
+            Positioned(
+              right: -4,
+              top: -4,
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                child: const Center(
+                  child: Text('D', style: TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ),
+          // Current bet
+          if (bet > 0)
+            Positioned(
+              bottom: -8,
+              left: 10,
+              right: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade800,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '\$${bet.toStringAsFixed(0)}',
+                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _truncateName(String name) {
+    if (name.length <= 7) return name;
+    return '${name.substring(0, 6)}..';
+  }
+
+  Widget _buildActionButtons() {
+    final currentPlayer = _gameState!.currentPlayer;
+    final canCheck = _gameState!.isValidAction(PlayerAction.check);
+    final canCall = _gameState!.isValidAction(PlayerAction.call);
+    final canBet = _gameState!.isValidAction(PlayerAction.bet);
+    final canRaise = _gameState!.isValidAction(PlayerAction.raise);
+
+    final callAmount = _gameState!.getCurrentBet() - _gameState!.players[currentPlayer - 1].betThisRound;
+    final playerName = _sessionManager!.getPlayerName(currentPlayer);
+    final playerStack = _gameState!.getPlayerStack(currentPlayer);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Player info and mode toggle row
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '$playerName to act (\$${playerStack.toStringAsFixed(0)})',
+                      style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Voice mode toggle - more prominent
+                GestureDetector(
+                  onTap: () => _toggleVoiceMode(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _isVoiceMode
+                          ? (_isListening ? Colors.green.shade600 : Colors.orange.shade600)
+                          : Colors.blueGrey.shade700,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _isVoiceMode
+                            ? (_isListening ? Colors.green.shade400 : Colors.orange.shade400)
+                            : Colors.blueGrey.shade500,
+                        width: 2,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _isVoiceMode
+                              ? (_isListening ? Icons.mic : Icons.mic_off)
+                              : Icons.touch_app,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _isVoiceMode
+                              ? (_isListening ? 'LISTENING' : 'MIC OFF')
+                              : 'TAP',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Show voice UI or manual buttons based on mode
+            if (_isVoiceMode)
+              _buildVoiceActionUI()
+            else
+              Row(
+                children: [
+                  _buildActionButton('FOLD', Colors.red.shade700,
+                      () => _performAction(PlayerAction.fold)),
+                  const SizedBox(width: 8),
+                  if (canCheck)
+                    _buildActionButton('CHECK', Colors.grey.shade700,
+                        () => _performAction(PlayerAction.check))
+                  else if (canCall)
+                    _buildActionButton('CALL\n\$${callAmount.toStringAsFixed(0)}', Colors.green.shade700,
+                        () => _performAction(PlayerAction.call)),
+                  const SizedBox(width: 8),
+                  if (canBet)
+                    _buildActionButton('BET', Colors.blue.shade700, () async {
+                      final amount = await _showAmountDialog('Bet amount');
+                      if (amount != null && amount > 0) {
+                        await _performAction(PlayerAction.bet, amount: amount);
+                      }
+                    })
+                  else if (canRaise)
+                    _buildActionButton('RAISE', Colors.blue.shade700, () async {
+                      final amount = await _showAmountDialog('Raise to');
+                      if (amount != null && amount > 0) {
+                        await _performAction(PlayerAction.raise, amount: amount);
+                      }
+                    }),
+                  const SizedBox(width: 8),
+                  _buildActionButton('ALL IN', Colors.purple.shade700, () async {
+                    // All-in is either a bet or raise for the player's full stack
+                    final stack = _gameState!.getPlayerStack(currentPlayer);
+                    final action = canBet ? PlayerAction.bet : PlayerAction.raise;
+                    await _performAction(action, amount: stack + _gameState!.players[currentPlayer - 1].betThisRound);
+                  }),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build voice action UI with push-to-talk button
+  Widget _buildVoiceActionUI() {
+    // Show last detected action briefly
+    if (_lastDetectedAction != null) {
+      return _buildLastActionFeedback(_lastDetectedAction!);
+    }
+
+    return Column(
+      children: [
+        // Large push-to-talk button
+        GestureDetector(
+          onTapDown: (_) => _startContinuousListening(),
+          onTapUp: (_) => _stopContinuousListening(),
+          onTapCancel: () => _stopContinuousListening(),
+          child: Container(
+            width: double.infinity,
+            height: 80,
+            decoration: BoxDecoration(
+              color: _isListening ? Colors.green.shade700 : Colors.grey.shade800,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _isListening ? Colors.green : Colors.grey.shade600,
+                width: 2,
+              ),
+              boxShadow: _isListening
+                  ? [
+                      BoxShadow(
+                        color: Colors.green.withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _isListening ? Icons.mic : Icons.mic_none,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    _isListening ? 'LISTENING...' : 'HOLD TO SPEAK',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Show partial transcript while listening
+        if (_isListening && _partialTranscript.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              _partialTranscript,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        const SizedBox(height: 4),
+        Text(
+          'Say: fold, check, call, bet [amount], raise [amount], all-in',
+          style: const TextStyle(color: Colors.white54, fontSize: 11),
+        ),
+      ],
+    );
+  }
+
+  /// Show brief feedback when action is detected and executed
+  Widget _buildLastActionFeedback(DetectedPokerAction action) {
+    final actionDisplay = action.action.toUpperCase();
+    final amountDisplay = action.amount != null ? ' \$${action.amount!.toStringAsFixed(0)}' : '';
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.green.shade700,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                '$actionDisplay$amountDisplay',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Heard: "${action.transcript}"',
+          style: const TextStyle(color: Colors.white54, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  /// Toggle voice mode on/off (shows/hides push-to-talk button)
+  Future<void> _toggleVoiceMode() async {
+    try {
+      debugPrint('Toggle voice mode: current=$_isVoiceMode');
+      if (_isVoiceMode) {
+        // Turn off voice mode - stop any active listening
+        await _stopContinuousListening();
+        if (mounted) setState(() => _isVoiceMode = false);
+      } else {
+        // Turn on voice mode - just show the push-to-talk UI
+        // Actual streaming starts when button is held
+        if (mounted) setState(() => _isVoiceMode = true);
+      }
+    } catch (e, stack) {
+      debugPrint('Error toggling voice mode: $e');
+      debugPrint('Stack: $stack');
+      _showError('Voice mode error: $e');
+      if (mounted) setState(() => _isVoiceMode = false);
+    }
+  }
+
+  /// Start continuous listening using real-time WebSocket streaming
+  Future<void> _startContinuousListening() async {
+    try {
+      debugPrint('Starting real-time speech streaming...');
+
+      // Subscribe to action stream from realtime service
+      _actionSubscription?.cancel();
+      _actionSubscription = _realtimeSpeechService.actionStream.listen(
+        _onActionDetected,
+        onError: (e) => debugPrint('Action stream error: $e'),
+      );
+
+      // Subscribe to partial results for UI feedback
+      _partialSubscription?.cancel();
+      _partialSubscription = _realtimeSpeechService.partialStream.listen(
+        (partial) {
+          if (mounted) setState(() => _partialTranscript = partial);
+        },
+        onError: (e) => debugPrint('Partial stream error: $e'),
+      );
+
+      // Subscribe to status stream for connection state
+      _statusSubscription?.cancel();
+      _statusSubscription = _realtimeSpeechService.statusStream.listen(
+        (status) {
+          if (mounted) {
+            setState(() => _connectionStatus = status);
+            debugPrint('Real-time speech status: $status');
+          }
+        },
+        onError: (e) => debugPrint('Status stream error: $e'),
+      );
+
+      debugPrint('Starting real-time speech streaming...');
+      final started = await _realtimeSpeechService.startStreaming();
+      debugPrint('Real-time speech streaming started: $started');
+
+      if (mounted) setState(() => _isListening = started);
+
+      if (!started) {
+        _showError('Failed to start streaming - check server connection and microphone');
+      }
+    } catch (e, stack) {
+      debugPrint('Error starting real-time speech: $e');
+      debugPrint('Stack: $stack');
+      _showError('Failed to start voice: $e');
+      if (mounted) {
+        setState(() {
+          _isVoiceMode = false;
+          _isListening = false;
+        });
+      }
+    }
+  }
+
+  /// Stop continuous listening
+  /// Stop continuous listening
+  /// Waits for final results before cancelling subscriptions
+  Future<void> _stopContinuousListening() async {
+    // First stop the service (waits for final results from Soniox)
+    await _realtimeSpeechService.stopStreaming();
+
+    // THEN cancel subscriptions after final results have been processed
+    _actionSubscription?.cancel();
+    _actionSubscription = null;
+    _partialSubscription?.cancel();
+    _partialSubscription = null;
+    _statusSubscription?.cancel();
+    _statusSubscription = null;
+
+    setState(() {
+      _isListening = false;
+      _partialTranscript = '';
+      _connectionStatus = 'stopped';
+    });
+  }
+
+  /// Handle detected action from speech
+  Future<void> _onActionDetected(DetectedPokerAction action) async {
+    debugPrint('=== ACTION DETECTED FROM SPEECH ===');
+    debugPrint('Action: ${action.action}, Amount: ${action.amount}');
+    debugPrint('_isHandActive: $_isHandActive');
+
+    if (!_isHandActive) {
+      debugPrint('SKIPPING: Hand not active');
+      return;
+    }
+
+    debugPrint('Voice action detected: ${action.action} (amount: ${action.amount})');
+
+    // Show the detected action briefly
+    setState(() => _lastDetectedAction = action);
+
+    // Execute the action
+    await _executeVoiceAction(action);
+
+    // Clear the feedback after a delay
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() => _lastDetectedAction = null);
+      }
+    });
+  }
+
+  /// Execute a detected voice action
+  Future<void> _executeVoiceAction(DetectedPokerAction action) async {
+    debugPrint('=== VOICE ACTION EXECUTION ===');
+    debugPrint('Action to execute: ${action.action}');
+    debugPrint('_gameState is null: ${_gameState == null}');
+    debugPrint('_isHandActive: $_isHandActive');
+
+    if (_gameState == null) {
+      debugPrint('ERROR: Cannot execute voice action - game state is null');
+      return;
+    }
+
+    if (!_isHandActive) {
+      debugPrint('ERROR: Cannot execute voice action - hand is not active');
+      return;
+    }
+
+    PlayerAction? playerAction;
+    double? amount = action.amount;
+
+    switch (action.action) {
+      case 'fold':
+        playerAction = PlayerAction.fold;
+        break;
+      case 'check':
+        // Auto-correct: if check is invalid, try call instead
+        if (!_gameState!.isValidAction(PlayerAction.check)) {
+          if (_gameState!.isValidAction(PlayerAction.call)) {
+            playerAction = PlayerAction.call;
+            _showAutoCorrection('check', 'call');
+          } else {
+            _showError('Cannot check or call');
+            return;
+          }
+        } else {
+          playerAction = PlayerAction.check;
+        }
+        break;
+      case 'call':
+        // Auto-correct: if call is invalid, try check instead
+        if (!_gameState!.isValidAction(PlayerAction.call)) {
+          if (_gameState!.isValidAction(PlayerAction.check)) {
+            playerAction = PlayerAction.check;
+            _showAutoCorrection('call', 'check');
+          } else {
+            _showError('Cannot call or check');
+            return;
+          }
+        } else {
+          playerAction = PlayerAction.call;
+        }
+        break;
+      case 'bet':
+        // Auto-correct: if bet is invalid, try raise instead
+        if (!_gameState!.isValidAction(PlayerAction.bet)) {
+          if (_gameState!.isValidAction(PlayerAction.raise)) {
+            playerAction = PlayerAction.raise;
+            _showAutoCorrection('bet', 'raise');
+            if (amount == null) {
+              amount = await _showAmountDialog('Raise to');
+              if (amount == null || amount <= 0) return;
+            }
+          } else {
+            _showError('Cannot bet or raise');
+            return;
+          }
+        } else {
+          playerAction = PlayerAction.bet;
+          if (amount == null) {
+            amount = await _showAmountDialog('Bet amount');
+            if (amount == null || amount <= 0) return;
+          }
+        }
+        break;
+      case 'raise':
+        // Auto-correct: if raise is invalid, try bet instead
+        if (!_gameState!.isValidAction(PlayerAction.raise)) {
+          if (_gameState!.isValidAction(PlayerAction.bet)) {
+            playerAction = PlayerAction.bet;
+            _showAutoCorrection('raise', 'bet');
+            if (amount == null) {
+              amount = await _showAmountDialog('Bet amount');
+              if (amount == null || amount <= 0) return;
+            }
+          } else {
+            _showError('Cannot raise or bet');
+            return;
+          }
+        } else {
+          playerAction = PlayerAction.raise;
+          if (amount == null) {
+            amount = await _showAmountDialog('Raise to');
+            if (amount == null || amount <= 0) return;
+          }
+        }
+        break;
+      case 'all-in':
+        final canBet = _gameState!.isValidAction(PlayerAction.bet);
+        playerAction = canBet ? PlayerAction.bet : PlayerAction.raise;
+        final currentPlayer = _gameState!.currentPlayer;
+        amount = _gameState!.getPlayerStack(currentPlayer) +
+            _gameState!.players[currentPlayer - 1].betThisRound;
+        break;
+      default:
+        _showError('Unknown action: ${action.action}');
+        return;
+    }
+
+    // Execute the action
+    debugPrint('Calling _performAction with: $playerAction, amount: $amount');
+    await _performAction(
+      playerAction,
+      amount: amount,
+      transcript: action.transcript,
+      confidence: action.confidence,
+    );
+    debugPrint('_performAction completed');
+  }
+
+  Widget _buildActionButton(String label, Color color, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(10)),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStartHandSection() {
+    final occupiedSeats = _gameState!.getActivePlayers().length;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Text('$occupiedSeats players seated', style: const TextStyle(color: Colors.white54)),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: occupiedSeats >= 2 ? _startNewHand : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              disabledBackgroundColor: Colors.grey.shade800,
+              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: _isLoading
+                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : const Text('START NEW HAND', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
+          if (occupiedSeats < 2)
+            const Padding(
+              padding: EdgeInsets.only(top: 12),
+              child: Text('Need at least 2 players to start', style: TextStyle(color: Colors.orange)),
+            ),
+          // Debug button to add random players for testing
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: _addRandomPlayersForTesting,
+            icon: const Icon(Icons.group_add, color: Colors.amber),
+            label: const Text('Add Test Players', style: TextStyle(color: Colors.amber)),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.amber),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Add random players to all empty seats for testing
+  Future<void> _addRandomPlayersForTesting() async {
+    final testNames = [
+      'Alice', 'Bob', 'Charlie', 'Diana', 'Eve',
+      'Frank', 'Grace', 'Henry', 'Ivy',
+    ];
+
+    final random = math.Random();
+    final defaultStack = _dealerSession.bigBlind * 100.0;
+
+    for (int seatNumber = 1; seatNumber <= 9; seatNumber++) {
+      // Skip if seat is already occupied
+      if (_gameState!.players[seatNumber - 1].isActive) {
+        continue;
+      }
+
+      final playerName = testNames[seatNumber - 1];
+      // Randomize stack a bit: 80-120 BBs
+      final stack = defaultStack * (0.8 + random.nextDouble() * 0.4);
+
+      try {
+        await SeatService.addManualPlayer(
+          clubId: widget.club.id,
+          tableId: widget.table.id,
+          seatNumber: seatNumber,
+          playerName: playerName,
+          chipStack: stack,
+        );
+
+        // Update local game state
+        _gameState!.setPlayerStack(seatNumber, stack);
+        _gameState!.setPlayerActive(seatNumber, true);
+        _sessionManager!.activeSeats.add(seatNumber);
+        _sessionManager!.setPlayerName(seatNumber, playerName);
+        _sessionManager!.setPlayerStack(seatNumber, stack);
+      } catch (e) {
+        debugPrint('Error adding test player to seat $seatNumber: $e');
+      }
+    }
+
+    setState(() {});
+    _showSuccess('Added ${9 - _seatAssignments.length} test players');
+  }
+}
+
+/// Dialog to display QR codes for all seats
+class _QRCodesDialog extends StatefulWidget {
+  final String clubId;
+  final String tableId;
+  final String tableName;
+
+  const _QRCodesDialog({
+    required this.clubId,
+    required this.tableId,
+    required this.tableName,
+  });
+
+  @override
+  State<_QRCodesDialog> createState() => _QRCodesDialogState();
+}
+
+class _QRCodesDialogState extends State<_QRCodesDialog> {
+  int _selectedSeat = 1;
+  Map<int, SeatAssignment> _seatAssignments = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSeatAssignments();
+  }
+
+  Future<void> _loadSeatAssignments() async {
+    try {
+      final seats = await SeatService.getTableSeats(
+        clubId: widget.clubId,
+        tableId: widget.tableId,
+      );
+      if (mounted) {
+        setState(() {
+          _seatAssignments = seats;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final qrData = QRService.generateQRData(
+      clubId: widget.clubId,
+      tableId: widget.tableId,
+      seatNumber: _selectedSeat,
+    );
+
+    final isOccupied = _seatAssignments[_selectedSeat]?.isOccupied ?? false;
+    final occupantName = _seatAssignments[_selectedSeat]?.playerName;
+
+    return Dialog(
+      backgroundColor: const Color(0xFF1E1E2E),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${widget.tableName} - Seat $_selectedSeat',
+              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            if (isOccupied)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Occupied by ${occupantName ?? "Player"}',
+                  style: const TextStyle(color: Colors.orange, fontSize: 12),
+                ),
+              ),
+            const SizedBox(height: 20),
+            if (!isOccupied) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: QrImageView(
+                  data: qrData.encode(),
+                  version: QrVersions.auto,
+                  size: 200,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Scan to join this seat',
+                style: TextStyle(color: Colors.white54),
+              ),
+            ] else ...[
+              Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade800,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.person, size: 60, color: Colors.white38),
+                      SizedBox(height: 12),
+                      Text(
+                        'Seat Occupied',
+                        style: TextStyle(color: Colors.white54, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            // Seat selector
+            _isLoading
+                ? const CircularProgressIndicator()
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(9, (i) {
+                      final seat = i + 1;
+                      final seatIsOccupied = _seatAssignments[seat]?.isOccupied ?? false;
+                      final isSelected = seat == _selectedSeat;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedSeat = seat),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? (seatIsOccupied ? Colors.orange : Colors.green)
+                                : (seatIsOccupied ? Colors.orange.withValues(alpha: 0.3) : const Color(0xFF2A2A3A)),
+                            borderRadius: BorderRadius.circular(8),
+                            border: isSelected
+                                ? Border.all(color: Colors.white, width: 2)
+                                : null,
+                          ),
+                          child: Center(
+                            child: Text(
+                              seat.toString(),
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.white70,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A2A3A),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Text('Empty', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                const SizedBox(width: 16),
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Text('Occupied', style: TextStyle(color: Colors.white54, fontSize: 12)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

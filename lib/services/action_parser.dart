@@ -1,0 +1,166 @@
+import 'package:flutter/foundation.dart';
+
+/// Detected poker action from speech.
+class ParsedAction {
+  final String action;
+  final double? amount;
+  final double confidence;
+
+  ParsedAction({
+    required this.action,
+    this.amount,
+    this.confidence = 1.0,
+  });
+
+  @override
+  String toString() => 'ParsedAction($action${amount != null ? ', $amount' : ''})';
+}
+
+/// Local action parser for poker speech.
+///
+/// Parses transcriptions into poker actions.
+/// Expects English input (Soniox translates all languages to English).
+class ActionParser {
+  // English number words to digits
+  static const Map<String, String> _numberWords = {
+    'one': '1',
+    'two': '2',
+    'three': '3',
+    'four': '4',
+    'five': '5',
+    'six': '6',
+    'seven': '7',
+    'eight': '8',
+    'nine': '9',
+    'ten': '10',
+    'fifteen': '15',
+    'twenty': '20',
+    'thirty': '30',
+    'forty': '40',
+    'fifty': '50',
+    'sixty': '60',
+    'seventy': '70',
+    'eighty': '80',
+    'ninety': '90',
+    'hundred': '100',
+  };
+
+  // Patterns with their action types and amount group index
+  static final List<_ActionPattern> _patterns = [
+    // Fold
+    _ActionPattern(RegExp(r'\b(fold|pass|muck)\b', caseSensitive: false), 'fold'),
+
+    // Check
+    _ActionPattern(RegExp(r'\b(check|checking)\b', caseSensitive: false), 'check'),
+
+    // Call
+    _ActionPattern(RegExp(r'\b(call|calling)\b', caseSensitive: false), 'call'),
+
+    // Bet with amount
+    _ActionPattern(
+      RegExp(r'\b(?:bet|betting)\s+(\d+)', caseSensitive: false),
+      'bet',
+      amountGroup: 1,
+    ),
+
+    // Raise with amount
+    _ActionPattern(
+      RegExp(r'\b(?:raise|re-raise|reraise|raising)\s+(\d+)', caseSensitive: false),
+      'raise',
+      amountGroup: 1,
+    ),
+
+    // Raise without amount
+    _ActionPattern(
+      RegExp(r'\b(raise|re-raise|reraise)\b(?!\s+\d)', caseSensitive: false),
+      'raise',
+    ),
+
+    // All-in
+    _ActionPattern(
+      RegExp(r'\b(all-in|all in|allin|shove|jam)\b', caseSensitive: false),
+      'all-in',
+    ),
+  ];
+
+  /// Convert number words to digits (e.g., "five" → "5").
+  static String _normalizeNumbers(String text) {
+    var result = text;
+    _numberWords.forEach((word, digit) {
+      result = result.replaceAll(word, digit);
+    });
+    return result;
+  }
+
+  /// Parse a transcript into a list of poker actions.
+  ///
+  /// Returns actions in the order they appear in the transcript.
+  static List<ParsedAction> parse(String transcript) {
+    final actions = <ParsedAction>[];
+    final text = _normalizeNumbers(transcript.toLowerCase());
+
+    // Track matches with their positions to sort by order of appearance
+    final matches = <_MatchedAction>[];
+
+    for (final pattern in _patterns) {
+      for (final match in pattern.regex.allMatches(text)) {
+        double? amount;
+
+        // Extract amount if pattern has an amount group
+        if (pattern.amountGroup != null && match.groupCount >= pattern.amountGroup!) {
+          final amountStr = match.group(pattern.amountGroup!);
+          if (amountStr != null) {
+            amount = double.tryParse(amountStr);
+          }
+        }
+
+        matches.add(_MatchedAction(
+          position: match.start,
+          action: pattern.action,
+          amount: amount,
+        ));
+      }
+    }
+
+    // Sort by position to maintain order of actions
+    matches.sort((a, b) => a.position.compareTo(b.position));
+
+    // Remove duplicates at same position (e.g., "raise" matching both with and without amount)
+    final seen = <int>{};
+    for (final match in matches) {
+      if (!seen.contains(match.position)) {
+        seen.add(match.position);
+        actions.add(ParsedAction(
+          action: match.action,
+          amount: match.amount,
+        ));
+      }
+    }
+
+    if (actions.isNotEmpty) {
+      debugPrint('ActionParser: "$transcript" -> $actions');
+    }
+
+    return actions;
+  }
+}
+
+class _ActionPattern {
+  final RegExp regex;
+  final String action;
+  final int? amountGroup;
+
+  _ActionPattern(this.regex, this.action, {this.amountGroup});
+}
+
+class _MatchedAction {
+  final int position;
+  final String action;
+  final double? amount;
+
+  _MatchedAction({
+    required this.position,
+    required this.action,
+    this.amount,
+  });
+}
