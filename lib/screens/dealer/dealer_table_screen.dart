@@ -87,6 +87,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   String? _lockedTableName;
   bool _isHoldingActions = false;
 
+  // Guard flag to prevent duplicate board cards dialogs
+  bool _isShowingBoardCardsDialog = false;
+
   @override
   void initState() {
     super.initState();
@@ -410,29 +413,40 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   void _advanceToNextStreet() async {
-    // Save pot for completed street
-    _sessionManager!.savePotForStreet(_gameState!.currentRound, _gameState!.currentPot);
-
-    // Show board cards dialog based on next street
-    final nextRound = _getNextRound(_gameState!.currentRound);
-
-    final boardCards = await _showBoardCardsDialog(nextRound);
-    if (boardCards == null) {
-      // User cancelled - don't advance
+    // Prevent duplicate dialogs from race conditions
+    if (_isShowingBoardCardsDialog) {
+      debugPrint('_advanceToNextStreet: Dialog already showing, skipping');
       return;
     }
+    _isShowingBoardCardsDialog = true;
 
-    // Update board cards in session manager from the BoardCards object
-    if (_sessionManager!.currentHand != null) {
-      _sessionManager!.currentHand!.boardCards = boardCards;
+    try {
+      // Save pot for completed street
+      _sessionManager!.savePotForStreet(_gameState!.currentRound, _gameState!.currentPot);
+
+      // Show board cards dialog based on next street
+      final nextRound = _getNextRound(_gameState!.currentRound);
+
+      final boardCards = await _showBoardCardsDialog(nextRound);
+      if (boardCards == null) {
+        // User cancelled - don't advance
+        return;
+      }
+
+      // Update board cards in session manager from the BoardCards object
+      if (_sessionManager!.currentHand != null) {
+        _sessionManager!.currentHand!.boardCards = boardCards;
+      }
+
+      // Advance game state to next street
+      _gameState!.startNewStreet(onStreetComplete: (round, pot) {
+        _sessionManager!.savePotForStreet(round, pot);
+      });
+
+      setState(() {});
+    } finally {
+      _isShowingBoardCardsDialog = false;
     }
-
-    // Advance game state to next street
-    _gameState!.startNewStreet(onStreetComplete: (round, pot) {
-      _sessionManager!.savePotForStreet(round, pot);
-    });
-
-    setState(() {});
   }
 
   BettingRound _getNextRound(BettingRound current) {
@@ -460,53 +474,64 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   void _showAllInBoardCardsDialog() async {
-    // When all-in, we need to deal remaining board cards
-    final currentRound = _gameState!.currentRound;
+    // Prevent duplicate dialogs from race conditions
+    if (_isShowingBoardCardsDialog) {
+      debugPrint('_showAllInBoardCardsDialog: Dialog already showing, skipping');
+      return;
+    }
+    _isShowingBoardCardsDialog = true;
 
-    // Show dialog to enter all remaining board cards at once
-    await showDialog<List<String>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text('All-In - Enter Remaining Board', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'All players are all-in. Enter the remaining board cards.',
-              style: TextStyle(color: Colors.white70),
+    try {
+      // When all-in, we need to deal remaining board cards
+      final currentRound = _gameState!.currentRound;
+
+      // Show dialog to enter all remaining board cards at once
+      await showDialog<List<String>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1E1E2E),
+          title: const Text('All-In - Enter Remaining Board', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'All players are all-in. Enter the remaining board cards.',
+                style: TextStyle(color: Colors.white70),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Current street: ${currentRound.name.toUpperCase()}',
+                style: TextStyle(color: Colors.amber),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, <String>[]),
+              child: const Text('Skip Cards'),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Current street: ${currentRound.name.toUpperCase()}',
-              style: TextStyle(color: Colors.amber),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, <String>['Ac', 'Kc', 'Qc', '2h', '3d']), // Placeholder
+              child: const Text('Continue to Showdown'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, <String>[]),
-            child: const Text('Skip Cards'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, <String>['Ac', 'Kc', 'Qc', '2h', '3d']), // Placeholder
-            child: const Text('Continue to Showdown'),
-          ),
-        ],
-      ),
-    );
+      );
 
-    // Auto-advance through remaining streets
-    while (_gameState!.currentRound != BettingRound.river) {
-      _gameState!.autoAdvanceToNextStreet();
+      // Auto-advance through remaining streets
+      while (_gameState!.currentRound != BettingRound.river) {
+        _gameState!.autoAdvanceToNextStreet();
+      }
+      _gameState!.bettingRoundComplete = true;
+
+      setState(() {});
+
+      // Go to showdown
+      _handleShowdown();
+    } finally {
+      _isShowingBoardCardsDialog = false;
     }
-    _gameState!.bettingRoundComplete = true;
-
-    setState(() {});
-
-    // Go to showdown
-    _handleShowdown();
   }
 
   void _handleShowdown() async {
@@ -2607,8 +2632,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       }
 
       final playerName = testNames[seatNumber - 1];
-      // Randomize stack a bit: 80-120 BBs
-      final stack = defaultStack * (0.8 + random.nextDouble() * 0.4);
+      // Randomize stack a bit: 80-120 BBs (rounded to whole number)
+      final stack = (defaultStack * (0.8 + random.nextDouble() * 0.4)).roundToDouble();
 
       try {
         await SeatService.addManualPlayer(

@@ -1166,7 +1166,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         Container(
           padding: EdgeInsets.symmetric(vertical: 6),
           child: Text(
-            stack > 0 ? '${gameType == GameType.cash ? '\$' : ''}$stack' : '-',
+            _formatStack(stack, gameType),
             style: TextStyle(
               color: Color(0xFF9A9A9A),
               fontSize: 11,
@@ -1189,7 +1189,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         Container(
           padding: EdgeInsets.symmetric(vertical: 6),
           child: Text(
-            amount != null ? '${gameType == GameType.cash ? '\$' : ''}$amount' : '-',
+            _formatAmount(amount, gameType),
             style: TextStyle(
               color: Color(0xFF9A9A9A),
               fontSize: 11,
@@ -1258,6 +1258,46 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       return 'Pot: \$${amount.toStringAsFixed(2)}';
     } else {
       return 'Pot: ${amount.toInt()}';
+    }
+  }
+
+  String _formatStack(dynamic stack, String gameType) {
+    if (stack == null || (stack is num && stack <= 0)) return '-';
+
+    final stackNum = (stack is num) ? stack.toDouble() : 0.0;
+    final isCashGame = gameType == 'cash';
+
+    if (isCashGame) {
+      // For cash games, show with $ and 2 decimal places if needed
+      if (stackNum == stackNum.roundToDouble()) {
+        return '\$${stackNum.toInt()}';
+      } else {
+        return '\$${stackNum.toStringAsFixed(2)}';
+      }
+    } else {
+      // For tournaments, show as integer
+      return '${stackNum.toInt()}';
+    }
+  }
+
+  String _formatAmount(dynamic amount, String gameType) {
+    if (amount == null) return '-';
+
+    final amountNum = (amount is num) ? amount.toDouble() : 0.0;
+    if (amountNum <= 0) return '-';
+
+    final isCashGame = gameType == 'cash';
+
+    if (isCashGame) {
+      // For cash games, show with $ and clean decimals
+      if (amountNum == amountNum.roundToDouble()) {
+        return '\$${amountNum.toInt()}';
+      } else {
+        return '\$${amountNum.toStringAsFixed(2)}';
+      }
+    } else {
+      // For tournaments, show as integer
+      return '${amountNum.toInt()}';
     }
   }
 

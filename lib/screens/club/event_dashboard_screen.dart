@@ -37,6 +37,10 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
   Timer? _refreshTimer;
   final _numberFormat = NumberFormat('#,###');
 
+  // Local fallback data when WebSocket is disconnected
+  List<EventRanking>? _localRankings;
+  int _localTotalChips = 0;
+
   // Refresh interval in seconds
   static const int _refreshIntervalSeconds = 30;
 
@@ -57,34 +61,50 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
   Future<void> _connectAndLoadRankings() async {
     setState(() => _isLoading = true);
 
+    debugPrint('EventDashboard: Loading rankings for event ${widget.event.id}');
+    debugPrint('EventDashboard: Club ID: ${widget.club.id}');
+    debugPrint('EventDashboard: Tables: ${widget.tables.map((t) => '${t.id}(${t.name})').join(', ')}');
+
+    // Sync players from tables FIRST (local data) - don't wait for WebSocket
+    await _syncPlayersFromTables();
+
     // Connect to WebSocket if not already connected
     final wsService = WebSocketService.instance;
     if (!wsService.isConnected) {
+      debugPrint('EventDashboard: Connecting to WebSocket at ${AppConfig.serverUrl}');
       wsService.connect(AppConfig.serverUrl);
       await Future.delayed(const Duration(seconds: 1));
     }
 
-    // Join event room - pass event data so backend can create if needed
-    final joinResult = await wsService.joinEvent(
-      widget.event.id,
-      clubId: widget.event.clubId,
-      name: widget.event.name,
-      tableIds: widget.event.tableIds,
-      isPublic: widget.event.isPublic,
-      accessCode: widget.event.accessCode,
-      createdBy: widget.event.createdBy,
-    );
-    if (joinResult != null && joinResult['success'] == true) {
-      setState(() => _isConnected = true);
+    // Only try to join event room if WebSocket connected
+    if (wsService.isConnected) {
+      // Join event room - pass event data so backend can create if needed
+      final joinResult = await wsService.joinEvent(
+        widget.event.id,
+        clubId: widget.event.clubId,
+        name: widget.event.name,
+        tableIds: widget.event.tableIds,
+        isPublic: widget.event.isPublic,
+        accessCode: widget.event.accessCode,
+        createdBy: widget.event.createdBy,
+      );
+      if (joinResult != null && joinResult['success'] == true) {
+        setState(() => _isConnected = true);
+        debugPrint('EventDashboard: WebSocket connected and joined event');
 
-      // Initial rankings from join response
-      if (joinResult['rankings'] != null) {
-        setState(() {
-          _rankingsData = EventRankingsData.fromMap(
-            joinResult['rankings'] as Map<String, dynamic>,
-          );
-        });
+        // Initial rankings from join response
+        if (joinResult['rankings'] != null) {
+          setState(() {
+            _rankingsData = EventRankingsData.fromMap(
+              joinResult['rankings'] as Map<String, dynamic>,
+            );
+          });
+        }
+      } else {
+        debugPrint('EventDashboard: Failed to join event room: $joinResult');
       }
+    } else {
+      debugPrint('EventDashboard: WebSocket not connected, using local data only');
     }
 
     // Subscribe to ranking updates
@@ -93,9 +113,6 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
         _rankingsData = EventRankingsData.fromMap(data);
       });
     });
-
-    // Sync players from tables
-    await _syncPlayersFromTables();
 
     // Start periodic refresh timer
     _startRefreshTimer();
@@ -116,6 +133,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
     try {
       // Get current players from each table's active session or seat assignments
       final tablePlayers = <String, List<Map<String, dynamic>>>{};
+      final allPlayers = <Map<String, dynamic>>[];
 
       for (final table in widget.tables) {
         // First try to get players from DealerSession
@@ -123,6 +141,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
           clubId: widget.club.id,
           tableId: table.id,
         );
+
+        debugPrint('Table ${table.id} (${table.name}): session=${session != null}, activePlayers=${session?.activePlayers.length ?? 0}');
 
         if (session != null && session.activePlayers.isNotEmpty) {
           final players = session.activePlayers.map((p) => {
@@ -132,15 +152,19 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
                 'current_stack': p.stack.toInt(),
                 'starting_stack': p.stack.toInt(),
                 'seat_number': p.seatNumber,
+                'table_name': table.name,
               }).toList();
 
           tablePlayers[table.id] = players;
+          allPlayers.addAll(players);
         } else {
           // Fallback: Get players from seat assignments
           final seatAssignments = await SeatService.getTableSeats(
             clubId: widget.club.id,
             tableId: table.id,
           );
+
+          debugPrint('Table ${table.id}: seatAssignments=${seatAssignments.length}, occupied=${seatAssignments.values.where((s) => s.isOccupied).length}');
 
           final players = seatAssignments.entries
               .where((e) => e.value.isOccupied)
@@ -151,36 +175,72 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
                     'current_stack': (e.value.chipStack ?? 0).toInt(),
                     'starting_stack': (e.value.chipStack ?? 0).toInt(),
                     'seat_number': e.key,
+                    'table_name': table.name,
                   })
               .toList();
 
           if (players.isNotEmpty) {
             tablePlayers[table.id] = players;
+            allPlayers.addAll(players);
           }
         }
       }
 
-      // Always sync, even if empty - this ensures the event is created on backend
-      final result = await WebSocketService.instance.syncEventPlayers(
-        eventId: widget.event.id,
-        tablePlayers: tablePlayers,
-        clubId: widget.event.clubId,
-        name: widget.event.name,
-        tableIds: widget.event.tableIds,
-        isPublic: widget.event.isPublic,
-        createdBy: widget.event.createdBy,
-      );
+      // Build local rankings as fallback (sorted by stack descending)
+      allPlayers.sort((a, b) => (b['current_stack'] as int).compareTo(a['current_stack'] as int));
 
-      if (result != null && result['rankings'] != null) {
-        setState(() {
-          _rankingsData = EventRankingsData.fromMap(
-            result['rankings'] as Map<String, dynamic>,
-          );
-        });
+      int totalChips = 0;
+      final localRankings = <EventRanking>[];
+      final now = DateTime.now();
+      for (int i = 0; i < allPlayers.length; i++) {
+        final p = allPlayers[i];
+        final stack = p['current_stack'] as int;
+        totalChips += stack;
+        localRankings.add(EventRanking(
+          eventId: widget.event.id,
+          playerId: p['player_id'] as String,
+          playerName: p['player_name'] as String,
+          currentStack: stack,
+          startingStack: p['starting_stack'] as int,
+          tableId: '',
+          tableName: p['table_name'] as String?,
+          seatNumber: p['seat_number'] as int,
+          rank: i + 1,
+          lastUpdated: now,
+          previousRank: null,
+          previousStack: null,
+        ));
+      }
+
+      // Update local fallback data
+      setState(() {
+        _localRankings = localRankings;
+        _localTotalChips = totalChips;
+      });
+
+      // Try to sync via WebSocket if connected
+      if (WebSocketService.instance.isConnected) {
+        final result = await WebSocketService.instance.syncEventPlayers(
+          eventId: widget.event.id,
+          tablePlayers: tablePlayers,
+          clubId: widget.event.clubId,
+          name: widget.event.name,
+          tableIds: widget.event.tableIds,
+          isPublic: widget.event.isPublic,
+          createdBy: widget.event.createdBy,
+        );
+
+        if (result != null && result['rankings'] != null) {
+          setState(() {
+            _rankingsData = EventRankingsData.fromMap(
+              result['rankings'] as Map<String, dynamic>,
+            );
+          });
+        }
       }
 
       // Log for debugging
-      debugPrint('Synced ${tablePlayers.length} tables with players');
+      debugPrint('Synced ${tablePlayers.length} tables with ${allPlayers.length} total players');
       for (final entry in tablePlayers.entries) {
         debugPrint('  Table ${entry.key}: ${entry.value.length} players');
       }
@@ -232,8 +292,12 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
   }
 
   Widget _buildHeader() {
-    final rankings = _rankingsData?.rankings ?? [];
+    // Use WebSocket data if available, otherwise use local fallback
+    final rankings = _rankingsData?.rankings ?? _localRankings ?? [];
     final chipLeader = rankings.isNotEmpty ? rankings.first : null;
+    final totalPlayers = _rankingsData?.totalPlayers ?? rankings.length;
+    final totalChips = _rankingsData?.totalChips ?? _localTotalChips;
+    final averageStack = totalPlayers > 0 ? totalChips ~/ totalPlayers : 0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -255,22 +319,40 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
                 decoration: BoxDecoration(
                   color: _isConnected
                       ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      : (_localRankings?.isNotEmpty ?? false)
+                          ? Colors.orange.withOpacity(0.1)
+                          : Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      _isConnected ? Icons.wifi : Icons.wifi_off,
+                      _isConnected
+                          ? Icons.wifi
+                          : (_localRankings?.isNotEmpty ?? false)
+                              ? Icons.sync
+                              : Icons.wifi_off,
                       size: 14,
-                      color: _isConnected ? Colors.green : Colors.red,
+                      color: _isConnected
+                          ? Colors.green
+                          : (_localRankings?.isNotEmpty ?? false)
+                              ? Colors.orange
+                              : Colors.red,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      _isConnected ? 'Live' : 'Disconnected',
+                      _isConnected
+                          ? 'Live'
+                          : (_localRankings?.isNotEmpty ?? false)
+                              ? 'Local'
+                              : 'Disconnected',
                       style: TextStyle(
-                        color: _isConnected ? Colors.green : Colors.red,
+                        color: _isConnected
+                            ? Colors.green
+                            : (_localRankings?.isNotEmpty ?? false)
+                                ? Colors.orange
+                                : Colors.red,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -304,7 +386,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
             children: [
               _buildStatItem(
                 'Players',
-                '${_rankingsData?.totalPlayers ?? 0}',
+                '$totalPlayers',
                 Icons.people,
               ),
               _buildStatItem(
@@ -314,12 +396,12 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
               ),
               _buildStatItem(
                 'Total Chips',
-                _numberFormat.format(_rankingsData?.totalChips ?? 0),
+                _numberFormat.format(totalChips),
                 Icons.monetization_on,
               ),
               _buildStatItem(
                 'Avg Stack',
-                _numberFormat.format(_rankingsData?.averageStack ?? 0),
+                _numberFormat.format(averageStack),
                 Icons.equalizer,
               ),
             ],
@@ -408,7 +490,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
   }
 
   Widget _buildRankingsTable() {
-    final rankings = _rankingsData?.rankings ?? [];
+    // Use WebSocket data if available, otherwise use local fallback
+    final rankings = _rankingsData?.rankings ?? _localRankings ?? [];
 
     if (rankings.isEmpty) {
       return Center(
