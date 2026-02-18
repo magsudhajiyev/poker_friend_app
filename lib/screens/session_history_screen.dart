@@ -299,13 +299,15 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   Widget _buildSessionCard(Map<String, dynamic> session) {
     final startTime = DateTime.parse(session['startTime']);
-    final endTime = session['endTime'] != null 
-        ? DateTime.parse(session['endTime']) 
+    final endTime = session['endTime'] != null
+        ? DateTime.parse(session['endTime'])
         : null;
-    
-    final duration = endTime != null 
-        ? endTime.difference(startTime).inMinutes 
+
+    final duration = endTime != null
+        ? endTime.difference(startTime).inMinutes
         : null;
+
+    final isDealerSession = session['isDealerSession'] == true;
 
     return Container(
       margin: EdgeInsets.only(bottom: 16),
@@ -325,15 +327,39 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           ),
           child: _getGameTypeIcon(session['gameType']),
         ),
-        title: Text(
-          session['sessionName'] != null && session['sessionName'].isNotEmpty 
-              ? session['sessionName']
-              : 'Session ${session['id'].substring(0, 8)}...',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                session['sessionName'] != null && session['sessionName'].isNotEmpty
+                    ? session['sessionName']
+                    : 'Session ${session['id'].substring(0, 8)}...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            if (isDealerSession) ...[
+              SizedBox(width: 8),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Color(0xFF4CAF50).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Live',
+                  style: TextStyle(
+                    color: Color(0xFF4CAF50),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

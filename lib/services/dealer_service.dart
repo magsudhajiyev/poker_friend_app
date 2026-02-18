@@ -129,6 +129,7 @@ class DealerService {
     if (!sessionDoc.exists) throw 'Session not found';
 
     final session = DealerSession.fromFirestore(sessionDoc);
+    final endTime = DateTime.now();
 
     // Update session status
     await _firestore
@@ -139,6 +140,23 @@ class DealerService {
           'endTime': FieldValue.serverTimestamp(),
         });
 
+    // Create poker_sessions records for each player who participated
+    // This allows players to see this session in their Session History
+    for (final entry in session.players.entries) {
+      final player = entry.value;
+      // Only create records for real users (not manual/walk-up players)
+      if (player.playerId.isNotEmpty && !player.playerId.startsWith('manual_')) {
+        await _createPlayerSessionRecord(
+          dealerSession: session,
+          sessionId: sessionId,
+          playerId: player.playerId,
+          playerName: player.displayName,
+          seatNumber: entry.key,
+          endTime: endTime,
+        );
+      }
+    }
+
     // Clear all seats at the table
     await SeatService.clearAllSeats(
       clubId: session.clubId,
@@ -147,6 +165,38 @@ class DealerService {
 
     // Clear table session info
     await TableService.clearTableSession(session.clubId, session.tableId);
+  }
+
+  /// Create a poker_sessions record for a player who participated in a dealer session
+  /// This links the player's participation to their session history
+  static Future<void> _createPlayerSessionRecord({
+    required DealerSession dealerSession,
+    required String sessionId,
+    required String playerId,
+    required String playerName,
+    required int seatNumber,
+    required DateTime endTime,
+  }) async {
+    final sessionData = {
+      'userId': playerId,
+      'sessionName': 'Table Session',
+      'smallBlind': dealerSession.smallBlind,
+      'bigBlind': dealerSession.bigBlind,
+      'hasBBante': dealerSession.hasBBante,
+      'playerCount': dealerSession.playerCount,
+      'ourSeatNumber': seatNumber,
+      'gameType': dealerSession.gameType,
+      'startTime': Timestamp.fromDate(dealerSession.startTime),
+      'endTime': Timestamp.fromDate(endTime),
+      'totalHands': dealerSession.currentHandNumber,
+      'isIndividualSession': false,
+      'isDealerSession': true,
+      'dealerSessionId': sessionId,
+      'clubId': dealerSession.clubId,
+      'tableId': dealerSession.tableId,
+    };
+
+    await _firestore.collection('poker_sessions').add(sessionData);
   }
 
   /// Get a dealer session by ID
@@ -222,8 +272,11 @@ class DealerService {
     required String handId,
     required int seatNumber,
     required String action,  // 'fold', 'check', 'call', 'bet', 'raise', 'all-in'
+    required String street,  // 'preflop', 'flop', 'turn', 'river'
     double? amount,
     String? playerName,
+    double? playerStack,  // Stack size at time of action
+    String? playerPosition,  // Position name (BTN, SB, BB, UTG, etc.)
     String? transcript,  // Voice transcript for speech-logged actions
     double? confidence,  // Confidence score for speech recognition
   }) async {
@@ -236,8 +289,11 @@ class DealerService {
     final actionData = {
       'player': seatNumber,
       'action': action,
+      'street': street,
       'amount': amount,
       'playerName': playerName,
+      'playerStack': playerStack,
+      'playerPosition': playerPosition,
       'timestamp': DateTime.now().toIso8601String(),
       if (transcript != null) 'transcript': transcript,
       if (confidence != null) 'confidence': confidence,
@@ -398,8 +454,15 @@ class DealerService {
 
     return snapshot.docs.map((doc) {
       final data = doc.data();
-      data['id'] = doc.id;
-      return data;
+
+      // Convert Timestamps to ISO strings (same format as FirebaseService.getSessionHands)
+      return {
+        'id': doc.id,
+        'sessionId': sessionId,
+        ...data,
+        'startTime': (data['startTime'] as Timestamp?)?.toDate().toIso8601String() ?? DateTime.now().toIso8601String(),
+        'endTime': (data['endTime'] as Timestamp?)?.toDate().toIso8601String(),
+      };
     }).toList();
   }
 
@@ -502,5 +565,75 @@ class DealerService {
           data['id'] = doc.id;
           return data;
         });
+  }
+
+  /// Save player-specific data for a hand (hole cards, notes, tags)
+  static Future<void> savePlayerHandData({
+    required String sessionId,
+    required String handId,
+    required String odPlayerId,
+    String? card1,
+    String? card2,
+    String? notes,
+    List<String>? tags,
+  }) async {
+    final playerDataRef = _firestore
+        .collection(_dealerSessionsCollection)
+        .doc(sessionId)
+        .collection(_handsSubcollection)
+        .doc(handId)
+        .collection('player_data')
+        .doc(odPlayerId);
+
+    final data = <String, dynamic>{
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    if (card1 != null && card2 != null) {
+      data['holeCards'] = {'card1': card1, 'card2': card2};
+    }
+    if (notes != null) {
+      data['notes'] = notes;
+    }
+    if (tags != null) {
+      data['tags'] = tags;
+    }
+
+    await playerDataRef.set(data, SetOptions(merge: true));
+  }
+
+  /// Get player-specific data for a hand
+  static Future<Map<String, dynamic>?> getPlayerHandData({
+    required String sessionId,
+    required String handId,
+    required String odPlayerId,
+  }) async {
+    final doc = await _firestore
+        .collection(_dealerSessionsCollection)
+        .doc(sessionId)
+        .collection(_handsSubcollection)
+        .doc(handId)
+        .collection('player_data')
+        .doc(odPlayerId)
+        .get();
+
+    return doc.exists ? doc.data() : null;
+  }
+
+  /// Watch player-specific data for a hand
+  static Stream<Map<String, dynamic>?> watchPlayerHandData({
+    required String sessionId,
+    required String handId,
+    required String odPlayerId,
+  }) {
+    return _firestore
+        .collection(_dealerSessionsCollection)
+        .doc(sessionId)
+        .collection(_handsSubcollection)
+        .doc(handId)
+        .collection('player_data')
+        .doc(odPlayerId)
+        .snapshots()
+        .map((doc) => doc.exists ? doc.data() : null);
   }
 }

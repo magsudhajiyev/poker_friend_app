@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/introduction_screen.dart';
 import '../screens/logging_mode_selection_screen.dart';
@@ -21,16 +23,28 @@ import '../services/stats_verification_service.dart';
 import '../screens/auth_screen.dart';
 import '../widgets/loading_screen.dart';
 import '../services/calendar_event_service.dart';
+import '../widgets/global_bottom_nav_bar.dart';
+import '../design_system/design_system.dart';
+import '../services/seat_service.dart';
+import '../models/seat_assignment.dart';
+import '../widgets/sliding_notification.dart';
 
+/// Home screen
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  int _currentIndex = 2; // Start tab is selected by default
+  int _currentIndex = 2;
   List<Map<String, dynamic>> upcomingEvents = [];
-  
+
+  // Seat assignment listener for dealer notifications
+  StreamSubscription<List<SeatAssignment>>? _seatSubscription;
+  Set<String> _notifiedSeatIds = {};
+  bool _hasActiveSession = false;
+  List<SeatAssignment> _activeSeats = [];
+
   // Data variables
   double currentBankroll = 0.0;
   double bankrollGoal = 0.0;
@@ -46,17 +60,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   double avgEarnings = 0.0;
   bool isLoadingData = true;
 
+  // Context menu state
+  String? _selectedEventId;
+  Offset? _popupPosition;
+
   @override
   void initState() {
     super.initState();
-    
-    // Initialize animation controller
+
     _progressAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
-    // Initialize animation with curved animation for smooth progress
+
     _progressAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -64,16 +80,282 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       parent: _progressAnimationController,
       curve: Curves.easeOutCubic,
     ));
-    
+
     _loadData();
+    _setupSeatListener();
+  }
+
+  /// Listen for seat assignments where the current user has been seated by a dealer
+  void _setupSeatListener() {
+    final userId = AuthService.userId;
+    if (userId == null) return;
+
+    // First pre-populate existing seats to avoid duplicate notifications
+    SeatService.getCurrentUserAllSeats().then((existingSeats) {
+      for (final seat in existingSeats) {
+        _notifiedSeatIds.add(seat.id);
+      }
+    }).catchError((e) {
+      print('Error pre-populating seats: $e');
+    });
+
+    // Set up real-time listener
+    _seatSubscription = SeatService.watchCurrentUserSeats().listen((seats) {
+      // Update active session state
+      final hasActive = seats.isNotEmpty;
+      if (_hasActiveSession != hasActive || _activeSeats.length != seats.length) {
+        setState(() {
+          _hasActiveSession = hasActive;
+          _activeSeats = seats;
+        });
+      }
+
+      for (final seat in seats) {
+        if (!_notifiedSeatIds.contains(seat.id)) {
+          _notifiedSeatIds.add(seat.id);
+          _showSeatedNotification(seat);
+        }
+      }
+    }, onError: (error) {
+      print('Seat listener error: $error');
+    });
+  }
+
+  /// Show a sliding notification when user is seated by a dealer
+  void _showSeatedNotification(SeatAssignment seat) {
+    if (!mounted) return;
+
+    final chipStackStr = seat.chipStack != null
+        ? '\$${seat.chipStack!.toStringAsFixed(0)}'
+        : 'Not set';
+
+    SlidingNotificationOverlay.show(
+      context: context,
+      title: "You've Been Seated!",
+      subtitle: 'Table: ${seat.tableId}',
+      detail: 'Seat #${seat.seatNumber}  •  Stack: $chipStackStr',
+      icon: Icons.event_seat,
+      iconColor: const Color(0xFF5AC95A),
+      displayDuration: const Duration(seconds: 6),
+      onTap: () {
+        // Navigate to player session screen
+        _navigateToPlayerSession(seat);
+      },
+    );
+  }
+
+  /// Navigate to the player session screen for the given seat
+  void _navigateToPlayerSession(SeatAssignment seat) {
+    Navigator.pushNamed(
+      context,
+      '/player_session',
+      arguments: {
+        'clubId': seat.clubId,
+        'tableId': seat.tableId,
+        'seatNumber': seat.seatNumber,
+      },
+    );
+  }
+
+  /// Show active sessions dropdown
+  void _showActiveSessionsDropdown(BuildContext context) {
+    if (_activeSeats.isEmpty) {
+      // No active sessions - show a message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No active sessions'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Get the button position for positioning the dropdown
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final buttonPosition = button.localToGlobal(Offset.zero, ancestor: overlay);
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (context) => Stack(
+        children: [
+          // Dismiss on tap outside
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          // Dropdown positioned below the bell icon
+          Positioned(
+            top: buttonPosition.dy + 50,
+            right: 16,
+            child: Material(
+              color: Colors.transparent,
+              child: _buildSessionsDropdown(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSessionsDropdown(BuildContext context) {
+    return Container(
+      width: 280,
+      constraints: const BoxConstraints(maxHeight: 300),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1E),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF5AC95A),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Live Sessions',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${_activeSeats.length}',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Session list
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _activeSeats.length,
+              itemBuilder: (context, index) {
+                final seat = _activeSeats[index];
+                return _buildActiveSessionItem(context, seat);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveSessionItem(BuildContext context, SeatAssignment seat) {
+    final chipStackStr = seat.chipStack != null
+        ? '\$${seat.chipStack!.toStringAsFixed(0)}'
+        : 'Not set';
+
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context); // Close dropdown
+        _navigateToPlayerSession(seat);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            // Table icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFF5AC95A).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.casino,
+                color: Color(0xFF5AC95A),
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Session details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    seat.tableId,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Seat #${seat.seatNumber}  •  $chipStackStr',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Arrow
+            Icon(
+              Icons.chevron_right,
+              color: Colors.white.withValues(alpha: 0.3),
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _seatSubscription?.cancel();
     _progressAnimationController.dispose();
     super.dispose();
   }
-
 
   Future<void> _loadData() async {
     try {
@@ -81,7 +363,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         isLoadingData = true;
       });
 
-      // Run stats verification in background
       StatsVerificationService.verifyAllStats();
 
       final bankroll = await BankrollService.getCurrentBankroll();
@@ -92,7 +373,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final earningsData = await _getEarningsData();
       final events = await _loadCalendarEvents();
 
-      // Get user's display name
       final user = AuthService.currentUser;
       String displayName = 'User';
       if (user != null) {
@@ -100,7 +380,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
 
       if (mounted) {
-        print('🏠 DEBUG Home Screen - playerStats: $stats');
         setState(() {
           currentBankroll = bankroll;
           bankrollGoal = goal;
@@ -114,7 +393,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           isLoadingData = false;
         });
 
-        // Reset and start animation from 0 to the new progress value
         _progressAnimationController.reset();
         _progressAnimationController.forward();
       }
@@ -136,23 +414,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       } catch (e) {
         sessions = await LocalStorageService.getUserSessions();
       }
-      
-      
-      // Sort by date and take the latest 3
+
       sessions.sort((a, b) {
         try {
           DateTime dateA = _parseSessionDate(a);
           DateTime dateB = _parseSessionDate(b);
-          
           return dateB.compareTo(dateA);
         } catch (e) {
           return 0;
         }
       });
-      
-      List<Map<String, dynamic>> recent = sessions.take(3).toList();
-      
-      return recent;
+
+      return sessions.take(3).toList();
     } catch (e) {
       print('Error loading recent sessions: $e');
       return [];
@@ -161,27 +434,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   DateTime _parseSessionDate(Map<String, dynamic> session) {
     try {
-      // Handle Firebase Timestamp objects
       var createdAt = session['createdAt'];
       var timestamp = session['timestamp'];
 
       if (createdAt != null) {
-        // If it's a Firebase Timestamp, convert it
         if (createdAt.runtimeType.toString().contains('Timestamp')) {
           return (createdAt as dynamic).toDate();
         }
-        // If it's already a DateTime
         if (createdAt is DateTime) {
           return createdAt;
         }
-        // If it's a String, parse it
         if (createdAt is String) {
           return DateTime.tryParse(createdAt) ?? DateTime(2000);
         }
       }
 
       if (timestamp != null) {
-        // Handle timestamp field similarly
         if (timestamp.runtimeType.toString().contains('Timestamp')) {
           return (timestamp as dynamic).toDate();
         }
@@ -201,21 +469,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<Map<String, dynamic>> _getEarningsData() async {
     try {
-      // Get all session results
       final sessionResults = await SessionResultService.getAllSessionResults();
 
-      // Calculate current week (Monday to Sunday)
       final now = DateTime.now();
-      final currentWeekday = now.weekday; // 1 = Monday, 7 = Sunday
-
-      // Get Monday of current week (weekday 1)
+      final currentWeekday = now.weekday;
       final monday = now.subtract(Duration(days: currentWeekday - 1));
-      // Get Sunday of current week
       final sunday = monday.add(Duration(days: 6));
 
-      print('📅 Current Week: ${DateFormat('MMM d').format(monday)} - ${DateFormat('MMM d').format(sunday)}');
-
-      // Initialize data for all 7 days of current week with zeros
       Map<String, Map<String, double>> dailyData = {};
       for (int i = 0; i < 7; i++) {
         final date = monday.add(Duration(days: i));
@@ -223,7 +483,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         dailyData[dateKey] = {'tournament': 0.0, 'cash': 0.0, 'dateObj': date.millisecondsSinceEpoch.toDouble()};
       }
 
-      // Fill in actual data for days that have session results
       for (var result in sessionResults) {
         DateTime date;
         if (result['timestamp'] != null) {
@@ -234,12 +493,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           continue;
         }
 
-        // Only include data from current week (Monday to Sunday)
         if (date.isBefore(monday) || date.isAfter(sunday.add(Duration(days: 1)))) continue;
 
-        // Normalize to day (ignore time)
         final dateKey = DateFormat('MMM d').format(date);
-
         final gameType = result['gameType'] as String? ?? 'cash';
         final amount = (result['amount'] as num?)?.toDouble() ?? 0.0;
 
@@ -248,7 +504,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         }
       }
 
-      // Convert to list and sort chronologically
       List<Map<String, dynamic>> chartData = dailyData.entries.map((entry) {
         return {
           'date': entry.key,
@@ -258,19 +513,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         };
       }).toList();
 
-      // Sort by actual date
       chartData.sort((a, b) => (a['dateObj'] as double).compareTo(b['dateObj'] as double));
 
-      // Remove dateObj as it's only used for sorting
       for (var item in chartData) {
         item.remove('dateObj');
       }
 
-      // Calculate average earnings: total / number of sessions (can be negative)
       double totalEarnings = sessionResults.fold(0.0, (sum, r) => sum + ((r['amount'] as num?)?.toDouble() ?? 0.0));
       double avgEarnings = sessionResults.isNotEmpty ? totalEarnings / sessionResults.length : 0.0;
-
-      print('📊 Earnings Data: ${chartData.length} days, Avg: \$${avgEarnings.toStringAsFixed(2)}');
 
       return {
         'chartData': chartData,
@@ -285,425 +535,354 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  Future<List<Map<String, dynamic>>> _loadCalendarEvents() async {
+    try {
+      final events = await CalendarEventService.getUpcomingEvents();
+      return events;
+    } catch (e) {
+      return [];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Show loading screen during initial data load
     if (isLoadingData && currentBankroll == 0.0 && recentSessions.isEmpty) {
       return LoadingScreen(message: 'Loading your poker data...');
     }
-    
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: Color(0xFF161618), // Health app dark background
+      backgroundColor: Colors.black,
+      extendBody: true,
       body: Stack(
         children: [
+          // Gradient background from design system
+          GradientBackground(),
+
           SafeArea(
             child: RefreshIndicator(
               onRefresh: _loadData,
-              color: Color(0xFF5AC95A),
-              backgroundColor: Color(0xFF1F1F23),
+              color: const Color(0xFFA5EC44),
+              backgroundColor: const Color(0xFF1C2926),
               child: SingleChildScrollView(
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: 375),
-                  margin: EdgeInsets.symmetric(horizontal: 24),
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                // Header Section
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 32, 0, 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Hi, $userName!',
-                            style: TextStyle(
-                              fontSize: 32,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            _getFormattedDate(),
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF9A9A9A),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(height: 16),
+
+                      // Top Header Bar
+                      MainScreenHeader(
+                        username: userName,
+                        title: 'Home', // Fallback if no username
+                        subtitle: 'Welcome back',
+                        showLeftIcon: true,
+                        leftImagePath: 'icons/flat_icons/stats.png',
+                        onLeftPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => StatisticsScreen()),
+                          );
+                        },
+                        rightImagePath: 'icons/flat_icons/bell.png',
+                        showRightBadge: _hasActiveSession,
+                        onRightPressed: () {
+                          _showActiveSessionsDropdown(context);
+                        },
                       ),
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF1F1F23),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.notifications_outlined,
-                            color: Colors.white.withOpacity(0.4),
-                            size: 22,
-                          ),
-                          onPressed: null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Goal Progress Card
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(24),
-                  margin: EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Goal',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                              RichText(
-                                text: TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text: '\$${currentBankroll.toStringAsFixed(0)}',
-                                      style: TextStyle(
-                                        fontSize: 28,
-                                        color: Color(0xFF5AC95A),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: ' of \$${bankrollGoal.toStringAsFixed(0)}',
-                                      style: TextStyle(
-                                        fontSize: 28,
-                                        color: Color(0xFF9A9A9A),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                '\$${(bankrollGoal - currentBankroll).toStringAsFixed(0)} left',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF9A9A9A),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              ],
-                            ),
-                          ),
-                          // Circular Progress with Animation
-                          AnimatedBuilder(
-                            animation: _progressAnimation,
-                            builder: (context, child) {
-                              final animatedProgress = _progressAnimation.value * bankrollProgress;
-                              return Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 100,
-                                    height: 100,
-                                    child: CircularProgressIndicator(
-                                      value: animatedProgress,
-                                      strokeWidth: 6,
-                                      strokeCap: StrokeCap.round,
-                                      backgroundColor: Color(0xFF2A2A2E),
-                                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5AC95A)),
-                                    ),
-                                  ),
-                                  Text(
-                                    '${(animatedProgress * 100).toStringAsFixed(0)}%',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Metrics Grid (2x2)
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.2,
-                  children: [
-                    _buildMetricCard(
-                      title: 'Sessions',
-                      value: '${playerStats['totalSessions'] ?? 0}',
-                      unit: '',
-                      iconColor: Color(0xFF5B9CDF),
-                    ),
-                    _buildMetricCard(
-                      title: 'Win Rate',
-                      value: '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
-                      unit: '',
-                      iconColor: Color(0xFF9B59B6),
-                    ),
-                    _buildMetricCard(
-                      title: 'Hours',
-                      value: '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(1)}',
-                      unit: '',
-                      iconColor: Color(0xFF5B9CDF),
-                    ),
-                    _buildMetricCard(
-                      title: 'Play Style',
-                      value: _getPlayStyleName(),
-                      unit: '',
-                      iconColor: Color(0xFFE67E22),
-                    ),
-                  ],
-                ),
-                
-                SizedBox(height: 24),
-                
-                // Earnings Chart Card
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(24),
-                  margin: EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Earnings',
-                            style: TextStyle(
-                              fontSize: 24,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Avg ${avgEarnings >= 0 ? '\$' : '-\$'}${avgEarnings.abs().toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: avgEarnings >= 0 ? Color(0xFF5AC95A) : Color(0xFFFF6B6B),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      Row(
-                        children: [
-                          _buildLegendItem('Tournament', Color(0xFF5B9CDF)),
-                          SizedBox(width: 20),
-                          _buildLegendItem('Cash Game', Color(0xFF5AC95A)),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      Container(
-                        height: 200,
-                        child: _buildEarningsChart(),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Recent Sessions Card
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(24),
-                  margin: EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Recent Sessions',
-                            style: TextStyle(
-                              fontSize: 24,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
-                              );
-                            },
-                            child: Text(
-                              'View All',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFF5AC95A),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      _buildRecentSessionsList(),
-                    ],
-                  ),
-                ),
-                
-                // Calendar Widget
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(24),
-                  margin: EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Upcoming Events',
-                            style: TextStyle(
-                              fontSize: 24,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => CalendarScreen()),
-                              );
-                              // Reload events after returning from calendar screen
-                              _loadData();
-                            },
-                            child: Text(
-                              'View All',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFF5AC95A),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      _buildUpcomingEvents(),
-                    ],
-                  ),
-                ),
-                
-                      SizedBox(height: 100), // Space for bottom navigation
+
+                      const SizedBox(height: 24),
+
+                      // Goal Section
+                      _buildGoalSection(),
+
+                      const SizedBox(height: 40),
+
+                      // Stats Grid
+                      _buildStatsGrid(),
+
+                      const SizedBox(height: 28),
+
+                      // Earnings Chart
+                      _buildEarningsCard(),
+
+                      const SizedBox(height: 28),
+
+                      // Recent Sessions
+                      _buildRecentSessionsCard(),
+
+                      const SizedBox(height: 28),
+
+                      // Upcoming Events
+                      _buildUpcomingEventsCard(),
+
+                      const SizedBox(height: 100),
                     ],
                   ),
                 ),
               ),
             ),
           ),
-          // Floating Bottom Navigation
-          Positioned(
-            bottom: 16,
-            left: 24,
-            right: 24,
+
+          // Blur overlay when popup is visible
+          if (_selectedEventId != null)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedEventId = null;
+                  _popupPosition = null;
+                });
+              },
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                child: Container(
+                  color: Colors.black.withOpacity(0.0),
+                ),
+              ),
+            ),
+
+          // Positioned popup menu
+          if (_selectedEventId != null && _popupPosition != null)
+            Positioned(
+              left: _popupPosition!.dx,
+              top: _popupPosition!.dy,
+              child: _buildEventContextMenu(),
+            ),
+        ],
+      ),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home'),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      height: 70,
+      decoration: BoxDecoration(
+        color: const Color(0xFF2D2D2D),
+        borderRadius: BorderRadius.circular(35),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Home Icon
+          IconButton(
+            icon: Icon(Icons.home, color: Colors.white, size: 28),
+            onPressed: () {
+              // Already on home screen
+            },
+          ),
+          // Opponents Icon
+          IconButton(
+            icon: Icon(Icons.group, color: Colors.white, size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyOpponentsScreen()),
+              );
+            },
+          ),
+          // Center Plus Button
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFFA5EC44),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: Icon(Icons.add, color: Colors.black, size: 32),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
+                );
+              },
+            ),
+          ),
+          // Game/Cards Icon
+          IconButton(
+            icon: Icon(Icons.style, color: Colors.white, size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
+              );
+            },
+          ),
+          // Profile Icon
+          IconButton(
+            icon: Icon(Icons.person, color: Colors.white, size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Profile Picture (frame)
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileScreen()),
+              );
+            },
             child: Container(
-              height: 68,
+              width: 60,
+              height: 60,
               decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: Offset(0, 8),
-                    spreadRadius: -5,
-                  ),
-                ],
+                color: Colors.white.withOpacity(0.15),
+                shape: BoxShape.circle,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildBottomNavItem(
-                    icon: Icons.home_outlined,
-                    label: 'Home',
-                    index: 0,
-                    onTap: () => _onNavItemTapped(0),
-                  ),
-                  _buildBottomNavItem(
-                    icon: Icons.bar_chart_outlined,
-                    label: 'Stats',
-                    index: 1,
-                    onTap: () => _onNavItemTapped(1),
-                  ),
-                  _buildBottomNavItem(
-                    icon: Icons.add,
-                    label: 'Start',
-                    index: 2,
-                    onTap: () => _onNavItemTapped(2),
-                    isCenter: true,
-                  ),
-                  _buildBottomNavItem(
-                    icon: Icons.people_outline,
-                    label: 'Opponents',
-                    index: 3,
-                    onTap: () => _onNavItemTapped(3),
-                  ),
-                  _buildBottomNavItem(
-                    icon: Icons.person_outline,
-                    label: 'Profile',
-                    index: 4,
-                    onTap: () => _onNavItemTapped(4),
-                  ),
-                ],
+              child: ClipOval(
+                child: Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 36,
+                ),
               ),
+            ),
+          ),
+
+          // Right side icons
+          Row(
+            children: [
+              // Statistics Icon
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => StatisticsScreen()),
+                  );
+                },
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      'icons/flat_icons/stats.png',
+                      color: Colors.white,
+                      width: 26,
+                      height: 26,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Notification Bell Icon
+              GestureDetector(
+                onTap: () {
+                  // TODO: Navigate to notifications
+                },
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      'icons/flat_icons/bell.png',
+                      color: Colors.white,
+                      width: 26,
+                      height: 26,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalSection() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          // 144deg in CSS = Alignment(-0.8, -0.6) to Alignment(0.8, 0.6)
+          begin: Alignment(-0.8, -0.6),
+          end: Alignment(0.8, 0.6),
+          colors: [
+            Color(0xFF022F00), // rgba(2, 47, 0, 1) - darkest
+            Color(0xFF033800), // Very subtle step
+            Color(0xFF044100), // Very subtle step
+            Color(0xFF054A00), // Very subtle step
+            Color(0xFF055300), // Very subtle step
+            Color(0xFF065C00), // Very subtle step
+            Color(0xFF076500), // Softer bright green
+          ],
+          stops: [0.0, 0.25, 0.4, 0.55, 0.7, 0.85, 1.0],
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Wallet Balance label
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: Text(
+              'Bankroll',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: Colors.white,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0,
+                height: 1.0,
+              ),
+            ),
+          ),
+          SizedBox(height: 16),
+          // Main balance text
+          Text(
+            '\$${currentBankroll.toStringAsFixed(0)} of \$${bankrollGoal.toStringAsFixed(0)}',
+            style: GoogleFonts.robotoMono(
+              fontSize: 38,
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+              height: 1.0,
+            ),
+          ),
+          SizedBox(height: 14),
+          // Remaining balance text
+          Text(
+            '\$${(bankrollGoal - currentBankroll).toStringAsFixed(0)} left',
+            style: GoogleFonts.robotoMono(
+              fontSize: 16,
+              color: Color(0xFFC2EFBA),
+              fontWeight: FontWeight.w500,
+              letterSpacing: -1.0,
+              height: 1.0,
             ),
           ),
         ],
@@ -711,93 +890,97 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  String _getFormattedDate() {
-    final now = DateTime.now();
-    return DateFormat('EEE, d MMM').format(now);
-  }
-
-  void _onNavItemTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-    
-    switch (index) {
-      case 0:
-        // Home - already here
-        break;
-      case 1:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => StatisticsScreen()),
-        );
-        break;
-      case 2:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
-        );
-        break;
-      case 3:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => MyOpponentsScreen()),
-        );
-        break;
-      case 4:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ProfileScreen()),
-        ).then((_) {
-          // Reload data when returning from profile
-          _loadData();
-        });
-        break;
-    }
-  }
-
-  Widget _buildMetricCard({
-    required String title,
-    required String value,
-    required String unit,
-    required Color iconColor,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              _getIconForTitle(title, iconColor),
-            ],
+  Widget _buildStatsGrid() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Recent Activity title
+        Text(
+          'RECENT ACTIVITY',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Color(0xFF87ED81),
+            fontWeight: FontWeight.w400,
+            letterSpacing: 1.0,
+            height: 1.0,
           ),
-          Spacer(),
+        ),
+        SizedBox(height: 20),
+        // Stats cards with dividers
+        Column(
+          children: [
+            _buildStatCard(
+              'Sessions',
+              '${playerStats['totalSessions'] ?? 0}',
+              iconAsset: 'assets/session.png',
+            ),
+            _buildDivider(),
+            _buildStatCard(
+              'Win Rate',
+              '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
+              iconAsset: 'assets/trophy.png',
+            ),
+            _buildDivider(),
+            _buildStatCard(
+              'Hours',
+              '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(1)}',
+              iconAsset: 'assets/clock.png',
+            ),
+            _buildDivider(),
+            _buildStatCard(
+              'Play Style',
+              _getPlayStyleName(),
+              iconAsset: _getPlayStyleIcon(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      height: 1,
+      margin: EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Colors.white.withOpacity(0.1),
+            Colors.white.withOpacity(0.3),
+            Colors.white.withOpacity(0.1),
+          ],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, {IconData? icon, String? iconAsset}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
           Text(
-            value,
+            title,
             style: TextStyle(
-              fontSize: 28,
               color: Colors.white,
-              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w500,
             ),
           ),
           Text(
-            unit,
+            value,
+            textAlign: TextAlign.right,
             style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF9A9A9A),
+              color: Colors.white,
+              fontSize: 18,
+              fontFamily: 'Inter',
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -806,321 +989,695 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _getIconForTitle(String title, Color iconColor) {
-    switch (title) {
-      case 'Sessions':
-        return Image.asset(
-          'assets/session.png',
-          width: 48,
-          height: 48,
-          fit: BoxFit.contain,
-        );
-      case 'Win Rate':
-        return Image.asset(
-          'assets/trophy.png',
-          width: 48,
-          height: 48,
-          fit: BoxFit.contain,
-        );
-      case 'Hours':
-        return Image.asset(
-          'assets/clock.png',
-          width: 48,
-          height: 48,
-          fit: BoxFit.contain,
-        );
-      case 'Play Style':
-        return Image.asset(
-          'assets/play_style/${_getPlayStyleIcon()}',
-          width: 48,
-          height: 48,
-          fit: BoxFit.contain,
-        );
-      default:
-        return Icon(Icons.analytics, color: iconColor, size: 32);
-    }
-  }
-
-  // Play style detection methods
-  String _getPlayStyleName() {
-    // Get stats from playerStats
-    final vpip = (playerStats['vpip'] as num?)?.toDouble() ?? 0.0;
-    final pfr = (playerStats['pfr'] as num?)?.toDouble() ?? 0.0;
-    final threeBet = (playerStats['threeBet'] as num?)?.toDouble() ?? 0.0;
-    final aggressionFactor = (playerStats['aggressionFactor'] as num?)?.toDouble() ?? 0.0;
-    final wtsd = (playerStats['wtsd'] as num?)?.toDouble();
-    final wsd = (playerStats['wsd'] as num?)?.toDouble();
-    final handsPlayed = (playerStats['handsPlayed'] as num?)?.toInt();
-
-    final result = PlayStyleDetector.detectPlayStyle(
-      vpip: vpip,
-      pfr: pfr,
-      threeBet: threeBet,
-      aggressionFactor: aggressionFactor,
-      wtsd: wtsd,
-      wsd: wsd,
-      handsPlayed: handsPlayed,
-    );
-
-    return PlayStyleDetector.getStyleAbbreviation(result['style']!);
-  }
-
-  String _getPlayStyleIcon() {
-    // Get stats from playerStats
-    final vpip = (playerStats['vpip'] as num?)?.toDouble() ?? 0.0;
-    final pfr = (playerStats['pfr'] as num?)?.toDouble() ?? 0.0;
-    final threeBet = (playerStats['threeBet'] as num?)?.toDouble() ?? 0.0;
-    final aggressionFactor = (playerStats['aggressionFactor'] as num?)?.toDouble() ?? 0.0;
-    final wtsd = (playerStats['wtsd'] as num?)?.toDouble();
-    final wsd = (playerStats['wsd'] as num?)?.toDouble();
-    final handsPlayed = (playerStats['handsPlayed'] as num?)?.toInt();
-
-    final result = PlayStyleDetector.detectPlayStyle(
-      vpip: vpip,
-      pfr: pfr,
-      threeBet: threeBet,
-      aggressionFactor: aggressionFactor,
-      wtsd: wtsd,
-      wsd: wsd,
-      handsPlayed: handsPlayed,
-    );
-
-    return result['icon']!;
-  }
-
-  Widget _buildLegendItem(String label, Color color) {
-    return Row(
+  Widget _buildEarningsCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+        // Header row with title and avg badge
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'EARNINGS',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: Color(0xFF87ED81),
+                fontWeight: FontWeight.w400,
+                letterSpacing: 1.0,
+                height: 1.0,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF009548),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Avg',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0,
+                      height: 1.2,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    '\$${avgEarnings.toStringAsFixed(0)}',
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Color(0xFF9A9A9A),
-            fontWeight: FontWeight.w500,
-          ),
+        const SizedBox(height: 18),
+        // Legend
+        Row(
+          children: [
+            _buildLegendItem('Tournament', const Color(0xFF00C3FF)),
+            const SizedBox(width: 17),
+            _buildLegendItem('Cash Game', const Color(0xFF44EC49)),
+          ],
+        ),
+        const SizedBox(height: 24),
+        // Chart
+        Container(
+          height: 167,
+          child: earningsChartData.isEmpty
+              ? Center(
+                  child: Text(
+                    'No earnings data yet',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.40),
+                      fontSize: 16,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                )
+              : CustomPaint(
+                  painter: EarningsChartPainter(earningsChartData),
+                  size: Size.infinite,
+                ),
         ),
       ],
     );
   }
 
-  Widget _buildEarningsChart() {
-    // Show empty state if no data
-    if (earningsChartData.isEmpty) {
-      return Container(
-        height: 200,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'icons/stats.png',
-                width: 48,
-                height: 48,
-                fit: BoxFit.contain,
-              ),
-              SizedBox(height: 12),
-              Text(
-                'No earnings data yet',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF9A9A9A),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Add session results to see your progress',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF9A9A9A),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return CustomPaint(
-      painter: EarningsChartPainter(earningsChartData),
-      size: Size.infinite,
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> _loadCalendarEvents() async {
-    try {
-      print('🏠 Home screen: Loading calendar events...');
-      // Load upcoming events from Firebase
-      final events = await CalendarEventService.getUpcomingEvents();
-      print('🏠 Home screen: Loaded ${events.length} events');
-      for (final event in events) {
-        print('  - ${event['title']} on ${event['date']}');
-      }
-      return events;
-    } catch (e) {
-      print('❌ Error loading calendar events: $e');
-      return [];
-    }
-  }
-
-  Widget _buildUpcomingEvents() {
-    // Events are already filtered to future events in _loadCalendarEvents
-    if (upcomingEvents.isEmpty) {
-      return Container(
-        height: 100,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'icons/calendar.png',
-                width: 48,
-                height: 48,
-                fit: BoxFit.contain,
-              ),
-              SizedBox(height: 8),
-              Text(
-                'No upcoming events',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF9A9A9A),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Show only the first 3 upcoming events
-    final displayEvents = upcomingEvents.take(3).toList();
-
+  Widget _buildRecentSessionsCard() {
     return Column(
-      children: displayEvents.map((event) => _buildEventItem(event)).toList(),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row with title and view all
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'RECENT SESSIONS',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: Color(0xFF87ED81),
+                fontWeight: FontWeight.w400,
+                letterSpacing: 1.0,
+                height: 1.0,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
+                );
+              },
+              child: Text(
+                'View All',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        // Content
+        recentSessions.isEmpty
+            ? Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 44, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Color(0xFF2B2B2B),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon (24x24)
+                    Image.asset(
+                      'icons/flat_icons/deuce.png',
+                      width: 24,
+                      height: 24,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 20),
+                    // Text content - centered, 200px width
+                    SizedBox(
+                      width: 200,
+                      child: Column(
+                        children: [
+                          Text(
+                            'No recent sessions',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              height: 1.46,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Start your first poker session!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0x4C2C3E2E), // #2c3e2e4c
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: _buildSessionsList(),
+                ),
+              ),
+      ],
     );
   }
 
-  Widget _buildEventItem(Map<String, dynamic> event) {
-    // Format the date to be more readable
-    String formattedDate = '';
-    try {
-      final dateTime = DateTime.parse(event['date']);
-      final dateFormat = DateFormat('MMM dd, h:mm a'); // e.g., "Oct 27, 7:00 PM"
-      formattedDate = dateFormat.format(dateTime);
-    } catch (e) {
-      formattedDate = event['date'] ?? '';
+  Widget _buildUpcomingEventsCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row with title and view all
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'UPCOMING EVENTS',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: Color(0xFF87ED81),
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1.0,
+                height: 1.0,
+              ),
+            ),
+            GestureDetector(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CalendarScreen()),
+                );
+                _loadData();
+              },
+              child: Text(
+                'View All',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Content
+        upcomingEvents.isEmpty
+            ? Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 44, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Color(0xFF2B2B2B),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon (24x24)
+                    Image.asset(
+                      'icons/flat_icons/calendar_edit.png',
+                      width: 24,
+                      height: 24,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 20),
+                    // Text content - centered, 200px width
+                    SizedBox(
+                      width: 200,
+                      child: Column(
+                        children: [
+                          Text(
+                            'No upcoming events',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              height: 1.46,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Schedule your first event!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0x4C2C3E2E), // #2c3e2e4c
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: _buildEventsList(),
+                ),
+              ),
+      ],
+    );
+  }
+
+  List<Widget> _buildSessionsList() {
+    List<Widget> widgets = [];
+    final sessions = recentSessions.take(3).toList();
+
+    for (int i = 0; i < sessions.length; i++) {
+      widgets.add(_buildSessionItem(sessions[i]));
+
+      // Add divider between sessions (not after the last one)
+      if (i < sessions.length - 1) {
+        widgets.add(
+          Container(
+            height: 1,
+            margin: EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.3),
+                  Colors.white.withOpacity(0.1),
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+        );
+      }
     }
 
-    return InkWell(
-      onTap: () => _showEventOptionsDialog(event),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Color(0xFF2A2A2E),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
+    return widgets;
+  }
+
+  Widget _buildSessionItem(Map<String, dynamic> session) {
+    String sessionName = session['sessionName'] ?? '';
+
+    if (sessionName.isEmpty) {
+      final createdAt = _parseSessionDate(session);
+      final gameType = session['gameType'] ?? 'Poker';
+      final dateStr = DateFormat('MMM d').format(createdAt);
+      sessionName = '$gameType Session - $dateStr';
+    }
+
+    final createdAt = _parseSessionDate(session);
+    final formattedDate = DateFormat('MMM dd, h:mma').format(createdAt).toLowerCase();
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SessionHistoryScreen(targetSessionId: session['id']),
+          ),
+        );
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _getEventTypeImage(event['type']),
-          SizedBox(width: 16),
+          // Left side: Session info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  event['title'] ?? 'Poker Event',
+                  sessionName,
                   style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
+                    fontFamily: 'Inter',
+                    fontSize: 20,
+                    color: Color(0xFFF8FFF7),
                     fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
+                    height: 1.2,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   formattedDate,
                   style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF9A9A9A),
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    color: Color(0xFFF8FFF7),
                     fontWeight: FontWeight.w500,
+                    letterSpacing: 0,
+                    height: 1.2,
                   ),
                 ),
               ],
             ),
           ),
-          if (event['buyIn'] != null && event['buyIn'] > 0)
-            Text(
-              '\$${event['buyIn'].toStringAsFixed(0)}',
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF5AC95A),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-        ],
-        ),
-      ),
-    );
-  }
-
-  void _showEventOptionsDialog(Map<String, dynamic> event) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFF1F1F23),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          event['title'] ?? 'Event Options',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.edit, color: Colors.blue),
-              title: Text('Edit Event', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _showEditEventDialog(event);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.delete, color: Colors.red),
-              title: Text('Delete Event', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _showDeleteEventConfirmation(event);
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.white)),
+          // Right side: Arrow icon
+          Icon(
+            Icons.arrow_forward_ios,
+            color: Color(0xFF87ED81),
+            size: 18,
           ),
         ],
       ),
     );
   }
 
+  List<Widget> _buildEventsList() {
+    List<Widget> widgets = [];
+    final events = upcomingEvents.take(3).toList();
+
+    for (int i = 0; i < events.length; i++) {
+      widgets.add(_buildEventItem(events[i]));
+
+      // Add divider between events (not after the last one)
+      if (i < events.length - 1) {
+        widgets.add(
+          Container(
+            height: 1,
+            margin: EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.3),
+                  Colors.white.withOpacity(0.1),
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return widgets;
+  }
+
+  Widget _buildEventItem(Map<String, dynamic> event) {
+    final GlobalKey eventKey = GlobalKey();
+
+    String formattedDate = '';
+    try {
+      final dateTime = DateTime.parse(event['date']);
+      formattedDate = DateFormat('MMM dd, h:mma').format(dateTime).toLowerCase();
+    } catch (e) {
+      formattedDate = event['date'] ?? '';
+    }
+
+    // Get buy-in amount from event
+    String buyIn = '';
+    if (event['buyIn'] != null) {
+      final buyInValue = event['buyIn'];
+      if (buyInValue is num) {
+        buyIn = '\$${buyInValue.toStringAsFixed(0)}';
+      } else {
+        buyIn = buyInValue.toString();
+      }
+    }
+
+    return GestureDetector(
+      key: eventKey,
+      behavior: HitTestBehavior.opaque,
+      onLongPress: () {
+        // Get the position of the card
+        final RenderBox renderBox = eventKey.currentContext!.findRenderObject() as RenderBox;
+        final cardPosition = renderBox.localToGlobal(Offset.zero);
+        final cardSize = renderBox.size;
+
+        // Position popup at top-right of the card
+        final popupX = cardPosition.dx + cardSize.width - 184 - 16; // 184px menu width, 16px margin
+        final popupY = cardPosition.dy;
+
+        setState(() {
+          _selectedEventId = event['id'];
+          _popupPosition = Offset(popupX, popupY);
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        color: Colors.transparent,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+        // Left side: Event info
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                event['title'] ?? 'Event',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 20,
+                  color: Color(0xFFF8FFF7),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                formattedDate,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Color(0xFFF8FFF7),
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Right side: Buy-in price
+        if (buyIn.isNotEmpty)
+          Text(
+            buyIn,
+            style: GoogleFonts.robotoMono(
+              fontSize: 22,
+              color: Color(0xFF87ED81),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
+              height: 1.0,
+            ),
+          ),
+      ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventContextMenu() {
+    if (_selectedEventId == null) return SizedBox.shrink();
+
+    // Find the event data
+    final event = upcomingEvents.firstWhere(
+      (e) => e['id'] == _selectedEventId,
+      orElse: () => {},
+    );
+
+    if (event.isEmpty) return SizedBox.shrink();
+
+    final eventTitle = event['title'] ?? 'Event';
+
+    return AnimatedScale(
+      scale: _selectedEventId != null ? 1.0 : 0.0,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+      child: AnimatedOpacity(
+        opacity: _selectedEventId != null ? 1.0 : 0.0,
+        duration: Duration(milliseconds: 300),
+        child: Container(
+          width: 184,
+          decoration: BoxDecoration(
+            color: Color(0xFF131613),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Event title
+              Text(
+                eventTitle,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0,
+                  height: 1.2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 14),
+
+              // Menu items
+              Column(
+                children: [
+                  // Edit Event
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedEventId = null;
+                        _popupPosition = null;
+                      });
+                      _showEditEventDialog(event);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Edit Event',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: Color(0xFFEBFFEF),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0,
+                              height: 1.2,
+                            ),
+                          ),
+                          Icon(
+                            Icons.edit,
+                            color: Color(0xFFEBFFEF),
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Divider
+                  Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          Colors.white.withOpacity(0.1),
+                          Colors.white.withOpacity(0.3),
+                          Colors.white.withOpacity(0.1),
+                        ],
+                        stops: [0.0, 0.5, 1.0],
+                      ),
+                    ),
+                  ),
+
+                  // Delete Event
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedEventId = null;
+                        _popupPosition = null;
+                      });
+                      _handleDeleteEvent(event['id'], event['title'] ?? 'Event');
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Delete Event',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: Color(0xFFEBFFEF),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0,
+                              height: 1.2,
+                            ),
+                          ),
+                          Icon(
+                            Icons.delete,
+                            color: Color(0xFFEBFFEF),
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showEditEventDialog(Map<String, dynamic> event) async {
-    final titleController = TextEditingController(text: event['title']);
-    final locationController = TextEditingController(text: event['location']);
-    final buyInController = TextEditingController(text: event['buyIn'].toString());
+    final titleController = TextEditingController(text: event['title'] ?? '');
+    final locationController = TextEditingController(text: event['location'] ?? '');
+    final buyInController = TextEditingController(text: event['buyIn']?.toString() ?? '');
 
     final eventDate = DateTime.parse(event['date']);
     DateTime dialogSelectedDate = eventDate;
@@ -1359,11 +1916,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           // Date Picker
                           GestureDetector(
                             onTap: () async {
-                              final date = await showDatePicker(
-                                context: context,
-                                initialDate: dialogSelectedDate,
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2100),
+                              final date = await _showCustomDatePicker(
+                                context,
+                                dialogSelectedDate,
                               );
                               if (date != null) {
                                 setDialogState(() {
@@ -1419,8 +1974,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               height: 48,
                               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                               decoration: BoxDecoration(
-                                color: Color(0xFF181D1B),
-                                border: Border.all(color: Colors.transparent),
+                                color: Color(0x0AFFFFFF),
+                                border: Border.all(color: Color(0xFF13321B)),
                                 borderRadius: BorderRadius.circular(58),
                               ),
                               child: Row(
@@ -1459,13 +2014,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               );
 
                               try {
-                                await _updateEvent(
-                                  event['id'],
-                                  title,
-                                  selectedType,
-                                  locationController.text.trim(),
-                                  eventDateTime,
-                                  double.tryParse(buyInController.text) ?? 0.0,
+                                await CalendarEventService.updateEvent(
+                                  eventId: event['id'],
+                                  title: title,
+                                  type: selectedType,
+                                  location: locationController.text.trim(),
+                                  date: eventDateTime,
+                                  buyIn: double.tryParse(buyInController.text) ?? 0.0,
                                 );
 
                                 Navigator.pop(context);
@@ -1511,304 +2066,678 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _showDeleteEventConfirmation(Map<String, dynamic> event) {
-    showDialog(
+  Future<DateTime?> _showCustomDatePicker(BuildContext context, DateTime initialDate) async {
+    DateTime displayMonth = DateTime(initialDate.year, initialDate.month);
+    DateTime? selectedDate = initialDate;
+
+    return await showGeneralDialog<DateTime>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFF1F1F23),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          'Delete Event?',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          'Are you sure you want to delete "${event['title']}"?',
-          style: TextStyle(color: Color(0xFF9A9A9A)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.white)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await _deleteEvent(event['id']);
-              Navigator.pop(context);
-              _loadData(); // Reload to remove deleted event
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: Text('Delete', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: Duration(milliseconds: 200),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return StatefulBuilder(
+          builder: (context, setPickerState) {
+            // Calculate calendar data
+            final daysInMonth = DateTime(displayMonth.year, displayMonth.month + 1, 0).day;
+            final firstDayOfMonth = DateTime(displayMonth.year, displayMonth.month, 1);
+            final startingWeekday = firstDayOfMonth.weekday % 7; // 0 = Sunday
 
-  Future<void> _updateEvent(
-    String id,
-    String title,
-    String type,
-    String location,
-    DateTime date,
-    double buyIn,
-  ) async {
-    try {
-      await CalendarEventService.updateEvent(
-        eventId: id,
-        title: title,
-        type: type,
-        location: location,
-        date: date,
-        buyIn: buyIn,
-      );
-    } catch (e) {
-      print('Error updating event: $e');
-    }
-  }
-
-  Future<void> _deleteEvent(String id) async {
-    try {
-      await CalendarEventService.deleteEvent(id);
-    } catch (e) {
-      print('Error deleting event: $e');
-    }
-  }
-
-  Color _getEventTypeColor(String? type) {
-    switch (type) {
-      case 'Tournament':
-        return Color(0xFF5B9CDF);
-      case 'Cash Game':
-        return Color(0xFF5AC95A);
-      case 'Home Game':
-        return Color(0xFFE67E22);
-      case 'Online':
-        return Color(0xFF8B5CF6);
-      default:
-        return Color(0xFF9A9A9A);
-    }
-  }
-
-  Widget _getEventTypeImage(String? type) {
-    switch (type) {
-      case 'Tournament':
-        return Image.asset('icons/podium.png', width: 48, height: 48);
-      case 'Cash Game':
-        return Image.asset('icons/cash.png', width: 48, height: 48);
-      case 'Home Game':
-        return Icon(Icons.home, color: Color(0xFFE67E22), size: 48);
-      case 'Online':
-        return Icon(Icons.computer, color: Color(0xFF8B5CF6), size: 48);
-      default:
-        return Icon(Icons.event, color: Color(0xFF9A9A9A), size: 48);
-    }
-  }
-
-  IconData _getEventTypeIcon(String? type) {
-    switch (type) {
-      case 'Tournament':
-        return Icons.emoji_events;
-      case 'Cash Game':
-        return Icons.attach_money;
-      case 'Home Game':
-        return Icons.home;
-      case 'Online':
-        return Icons.computer;
-      default:
-        return Icons.event;
-    }
-  }
-
-  Widget _buildRecentSessionsList() {
-    if (recentSessions.isEmpty) {
-      return Container(
-        padding: EdgeInsets.symmetric(vertical: 44, horizontal: 8),
-        decoration: BoxDecoration(
-          color: Color(0xFF2B2B2B),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Icon (24x24)
-            Image.asset(
-              'icons/flat_icons/deuce.png',
-              width: 24,
-              height: 24,
-              color: Colors.white,
-            ),
-            SizedBox(height: 20),
-            // Text content - centered, 200px width
-            SizedBox(
-              width: 200,
-              child: Column(
-                children: [
-                  Text(
-                    'No recent sessions',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      height: 1.46,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Start your first poker session!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w400,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      children: recentSessions.map((session) => _buildSessionItem(session)).toList(),
-    );
-  }
-
-  Widget _buildSessionItem(Map<String, dynamic> session) {
-    String sessionName = session['sessionName'] ?? '';
-
-    // If no sessionName, create a meaningful one based on available data
-    if (sessionName.isEmpty) {
-      final createdAt = _parseSessionDate(session);
-      final gameType = session['gameType'] ?? 'Poker';
-      final dateStr = DateFormat('MMM d').format(createdAt);
-      sessionName = '$gameType Session - $dateStr';
-    }
-    
-    final createdAt = _parseSessionDate(session);
-    
-    return GestureDetector(
-      onTap: () {
-        // Navigate to session history screen and scroll to this session
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SessionHistoryScreen(targetSessionId: session['id']),
-          ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Color(0xFF2A2A2E),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-        children: [
-          Image.asset(
-            'assets/session.png',
-            width: 48,
-            height: 48,
-            fit: BoxFit.contain,
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            return Stack(
               children: [
-                Text(
-                  sessionName,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                // Blurred backdrop
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                      child: Container(
+                        color: Colors.black.withOpacity(0.0),
+                      ),
+                    ),
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  DateFormat('MMM dd, yyyy • HH:mm').format(createdAt),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF9A9A9A),
-                    fontWeight: FontWeight.w500,
+                // Date picker content
+                Center(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      width: 312,
+                      margin: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF000300),
+                        border: Border.all(color: Color(0x4CFFFFFF)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Header
+                          Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Select date:',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Color(0xFFBDBDBD),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Spacer(),
+                                // Clear button
+                                GestureDetector(
+                                  onTap: () {
+                                    setPickerState(() {
+                                      selectedDate = DateTime.now();
+                                      displayMonth = DateTime(selectedDate!.year, selectedDate!.month);
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.close, color: Color(0xFFD55A41), size: 12),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Clear',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color(0xFFD55A41),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                // Today button
+                                GestureDetector(
+                                  onTap: () {
+                                    final today = DateTime.now();
+                                    setPickerState(() {
+                                      selectedDate = DateTime(today.year, today.month, today.day);
+                                      displayMonth = DateTime(today.year, today.month);
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Color(0xFFFFFFFF).withOpacity(0.3)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.today, color: Color(0xFFFAFAFA), size: 12),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Today',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color(0xFFFAFAFA),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                // Close button
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Icon(Icons.close, color: Color(0xFFFAFAFA), size: 16),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 4),
+
+                          // Calendar body
+                          Container(
+                            width: 296,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF171C19),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: EdgeInsets.all(8),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Year/Month selector
+                                SizedBox(
+                                  width: 280,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                    // Year button
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            '${displayMonth.year}',
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              color: Color(0xFFFAFAFA),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          SizedBox(width: 4),
+                                          Icon(Icons.keyboard_arrow_down, color: Color(0xFFFAFAFA), size: 16),
+                                        ],
+                                      ),
+                                    ),
+                                    // Month navigation
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.chevron_left, color: Color(0xFFFAFAFA), size: 16),
+                                          onPressed: () {
+                                            setPickerState(() {
+                                              displayMonth = DateTime(displayMonth.year, displayMonth.month - 1);
+                                            });
+                                          },
+                                          padding: EdgeInsets.all(8),
+                                          constraints: BoxConstraints(),
+                                        ),
+                                        Text(
+                                          DateFormat('MMMM').format(displayMonth),
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Color(0xFFFAFAFA),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(Icons.chevron_right, color: Color(0xFFFAFAFA), size: 16),
+                                          onPressed: () {
+                                            setPickerState(() {
+                                              displayMonth = DateTime(displayMonth.year, displayMonth.month + 1);
+                                            });
+                                          },
+                                          padding: EdgeInsets.all(8),
+                                          constraints: BoxConstraints(),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                  ),
+                                ),
+
+                                SizedBox(height: 2),
+
+                                // Week day labels
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF191F1B),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                                          .map((day) => Expanded(
+                                                child: Container(
+                                                  height: 24,
+                                                  decoration: BoxDecoration(
+                                                    color: Color(0x0DFFFFFF),
+                                                  ),
+                                                  child: Center(
+                                                    child: Text(
+                                                      day,
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color: Color(0xFFBDBDBD),
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.w400,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ))
+                                          .toList(),
+                                    ),
+                                  ),
+                                ),
+
+                                SizedBox(height: 2),
+
+                                // Calendar grid
+                                GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 7,
+                                    childAspectRatio: 1.0,
+                                    crossAxisSpacing: 0,
+                                    mainAxisSpacing: 0,
+                                  ),
+                                  itemCount: 42,
+                                  itemBuilder: (context, index) {
+                                    // Show previous month days
+                                    if (index < startingWeekday) {
+                                      final prevMonth = DateTime(displayMonth.year, displayMonth.month - 1);
+                                      final daysInPrevMonth = DateTime(prevMonth.year, prevMonth.month + 1, 0).day;
+                                      final prevMonthDay = daysInPrevMonth - (startingWeekday - index - 1);
+
+                                      return Container(
+                                        child: Center(
+                                          child: Text(
+                                            prevMonthDay.toString(),
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              color: Color(0x66FAFAFA), // Grayed out
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+                                    final dayNumber = index - startingWeekday + 1;
+                                    if (dayNumber > daysInMonth) {
+                                      return Container(); // Empty cell
+                                    }
+
+                                    final date = DateTime(displayMonth.year, displayMonth.month, dayNumber);
+                                    final isSelected = selectedDate != null &&
+                                        selectedDate!.year == date.year &&
+                                        selectedDate!.month == date.month &&
+                                        selectedDate!.day == date.day;
+                                    final isToday = DateTime.now().year == date.year &&
+                                        DateTime.now().month == date.month &&
+                                        DateTime.now().day == date.day;
+
+                                    return GestureDetector(
+                                      onTap: () {
+                                        setPickerState(() {
+                                          selectedDate = date;
+                                        });
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? Color(0xFF5AC95A)
+                                              : (isToday ? Color(0xFF2A2A2E) : Colors.transparent),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: isToday && !isSelected
+                                              ? Border.all(color: Color(0xFF5AC95A), width: 1)
+                                              : null,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            dayNumber.toString(),
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              color: isSelected ? Colors.black : Color(0xFFFAFAFA),
+                                              fontSize: 12,
+                                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 8),
+
+                          // Footer buttons
+                          Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Row(
+                              children: [
+                                // Cancel button
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Container(
+                                    width: 88,
+                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Color(0xFFFFFFFF).withOpacity(0.3)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'Cancel',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          color: Color(0xFFFAFAFA),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                // Done button
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.pop(context, selectedDate),
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFBAFF9A),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          'Done',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            color: Colors.black,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
-            ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            color: Color(0xFF9A9A9A),
-            size: 16,
-          ),
-        ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildBottomNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-    required VoidCallback onTap,
-    bool isCenter = false,
-  }) {
-    final isSelected = _currentIndex == index;
-    
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: isCenter ? 64 : 44,
-        height: isCenter ? 64 : 44,
-        decoration: BoxDecoration(
-          gradient: isCenter && isSelected 
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFcb5242),
-                  Color(0xFFb8442f),
-                ],
-              )
-            : null,
-          borderRadius: BorderRadius.circular(isCenter ? 18 : 14),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  void _handleDeleteEvent(String eventId, String eventName) {
+    _showDeleteConfirmationDialog(eventId, eventName);
+  }
+
+  void _showDeleteConfirmationDialog(String eventId, String eventName) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOut,
+          )),
+          child: child,
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Stack(
           children: [
-            Icon(
-              icon,
-              color: isCenter && isSelected 
-                ? Colors.white
-                : (isSelected ? Color(0xFFcb5242) : Colors.white.withOpacity(0.7)),
-              size: isCenter ? 26 : 20,
-            ),
-            if (isCenter) ...[
-              SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+            // Blurred backdrop
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.0),
+                  ),
                 ),
               ),
-            ],
+            ),
+
+            // Dialog content
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+              // Main dialog container
+              Container(
+                decoration: BoxDecoration(
+                  color: Color(0xFF131613),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                padding: EdgeInsets.only(top: 24),
+                child: Column(
+                  children: [
+                    // Title section
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Delete $eventName?',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0,
+                          height: 1.2,
+                          decoration: TextDecoration.none,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    SizedBox(height: 24),
+
+                    // Description section
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Are you sure you want to delete "$eventName"?',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.24,
+                          height: 1.7,
+                          decoration: TextDecoration.none,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    SizedBox(height: 16),
+
+                    // Divider
+                    Container(
+                      height: 1,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+
+                    SizedBox(height: 4),
+
+                    // Delete button
+                    GestureDetector(
+                      onTap: () async {
+                        Navigator.pop(context); // Close dialog
+                        await _performDeleteEvent(eventId);
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                        child: Text(
+                          'Delete',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16,
+                            color: Color(0xFFD55A41), // Red color
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0,
+                            height: 1.2,
+                            decoration: TextDecoration.none,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 8),
+
+              // Cancel button (separate container)
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFF131613),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                  width: double.infinity,
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0,
+                      height: 1.2,
+                      decoration: TextDecoration.none,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 16), // Bottom safe area padding
+                  ],
+                ),
+              ),
+            ),
           ],
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  Future<void> _performDeleteEvent(String eventId) async {
+    try {
+      // Delete the event
+      await CalendarEventService.deleteEvent(eventId);
+
+      // Reload data to show updated list
+      await _loadData();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Event deleted successfully'),
+          backgroundColor: Color(0xFF5AC95A),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error deleting event: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3.5),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w400,
+            letterSpacing: -0.24,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getPlayStyleName() {
+    final vpip = (playerStats['vpip'] as num?)?.toDouble() ?? 0.0;
+    final pfr = (playerStats['pfr'] as num?)?.toDouble() ?? 0.0;
+    final threeBet = (playerStats['threeBet'] as num?)?.toDouble() ?? 0.0;
+    final aggressionFactor = (playerStats['aggressionFactor'] as num?)?.toDouble() ?? 0.0;
+    final wtsd = (playerStats['wtsd'] as num?)?.toDouble();
+    final wsd = (playerStats['wsd'] as num?)?.toDouble();
+    final handsPlayed = (playerStats['handsPlayed'] as num?)?.toInt();
+
+    final result = PlayStyleDetector.detectPlayStyle(
+      vpip: vpip,
+      pfr: pfr,
+      threeBet: threeBet,
+      aggressionFactor: aggressionFactor,
+      wtsd: wtsd,
+      wsd: wsd,
+      handsPlayed: handsPlayed,
+    );
+
+    return PlayStyleDetector.getStyleAbbreviation(result['style'] ?? 'Balanced');
+  }
+
+  String _getPlayStyleIcon() {
+    final styleName = _getPlayStyleName().toLowerCase();
+
+    // Map play style abbreviations to icon filenames
+    switch (styleName) {
+      case 'tag':
+        return 'assets/play_style/tag.png';
+      case 'lag':
+        return 'assets/play_style/lag.png';
+      case 'nit':
+        return 'assets/play_style/nit.png';
+      case 'maniac':
+        return 'assets/play_style/maniac.png';
+      case 'calling station':
+        return 'assets/play_style/calling_station.png';
+      case 'balanced':
+        return 'assets/play_style/balanced.png';
+      default:
+        return 'assets/play_style/balanced.png'; // Default fallback
+    }
   }
 }
 
@@ -1824,10 +2753,8 @@ class EarningsChartPainter extends CustomPainter {
 
     final paint = Paint()..style = PaintingStyle.fill;
 
-    // Chart area (leaving space for axes and labels)
     final chartArea = Rect.fromLTWH(50, 20, size.width - 70, size.height - 50);
 
-    // Find max and min values for scaling (including negatives)
     double maxValue = 0;
     double minValue = 0;
     for (var point in data) {
@@ -1837,54 +2764,48 @@ class EarningsChartPainter extends CustomPainter {
       minValue = math.min(minValue, math.min(tournament, cash));
     }
 
-    // Ensure minimum scale
     if (maxValue == 0 && minValue == 0) {
       maxValue = 100;
       minValue = -100;
     }
 
-    // Round to nearest 100
     maxValue = ((maxValue / 100).ceil() * 100).toDouble();
     minValue = ((minValue / 100).floor() * 100).toDouble();
 
     final valueRange = maxValue - minValue;
 
-    // Calculate zero line position
     final zeroY = chartArea.bottom - ((0 - minValue) / valueRange) * chartArea.height;
 
-    // Draw axes
     final axisPaint = Paint()
-      ..color = Color(0xFF9A9A9A)
+      ..color = Colors.white
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
-    // Y-axis
     canvas.drawLine(
       Offset(chartArea.left, chartArea.top),
       Offset(chartArea.left, chartArea.bottom),
       axisPaint,
     );
 
-    // Zero line (X-axis)
     canvas.drawLine(
       Offset(chartArea.left, zeroY),
       Offset(chartArea.right, zeroY),
       axisPaint,
     );
 
-    // Draw Y-axis labels
     final textPainter = TextPainter(
       textDirection: ui.TextDirection.ltr,
     );
 
-    // Draw 5 labels from min to max
     for (int i = 0; i <= 4; i++) {
       final value = minValue + (i * valueRange / 4);
       textPainter.text = TextSpan(
         text: '\$${value.toInt()}',
         style: TextStyle(
-          color: Color(0xFF9A9A9A),
-          fontSize: 10,
+          color: Colors.white,
+          fontSize: 11,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w300,
         ),
       );
       textPainter.layout();
@@ -1893,20 +2814,16 @@ class EarningsChartPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(5, y - textPainter.height / 2));
     }
 
-    // Calculate bar width and spacing
     final barGroupWidth = chartArea.width / data.length;
-    final barWidth = (barGroupWidth - 16) / 2; // 2 bars per group with spacing
-    final spacing = 4.0; // Space between tournament and cash bars
+    final barWidth = (barGroupWidth - 16) / 2;
+    final spacing = 4.0;
 
-    // Draw bars
     for (int i = 0; i < data.length; i++) {
       final tournamentValue = (data[i]['tournament'] as num?)?.toDouble() ?? 0.0;
       final cashValue = (data[i]['cash'] as num?)?.toDouble() ?? 0.0;
 
-      // Calculate x position for this group
       final groupX = chartArea.left + (i * barGroupWidth) + 8;
 
-      // Draw tournament bar (left bar in group)
       final tournamentBarX = groupX;
       final tournamentHeight = ((tournamentValue - 0) / valueRange) * chartArea.height;
       final tournamentTop = tournamentValue >= 0
@@ -1915,7 +2832,7 @@ class EarningsChartPainter extends CustomPainter {
       final tournamentBarHeight = tournamentHeight.abs();
 
       if (tournamentBarHeight > 0) {
-        paint.color = Color(0xFF5B9CDF);
+        paint.color = const Color(0xFF006AFF);
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(
@@ -1930,7 +2847,6 @@ class EarningsChartPainter extends CustomPainter {
         );
       }
 
-      // Draw cash bar (right bar in group)
       final cashBarX = groupX + barWidth + spacing;
       final cashHeight = ((cashValue - 0) / valueRange) * chartArea.height;
       final cashTop = cashValue >= 0
@@ -1939,7 +2855,7 @@ class EarningsChartPainter extends CustomPainter {
       final cashBarHeight = cashHeight.abs();
 
       if (cashBarHeight > 0) {
-        paint.color = Color(0xFF5AC95A);
+        paint.color = const Color(0xFFA5EC44);
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(
@@ -1954,12 +2870,13 @@ class EarningsChartPainter extends CustomPainter {
         );
       }
 
-      // Draw X-axis label (date) centered under the bar group
       textPainter.text = TextSpan(
         text: data[i]['date'],
         style: TextStyle(
-          color: Color(0xFF9A9A9A),
-          fontSize: 10,
+          color: Colors.white,
+          fontSize: 11,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w300,
         ),
       );
       textPainter.layout();

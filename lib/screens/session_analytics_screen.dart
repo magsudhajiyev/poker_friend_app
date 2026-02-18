@@ -8,6 +8,7 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/session_analytics_service.dart';
 import '../services/auth_service.dart';
+import '../services/dealer_service.dart';
 import 'session_hands_screen.dart';
 
 class SessionAnalyticsScreen extends StatefulWidget {
@@ -58,9 +59,18 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       }
 
       // Try Firebase first, fall back to local storage
+      // For dealer sessions, fetch from dealer_sessions collection
       List<Map<String, dynamic>> hands;
+      final isDealerSession = widget.sessionData['isDealerSession'] == true;
+      final dealerSessionId = widget.sessionData['dealerSessionId'] as String?;
+
       try {
-        hands = await FirebaseService.getSessionHands(widget.sessionId);
+        if (isDealerSession && dealerSessionId != null) {
+          // Fetch hands from dealer_sessions collection
+          hands = await DealerService.getSessionHands(dealerSessionId);
+        } else {
+          hands = await FirebaseService.getSessionHands(widget.sessionId);
+        }
       } catch (e) {
         hands = await LocalStorageService.getSessionHands(widget.sessionId);
       }

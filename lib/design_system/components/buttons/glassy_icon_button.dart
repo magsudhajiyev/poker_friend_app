@@ -28,6 +28,8 @@ class GlassyIconButton extends StatelessWidget {
   final double? iconSize;
   final Color? backgroundColor;
   final Color? iconColor;
+  final bool showBadge;
+  final Color? badgeColor;
 
   const GlassyIconButton({
     super.key,
@@ -38,6 +40,8 @@ class GlassyIconButton extends StatelessWidget {
     this.iconSize,
     this.backgroundColor,
     this.iconColor,
+    this.showBadge = false,
+    this.badgeColor,
   }) : assert(icon != null || imagePath != null, 'Either icon or imagePath must be provided');
 
   @override
@@ -45,7 +49,7 @@ class GlassyIconButton extends StatelessWidget {
     final buttonSize = size ?? 38.0;
     final buttonIconSize = iconSize ?? 24.0;
 
-    return ClipOval(
+    final button = ClipOval(
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
         child: Container(
@@ -60,8 +64,8 @@ class GlassyIconButton extends StatelessWidget {
             child: InkWell(
               onTap: onPressed,
               customBorder: const CircleBorder(),
-              splashColor: Colors.white.withOpacity(0.1),
-              highlightColor: Colors.white.withOpacity(0.05),
+              splashColor: Colors.white.withValues(alpha: 0.1),
+              highlightColor: Colors.white.withValues(alpha: 0.05),
               child: Center(
                 child: imagePath != null
                     ? Image.asset(
@@ -79,6 +83,36 @@ class GlassyIconButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+
+    if (!showBadge) return button;
+
+    // Wrap with Stack to show badge
+    return SizedBox(
+      width: buttonSize,
+      height: buttonSize,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          button,
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: badgeColor ?? const Color(0xFFFF3B30),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFF0D1117),
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

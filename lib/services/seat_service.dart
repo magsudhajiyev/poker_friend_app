@@ -135,6 +135,53 @@ class SeatService {
     });
   }
 
+  /// Directly seat a user by their ID (for dealers - bypasses QR flow)
+  /// This is equivalent to a player scanning QR and dealer immediately approving
+  static Future<SeatAssignment> seatUserDirectly({
+    required String clubId,
+    required String tableId,
+    required int seatNumber,
+    required String playerId,
+    required String playerName,
+    required double chipStack,
+  }) async {
+    print('🪑 seatUserDirectly: clubId=$clubId, tableId=$tableId, seat=$seatNumber');
+    print('🪑 seatUserDirectly: playerId=$playerId, playerName=$playerName, chipStack=$chipStack');
+
+    final seatId = _getSeatId(clubId, tableId, seatNumber);
+    final seatRef = _firestore.collection(_seatAssignmentsCollection).doc(seatId);
+
+    return await _firestore.runTransaction<SeatAssignment>((transaction) async {
+      final seatDoc = await transaction.get(seatRef);
+
+      // Check if seat is already occupied by someone else
+      if (seatDoc.exists) {
+        final existing = SeatAssignment.fromFirestore(seatDoc);
+        if (existing.isOccupied && existing.playerId != playerId) {
+          throw 'Seat is already occupied by another player';
+        }
+      }
+
+      final now = DateTime.now();
+      final assignment = SeatAssignment(
+        id: seatId,
+        clubId: clubId,
+        tableId: tableId,
+        seatNumber: seatNumber,
+        playerId: playerId,
+        playerName: playerName,
+        status: SeatStatus.joined, // Directly joined, no pending state
+        chipStack: chipStack,
+        assignedAt: now,
+        updatedAt: now,
+      );
+
+      print('🪑 seatUserDirectly: Saving assignment with status=${assignment.status}');
+      transaction.set(seatRef, assignment.toFirestore());
+      return assignment;
+    });
+  }
+
   /// Watch for pending join requests at a table (for dealers)
   static Stream<List<SeatAssignment>> watchPendingJoins({
     required String clubId,
@@ -392,5 +439,60 @@ class SeatService {
 
     await seatRef.set(assignment.toFirestore());
     return assignment;
+  }
+
+  /// Watch for all seat assignments where current user is seated (across all tables)
+  /// Returns a stream of seat assignments with status 'joined'
+  static Stream<List<SeatAssignment>> watchCurrentUserSeats() {
+    final userId = AuthService.userId;
+    print('🪑 watchCurrentUserSeats: userId=$userId');
+    if (userId == null) {
+      print('🪑 watchCurrentUserSeats: No user ID, returning empty stream');
+      return Stream.value([]);
+    }
+
+    print('🪑 watchCurrentUserSeats: Setting up Firestore listener for playerId=$userId, status=joined');
+    return _firestore
+        .collection(_seatAssignmentsCollection)
+        .where('playerId', isEqualTo: userId)
+        .where('status', isEqualTo: 'joined')
+        .snapshots()
+        .map((snapshot) {
+          print('🪑 watchCurrentUserSeats: Received ${snapshot.docs.length} documents');
+          for (final doc in snapshot.docs) {
+            print('🪑 watchCurrentUserSeats: Doc ${doc.id} = ${doc.data()}');
+          }
+          return snapshot.docs
+              .map((doc) => SeatAssignment.fromFirestore(doc))
+              .toList();
+        });
+  }
+
+  /// Get all current seat assignments for a user (one-time fetch)
+  static Future<List<SeatAssignment>> getCurrentUserAllSeats() async {
+    print('🪑 getCurrentUserAllSeats() called');
+    final userId = AuthService.userId;
+    print('🪑 getCurrentUserAllSeats: userId=$userId');
+    if (userId == null) {
+      print('🪑 getCurrentUserAllSeats: No user ID, returning empty list');
+      return [];
+    }
+
+    try {
+      print('🪑 getCurrentUserAllSeats: Querying Firestore...');
+      final snapshot = await _firestore
+          .collection(_seatAssignmentsCollection)
+          .where('playerId', isEqualTo: userId)
+          .where('status', isEqualTo: 'joined')
+          .get();
+
+      print('🪑 getCurrentUserAllSeats: Got ${snapshot.docs.length} results');
+      return snapshot.docs
+          .map((doc) => SeatAssignment.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      print('🪑 getCurrentUserAllSeats ERROR: $e');
+      return [];
+    }
   }
 }

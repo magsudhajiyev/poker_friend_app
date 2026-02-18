@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../services/firebase_service.dart';
+import '../services/dealer_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import 'hand_actions_screen.dart';
@@ -35,7 +36,16 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
         error = null;
       });
 
-      final loadedHands = await FirebaseService.getSessionHands(widget.session['id']);
+      // For dealer sessions, fetch from dealer_sessions collection
+      final isDealerSession = widget.session['isDealerSession'] == true;
+      final dealerSessionId = widget.session['dealerSessionId'] as String?;
+
+      List<Map<String, dynamic>> loadedHands;
+      if (isDealerSession && dealerSessionId != null) {
+        loadedHands = await DealerService.getSessionHands(dealerSessionId);
+      } else {
+        loadedHands = await FirebaseService.getSessionHands(widget.session['id']);
+      }
 
       setState(() {
         hands = loadedHands;

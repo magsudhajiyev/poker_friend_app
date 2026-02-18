@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens/home_screen_experimental.dart';
+import '../screens/home_screen.dart';
 import '../screens/statistics_screen.dart';
 import '../screens/my_opponents_screen.dart';
 import '../screens/session_history_screen.dart';
@@ -50,7 +50,7 @@ class GlobalBottomNavBar extends StatelessWidget {
                     if (currentScreen != 'home') {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => HomeScreenExperimental()),
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
                       );
                     }
                   },

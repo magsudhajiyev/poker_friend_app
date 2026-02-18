@@ -18,11 +18,12 @@ import '../../services/auth_service.dart';
 import '../../services/qr_service.dart';
 import '../../services/continuous_speech_service.dart';
 import '../../services/soniox_service.dart';
+import '../../utils/poker_positions.dart';
 import '../../widgets/board_cards_dialog.dart';
 import '../../widgets/winner_selection_dialog.dart';
 import '../../widgets/multi_pot_winner_dialog.dart';
-import '../../widgets/showdown_dialog.dart';
-// Removed unused import: hole_cards_dialog.dart
+// Removed: showdown_dialog - dealers don't enter player hole cards
+// Players enter their own hole cards on their devices
 
 /// Main screen for dealers to log poker hands
 /// Uses PokerGameState and PokerSessionManager for consistent hand logging
@@ -223,7 +224,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       if (assignment != null && assignment.isOccupied) {
         final stack = assignment.chipStack ?? (_dealerSession.bigBlind * 100.0);
 
-        // Update PokerGameState
+        // Update PokerGameState - use BOTH direct array access AND method for reliability
+        _gameState!.players[i - 1].setStack(stack);
+        _gameState!.players[i - 1].isActive = true;
         _gameState!.setPlayerStack(i, stack);
         _gameState!.setPlayerActive(i, true);
 
@@ -233,6 +236,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         _sessionManager!.setPlayerStack(i, stack);
       } else {
         // Inactive seat
+        _gameState!.players[i - 1].setStack(0.0);
+        _gameState!.players[i - 1].isActive = false;
         _gameState!.setPlayerStack(i, 0.0);
         _gameState!.setPlayerActive(i, false);
       }
@@ -329,7 +334,15 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     }
 
     final currentSeat = _gameState!.currentPlayer;
-    final playerStack = _gameState!.getPlayerStack(currentSeat);
+    // Use direct array access for reliability (bypasses _getPlayer lookup)
+    var playerStack = _gameState!.players[currentSeat - 1].currentStack;
+
+    // Fallback if stack is unexpectedly 0
+    if (playerStack <= 0) {
+      playerStack = _sessionManager!.getPlayerStack(currentSeat) ??
+                    (_dealerSession.bigBlind * 100.0);
+    }
+
     final playerName = _sessionManager!.getPlayerName(currentSeat);
 
     // Record action in session manager (for Firebase/stats)
@@ -355,13 +368,32 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     final handId = _dealerSession.currentHandId;
     if (handId != null && handId.isNotEmpty) {
       try {
+        // Get current street from game state
+        final streetName = _gameState!.currentRound.name; // 'preflop', 'flop', 'turn', 'river'
+
+        // Calculate position using active seats (not folded players still count for position)
+        final activeSeats = <int>[];
+        for (int i = 1; i <= 9; i++) {
+          if (_gameState!.players[i - 1].isActive) {
+            activeSeats.add(i);
+          }
+        }
+        final playerPosition = PokerPositions.getPositionNameForActivePlayers(
+          currentSeat,
+          _gameState!.buttonPosition,
+          activeSeats,
+        );
+
         await DealerService.logAction(
           sessionId: _dealerSession.id,
           handId: handId,
           seatNumber: currentSeat,
           action: action.name,
+          street: streetName,
           amount: amount,
           playerName: playerName,
+          playerStack: playerStack,
+          playerPosition: playerPosition,
           transcript: transcript,
           confidence: confidence,
         );
@@ -436,6 +468,18 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       // Update board cards in session manager from the BoardCards object
       if (_sessionManager!.currentHand != null) {
         _sessionManager!.currentHand!.boardCards = boardCards;
+      }
+
+      // Sync board cards to Firestore for player screens
+      final handId = _dealerSession.currentHandId;
+      if (handId != null && handId.isNotEmpty) {
+        await DealerService.setBoardCards(
+          sessionId: _dealerSession.id,
+          handId: handId,
+          flop: boardCards.flop.isNotEmpty ? boardCards.flop : null,
+          turn: boardCards.turn,
+          river: boardCards.river,
+        );
       }
 
       // Advance game state to next street
@@ -549,18 +593,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       return;
     }
 
-    // Show showdown dialog for entering player cards (optional)
-    final showdownData = await showDialog<ShowdownData>(
-      context: context,
-      builder: (context) => ShowdownDialog(
-        playerCount: 9,
-        activePlayers: activePlayers,
-      ),
-    );
-
-    if (showdownData != null && _sessionManager!.currentHand != null) {
-      _sessionManager!.currentHand!.showdownData = showdownData;
-    }
+    // Note: Player hole cards are entered by players themselves on their devices
+    // Dealer only needs to select the winner
 
     // Check for side pots
     final sidePots = _gameState!.calculateSidePots();
@@ -991,6 +1025,15 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           chipStack: chipStack,
         );
 
+        // Add player to dealer session's players map for session history tracking
+        await DealerService.addPlayer(
+          sessionId: _dealerSession.id,
+          odPlayerId: pending.playerId ?? '',
+          displayName: pending.playerName ?? 'Player ${pending.seatNumber}',
+          seatNumber: pending.seatNumber,
+          initialStack: chipStack,
+        );
+
         // Update local game state
         _gameState!.setPlayerStack(pending.seatNumber, chipStack);
         _gameState!.setPlayerActive(pending.seatNumber, true);
@@ -1104,89 +1147,68 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   Future<void> _showAddPlayerDialog(int seatNumber) async {
-    final nameController = TextEditingController();
-    final stackController = TextEditingController(text: (_dealerSession.bigBlind * 100).toString());
-
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
-        title: Text(
-          'Add Player to Seat $seatNumber',
-          style: const TextStyle(color: Colors.white),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              style: const TextStyle(color: Colors.white),
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: 'Player Name',
-                labelStyle: const TextStyle(color: Colors.white54),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.1),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                hintText: 'Enter player name',
-                hintStyle: const TextStyle(color: Colors.white30),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: stackController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Starting Chip Stack',
-                labelStyle: const TextStyle(color: Colors.white54),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.1),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                prefixText: '\$',
-                prefixStyle: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final stack = double.tryParse(stackController.text);
-              if (name.isNotEmpty && stack != null && stack > 0) {
-                Navigator.pop(context, {'name': name, 'stack': stack});
-              }
-            },
-            child: const Text('Add Player'),
-          ),
-        ],
+      builder: (context) => _UserSearchDialog(
+        seatNumber: seatNumber,
+        defaultStack: (_dealerSession.bigBlind * 100).toDouble(),
       ),
     );
 
     if (result != null) {
       try {
-        await SeatService.addManualPlayer(
-          clubId: widget.club.id,
-          tableId: widget.table.id,
-          seatNumber: seatNumber,
-          playerName: result['name'],
-          chipStack: result['stack'],
-        );
+        final playerId = result['playerId'] as String?;
+        final playerName = result['name'] as String;
+        final stack = result['stack'] as double;
+
+        if (playerId != null) {
+          // Seat registered user directly
+          await SeatService.seatUserDirectly(
+            clubId: widget.club.id,
+            tableId: widget.table.id,
+            seatNumber: seatNumber,
+            playerId: playerId,
+            playerName: playerName,
+            chipStack: stack,
+          );
+
+          // Add player to dealer session's players map for session history tracking
+          await DealerService.addPlayer(
+            sessionId: _dealerSession.id,
+            odPlayerId: playerId,
+            displayName: playerName,
+            seatNumber: seatNumber,
+            initialStack: stack,
+          );
+        } else {
+          // Add manual/walk-up player (no user account)
+          final seatAssignment = await SeatService.addManualPlayer(
+            clubId: widget.club.id,
+            tableId: widget.table.id,
+            seatNumber: seatNumber,
+            playerName: playerName,
+            chipStack: stack,
+          );
+
+          // Add manual player to dealer session's players map
+          await DealerService.addPlayer(
+            sessionId: _dealerSession.id,
+            odPlayerId: seatAssignment.playerId ?? 'manual_$seatNumber',
+            displayName: playerName,
+            seatNumber: seatNumber,
+            initialStack: stack,
+          );
+        }
 
         // Update local game state
-        _gameState!.setPlayerStack(seatNumber, result['stack']);
+        _gameState!.setPlayerStack(seatNumber, stack);
         _gameState!.setPlayerActive(seatNumber, true);
         _sessionManager!.activeSeats.add(seatNumber);
-        _sessionManager!.setPlayerName(seatNumber, result['name']);
-        _sessionManager!.setPlayerStack(seatNumber, result['stack']);
+        _sessionManager!.setPlayerName(seatNumber, playerName);
+        _sessionManager!.setPlayerStack(seatNumber, stack);
 
         setState(() {});
-        _showSuccess('${result['name']} added to Seat $seatNumber');
+        _showSuccess('$playerName added to Seat $seatNumber');
       } catch (e) {
         _showError('Failed to add player: ${e.toString()}');
       }
@@ -2636,12 +2658,21 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       final stack = (defaultStack * (0.8 + random.nextDouble() * 0.4)).roundToDouble();
 
       try {
-        await SeatService.addManualPlayer(
+        final seatAssignment = await SeatService.addManualPlayer(
           clubId: widget.club.id,
           tableId: widget.table.id,
           seatNumber: seatNumber,
           playerName: playerName,
           chipStack: stack,
+        );
+
+        // Add test player to dealer session's players map for session history tracking
+        await DealerService.addPlayer(
+          sessionId: _dealerSession.id,
+          odPlayerId: seatAssignment.playerId ?? 'manual_$seatNumber',
+          displayName: playerName,
+          seatNumber: seatNumber,
+          initialStack: stack,
         );
 
         // Update local game state
@@ -2857,5 +2888,353 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
         ),
       ),
     );
+  }
+}
+
+/// Dialog for searching and selecting users to seat
+class _UserSearchDialog extends StatefulWidget {
+  final int seatNumber;
+  final double defaultStack;
+
+  const _UserSearchDialog({
+    required this.seatNumber,
+    required this.defaultStack,
+  });
+
+  @override
+  State<_UserSearchDialog> createState() => _UserSearchDialogState();
+}
+
+class _UserSearchDialogState extends State<_UserSearchDialog> {
+  final _searchController = TextEditingController();
+  final _stackController = TextEditingController();
+  List<Map<String, dynamic>> _searchResults = [];
+  Map<String, dynamic>? _selectedUser;
+  bool _isSearching = false;
+  bool _useManualEntry = false;
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _stackController.text = widget.defaultStack.toStringAsFixed(0);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _stackController.dispose();
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    _debounceTimer?.cancel();
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearching = true);
+
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
+      final results = await AuthService.searchUsersByName(query);
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+        });
+      }
+    });
+  }
+
+  void _selectUser(Map<String, dynamic> user) {
+    setState(() {
+      _selectedUser = user;
+      _searchController.text = user['displayName'] ?? '';
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedUser = null;
+      _searchController.clear();
+      _searchResults = [];
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF1E1E2E),
+      title: Text(
+        'Add Player to Seat ${widget.seatNumber}',
+        style: const TextStyle(color: Colors.white),
+      ),
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Toggle between search and manual entry
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _useManualEntry = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: !_useManualEntry ? Colors.amber : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        'Search User',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: !_useManualEntry ? Colors.amber : Colors.white54,
+                          fontWeight: !_useManualEntry ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() {
+                      _useManualEntry = true;
+                      _selectedUser = null;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: _useManualEntry ? Colors.amber : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        'Manual Entry',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: _useManualEntry ? Colors.amber : Colors.white54,
+                          fontWeight: _useManualEntry ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            if (!_useManualEntry) ...[
+              // Search field
+              TextField(
+                controller: _searchController,
+                style: const TextStyle(color: Colors.white),
+                autofocus: true,
+                enabled: _selectedUser == null,
+                onChanged: _selectedUser == null ? _onSearchChanged : null,
+                decoration: InputDecoration(
+                  labelText: 'Search by Name',
+                  labelStyle: const TextStyle(color: Colors.white54),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.1),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  hintText: 'Type to search users...',
+                  hintStyle: const TextStyle(color: Colors.white30),
+                  prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                  suffixIcon: _selectedUser != null
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.white54),
+                          onPressed: _clearSelection,
+                        )
+                      : (_isSearching
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : null),
+                ),
+              ),
+
+              // Search results or selected user
+              if (_selectedUser != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.green),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _selectedUser!['displayName'] ?? 'Unknown',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              _selectedUser!['email'] ?? '',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else if (_searchResults.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 150),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _searchResults.length,
+                    itemBuilder: (context, index) {
+                      final user = _searchResults[index];
+                      return ListTile(
+                        dense: true,
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.blue.withValues(alpha: 0.3),
+                          child: Text(
+                            (user['displayName'] as String? ?? 'U')[0].toUpperCase(),
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        title: Text(
+                          user['displayName'] ?? 'Unknown',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          user['email'] ?? '',
+                          style: const TextStyle(color: Colors.white54, fontSize: 12),
+                        ),
+                        onTap: () => _selectUser(user),
+                      );
+                    },
+                  ),
+                ),
+              ] else if (_searchController.text.isNotEmpty && !_isSearching) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'No users found. Try manual entry.',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ),
+                ),
+              ],
+            ] else ...[
+              // Manual entry mode
+              TextField(
+                controller: _searchController,
+                style: const TextStyle(color: Colors.white),
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Player Name',
+                  labelStyle: const TextStyle(color: Colors.white54),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.1),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  hintText: 'Enter player name',
+                  hintStyle: const TextStyle(color: Colors.white30),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 16),
+
+            // Chip stack field
+            TextField(
+              controller: _stackController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Starting Chip Stack',
+                labelStyle: const TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.1),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                prefixText: '\$',
+                prefixStyle: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _canSubmit() ? _submit : null,
+          child: const Text('Add Player'),
+        ),
+      ],
+    );
+  }
+
+  bool _canSubmit() {
+    final name = _searchController.text.trim();
+    final stack = double.tryParse(_stackController.text);
+
+    if (name.isEmpty || stack == null || stack <= 0) return false;
+
+    // In search mode, require a selected user unless manual entry
+    if (!_useManualEntry && _selectedUser == null) return false;
+
+    return true;
+  }
+
+  void _submit() {
+    final name = _searchController.text.trim();
+    final stack = double.tryParse(_stackController.text);
+
+    if (name.isEmpty || stack == null || stack <= 0) return;
+
+    Navigator.pop(context, {
+      'playerId': _selectedUser?['uid'],
+      'name': _selectedUser?['displayName'] ?? name,
+      'stack': stack,
+    });
   }
 }

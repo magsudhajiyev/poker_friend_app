@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth_wrapper.dart';
+import 'screens/player/player_session_screen.dart';
 import 'services/notification_service.dart';
 import 'services/logger_service.dart';
 import 'config/env_config.dart';
@@ -61,6 +62,22 @@ class PokerTrackerApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => AuthWrapper(),
+      },
+      onGenerateRoute: (settings) {
+        // Handle player session route with arguments
+        if (settings.name == '/player_session') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          if (args != null) {
+            return MaterialPageRoute(
+              builder: (context) => PlayerSessionScreen(
+                clubId: args['clubId'] as String,
+                tableId: args['tableId'] as String,
+                seatNumber: args['seatNumber'] as int,
+              ),
+            );
+          }
+        }
+        return null;
       },
       debugShowCheckedModeBanner: false,
     );

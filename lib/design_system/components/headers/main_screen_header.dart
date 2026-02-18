@@ -31,6 +31,7 @@ class MainScreenHeader extends StatelessWidget {
   final VoidCallback? onRightPressed;
   final bool showLeftIcon;
   final EdgeInsets? padding;
+  final bool showRightBadge;
 
   const MainScreenHeader({
     super.key,
@@ -45,6 +46,7 @@ class MainScreenHeader extends StatelessWidget {
     this.onRightPressed,
     this.showLeftIcon = true,
     this.padding,
+    this.showRightBadge = false,
   });
 
   @override
@@ -121,6 +123,7 @@ class MainScreenHeader extends StatelessWidget {
                       icon: rightIcon,
                       imagePath: rightImagePath,
                       onPressed: onRightPressed!,
+                      showBadge: showRightBadge,
                     ),
                 ],
               ),

@@ -13,7 +13,7 @@ import '../widgets/global_loading_spinner.dart';
 import 'profile_screen.dart';
 import 'logging_mode_selection_screen.dart';
 import 'session_history_screen.dart';
-import 'home_screen_experimental.dart';
+import 'home_screen.dart';
 import 'my_opponents_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/global_top_header.dart';
@@ -539,7 +539,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             onPressed: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => HomeScreenExperimental()),
+                MaterialPageRoute(builder: (context) => HomeScreen()),
               );
             },
           ),

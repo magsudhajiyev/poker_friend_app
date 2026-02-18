@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../utils/poker_positions.dart';
@@ -216,7 +217,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final actions = List<Map<String, dynamic>>.from(widget.hand['actions'] ?? []);
     final startTime = DateTime.parse(widget.hand['startTime']);
     final buttonPosition = widget.hand['buttonPosition'] ?? 1;
-    final playerCount = widget.hand['playerCount'] ?? 6;
+    // Ensure playerCount is at least 2 to avoid division by zero in position calculations
+    final rawPlayerCount = (widget.hand['playerCount'] as int?) ?? 6;
+    final playerCount = math.max(2, rawPlayerCount);
     // New fields for position tracking
     final heroPositionName = widget.hand['heroPositionName'] as String?;
     final heroSeatNumber = widget.hand['heroSeatNumber'] as int?;
@@ -744,7 +747,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final actions = List<Map<String, dynamic>>.from(widget.hand['actions'] ?? []);
     final boardCardsData = widget.hand['boardCards'];
     final buttonPosition = widget.hand['buttonPosition'] ?? 1;
-    final playerCount = widget.hand['playerCount'] ?? 6;
+    // Ensure playerCount is at least 2 to avoid division by zero
+    final rawPlayerCount = (widget.hand['playerCount'] as int?) ?? 6;
+    final playerCount = math.max(2, rawPlayerCount);
     final heroPosition = widget.ourSeat ?? widget.hand['heroPosition'];
     final playerNamesData = widget.hand['playerNames'];
     final winnerId = widget.hand['winnerId'];

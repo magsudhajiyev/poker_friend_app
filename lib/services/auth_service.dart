@@ -27,6 +27,14 @@ class AuthService {
         password: password,
       );
       print('User signed in: ${credential.user?.email}');
+
+      // Ensure user document exists (backfill for users registered before this feature)
+      if (credential.user != null) {
+        print('Calling ensureUserDocument after sign in...');
+        await ensureUserDocument();
+        print('ensureUserDocument completed');
+      }
+
       return credential;
     } on FirebaseAuthException catch (e) {
       print('Sign in error: ${e.message}');
@@ -44,11 +52,16 @@ class AuthService {
         email: email,
         password: password,
       );
-      
+
       // Update display name
       await credential.user?.updateDisplayName(displayName);
       await credential.user?.reload();
-      
+
+      // Create user document in Firestore for searchability
+      if (credential.user != null) {
+        await _createUserDocument(credential.user!.uid, displayName, email);
+      }
+
       print('User registered: ${credential.user?.email}');
       return credential;
     } on FirebaseAuthException catch (e) {
@@ -57,6 +70,81 @@ class AuthService {
     } catch (e) {
       print('Unexpected error during registration: $e');
       throw 'An unexpected error occurred. Please try again.';
+    }
+  }
+
+  // Create or update user document in Firestore
+  static Future<void> _createUserDocument(String uid, String displayName, String email) async {
+    print('Creating user document: uid=$uid, displayName=$displayName, email=$email');
+    try {
+      await _firestore.collection('users').doc(uid).set({
+        'uid': uid,
+        'displayName': displayName,
+        'displayNameLower': displayName.toLowerCase(), // For case-insensitive search
+        'email': email,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      print('User document created successfully for $uid');
+    } catch (e) {
+      print('Error creating user document: $e');
+      // Don't throw - user registration should still succeed
+    }
+  }
+
+  // Ensure current user has a document (for existing users who registered before this feature)
+  static Future<void> ensureUserDocument() async {
+    final user = currentUser;
+    print('ensureUserDocument called, user=${user?.uid}, displayName=${user?.displayName}');
+    if (user == null) {
+      print('ensureUserDocument: No current user, returning');
+      return;
+    }
+
+    try {
+      final doc = await _firestore.collection('users').doc(user.uid).get();
+      print('ensureUserDocument: Document exists=${doc.exists}');
+      if (!doc.exists) {
+        await _createUserDocument(
+          user.uid,
+          user.displayName ?? user.email?.split('@').first ?? 'Player',
+          user.email ?? '',
+        );
+      } else {
+        print('ensureUserDocument: Document already exists, skipping creation');
+      }
+    } catch (e) {
+      print('ensureUserDocument error: $e');
+    }
+  }
+
+  // Search users by name (case-insensitive prefix search)
+  static Future<List<Map<String, dynamic>>> searchUsersByName(String query) async {
+    if (query.isEmpty) return [];
+
+    final queryLower = query.toLowerCase();
+    final queryEnd = queryLower.substring(0, queryLower.length - 1) +
+        String.fromCharCode(queryLower.codeUnitAt(queryLower.length - 1) + 1);
+
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .where('displayNameLower', isGreaterThanOrEqualTo: queryLower)
+          .where('displayNameLower', isLessThan: queryEnd)
+          .limit(10)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return <String, dynamic>{
+          'uid': data['uid'] ?? doc.id,
+          'displayName': data['displayName'] ?? 'Unknown',
+          'email': data['email'] ?? '',
+        };
+      }).toList();
+    } catch (e) {
+      print('Error searching users: $e');
+      return [];
     }
   }
   
