@@ -266,6 +266,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
 
   Widget _buildRankingsList() {
     final rankings = _rankingsData!.rankings;
+    final averageStack = _rankingsData!.averageStack;
 
     // Calculate finish positions for eliminated players who don't have one
     final totalPlayers = rankings.length;
@@ -293,17 +294,19 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
         itemBuilder: (context, index) {
           final ranking = rankings[index];
           final calculatedFinish = calculatedFinishPositions[ranking.playerId];
-          return _buildRankingCard(ranking, index, calculatedFinish);
+          return _buildRankingCard(ranking, index, calculatedFinish, averageStack);
         },
       ),
     );
   }
 
-  Widget _buildRankingCard(EventRanking ranking, int index, int? calculatedFinishPosition) {
+  Widget _buildRankingCard(EventRanking ranking, int index, int? calculatedFinishPosition, int averageStack) {
     final isChipLeader = index == 0 && !ranking.isEliminated;
     final isEliminated = ranking.isEliminated;
     // Use ranking's finishPosition if available, otherwise use calculated
     final finishPosition = ranking.finishPosition ?? calculatedFinishPosition;
+    // Get color based on stack vs average
+    final stackColor = _getStackColor(ranking.currentStack, averageStack, isEliminated);
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
@@ -418,9 +421,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                 _formatNumber(ranking.currentStack),
                 style: TextStyle(
                   fontSize: 18,
-                  color: isEliminated
-                      ? PokerFriendColors.dark9
-                      : PokerFriendColors.green,
+                  color: stackColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -533,6 +534,24 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       return '${(number / 1000).toStringAsFixed(1)}K';
     }
     return NumberFormat('#,###').format(number);
+  }
+
+  /// Get color for stack based on comparison to average
+  /// Green: > avg + 10%, Orange: within ±10%, Red: < avg - 10%
+  Color _getStackColor(int stack, int averageStack, bool isEliminated) {
+    if (isEliminated) return PokerFriendColors.dark9;
+    if (averageStack == 0) return PokerFriendColors.yellow; // Edge case
+
+    final upperBound = averageStack * 1.10; // +10%
+    final lowerBound = averageStack * 0.90; // -10%
+
+    if (stack > upperBound) {
+      return PokerFriendColors.green; // Above average
+    } else if (stack < lowerBound) {
+      return PokerFriendColors.red; // Below average
+    } else {
+      return PokerFriendColors.yellow; // Within ±10% of average
+    }
   }
 
   String _getTableDisplayName(EventRanking ranking) {
