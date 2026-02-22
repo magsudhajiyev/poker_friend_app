@@ -2076,9 +2076,42 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           onEmptyTap: !isOccupied && !playerState.isActive && !isPending && !_isHandActive
               ? () => _showAddPlayerDialog(seatNumber)
               : null,
+          canAcceptButtonDrop: !_isHandActive,
+          onButtonDropped: _onButtonDroppedOnSeat,
         ),
       );
     });
+  }
+
+  /// Handle dealer button being dropped on a seat
+  Future<void> _onButtonDroppedOnSeat(int newButtonSeat) async {
+    final oldPosition = _gameState!.buttonPosition;
+    if (newButtonSeat == oldPosition) return;
+
+    setState(() {
+      _gameState!.buttonPosition = newButtonSeat;
+    });
+
+    // Persist to Firestore
+    try {
+      await DealerService.updateSessionButtonPosition(
+        sessionId: _dealerSession.id,
+        buttonPosition: newButtonSeat,
+      );
+    } catch (e) {
+      // Rollback on error
+      setState(() {
+        _gameState!.buttonPosition = oldPosition;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to move button: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildSeat({
@@ -2094,6 +2127,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     VoidCallback? onPendingTap,
     VoidCallback? onOccupiedTap,
     VoidCallback? onEmptyTap,
+    bool canAcceptButtonDrop = false,
+    Function(int)? onButtonDropped,
   }) {
     Color bgColor;
     Color borderColor;
@@ -2115,7 +2150,25 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       borderColor = const Color(0xFF2E5A8F);
     }
 
-    return GestureDetector(
+    // Dealer button widget (extracted for reuse in Draggable)
+    Widget dealerButtonBadge({double opacity = 1.0}) => Container(
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: opacity),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.black.withValues(alpha: opacity), width: 2),
+      ),
+      child: Center(
+        child: Text('D', style: TextStyle(
+          color: Colors.black.withValues(alpha: opacity),
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        )),
+      ),
+    );
+
+    final seatWidget = GestureDetector(
       onTap: isPending
           ? onPendingTap
           : (isOccupied && _isHandActive && !isFolded
@@ -2203,23 +2256,22 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 ),
               ),
             ),
-          // Dealer button
+          // Dealer button - draggable when hand is not active
           if (isButton && !isPending)
             Positioned(
               right: -4,
               top: -4,
-              child: Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.black, width: 2),
-                ),
-                child: const Center(
-                  child: Text('D', style: TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.bold)),
-                ),
-              ),
+              child: canAcceptButtonDrop
+                  ? Draggable<int>(
+                      data: seatNumber,
+                      feedback: Material(
+                        color: Colors.transparent,
+                        child: dealerButtonBadge(opacity: 0.9),
+                      ),
+                      childWhenDragging: dealerButtonBadge(opacity: 0.3),
+                      child: dealerButtonBadge(),
+                    )
+                  : dealerButtonBadge(),
             ),
           // Current bet
           if (bet > 0)
@@ -2243,6 +2295,37 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         ],
       ),
     );
+
+    // Wrap with DragTarget to accept button drops
+    if (canAcceptButtonDrop && onButtonDropped != null) {
+      return DragTarget<int>(
+        onAcceptWithDetails: (details) {
+          onButtonDropped(seatNumber);
+        },
+        builder: (context, candidateData, rejectedData) {
+          // Highlight seat when button is dragged over it
+          final isHovered = candidateData.isNotEmpty;
+          if (isHovered) {
+            return Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: seatWidget,
+            );
+          }
+          return seatWidget;
+        },
+      );
+    }
+
+    return seatWidget;
   }
 
   String _truncateName(String name) {

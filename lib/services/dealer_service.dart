@@ -483,6 +483,19 @@ class DealerService {
         });
   }
 
+  /// Update session button position (for drag-drop button movement)
+  static Future<void> updateSessionButtonPosition({
+    required String sessionId,
+    required int buttonPosition,
+  }) async {
+    await _firestore
+        .collection(_dealerSessionsCollection)
+        .doc(sessionId)
+        .update({
+          'buttonPosition': buttonPosition,
+        });
+  }
+
   /// Add a player to the session
   static Future<void> addPlayer({
     required String sessionId,
