@@ -12,7 +12,9 @@ import '../../models/poker_game_state.dart';
 import '../../models/hand_state_machine.dart';
 import '../../models/game_types.dart';
 import '../../services/dealer_service.dart';
+import '../../services/event_service.dart';
 import '../../services/seat_service.dart';
+import '../../models/club_event.dart';
 import '../../services/websocket_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/qr_service.dart';
@@ -61,6 +63,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   StreamSubscription? _seatSubscription;
   StreamSubscription? _sessionSubscription;
   StreamSubscription? _pendingSubscription;
+  StreamSubscription? _eventSubscription;
 
   bool _isHandActive = false;
   bool _isLoading = false;
@@ -91,6 +94,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
   // Guard flag to prevent duplicate board cards dialogs
   bool _isShowingBoardCardsDialog = false;
+
+  // Guard flag to prevent duplicate event end dialogs
+  bool _isShowingEventEndDialog = false;
 
   @override
   void initState() {
@@ -127,6 +133,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     _seatSubscription?.cancel();
     _sessionSubscription?.cancel();
     _pendingSubscription?.cancel();
+    _eventSubscription?.cancel();
     _actionSubscription?.cancel();
     _partialSubscription?.cancel();
     _statusSubscription?.cancel();
@@ -188,8 +195,26 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         setState(() {
           _dealerSession = session;
         });
+      } else if (session == null && mounted) {
+        // Session was deleted or ended externally
+        _handleSessionEnded();
       }
     });
+
+    // Subscribe to event status updates (if linked to an event)
+    if (_dealerSession.eventId != null) {
+      _eventSubscription = EventService.watchEvent(
+        widget.club.id,
+        _dealerSession.eventId!,
+      ).listen((event) {
+        if (!mounted) return;
+        if (event == null ||
+            event.status == EventStatus.completed ||
+            event.status == EventStatus.cancelled) {
+          _handleEventEnded(event?.status);
+        }
+      });
+    }
 
     // Connect to WebSocket server for real-time updates
     final serverUrl = AppConfig.serverUrl;
@@ -923,6 +948,79 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
       if (mounted) Navigator.pop(context);
     }
+  }
+
+  /// Handle event completion or cancellation by club admin
+  void _handleEventEnded(EventStatus? status) {
+    if (_isShowingEventEndDialog) return;
+    _isShowingEventEndDialog = true;
+
+    // Stop any ongoing voice recognition
+    if (_isListening) {
+      _stopContinuousListening();
+    }
+
+    // Cancel subscriptions to prevent further updates
+    _seatSubscription?.cancel();
+    _sessionSubscription?.cancel();
+    _eventSubscription?.cancel();
+
+    final title = status == EventStatus.cancelled ? 'Event Cancelled' : 'Event Finished';
+    final message = status == EventStatus.cancelled
+        ? 'The club admin has cancelled this event. All sessions have been saved.'
+        : 'The club admin has finished this event. All sessions have been saved.';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+        content: Text(message, style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Exit dealer screen
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Handle session ended externally (e.g., by event completion)
+  void _handleSessionEnded() {
+    if (_isShowingEventEndDialog) return;
+    _isShowingEventEndDialog = true;
+
+    // Stop any ongoing voice recognition
+    if (_isListening) {
+      _stopContinuousListening();
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: const Text('Session Ended', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'This session has been ended. All data has been saved.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Exit dealer screen
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showQRCodesDialog() {

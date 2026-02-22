@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import '../models/club_event.dart';
+import '../models/dealer_session.dart';
 import '../models/event_ranking.dart';
 import '../config/app_config.dart';
 import 'auth_service.dart';
@@ -304,19 +305,49 @@ class EventService {
   /// End all active dealer sessions associated with an event
   static Future<void> _endEventDealerSessions(String eventId) async {
     try {
-      // Query all active dealer sessions with this eventId
+      // Query all active AND paused dealer sessions with this eventId
       final sessions = await _firestore
           .collection('dealer_sessions')
           .where('eventId', isEqualTo: eventId)
-          .where('status', isEqualTo: 'active')
+          .where('status', whereIn: [
+            DealerSessionStatus.active.value,
+            DealerSessionStatus.paused.value,
+          ])
           .get();
 
       // End each session (this also clears seats and table state)
       for (final doc in sessions.docs) {
         try {
+          final session = DealerSession.fromFirestore(doc);
+
+          // If there's an active hand, mark it as cancelled
+          if (session.currentHandId != null) {
+            try {
+              await _firestore
+                  .collection('dealer_sessions')
+                  .doc(doc.id)
+                  .collection('hands')
+                  .doc(session.currentHandId)
+                  .update({
+                    'status': 'cancelled',
+                    'endTime': FieldValue.serverTimestamp(),
+                    'note': 'Event ended mid-hand',
+                  });
+            } catch (e) {
+              // Hand may not exist or already completed
+            }
+          }
+
           await DealerService.endSession(doc.id);
         } catch (e) {
-          print('Error ending dealer session ${doc.id}: $e');
+          // Force status update even if full cleanup fails
+          await _firestore
+              .collection('dealer_sessions')
+              .doc(doc.id)
+              .update({
+                'status': DealerSessionStatus.ended.value,
+                'endTime': FieldValue.serverTimestamp(),
+              });
         }
       }
     } catch (e) {
