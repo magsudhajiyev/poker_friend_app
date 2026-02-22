@@ -2090,6 +2090,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     setState(() {
       _gameState!.buttonPosition = newButtonSeat;
+      // Also update dealer session so _startNewHand uses correct position
+      _dealerSession = _dealerSession.copyWith(buttonPosition: newButtonSeat);
     });
 
     // Persist to Firestore
@@ -2102,6 +2104,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       // Rollback on error
       setState(() {
         _gameState!.buttonPosition = oldPosition;
+        _dealerSession = _dealerSession.copyWith(buttonPosition: oldPosition);
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -1179,6 +1179,16 @@ class PokerGameState {
 
   // Pot calculation methods
   void initializePot() {
+    // Reset all player bets first (in case initializePot is called multiple times)
+    // This handles the case where button position changes between hands
+    for (PlayerState player in players) {
+      // Refund any previous blind bets back to player stack
+      if (player.betThisRound > 0) {
+        player.currentStack += player.betThisRound;
+        player.betThisRound = 0.0;
+      }
+    }
+
     currentPot = 0.0;
     currentBet = bigBlind.toDouble();
     _effectiveBBPosition = _determineEffectiveBBPosition(); // Set before posting
