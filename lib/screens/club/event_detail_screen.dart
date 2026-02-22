@@ -15,6 +15,7 @@ import 'event_attendees_screen.dart';
 import 'club_dashboard_screen.dart';
 import '../dealer/dealer_qr_scan_screen.dart';
 import '../spectator/event_rankings_screen.dart';
+import 'final_standings_screen.dart';
 
 /// Event detail screen with RSVP functionality
 class EventDetailScreen extends StatefulWidget {
@@ -455,6 +456,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           if (_event.isLive) ...[
                             const SizedBox(height: 12),
                             _buildViewRankingsButton(),
+                          ],
+
+                          // View Final Standings button (for completed events)
+                          if (_event.status == EventStatus.completed) ...[
+                            const SizedBox(height: 12),
+                            _buildViewFinalStandingsButton(),
                           ],
 
                           // Add to Calendar button
@@ -978,6 +985,52 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: PokerFriendColors.purple,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildViewFinalStandingsButton() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FinalStandingsScreen(
+              club: widget.club,
+              event: _event,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: PokerFriendColors.dark3,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.amber.withOpacity(0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.emoji_events,
+              color: Colors.amber,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'View Final Standings',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.amber,
               ),
             ),
           ],

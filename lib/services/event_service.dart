@@ -4,10 +4,12 @@ import 'package:http/http.dart' as http;
 import '../models/club_event.dart';
 import '../models/dealer_session.dart';
 import '../models/event_ranking.dart';
+import '../models/final_standings.dart';
 import '../config/app_config.dart';
 import 'auth_service.dart';
 import 'club_notification_service.dart';
 import 'dealer_service.dart';
+import 'seat_service.dart';
 
 /// Service for managing club events and live rankings
 class EventService {
@@ -296,10 +298,166 @@ class EventService {
 
   /// Complete an event (finish a live event)
   static Future<void> completeEvent(String clubId, String eventId) async {
-    // End all active dealer sessions for this event first
+    // Get event details before completion
+    final event = await getEvent(clubId, eventId);
+
+    // Get current rankings before ending sessions (they'll be cleared after)
+    List<EventRanking>? currentRankings;
+    try {
+      currentRankings = await _getCurrentRankingsFromTables(clubId, eventId);
+    } catch (e) {
+      print('Error getting rankings for final standings: $e');
+    }
+
+    // End all active dealer sessions for this event
     await _endEventDealerSessions(eventId);
 
+    // Save final standings snapshot if we have rankings
+    if (currentRankings != null && currentRankings.isNotEmpty && event != null) {
+      await saveFinalStandings(
+        clubId: clubId,
+        eventId: eventId,
+        rankings: currentRankings,
+        event: event,
+      );
+    }
+
     await updateEvent(clubId, eventId, status: EventStatus.completed);
+  }
+
+  /// Get current rankings from all tables in an event (for final standings snapshot)
+  static Future<List<EventRanking>> _getCurrentRankingsFromTables(
+    String clubId,
+    String eventId,
+  ) async {
+    final event = await getEvent(clubId, eventId);
+    if (event == null) return [];
+
+    final List<EventRanking> allRankings = [];
+
+    for (final tableId in event.tableIds) {
+      try {
+        // Get seated players from this table
+        final seats = await SeatService.getTableSeats(clubId: clubId, tableId: tableId);
+
+        for (final entry in seats.entries) {
+          final seat = entry.value;
+          if (seat.playerId != null && seat.playerId!.isNotEmpty) {
+            final stack = seat.chipStack?.toInt() ?? 0;
+            allRankings.add(EventRanking(
+              eventId: eventId,
+              playerId: seat.playerId!,
+              playerName: seat.playerName ?? 'Player ${entry.key}',
+              currentStack: stack,
+              startingStack: event.startingStack?.toInt() ?? stack,
+              rank: 0, // Will be calculated when sorting
+              tableId: tableId,
+              tableName: 'Table ${entry.key}',
+              seatNumber: entry.key,
+              lastUpdated: DateTime.now(),
+              status: stack <= 0 ? PlayerRankingStatus.busted : PlayerRankingStatus.active,
+            ));
+          }
+        }
+      } catch (e) {
+        print('Error getting seats for table $tableId: $e');
+      }
+    }
+
+    // Sort by stack descending and assign ranks
+    allRankings.sort((a, b) => b.currentStack.compareTo(a.currentStack));
+    for (int i = 0; i < allRankings.length; i++) {
+      // Create new ranking with updated rank (since rank is final)
+      final r = allRankings[i];
+      allRankings[i] = EventRanking(
+        eventId: r.eventId,
+        playerId: r.playerId,
+        playerName: r.playerName,
+        currentStack: r.currentStack,
+        startingStack: r.startingStack,
+        rank: i + 1,
+        tableId: r.tableId,
+        tableName: r.tableName,
+        seatNumber: r.seatNumber,
+        lastUpdated: r.lastUpdated,
+        status: r.status,
+        finishPosition: r.status == PlayerRankingStatus.busted ? i + 1 : null,
+      );
+    }
+
+    return allRankings;
+  }
+
+  /// Save final standings when event completes
+  static Future<void> saveFinalStandings({
+    required String clubId,
+    required String eventId,
+    required List<EventRanking> rankings,
+    required ClubEvent event,
+  }) async {
+    try {
+      final finalStandings = FinalStandings.fromRankings(
+        eventId: eventId,
+        eventName: event.name,
+        rankings: rankings,
+        metadata: {
+          'buyInAmount': event.buyInAmount,
+          'startingStack': event.startingStack,
+          'gameType': event.gameType,
+        },
+      );
+
+      // Save to Firestore subcollection
+      await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_eventsSubcollection)
+          .doc(eventId)
+          .collection('final_standings')
+          .doc('results')
+          .set(finalStandings.toMap());
+    } catch (e) {
+      print('Error saving final standings: $e');
+    }
+  }
+
+  /// Get final standings for a completed event
+  static Future<FinalStandings?> getFinalStandings(String clubId, String eventId) async {
+    try {
+      final doc = await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_eventsSubcollection)
+          .doc(eventId)
+          .collection('final_standings')
+          .doc('results')
+          .get();
+
+      if (doc.exists && doc.data() != null) {
+        return FinalStandings.fromMap(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting final standings: $e');
+      return null;
+    }
+  }
+
+  /// Check if event has any active dealer sessions
+  static Future<bool> hasActiveSessions(String eventId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('dealer_sessions')
+          .where('eventId', isEqualTo: eventId)
+          .where('status', isEqualTo: DealerSessionStatus.active.value)
+          .limit(1)
+          .get();
+
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      print('Error checking active sessions: $e');
+      return false;
+    }
   }
 
   /// End all active dealer sessions associated with an event
