@@ -40,6 +40,10 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
   // Local fallback data when WebSocket is disconnected
   List<EventRanking>? _localRankings;
   int _localTotalChips = 0;
+  bool _hasActiveSessions = true; // Assume active initially
+
+  // Track busted players' finish positions (persists across data updates)
+  final Map<String, int> _bustedPlayerPositions = {};
 
   // Refresh interval in seconds
   static const int _refreshIntervalSeconds = 30;
@@ -109,8 +113,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
 
     // Subscribe to ranking updates
     _rankingSubscription = wsService.onRankingUpdate.listen((data) {
+      final newRankings = EventRankingsData.fromMap(data);
       setState(() {
-        _rankingsData = EventRankingsData.fromMap(data);
+        _rankingsData = newRankings;
       });
     });
 
@@ -134,6 +139,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
       // Get current players from each table's active session or seat assignments
       final tablePlayers = <String, List<Map<String, dynamic>>>{};
       final allPlayers = <Map<String, dynamic>>[];
+      bool hasAnyActiveSession = false;
 
       for (final table in widget.tables) {
         // First try to get players from DealerSession
@@ -145,6 +151,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
         debugPrint('Table ${table.id} (${table.name}): session=${session != null}, activePlayers=${session?.activePlayers.length ?? 0}');
 
         if (session != null && session.activePlayers.isNotEmpty) {
+          hasAnyActiveSession = true;
           final players = session.activePlayers.map((p) => {
                 // Use seat-based ID for consistency with dealer stack updates
                 'player_id': 'seat_${table.id}_${p.seatNumber}',
@@ -189,16 +196,49 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
       // Build local rankings as fallback (sorted by stack descending)
       allPlayers.sort((a, b) => (b['current_stack'] as int).compareTo(a['current_stack'] as int));
 
+      // Count active players (non-busted) to calculate finish positions
+      final activePlayerCount = allPlayers.where((p) => (p['current_stack'] as int) > 0).length;
+
       int totalChips = 0;
       final localRankings = <EventRanking>[];
       final now = DateTime.now();
       for (int i = 0; i < allPlayers.length; i++) {
         final p = allPlayers[i];
+        final playerId = p['player_id'] as String;
         final stack = p['current_stack'] as int;
         totalChips += stack;
+
+        // Determine player status
+        PlayerRankingStatus status;
+        if (stack <= 0) {
+          status = PlayerRankingStatus.busted;
+        } else if (!hasAnyActiveSession) {
+          status = PlayerRankingStatus.onBreak;
+        } else {
+          status = PlayerRankingStatus.active;
+        }
+
+        // Track finish position for busted players
+        int? finishPosition;
+        if (status == PlayerRankingStatus.busted) {
+          // Only assign finish position if not already tracked (first time busting)
+          if (!_bustedPlayerPositions.containsKey(playerId)) {
+            // Finish position = active players + 1 (they're out after all active players)
+            _bustedPlayerPositions[playerId] = activePlayerCount + 1;
+          }
+          finishPosition = _bustedPlayerPositions[playerId];
+        } else {
+          // Player is active - if they were previously busted, they rebought
+          // Clear their finish position so they can bust again later
+          if (_bustedPlayerPositions.containsKey(playerId)) {
+            _bustedPlayerPositions.remove(playerId);
+          }
+          finishPosition = null;
+        }
+
         localRankings.add(EventRanking(
           eventId: widget.event.id,
-          playerId: p['player_id'] as String,
+          playerId: playerId,
           playerName: p['player_name'] as String,
           currentStack: stack,
           startingStack: p['starting_stack'] as int,
@@ -209,6 +249,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
           lastUpdated: now,
           previousRank: null,
           previousStack: null,
+          status: status,
+          finishPosition: finishPosition,
         ));
       }
 
@@ -216,6 +258,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
       setState(() {
         _localRankings = localRankings;
         _localTotalChips = totalChips;
+        _hasActiveSessions = hasAnyActiveSession;
       });
 
       // Try to sync via WebSocket if connected
@@ -299,22 +342,51 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
     final totalChips = _rankingsData?.totalChips ?? _localTotalChips;
     final averageStack = totalPlayers > 0 ? totalChips ~/ totalPlayers : 0;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
+    // Check if tournament is on break (event active but no active sessions)
+    final isOnBreak = widget.event.isOngoing &&
+        !_hasActiveSessions &&
+        (rankings.isNotEmpty);
+
+    return Column(
+      children: [
+        // "On Break" banner
+        if (isOnBreak)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            color: Colors.orange.shade700,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.pause_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Tournament on Break',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).dividerColor,
+              ),
+            ),
+          ),
+          child: Column(
             children: [
-              // Connection status
-              Container(
+              Row(
+                children: [
+                  // Connection status
+                  Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: _isConnected
@@ -463,6 +535,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
           ],
         ],
       ),
+        ),
+      ],
     );
   }
 
@@ -525,19 +599,46 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
       itemCount: rankings.length,
       itemBuilder: (context, index) {
         final ranking = rankings[index];
-        return _buildRankingRow(ranking, index);
+        // Use key with playerId + status to force rebuild when status changes
+        return KeyedSubtree(
+          key: ValueKey('${ranking.playerId}_${ranking.status.name}'),
+          child: _buildRankingRow(ranking, index),
+        );
       },
     );
   }
 
+  /// Get ordinal suffix for a number (1st, 2nd, 3rd, 4th, etc.)
+  String _getOrdinal(int number) {
+    if (number >= 11 && number <= 13) {
+      return '${number}th';
+    }
+    switch (number % 10) {
+      case 1:
+        return '${number}st';
+      case 2:
+        return '${number}nd';
+      case 3:
+        return '${number}rd';
+      default:
+        return '${number}th';
+    }
+  }
+
   Widget _buildRankingRow(EventRanking ranking, int index) {
-    final isTopThree = ranking.rank <= 3;
-    final rankColor = switch (ranking.rank) {
-      1 => Colors.amber,
-      2 => Colors.grey.shade400,
-      3 => Colors.orange.shade700,
-      _ => null,
-    };
+    final isBusted = ranking.status == PlayerRankingStatus.busted;
+    final isOnBreak = ranking.status == PlayerRankingStatus.onBreak;
+    final isTopThree = ranking.rank <= 3 && !isBusted;
+
+    // Rank badge color - gray for busted, normal colors for others
+    final rankColor = isBusted
+        ? Colors.grey.shade600
+        : switch (ranking.rank) {
+            1 => Colors.amber,
+            2 => Colors.grey.shade400,
+            3 => Colors.orange.shade700,
+            _ => null,
+          };
 
     final stackChange = ranking.stackChange;
     final rankChange = ranking.rankChange;
@@ -546,15 +647,19 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: ranking.isEliminated
-            ? Colors.grey.shade200.withOpacity(0.5)
-            : isTopThree
-                ? rankColor?.withOpacity(0.1)
-                : null,
+        color: isBusted
+            ? Colors.grey.shade800.withOpacity(0.3)
+            : isOnBreak
+                ? Colors.orange.withOpacity(0.1)
+                : isTopThree
+                    ? rankColor?.withOpacity(0.1)
+                    : null,
         borderRadius: BorderRadius.circular(8),
-        border: isTopThree
-            ? Border.all(color: rankColor!.withOpacity(0.3))
-            : null,
+        border: isBusted
+            ? Border.all(color: Colors.grey.shade600.withOpacity(0.3))
+            : isTopThree
+                ? Border.all(color: rankColor!.withOpacity(0.3))
+                : null,
       ),
       child: ListTile(
         leading: Container(
@@ -565,14 +670,30 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
-          child: Text(
-            '${ranking.rank}',
-            style: TextStyle(
-              color: rankColor != null ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
+          child: isBusted
+              ? Builder(builder: (context) {
+                  // Use ranking.finishPosition or fallback to tracked position
+                  final finishPos = ranking.finishPosition ??
+                      _bustedPlayerPositions[ranking.playerId];
+                  return finishPos != null
+                      ? Text(
+                          '$finishPos',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        )
+                      : const Icon(Icons.close, color: Colors.white, size: 20);
+                })
+              : Text(
+                  '${ranking.rank}',
+                  style: TextStyle(
+                    color: rankColor != null ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
         ),
         title: Row(
           children: [
@@ -581,14 +702,55 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
                 ranking.playerName,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  decoration: ranking.isEliminated
-                      ? TextDecoration.lineThrough
-                      : null,
-                  color: ranking.isEliminated ? Colors.grey : null,
+                  decoration: isBusted ? TextDecoration.lineThrough : null,
+                  color: isBusted ? Colors.grey : null,
                 ),
               ),
             ),
-            if (rankChange != null && rankChange != 0)
+            // Status labels
+            if (isBusted)
+              Builder(builder: (context) {
+                // Use ranking.finishPosition or fallback to tracked position
+                final finishPos = ranking.finishPosition ??
+                    _bustedPlayerPositions[ranking.playerId];
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  margin: const EdgeInsets.only(left: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade600,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    finishPos != null
+                        ? _getOrdinal(finishPos)
+                        : 'BUSTED',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                );
+              }),
+            if (isOnBreak)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                margin: const EdgeInsets.only(left: 8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.orange.shade700),
+                ),
+                child: Text(
+                  'ON BREAK',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.orange.shade700,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            if (rankChange != null && rankChange != 0 && !isBusted)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 margin: const EdgeInsets.only(left: 8),
@@ -621,13 +783,15 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
               ),
           ],
         ),
-        subtitle: Text(
-          ranking.tableName ?? 'Table ${ranking.seatNumber}',
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 12,
-          ),
-        ),
+        subtitle: isBusted
+            ? null  // Don't show table/seat for busted players
+            : Text(
+                '${ranking.tableName ?? 'Table'} - Seat ${ranking.seatNumber}',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 12,
+                ),
+              ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,

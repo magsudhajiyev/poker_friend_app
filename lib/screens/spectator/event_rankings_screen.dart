@@ -267,6 +267,23 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
   Widget _buildRankingsList() {
     final rankings = _rankingsData!.rankings;
 
+    // Calculate finish positions for eliminated players who don't have one
+    final totalPlayers = rankings.length;
+    final eliminatedPlayers = rankings.where((r) => r.isEliminated).toList();
+
+    // Create a map of calculated finish positions
+    // Eliminated players get positions from totalPlayers down
+    // (last eliminated = totalPlayers, second to last = totalPlayers-1, etc.)
+    final calculatedFinishPositions = <String, int>{};
+    for (int i = 0; i < eliminatedPlayers.length; i++) {
+      final player = eliminatedPlayers[i];
+      if (player.finishPosition == null) {
+        // Assign finish position: total - index of elimination
+        // Since we don't know order of elimination, use total - i
+        calculatedFinishPositions[player.playerId] = totalPlayers - i;
+      }
+    }
+
     return RefreshIndicator(
       onRefresh: () => _loadRankings(),
       color: PokerFriendColors.purple,
@@ -274,15 +291,19 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
         padding: EdgeInsets.symmetric(horizontal: 24),
         itemCount: rankings.length,
         itemBuilder: (context, index) {
-          return _buildRankingCard(rankings[index], index);
+          final ranking = rankings[index];
+          final calculatedFinish = calculatedFinishPositions[ranking.playerId];
+          return _buildRankingCard(ranking, index, calculatedFinish);
         },
       ),
     );
   }
 
-  Widget _buildRankingCard(EventRanking ranking, int index) {
+  Widget _buildRankingCard(EventRanking ranking, int index, int? calculatedFinishPosition) {
     final isChipLeader = index == 0 && !ranking.isEliminated;
     final isEliminated = ranking.isEliminated;
+    // Use ranking's finishPosition if available, otherwise use calculated
+    final finishPosition = ranking.finishPosition ?? calculatedFinishPosition;
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
@@ -298,7 +319,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       ),
       child: Row(
         children: [
-          // Rank
+          // Rank badge - shows finish position for eliminated, rank for active
           Container(
             width: 40,
             height: 40,
@@ -312,7 +333,14 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             ),
             child: Center(
               child: isEliminated
-                  ? Icon(Icons.close, color: PokerFriendColors.dark9, size: 20)
+                  ? Text(
+                      '${finishPosition ?? "X"}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: PokerFriendColors.dark9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
                   : Text(
                       '${ranking.rank}',
                       style: TextStyle(
@@ -342,8 +370,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                             ? PokerFriendColors.dark9
                             : Colors.white,
                         fontWeight: FontWeight.w600,
-                        decoration:
-                            isEliminated ? TextDecoration.lineThrough : null,
+                        // No strikethrough - just gray color for eliminated
                       ),
                     ),
                     if (isChipLeader) ...[
@@ -356,13 +383,26 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                     ],
                   ],
                 ),
-                if (ranking.tableId.isNotEmpty || ranking.seatNumber > 0) ...[
+                // Only show table/seat for active (non-eliminated) players
+                if (!isEliminated && (ranking.tableId.isNotEmpty || ranking.seatNumber > 0)) ...[
                   SizedBox(height: 2),
                   Text(
                     '${_getTableDisplayName(ranking)} - Seat ${ranking.seatNumber}',
                     style: TextStyle(
                       fontSize: 12,
                       color: PokerFriendColors.dark9,
+                    ),
+                  ),
+                ],
+                // Show "BUSTED" label for eliminated players
+                if (isEliminated) ...[
+                  SizedBox(height: 2),
+                  Text(
+                    'BUSTED',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: PokerFriendColors.red,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
