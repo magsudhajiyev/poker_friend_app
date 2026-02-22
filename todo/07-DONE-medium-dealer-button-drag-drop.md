@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-21
 **Branch:** feature/dealer-assisted-logging
-**Status:** TODO (Feature Enhancement)
+**Status:** DONE (Button Drag-Drop + Blinds Change)
 **Priority:** Medium
 
 ---
@@ -164,22 +164,23 @@ EventService.watchEvent(clubId, eventId).listen((event) {
 
 ## Acceptance Criteria
 
-**Button Drag-Drop:**
-- [ ] Dealer can drag button to any occupied seat
-- [ ] Visual feedback during drag
-- [ ] Button snaps to seat on drop
+**Button Drag-Drop:** ✅ DONE
+- [x] Dealer can drag button to any seat (occupied or not)
+- [x] Visual feedback during drag (seat glows, button semi-transparent)
+- [x] Button snaps to seat on drop
+- [x] Persisted to Firestore with error handling
 
-**Horizontal View:**
+**Horizontal View:** DEFERRED
 - [ ] Dealer screen works in landscape orientation
 - [ ] Table layout adapts appropriately
 - [ ] All controls accessible in both orientations
 
-**Blinds Up Button:**
-- [ ] Button visible in tournament mode
-- [ ] Quick selection of new blind level
-- [ ] Session updates immediately
+**Blinds Up Button:** ✅ DONE (in separate commit)
+- [x] Blinds info is clickable in dealer screen
+- [x] Dialog for entering new blind levels
+- [x] Session updates immediately
 
-**Admin Blind Control:**
+**Admin Blind Control:** DEFERRED
 - [ ] Admin can define blind structure for event
 - [ ] Admin can advance blinds for all tables
 - [ ] Dealer screens update in real-time
