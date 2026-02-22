@@ -1031,6 +1031,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           seatNumber: seatNumber,
         );
 
+        // Update dealer session in Firestore (marks player as inactive)
+        await DealerService.removePlayer(
+          sessionId: _dealerSession.id,
+          seatNumber: seatNumber,
+        );
+
         // Remove from local seat assignments to keep in sync
         _seatAssignments.remove(seatNumber);
 
@@ -1633,6 +1639,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       await SeatService.removeSeatOccupant(
         clubId: widget.club.id,
         tableId: widget.table.id,
+        seatNumber: seatNumber,
+      );
+
+      // Update dealer session in Firestore (marks player as inactive)
+      await DealerService.removePlayer(
+        sessionId: _dealerSession.id,
         seatNumber: seatNumber,
       );
 
