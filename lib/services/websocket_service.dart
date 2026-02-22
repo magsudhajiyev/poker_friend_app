@@ -379,6 +379,8 @@ class WebSocketService {
     required int newStack,
     String? playerName,
     int? seatNumber,
+    String? status, // 'active', 'busted', 'onBreak'
+    int? finishPosition, // For busted players (e.g., 14 = finished 14th)
   }) async {
     if (!isConnected) return null;
 
@@ -391,6 +393,8 @@ class WebSocketService {
     };
     if (playerName != null) payload['player_name'] = playerName;
     if (seatNumber != null) payload['seat_number'] = seatNumber;
+    if (status != null) payload['status'] = status;
+    if (finishPosition != null) payload['finish_position'] = finishPosition;
 
     _socket!.emitWithAck('update_player_stack', payload, ack: (data) {
       if (data != null) {
