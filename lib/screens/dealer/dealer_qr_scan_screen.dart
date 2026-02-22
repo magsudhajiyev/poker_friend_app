@@ -439,7 +439,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
             SizedBox(height: 16),
             _buildResumeInfoRow('Hands Played', '${session.currentHandNumber}'),
             _buildResumeInfoRow('Blinds', '${session.smallBlind}/${session.bigBlind}'),
-            _buildResumeInfoRow('Players', '${session.players.length}'),
+            _buildResumeInfoRow('Players', '${session.players.values.where((p) => p.isActive).length}'),
           ],
         ),
         actions: [
