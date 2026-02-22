@@ -133,6 +133,39 @@ class DealerService {
         });
   }
 
+  /// Get paused session for a specific table (for dealer change)
+  static Future<DealerSession?> getPausedSessionForTable({
+    required String clubId,
+    required String tableId,
+  }) async {
+    final snapshot = await _firestore
+        .collection(_dealerSessionsCollection)
+        .where('clubId', isEqualTo: clubId)
+        .where('tableId', isEqualTo: tableId)
+        .where('status', isEqualTo: DealerSessionStatus.paused.value)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+    return DealerSession.fromFirestore(snapshot.docs.first);
+  }
+
+  /// Resume session with new dealer (for dealer change handoff)
+  static Future<void> resumeSessionWithNewDealer({
+    required String sessionId,
+    required String newDealerId,
+    required String? newDealerName,
+  }) async {
+    await _firestore
+        .collection(_dealerSessionsCollection)
+        .doc(sessionId)
+        .update({
+          'dealerId': newDealerId,
+          'dealerName': newDealerName,
+          'status': DealerSessionStatus.active.value,
+        });
+  }
+
   /// End a dealer session
   static Future<void> endSession(String sessionId) async {
     final sessionDoc = await _firestore

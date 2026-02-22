@@ -255,6 +255,8 @@ class DealerSession {
 
   /// Create a copy with updated values
   DealerSession copyWith({
+    String? dealerId,
+    String? dealerName,
     DealerSessionStatus? status,
     String? eventId,
     Map<int, SeatedPlayer>? players,
@@ -267,8 +269,8 @@ class DealerSession {
       id: id,
       clubId: clubId,
       tableId: tableId,
-      dealerId: dealerId,
-      dealerName: dealerName,
+      dealerId: dealerId ?? this.dealerId,
+      dealerName: dealerName ?? this.dealerName,
       eventId: eventId ?? this.eventId,
       status: status ?? this.status,
       players: players ?? this.players,

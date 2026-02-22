@@ -3,7 +3,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../design_system/poker_friend_theme.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
+import '../../models/dealer_session.dart';
 import '../../models/qr_table_data.dart';
+import '../../services/auth_service.dart';
 import '../../services/qr_service.dart';
 import '../../services/dealer_service.dart';
 import '../../services/table_service.dart';
@@ -123,7 +125,22 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
         return;
       }
 
-      // Show session settings dialog before starting
+      // Check for existing paused session on this table (dealer change)
+      final pausedSession = await DealerService.getPausedSessionForTable(
+        clubId: widget.club.id,
+        tableId: table.id,
+      );
+
+      if (pausedSession != null && mounted) {
+        // Offer to resume the paused session
+        final shouldResume = await _showResumePausedSessionDialog(pausedSession);
+        if (shouldResume) {
+          await _resumePausedSession(pausedSession, table);
+        }
+        return;
+      }
+
+      // No paused session - show session settings dialog before starting
       if (mounted) {
         _showSessionSettingsDialog(table);
       }
@@ -390,6 +407,107 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
         duration: const Duration(seconds: 3),
       ),
     );
+  }
+
+  /// Show dialog to resume a paused session (dealer change handoff)
+  Future<bool> _showResumePausedSessionDialog(DealerSession session) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: PokerFriendColors.dark3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.swap_horiz, color: Colors.orange),
+            SizedBox(width: 12),
+            Text(
+              'Resume Session',
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Taking over from ${session.dealerName ?? "previous dealer"}',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            _buildResumeInfoRow('Hands Played', '${session.currentHandNumber}'),
+            _buildResumeInfoRow('Blinds', '${session.smallBlind}/${session.bigBlind}'),
+            _buildResumeInfoRow('Players', '${session.players.length}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: PokerFriendColors.dark9)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text('Resume'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Widget _buildResumeInfoRow(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: PokerFriendColors.dark9)),
+          Text(value, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  /// Resume a paused session with new dealer
+  Future<void> _resumePausedSession(DealerSession session, dynamic table) async {
+    setState(() => _isProcessing = true);
+
+    try {
+      // Update dealer info and resume
+      await DealerService.resumeSessionWithNewDealer(
+        sessionId: session.id,
+        newDealerId: AuthService.userId!,
+        newDealerName: AuthService.userDisplayName,
+      );
+
+      // Navigate to dealer table screen with updated session
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DealerTableScreen(
+              session: session.copyWith(
+                dealerId: AuthService.userId!,
+                dealerName: AuthService.userDisplayName,
+                status: DealerSessionStatus.active,
+              ),
+              club: widget.club,
+              table: table,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      _showError('Failed to resume session: ${e.toString()}');
+      setState(() => _isProcessing = false);
+    }
   }
 
   void _showTableNotAssignedError(dynamic table) {

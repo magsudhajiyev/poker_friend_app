@@ -1145,6 +1145,60 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     }
   }
 
+  /// Show dialog to confirm dealer change/handoff
+  Future<void> _showDealerChangeDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: const Text('Dealer Change', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Hand off this table to another dealer?\n\n'
+          'The session will be paused. Another dealer can scan '
+          'the table QR to continue where you left off.\n\n'
+          'Players, blinds, and all state will be preserved.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('Hand Off'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _executeDealerChange();
+    }
+  }
+
+  /// Execute dealer change - pause session and exit
+  Future<void> _executeDealerChange() async {
+    try {
+      // Pause the session (preserves all state)
+      await DealerService.pauseSession(_dealerSession.id);
+
+      // Navigate back to dealer home
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Session paused. Another dealer can now take over.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      _showError('Failed to pause session: $e');
+    }
+  }
+
   /// Handle event completion or cancellation by club admin
   void _handleEventEnded(EventStatus? status) {
     if (_isShowingEventEndDialog) return;
@@ -1701,6 +1755,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             icon: const Icon(Icons.qr_code),
             onPressed: _showQRCodesDialog,
             tooltip: 'Show QR Codes',
+          ),
+          IconButton(
+            icon: const Icon(Icons.swap_horiz, color: Colors.orange),
+            onPressed: _showDealerChangeDialog,
+            tooltip: 'Dealer Change',
           ),
           IconButton(
             icon: const Icon(Icons.stop_circle_outlined),
