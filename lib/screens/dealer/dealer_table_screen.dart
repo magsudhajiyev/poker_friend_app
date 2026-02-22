@@ -21,6 +21,7 @@ import '../../services/qr_service.dart';
 import '../../services/continuous_speech_service.dart';
 import '../../services/soniox_service.dart';
 import '../../utils/poker_positions.dart';
+import '../../utils/number_formatter.dart';
 import '../../widgets/board_cards_dialog.dart';
 import '../../widgets/all_in_board_cards_dialog.dart';
 import '../../widgets/winner_selection_dialog.dart';
@@ -836,10 +837,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         handId: _dealerSession.currentHandId ?? '',
         winnerSeat: winnerId,
         potAmount: _gameState!.currentPot,
-        summary: '$winnerName wins \$${_gameState!.currentPot.toStringAsFixed(0)}',
+        summary: '$winnerName wins ${formatCompactCurrency(_gameState!.currentPot)}',
       );
 
-      _showSuccess('$winnerName wins \$${_gameState!.currentPot.toStringAsFixed(0)}');
+      _showSuccess('$winnerName wins ${formatCompactCurrency(_gameState!.currentPot)}');
 
       // Check for busted players BEFORE startNewHand() deactivates them
       // This allows the rebuy/remove dialog to appear while player is still marked active
@@ -900,7 +901,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         handId: _dealerSession.currentHandId ?? '',
         winnerSeat: winnerIds.first,
         potAmount: _gameState!.currentPot,
-        summary: 'Chop: $winnerNames split \$${_gameState!.currentPot.toStringAsFixed(0)}',
+        summary: 'Chop: $winnerNames split ${formatCompactCurrency(_gameState!.currentPot)}',
       );
 
       _showSuccess('Pot chopped between $winnerNames');
@@ -1460,7 +1461,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         _sessionManager!.setPlayerName(pending.seatNumber, pending.playerName ?? 'Player ${pending.seatNumber}');
         _sessionManager!.setPlayerStack(pending.seatNumber, chipStack);
 
-        _showSuccess('${pending.playerName} joined with \$${chipStack.toStringAsFixed(0)}');
+        _showSuccess('${pending.playerName} joined with ${formatCompactCurrency(chipStack)}');
       } catch (e) {
         _showError('Failed to approve: ${e.toString()}');
       }
@@ -1557,7 +1558,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           _gameState!.setPlayerStack(seatNumber, newStack);
           _sessionManager!.setPlayerStack(seatNumber, newStack);
           setState(() {});
-          _showSuccess('Updated ${playerName ?? 'player'} stack to \$${newStack.toStringAsFixed(0)}');
+          _showSuccess('Updated ${playerName ?? 'player'} stack to ${formatCompactCurrency(newStack)}');
         } catch (e) {
           _showError('Failed to update stack: ${e.toString()}');
         }
@@ -1798,7 +1799,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildInfoItem('POT', '\$${_gameState!.currentPot.toStringAsFixed(0)}', Colors.amber),
+          _buildInfoItem('POT', formatCompactCurrency(_gameState!.currentPot), Colors.amber),
           _buildInfoItem('STREET', _gameState!.currentRound.name.toUpperCase(), Colors.blue),
           GestureDetector(
             onTap: _showChangeBlindsDialog,
@@ -2081,7 +2082,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            '\$${_gameState!.currentPot.toStringAsFixed(0)}',
+                            formatCompactCurrency(_gameState!.currentPot),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 32,
@@ -2300,7 +2301,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '\$${stack.toStringAsFixed(0)}',
+                      formatCompactCurrency(stack),
                       style: TextStyle(
                         color: isFolded ? Colors.white38 : Colors.greenAccent,
                         fontSize: 11,
@@ -2360,7 +2361,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '\$${bet.toStringAsFixed(0)}',
+                  formatCompactCurrency(bet),
                   style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
@@ -2439,7 +2440,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '$playerName to act (\$${playerStack.toStringAsFixed(0)})',
+                      '$playerName to act (${formatCompactCurrency(playerStack)})',
                       style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
@@ -2496,7 +2497,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     _buildActionButton('CHECK', Colors.grey.shade700,
                         () => _performAction(PlayerAction.check))
                   else if (canCall)
-                    _buildActionButton('CALL\n\$${callAmount.toStringAsFixed(0)}', Colors.green.shade700,
+                    _buildActionButton('CALL\n${formatCompactCurrency(callAmount)}', Colors.green.shade700,
                         () => _performAction(PlayerAction.call)),
                   const SizedBox(width: 8),
                   if (canBet)
@@ -2917,7 +2918,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   /// Show brief feedback when action is detected and executed
   Widget _buildLastActionFeedback(DetectedPokerAction action) {
     final actionDisplay = action.action.toUpperCase();
-    final amountDisplay = action.amount != null ? ' \$${action.amount!.toStringAsFixed(0)}' : '';
+    final amountDisplay = action.amount != null ? ' ${formatCompactCurrency(action.amount!)}' : '';
 
     return Column(
       children: [

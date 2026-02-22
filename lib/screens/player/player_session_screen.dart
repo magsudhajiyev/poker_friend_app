@@ -5,7 +5,9 @@ import '../../models/dealer_session.dart';
 import '../../models/hand_state_machine.dart';
 import '../../services/seat_service.dart';
 import '../../services/dealer_service.dart';
+import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
+import '../../utils/number_formatter.dart';
 import '../../widgets/hole_cards_dialog.dart';
 import '../hand_actions_screen.dart';
 
@@ -43,6 +45,9 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   // Session status
   DealerSessionStatus _sessionStatus = DealerSessionStatus.active;
   bool get _isPaused => _sessionStatus == DealerSessionStatus.paused;
+
+  // Event info
+  String? _eventName;
 
   // Player's seat info
   double _myStack = 0;
@@ -161,6 +166,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           });
         }
         _loadExistingHands(session.id);
+        _loadEventName(session);
       }
 
       // If hand changed, watch the new hand
@@ -344,6 +350,27 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     }
   }
 
+  /// Load event name from session's event ID
+  Future<void> _loadEventName(DealerSession session) async {
+    if (session.eventId == null) {
+      setState(() {
+        _eventName = null;
+      });
+      return;
+    }
+
+    try {
+      final event = await EventService.getEvent(session.clubId, session.eventId!);
+      if (mounted && event != null) {
+        setState(() {
+          _eventName = event.name;
+        });
+      }
+    } catch (e) {
+      // Silently fail - event name is optional
+    }
+  }
+
   void _showSessionEndedDialog() {
     if (_isShowingExitDialog) return;
     _isShowingExitDialog = true;
@@ -415,8 +442,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       SnackBar(
         content: Text(
           isWinner
-              ? 'You won \$${pot.toStringAsFixed(0)}!'
-              : 'Seat $winnerId wins \$${pot.toStringAsFixed(0)}',
+              ? 'You won ${formatCompactCurrency(pot)}!'
+              : 'Seat $winnerId wins ${formatCompactCurrency(pot)}',
         ),
         backgroundColor: isWinner ? Colors.green.shade700 : Colors.grey.shade700,
         duration: const Duration(seconds: 3),
@@ -553,15 +580,51 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final dealerName = _session?.dealerName ?? 'Unknown';
+
     return AppBar(
       backgroundColor: const Color(0xFF161B22),
       elevation: 0,
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.tableId,
-            style: const TextStyle(fontSize: 18),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  _eventName ?? 'Table Session',
+                  style: const TextStyle(fontSize: 18),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.person,
+                      size: 12,
+                      color: Colors.blue.shade300,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      dealerName,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.blue.shade300,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           Row(
             children: [
@@ -686,8 +749,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildStatusItem('SEAT', '#${widget.seatNumber}', Colors.blue),
-          _buildStatusItem('STACK', '\$${_myStack.toStringAsFixed(0)}', Colors.green),
-          _buildStatusItem('POT', '\$${_potAmount.toStringAsFixed(0)}', Colors.amber),
+          _buildStatusItem('STACK', formatCompactCurrency(_myStack), Colors.green),
+          _buildStatusItem('POT', formatCompactCurrency(_potAmount), Colors.amber),
         ],
       ),
     );
@@ -1000,7 +1063,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
     String actionText = '$displayName ${actionType.toUpperCase()}';
     if (amount != null && amount > 0) {
-      actionText += ' \$${amount.toStringAsFixed(0)}';
+      actionText += ' ${formatCompactCurrency(amount)}';
     }
 
     return Padding(
@@ -1291,7 +1354,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isWinner ? 'Won \$${pot.toStringAsFixed(0)}' : 'Lost',
+                    isWinner ? 'Won ${formatCompactCurrency(pot)}' : 'Lost',
                     style: TextStyle(
                       color: isWinner ? Colors.green : Colors.white54,
                       fontSize: 14,
@@ -1467,13 +1530,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.pause_circle_outline,
+              Icons.swap_horiz,
               size: 80,
               color: Colors.amber.withValues(alpha: 0.8),
             ),
             const SizedBox(height: 24),
             const Text(
-              'Session Paused',
+              'Dealer Change',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -1482,10 +1545,19 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'The dealer has paused the session',
+              'Waiting for new dealer to take over...',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.amber.withValues(alpha: 0.7),
               ),
             ),
           ],

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../utils/poker_positions.dart';
+import '../utils/number_formatter.dart';
 import '../models/game_types.dart';
 import '../services/ai_analyzer_service.dart';
 import '../services/firebase_service.dart';
@@ -556,11 +557,11 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
     // Format values
     String potText = gameType == GameType.cash
-        ? '\$${pot.toStringAsFixed(0)}'
-        : '${pot.toStringAsFixed(0)}';
+        ? formatCompactCurrency(pot)
+        : formatCompactNumber(pot);
     String blindsText = gameType == GameType.cash
-        ? '\$${smallBlind}/\$${bigBlind}'
-        : '${smallBlind}/${bigBlind}';
+        ? '${formatCompactCurrency(smallBlind)}/${formatCompactCurrency(bigBlind)}'
+        : '${formatCompactNumber(smallBlind)}/${formatCompactNumber(bigBlind)}';
     String? winnerText = _getWinnerText();
 
     return Container(
@@ -1273,15 +1274,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final isCashGame = gameType == 'cash';
 
     if (isCashGame) {
-      // For cash games, show with $ and 2 decimal places if needed
-      if (stackNum == stackNum.roundToDouble()) {
-        return '\$${stackNum.toInt()}';
-      } else {
-        return '\$${stackNum.toStringAsFixed(2)}';
-      }
+      return formatCompactCurrency(stackNum);
     } else {
-      // For tournaments, show as integer
-      return '${stackNum.toInt()}';
+      // For tournaments, show compact without $ prefix
+      return formatCompactNumber(stackNum);
     }
   }
 
@@ -1294,15 +1290,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final isCashGame = gameType == 'cash';
 
     if (isCashGame) {
-      // For cash games, show with $ and clean decimals
-      if (amountNum == amountNum.roundToDouble()) {
-        return '\$${amountNum.toInt()}';
-      } else {
-        return '\$${amountNum.toStringAsFixed(2)}';
-      }
+      return formatCompactCurrency(amountNum);
     } else {
-      // For tournaments, show as integer
-      return '${amountNum.toInt()}';
+      // For tournaments, show compact without $ prefix
+      return formatCompactNumber(amountNum);
     }
   }
 

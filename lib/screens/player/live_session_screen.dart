@@ -7,6 +7,7 @@ import '../../services/seat_service.dart';
 import '../../services/dealer_service.dart';
 import '../../services/websocket_service.dart';
 import '../../services/auth_service.dart';
+import '../../utils/number_formatter.dart';
 
 /// Screen for players to view the live poker session
 class LiveSessionScreen extends StatefulWidget {
@@ -469,7 +470,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                 ),
               ),
               Text(
-                '\$${_potAmount.toStringAsFixed(0)}',
+                formatCompactCurrency(_potAmount),
                 style: const TextStyle(
                   color: Colors.amber,
                   fontSize: 24,
@@ -571,7 +572,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            '\$${_potAmount.toStringAsFixed(0)}',
+                            formatCompactCurrency(_potAmount),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 28,
@@ -694,7 +695,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                 ),
                 if (chipStack > 0)
                   Text(
-                    '\$${chipStack.toStringAsFixed(0)}',
+                    formatCompactCurrency(chipStack),
                     style: TextStyle(
                       color: isMySeat ? Colors.lightBlueAccent : Colors.greenAccent,
                       fontSize: 10,
@@ -794,7 +795,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
 
     String actionText = '$playerName $actionType';
     if (amount != null && amount > 0) {
-      actionText += ' \$${amount.toStringAsFixed(0)}';
+      actionText += ' ${formatCompactCurrency(amount)}';
     }
 
     return Padding(
@@ -873,7 +874,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                     ),
                   ),
                   Text(
-                    myStack > 0 ? 'Stack: \$${myStack.toStringAsFixed(0)}' : 'Waiting for dealer...',
+                    myStack > 0 ? 'Stack: ${formatCompactCurrency(myStack)}' : 'Waiting for dealer...',
                     style: TextStyle(
                       color: myStack > 0 ? Colors.greenAccent : Colors.white54,
                       fontSize: 14,

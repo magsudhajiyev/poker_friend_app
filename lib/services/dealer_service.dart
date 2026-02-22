@@ -654,7 +654,8 @@ class DealerService {
     return null;
   }
 
-  /// Watch active session for a table (real-time)
+  /// Watch active or paused session for a table (real-time)
+  /// Includes paused sessions so players stay connected during dealer handoff
   static Stream<DealerSession?> watchActiveSessionForTable({
     required String clubId,
     required String tableId,
@@ -663,7 +664,10 @@ class DealerService {
         .collection(_dealerSessionsCollection)
         .where('clubId', isEqualTo: clubId)
         .where('tableId', isEqualTo: tableId)
-        .where('status', isEqualTo: DealerSessionStatus.active.value)
+        .where('status', whereIn: [
+          DealerSessionStatus.active.value,
+          DealerSessionStatus.paused.value,
+        ])
         .orderBy('startTime', descending: true)  // Get newest session first
         .limit(1)
         .snapshots()

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../design_system/poker_friend_theme.dart';
 import '../../models/club_event.dart';
 import '../../models/event_ranking.dart';
 import '../../services/event_service.dart';
 import '../../services/table_service.dart';
+import '../../utils/number_formatter.dart';
 
 /// Screen for spectators to view live rankings during an event
 class EventRankingsScreen extends StatefulWidget {
@@ -219,7 +219,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           ),
           _buildStatItem(
             label: 'Total Chips',
-            value: _formatNumber(data.totalChips),
+            value: formatCompactNumber(data.totalChips),
             color: PokerFriendColors.green,
           ),
           Container(
@@ -229,7 +229,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           ),
           _buildStatItem(
             label: 'Avg Stack',
-            value: _formatNumber(data.averageStack),
+            value: formatCompactNumber(data.averageStack),
             color: PokerFriendColors.yellow,
           ),
         ],
@@ -418,7 +418,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                _formatNumber(ranking.currentStack),
+                formatCompactNumber(ranking.currentStack),
                 style: TextStyle(
                   fontSize: 18,
                   color: stackColor,
@@ -428,7 +428,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
               if (!isEliminated) ...[
                 SizedBox(height: 2),
                 Text(
-                  '${ranking.profitLoss >= 0 ? '+' : ''}${_formatNumber(ranking.profitLoss)}',
+                  '${ranking.profitLoss >= 0 ? '+' : ''}${formatCompactNumber(ranking.profitLoss)}',
                   style: TextStyle(
                     fontSize: 12,
                     color: ranking.profitLoss >= 0
@@ -525,15 +525,6 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
         ],
       ),
     );
-  }
-
-  String _formatNumber(int number) {
-    if (number >= 1000000) {
-      return '${(number / 1000000).toStringAsFixed(1)}M';
-    } else if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(1)}K';
-    }
-    return NumberFormat('#,###').format(number);
   }
 
   /// Get color for stack based on comparison to average
