@@ -98,6 +98,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   // Guard flag to prevent duplicate event end dialogs
   bool _isShowingEventEndDialog = false;
 
+  // Event info for rebuy handling
+  ClubEvent? _currentEvent;
+  double _rebuyStack = 0;
+
   @override
   void initState() {
     super.initState();
@@ -208,12 +212,20 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         _dealerSession.eventId!,
       ).listen((event) {
         if (!mounted) return;
+        if (event != null) {
+          // Store event info for rebuy handling
+          _currentEvent = event;
+          _rebuyStack = event.startingStack ?? (_dealerSession.bigBlind * 100.0);
+        }
         if (event == null ||
             event.status == EventStatus.completed ||
             event.status == EventStatus.cancelled) {
           _handleEventEnded(event?.status);
         }
       });
+    } else {
+      // No event linked - use default stack
+      _rebuyStack = _dealerSession.bigBlind * 100.0;
     }
 
     // Connect to WebSocket server for real-time updates
@@ -285,10 +297,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         // Only set button from dealer session for the first hand
         // After that, _gameState.startNewHand() moves the button automatically
         _gameState!.buttonPosition = _dealerSession.buttonPosition;
+        // Only sync from seats for the FIRST hand - after that, game state is source of truth
+        _syncPlayersFromSeats();
       }
-
-      // Sync players before starting hand
-      _syncPlayersFromSeats();
+      // NOTE: Don't call _syncPlayersFromSeats() for subsequent hands -
+      // game state tracks player stacks during active session
 
       // Finalize game state initialization and calculate blinds
       _gameState!.finalizeInitialization();
@@ -568,14 +581,28 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       // Save pot for current street before showing dialog
       _sessionManager!.savePotForStreet(_gameState!.currentRound, _gameState!.currentPot);
 
-      // Show single dialog for all remaining board cards (uses existing AllInBoardCardsDialog)
-      final boardCards = await showDialog<BoardCards>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AllInBoardCardsDialog(
-          existingBoardCards: _sessionManager!.currentHand?.boardCards,
-        ),
-      );
+      // Check if all 5 board cards are already selected - skip dialog if complete
+      final existingCards = _sessionManager!.currentHand?.boardCards;
+      final hasCompleteBoard = existingCards != null &&
+          existingCards.flop.length == 3 &&
+          existingCards.turn != null &&
+          existingCards.river != null;
+
+      BoardCards? boardCards;
+
+      if (hasCompleteBoard) {
+        // All cards already selected - use existing cards, skip dialog
+        boardCards = existingCards;
+      } else {
+        // Show dialog to collect missing cards
+        boardCards = await showDialog<BoardCards>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AllInBoardCardsDialog(
+            existingBoardCards: existingCards,
+          ),
+        );
+      }
 
       // Guard after dialog returns
       if (!mounted) {
@@ -805,7 +832,13 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         summary: '$winnerName wins \$${_gameState!.currentPot.toStringAsFixed(0)}',
       );
 
-      // Prepare for next hand
+      _showSuccess('$winnerName wins \$${_gameState!.currentPot.toStringAsFixed(0)}');
+
+      // Check for busted players BEFORE startNewHand() deactivates them
+      // This allows the rebuy/remove dialog to appear while player is still marked active
+      await _checkForBustedPlayers();
+
+      // Now prepare for next hand (this will deactivate any remaining busted players)
       _gameState!.startNewHand();
 
       // Update seat chip stacks in Firebase
@@ -814,8 +847,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       setState(() {
         _isHandActive = false;
       });
-
-      _showSuccess('$winnerName wins \$${_gameState!.currentPot.toStringAsFixed(0)}');
     } catch (e) {
       _showError('Failed to complete hand: ${e.toString()}');
     }
@@ -865,7 +896,13 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         summary: 'Chop: $winnerNames split \$${_gameState!.currentPot.toStringAsFixed(0)}',
       );
 
-      // Prepare for next hand
+      _showSuccess('Pot chopped between $winnerNames');
+
+      // Check for busted players BEFORE startNewHand() deactivates them
+      // This allows the rebuy/remove dialog to appear while player is still marked active
+      await _checkForBustedPlayers();
+
+      // Now prepare for next hand (this will deactivate any remaining busted players)
       _gameState!.startNewHand();
 
       // Update seat chip stacks
@@ -874,8 +911,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       setState(() {
         _isHandActive = false;
       });
-
-      _showSuccess('Pot chopped between $winnerNames');
     } catch (e) {
       _showError('Failed to complete hand: ${e.toString()}');
     }
@@ -910,6 +945,159 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         }
       }
     }
+  }
+
+  /// Check for busted players after hand completion and prompt dealer for action
+  Future<void> _checkForBustedPlayers() async {
+    if (_gameState == null || _sessionManager == null) return;
+
+    // Count active players for finish position calculation
+    int activePlayerCount = 0;
+    for (int i = 0; i < 9; i++) {
+      if (_gameState!.players[i].isActive && _gameState!.players[i].currentStack > 0) {
+        activePlayerCount++;
+      }
+    }
+
+    // Find all busted players (stack <= 0)
+    final bustedPlayers = <int>[];
+    for (int seatNumber = 1; seatNumber <= 9; seatNumber++) {
+      final player = _gameState!.players[seatNumber - 1];
+      if (player.isActive && player.currentStack <= 0) {
+        bustedPlayers.add(seatNumber);
+      }
+    }
+
+    // Process each busted player
+    for (final seatNumber in bustedPlayers) {
+      final playerName = _sessionManager!.getPlayerName(seatNumber);
+      final action = await _showBustedPlayerDialog(playerName, seatNumber);
+
+      if (action == 'rebuy') {
+        // Give player the rebuy stack
+        _gameState!.players[seatNumber - 1].currentStack = _rebuyStack;
+        _sessionManager!.setPlayerStack(seatNumber, _rebuyStack);
+
+        // Update seat with new stack
+        await SeatService.updateChipStack(
+          clubId: widget.club.id,
+          tableId: widget.table.id,
+          seatNumber: seatNumber,
+          chipStack: _rebuyStack,
+        );
+
+        // Update local seat assignment to keep in sync
+        if (_seatAssignments.containsKey(seatNumber)) {
+          _seatAssignments[seatNumber] = _seatAssignments[seatNumber]!.copyWith(
+            chipStack: _rebuyStack,
+          );
+        }
+
+        // Emit stack update for rankings - player is back to active status
+        // This clears any previous finish position from being busted
+        _wsService.emitPlayerStackUpdate(
+          tableId: widget.table.id,
+          playerId: 'seat_${widget.table.id}_$seatNumber',
+          newStack: _rebuyStack.toInt(),
+          playerName: playerName,
+          seatNumber: seatNumber,
+          status: 'active', // Back in the game
+          finishPosition: null, // Clear previous finish position
+        );
+
+        _showSuccess('$playerName rebuys for ${_rebuyStack.toStringAsFixed(0)}');
+      } else {
+        // Calculate finish position: active players + busted players being processed
+        // If multiple players bust on same hand, they all get same position
+        final finishPosition = activePlayerCount + bustedPlayers.length;
+
+        // Remove player from game
+        _gameState!.players[seatNumber - 1].isActive = false;
+        _gameState!.players[seatNumber - 1].currentStack = 0;
+        _gameState!.players[seatNumber - 1].betThisRound = 0;
+        _sessionManager!.removePlayer(seatNumber);
+
+        // Clear the seat in Firebase
+        await SeatService.removeSeatOccupant(
+          clubId: widget.club.id,
+          tableId: widget.table.id,
+          seatNumber: seatNumber,
+        );
+
+        // Remove from local seat assignments to keep in sync
+        _seatAssignments.remove(seatNumber);
+
+        // Emit player removal for rankings (busted with finish position)
+        _wsService.emitPlayerStackUpdate(
+          tableId: widget.table.id,
+          playerId: 'seat_${widget.table.id}_$seatNumber',
+          newStack: 0,
+          playerName: playerName,
+          seatNumber: seatNumber,
+          status: 'busted',
+          finishPosition: finishPosition,
+        );
+
+        _showSuccess('$playerName finishes in ${_getOrdinal(finishPosition)} place');
+      }
+    }
+
+    // Update state if any players were processed
+    if (bustedPlayers.isNotEmpty) {
+      setState(() {});
+    }
+  }
+
+  /// Show dialog asking dealer if busted player is rebuying or leaving
+  Future<String> _showBustedPlayerDialog(String playerName, int seatNumber) async {
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber, color: Colors.orange, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '$playerName Busted!',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Player $playerName (Seat $seatNumber) has no chips remaining.',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Rebuy amount: ${_rebuyStack.toStringAsFixed(0)}',
+              style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'remove'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Remove Player'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, 'rebuy'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('Rebuy'),
+          ),
+        ],
+      ),
+    );
+
+    return result ?? 'remove';
   }
 
   Future<void> _endSession() async {
@@ -1071,6 +1259,23 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
     );
+  }
+
+  /// Get ordinal suffix for a number (1st, 2nd, 3rd, 4th, etc.)
+  String _getOrdinal(int number) {
+    if (number >= 11 && number <= 13) {
+      return '${number}th';
+    }
+    switch (number % 10) {
+      case 1:
+        return '${number}st';
+      case 2:
+        return '${number}nd';
+      case 3:
+        return '${number}rd';
+      default:
+        return '${number}th';
+    }
   }
 
   void _showSuccess(String message) {
