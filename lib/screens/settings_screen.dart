@@ -1,11 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:share_plus/share_plus.dart';
 import '../design_system/poker_friend_theme.dart';
-import '../services/logger_service.dart';
-import '../services/test_data_seed_service.dart';
-import 'debug_hand_viewer.dart';
+import '../services/club_seeder_service.dart';
+import '../services/club_service.dart';
+import '../models/club_member.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -194,7 +193,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 SizedBox(height: 24),
 
-                // Debug Logs Card
+                // Debug Section - Club Admin
                 Container(
                   padding: EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -210,12 +209,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: PokerFriendColors.red.withOpacity(0.1),
+                              color: PokerFriendColors.purple.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
-                              Icons.bug_report,
-                              color: PokerFriendColors.red,
+                              Icons.admin_panel_settings,
+                              color: PokerFriendColors.purple,
                               size: 20,
                             ),
                           ),
@@ -225,7 +224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Debug Logs',
+                                  'Club Admin',
                                   style: TextStyle(
                                     fontSize: 18,
                                     color: Colors.white,
@@ -234,7 +233,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 SizedBox(height: 2),
                                 Text(
-                                  'View session logs for debugging',
+                                  'Manage your club roles',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: PokerFriendColors.dark9,
@@ -246,54 +245,81 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                       SizedBox(height: 16),
-
-                      // View Logs Button
-                      _buildLogButton(
-                        icon: Icons.text_snippet,
-                        label: 'View Logs',
-                        onPressed: _viewLogs,
+                      _buildAdminButton(
+                        label: 'Become Admin of Gringster Room',
+                        onTap: () => _promoteToAdmin('Gringster Room'),
                       ),
-                      SizedBox(height: 12),
-
-                      // Share Logs Button
-                      _buildLogButton(
-                        icon: Icons.share,
-                        label: 'Share Logs',
-                        onPressed: _shareLogs,
+                      SizedBox(height: 8),
+                      _buildAdminButton(
+                        label: 'Become Admin of Poczekalia',
+                        onTap: () => _promoteToAdmin('Poczekalia'),
                       ),
-                      SizedBox(height: 12),
-
-                      // Clear Logs Button
-                      _buildLogButton(
-                        icon: Icons.delete_outline,
-                        label: 'Clear Logs',
-                        onPressed: _clearLogs,
-                        isDestructive: true,
+                      SizedBox(height: 8),
+                      _buildAdminButton(
+                        label: 'Become Admin of House of Cards',
+                        onTap: () => _promoteToAdmin('House of Cards'),
                       ),
-                      SizedBox(height: 12),
+                    ],
+                  ),
+                ),
 
-                      // Debug Hand Viewer Button
-                      _buildLogButton(
-                        icon: Icons.search,
-                        label: 'Debug Hand Viewer',
-                        onPressed: _openDebugHandViewer,
+                SizedBox(height: 24),
+
+                // Debug Section - Test Dealer Invitation
+                Container(
+                  padding: EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: PokerFriendColors.dark3,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: PokerFriendColors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.person_add,
+                              color: PokerFriendColors.green,
+                              size: 20,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Test Dealer Invitation',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'For testing deep link flow',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: PokerFriendColors.dark9,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 12),
-
-                      // Seed Test Data Button
-                      _buildLogButton(
-                        icon: Icons.data_array,
-                        label: 'Seed Test Data (50 Hands)',
-                        onPressed: _seedTestData,
-                      ),
-                      SizedBox(height: 12),
-
-                      // Cleanup Test Data Button
-                      _buildLogButton(
-                        icon: Icons.delete_sweep,
-                        label: 'Cleanup Test Data',
-                        onPressed: _cleanupTestData,
-                        isDestructive: true,
+                      SizedBox(height: 16),
+                      _buildAdminButton(
+                        label: 'Add jeyranisayevaa@gmail.com to Gringster Room',
+                        onTap: _addTestDealer,
                       ),
                     ],
                   ),
@@ -308,463 +334,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildLogButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-    bool isDestructive = false,
-  }) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: PokerFriendColors.dark1,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDestructive
-                ? PokerFriendColors.red.withOpacity(0.3)
-                : PokerFriendColors.dark4,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isDestructive ? PokerFriendColors.red : Colors.white,
-              size: 20,
-            ),
-            SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                color: isDestructive ? PokerFriendColors.red : Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.chevron_right,
-              color: PokerFriendColors.dark7,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _viewLogs() async {
-    try {
-      final logs = await LoggerService.exportLogs();
-      final logSize = await LoggerService.getLogFileSize();
-
-      if (!mounted) return;
-
-      showDialog(
-        context: context,
-        builder: (context) => Dialog(
-          backgroundColor: PokerFriendColors.dark2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Container(
-            constraints: BoxConstraints(maxHeight: 600),
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.text_snippet,
-                      color: PokerFriendColors.red,
-                      size: 24,
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Session Logs',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(Icons.close, color: Colors.white),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Size: ${logSize.toStringAsFixed(2)} MB',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: PokerFriendColors.dark9,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.dark1,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: SingleChildScrollView(
-                      child: Text(
-                        logs,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                          fontFamily: 'monospace',
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          await Clipboard.setData(ClipboardData(text: logs));
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Logs copied to clipboard'),
-                              backgroundColor: PokerFriendColors.dark3,
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: PokerFriendColors.dark3,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text('Copy to Clipboard'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error loading logs: $e'),
-          backgroundColor: PokerFriendColors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _shareLogs() async {
-    try {
-      final logPath = await LoggerService.getLogFilePath();
-      if (logPath != null) {
-        await Share.shareXFiles(
-          [XFile(logPath)],
-          subject: 'Poker Logger Session Logs',
-          text: 'Session logs from Poker Logger app',
-        );
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('No log file found'),
-            backgroundColor: PokerFriendColors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error sharing logs: $e'),
-          backgroundColor: PokerFriendColors.red,
-        ),
-      );
-    }
-  }
-
-  void _openDebugHandViewer() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => DebugHandViewerScreen()),
-    );
-  }
-
-  Future<void> _clearLogs() async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          'Clear All Logs?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          'This will permanently delete all session logs. This action cannot be undone.',
-          style: TextStyle(color: PokerFriendColors.dark9),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: PokerFriendColors.dark9),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: PokerFriendColors.red,
-            ),
-            child: Text('Clear Logs'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await LoggerService.clearLogs();
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Logs cleared successfully'),
-            backgroundColor: PokerFriendColors.dark3,
-          ),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error clearing logs: $e'),
-            backgroundColor: PokerFriendColors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _seedTestData() async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          'Seed Test Data?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'This will create:',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '• 5 opponents (FISH, TAG, LAG, NIT, MANIAC)\n'
-              '• 1 session with 50 hands\n'
-              '• Various scenarios (opens, 3bets, 4bets, mistakes)',
-              style: TextStyle(color: PokerFriendColors.dark9, height: 1.5),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Use this for testing Session Analytics.',
-              style: TextStyle(color: PokerFriendColors.dark9),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: PokerFriendColors.dark9),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: PokerFriendColors.green,
-            ),
-            child: Text('Seed Data'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        // Show loading indicator
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => Center(
-            child: Container(
-              padding: EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: PokerFriendColors.dark2,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(color: PokerFriendColors.green),
-                  SizedBox(height: 16),
-                  Text(
-                    'Seeding test data...',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-
-        await TestDataSeedService.seedTestData(force: true);
-
-        if (!mounted) return;
-        Navigator.pop(context); // Close loading dialog
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Test data seeded successfully! Check History for the new session.'),
-            backgroundColor: PokerFriendColors.green,
-            duration: Duration(seconds: 4),
-          ),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error seeding test data: $e'),
-            backgroundColor: PokerFriendColors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _cleanupTestData() async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          'Cleanup Test Data?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          'This will delete all test opponents (FISH Mike, TAG Sarah, etc.) and the test session with 50 hands.',
-          style: TextStyle(color: PokerFriendColors.dark9),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: PokerFriendColors.dark9),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: PokerFriendColors.red,
-            ),
-            child: Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        // Show loading indicator
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => Center(
-            child: Container(
-              padding: EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: PokerFriendColors.dark2,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(color: PokerFriendColors.red),
-                  SizedBox(height: 16),
-                  Text(
-                    'Cleaning up test data...',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-
-        await TestDataSeedService.cleanupTestData();
-
-        if (!mounted) return;
-        Navigator.pop(context); // Close loading dialog
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Test data cleaned up successfully!'),
-            backgroundColor: PokerFriendColors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error cleaning up test data: $e'),
-            backgroundColor: PokerFriendColors.red,
-          ),
-        );
-      }
-    }
-  }
-
   Widget _buildFeatureText(String text) {
     return Padding(
       padding: EdgeInsets.only(bottom: 4),
@@ -777,5 +346,146 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildAdminButton({
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          color: PokerFriendColors.dark1,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: PokerFriendColors.dark5),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.arrow_forward_ios,
+              color: PokerFriendColors.purple,
+              size: 14,
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addTestDealer() async {
+    const testEmail = 'jeyranisayevaa@gmail.com';
+    const clubName = 'Gringster Room';
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: CircularProgressIndicator(color: PokerFriendColors.green),
+      ),
+    );
+
+    try {
+      // Find the user by email
+      final userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: testEmail)
+          .limit(1)
+          .get();
+
+      if (userSnapshot.docs.isEmpty) {
+        throw Exception('User with email $testEmail not found. Make sure they have signed up first.');
+      }
+
+      final userData = userSnapshot.docs.first;
+      final userId = userData.id;
+      final displayName = userData.data()['displayName'] ?? 'Jeku';
+
+      // Find the Gringster Room club
+      final clubs = await ClubService.getClubs();
+      final club = clubs.firstWhere(
+        (c) => c.name == clubName,
+        orElse: () => throw Exception('Club "$clubName" not found'),
+      );
+
+      // Add user directly as dealer
+      await ClubService.addMemberToClub(
+        clubId: club.id,
+        userId: userId,
+        displayName: displayName,
+        email: testEmail,
+        role: ClubRole.dealer,
+      );
+
+      Navigator.pop(context); // Close loading
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$displayName is now a dealer in $clubName!'),
+          backgroundColor: PokerFriendColors.green,
+        ),
+      );
+    } catch (e) {
+      Navigator.pop(context); // Close loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: PokerFriendColors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _promoteToAdmin(String clubName) async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: CircularProgressIndicator(color: PokerFriendColors.purple),
+      ),
+    );
+
+    try {
+      final success = await ClubSeederService.promoteCurrentUserToAdmin(clubName);
+      Navigator.pop(context); // Close loading
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('You are now admin of $clubName!'),
+            backgroundColor: PokerFriendColors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to promote. Make sure you are a member of $clubName.'),
+            backgroundColor: PokerFriendColors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      Navigator.pop(context); // Close loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: PokerFriendColors.red,
+        ),
+      );
+    }
   }
 }

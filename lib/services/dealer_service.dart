@@ -4,6 +4,7 @@ import '../models/poker_table.dart';
 import 'auth_service.dart';
 import 'table_service.dart';
 import 'seat_service.dart';
+import 'event_service.dart';
 
 /// Service for managing dealer sessions and hand logging
 class DealerService {
@@ -23,6 +24,10 @@ class DealerService {
   }) async {
     final dealerId = AuthService.userId;
     if (dealerId == null) throw 'User not authenticated';
+
+    // End any existing active sessions on this table first
+    // This prevents multiple active sessions from coexisting
+    await _endExistingActiveSessions(clubId, tableId);
 
     final now = DateTime.now();
 
@@ -46,12 +51,20 @@ class DealerService {
       }
     }
 
+    // Find active event that includes this table (for live rankings)
+    final activeEvent = await EventService.getActiveEventForTable(clubId, tableId);
+    final eventId = activeEvent?.id;
+
+    // Use event's game type if available
+    final effectiveGameType = activeEvent?.gameType ?? gameType;
+
     final session = DealerSession(
       id: '',
       clubId: clubId,
       tableId: tableId,
       dealerId: dealerId,
       dealerName: AuthService.userDisplayName,
+      eventId: eventId,
       status: DealerSessionStatus.active,
       players: players,
       currentHandNumber: 0,
@@ -60,7 +73,7 @@ class DealerService {
       smallBlind: smallBlind,
       bigBlind: bigBlind,
       hasBBante: hasBBante,
-      gameType: gameType,
+      gameType: effectiveGameType,
       startTime: now,
       endTime: null,
     );
@@ -85,6 +98,7 @@ class DealerService {
       tableId: tableId,
       dealerId: dealerId,
       dealerName: AuthService.userDisplayName,
+      eventId: eventId,
       status: DealerSessionStatus.active,
       players: players,
       currentHandNumber: 0,
@@ -93,7 +107,7 @@ class DealerService {
       smallBlind: smallBlind,
       bigBlind: bigBlind,
       hasBBante: hasBBante,
-      gameType: gameType,
+      gameType: effectiveGameType,
       startTime: now,
       endTime: null,
     );
@@ -167,6 +181,35 @@ class DealerService {
     await TableService.clearTableSession(session.clubId, session.tableId);
   }
 
+  /// End any existing active sessions on a table before starting a new one
+  /// This prevents multiple active sessions from coexisting
+  static Future<void> _endExistingActiveSessions(String clubId, String tableId) async {
+    try {
+      final existingSessions = await _firestore
+          .collection(_dealerSessionsCollection)
+          .where('clubId', isEqualTo: clubId)
+          .where('tableId', isEqualTo: tableId)
+          .where('status', isEqualTo: DealerSessionStatus.active.value)
+          .get();
+
+      for (final doc in existingSessions.docs) {
+        try {
+          await endSession(doc.id);
+        } catch (e) {
+          // Log but continue - don't block new session creation
+          print('Error ending existing session ${doc.id}: $e');
+          // At minimum, mark it as ended
+          await _firestore
+              .collection(_dealerSessionsCollection)
+              .doc(doc.id)
+              .update({'status': DealerSessionStatus.ended.value});
+        }
+      }
+    } catch (e) {
+      print('Error checking for existing sessions: $e');
+    }
+  }
+
   /// Create a poker_sessions record for a player who participated in a dealer session
   /// This links the player's participation to their session history
   static Future<void> _createPlayerSessionRecord({
@@ -177,15 +220,34 @@ class DealerService {
     required int seatNumber,
     required DateTime endTime,
   }) async {
+    // Try to get event details for session name and game type
+    String sessionName = 'Table Session';
+    String gameType = dealerSession.gameType;
+
+    if (dealerSession.eventId != null) {
+      try {
+        final event = await EventService.getEvent(
+          dealerSession.clubId,
+          dealerSession.eventId!,
+        );
+        if (event != null) {
+          sessionName = event.name;
+          gameType = event.gameType;
+        }
+      } catch (e) {
+        print('Error fetching event for session name: $e');
+      }
+    }
+
     final sessionData = {
       'userId': playerId,
-      'sessionName': 'Table Session',
+      'sessionName': sessionName,
       'smallBlind': dealerSession.smallBlind,
       'bigBlind': dealerSession.bigBlind,
       'hasBBante': dealerSession.hasBBante,
       'playerCount': dealerSession.playerCount,
       'ourSeatNumber': seatNumber,
-      'gameType': dealerSession.gameType,
+      'gameType': gameType,
       'startTime': Timestamp.fromDate(dealerSession.startTime),
       'endTime': Timestamp.fromDate(endTime),
       'totalHands': dealerSession.currentHandNumber,
@@ -194,6 +256,7 @@ class DealerService {
       'dealerSessionId': sessionId,
       'clubId': dealerSession.clubId,
       'tableId': dealerSession.tableId,
+      if (dealerSession.eventId != null) 'eventId': dealerSession.eventId,
     };
 
     await _firestore.collection('poker_sessions').add(sessionData);
@@ -520,6 +583,7 @@ class DealerService {
         .where('clubId', isEqualTo: clubId)
         .where('tableId', isEqualTo: tableId)
         .where('status', isEqualTo: DealerSessionStatus.active.value)
+        .orderBy('startTime', descending: true)  // Get newest session first
         .limit(1)
         .get();
 
@@ -539,6 +603,7 @@ class DealerService {
         .where('clubId', isEqualTo: clubId)
         .where('tableId', isEqualTo: tableId)
         .where('status', isEqualTo: DealerSessionStatus.active.value)
+        .orderBy('startTime', descending: true)  // Get newest session first
         .limit(1)
         .snapshots()
         .map((snapshot) {

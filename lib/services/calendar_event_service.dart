@@ -13,6 +13,8 @@ class CalendarEventService {
     required String location,
     required DateTime date,
     required double buyIn,
+    String? clubId,       // Optional: link to club event
+    String? clubEventId,  // Optional: link to club event
   }) async {
     try {
       final userId = AuthService.userId;
@@ -27,6 +29,8 @@ class CalendarEventService {
         'date': Timestamp.fromDate(date),
         'buyIn': buyIn,
         'createdAt': FieldValue.serverTimestamp(),
+        if (clubId != null) 'clubId': clubId,
+        if (clubEventId != null) 'clubEventId': clubEventId,
       };
 
       final eventRef = await _firestore.collection(_eventsCollection).add(eventData);
@@ -43,6 +47,23 @@ class CalendarEventService {
       return eventRef.id;
     } catch (e) {
       print('Error creating event: $e');
+      rethrow;
+    }
+  }
+
+  // Delete an event by ID
+  static Future<void> deleteEventById(String eventId) async {
+    try {
+      final userId = AuthService.userId;
+      if (userId == null) throw 'User not authenticated';
+
+      // Cancel notifications for this event
+      await NotificationService.cancelEventNotifications(eventId);
+
+      await _firestore.collection(_eventsCollection).doc(eventId).delete();
+      print('Event deleted: $eventId');
+    } catch (e) {
+      print('Error deleting event by ID: $e');
       rethrow;
     }
   }
@@ -76,6 +97,8 @@ class CalendarEventService {
           'location': data['location'],
           'date': dateTimestamp?.toDate().toIso8601String() ?? DateTime.now().toIso8601String(),
           'buyIn': data['buyIn'],
+          'clubId': data['clubId'],
+          'clubEventId': data['clubEventId'],
         };
       }).toList();
 
@@ -138,6 +161,8 @@ class CalendarEventService {
               'location': data['location'],
               'date': eventDate.toIso8601String(),
               'buyIn': data['buyIn'],
+              'clubId': data['clubId'],
+              'clubEventId': data['clubEventId'],
             };
           })
           .where((event) => event != null)

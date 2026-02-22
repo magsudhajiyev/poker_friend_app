@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
@@ -7,7 +6,6 @@ import '../services/session_result_service.dart';
 import '../screens/settings_screen.dart';
 import '../screens/subscription_debug_screen.dart';
 import '../screens/dealer/dealer_home_screen.dart';
-import '../screens/player/qr_scan_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -701,73 +699,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          color: Color(0xFF9A9A9A),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Scan QR to Join Table
-                Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.only(bottom: 16),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const QRScanScreen()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF1F1F23),
-                      padding: EdgeInsets.all(20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF2A5C2A),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            Icons.qr_code_scanner,
-                            color: Color(0xFF5AC95A),
-                            size: 24,
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Scan QR to Join Table',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                'Join a live dealer session',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF9A9A9A),
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                         Icon(

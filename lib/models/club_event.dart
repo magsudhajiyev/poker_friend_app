@@ -2,45 +2,65 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Status of a club event
 enum EventStatus {
-  active,
+  scheduled,  // Event created but not started
+  active,     // Event is currently running
   paused,
   completed,
+  cancelled,
 }
 
 extension EventStatusExtension on EventStatus {
   String get displayName {
     switch (this) {
+      case EventStatus.scheduled:
+        return 'Scheduled';
       case EventStatus.active:
         return 'Active';
       case EventStatus.paused:
         return 'Paused';
       case EventStatus.completed:
         return 'Completed';
+      case EventStatus.cancelled:
+        return 'Cancelled';
     }
   }
 
   String get value {
     switch (this) {
+      case EventStatus.scheduled:
+        return 'scheduled';
       case EventStatus.active:
         return 'active';
       case EventStatus.paused:
         return 'paused';
       case EventStatus.completed:
         return 'completed';
+      case EventStatus.cancelled:
+        return 'cancelled';
     }
   }
 
   static EventStatus fromString(String? value) {
     switch (value?.toLowerCase()) {
+      case 'scheduled':
+        return EventStatus.scheduled;
       case 'paused':
         return EventStatus.paused;
       case 'completed':
         return EventStatus.completed;
+      case 'cancelled':
+        return EventStatus.cancelled;
       case 'active':
       default:
         return EventStatus.active;
     }
   }
+
+  /// Check if event can be viewed by spectators
+  bool get isSpectatable => this == EventStatus.active;
+
+  /// Check if event is over
+  bool get isFinished => this == EventStatus.completed || this == EventStatus.cancelled;
 }
 
 /// Represents a club event that groups multiple tables for ranking
@@ -56,6 +76,16 @@ class ClubEvent {
   final EventStatus status;
   final String createdBy; // Admin userId who created this event
 
+  // New fields for events system
+  final String? description;      // Event description
+  final String? location;         // Physical location
+  final double? buyInAmount;      // Buy-in cost
+  final double? startingStack;    // Starting stack for tournament
+  final int? maxPlayers;          // Capacity limit
+  final bool notifyMembers;       // Whether to send notifications
+  final DateTime createdAt;       // Creation timestamp
+  final String gameType;          // 'cash' or 'tournament'
+
   ClubEvent({
     required this.id,
     required this.clubId,
@@ -65,15 +95,35 @@ class ClubEvent {
     this.endTime,
     this.isPublic = false,
     this.accessCode,
-    this.status = EventStatus.active,
+    this.status = EventStatus.scheduled,
     required this.createdBy,
-  });
+    this.description,
+    this.location,
+    this.buyInAmount,
+    this.startingStack,
+    this.maxPlayers,
+    this.notifyMembers = true,
+    DateTime? createdAt,
+    this.gameType = 'cash',
+  }) : createdAt = createdAt ?? DateTime.now();
 
   /// Check if event is ongoing
-  bool get isOngoing => status != EventStatus.completed;
+  bool get isOngoing => status == EventStatus.active || status == EventStatus.paused;
+
+  /// Check if event is upcoming
+  bool get isUpcoming => status == EventStatus.scheduled && startTime.isAfter(DateTime.now());
+
+  /// Check if event is live
+  bool get isLive => status == EventStatus.active;
 
   /// Get table count
   int get tableCount => tableIds.length;
+
+  /// Check if event has capacity
+  bool get hasCapacity => maxPlayers != null;
+
+  /// Check if event is free
+  bool get isFree => buyInAmount == null || buyInAmount == 0;
 
   /// Factory constructor from Firestore document
   factory ClubEvent.fromFirestore(DocumentSnapshot doc) {
@@ -89,6 +139,14 @@ class ClubEvent {
       accessCode: data['accessCode'],
       status: EventStatusExtension.fromString(data['status']),
       createdBy: data['createdBy'] ?? '',
+      description: data['description'],
+      location: data['location'],
+      buyInAmount: (data['buyInAmount'] as num?)?.toDouble(),
+      startingStack: (data['startingStack'] as num?)?.toDouble(),
+      maxPlayers: data['maxPlayers'],
+      notifyMembers: data['notifyMembers'] ?? true,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+      gameType: data['gameType'] ?? 'cash',
     );
   }
 
@@ -105,6 +163,14 @@ class ClubEvent {
       accessCode: map['accessCode'],
       status: EventStatusExtension.fromString(map['status']),
       createdBy: map['createdBy'] ?? '',
+      description: map['description'],
+      location: map['location'],
+      buyInAmount: (map['buyInAmount'] as num?)?.toDouble(),
+      startingStack: (map['startingStack'] as num?)?.toDouble(),
+      maxPlayers: map['maxPlayers'],
+      notifyMembers: map['notifyMembers'] ?? true,
+      createdAt: map['createdAt'] != null ? DateTime.tryParse(map['createdAt']) : null,
+      gameType: map['gameType'] ?? 'cash',
     );
   }
 
@@ -120,6 +186,14 @@ class ClubEvent {
       'accessCode': accessCode,
       'status': status.value,
       'createdBy': createdBy,
+      'description': description,
+      'location': location,
+      'buyInAmount': buyInAmount,
+      'startingStack': startingStack,
+      'maxPlayers': maxPlayers,
+      'notifyMembers': notifyMembers,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'gameType': gameType,
     };
   }
 
@@ -136,6 +210,14 @@ class ClubEvent {
       'accessCode': accessCode,
       'status': status.value,
       'createdBy': createdBy,
+      'description': description,
+      'location': location,
+      'buyInAmount': buyInAmount,
+      'startingStack': startingStack,
+      'maxPlayers': maxPlayers,
+      'notifyMembers': notifyMembers,
+      'createdAt': createdAt.toIso8601String(),
+      'gameType': gameType,
     };
   }
 
@@ -143,22 +225,38 @@ class ClubEvent {
   ClubEvent copyWith({
     String? name,
     List<String>? tableIds,
+    DateTime? startTime,
     DateTime? endTime,
     bool? isPublic,
     String? accessCode,
     EventStatus? status,
+    String? description,
+    String? location,
+    double? buyInAmount,
+    double? startingStack,
+    int? maxPlayers,
+    bool? notifyMembers,
+    String? gameType,
   }) {
     return ClubEvent(
       id: id,
       clubId: clubId,
       name: name ?? this.name,
       tableIds: tableIds ?? this.tableIds,
-      startTime: startTime,
+      startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       isPublic: isPublic ?? this.isPublic,
       accessCode: accessCode ?? this.accessCode,
       status: status ?? this.status,
       createdBy: createdBy,
+      description: description ?? this.description,
+      location: location ?? this.location,
+      buyInAmount: buyInAmount ?? this.buyInAmount,
+      startingStack: startingStack ?? this.startingStack,
+      maxPlayers: maxPlayers ?? this.maxPlayers,
+      notifyMembers: notifyMembers ?? this.notifyMembers,
+      createdAt: createdAt,
+      gameType: gameType ?? this.gameType,
     );
   }
 }

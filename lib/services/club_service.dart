@@ -68,28 +68,30 @@ class ClubService {
     if (userId == null) return [];
 
     try {
-      // First get club IDs from the dealers document
+      // First try to get club IDs from the dealers document (faster)
       final dealerClubIds = await AuthService.getDealerClubIds();
 
-      if (dealerClubIds.isEmpty) {
-        // Fallback: Query clubs collection directly for membership
-        // This is less efficient but works as backup
-        return await _getClubsByMembership(userId);
-      }
-
-      // Fetch all clubs the user belongs to
-      final clubs = <Club>[];
-      for (final clubId in dealerClubIds) {
-        final club = await getClub(clubId);
-        if (club != null) {
-          clubs.add(club);
+      if (dealerClubIds.isNotEmpty) {
+        // Fetch all clubs the user belongs to
+        final clubs = <Club>[];
+        for (final clubId in dealerClubIds) {
+          final club = await getClub(clubId);
+          if (club != null) {
+            clubs.add(club);
+          }
+        }
+        if (clubs.isNotEmpty) {
+          return clubs;
         }
       }
 
-      return clubs;
+      // Fallback: Query clubs collection directly for membership
+      // This is more reliable but slower
+      return await _getClubsByMembership(userId);
     } catch (e) {
       print('Error getting clubs: $e');
-      return [];
+      // Ultimate fallback
+      return await _getClubsByMembership(userId);
     }
   }
 
@@ -194,6 +196,95 @@ class ClubService {
     return role?.canManageDealers ?? false;
   }
 
+  /// Check if user can manage events in this club
+  static Future<bool> canManageEvents(String clubId) async {
+    final userId = AuthService.userId;
+    if (userId == null) return false;
+
+    final role = await getMemberRole(clubId, userId);
+    // Owners and admins can manage events
+    return role == ClubRole.owner || role == ClubRole.admin;
+  }
+
+  /// Get all member user IDs for a club (for notifications)
+  static Future<List<String>> getMemberUserIds(String clubId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_membersSubcollection)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => doc.data()['userId'] as String?)
+          .where((userId) => userId != null)
+          .cast<String>()
+          .toList();
+    } catch (e) {
+      print('Error getting member user IDs: $e');
+      return [];
+    }
+  }
+
+  /// Get member count for a club
+  static Future<int> getMemberCount(String clubId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_membersSubcollection)
+          .count()
+          .get();
+
+      return snapshot.count ?? 0;
+    } catch (e) {
+      print('Error getting member count: $e');
+      return 0;
+    }
+  }
+
+  /// Watch members of a club in real-time
+  static Stream<List<ClubMember>> watchMembers(String clubId) {
+    return _firestore
+        .collection(_clubsCollection)
+        .doc(clubId)
+        .collection(_membersSubcollection)
+        .orderBy('joinedAt', descending: false)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => ClubMember.fromFirestore(doc)).toList());
+  }
+
+  /// Add a user as a member of a club
+  static Future<void> addMemberToClub({
+    required String clubId,
+    required String userId,
+    required String displayName,
+    String? email,
+    ClubRole role = ClubRole.player,
+  }) async {
+    final now = DateTime.now();
+
+    // Add to club's members subcollection
+    await _firestore
+        .collection(_clubsCollection)
+        .doc(clubId)
+        .collection(_membersSubcollection)
+        .add(
+          ClubMember(
+            id: '',
+            userId: userId,
+            displayName: displayName,
+            email: email,
+            role: role,
+            joinedAt: now,
+          ).toFirestore(),
+        );
+
+    // Add club to user's dealers document
+    await _addClubToDealer(userId, clubId);
+  }
+
   /// Add a club ID to a dealer's document
   static Future<void> _addClubToDealer(String userId, String clubId) async {
     final dealerRef = _firestore.collection(_dealersCollection).doc(userId);
@@ -220,6 +311,97 @@ class ClubService {
     await dealerRef.update({
       'clubIds': FieldValue.arrayRemove([clubId]),
     });
+  }
+
+  /// Update a member's role in a club
+  static Future<void> updateMemberRole({
+    required String clubId,
+    required String userId,
+    required ClubRole newRole,
+  }) async {
+    try {
+      // Find the member document
+      final snapshot = await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_membersSubcollection)
+          .where('userId', isEqualTo: userId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        throw 'Member not found in club';
+      }
+
+      // Update the role
+      await snapshot.docs.first.reference.update({
+        'role': newRole.value,
+      });
+    } catch (e) {
+      print('Error updating member role: $e');
+      rethrow;
+    }
+  }
+
+  /// Get a member by userId
+  static Future<ClubMember?> getMember(String clubId, String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_membersSubcollection)
+          .where('userId', isEqualTo: userId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return ClubMember.fromFirestore(snapshot.docs.first);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting member: $e');
+      return null;
+    }
+  }
+
+  /// Find club by name
+  static Future<Club?> findClubByName(String name) async {
+    try {
+      final snapshot = await _firestore
+          .collection(_clubsCollection)
+          .where('name', isEqualTo: name)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return Club.fromFirestore(snapshot.docs.first);
+      }
+      return null;
+    } catch (e) {
+      print('Error finding club by name: $e');
+      return null;
+    }
+  }
+
+  /// Find member by display name in a club
+  static Future<ClubMember?> findMemberByName(String clubId, String displayName) async {
+    try {
+      final snapshot = await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_membersSubcollection)
+          .where('displayName', isEqualTo: displayName)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return ClubMember.fromFirestore(snapshot.docs.first);
+      }
+      return null;
+    } catch (e) {
+      print('Error finding member by name: $e');
+      return null;
+    }
   }
 
   /// Listen to club updates in real-time

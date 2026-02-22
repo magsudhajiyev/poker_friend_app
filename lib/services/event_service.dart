@@ -5,6 +5,8 @@ import '../models/club_event.dart';
 import '../models/event_ranking.dart';
 import '../config/app_config.dart';
 import 'auth_service.dart';
+import 'club_notification_service.dart';
+import 'dealer_service.dart';
 
 /// Service for managing club events and live rankings
 class EventService {
@@ -12,7 +14,7 @@ class EventService {
   static const String _clubsCollection = 'clubs';
   static const String _eventsSubcollection = 'events';
 
-  /// Create a new event for a club
+  /// Create a new event for a club (legacy method for compatibility)
   static Future<ClubEvent> createEvent({
     required String clubId,
     required String name,
@@ -20,42 +22,100 @@ class EventService {
     bool isPublic = false,
     String? accessCode,
   }) async {
+    return createEventWithDetails(
+      clubId: clubId,
+      name: name,
+      startTime: DateTime.now(),
+      tableIds: tableIds,
+      isPublic: isPublic,
+      accessCode: accessCode,
+      notifyMembers: false,  // Legacy behavior - no notification
+    );
+  }
+
+  /// Create a new event with full details and optional member notification
+  static Future<ClubEvent> createEventWithDetails({
+    required String clubId,
+    required String name,
+    required DateTime startTime,
+    List<String> tableIds = const [],
+    String? description,
+    String? location,
+    DateTime? endTime,
+    double? buyInAmount,
+    double? startingStack,
+    int? maxPlayers,
+    bool isPublic = false,
+    String? accessCode,
+    bool notifyMembers = true,
+    String gameType = 'cash',
+  }) async {
     final userId = AuthService.userId;
     if (userId == null) throw 'User not authenticated';
 
     final now = DateTime.now();
+
+    final eventData = ClubEvent(
+      id: '',
+      clubId: clubId,
+      name: name,
+      tableIds: tableIds,
+      startTime: startTime,
+      endTime: endTime,
+      isPublic: isPublic,
+      accessCode: accessCode,
+      status: EventStatus.scheduled,
+      createdBy: userId,
+      description: description,
+      location: location,
+      buyInAmount: buyInAmount,
+      startingStack: startingStack,
+      maxPlayers: maxPlayers,
+      notifyMembers: notifyMembers,
+      createdAt: now,
+      gameType: gameType,
+    );
 
     // Create in Firestore
     final eventRef = await _firestore
         .collection(_clubsCollection)
         .doc(clubId)
         .collection(_eventsSubcollection)
-        .add({
-      'clubId': clubId,
-      'name': name,
-      'tableIds': tableIds,
-      'startTime': Timestamp.fromDate(now),
-      'endTime': null,
-      'isPublic': isPublic,
-      'accessCode': accessCode,
-      'status': 'active',
-      'createdBy': userId,
-    });
+        .add(eventData.toFirestore());
 
     final event = ClubEvent(
       id: eventRef.id,
       clubId: clubId,
       name: name,
       tableIds: tableIds,
-      startTime: now,
+      startTime: startTime,
+      endTime: endTime,
       isPublic: isPublic,
       accessCode: accessCode,
-      status: EventStatus.active,
+      status: EventStatus.scheduled,
       createdBy: userId,
+      description: description,
+      location: location,
+      buyInAmount: buyInAmount,
+      startingStack: startingStack,
+      maxPlayers: maxPlayers,
+      notifyMembers: notifyMembers,
+      createdAt: now,
+      gameType: gameType,
     );
 
-    // Also register with backend for real-time tracking
-    await _registerEventWithBackend(event);
+    // Send notification to club members if enabled
+    if (notifyMembers) {
+      await ClubNotificationService.notifyEventCreated(
+        clubId: clubId,
+        event: event,
+      );
+    }
+
+    // Also register with backend for real-time tracking if it has tables
+    if (tableIds.isNotEmpty) {
+      await _registerEventWithBackend(event);
+    }
 
     return event;
   }
@@ -103,21 +163,164 @@ class EventService {
     }
   }
 
-  /// Get active events for a club
+  /// Get active (live) events for a club
   static Future<List<ClubEvent>> getActiveEvents(String clubId) async {
     try {
+      // Fetch all active events (avoid composite index requirement)
       final snapshot = await _firestore
           .collection(_clubsCollection)
           .doc(clubId)
           .collection(_eventsSubcollection)
           .where('status', isEqualTo: 'active')
-          .orderBy('startTime', descending: true)
           .get();
 
-      return snapshot.docs.map((doc) => ClubEvent.fromFirestore(doc)).toList();
+      // Sort locally by start time
+      final events = snapshot.docs
+          .map((doc) => ClubEvent.fromFirestore(doc))
+          .toList();
+      events.sort((a, b) => b.startTime.compareTo(a.startTime));
+
+      return events;
     } catch (e) {
       print('Error getting active events: $e');
       return [];
+    }
+  }
+
+  /// Get active event that includes a specific table
+  /// Returns the first active event that contains the given tableId
+  static Future<ClubEvent?> getActiveEventForTable(String clubId, String tableId) async {
+    try {
+      // Get all active events for the club
+      final activeEvents = await getActiveEvents(clubId);
+
+      // Find the first event that includes this table
+      for (final event in activeEvents) {
+        if (event.tableIds.contains(tableId)) {
+          return event;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      print('Error getting active event for table: $e');
+      return null;
+    }
+  }
+
+  /// Get upcoming (scheduled) events for a club
+  static Future<List<ClubEvent>> getUpcomingEvents(String clubId) async {
+    try {
+      // Fetch all scheduled events (avoid composite index requirement)
+      final snapshot = await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_eventsSubcollection)
+          .where('status', isEqualTo: 'scheduled')
+          .get();
+
+      // Sort locally to avoid composite index
+      final events = snapshot.docs
+          .map((doc) => ClubEvent.fromFirestore(doc))
+          .toList();
+
+      // Sort by start time (soonest first)
+      events.sort((a, b) => a.startTime.compareTo(b.startTime));
+
+      return events;
+    } catch (e) {
+      print('Error getting upcoming events: $e');
+      return [];
+    }
+  }
+
+  /// Get past (completed) events for a club
+  static Future<List<ClubEvent>> getPastEvents(String clubId, {int limit = 20}) async {
+    try {
+      // Fetch all events and filter locally (avoid composite index)
+      final snapshot = await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_eventsSubcollection)
+          .get();
+
+      // Filter for completed/cancelled and sort locally
+      final events = snapshot.docs
+          .map((doc) => ClubEvent.fromFirestore(doc))
+          .where((e) => e.status == EventStatus.completed || e.status == EventStatus.cancelled)
+          .toList();
+
+      // Sort by start time (most recent first)
+      events.sort((a, b) => b.startTime.compareTo(a.startTime));
+
+      // Apply limit
+      return events.take(limit).toList();
+    } catch (e) {
+      print('Error getting past events: $e');
+      return [];
+    }
+  }
+
+  /// Start an event (change status from scheduled to active)
+  static Future<void> startEvent(String clubId, String eventId) async {
+    await updateEvent(clubId, eventId, status: EventStatus.active);
+
+    // Send notification that event has started
+    final event = await getEvent(clubId, eventId);
+    if (event != null && event.notifyMembers) {
+      await ClubNotificationService.notifyEventStarted(
+        clubId: clubId,
+        event: event,
+      );
+    }
+  }
+
+  /// Cancel an event
+  static Future<void> cancelEvent(String clubId, String eventId) async {
+    final event = await getEvent(clubId, eventId);
+
+    // End all active dealer sessions for this event first
+    await _endEventDealerSessions(eventId);
+
+    await updateEvent(clubId, eventId, status: EventStatus.cancelled);
+
+    // Send notification that event was cancelled
+    if (event != null && event.notifyMembers) {
+      await ClubNotificationService.notifyEventCancelled(
+        clubId: clubId,
+        event: event,
+      );
+    }
+  }
+
+  /// Complete an event (finish a live event)
+  static Future<void> completeEvent(String clubId, String eventId) async {
+    // End all active dealer sessions for this event first
+    await _endEventDealerSessions(eventId);
+
+    await updateEvent(clubId, eventId, status: EventStatus.completed);
+  }
+
+  /// End all active dealer sessions associated with an event
+  static Future<void> _endEventDealerSessions(String eventId) async {
+    try {
+      // Query all active dealer sessions with this eventId
+      final sessions = await _firestore
+          .collection('dealer_sessions')
+          .where('eventId', isEqualTo: eventId)
+          .where('status', isEqualTo: 'active')
+          .get();
+
+      // End each session (this also clears seats and table state)
+      for (final doc in sessions.docs) {
+        try {
+          await DealerService.endSession(doc.id);
+        } catch (e) {
+          print('Error ending dealer session ${doc.id}: $e');
+        }
+      }
+    } catch (e) {
+      print('Error ending event dealer sessions: $e');
     }
   }
 

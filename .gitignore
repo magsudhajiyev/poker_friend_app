@@ -59,4 +59,5 @@ android/app/google-services.json
 diary/
 
 # Node.js dependencies
+node_modules/table_1_qr.html
 node_modules/

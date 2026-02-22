@@ -20,6 +20,7 @@ import '../../services/continuous_speech_service.dart';
 import '../../services/soniox_service.dart';
 import '../../utils/poker_positions.dart';
 import '../../widgets/board_cards_dialog.dart';
+import '../../widgets/all_in_board_cards_dialog.dart';
 import '../../widgets/winner_selection_dialog.dart';
 import '../../widgets/multi_pot_winner_dialog.dart';
 // Removed: showdown_dialog - dealers don't enter player hole cards
@@ -244,7 +245,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     }
   }
 
-  List<int> get _activePlayers => _gameState!.getActivePlayers();
+  List<int> get _activePlayers => _gameState?.getActivePlayers() ?? [];
 
   Future<void> _startNewHand() async {
     if (_isLoading) return;
@@ -429,6 +430,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   void _handleBettingRoundComplete() {
+    // Guard: Check state validity
+    if (_gameState == null) {
+      debugPrint('_handleBettingRoundComplete: _gameState is null, skipping');
+      return;
+    }
+
     // Check if we should auto-advance to showdown (all-in scenario)
     if (_gameState!.shouldAutoAdvanceToShowdown()) {
       _showAllInBoardCardsDialog();
@@ -523,55 +530,68 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       debugPrint('_showAllInBoardCardsDialog: Dialog already showing, skipping');
       return;
     }
+
+    // Early return if state is invalid
+    if (_gameState == null || _sessionManager == null) {
+      debugPrint('_showAllInBoardCardsDialog: state is null, skipping');
+      return;
+    }
+
     _isShowingBoardCardsDialog = true;
 
     try {
-      // When all-in, we need to deal remaining board cards
-      final currentRound = _gameState!.currentRound;
+      // Save pot for current street before showing dialog
+      _sessionManager!.savePotForStreet(_gameState!.currentRound, _gameState!.currentPot);
 
-      // Show dialog to enter all remaining board cards at once
-      await showDialog<List<String>>(
+      // Show single dialog for all remaining board cards (uses existing AllInBoardCardsDialog)
+      final boardCards = await showDialog<BoardCards>(
         context: context,
         barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF1E1E2E),
-          title: const Text('All-In - Enter Remaining Board', style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'All players are all-in. Enter the remaining board cards.',
-                style: TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Current street: ${currentRound.name.toUpperCase()}',
-                style: TextStyle(color: Colors.amber),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, <String>[]),
-              child: const Text('Skip Cards'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, <String>['Ac', 'Kc', 'Qc', '2h', '3d']), // Placeholder
-              child: const Text('Continue to Showdown'),
-            ),
-          ],
+        builder: (context) => AllInBoardCardsDialog(
+          existingBoardCards: _sessionManager!.currentHand?.boardCards,
         ),
       );
 
-      // Auto-advance through remaining streets
-      while (_gameState!.currentRound != BettingRound.river) {
-        _gameState!.autoAdvanceToNextStreet();
+      // Guard after dialog returns
+      if (!mounted) {
+        debugPrint('_showAllInBoardCardsDialog: Widget disposed after dialog, skipping');
+        return;
       }
+      if (_gameState == null || _sessionManager == null) {
+        debugPrint('_showAllInBoardCardsDialog: state became null after dialog, skipping');
+        return;
+      }
+
+      if (boardCards == null) {
+        // User cancelled
+        debugPrint('_showAllInBoardCardsDialog: User cancelled board cards dialog');
+        return;
+      }
+
+      // Update board cards in session manager
+      if (_sessionManager!.currentHand != null) {
+        _sessionManager!.currentHand!.boardCards = boardCards;
+      }
+
+      // Sync board cards to Firestore for player screens
+      final handId = _dealerSession.currentHandId;
+      if (handId != null && handId.isNotEmpty) {
+        await DealerService.setBoardCards(
+          sessionId: _dealerSession.id,
+          handId: handId,
+          flop: boardCards.flop.isNotEmpty ? boardCards.flop : null,
+          turn: boardCards.turn,
+          river: boardCards.river,
+        );
+      }
+
+      // Skip to river (all cards are now entered)
+      _gameState!.currentRound = BettingRound.river;
       _gameState!.bettingRoundComplete = true;
 
       setState(() {});
 
-      // Go to showdown
+      // Go to showdown for winner selection
       _handleShowdown();
     } finally {
       _isShowingBoardCardsDialog = false;
@@ -579,6 +599,16 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   void _handleShowdown() async {
+    // Guard: Early return if state is invalid
+    if (_gameState == null || _sessionManager == null) {
+      debugPrint('_handleShowdown: State is null, skipping');
+      return;
+    }
+    if (!mounted) {
+      debugPrint('_handleShowdown: Widget not mounted, skipping');
+      return;
+    }
+
     // Mark as reached showdown
     if (_sessionManager!.currentHand != null) {
       _sessionManager!.currentHand!.reachedShowdown = true;
@@ -586,6 +616,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     // Get active players for winner selection
     final activePlayers = _activePlayers;
+
+    // Guard: Check for valid active players
+    if (activePlayers.isEmpty) {
+      debugPrint('_handleShowdown: No active players, skipping');
+      return;
+    }
 
     if (activePlayers.length == 1) {
       // Only one player left - they win automatically
@@ -595,6 +631,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     // Note: Player hole cards are entered by players themselves on their devices
     // Dealer only needs to select the winner
+
+    // Guard: Check state again before calculating pots
+    if (_gameState == null) {
+      debugPrint('_handleShowdown: _gameState became null, skipping');
+      return;
+    }
 
     // Check for side pots
     final sidePots = _gameState!.calculateSidePots();
@@ -609,8 +651,15 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   void _completeHandAutomatically() async {
+    // Guard: Check for valid active players
+    final activePlayers = _activePlayers;
+    if (activePlayers.isEmpty) {
+      debugPrint('_completeHandAutomatically: No active players, skipping');
+      return;
+    }
+
     // Single winner - everyone else folded
-    final winner = _activePlayers.first;
+    final winner = activePlayers.first;
     await _completeHand(winner);
   }
 

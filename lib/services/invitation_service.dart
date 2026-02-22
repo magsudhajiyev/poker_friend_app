@@ -1,8 +1,10 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/club_invitation.dart';
 import '../models/club_member.dart';
 import 'auth_service.dart';
 import 'club_service.dart';
+import 'email_service.dart';
 
 /// Service for managing club invitations
 class InvitationService {
@@ -47,6 +49,19 @@ class InvitationService {
         .doc(clubId)
         .collection(_invitationsSubcollection)
         .add(invitation.toFirestore());
+
+    // Send invitation email
+    final emailSent = await EmailService.sendInvitationEmail(
+      toEmail: email.toLowerCase().trim(),
+      clubName: clubName,
+      clubId: clubId,
+      invitationId: ref.id,
+      inviterName: AuthService.userDisplayName ?? 'A club admin',
+    );
+
+    if (!emailSent) {
+      print('Warning: Invitation created but email failed to send');
+    }
 
     return ClubInvitation(
       id: ref.id,

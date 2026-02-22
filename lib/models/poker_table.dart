@@ -42,6 +42,7 @@ class PokerTable {
   final String? dealerId;  // Currently assigned dealer
   final String? currentSessionId;  // Active dealer session
   final Map<int, String> qrCodes;  // seat number -> QR code data
+  final String? tableQRCode;  // Table-level QR code for dealers to scan
   final DateTime createdAt;
 
   PokerTable({
@@ -53,6 +54,7 @@ class PokerTable {
     this.dealerId,
     this.currentSessionId,
     this.qrCodes = const {},
+    this.tableQRCode,
     required this.createdAt,
   });
 
@@ -68,6 +70,7 @@ class PokerTable {
       dealerId: data['dealerId'],
       currentSessionId: data['currentSessionId'],
       qrCodes: _parseQrCodes(data['qrCodes']),
+      tableQRCode: data['tableQRCode'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -83,6 +86,7 @@ class PokerTable {
       dealerId: map['dealerId'],
       currentSessionId: map['currentSessionId'],
       qrCodes: _parseQrCodes(map['qrCodes']),
+      tableQRCode: map['tableQRCode'],
       createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
     );
   }
@@ -107,6 +111,7 @@ class PokerTable {
       'dealerId': dealerId,
       'currentSessionId': currentSessionId,
       'qrCodes': qrCodes.map((key, value) => MapEntry(key.toString(), value)),
+      'tableQRCode': tableQRCode,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -122,6 +127,7 @@ class PokerTable {
       'dealerId': dealerId,
       'currentSessionId': currentSessionId,
       'qrCodes': qrCodes.map((key, value) => MapEntry(key.toString(), value)),
+      'tableQRCode': tableQRCode,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -133,6 +139,7 @@ class PokerTable {
     String? dealerId,
     String? currentSessionId,
     Map<int, String>? qrCodes,
+    String? tableQRCode,
   }) {
     return PokerTable(
       id: id,
@@ -143,6 +150,7 @@ class PokerTable {
       dealerId: dealerId ?? this.dealerId,
       currentSessionId: currentSessionId ?? this.currentSessionId,
       qrCodes: qrCodes ?? this.qrCodes,
+      tableQRCode: tableQRCode ?? this.tableQRCode,
       createdAt: createdAt,
     );
   }

@@ -49,5 +49,19 @@
 	<string>Camera access is required to scan QR codes for joining poker tables.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is required for voice commands to log poker actions.</string>
+	<!-- Deep linking URL schemes for dealer invitations -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.pokerlogger.invite</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>pkr</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

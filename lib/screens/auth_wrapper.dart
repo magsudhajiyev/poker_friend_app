@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
+import '../services/deep_link_service.dart';
 import 'intro_screen.dart';
 import 'home_screen.dart';
 
@@ -55,6 +56,13 @@ class AuthWrapper extends StatelessWidget {
         
         // User is signed in
         if (snapshot.hasData && snapshot.data != null) {
+          // Ensure user document exists (safety net for all users)
+          AuthService.ensureUserDocument();
+
+          // Process any pending deep link invitations
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            DeepLinkService.processPendingInvitation();
+          });
           return HomeScreen();
         }
         

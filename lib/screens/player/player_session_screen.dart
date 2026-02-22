@@ -53,6 +53,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   List<Map<String, dynamic>> _actions = [];
   Map<String, dynamic>? _boardCards;
   bool _isHandActive = false;
+  bool _isShowingExitDialog = false;  // Prevent duplicate exit dialogs
 
   // Player input (persisted per hand)
   String? _myCard1;
@@ -91,17 +92,24 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
   Future<void> _initialize() async {
     try {
-      // Watch seat updates
+      // Watch seat updates - also detect if player is removed by dealer
       _seatSubscription = SeatService.watchSeat(
         clubId: widget.clubId,
         tableId: widget.tableId,
         seatNumber: widget.seatNumber,
       ).listen((seat) {
-        if (mounted && seat != null) {
-          setState(() {
-            _myStack = seat.chipStack ?? 0;
-          });
+        if (!mounted) return;
+
+        if (seat == null || !seat.isOccupied || seat.playerId != AuthService.userId) {
+          // Player was removed from the seat by dealer
+          _showRemovedFromTableDialog();
+          return;
         }
+
+        // Update chip stack
+        setState(() {
+          _myStack = seat.chipStack ?? 0;
+        });
       });
 
       // Watch dealer session
@@ -132,6 +140,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
     if (session != null) {
       final isFirstLoad = _session == null;
+      final sessionChanged = _session != null && _session!.id != session.id;
       final oldHandId = _session?.currentHandId;
       final newHandId = session.currentHandId;
 
@@ -140,8 +149,17 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         _sessionStatus = session.status;
       });
 
-      // On first load, fetch all existing completed hands from Firestore
-      if (isFirstLoad) {
+      // On first load OR when session changes, fetch hands from the new session
+      if (isFirstLoad || sessionChanged) {
+        if (sessionChanged) {
+          // Clear old history when switching to a new session
+          setState(() {
+            _handHistory = [];
+            _currentHand = null;
+            _actions = [];
+            _boardCards = null;
+          });
+        }
         _loadExistingHands(session.id);
       }
 
@@ -327,6 +345,9 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   }
 
   void _showSessionEndedDialog() {
+    if (_isShowingExitDialog) return;
+    _isShowingExitDialog = true;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -338,6 +359,41 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         ),
         content: const Text(
           'The dealer has ended this session.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRemovedFromTableDialog() {
+    if (_isShowingExitDialog) return;
+    _isShowingExitDialog = true;
+
+    // Cancel subscriptions to prevent further updates
+    _sessionSubscription?.cancel();
+    _handSubscription?.cancel();
+    _seatSubscription?.cancel();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: const Text(
+          'Removed from Table',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'You have been removed from the table by the dealer.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [

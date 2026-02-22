@@ -7,7 +7,6 @@ import '../../services/table_service.dart';
 import '../../services/dealer_service.dart';
 import '../../services/auth_service.dart';
 import 'dealer_table_screen.dart';
-import '../club/event_management_screen.dart';
 
 /// Home screen for dealers to select a club and table
 class DealerHomeScreen extends StatefulWidget {
@@ -220,41 +219,18 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildSectionHeader('Tables'),
-                  Row(
-                    children: [
-                      // Events button
-                      TextButton.icon(
-                        onPressed: () {
-                          final club = _clubs.where((c) => c.id == _selectedClubId).firstOrNull;
-                          if (club != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EventManagementScreen(club: club),
-                              ),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.leaderboard, size: 18),
-                        label: const Text('Events'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.amber,
-                        ),
+                  if (_isAdmin)
+                    TextButton.icon(
+                      onPressed: () {
+                        final club = _clubs.where((c) => c.id == _selectedClubId).firstOrNull;
+                        if (club != null) _showCreateTableDialog(club);
+                      },
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Add Table'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blue,
                       ),
-                      if (_isAdmin)
-                        TextButton.icon(
-                          onPressed: () {
-                            final club = _clubs.where((c) => c.id == _selectedClubId).firstOrNull;
-                            if (club != null) _showCreateTableDialog(club);
-                          },
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Add Table'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.blue,
-                          ),
-                        ),
-                    ],
-                  ),
+                    ),
                 ],
               ),
               const SizedBox(height: 12),

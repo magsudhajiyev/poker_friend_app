@@ -57,6 +57,7 @@ class ClubInvitation {
   final String clubId;
   final String? clubName;  // Denormalized for display
   final String email;
+  final String? token;  // Unique token for shareable link (one-time use)
   final ClubRole role;
   final InvitationStatus status;
   final String invitedBy;  // userId of person who sent invitation
@@ -69,6 +70,7 @@ class ClubInvitation {
     required this.clubId,
     this.clubName,
     required this.email,
+    this.token,
     required this.role,
     this.status = InvitationStatus.pending,
     required this.invitedBy,
@@ -76,6 +78,9 @@ class ClubInvitation {
     required this.createdAt,
     required this.expiresAt,
   });
+
+  /// Get shareable invitation code (last 8 chars of token for readability)
+  String? get inviteCode => token;
 
   /// Check if invitation is expired
   bool get isExpired => DateTime.now().isAfter(expiresAt);

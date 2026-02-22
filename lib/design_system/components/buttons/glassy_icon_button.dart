@@ -29,6 +29,7 @@ class GlassyIconButton extends StatelessWidget {
   final Color? backgroundColor;
   final Color? iconColor;
   final bool showBadge;
+  final int? badgeCount;  // Optional count to display in badge
   final Color? badgeColor;
 
   const GlassyIconButton({
@@ -41,6 +42,7 @@ class GlassyIconButton extends StatelessWidget {
     this.backgroundColor,
     this.iconColor,
     this.showBadge = false,
+    this.badgeCount,
     this.badgeColor,
   }) : assert(icon != null || imagePath != null, 'Either icon or imagePath must be provided');
 
@@ -89,6 +91,11 @@ class GlassyIconButton extends StatelessWidget {
     if (!showBadge) return button;
 
     // Wrap with Stack to show badge
+    final bool hasCount = badgeCount != null && badgeCount! > 0;
+    final String badgeText = hasCount
+        ? (badgeCount! > 9 ? '9+' : '$badgeCount')
+        : '';
+
     return SizedBox(
       width: buttonSize,
       height: buttonSize,
@@ -97,11 +104,14 @@ class GlassyIconButton extends StatelessWidget {
         children: [
           button,
           Positioned(
-            top: 0,
-            right: 0,
+            top: -2,
+            right: -2,
             child: Container(
-              width: 10,
-              height: 10,
+              constraints: BoxConstraints(
+                minWidth: hasCount ? 18 : 10,
+                minHeight: hasCount ? 18 : 10,
+              ),
+              padding: hasCount ? const EdgeInsets.symmetric(horizontal: 4, vertical: 2) : EdgeInsets.zero,
               decoration: BoxDecoration(
                 color: badgeColor ?? const Color(0xFFFF3B30),
                 shape: BoxShape.circle,
@@ -110,6 +120,19 @@ class GlassyIconButton extends StatelessWidget {
                   width: 1.5,
                 ),
               ),
+              child: hasCount
+                  ? Center(
+                      child: Text(
+                        badgeText,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          height: 1,
+                        ),
+                      ),
+                    )
+                  : null,
             ),
           ),
         ],

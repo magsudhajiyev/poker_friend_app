@@ -3,9 +3,14 @@ import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import '../services/calendar_event_service.dart';
 import '../services/notification_service.dart';
+import '../services/club_service.dart';
+import '../services/event_service.dart';
+import '../models/club.dart';
+import '../models/club_event.dart';
 import '../design_system/design_system.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/event_success_popup.dart';
+import 'club/event_detail_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -905,6 +910,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   onRightPressed: _showAddEventDialog,
                 ),
 
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
             SizedBox(height: 24),
 
             // Date Selector
@@ -1048,6 +1058,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
 
             SizedBox(height: 16),
+
+            // Events for selected date
+            _buildEventsForSelectedDate(),
+
+            SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
             ],
           ),
         ),
@@ -1185,6 +1204,69 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
+  Widget _buildEventsForSelectedDate() {
+    final eventsForDate = _getEventsForDate(selectedDate);
+
+    if (eventsForDate.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Events on ${DateFormat('MMM d, yyyy').format(selectedDate)}',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: Color(0xFFEBEBEB),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Color(0xFF191E1A),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  'No events scheduled',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    color: Color(0xFF9A9A9A),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Events on ${DateFormat('MMM d, yyyy').format(selectedDate)}',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              color: Color(0xFFEBEBEB),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 12),
+          ...eventsForDate.map((event) => _buildEventCard(event)).toList(),
+        ],
+      ),
+    );
+  }
+
   Widget _buildYearPicker() {
     final currentYear = DateTime.now().year;
     final startYear = currentYear - 10;
@@ -1255,72 +1337,130 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildEventCard(PokerEvent event) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 8),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 40,
-            decoration: BoxDecoration(
-              color: _getEventTypeColor(event.type),
-              borderRadius: BorderRadius.circular(2),
+    return GestureDetector(
+      onTap: () => _navigateToEventDetail(event),
+      child: Container(
+        margin: EdgeInsets.only(bottom: 8),
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Color(0xFF1F1F23),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _getEventTypeColor(event.type),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event.title,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (event.location.isNotEmpty)
+                    Text(
+                      event.location,
+                      style: TextStyle(
+                        color: Color(0xFF9A9A9A),
+                        fontSize: 14,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  event.title,
+                  DateFormat('HH:mm').format(event.date),
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (event.location.isNotEmpty)
+                if (event.buyIn > 0)
                   Text(
-                    event.location,
+                    '\$${event.buyIn.toStringAsFixed(0)}',
                     style: TextStyle(
-                      color: Color(0xFF9A9A9A),
-                      fontSize: 14,
+                      color: Color(0xFF5AC95A),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                DateFormat('HH:mm').format(event.date),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+            // Show arrow if it's a club event
+            if (event.clubId != null && event.clubEventId != null) ...[
+              SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right,
+                color: Color(0xFF9A9A9A),
+                size: 20,
               ),
-              if (event.buyIn > 0)
-                Text(
-                  '\$${event.buyIn.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    color: Color(0xFF5AC95A),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
             ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _navigateToEventDetail(PokerEvent event) async {
+    // Only navigate if this is a club event
+    if (event.clubId == null || event.clubEventId == null) {
+      return;
+    }
+
+    try {
+      // Fetch the club and event data
+      final club = await ClubService.getClub(event.clubId!);
+      if (club == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Club not found')),
+        );
+        return;
+      }
+
+      final clubEvent = await EventService.getEvent(event.clubId!, event.clubEventId!);
+      if (clubEvent == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event not found')),
+        );
+        return;
+      }
+
+      // Check if user is admin
+      final isAdmin = await ClubService.canManageEvents(event.clubId!);
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EventDetailScreen(
+            club: club,
+            event: clubEvent,
+            isAdmin: isAdmin,
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load event: $e')),
+      );
+    }
   }
 
   Color _getEventTypeColor(String type) {
@@ -1346,6 +1486,8 @@ class PokerEvent {
   final String location;
   final DateTime date;
   final double buyIn;
+  final String? clubId;
+  final String? clubEventId;
 
   PokerEvent({
     required this.id,
@@ -1354,6 +1496,8 @@ class PokerEvent {
     required this.location,
     required this.date,
     required this.buyIn,
+    this.clubId,
+    this.clubEventId,
   });
 
   Map<String, dynamic> toJson() {
@@ -1364,6 +1508,8 @@ class PokerEvent {
       'location': location,
       'date': date.toIso8601String(),
       'buyIn': buyIn,
+      'clubId': clubId,
+      'clubEventId': clubEventId,
     };
   }
 
@@ -1375,6 +1521,8 @@ class PokerEvent {
       location: json['location'],
       date: DateTime.parse(json['date']),
       buyIn: json['buyIn'].toDouble(),
+      clubId: json['clubId'],
+      clubEventId: json['clubEventId'],
     );
   }
 }

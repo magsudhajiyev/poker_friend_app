@@ -32,6 +32,9 @@ class MainScreenHeader extends StatelessWidget {
   final bool showLeftIcon;
   final EdgeInsets? padding;
   final bool showRightBadge;
+  final int? rightBadgeCount;  // Optional count to display in badge
+  final bool showHamburgerMenu;
+  final VoidCallback? onHamburgerPressed;
 
   const MainScreenHeader({
     super.key,
@@ -47,6 +50,9 @@ class MainScreenHeader extends StatelessWidget {
     this.showLeftIcon = true,
     this.padding,
     this.showRightBadge = false,
+    this.rightBadgeCount,
+    this.showHamburgerMenu = false,
+    this.onHamburgerPressed,
   });
 
   @override
@@ -63,10 +69,30 @@ class MainScreenHeader extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Left side: Title, subtitle, and username
+              // Left side: Hamburger menu, title, subtitle, and username
               Expanded(
                 child: Row(
                   children: [
+                    // Hamburger menu icon
+                    if (showHamburgerMenu && onHamburgerPressed != null) ...[
+                      GestureDetector(
+                        onTap: onHamburgerPressed,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.menu,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,6 +150,7 @@ class MainScreenHeader extends StatelessWidget {
                       imagePath: rightImagePath,
                       onPressed: onRightPressed!,
                       showBadge: showRightBadge,
+                      badgeCount: rightBadgeCount,
                     ),
                 ],
               ),

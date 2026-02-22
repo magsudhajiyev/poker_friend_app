@@ -24,6 +24,10 @@ class EnvConfig {
   static String get revenueCatApiKey =>
       dotenv.env['REVENUECAT_API_KEY'] ?? '';
 
+  /// Resend API key for email sending
+  static String get resendApiKey =>
+      dotenv.env['RESEND_API_KEY'] ?? '';
+
   // ==================== Server URLs ====================
 
   /// WebSocket server URL for real-time communication

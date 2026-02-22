@@ -1,7 +1,59 @@
 import '../models/qr_seat_data.dart';
+import '../models/qr_table_data.dart';
 
 /// Service for QR code generation and parsing
 class QRService {
+  // ==================== Table QR (for dealers) ====================
+
+  /// Generate QR data for a table (dealer use)
+  static QRTableData generateTableQRData({
+    required String clubId,
+    required String tableId,
+  }) {
+    return QRTableData(
+      clubId: clubId,
+      tableId: tableId,
+    );
+  }
+
+  /// Generate QR URL string for a table
+  static String generateTableQRUrl({
+    required String clubId,
+    required String tableId,
+  }) {
+    final data = generateTableQRData(
+      clubId: clubId,
+      tableId: tableId,
+    );
+    return data.encode();
+  }
+
+  /// Parse a table QR URL string
+  static QRTableData? parseTableQRUrl(String url) {
+    return QRTableData.decode(url);
+  }
+
+  /// Validate a table QR data object
+  static bool validateTableQRData(QRTableData data) {
+    if (!data.validateChecksum()) {
+      return false;
+    }
+    if (data.clubId.isEmpty || data.tableId.isEmpty) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Parse and validate a table QR URL in one step
+  static QRTableData? parseAndValidateTableQR(String url) {
+    final data = parseTableQRUrl(url);
+    if (data == null) return null;
+    if (!validateTableQRData(data)) return null;
+    return data;
+  }
+
+  // ==================== Seat QR (for players) ====================
+
   /// Generate QR data for a seat
   static QRSeatData generateQRData({
     required String clubId,

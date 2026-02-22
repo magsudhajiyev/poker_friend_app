@@ -311,9 +311,11 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
 
   Widget _buildEventCard(ClubEvent event) {
     final statusColor = switch (event.status) {
+      EventStatus.scheduled => Colors.blue,
       EventStatus.active => Colors.green,
       EventStatus.paused => Colors.orange,
       EventStatus.completed => Colors.grey,
+      EventStatus.cancelled => Colors.red,
     };
 
     return Card(

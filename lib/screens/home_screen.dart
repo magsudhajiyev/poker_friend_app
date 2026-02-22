@@ -25,9 +25,20 @@ import '../widgets/loading_screen.dart';
 import '../services/calendar_event_service.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
+import '../design_system/poker_friend_theme.dart';
 import '../services/seat_service.dart';
+import '../services/club_notification_service.dart';
+import '../services/club_service.dart';
+import '../services/event_service.dart';
 import '../models/seat_assignment.dart';
+import '../models/club_notification.dart';
+import '../models/club.dart';
 import '../widgets/sliding_notification.dart';
+import '../widgets/navigation_drawer.dart';
+import 'player/qr_scan_screen.dart';
+import 'club/event_detail_screen.dart';
+import 'invitations_screen.dart';
+import '../services/invitation_service.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {
@@ -36,6 +47,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 2;
   List<Map<String, dynamic>> upcomingEvents = [];
 
@@ -44,6 +56,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Set<String> _notifiedSeatIds = {};
   bool _hasActiveSession = false;
   List<SeatAssignment> _activeSeats = [];
+
+  // Club notification listener for event notifications
+  StreamSubscription<List<ClubNotification>>? _clubNotificationSubscription;
+  Set<String> _notifiedClubNotificationIds = {};
+  List<ClubNotification> _allNotifications = [];  // All notifications to display
+  int _unreadNotificationCount = 0;  // For badge only
 
   // Data variables
   double currentBankroll = 0.0;
@@ -119,6 +137,103 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }, onError: (error) {
       print('Seat listener error: $error');
     });
+
+    // Set up club notification listener for event notifications
+    _setupClubNotificationListener();
+  }
+
+  /// Set up listener for club event notifications
+  void _setupClubNotificationListener() {
+    // Pre-populate existing notifications to avoid duplicate sliding alerts
+    ClubNotificationService.getUserNotifications(limit: 50).then((existing) {
+      for (final notification in existing) {
+        _notifiedClubNotificationIds.add(notification.id);
+      }
+      // Also update unread notifications list
+      _updateUnreadNotifications(existing);
+    }).catchError((e) {
+      print('Error pre-populating club notifications: $e');
+    });
+
+    // Set up real-time listener
+    _clubNotificationSubscription = ClubNotificationService.watchUserNotifications(limit: 20).listen((notifications) {
+      // Update unread notifications for badge
+      _updateUnreadNotifications(notifications);
+
+      // Show sliding notification for new ones
+      for (final notification in notifications) {
+        if (!_notifiedClubNotificationIds.contains(notification.id)) {
+          _notifiedClubNotificationIds.add(notification.id);
+          // Only show sliding notification if it's recent (within last 5 minutes)
+          final age = DateTime.now().difference(notification.createdAt);
+          if (age.inMinutes < 5) {
+            _showClubEventNotification(notification);
+          }
+        }
+      }
+    }, onError: (error) {
+      print('Club notification listener error: $error');
+    });
+  }
+
+  /// Update notifications list and unread count
+  void _updateUnreadNotifications(List<ClubNotification> notifications) {
+    final unreadCount = notifications.where((n) => !n.isRead).length;
+    // Always update - notifications content may have changed (e.g., isRead status)
+    setState(() {
+      _allNotifications = notifications;
+      _unreadNotificationCount = unreadCount;
+    });
+  }
+
+  /// Show a sliding notification for club events
+  void _showClubEventNotification(ClubNotification notification) {
+    if (!mounted) return;
+
+    // Choose icon and color based on notification type
+    IconData icon;
+    Color iconColor;
+    switch (notification.type) {
+      case NotificationType.eventCreated:
+        icon = Icons.event_available;
+        iconColor = const Color(0xFF5AC95A);
+        break;
+      case NotificationType.eventStarted:
+        icon = Icons.play_circle_filled;
+        iconColor = const Color(0xFF4CAF50);
+        break;
+      case NotificationType.eventStarting:
+        icon = Icons.schedule;
+        iconColor = const Color(0xFFFFA726);
+        break;
+      case NotificationType.eventUpdated:
+        icon = Icons.update;
+        iconColor = const Color(0xFF42A5F5);
+        break;
+      case NotificationType.eventCancelled:
+        icon = Icons.event_busy;
+        iconColor = const Color(0xFFEF5350);
+        break;
+      case NotificationType.memberRSVP:
+        icon = Icons.how_to_reg;
+        iconColor = const Color(0xFF9C27B0);
+        break;
+    }
+
+    SlidingNotificationOverlay.show(
+      context: context,
+      title: notification.title,
+      subtitle: notification.clubName,
+      detail: notification.body,
+      icon: icon,
+      iconColor: iconColor,
+      displayDuration: const Duration(seconds: 6),
+      onTap: () {
+        // TODO: Navigate to event detail screen when implemented
+        // For now, mark as read
+        ClubNotificationService.markAsRead(notification.id);
+      },
+    );
   }
 
   /// Show a sliding notification when user is seated by a dealer
@@ -350,9 +465,366 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  /// Show combined notifications dropdown (active sessions + club notifications)
+  void _showNotificationsDropdown(BuildContext context) {
+    final hasItems = _activeSeats.isNotEmpty || _allNotifications.isNotEmpty;
+
+    if (!hasItems) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No notifications'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Get the button position for positioning the dropdown
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final buttonPosition = button.localToGlobal(Offset.zero, ancestor: overlay);
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (dialogContext) => Stack(
+        children: [
+          // Dismiss on tap outside
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(dialogContext),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          // Dropdown positioned below the bell icon
+          Positioned(
+            top: buttonPosition.dy + 50,
+            right: 16,
+            child: Material(
+              color: Colors.transparent,
+              child: _buildNotificationsDropdown(dialogContext),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationsDropdown(BuildContext dialogContext) {
+    return Container(
+      width: 300,
+      constraints: const BoxConstraints(maxHeight: 400),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1E),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.notifications,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Notifications',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_unreadNotificationCount > 0)
+                    GestureDetector(
+                      onTap: () async {
+                        await ClubNotificationService.markAllAsRead();
+                        Navigator.pop(dialogContext);
+                      },
+                      child: Text(
+                        'Mark all read',
+                        style: TextStyle(
+                          color: const Color(0xFF5AC95A),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            // Active Sessions Section
+            if (_activeSeats.isNotEmpty) ...[
+              _buildSectionHeader('Live Sessions', _activeSeats.length, const Color(0xFF5AC95A)),
+              ...(_activeSeats.map((seat) => _buildActiveSessionItem(dialogContext, seat))),
+            ],
+
+            // Club Notifications Section
+            if (_allNotifications.isNotEmpty) ...[
+              if (_activeSeats.isNotEmpty)
+                Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+              _buildSectionHeader('Events', _allNotifications.length, const Color(0xFF42A5F5)),
+              ...(_allNotifications.map((notification) => _buildNotificationItem(dialogContext, notification))),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, int count, Color dotColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            '$count',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationItem(BuildContext dialogContext, ClubNotification notification) {
+    // Choose icon and color based on notification type
+    IconData icon;
+    Color iconColor;
+    switch (notification.type) {
+      case NotificationType.eventCreated:
+        icon = Icons.event_available;
+        iconColor = const Color(0xFF5AC95A);
+        break;
+      case NotificationType.eventStarted:
+        icon = Icons.play_circle_filled;
+        iconColor = const Color(0xFF4CAF50);
+        break;
+      case NotificationType.eventStarting:
+        icon = Icons.schedule;
+        iconColor = const Color(0xFFFFA726);
+        break;
+      case NotificationType.eventUpdated:
+        icon = Icons.update;
+        iconColor = const Color(0xFF42A5F5);
+        break;
+      case NotificationType.eventCancelled:
+        icon = Icons.event_busy;
+        iconColor = const Color(0xFFEF5350);
+        break;
+      case NotificationType.memberRSVP:
+        icon = Icons.how_to_reg;
+        iconColor = const Color(0xFF9C27B0);
+        break;
+    }
+
+    // Format time ago
+    final age = DateTime.now().difference(notification.createdAt);
+    String timeAgo;
+    if (age.inMinutes < 1) {
+      timeAgo = 'Just now';
+    } else if (age.inMinutes < 60) {
+      timeAgo = '${age.inMinutes}m ago';
+    } else if (age.inHours < 24) {
+      timeAgo = '${age.inHours}h ago';
+    } else {
+      timeAgo = '${age.inDays}d ago';
+    }
+
+    return InkWell(
+      onTap: () async {
+        Navigator.pop(dialogContext);
+        // Mark as read
+        await ClubNotificationService.markAsRead(notification.id);
+        // Navigate to event detail screen
+        _navigateToEventFromNotification(notification);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notification.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    notification.body,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 12,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${notification.clubName}  •  $timeAgo',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Unread indicator
+            if (!notification.isRead)
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(left: 8, top: 4),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF5AC95A),
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Navigate to event detail screen from notification
+  Future<void> _navigateToEventFromNotification(ClubNotification notification) async {
+    if (notification.eventId == null || notification.clubId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Event not found')),
+      );
+      return;
+    }
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // Fetch club and event data
+      final club = await ClubService.getClub(notification.clubId);
+      final event = await EventService.getEvent(notification.clubId, notification.eventId!);
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (club == null || event == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event not found')),
+          );
+        }
+        return;
+      }
+
+      // Check if user is admin
+      final isAdmin = await ClubService.canManageEvents(notification.clubId);
+
+      // Navigate to event detail
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EventDetailScreen(
+              club: club,
+              event: event,
+              isAdmin: isAdmin,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading event: $e')),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _seatSubscription?.cancel();
+    _clubNotificationSubscription?.cancel();
     _progressAnimationController.dispose();
     super.dispose();
   }
@@ -395,6 +867,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
         _progressAnimationController.reset();
         _progressAnimationController.forward();
+
+        // Check for pending club invitations
+        _checkPendingInvitations();
       }
     } catch (e) {
       print('Error loading data: $e');
@@ -403,6 +878,87 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           isLoadingData = false;
         });
       }
+    }
+  }
+
+  /// Check for pending club invitations and show dialog if any exist
+  Future<void> _checkPendingInvitations() async {
+    try {
+      final invitations = await InvitationService.getPendingInvitations();
+      if (invitations.isNotEmpty && mounted) {
+        // Show a dialog prompting user to view their invitations
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: PokerFriendColors.dark2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.mail_outline,
+                  color: PokerFriendColors.purple,
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Club Invitations',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'You have ${invitations.length} pending club invitation${invitations.length > 1 ? 's' : ''}.',
+              style: TextStyle(
+                color: PokerFriendColors.dark11,
+                fontSize: 14,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Later',
+                  style: TextStyle(
+                    color: PokerFriendColors.dark9,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const InvitationsScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: PokerFriendColors.purple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'View Invitations',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      // Silently fail - invitations are not critical
+      print('Error checking invitations: $e');
     }
   }
 
@@ -551,9 +1107,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     return Scaffold(
+      key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
       extendBody: true,
+      drawer: AppNavigationDrawer(
+        username: userName,
+        email: AuthService.currentUser?.email,
+      ),
       body: Stack(
         children: [
           // Gradient background from design system
@@ -578,18 +1139,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         username: userName,
                         title: 'Home', // Fallback if no username
                         subtitle: 'Welcome back',
+                        showHamburgerMenu: true,
+                        onHamburgerPressed: () {
+                          _scaffoldKey.currentState?.openDrawer();
+                        },
                         showLeftIcon: true,
-                        leftImagePath: 'icons/flat_icons/stats.png',
+                        leftIcon: Icons.qr_code_scanner,
                         onLeftPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => StatisticsScreen()),
+                            MaterialPageRoute(builder: (context) => const QRScanScreen()),
                           );
                         },
                         rightImagePath: 'icons/flat_icons/bell.png',
-                        showRightBadge: _hasActiveSession,
+                        showRightBadge: _unreadNotificationCount > 0,
+                        rightBadgeCount: _unreadNotificationCount,
                         onRightPressed: () {
-                          _showActiveSessionsDropdown(context);
+                          _showNotificationsDropdown(context);
                         },
                       ),
 
@@ -788,26 +1354,55 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
               const SizedBox(width: 12),
-              // Notification Bell Icon
+              // Notification Bell Icon with badge
               GestureDetector(
                 onTap: () {
-                  // TODO: Navigate to notifications
+                  _showNotificationsDropdown(context);
                 },
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Image.asset(
-                      'icons/flat_icons/bell.png',
-                      color: Colors.white,
-                      width: 26,
-                      height: 26,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Image.asset(
+                          'icons/flat_icons/bell.png',
+                          color: Colors.white,
+                          width: 26,
+                          height: 26,
+                        ),
+                      ),
                     ),
-                  ),
+                    // Badge for unread notifications
+                    if (_unreadNotificationCount > 0)
+                      Positioned(
+                        right: -2,
+                        top: -2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEF5350),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              _unreadNotificationCount > 9 ? '9+' : '$_unreadNotificationCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -1458,6 +2053,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return GestureDetector(
       key: eventKey,
       behavior: HitTestBehavior.opaque,
+      onTap: () => _navigateToCalendarEventDetail(event),
       onLongPress: () {
         // Get the position of the card
         final RenderBox renderBox = eventKey.currentContext!.findRenderObject() as RenderBox;
@@ -1527,6 +2123,64 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  Future<void> _navigateToCalendarEventDetail(Map<String, dynamic> event) async {
+    final clubId = event['clubId'];
+    final clubEventId = event['clubEventId'];
+
+    // Only navigate if this is a club event
+    if (clubId == null || clubEventId == null) {
+      return;
+    }
+
+    try {
+      // Fetch the club and event data
+      final club = await ClubService.getClub(clubId);
+      if (club == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Club not found')),
+          );
+        }
+        return;
+      }
+
+      final clubEvent = await EventService.getEvent(clubId, clubEventId);
+      if (clubEvent == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event not found')),
+          );
+        }
+        return;
+      }
+
+      // Check if user is admin
+      final isAdmin = await ClubService.canManageEvents(clubId);
+
+      if (!mounted) return;
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EventDetailScreen(
+            club: club,
+            event: clubEvent,
+            isAdmin: isAdmin,
+          ),
+        ),
+      );
+
+      // Refresh data after returning
+      _loadData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load event: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildEventContextMenu() {

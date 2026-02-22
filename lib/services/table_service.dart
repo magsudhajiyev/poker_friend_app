@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/poker_table.dart';
 import '../models/qr_seat_data.dart';
+import '../models/qr_table_data.dart';
 import 'auth_service.dart';
 
 /// Service for managing poker tables within clubs
@@ -59,8 +60,18 @@ class TableService {
       actualQrCodes[seat.toString()] = qrData.encode();
     }
 
+    // Generate table-level QR code for dealers
+    final tableQrData = QRTableData(
+      clubId: clubId,
+      tableId: tableRef.id,
+    );
+    final tableQRCode = tableQrData.encode();
+
     // Update the table with QR codes
-    await tableRef.update({'qrCodes': actualQrCodes});
+    await tableRef.update({
+      'qrCodes': actualQrCodes,
+      'tableQRCode': tableQRCode,
+    });
 
     // Parse QR codes back to Map<int, String>
     final parsedQrCodes = actualQrCodes.map(
@@ -76,6 +87,7 @@ class TableService {
       dealerId: null,
       currentSessionId: null,
       qrCodes: parsedQrCodes,
+      tableQRCode: tableQRCode,
       createdAt: now,
     );
   }
@@ -115,6 +127,50 @@ class TableService {
       return null;
     } catch (e) {
       print('Error getting table: $e');
+      return null;
+    }
+  }
+
+  /// Find a table by name pattern (e.g., "table_1" -> "Table 1")
+  /// or by table number extracted from the pattern
+  static Future<PokerTable?> findTableByNamePattern(
+    String clubId,
+    String namePattern,
+  ) async {
+    try {
+      // First try direct ID lookup
+      final directTable = await getTable(clubId, namePattern);
+      if (directTable != null) return directTable;
+
+      // Try to extract table number from pattern like "table_1" or "1"
+      int? tableNumber;
+      final match = RegExp(r'(?:table_)?(\d+)$', caseSensitive: false)
+          .firstMatch(namePattern);
+      if (match != null) {
+        tableNumber = int.tryParse(match.group(1)!);
+      }
+
+      // Get all tables and find matching one
+      final tables = await getTables(clubId);
+
+      // Try to match by table number
+      if (tableNumber != null) {
+        final byNumber = tables.where((t) => t.tableNumber == tableNumber);
+        if (byNumber.isNotEmpty) return byNumber.first;
+      }
+
+      // Try to match by name (case-insensitive)
+      final searchName = namePattern.replaceAll('_', ' ').toLowerCase();
+      final byName = tables.where(
+        (t) => t.name.toLowerCase() == searchName ||
+            t.name.toLowerCase() == 'table $searchName' ||
+            t.name.toLowerCase().contains(searchName),
+      );
+      if (byName.isNotEmpty) return byName.first;
+
+      return null;
+    } catch (e) {
+      print('Error finding table by name pattern: $e');
       return null;
     }
   }
@@ -231,5 +287,66 @@ class TableService {
         .map((snapshot) => snapshot.docs
             .map((doc) => PokerTable.fromFirestore(doc, clubId: clubId))
             .toList());
+  }
+
+  /// Get or generate the table QR code for a table
+  /// This ensures existing tables have a QR code (migration)
+  static Future<String?> getOrGenerateTableQRCode(
+    String clubId,
+    String tableId,
+  ) async {
+    try {
+      final table = await getTable(clubId, tableId);
+      if (table == null) return null;
+
+      // If table already has a QR code, return it
+      if (table.tableQRCode != null && table.tableQRCode!.isNotEmpty) {
+        return table.tableQRCode;
+      }
+
+      // Generate new table QR code
+      final tableQrData = QRTableData(
+        clubId: clubId,
+        tableId: tableId,
+      );
+      final tableQRCode = tableQrData.encode();
+
+      // Save to Firestore
+      await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_tablesSubcollection)
+          .doc(tableId)
+          .update({'tableQRCode': tableQRCode});
+
+      return tableQRCode;
+    } catch (e) {
+      print('Error getting/generating table QR code: $e');
+      return null;
+    }
+  }
+
+  /// Get table with ensured QR code (generates if missing)
+  static Future<PokerTable?> getTableWithQRCode(
+    String clubId,
+    String tableId,
+  ) async {
+    try {
+      var table = await getTable(clubId, tableId);
+      if (table == null) return null;
+
+      // If table doesn't have a QR code, generate one
+      if (table.tableQRCode == null || table.tableQRCode!.isEmpty) {
+        final qrCode = await getOrGenerateTableQRCode(clubId, tableId);
+        if (qrCode != null) {
+          table = table.copyWith(tableQRCode: qrCode);
+        }
+      }
+
+      return table;
+    } catch (e) {
+      print('Error getting table with QR code: $e');
+      return null;
+    }
   }
 }

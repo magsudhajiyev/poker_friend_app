@@ -60,6 +60,8 @@ class AuthService {
       // Create user document in Firestore for searchability
       if (credential.user != null) {
         await _createUserDocument(credential.user!.uid, displayName, email);
+        // Verify document was created (safety net)
+        await ensureUserDocument();
       }
 
       print('User registered: ${credential.user?.email}');

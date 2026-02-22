@@ -105,6 +105,7 @@ class DealerSession {
   final String tableId;
   final String dealerId;
   final String? dealerName;
+  final String? eventId;  // Link to active event (for live rankings)
   final DealerSessionStatus status;
   final Map<int, SeatedPlayer> players;  // seat number -> player
   final int currentHandNumber;
@@ -123,6 +124,7 @@ class DealerSession {
     required this.tableId,
     required this.dealerId,
     this.dealerName,
+    this.eventId,
     this.status = DealerSessionStatus.active,
     this.players = const {},
     this.currentHandNumber = 0,
@@ -155,6 +157,7 @@ class DealerSession {
       tableId: data['tableId'] ?? '',
       dealerId: data['dealerId'] ?? '',
       dealerName: data['dealerName'],
+      eventId: data['eventId'],
       status: DealerSessionStatusExtension.fromString(data['status']),
       players: _parsePlayers(data['players']),
       currentHandNumber: data['currentHandNumber'] ?? 0,
@@ -177,6 +180,7 @@ class DealerSession {
       tableId: map['tableId'] ?? '',
       dealerId: map['dealerId'] ?? '',
       dealerName: map['dealerName'],
+      eventId: map['eventId'],
       status: DealerSessionStatusExtension.fromString(map['status']),
       players: _parsePlayers(map['players']),
       currentHandNumber: map['currentHandNumber'] ?? 0,
@@ -209,6 +213,7 @@ class DealerSession {
       'tableId': tableId,
       'dealerId': dealerId,
       'dealerName': dealerName,
+      'eventId': eventId,
       'status': status.value,
       'players': players.map((key, value) =>
           MapEntry(key.toString(), value.toMap())),
@@ -232,6 +237,7 @@ class DealerSession {
       'tableId': tableId,
       'dealerId': dealerId,
       'dealerName': dealerName,
+      'eventId': eventId,
       'status': status.value,
       'players': players.map((key, value) =>
           MapEntry(key.toString(), value.toMap())),
@@ -250,6 +256,7 @@ class DealerSession {
   /// Create a copy with updated values
   DealerSession copyWith({
     DealerSessionStatus? status,
+    String? eventId,
     Map<int, SeatedPlayer>? players,
     int? currentHandNumber,
     String? currentHandId,
@@ -262,6 +269,7 @@ class DealerSession {
       tableId: tableId,
       dealerId: dealerId,
       dealerName: dealerName,
+      eventId: eventId ?? this.eventId,
       status: status ?? this.status,
       players: players ?? this.players,
       currentHandNumber: currentHandNumber ?? this.currentHandNumber,
