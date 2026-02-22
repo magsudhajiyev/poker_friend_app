@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-21
 **Branch:** feature/dealer-assisted-logging
-**Status:** TODO (Future Enhancement)
+**Status:** COMPLETED
 **Priority:** Medium
 
 ---
@@ -84,6 +84,31 @@ if (hasCompleteBoard) {
 
 ## Acceptance Criteria
 
-- [ ] When all 5 board cards are already selected, skip the board cards dialog on all-in showdown
-- [ ] When some board cards are missing, show dialog for only the missing cards
-- [ ] Existing all-in preflop flow continues to work (show full 5-card dialog)
+- [x] When all 5 board cards are already selected, skip the board cards dialog on all-in showdown
+- [x] When some board cards are missing, show dialog for only the missing cards
+- [x] Existing all-in preflop flow continues to work (show full 5-card dialog)
+
+---
+
+## Implementation Summary
+
+Modified `_showAllInBoardCardsDialog()` in `lib/screens/dealer/dealer_table_screen.dart`:
+
+```dart
+// Check if all 5 board cards are already selected - skip dialog if complete
+final existingCards = _sessionManager!.currentHand?.boardCards;
+final hasCompleteBoard = existingCards != null &&
+    existingCards.flop.length == 3 &&
+    existingCards.turn != null &&
+    existingCards.river != null;
+
+BoardCards? boardCards;
+
+if (hasCompleteBoard) {
+  // All cards already selected - use existing cards, skip dialog
+  boardCards = existingCards;
+} else {
+  // Show dialog to collect missing cards
+  boardCards = await showDialog<BoardCards>(...);
+}
+```
