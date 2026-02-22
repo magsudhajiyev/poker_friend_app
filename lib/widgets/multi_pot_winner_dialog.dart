@@ -300,44 +300,42 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Builder(
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Select Winners'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Multiple pots - select winner for each pot',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+    return AlertDialog(
+      title: const Text('Select Winners'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Multiple pots - select winner for each pot',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
               ),
-              const SizedBox(height: 12),
-              ...List.generate(
-                widget.sidePots.length,
-                (index) => _buildPotSection(index),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            ...List.generate(
+              widget.sidePots.length,
+              (index) => _buildPotSection(index),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: _isFormValid()
-                ? () {
-                    Navigator.of(dialogContext, rootNavigator: true).pop(_buildResult());
-                  }
-                : null,
-            child: const Text('Confirm Winners'),
-          ),
-        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _isFormValid()
+              ? () {
+                  Navigator.pop(context, _buildResult());
+                }
+              : null,
+          child: const Text('Confirm Winners'),
+        ),
+      ],
     );
   }
 }

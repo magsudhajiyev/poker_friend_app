@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/game_types.dart';
-import '../utils/poker_positions.dart';
 
 class WinnerSelectionDialog extends StatefulWidget {
   final List<int> activePlayers;
@@ -154,9 +153,8 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Builder(
-      builder: (dialogContext) => AlertDialog(
-        title: Text(isChoppedPot ? 'Who chopped this pot?' : 'Who won this hand?'),
+    return AlertDialog(
+      title: Text(isChoppedPot ? 'Who chopped this pot?' : 'Who won this hand?'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -237,14 +235,14 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
       ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(),
+            onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: isChoppedPot
                 ? (selectedWinners.isNotEmpty
                     ? () {
-                        Navigator.of(dialogContext, rootNavigator: true).pop({
+                        Navigator.pop(context,{
                         'isChoppedPot': true,
                         'winners': selectedWinners.toList(),
                         'individualShares': _calculateIndividualShares(),
@@ -254,7 +252,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                     : null)
                 : (selectedWinner != null
                     ? () {
-                        Navigator.of(dialogContext, rootNavigator: true).pop({
+                        Navigator.pop(context,{
                         'isChoppedPot': false,
                         'winner': selectedWinner,
                         'sharePerWinner': widget.potAmount,
@@ -264,7 +262,6 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
             child: Text(isChoppedPot ? 'Confirm Winners' : 'Confirm Winner'),
           ),
         ],
-      ),
-    );
+      );
   }
 }
