@@ -468,6 +468,21 @@ class DealerService {
     });
   }
 
+  /// Update session blinds (for mid-session blind changes)
+  static Future<void> updateSessionBlinds({
+    required String sessionId,
+    required int smallBlind,
+    required int bigBlind,
+  }) async {
+    await _firestore
+        .collection(_dealerSessionsCollection)
+        .doc(sessionId)
+        .update({
+          'smallBlind': smallBlind,
+          'bigBlind': bigBlind,
+        });
+  }
+
   /// Add a player to the session
   static Future<void> addPlayer({
     required String sessionId,

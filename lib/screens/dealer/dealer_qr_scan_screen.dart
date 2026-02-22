@@ -38,9 +38,6 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
   @override
   void initState() {
     super.initState();
-    print('DealerQRScan: Expected club ID = ${widget.club.id}');
-    print('DealerQRScan: Club name = ${widget.club.name}');
-    print('DealerQRScan: Event = ${widget.event.name}');
   }
 
   @override
@@ -95,8 +92,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
 
       // Validate the table belongs to this event's club
       if (clubId != widget.club.id) {
-        print('Club ID mismatch: QR has "$clubId", event expects "${widget.club.id}"');
-        _showError('This table belongs to a different club. Expected: ${widget.club.id}');
+        _showError('This table belongs to a different club.');
         return;
       }
 
@@ -123,8 +119,6 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
       // Validate the table is part of this event (using the actual table ID)
       if (widget.event.tableIds.isNotEmpty &&
           !widget.event.tableIds.contains(table.id)) {
-        print('Table ID mismatch: Found table "${table.id}" (${table.name}), event tableIds: ${widget.event.tableIds}');
-        // Show a more helpful error with the correct QR code
         _showTableNotAssignedError(table);
         return;
       }
@@ -239,24 +233,6 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
-
-                // Button position
-                Text(
-                  'Button Position',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 8),
-                _buildNumberField(
-                  label: 'Seat',
-                  value: buttonPosition,
-                  onChanged: (v) => setDialogState(() => buttonPosition = v),
-                  min: 1,
-                  max: 9,
-                ),
               ],
             ),
           ),
@@ -312,14 +288,17 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
       ),
       child: Row(
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: PokerFriendColors.dark9,
-              fontSize: 12,
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: PokerFriendColors.dark9,
+                fontSize: 12,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Spacer(),
+          SizedBox(width: 8),
           GestureDetector(
             onTap: () {
               if (value > min) onChanged(value - 1);

@@ -102,28 +102,35 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   ClubEvent? _currentEvent;
   double _rebuyStack = 0;
 
+  // Local blind state (can be changed during session)
+  int _smallBlind = 0;
+  int _bigBlind = 0;
+
   @override
   void initState() {
     super.initState();
     _dealerSession = widget.session;
+    _smallBlind = _dealerSession.smallBlind;
+    _bigBlind = _dealerSession.bigBlind;
     _initializeGameState();
     _initialize();
   }
 
   void _initializeGameState() {
     // Initialize PokerGameState with 9 seats (standard poker table)
+    // Use local blind state (allows mid-session changes)
     _gameState = PokerGameState(
       numberOfPlayers: 9,
-      smallBlind: _dealerSession.smallBlind,
-      bigBlind: _dealerSession.bigBlind,
+      smallBlind: _smallBlind,
+      bigBlind: _bigBlind,
       isCashGame: _dealerSession.gameType == 'cash',
       hasBBante: _dealerSession.hasBBante,
     );
 
     // Initialize PokerSessionManager for recording hands
     _sessionManager = PokerSessionManager(
-      smallBlind: _dealerSession.smallBlind,
-      bigBlind: _dealerSession.bigBlind,
+      smallBlind: _smallBlind,
+      bigBlind: _bigBlind,
       playerCount: 9,
       gameType: _dealerSession.gameType == 'cash' ? GameType.cash : GameType.tournament,
       sessionName: 'Dealer Session - ${widget.table.name}',
@@ -1722,7 +1729,17 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         children: [
           _buildInfoItem('POT', '\$${_gameState!.currentPot.toStringAsFixed(0)}', Colors.amber),
           _buildInfoItem('STREET', _gameState!.currentRound.name.toUpperCase(), Colors.blue),
-          _buildInfoItem('BLINDS', '${_dealerSession.smallBlind}/${_dealerSession.bigBlind}', Colors.green),
+          GestureDetector(
+            onTap: _showChangeBlindsDialog,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildInfoItem('BLINDS', '$_smallBlind/$_bigBlind', Colors.green),
+                const SizedBox(width: 4),
+                Icon(Icons.edit, color: Colors.green.withOpacity(0.7), size: 14),
+              ],
+            ),
+          ),
           _buildInfoItem('HAND', '#${_gameState!.handNumber}', Colors.purple),
         ],
       ),
@@ -1737,6 +1754,195 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         Text(value, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
       ],
     );
+  }
+
+  Future<void> _showChangeBlindsDialog() async {
+    final smallBlindController = TextEditingController(text: _smallBlind.toString());
+    final bigBlindController = TextEditingController(text: _bigBlind.toString());
+
+    final result = await showDialog<Map<String, int>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E2430),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Update Blinds',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Small Blind',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: smallBlindController,
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFF2A3142),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Big Blind',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: bigBlindController,
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFF2A3142),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'New blinds will apply from the next hand.',
+              style: TextStyle(color: Colors.grey[400], fontSize: 12, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newSmallBlind = int.tryParse(smallBlindController.text) ?? _smallBlind;
+              final newBigBlind = int.tryParse(bigBlindController.text) ?? _bigBlind;
+
+              // Validate: SB should be less than BB
+              if (newSmallBlind >= newBigBlind) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Small blind must be less than big blind'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              if (newSmallBlind <= 0 || newBigBlind <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Blinds must be greater than 0'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              Navigator.pop(context, {'smallBlind': newSmallBlind, 'bigBlind': newBigBlind});
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Update', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      final newSmallBlind = result['smallBlind']!;
+      final newBigBlind = result['bigBlind']!;
+
+      setState(() {
+        _smallBlind = newSmallBlind;
+        _bigBlind = newBigBlind;
+      });
+
+      // Update game state for next hand calculations
+      if (_gameState != null) {
+        _gameState!.smallBlind = newSmallBlind;
+        _gameState!.bigBlind = newBigBlind;
+      }
+
+      // Update session manager for hand recording
+      if (_sessionManager != null) {
+        _sessionManager!.smallBlind = newSmallBlind;
+        _sessionManager!.bigBlind = newBigBlind;
+      }
+
+      // Update session in Firestore
+      try {
+        await DealerService.updateSessionBlinds(
+          sessionId: _dealerSession.id,
+          smallBlind: newSmallBlind,
+          bigBlind: newBigBlind,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Blinds updated to $newSmallBlind/$newBigBlind'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        // Rollback local changes on failure
+        setState(() {
+          _smallBlind = _dealerSession.smallBlind;
+          _bigBlind = _dealerSession.bigBlind;
+        });
+        if (_gameState != null) {
+          _gameState!.smallBlind = _dealerSession.smallBlind;
+          _gameState!.bigBlind = _dealerSession.bigBlind;
+        }
+        if (_sessionManager != null) {
+          _sessionManager!.smallBlind = _dealerSession.smallBlind;
+          _sessionManager!.bigBlind = _dealerSession.bigBlind;
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to update blinds: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildTableView() {
