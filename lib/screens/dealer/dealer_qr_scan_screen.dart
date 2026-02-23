@@ -295,67 +295,133 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
     required int value,
     required Function(int) onChanged,
     int min = 1,
-    int max = 10000,
+    int max = 100000,
   }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: PokerFriendColors.dark5,
-        borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: () => _showNumberInputDialog(
+        label: label,
+        currentValue: value,
+        min: min,
+        max: max,
+        onChanged: onChanged,
       ),
-      child: Row(
-        children: [
-          Flexible(
-            child: Text(
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: PokerFriendColors.dark5,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: PokerFriendColors.dark7),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
               label,
               style: TextStyle(
                 color: PokerFriendColors.dark9,
                 fontSize: 12,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          SizedBox(width: 8),
-          GestureDetector(
-            onTap: () {
-              if (value > min) onChanged(value - 1);
-            },
-            child: Container(
-              padding: EdgeInsets.all(4),
-              child: Icon(
-                Icons.remove,
-                color: Colors.white,
-                size: 16,
-              ),
-            ),
-          ),
-          Container(
-            width: 40,
-            alignment: Alignment.center,
-            child: Text(
+            SizedBox(height: 4),
+            Text(
               '$value',
               style: TextStyle(
                 color: Colors.white,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showNumberInputDialog({
+    required String label,
+    required int currentValue,
+    required int min,
+    required int max,
+    required Function(int) onChanged,
+  }) async {
+    final controller = TextEditingController(text: currentValue.toString());
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: PokerFriendColors.dark3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'Enter $label',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
           ),
-          GestureDetector(
-            onTap: () {
-              if (value < max) onChanged(value + 1);
+          textAlign: TextAlign.center,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: PokerFriendColors.dark5,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+          onSubmitted: (value) {
+            final parsed = int.tryParse(value);
+            if (parsed != null && parsed >= min && parsed <= max) {
+              Navigator.pop(context, parsed);
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: PokerFriendColors.dark9),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final parsed = int.tryParse(controller.text);
+              if (parsed != null && parsed >= min && parsed <= max) {
+                Navigator.pop(context, parsed);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Please enter a valid number between $min and $max'),
+                    backgroundColor: PokerFriendColors.red,
+                  ),
+                );
+              }
             },
-            child: Container(
-              padding: EdgeInsets.all(4),
-              child: Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 16,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PokerFriendColors.green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
+            child: Text('OK', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
+
+    if (result != null) {
+      onChanged(result);
+    }
+
+    controller.dispose();
   }
 
   Future<void> _startSession({
