@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../design_system/poker_friend_theme.dart';
 import '../../models/club.dart';
+import '../../models/club_event.dart';
 import '../../models/poker_table.dart';
 import '../../services/event_service.dart';
 import '../../services/table_service.dart';
@@ -23,10 +24,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
   final _buyInController = TextEditingController();
   final _startingStackController = TextEditingController();
-  final _maxPlayersController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   TimeOfDay _selectedTime = const TimeOfDay(hour: 19, minute: 0);
@@ -38,6 +37,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   List<PokerTable> _availableTables = [];
   Set<String> _selectedTableIds = {};
   bool _isLoadingTables = true;
+  int _totalTablesCount = 0;  // Track total tables for better messaging
 
   @override
   void initState() {
@@ -48,8 +48,26 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Future<void> _loadTables() async {
     try {
       final tables = await TableService.getTables(widget.club.id);
+      final totalCount = tables.length;
+
+      // Get all running events (active or paused) and collect their table IDs
+      final allEvents = await EventService.getClubEvents(widget.club.id);
+      final runningEvents = allEvents.where((e) =>
+        e.status == EventStatus.active || e.status == EventStatus.paused
+      );
+
+      // Collect all table IDs that are tied to running events
+      final Set<String> usedTableIds = {};
+      for (final event in runningEvents) {
+        usedTableIds.addAll(event.tableIds);
+      }
+
+      // Filter out tables that are already in use
+      final availableTables = tables.where((t) => !usedTableIds.contains(t.id)).toList();
+
       setState(() {
-        _availableTables = tables;
+        _availableTables = availableTables;
+        _totalTablesCount = totalCount;
         _isLoadingTables = false;
       });
     } catch (e) {
@@ -62,10 +80,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
-    _locationController.dispose();
     _buyInController.dispose();
     _startingStackController.dispose();
-    _maxPlayersController.dispose();
     super.dispose();
   }
 
@@ -141,9 +157,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       final startingStack = _startingStackController.text.isNotEmpty
           ? double.tryParse(_startingStackController.text)
           : null;
-      final maxPlayers = _maxPlayersController.text.isNotEmpty
-          ? int.tryParse(_maxPlayersController.text)
-          : null;
 
       await EventService.createEventWithDetails(
         clubId: widget.club.id,
@@ -152,12 +165,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
-        location: _locationController.text.trim().isEmpty
-            ? null
-            : _locationController.text.trim(),
         buyInAmount: buyIn,
         startingStack: startingStack,
-        maxPlayers: maxPlayers,
         notifyMembers: _notifyMembers,
         tableIds: _selectedTableIds.toList(),
         gameType: _gameType,
@@ -243,15 +252,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       _buildGameTypeSelector(),
                       const SizedBox(height: 24),
 
-                      // Location
-                      _buildLabel('Location'),
-                      const SizedBox(height: 8),
-                      _buildTextField(
-                        controller: _locationController,
-                        hint: 'e.g., 123 Main St or Online',
-                      ),
-                      const SizedBox(height: 24),
-
                       // Buy-in and Starting Stack
                       Row(
                         children: [
@@ -285,16 +285,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                             ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Max Players
-                      _buildLabel('Max Players'),
-                      const SizedBox(height: 8),
-                      _buildTextField(
-                        controller: _maxPlayersController,
-                        hint: 'No limit',
-                        keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 24),
 
@@ -473,6 +463,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     }
 
     if (_availableTables.isEmpty) {
+      final bool allTablesInUse = _totalTablesCount > 0;
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -482,8 +473,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         child: Row(
           children: [
             Icon(
-              Icons.info_outline,
-              color: PokerFriendColors.dark9,
+              allTablesInUse ? Icons.event_busy : Icons.info_outline,
+              color: allTablesInUse ? PokerFriendColors.yellow : PokerFriendColors.dark9,
               size: 20,
             ),
             const SizedBox(width: 12),
@@ -492,7 +483,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'No tables configured',
+                    allTablesInUse
+                        ? 'All tables are in use'
+                        : 'No tables configured',
                     style: TextStyle(
                       color: PokerFriendColors.dark11,
                       fontSize: 14,
@@ -500,7 +493,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Tables can be assigned later when starting the event',
+                    allTablesInUse
+                        ? 'All $_totalTablesCount table${_totalTablesCount == 1 ? '' : 's'} tied to running events'
+                        : 'Tables can be assigned later when starting the event',
                     style: TextStyle(
                       color: PokerFriendColors.dark9,
                       fontSize: 12,
