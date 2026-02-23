@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../design_system/poker_friend_theme.dart';
@@ -41,10 +42,41 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   List<ClubInvitation> _pendingInvitations = [];
   Map<String, String?> _dealerTableAssignments = {}; // dealerId -> tableId
 
+  // Real-time subscription for all events
+  StreamSubscription<List<ClubEvent>>? _eventsSubscription;
+
   @override
   void initState() {
     super.initState();
     _loadData();
+    _setupEventsListener();
+  }
+
+  /// Setup real-time listener for all events (upcoming, live, past)
+  void _setupEventsListener() {
+    _eventsSubscription = EventService.watchClubEvents(widget.club.id)
+        .listen((allEvents) {
+      if (!mounted) return;
+      setState(() {
+        // Upcoming: scheduled events, sorted by start time (soonest first)
+        _upcomingEvents = allEvents
+            .where((e) => e.status == EventStatus.scheduled)
+            .toList()
+          ..sort((a, b) => a.startTime.compareTo(b.startTime));
+
+        // Live: active or paused events, sorted by start time (most recent first)
+        _liveEvents = allEvents
+            .where((e) => e.status == EventStatus.active || e.status == EventStatus.paused)
+            .toList()
+          ..sort((a, b) => b.startTime.compareTo(a.startTime));
+
+        // Past: completed or cancelled events, sorted by start time (most recent first)
+        _pastEvents = allEvents
+            .where((e) => e.status == EventStatus.completed || e.status == EventStatus.cancelled)
+            .toList()
+          ..sort((a, b) => b.startTime.compareTo(a.startTime));
+      });
+    });
   }
 
   void _initTabController() {
@@ -58,6 +90,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
   @override
   void dispose() {
+    _eventsSubscription?.cancel();
     _tabController?.dispose();
     super.dispose();
   }

@@ -12,10 +12,13 @@ import '../../services/calendar_event_service.dart';
 import '../../services/club_notification_service.dart';
 import '../../services/club_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/seat_service.dart';
+import '../../models/seat_assignment.dart';
 import 'event_attendees_screen.dart';
 import 'club_dashboard_screen.dart';
 import '../dealer/dealer_qr_scan_screen.dart';
 import '../spectator/event_rankings_screen.dart';
+import '../player/player_session_screen.dart';
 import 'final_standings_screen.dart';
 
 /// Event detail screen with RSVP functionality
@@ -44,7 +47,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   bool _addedToCalendar = false;
   String? _calendarEventId;
   bool _isDealer = false;
+  bool _isSeatedPlayer = false;
   StreamSubscription<List<EventAttendance>>? _attendanceSubscription;
+  StreamSubscription<ClubEvent?>? _eventSubscription;
+  StreamSubscription<List<SeatAssignment>>? _seatSubscription;
 
   @override
   void initState() {
@@ -53,12 +59,84 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     _loadData();
     _checkDealerStatus();
     _setupAttendanceListener();
+    _setupEventListener();
+    _setupSeatListener();
   }
 
   @override
   void dispose() {
     _attendanceSubscription?.cancel();
+    _eventSubscription?.cancel();
+    _seatSubscription?.cancel();
     super.dispose();
+  }
+
+  /// Setup real-time listener for user's seat status
+  void _setupSeatListener() {
+    _seatSubscription = SeatService.watchCurrentUserSeats().listen((seats) {
+      if (!mounted) return;
+
+      // Check if user has a joined seat in this event's tables
+      final eventTableIds = _event.tableIds.toSet();
+      final seatInEvent = seats.where((s) =>
+          eventTableIds.contains(s.tableId) &&
+          s.status == SeatStatus.joined
+      ).firstOrNull;
+
+      setState(() {
+        _isSeatedPlayer = seatInEvent != null;
+      });
+    });
+  }
+
+  /// Setup real-time event listener for status changes
+  void _setupEventListener() {
+    _eventSubscription = EventService.watchEvent(
+      widget.club.id,
+      _event.id,
+    ).listen((updatedEvent) {
+      if (!mounted || updatedEvent == null) return;
+
+      // Check if status changed
+      final oldStatus = _event.status;
+      final newStatus = updatedEvent.status;
+
+      if (oldStatus != newStatus) {
+        // Show notification for status change
+        String message;
+        Color bgColor;
+
+        if (newStatus == EventStatus.active) {
+          message = 'Event is now LIVE!';
+          bgColor = PokerFriendColors.green;
+        } else if (newStatus == EventStatus.completed) {
+          message = 'Event has ended';
+          bgColor = PokerFriendColors.purple;
+        } else if (newStatus == EventStatus.cancelled) {
+          message = 'Event was cancelled';
+          bgColor = PokerFriendColors.red;
+        } else if (newStatus == EventStatus.paused) {
+          message = 'Event is paused';
+          bgColor = PokerFriendColors.yellow;
+        } else {
+          message = 'Event status updated';
+          bgColor = PokerFriendColors.dark5;
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: bgColor,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+
+      setState(() {
+        _event = updatedEvent;
+      });
+    });
   }
 
   /// Setup real-time attendance listener
@@ -508,6 +586,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             _buildViewRankingsButton(),
                           ],
 
+                          // Return to my seat button (for approved seated players during live events)
+                          if (_event.isLive && _isSeatedPlayer) ...[
+                            const SizedBox(height: 12),
+                            _buildReturnToSeatButton(),
+                          ],
+
                           // View Final Standings button (for completed events)
                           if (_event.status == EventStatus.completed) ...[
                             const SizedBox(height: 12),
@@ -773,9 +857,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _buildAddToCalendarButton() {
-    // Only show for upcoming events (not completed/cancelled)
-    if (_event.status == EventStatus.completed ||
-        _event.status == EventStatus.cancelled) {
+    // Only show for upcoming/scheduled events (not live, completed, or cancelled)
+    if (_event.status != EventStatus.scheduled) {
       return const SizedBox.shrink();
     }
 
@@ -1035,6 +1118,103 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: PokerFriendColors.purple,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _navigateToMySeat() async {
+    final userId = AuthService.userId;
+    if (userId == null) return;
+
+    try {
+      // Get all seats where user is currently seated
+      final seats = await SeatService.getCurrentUserAllSeats();
+
+      if (seats.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You are not currently seated at any table'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Find seat in this event's tables
+      final eventTableIds = _event.tableIds.toSet();
+      final seatInEvent = seats.where((s) => eventTableIds.contains(s.tableId)).firstOrNull;
+
+      if (seatInEvent == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You are not seated in this event'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Navigate to PlayerSessionScreen
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PlayerSessionScreen(
+              clubId: seatInEvent.clubId,
+              tableId: seatInEvent.tableId,
+              seatNumber: seatInEvent.seatNumber,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error finding your seat: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildReturnToSeatButton() {
+    return GestureDetector(
+      onTap: _navigateToMySeat,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: PokerFriendColors.dark3,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: PokerFriendColors.green.withOpacity(0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.event_seat,
+              color: PokerFriendColors.green,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Return to My Seat',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: PokerFriendColors.green,
               ),
             ),
           ],

@@ -736,4 +736,67 @@ class EventService {
     }
     return url;
   }
+
+  /// Get rankings directly from Firestore seat data (fallback when backend is empty)
+  static Future<EventRankingsData?> getRankingsFromFirestore(
+    String clubId,
+    String eventId,
+  ) async {
+    try {
+      final event = await getEvent(clubId, eventId);
+      if (event == null) return null;
+
+      final List<EventRanking> rankings = [];
+      int totalChips = 0;
+
+      for (final tableId in event.tableIds) {
+        final seats = await SeatService.getTableSeats(
+          clubId: clubId,
+          tableId: tableId,
+        );
+
+        for (final entry in seats.entries) {
+          final seat = entry.value;
+          if (seat.playerId != null && seat.playerId!.isNotEmpty) {
+            final stack = seat.chipStack?.toInt() ?? 0;
+            totalChips += stack;
+            rankings.add(EventRanking(
+              eventId: eventId,
+              playerId: seat.playerId!,
+              playerName: seat.playerName ?? 'Player ${entry.key}',
+              currentStack: stack,
+              startingStack: event.startingStack?.toInt() ?? stack,
+              rank: 0,
+              tableId: tableId,
+              seatNumber: entry.key,
+              lastUpdated: DateTime.now(),
+              status: stack <= 0
+                  ? PlayerRankingStatus.busted
+                  : PlayerRankingStatus.active,
+            ));
+          }
+        }
+      }
+
+      if (rankings.isEmpty) return null;
+
+      // Sort by stack and assign ranks
+      rankings.sort((a, b) => b.currentStack.compareTo(a.currentStack));
+      for (int i = 0; i < rankings.length; i++) {
+        rankings[i] = rankings[i].copyWith(rank: i + 1);
+      }
+
+      return EventRankingsData(
+        eventId: eventId,
+        eventName: event.name,
+        rankings: rankings,
+        totalPlayers: rankings.length,
+        totalChips: totalChips,
+        lastUpdated: DateTime.now(),
+      );
+    } catch (e) {
+      print('Error getting rankings from Firestore: $e');
+      return null;
+    }
+  }
 }

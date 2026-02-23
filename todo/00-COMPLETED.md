@@ -62,3 +62,13 @@
 - Edit dialog allows adding/changing hole cards, notes, and tags
 - Changes saved immediately to Firestore
 - Long press for full hand details view
+
+### 16 - Real-time Event Status Updates
+- Event status changes now propagate to all viewers in real-time
+- Event detail screen: Uses StreamSubscription on EventService.watchEvent()
+- Club dashboard ALL tabs: Uses single StreamSubscription on EventService.watchClubEvents()
+  - Upcoming: new events appear immediately
+  - Live: started events move here automatically
+  - Past: finished/cancelled events move here automatically
+- Visual SnackBar notification when status changes (live, ended, cancelled, paused)
+- UI updates automatically without manual refresh

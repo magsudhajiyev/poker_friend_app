@@ -68,12 +68,21 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
     }
 
     try {
-      final data = widget.event.isPublic
+      // Try backend API first
+      var data = widget.event.isPublic
           ? await EventService.getPublicRankings(
               widget.event.id,
               accessCode: widget.accessCode,
             )
           : await EventService.getRankings(widget.event.id);
+
+      // Fallback to Firestore if backend returns empty
+      if (data == null || data.rankings.isEmpty) {
+        data = await EventService.getRankingsFromFirestore(
+          widget.event.clubId,
+          widget.event.id,
+        );
+      }
 
       if (mounted) {
         setState(() {
