@@ -925,11 +925,17 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   Future<void> _updateSeatChipStacks() async {
+    // Collect all active player stacks for bulk update
+    final playerStacks = <int, double>{};
+
     // Update chip stacks in Firebase for all active players
     for (int i = 1; i <= 9; i++) {
       if (_gameState!.players[i - 1].isActive) {
         final stack = _gameState!.players[i - 1].currentStack;
         final playerName = _sessionManager?.getPlayerName(i) ?? 'Player $i';
+
+        // Add to collection for stack history tracking
+        playerStacks[i] = stack;
 
         try {
           await SeatService.updateChipStack(
@@ -951,6 +957,19 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         } catch (e) {
           // Ignore individual update failures
         }
+      }
+    }
+
+    // Update stack history in dealer session for session analytics
+    if (playerStacks.isNotEmpty) {
+      try {
+        await DealerService.updateAllPlayerStacks(
+          sessionId: _dealerSession.id,
+          playerStacks: playerStacks,
+          handNumber: _dealerSession.currentHandNumber,
+        );
+      } catch (e) {
+        // Ignore stack history update failures
       }
     }
   }
@@ -999,6 +1018,17 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           _seatAssignments[seatNumber] = _seatAssignments[seatNumber]!.copyWith(
             chipStack: _rebuyStack,
           );
+        }
+
+        // Record rebuy in dealer session for analytics tracking
+        try {
+          await DealerService.recordRebuy(
+            sessionId: _dealerSession.id,
+            seatNumber: seatNumber,
+            newStack: _rebuyStack,
+          );
+        } catch (e) {
+          // Ignore rebuy tracking failures
         }
 
         // Emit stack update for rankings - player is back to active status

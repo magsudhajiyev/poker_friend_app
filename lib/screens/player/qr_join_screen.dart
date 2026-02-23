@@ -7,7 +7,7 @@ import '../../models/seat_assignment.dart';
 import '../../services/club_service.dart';
 import '../../services/table_service.dart';
 import '../../services/seat_service.dart';
-import 'live_session_screen.dart';
+import 'player_session_screen.dart';
 
 /// Screen for confirming and joining a poker table seat
 class QRJoinScreen extends StatefulWidget {
@@ -128,17 +128,15 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             ),
           );
         } else if (seat.status == SeatStatus.joined) {
-          // Approved! Navigate to live session
+          // Approved! Navigate to player session (same screen as dealer-assisted)
           _seatSubscription?.cancel();
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => LiveSessionScreen(
+              builder: (context) => PlayerSessionScreen(
                 clubId: widget.qrData.clubId,
                 tableId: widget.qrData.tableId,
                 seatNumber: widget.qrData.seatNumber,
-                tableName: _table!.name,
-                clubName: _club!.name,
               ),
             ),
           );

@@ -52,6 +52,12 @@ class SeatedPlayer {
   final DateTime joinedAt;
   final bool isActive;  // Still at the table
 
+  // Analytics tracking fields
+  final double initialStack;  // Stack when player first joined
+  final double buyInAmount;   // Buy-in amount from event
+  final int rebuyCount;       // Number of rebuys
+  final List<Map<String, dynamic>> stackHistory;  // Stack snapshots
+
   SeatedPlayer({
     required this.playerId,
     required this.displayName,
@@ -59,6 +65,10 @@ class SeatedPlayer {
     required this.stack,
     required this.joinedAt,
     this.isActive = true,
+    this.initialStack = 0,
+    this.buyInAmount = 0,
+    this.rebuyCount = 0,
+    this.stackHistory = const [],
   });
 
   factory SeatedPlayer.fromMap(Map<String, dynamic> map) {
@@ -69,6 +79,12 @@ class SeatedPlayer {
       stack: (map['stack'] ?? 0).toDouble(),
       joinedAt: DateTime.tryParse(map['joinedAt'] ?? '') ?? DateTime.now(),
       isActive: map['isActive'] ?? true,
+      initialStack: (map['initialStack'] ?? 0).toDouble(),
+      buyInAmount: (map['buyInAmount'] ?? 0).toDouble(),
+      rebuyCount: map['rebuyCount'] ?? 0,
+      stackHistory: (map['stackHistory'] as List<dynamic>?)
+          ?.map((e) => Map<String, dynamic>.from(e as Map))
+          .toList() ?? [],
     );
   }
 
@@ -80,12 +96,20 @@ class SeatedPlayer {
       'stack': stack,
       'joinedAt': joinedAt.toIso8601String(),
       'isActive': isActive,
+      'initialStack': initialStack,
+      'buyInAmount': buyInAmount,
+      'rebuyCount': rebuyCount,
+      'stackHistory': stackHistory,
     };
   }
 
   SeatedPlayer copyWith({
     double? stack,
     bool? isActive,
+    double? initialStack,
+    double? buyInAmount,
+    int? rebuyCount,
+    List<Map<String, dynamic>>? stackHistory,
   }) {
     return SeatedPlayer(
       playerId: playerId,
@@ -94,6 +118,10 @@ class SeatedPlayer {
       stack: stack ?? this.stack,
       joinedAt: joinedAt,
       isActive: isActive ?? this.isActive,
+      initialStack: initialStack ?? this.initialStack,
+      buyInAmount: buyInAmount ?? this.buyInAmount,
+      rebuyCount: rebuyCount ?? this.rebuyCount,
+      stackHistory: stackHistory ?? this.stackHistory,
     );
   }
 }

@@ -37,23 +37,34 @@ class DealerService {
       tableId: tableId,
     );
 
+    // Find active event that includes this table (for live rankings and buy-in amount)
+    final activeEvent = await EventService.getActiveEventForTable(clubId, tableId);
+    final eventId = activeEvent?.id;
+    final eventBuyIn = activeEvent?.startingStack?.toDouble() ?? 0;
+
     // Convert seat assignments to seated players
     final players = <int, SeatedPlayer>{};
     for (final entry in seatAssignments.entries) {
       if (entry.value.isOccupied) {
+        final chipStack = entry.value.chipStack ?? 0;
         players[entry.key] = SeatedPlayer(
           playerId: entry.value.playerId!,
           displayName: entry.value.playerName ?? 'Player ${entry.key}',
           seatNumber: entry.key,
-          stack: 0,  // Will be set when hand starts
+          stack: chipStack,
           joinedAt: entry.value.assignedAt ?? now,
+          // Analytics tracking
+          initialStack: chipStack,
+          buyInAmount: eventBuyIn > 0 ? eventBuyIn : chipStack,
+          rebuyCount: 0,
+          stackHistory: chipStack > 0 ? [{
+            'timestamp': now.toIso8601String(),
+            'stackSize': chipStack,
+            'changeType': 'initial',
+          }] : [],
         );
       }
     }
-
-    // Find active event that includes this table (for live rankings)
-    final activeEvent = await EventService.getActiveEventForTable(clubId, tableId);
-    final eventId = activeEvent?.id;
 
     // Use event's game type if available
     final effectiveGameType = activeEvent?.gameType ?? gameType;
@@ -253,9 +264,14 @@ class DealerService {
     required int seatNumber,
     required DateTime endTime,
   }) async {
+    // Get player data for analytics
+    final player = dealerSession.players[seatNumber];
+    if (player == null) return;
+
     // Try to get event details for session name and game type
     String sessionName = 'Table Session';
     String gameType = dealerSession.gameType;
+    double eventBuyIn = player.buyInAmount;
 
     if (dealerSession.eventId != null) {
       try {
@@ -266,9 +282,27 @@ class DealerService {
         if (event != null) {
           sessionName = event.name;
           gameType = event.gameType;
+          // Use event's starting stack if available
+          if (event.startingStack != null && event.startingStack! > 0) {
+            eventBuyIn = event.startingStack!.toDouble();
+          }
         }
       } catch (e) {
         print('Error fetching event for session name: $e');
+      }
+    }
+
+    // Calculate total buy-in (initial + rebuys)
+    final totalBuyIn = eventBuyIn * (1 + player.rebuyCount);
+
+    // Build rebuys list from stack history
+    final rebuys = <Map<String, dynamic>>[];
+    for (final entry in player.stackHistory) {
+      if (entry['changeType'] == 'rebuy') {
+        rebuys.add({
+          'timestamp': entry['timestamp'],
+          'amount': entry['rebuyAmount'] ?? eventBuyIn,
+        });
       }
     }
 
@@ -290,6 +324,15 @@ class DealerService {
       'clubId': dealerSession.clubId,
       'tableId': dealerSession.tableId,
       if (dealerSession.eventId != null) 'eventId': dealerSession.eventId,
+
+      // Analytics fields
+      'buyInAmount': eventBuyIn,
+      'totalBuyIn': totalBuyIn,
+      'startingStack': player.initialStack,
+      'currentStack': player.stack,
+      'stackHistory': player.stackHistory,
+      'rebuyCount': player.rebuyCount,
+      'rebuys': rebuys,
     };
 
     await _firestore.collection('poker_sessions').add(sessionData);
@@ -536,14 +579,41 @@ class DealerService {
     required String displayName,
     required int seatNumber,
     double initialStack = 0,
+    double? buyInAmount,  // Override buy-in amount if different from initial stack
   }) async {
     final now = DateTime.now();
+
+    // Get session to check for event buy-in amount
+    double effectiveBuyIn = buyInAmount ?? initialStack;
+    final session = await getSession(sessionId);
+    if (session?.eventId != null) {
+      try {
+        final event = await EventService.getEvent(
+          session!.clubId,
+          session.eventId!,
+        );
+        if (event?.startingStack != null && event!.startingStack! > 0) {
+          effectiveBuyIn = event.startingStack!.toDouble();
+        }
+      } catch (e) {
+        // Use initial stack as fallback
+      }
+    }
+
     final playerData = SeatedPlayer(
       playerId: odPlayerId,
       displayName: displayName,
       seatNumber: seatNumber,
       stack: initialStack,
       joinedAt: now,
+      initialStack: initialStack,
+      buyInAmount: effectiveBuyIn,
+      rebuyCount: 0,
+      stackHistory: initialStack > 0 ? [{
+        'timestamp': now.toIso8601String(),
+        'stackSize': initialStack,
+        'changeType': 'initial',
+      }] : [],
     ).toMap();
 
     await _firestore
@@ -567,7 +637,103 @@ class DealerService {
         });
   }
 
+  /// Add stack history entry for a player (call after each hand completes)
+  static Future<void> addStackHistoryEntry({
+    required String sessionId,
+    required int seatNumber,
+    required double stackSize,
+    required String changeType,  // 'hand', 'rebuy', 'initial'
+    int? handNumber,
+  }) async {
+    final entry = {
+      'timestamp': DateTime.now().toIso8601String(),
+      'stackSize': stackSize,
+      'changeType': changeType,
+      if (handNumber != null) 'handNumber': handNumber,
+    };
+
+    await _firestore
+        .collection(_dealerSessionsCollection)
+        .doc(sessionId)
+        .update({
+          'players.$seatNumber.stackHistory': FieldValue.arrayUnion([entry]),
+        });
+  }
+
+  /// Record a rebuy for a player
+  static Future<void> recordRebuy({
+    required String sessionId,
+    required int seatNumber,
+    required double newStack,
+    double? rebuyAmount,
+  }) async {
+    final now = DateTime.now();
+
+    // Get session to calculate rebuy amount if not provided
+    final session = await getSession(sessionId);
+    double effectiveRebuyAmount = rebuyAmount ?? newStack;
+
+    if (session != null) {
+      final player = session.players[seatNumber];
+      if (player != null && rebuyAmount == null) {
+        // Rebuy amount is the new stack (since player busted to 0)
+        effectiveRebuyAmount = newStack;
+      }
+    }
+
+    await _firestore
+        .collection(_dealerSessionsCollection)
+        .doc(sessionId)
+        .update({
+          'players.$seatNumber.rebuyCount': FieldValue.increment(1),
+          'players.$seatNumber.stack': newStack,
+          'players.$seatNumber.isActive': true,
+          'players.$seatNumber.stackHistory': FieldValue.arrayUnion([{
+            'timestamp': now.toIso8601String(),
+            'stackSize': newStack,
+            'changeType': 'rebuy',
+            'rebuyAmount': effectiveRebuyAmount,
+          }]),
+        });
+  }
+
+  /// Update all player stacks in bulk (call after hand completes)
+  static Future<void> updateAllPlayerStacks({
+    required String sessionId,
+    required Map<int, double> playerStacks,  // seat -> stack
+    required int handNumber,
+  }) async {
+    final updates = <String, dynamic>{};
+
+    for (final entry in playerStacks.entries) {
+      final seat = entry.key;
+      final stack = entry.value;
+
+      // Update stack
+      updates['players.$seat.stack'] = stack;
+    }
+
+    if (updates.isNotEmpty) {
+      await _firestore
+          .collection(_dealerSessionsCollection)
+          .doc(sessionId)
+          .update(updates);
+
+      // Add stack history entries for each player
+      for (final entry in playerStacks.entries) {
+        await addStackHistoryEntry(
+          sessionId: sessionId,
+          seatNumber: entry.key,
+          stackSize: entry.value,
+          changeType: 'hand',
+          handNumber: handNumber,
+        );
+      }
+    }
+  }
+
   /// Get all hands from a session
+  /// Includes player-specific data (hole cards, notes, tags) for the current user
   static Future<List<Map<String, dynamic>>> getSessionHands(String sessionId) async {
     final snapshot = await _firestore
         .collection(_dealerSessionsCollection)
@@ -576,18 +742,54 @@ class DealerService {
         .orderBy('handNumber')
         .get();
 
-    return snapshot.docs.map((doc) {
+    final currentUserId = AuthService.userId;
+    final hands = <Map<String, dynamic>>[];
+
+    for (final doc in snapshot.docs) {
       final data = doc.data();
 
       // Convert Timestamps to ISO strings (same format as FirebaseService.getSessionHands)
-      return {
+      final hand = {
         'id': doc.id,
         'sessionId': sessionId,
         ...data,
         'startTime': (data['startTime'] as Timestamp?)?.toDate().toIso8601String() ?? DateTime.now().toIso8601String(),
         'endTime': (data['endTime'] as Timestamp?)?.toDate().toIso8601String(),
       };
-    }).toList();
+
+      // Fetch player-specific data (hole cards, notes, tags) for current user
+      if (currentUserId != null) {
+        try {
+          final playerData = await getPlayerHandData(
+            sessionId: sessionId,
+            handId: doc.id,
+            odPlayerId: currentUserId,
+          );
+
+          if (playerData != null) {
+            // Merge hole cards as 'ourHoleCards' (matches expected format)
+            final holeCards = playerData['holeCards'] as Map<String, dynamic>?;
+            if (holeCards != null) {
+              hand['ourHoleCards'] = holeCards;
+            }
+
+            // Merge notes and tags
+            if (playerData['notes'] != null) {
+              hand['notes'] = playerData['notes'];
+            }
+            if (playerData['tags'] != null) {
+              hand['tags'] = playerData['tags'];
+            }
+          }
+        } catch (e) {
+          // Ignore errors fetching player data - hand is still valid
+        }
+      }
+
+      hands.add(hand);
+    }
+
+    return hands;
   }
 
   /// Watch session for real-time updates
