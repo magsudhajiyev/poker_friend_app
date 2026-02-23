@@ -170,11 +170,13 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
       // First check if user is admin (needed for tab count)
       final isAdmin = await ClubService.canManageEvents(widget.club.id);
+      if (!mounted) return;
 
       // Load all data in parallel
       final results = await Future.wait([
@@ -185,6 +187,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         if (isAdmin) ClubService.getMembers(widget.club.id),
         if (isAdmin) InvitationService.getClubInvitations(widget.club.id, status: InvitationStatus.pending),
       ]);
+      if (!mounted) return;
 
       // Get active dealer sessions to show dealer status
       Map<String, String?> dealerTableAssignments = {};
@@ -194,6 +197,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         for (final dealer in dealers) {
           // Check if dealer has active session
           final sessions = await DealerService.getDealerActiveSessions();
+          if (!mounted) return;
           final activeSession = sessions.where((s) => s.dealerId == dealer.userId && s.clubId == widget.club.id).firstOrNull;
           if (activeSession != null) {
             dealerTableAssignments[dealer.userId] = activeSession.tableId;
@@ -201,6 +205,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         }
       }
 
+      if (!mounted) return;
       setState(() {
         _isAdmin = isAdmin;
         _memberCount = results[0] as int;
@@ -220,7 +225,9 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       });
     } catch (e) {
       print('Error loading club data: $e');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
