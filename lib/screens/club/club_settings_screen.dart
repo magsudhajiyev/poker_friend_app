@@ -12,6 +12,7 @@ import '../../models/club_member.dart';
 import '../../models/poker_table.dart';
 import '../../services/club_service.dart';
 import '../../services/table_service.dart';
+import '../../widgets/invite_member_dialog.dart';
 
 /// Club settings screen for admins to manage club info, tables, and members
 class ClubSettingsScreen extends StatefulWidget {
@@ -906,7 +907,33 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Members (${_members.length})'),
+        _buildSectionTitle(
+          'Members (${_members.length})',
+          trailing: GestureDetector(
+            onTap: _showInviteMemberDialog,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: PokerFriendColors.green,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.person_add, color: Colors.white, size: 18),
+                  SizedBox(width: 4),
+                  Text(
+                    'Invite',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
         const SizedBox(height: 16),
         if (_members.isEmpty)
           Container(
@@ -1026,6 +1053,18 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         return PokerFriendColors.blue;
       case ClubRole.player:
         return PokerFriendColors.green;
+    }
+  }
+
+  Future<void> _showInviteMemberDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => InviteMemberDialog(club: _club),
+    );
+
+    // Refresh members list if a member was added
+    if (result == true) {
+      await _loadData();
     }
   }
 }

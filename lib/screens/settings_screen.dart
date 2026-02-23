@@ -4,7 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../services/club_seeder_service.dart';
 import '../services/club_service.dart';
+import '../services/club_request_service.dart';
 import '../models/club_member.dart';
+import 'admin/club_requests_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,11 +17,14 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool autoAdvanceStreets = false;
+  bool _isAppAdmin = false;
+  int _pendingRequestCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _checkAppAdminStatus();
   }
 
   Future<void> _loadSettings() async {
@@ -27,6 +32,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       autoAdvanceStreets = prefs.getBool('auto_advance_streets') ?? false;
     });
+  }
+
+  Future<void> _checkAppAdminStatus() async {
+    final isAdmin = await ClubRequestService.isAppAdmin();
+    if (isAdmin) {
+      final count = await ClubRequestService.getPendingCount();
+      setState(() {
+        _isAppAdmin = true;
+        _pendingRequestCount = count;
+      });
+    }
   }
 
   Future<void> _saveAutoAdvanceStreets(bool value) async {
@@ -193,7 +209,129 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 SizedBox(height: 24),
 
-                // Debug Section - Club Admin
+                // App Admin Section - Only visible for app admins
+                if (_isAppAdmin) ...[
+                  Container(
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: PokerFriendColors.dark3,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: PokerFriendColors.yellow.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.admin_panel_settings,
+                                color: PokerFriendColors.yellow,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'App Admin',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Manage club registration requests',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: PokerFriendColors.dark9,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ClubRequestsScreen(),
+                              ),
+                            );
+                            // Refresh pending count when returning
+                            _checkAppAdminStatus();
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: PokerFriendColors.dark1,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: PokerFriendColors.dark5),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.business_center,
+                                  color: PokerFriendColors.yellow,
+                                  size: 20,
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Club Requests',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                if (_pendingRequestCount > 0) ...[
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: PokerFriendColors.red,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '$_pendingRequestCount',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                ],
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: PokerFriendColors.dark9,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                ],
+
+                // Debug Section - Club Admin (for testing)
                 Container(
                   padding: EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -224,7 +362,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Club Admin',
+                                  'Debug: Club Admin',
                                   style: TextStyle(
                                     fontSize: 18,
                                     color: Colors.white,
@@ -233,7 +371,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 SizedBox(height: 2),
                                 Text(
-                                  'Manage your club roles',
+                                  'Test role promotion',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: PokerFriendColors.dark9,

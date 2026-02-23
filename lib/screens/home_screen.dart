@@ -37,7 +37,9 @@ import '../widgets/sliding_notification.dart';
 import '../widgets/navigation_drawer.dart';
 import 'player/qr_scan_screen.dart';
 import 'club/event_detail_screen.dart';
+import 'club/club_dashboard_screen.dart';
 import 'invitations_screen.dart';
+import '../models/club_member.dart';
 import '../services/invitation_service.dart';
 import '../services/event_attendance_service.dart';
 import '../models/event_attendance.dart';
@@ -220,6 +222,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case NotificationType.memberRSVP:
         icon = Icons.how_to_reg;
         iconColor = const Color(0xFF9C27B0);
+        break;
+      case NotificationType.clubApproved:
+        icon = Icons.check_circle;
+        iconColor = const Color(0xFF4CAF50);
+        break;
+      case NotificationType.clubRejected:
+        icon = Icons.cancel;
+        iconColor = const Color(0xFFEF5350);
+        break;
+      case NotificationType.memberInvited:
+        icon = Icons.mail;
+        iconColor = const Color(0xFFA855F7);
+        break;
+      case NotificationType.invitationAccepted:
+        icon = Icons.person_add;
+        iconColor = const Color(0xFF4CAF50);
+        break;
+      case NotificationType.invitationDeclined:
+        icon = Icons.person_off;
+        iconColor = const Color(0xFFEF5350);
         break;
     }
 
@@ -668,6 +690,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         icon = Icons.how_to_reg;
         iconColor = const Color(0xFF9C27B0);
         break;
+      case NotificationType.clubApproved:
+        icon = Icons.check_circle;
+        iconColor = const Color(0xFF4CAF50);
+        break;
+      case NotificationType.clubRejected:
+        icon = Icons.cancel;
+        iconColor = const Color(0xFFEF5350);
+        break;
+      case NotificationType.memberInvited:
+        icon = Icons.mail;
+        iconColor = const Color(0xFFA855F7);
+        break;
+      case NotificationType.invitationAccepted:
+        icon = Icons.person_add;
+        iconColor = const Color(0xFF4CAF50);
+        break;
+      case NotificationType.invitationDeclined:
+        icon = Icons.person_off;
+        iconColor = const Color(0xFFEF5350);
+        break;
     }
 
     // Format time ago
@@ -688,8 +730,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Navigator.pop(dialogContext);
         // Mark as read
         await ClubNotificationService.markAsRead(notification.id);
-        // Navigate to event detail screen
-        _navigateToEventFromNotification(notification);
+        // Handle based on notification type
+        _handleNotificationTap(notification);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -762,6 +804,335 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  /// Handle notification tap based on type
+  void _handleNotificationTap(ClubNotification notification) {
+    switch (notification.type) {
+      case NotificationType.memberInvited:
+        _handleMemberInvitationTap(notification);
+        break;
+      case NotificationType.clubApproved:
+        _navigateToClub(notification.clubId);
+        break;
+      case NotificationType.clubRejected:
+        // Just show a message, nothing to navigate to
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(notification.body)),
+        );
+        break;
+      case NotificationType.invitationAccepted:
+      case NotificationType.invitationDeclined:
+        // Navigate to club to see the member
+        _navigateToClub(notification.clubId);
+        break;
+      case NotificationType.eventCreated:
+      case NotificationType.eventUpdated:
+      case NotificationType.eventCancelled:
+      case NotificationType.eventStarting:
+      case NotificationType.eventStarted:
+      case NotificationType.memberRSVP:
+        _navigateToEventFromNotification(notification);
+        break;
+    }
+  }
+
+  /// Handle member invitation notification tap - show accept/decline dialog
+  Future<void> _handleMemberInvitationTap(ClubNotification notification) async {
+    if (notification.clubId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Club not found')),
+      );
+      return;
+    }
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // Fetch club data
+      final club = await ClubService.getClub(notification.clubId);
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (club == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Club not found')),
+          );
+        }
+        return;
+      }
+
+      // Show accept/decline dialog
+      if (mounted) {
+        _showInvitationResponseDialog(notification, club);
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  /// Show dialog to accept or decline invitation
+  void _showInvitationResponseDialog(ClubNotification notification, Club club) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Club Invitation',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: const Color(0xFFA855F7).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.mail,
+                color: Color(0xFFA855F7),
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'You\'ve been invited to join',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              club.name,
+              style: const TextStyle(
+                color: Color(0xFFA855F7),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              notification.body,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 13,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await _respondToInvitation(notification, club, false);
+            },
+            child: const Text(
+              'Decline',
+              style: TextStyle(color: Color(0xFFEF5350)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await _respondToInvitation(notification, club, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Accept'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Respond to invitation (accept or decline)
+  Future<void> _respondToInvitation(ClubNotification notification, Club club, bool accept) async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final userId = AuthService.userId;
+      final userName = AuthService.userDisplayName ?? 'User';
+
+      if (userId == null) {
+        throw 'Not authenticated';
+      }
+
+      if (accept) {
+        // User is already a member (was added when invitation was sent)
+        // Just notify admins and navigate to club
+
+        // Notify club admins
+        await _notifyClubAdmins(
+          club: club,
+          type: NotificationType.invitationAccepted,
+          title: 'Invitation Accepted',
+          body: '$userName has accepted the invitation to join ${club.name}.',
+        );
+
+        // Close loading dialog
+        if (mounted) Navigator.pop(context);
+
+        // Navigate to club
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ClubDashboardScreen(club: club),
+            ),
+          );
+        }
+      } else {
+        // User declined - remove them from club membership
+        await ClubService.removeMember(club.id, userId);
+
+        // Notify club admins
+        await _notifyClubAdmins(
+          club: club,
+          type: NotificationType.invitationDeclined,
+          title: 'Invitation Declined',
+          body: '$userName has declined the invitation to join ${club.name}.',
+        );
+
+        // Close loading dialog
+        if (mounted) Navigator.pop(context);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invitation declined')),
+          );
+        }
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  /// Notify club admins about invitation response
+  Future<void> _notifyClubAdmins({
+    required Club club,
+    required NotificationType type,
+    required String title,
+    required String body,
+  }) async {
+    try {
+      // Get all club members who are owners or admins
+      final members = await ClubService.getMembers(club.id);
+      final adminUserIds = members
+          .where((m) => m.role == ClubRole.owner || m.role == ClubRole.admin)
+          .map((m) => m.userId)
+          .whereType<String>()
+          .toList();
+
+      // Don't notify current user if they're an admin
+      final currentUserId = AuthService.userId;
+      adminUserIds.removeWhere((id) => id == currentUserId);
+
+      // Send notification to each admin
+      for (final adminId in adminUserIds) {
+        await ClubNotificationService.notifyUser(
+          userId: adminId,
+          type: type,
+          title: title,
+          body: body,
+          clubId: club.id,
+          clubName: club.name,
+          data: {
+            'action': 'view_club',
+            'clubId': club.id,
+          },
+        );
+      }
+    } catch (e) {
+      // Don't fail the whole operation if notification fails
+    }
+  }
+
+  /// Navigate to club dashboard
+  Future<void> _navigateToClub(String clubId) async {
+    if (clubId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Club not found')),
+      );
+      return;
+    }
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final club = await ClubService.getClub(clubId);
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (club == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Club not found')),
+          );
+        }
+        return;
+      }
+
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ClubDashboardScreen(club: club),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
 
   /// Navigate to event detail screen from notification

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/seat_assignment.dart';
 import '../models/qr_seat_data.dart';
 import 'auth_service.dart';
+import 'club_service.dart';
 
 /// Service for managing seat assignments at poker tables
 class SeatService {
@@ -80,6 +81,7 @@ class SeatService {
 
   /// Approve a pending join request (for dealers)
   /// Sets the player's chip stack and changes status to 'joined'
+  /// Also auto-adds the player as a club member if not already
   static Future<SeatAssignment> approveJoin({
     required String clubId,
     required String tableId,
@@ -89,7 +91,7 @@ class SeatService {
     final seatId = _getSeatId(clubId, tableId, seatNumber);
     final seatRef = _firestore.collection(_seatAssignmentsCollection).doc(seatId);
 
-    return await _firestore.runTransaction<SeatAssignment>((transaction) async {
+    final result = await _firestore.runTransaction<SeatAssignment>((transaction) async {
       final seatDoc = await transaction.get(seatRef);
 
       if (!seatDoc.exists) {
@@ -116,6 +118,17 @@ class SeatService {
 
       return updated;
     });
+
+    // Auto-add player as club member if not already
+    if (result.playerId != null && !result.playerId!.startsWith('manual_')) {
+      await ClubService.ensureMembership(
+        clubId: clubId,
+        userId: result.playerId!,
+        displayName: result.playerName ?? 'Player',
+      );
+    }
+
+    return result;
   }
 
   /// Reject a pending join request (for dealers)
@@ -137,6 +150,7 @@ class SeatService {
 
   /// Directly seat a user by their ID (for dealers - bypasses QR flow)
   /// This is equivalent to a player scanning QR and dealer immediately approving
+  /// Also auto-adds the player as a club member if not already
   static Future<SeatAssignment> seatUserDirectly({
     required String clubId,
     required String tableId,
@@ -145,13 +159,10 @@ class SeatService {
     required String playerName,
     required double chipStack,
   }) async {
-    print('🪑 seatUserDirectly: clubId=$clubId, tableId=$tableId, seat=$seatNumber');
-    print('🪑 seatUserDirectly: playerId=$playerId, playerName=$playerName, chipStack=$chipStack');
-
     final seatId = _getSeatId(clubId, tableId, seatNumber);
     final seatRef = _firestore.collection(_seatAssignmentsCollection).doc(seatId);
 
-    return await _firestore.runTransaction<SeatAssignment>((transaction) async {
+    final result = await _firestore.runTransaction<SeatAssignment>((transaction) async {
       final seatDoc = await transaction.get(seatRef);
 
       // Check if seat is already occupied by someone else
@@ -176,10 +187,20 @@ class SeatService {
         updatedAt: now,
       );
 
-      print('🪑 seatUserDirectly: Saving assignment with status=${assignment.status}');
       transaction.set(seatRef, assignment.toFirestore());
       return assignment;
     });
+
+    // Auto-add player as club member if not already (skip manual walk-up players)
+    if (!playerId.startsWith('manual_')) {
+      await ClubService.ensureMembership(
+        clubId: clubId,
+        userId: playerId,
+        displayName: playerName,
+      );
+    }
+
+    return result;
   }
 
   /// Watch for pending join requests at a table (for dealers)

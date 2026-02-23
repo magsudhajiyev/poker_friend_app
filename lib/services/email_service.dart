@@ -61,6 +61,264 @@ class EmailService {
     }
   }
 
+  /// Send club approval notification email
+  static Future<bool> sendClubApprovalEmail({
+    required String toEmail,
+    required String clubName,
+  }) async {
+    final apiKey = EnvConfig.resendApiKey;
+    if (apiKey.isEmpty) {
+      print('EmailService: Resend API key not configured');
+      return false;
+    }
+
+    final emailBody = _buildClubApprovalEmailHtml(clubName: clubName);
+
+    try {
+      final response = await http.post(
+        Uri.parse(_resendApiUrl),
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'from': 'Poker Friend <clubs@pokerfriend.app>',
+          'to': [toEmail],
+          'subject': 'Your Club Has Been Approved: $clubName',
+          'html': emailBody,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('EmailService: Club approval email sent to $toEmail');
+        return true;
+      } else {
+        print('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('EmailService: Error sending email - $e');
+      return false;
+    }
+  }
+
+  /// Build styled HTML email for club approval
+  static String _buildClubApprovalEmailHtml({
+    required String clubName,
+  }) {
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Club Approved</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f0f1a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0f0f1a;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" style="max-width: 500px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 32px 0;">
+              <table role="presentation" width="100%">
+                <tr>
+                  <td>
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: 12px; display: inline-block; text-align: center; line-height: 50px;">
+                      <span style="font-size: 24px;">&#10003;</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Title -->
+          <tr>
+            <td style="padding: 24px 32px 8px;">
+              <h1 style="margin: 0; color: #22c55e; font-size: 28px; font-weight: 700;">Club Approved!</h1>
+            </td>
+          </tr>
+
+          <!-- Main Message -->
+          <tr>
+            <td style="padding: 16px 32px 32px;">
+              <p style="margin: 0; color: #ffffff; font-size: 18px; line-height: 1.6;">
+                Great news! Your club <strong style="color: #22c55e;">$clubName</strong> has been approved and is now ready to use.
+              </p>
+              <p style="margin: 24px 0 0; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+                You can now log in to Poker Friend and start managing your club, adding tables, inviting dealers, and hosting events.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 32px;">
+              <hr style="border: none; border-top: 1px solid #374151; margin: 0;">
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px 32px;">
+              <p style="margin: 0; color: #6b7280; font-size: 12px; line-height: 1.6;">
+                Open the Poker Friend app to get started with your new club.
+              </p>
+              <p style="margin: 16px 0 0; color: #4b5563; font-size: 11px;">
+                Sent by Poker Friend
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+''';
+  }
+
+  /// Send member/admin invitation email
+  static Future<bool> sendMemberInvitationEmail({
+    required String toEmail,
+    required String clubName,
+    required String inviterName,
+    required String role,  // 'dealer' or 'admin'
+  }) async {
+    final apiKey = EnvConfig.resendApiKey;
+    if (apiKey.isEmpty) {
+      print('EmailService: Resend API key not configured');
+      return false;
+    }
+
+    final emailBody = _buildMemberInvitationEmailHtml(
+      clubName: clubName,
+      inviterName: inviterName,
+      role: role,
+    );
+
+    final roleTitle = role == 'admin' ? 'Admin' : 'Dealer';
+
+    try {
+      final response = await http.post(
+        Uri.parse(_resendApiUrl),
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'from': 'Poker Friend <invites@pokerfriend.app>',
+          'to': [toEmail],
+          'subject': '$roleTitle Invitation: $clubName',
+          'html': emailBody,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('EmailService: Member invitation email sent to $toEmail');
+        return true;
+      } else {
+        print('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('EmailService: Error sending email - $e');
+      return false;
+    }
+  }
+
+  /// Build styled HTML email for member invitation
+  static String _buildMemberInvitationEmailHtml({
+    required String clubName,
+    required String inviterName,
+    required String role,
+  }) {
+    final roleTitle = role == 'admin' ? 'an Admin' : 'a Dealer';
+    final roleColor = role == 'admin' ? '#f59e0b' : '#a855f7';
+
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Club Invitation</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f0f1a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0f0f1a;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" style="max-width: 500px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 32px 0;">
+              <table role="presentation" width="100%">
+                <tr>
+                  <td>
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, $roleColor 0%, ${role == 'admin' ? '#d97706' : '#7c3aed'} 100%); border-radius: 12px; display: inline-block; text-align: center; line-height: 50px;">
+                      <span style="font-size: 24px;">&#9824;</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Title -->
+          <tr>
+            <td style="padding: 24px 32px 8px;">
+              <h1 style="margin: 0; color: $roleColor; font-size: 28px; font-weight: 700;">You're Invited!</h1>
+            </td>
+          </tr>
+
+          <!-- Inviter Info -->
+          <tr>
+            <td style="padding: 0 32px 24px;">
+              <p style="margin: 0; color: #6b7280; font-size: 14px;">Invitation from $inviterName</p>
+            </td>
+          </tr>
+
+          <!-- Main Message -->
+          <tr>
+            <td style="padding: 0 32px 32px;">
+              <p style="margin: 0; color: #ffffff; font-size: 18px; line-height: 1.6;">
+                You've been invited to join <strong style="color: $roleColor;">$clubName</strong> as $roleTitle.
+              </p>
+              <p style="margin: 16px 0 0; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+                Open the Poker Friend app to accept this invitation and start ${role == 'admin' ? 'managing' : 'dealing at'} the club.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 32px;">
+              <hr style="border: none; border-top: 1px solid #374151; margin: 0;">
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px 32px;">
+              <p style="margin: 0; color: #6b7280; font-size: 12px; line-height: 1.6;">
+                If you don't have the app yet, download Poker Friend from the App Store or Google Play.
+              </p>
+              <p style="margin: 16px 0 0; color: #4b5563; font-size: 11px;">
+                Sent by Poker Friend
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+''';
+  }
+
   /// Build styled HTML email for dealer invitation
   static String _buildInvitationEmailHtml({
     required String clubName,

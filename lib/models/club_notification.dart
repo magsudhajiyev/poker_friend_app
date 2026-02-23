@@ -8,6 +8,11 @@ enum NotificationType {
   eventStarting,    // 1 hour before
   eventStarted,     // When status -> active
   memberRSVP,       // When a member RSVPs to an event
+  clubApproved,     // When a club request is approved
+  clubRejected,     // When a club request is rejected
+  memberInvited,    // When user is invited to join a club
+  invitationAccepted, // When invited user accepts the invitation
+  invitationDeclined, // When invited user declines the invitation
 }
 
 extension NotificationTypeExtension on NotificationType {
@@ -25,6 +30,16 @@ extension NotificationTypeExtension on NotificationType {
         return 'Event Started';
       case NotificationType.memberRSVP:
         return 'Member RSVP';
+      case NotificationType.clubApproved:
+        return 'Club Approved';
+      case NotificationType.clubRejected:
+        return 'Club Rejected';
+      case NotificationType.memberInvited:
+        return 'Club Invitation';
+      case NotificationType.invitationAccepted:
+        return 'Invitation Accepted';
+      case NotificationType.invitationDeclined:
+        return 'Invitation Declined';
     }
   }
 
@@ -42,6 +57,16 @@ extension NotificationTypeExtension on NotificationType {
         return 'event_started';
       case NotificationType.memberRSVP:
         return 'member_rsvp';
+      case NotificationType.clubApproved:
+        return 'club_approved';
+      case NotificationType.clubRejected:
+        return 'club_rejected';
+      case NotificationType.memberInvited:
+        return 'member_invited';
+      case NotificationType.invitationAccepted:
+        return 'invitation_accepted';
+      case NotificationType.invitationDeclined:
+        return 'invitation_declined';
     }
   }
 
@@ -59,6 +84,16 @@ extension NotificationTypeExtension on NotificationType {
         return NotificationType.eventStarted;
       case 'member_rsvp':
         return NotificationType.memberRSVP;
+      case 'club_approved':
+        return NotificationType.clubApproved;
+      case 'club_rejected':
+        return NotificationType.clubRejected;
+      case 'member_invited':
+        return NotificationType.memberInvited;
+      case 'invitation_accepted':
+        return NotificationType.invitationAccepted;
+      case 'invitation_declined':
+        return NotificationType.invitationDeclined;
       default:
         return NotificationType.eventCreated;
     }

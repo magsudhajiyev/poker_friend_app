@@ -11,6 +11,42 @@ class ClubNotificationService {
   static const String _notificationsSubcollection = 'notifications';
   static const String _userNotificationsCollection = 'user_notifications';
 
+  /// Send notification to a single user
+  static Future<void> notifyUser({
+    required String userId,
+    required NotificationType type,
+    required String title,
+    required String body,
+    String? clubId,
+    String? clubName,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      final notification = ClubNotification(
+        id: '',
+        clubId: clubId ?? '',
+        clubName: clubName ?? '',
+        type: type,
+        title: title,
+        body: body,
+        data: data ?? {},
+        createdAt: DateTime.now(),
+        recipientUserIds: [userId],
+      );
+
+      // Create user notification document
+      await _firestore
+          .collection(_userNotificationsCollection)
+          .add({
+        ...notification.toFirestore(),
+        'userId': userId,
+        'isRead': false,
+      });
+    } catch (e) {
+      print('Error sending notification to user: $e');
+    }
+  }
+
   /// Send notification to all club members
   static Future<void> notifyClubMembers({
     required String clubId,

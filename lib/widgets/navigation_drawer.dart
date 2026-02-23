@@ -6,6 +6,7 @@ import '../screens/statistics_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/intro_screen.dart';
 import '../screens/club/club_dashboard_screen.dart';
+import 'register_club_dialog.dart';
 
 /// Custom navigation drawer that slides from left to right
 class AppNavigationDrawer extends StatefulWidget {
@@ -154,6 +155,19 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => SettingsScreen()),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.add_business_rounded,
+                      label: 'Register Club',
+                      onTap: () {
+                        Navigator.pop(context);
+                        showDialog(
+                          context: context,
+                          builder: (context) => const RegisterClubDialog(),
                         );
                       },
                     ),

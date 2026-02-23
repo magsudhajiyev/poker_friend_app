@@ -11,16 +11,23 @@ class ClubService {
   static const String _dealersCollection = 'dealers';
 
   /// Create a new club (admin only)
-  /// The creator becomes the owner
+  /// The creator becomes the owner, or a different owner can be specified
   static Future<Club> createClub({
     required String name,
     ClubSettings? settings,
     String? ownerUserId,  // Can specify different owner (for admin creating clubs)
+    String? ownerDisplayName,  // Display name for the owner (if different from current user)
+    String? ownerEmail,  // Email for the owner (if different from current user)
   }) async {
     final adminId = AuthService.userId;
     if (adminId == null) throw 'User not authenticated';
 
     final ownerId = ownerUserId ?? adminId;
+    // Use provided owner info, or fall back to current user's info if owner is current user
+    final displayName = ownerDisplayName ??
+        (ownerId == adminId ? AuthService.userDisplayName : 'Club Owner');
+    final email = ownerEmail ??
+        (ownerId == adminId ? AuthService.currentUser?.email : null);
     final now = DateTime.now();
 
     final clubData = Club(
@@ -42,8 +49,8 @@ class ClubService {
       ClubMember(
         id: '',
         userId: ownerId,
-        displayName: AuthService.userDisplayName,
-        email: AuthService.currentUser?.email,
+        displayName: displayName,
+        email: email,
         role: ClubRole.owner,
         joinedAt: now,
       ).toFirestore(),
@@ -417,5 +424,55 @@ class ClubService {
         .doc(clubId)
         .snapshots()
         .map((doc) => doc.exists ? Club.fromFirestore(doc) : null);
+  }
+
+  /// Remove a member from a club
+  static Future<void> removeMember(String clubId, String userId) async {
+    try {
+      // Find the member document
+      final snapshot = await _firestore
+          .collection(_clubsCollection)
+          .doc(clubId)
+          .collection(_membersSubcollection)
+          .where('userId', isEqualTo: userId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        return; // Member not found, nothing to remove
+      }
+
+      // Delete the member document
+      await snapshot.docs.first.reference.delete();
+
+      // Remove club from user's dealers document
+      await removeClubFromDealer(userId, clubId);
+    } catch (e) {
+      print('Error removing member: $e');
+      rethrow;
+    }
+  }
+
+  /// Ensure a user is a member of a club (add if not exists)
+  /// Used for auto-membership when players are seated via QR or dealer
+  static Future<void> ensureMembership({
+    required String clubId,
+    required String userId,
+    required String displayName,
+    ClubRole role = ClubRole.player,
+  }) async {
+    try {
+      final existingMember = await getMember(clubId, userId);
+      if (existingMember == null) {
+        await addMemberToClub(
+          clubId: clubId,
+          userId: userId,
+          displayName: displayName,
+          role: role,
+        );
+      }
+    } catch (e) {
+      print('Error ensuring membership: $e');
+    }
   }
 }
