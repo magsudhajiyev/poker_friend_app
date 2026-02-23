@@ -136,14 +136,20 @@ class ClubService {
     }
   }
 
-  /// Update club settings
+  /// Update club settings and info
   static Future<void> updateClub(String clubId, {
     String? name,
     ClubSettings? settings,
+    String? address,
+    String? phone,
+    String? description,
   }) async {
     final updates = <String, dynamic>{};
     if (name != null) updates['name'] = name;
     if (settings != null) updates['settings'] = settings.toMap();
+    if (address != null) updates['address'] = address;
+    if (phone != null) updates['phone'] = phone;
+    if (description != null) updates['description'] = description;
 
     if (updates.isNotEmpty) {
       await _firestore.collection(_clubsCollection).doc(clubId).update(updates);

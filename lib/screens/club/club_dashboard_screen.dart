@@ -6,12 +6,17 @@ import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/club_member.dart';
 import '../../models/club_invitation.dart';
+import '../../models/event_attendance.dart';
+import '../../models/event_ranking.dart';
 import '../../services/club_service.dart';
 import '../../services/event_service.dart';
+import '../../services/event_attendance_service.dart';
 import '../../services/invitation_service.dart';
 import '../../services/dealer_service.dart';
 import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
+import 'club_settings_screen.dart';
+import 'club_info_screen.dart';
 
 /// Club dashboard showing events with tabs for Upcoming, Live, and Past
 class ClubDashboardScreen extends StatefulWidget {
@@ -42,6 +47,9 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   List<ClubInvitation> _pendingInvitations = [];
   Map<String, String?> _dealerTableAssignments = {}; // dealerId -> tableId
 
+  // Player counts for event cards
+  Map<String, int> _eventPlayerCounts = {}; // eventId -> player count
+
   // Real-time subscription for all events
   StreamSubscription<List<ClubEvent>>? _eventsSubscription;
 
@@ -57,26 +65,92 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     _eventsSubscription = EventService.watchClubEvents(widget.club.id)
         .listen((allEvents) {
       if (!mounted) return;
+
+      // Upcoming: scheduled events, sorted by start time (soonest first)
+      final upcoming = allEvents
+          .where((e) => e.status == EventStatus.scheduled)
+          .toList()
+        ..sort((a, b) => a.startTime.compareTo(b.startTime));
+
+      // Live: active or paused events, sorted by start time (most recent first)
+      final live = allEvents
+          .where((e) => e.status == EventStatus.active || e.status == EventStatus.paused)
+          .toList()
+        ..sort((a, b) => b.startTime.compareTo(a.startTime));
+
+      // Past: completed or cancelled events, sorted by start time (most recent first)
+      final past = allEvents
+          .where((e) => e.status == EventStatus.completed || e.status == EventStatus.cancelled)
+          .toList()
+        ..sort((a, b) => b.startTime.compareTo(a.startTime));
+
       setState(() {
-        // Upcoming: scheduled events, sorted by start time (soonest first)
-        _upcomingEvents = allEvents
-            .where((e) => e.status == EventStatus.scheduled)
-            .toList()
-          ..sort((a, b) => a.startTime.compareTo(b.startTime));
-
-        // Live: active or paused events, sorted by start time (most recent first)
-        _liveEvents = allEvents
-            .where((e) => e.status == EventStatus.active || e.status == EventStatus.paused)
-            .toList()
-          ..sort((a, b) => b.startTime.compareTo(a.startTime));
-
-        // Past: completed or cancelled events, sorted by start time (most recent first)
-        _pastEvents = allEvents
-            .where((e) => e.status == EventStatus.completed || e.status == EventStatus.cancelled)
-            .toList()
-          ..sort((a, b) => b.startTime.compareTo(a.startTime));
+        _upcomingEvents = upcoming;
+        _liveEvents = live;
+        _pastEvents = past;
       });
+
+      // Load player counts for all events
+      _loadPlayerCounts(allEvents);
     });
+  }
+
+  /// Load player counts for events based on their status
+  Future<void> _loadPlayerCounts(List<ClubEvent> events) async {
+    final counts = <String, int>{};
+
+    for (final event in events) {
+      try {
+        int count = 0;
+
+        if (event.status == EventStatus.scheduled) {
+          // For upcoming events: get "going" RSVP count
+          final attendanceCounts = await EventAttendanceService.getAttendanceCounts(
+            widget.club.id,
+            event.id,
+          );
+          count = attendanceCounts[AttendanceStatus.going] ?? 0;
+        } else if (event.status == EventStatus.active || event.status == EventStatus.paused) {
+          // For live events: get active (non-busted) player count
+          final rankings = await EventService.getRankingsFromFirestore(
+            widget.club.id,
+            event.id,
+          );
+          if (rankings != null) {
+            count = rankings.rankings
+                .where((r) => r.status == PlayerRankingStatus.active)
+                .length;
+          }
+        } else if (event.status == EventStatus.completed) {
+          // For completed events: get total players from final standings
+          final finalStandings = await EventService.getFinalStandings(
+            widget.club.id,
+            event.id,
+          );
+          if (finalStandings != null) {
+            count = finalStandings.totalPlayers;
+          } else {
+            // Fallback to rankings if final standings not available
+            final rankings = await EventService.getRankingsFromFirestore(
+              widget.club.id,
+              event.id,
+            );
+            count = rankings?.totalPlayers ?? 0;
+          }
+        }
+
+        counts[event.id] = count;
+      } catch (e) {
+        // Silently ignore errors for individual event counts
+        counts[event.id] = 0;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _eventPlayerCounts = counts;
+      });
+    }
   }
 
   void _initTabController() {
@@ -330,9 +404,45 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                 ],
               ),
             ),
+          const SizedBox(width: 12),
+          // Settings/Info button
+          GestureDetector(
+            onTap: _navigateToSettingsOrInfo,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: PokerFriendColors.dark3,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                _isAdmin ? Icons.settings : Icons.info_outline,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void _navigateToSettingsOrInfo() {
+    if (_isAdmin) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ClubSettingsScreen(club: widget.club),
+        ),
+      ).then((_) => _loadData()); // Refresh data when returning
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ClubInfoScreen(club: widget.club),
+        ),
+      );
+    }
   }
 
   Widget _buildTabBar() {
@@ -668,72 +778,98 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               ),
             ],
 
-            // Buy-in and max players row
-            if (!event.isFree || event.hasCapacity) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  if (!event.isFree) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: PokerFriendColors.green.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.attach_money,
-                            size: 14,
+            // Buy-in and player count row
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (!event.isFree) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: PokerFriendColors.green.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.attach_money,
+                          size: 14,
+                          color: PokerFriendColors.green,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          '${event.buyInAmount?.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontSize: 13,
                             color: PokerFriendColors.green,
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(width: 2),
-                          Text(
-                            '${event.buyInAmount?.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: PokerFriendColors.green,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                  ],
-                  if (event.hasCapacity)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: PokerFriendColors.blue.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.people,
-                            size: 14,
-                            color: PokerFriendColors.blue,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Max ${event.maxPlayers}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: PokerFriendColors.blue,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  ),
+                  const SizedBox(width: 8),
                 ],
-              ),
-            ],
+                // Player count badge
+                _buildPlayerCountBadge(event, type),
+              ],
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPlayerCountBadge(ClubEvent event, String type) {
+    final count = _eventPlayerCounts[event.id] ?? 0;
+
+    // Determine label based on event type
+    String label;
+    Color color;
+
+    switch (type) {
+      case 'scheduled':
+        label = '$count going';
+        color = PokerFriendColors.purple;
+        break;
+      case 'live':
+        label = '$count playing';
+        color = PokerFriendColors.blue;
+        break;
+      case 'past':
+        label = '$count players';
+        color = PokerFriendColors.dark9;
+        break;
+      default:
+        label = '$count';
+        color = PokerFriendColors.dark9;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.people,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

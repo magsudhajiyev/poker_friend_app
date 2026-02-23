@@ -8,6 +8,9 @@ class Club {
   final String createdBy; // Admin userId who created this club
   final DateTime createdAt;
   final ClubSettings settings;
+  final String? address;
+  final String? phone;
+  final String? description;
 
   Club({
     required this.id,
@@ -16,6 +19,9 @@ class Club {
     required this.createdBy,
     required this.createdAt,
     required this.settings,
+    this.address,
+    this.phone,
+    this.description,
   });
 
   /// Factory constructor from Firestore document
@@ -28,6 +34,9 @@ class Club {
       createdBy: data['createdBy'] ?? '',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       settings: ClubSettings.fromMap(data['settings'] as Map<String, dynamic>? ?? {}),
+      address: data['address'] as String?,
+      phone: data['phone'] as String?,
+      description: data['description'] as String?,
     );
   }
 
@@ -40,6 +49,9 @@ class Club {
       createdBy: map['createdBy'] ?? '',
       createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
       settings: ClubSettings.fromMap(map['settings'] as Map<String, dynamic>? ?? {}),
+      address: map['address'] as String?,
+      phone: map['phone'] as String?,
+      description: map['description'] as String?,
     );
   }
 
@@ -51,6 +63,9 @@ class Club {
       'createdBy': createdBy,
       'createdAt': Timestamp.fromDate(createdAt),
       'settings': settings.toMap(),
+      if (address != null) 'address': address,
+      if (phone != null) 'phone': phone,
+      if (description != null) 'description': description,
     };
   }
 
@@ -63,6 +78,9 @@ class Club {
       'createdBy': createdBy,
       'createdAt': createdAt.toIso8601String(),
       'settings': settings.toMap(),
+      'address': address,
+      'phone': phone,
+      'description': description,
     };
   }
 
@@ -71,6 +89,9 @@ class Club {
     String? name,
     String? ownerId,
     ClubSettings? settings,
+    String? address,
+    String? phone,
+    String? description,
   }) {
     return Club(
       id: id,
@@ -79,6 +100,9 @@ class Club {
       createdBy: createdBy,
       createdAt: createdAt,
       settings: settings ?? this.settings,
+      address: address ?? this.address,
+      phone: phone ?? this.phone,
+      description: description ?? this.description,
     );
   }
 }
