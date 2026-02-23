@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
 import '../services/session_result_service.dart';
 import '../screens/settings_screen.dart';
 import '../screens/subscription_debug_screen.dart';
-import '../screens/dealer/dealer_home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -21,7 +19,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double bankrollGoal = 0.0;
   bool isLoading = true;
   String _selectedGameType = 'cash'; // Default to cash
-  bool _isDealer = false;  // Check if user has dealer privileges
 
   @override
   void initState() {
@@ -41,7 +38,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final bankroll = await BankrollService.getCurrentBankroll();
       final goal = await BankrollService.getBankrollGoal();
-      final isDealer = await AuthService.isDealer;
 
       if (mounted) {
         setState(() {
@@ -49,7 +45,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           bankrollGoal = goal;
           _goalController.text = goal.toStringAsFixed(0);
           _bankrollController.text = bankroll.toStringAsFixed(0);
-          _isDealer = isDealer;
           isLoading = false;
         });
       }
@@ -60,44 +55,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           isLoading = false;
         });
       }
-    }
-  }
-
-  // TEMPORARY: Setup admin account - remove after first use
-  Future<void> _setupAdminAccount() async {
-    final userId = AuthService.userId;
-    if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Not logged in'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-
-    try {
-      await FirebaseFirestore.instance.collection('dealers').doc(userId).set({
-        'accountType': 'admin',
-        'clubIds': [],
-        'createdAt': FieldValue.serverTimestamp(),
-        'email': AuthService.currentUser?.email ?? '',
-        'displayName': AuthService.userDisplayName,
-      });
-
-      // Clear cached account type so it reloads
-      AuthService.clearAccountTypeCache();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Admin account created! Refresh the screen.'),
-          backgroundColor: Color(0xFF5AC95A),
-        ),
-      );
-
-      // Reload data to update dealer status
-      await _loadData();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-      );
     }
   }
 
@@ -710,132 +667,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-
-                // Dealer Mode Button (only shown if user is a dealer)
-                if (_isDealer)
-                  Container(
-                    width: double.infinity,
-                    margin: EdgeInsets.only(bottom: 16),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const DealerHomeScreen()),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF1F1F23),
-                        padding: EdgeInsets.all(20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF2A4A5C),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              Icons.badge,
-                              color: Color(0xFF5A9AC9),
-                              size: 24,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Dealer Mode',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'Start dealing at your club',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF9A9A9A),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            color: Color(0xFF9A9A9A),
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                // TEMPORARY: Setup Admin Account Button - Remove after first use!
-                if (!_isDealer)
-                  Container(
-                    width: double.infinity,
-                    margin: EdgeInsets.only(bottom: 16),
-                    child: ElevatedButton(
-                      onPressed: _setupAdminAccount,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF5C2A2A),
-                        padding: EdgeInsets.all(20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF8B3A3A),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              Icons.admin_panel_settings,
-                              color: Colors.orange,
-                              size: 24,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Setup Admin Account',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.orange,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'One-time setup - tap to enable dealer mode',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF9A9A9A),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
 
                 // Log Out Button
                 Container(
