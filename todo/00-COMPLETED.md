@@ -46,3 +46,19 @@
 ### Player Session Persistence on Dealer Handoff
 - Players stay connected when dealer hands off table
 - Session watches both active and paused status
+
+### 13 - Hole Cards Not Appearing in Hand Details
+- Fixed: Player hole cards now appear in hand details after session
+- Root cause: `getSessionHands()` wasn't fetching player_data subcollection
+- Solution: Fetch and merge player's holeCards, notes, tags into hand data
+
+### 09 - Event RSVP "Who's Coming"
+- Real-time updates on event detail screen using StreamSubscription
+- Going count badge displayed on event cards in home screen
+- RSVP system already existed (Going/Maybe/Can't Go buttons, attendee list)
+
+### 14 - Player Can Edit Any Hand During Session
+- Player can tap any past hand in hand history to edit
+- Edit dialog allows adding/changing hole cards, notes, and tags
+- Changes saved immediately to Firestore
+- Long press for full hand details view

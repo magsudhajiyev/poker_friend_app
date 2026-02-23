@@ -1296,6 +1296,10 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     final pot = (hand['potAmount'] as num?)?.toDouble() ?? 0;
     final isWinner = winnerId == widget.seatNumber;
     final playerTags = (hand['playerTags'] as List?)?.cast<String>() ?? [];
+    final playerHoleCards = hand['playerHoleCards'] as Map<String, dynamic>?;
+    final hasHoleCards = playerHoleCards != null &&
+        playerHoleCards['card1'] != null &&
+        playerHoleCards['card2'] != null;
 
     // Extract board cards
     final boardCardsData = hand['boardCards'] as Map<String, dynamic>?;
@@ -1316,7 +1320,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     }
 
     return GestureDetector(
-      onTap: () => _navigateToHandDetails(hand),
+      onTap: () => _showEditHandDialog(hand),
+      onLongPress: () => _navigateToHandDetails(hand),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: const BoxDecoration(
@@ -1382,12 +1387,139 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               _buildCompactBoardCards(boardCards),
               const SizedBox(width: 8),
             ],
-            // Arrow
-            const Icon(Icons.chevron_right, color: Colors.white24, size: 20),
+            // Edit indicator / hole cards status
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  hasHoleCards ? Icons.style : Icons.edit,
+                  color: hasHoleCards ? Colors.green : Colors.white38,
+                  size: 18,
+                ),
+                if (hasHoleCards)
+                  Text(
+                    '${playerHoleCards!['card1']}${playerHoleCards['card2']}',
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 8,
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
     );
+  }
+
+  /// Show dialog to edit hole cards, notes, and tags for a past hand
+  Future<void> _showEditHandDialog(Map<String, dynamic> hand) async {
+    final handNumber = hand['handNumber'] as int? ?? 0;
+    final handId = hand['id'] as String?;
+
+    if (handId == null || _session == null) return;
+
+    // Load existing player data
+    String? card1;
+    String? card2;
+    String notes = '';
+    List<String> tags = [];
+
+    final playerHoleCards = hand['playerHoleCards'] as Map<String, dynamic>?;
+    if (playerHoleCards != null) {
+      card1 = playerHoleCards['card1'] as String?;
+      card2 = playerHoleCards['card2'] as String?;
+    }
+    notes = (hand['playerNotes'] as String?) ?? '';
+    tags = (hand['playerTags'] as List?)?.cast<String>() ?? [];
+
+    // Also try to fetch from Firestore in case local cache is stale
+    final odPlayerId = AuthService.userId;
+    if (odPlayerId != null) {
+      try {
+        final playerData = await DealerService.getPlayerHandData(
+          sessionId: _session!.id,
+          handId: handId,
+          odPlayerId: odPlayerId,
+        );
+        if (playerData != null) {
+          final holeCards = playerData['holeCards'] as Map<String, dynamic>?;
+          if (holeCards != null) {
+            card1 = holeCards['card1'] as String?;
+            card2 = holeCards['card2'] as String?;
+          }
+          if (playerData['notes'] != null) {
+            notes = playerData['notes'] as String;
+          }
+          if (playerData['tags'] != null) {
+            tags = (playerData['tags'] as List).cast<String>();
+          }
+        }
+      } catch (e) {
+        debugPrint('Error fetching player hand data: $e');
+      }
+    }
+
+    // Get board cards for the hole cards dialog
+    final usedCards = <String>{};
+    final boardCardsData = hand['boardCards'] as Map<String, dynamic>?;
+    if (boardCardsData != null) {
+      final flop = boardCardsData['flop'] as List?;
+      if (flop != null) usedCards.addAll(flop.cast<String>());
+      final turn = boardCardsData['turn'] as String?;
+      if (turn != null) usedCards.add(turn);
+      final river = boardCardsData['river'] as String?;
+      if (river != null) usedCards.add(river);
+    }
+
+    if (!mounted) return;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _EditHandBottomSheet(
+        handNumber: handNumber,
+        handId: handId,
+        sessionId: _session!.id,
+        initialCard1: card1,
+        initialCard2: card2,
+        initialNotes: notes,
+        initialTags: tags,
+        usedCards: usedCards,
+        availableTags: _availableTags,
+        onSaved: () {
+          // Reload hand history to reflect changes
+          _loadHandHistory();
+        },
+        onViewDetails: () {
+          Navigator.pop(context);
+          _navigateToHandDetails(hand);
+        },
+      ),
+    );
+  }
+
+  /// Reload hand history from Firestore
+  Future<void> _loadHandHistory() async {
+    if (_session == null) return;
+
+    try {
+      final hands = await DealerService.getSessionHands(_session!.id);
+      final completedHands = hands
+          .where((h) => h['endTime'] != null)
+          .toList()
+        ..sort((a, b) => (b['handNumber'] as int? ?? 0)
+            .compareTo(a['handNumber'] as int? ?? 0));
+
+      if (mounted) {
+        setState(() {
+          _handHistory = completedHands.take(20).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading hand history: $e');
+    }
   }
 
   Widget _buildCompactBoardCards(List<String> cards) {
@@ -1561,6 +1693,377 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet for editing a past hand's hole cards, notes, and tags
+class _EditHandBottomSheet extends StatefulWidget {
+  final int handNumber;
+  final String handId;
+  final String sessionId;
+  final String? initialCard1;
+  final String? initialCard2;
+  final String initialNotes;
+  final List<String> initialTags;
+  final Set<String> usedCards;
+  final List<String> availableTags;
+  final VoidCallback onSaved;
+  final VoidCallback onViewDetails;
+
+  const _EditHandBottomSheet({
+    required this.handNumber,
+    required this.handId,
+    required this.sessionId,
+    this.initialCard1,
+    this.initialCard2,
+    required this.initialNotes,
+    required this.initialTags,
+    required this.usedCards,
+    required this.availableTags,
+    required this.onSaved,
+    required this.onViewDetails,
+  });
+
+  @override
+  State<_EditHandBottomSheet> createState() => _EditHandBottomSheetState();
+}
+
+class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
+  late String? _card1;
+  late String? _card2;
+  late TextEditingController _notesController;
+  late List<String> _selectedTags;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _card1 = widget.initialCard1;
+    _card2 = widget.initialCard2;
+    _notesController = TextEditingController(text: widget.initialNotes);
+    _selectedTags = List.from(widget.initialTags);
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveChanges() async {
+    if (_isSaving) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      final odPlayerId = AuthService.userId;
+      if (odPlayerId == null) throw 'Not authenticated';
+
+      await DealerService.savePlayerHandData(
+        sessionId: widget.sessionId,
+        handId: widget.handId,
+        odPlayerId: odPlayerId,
+        card1: _card1,
+        card2: _card2,
+        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        tags: _selectedTags.isNotEmpty ? _selectedTags : null,
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        widget.onSaved();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Hand #${0} updated'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _editHoleCards() async {
+    final result = await showDialog<HoleCards>(
+      context: context,
+      builder: (context) => HoleCardsDialog(
+        existingCards: (_card1 != null && _card2 != null)
+            ? HoleCards(card1: _card1!, card2: _card2!)
+            : null,
+        usedCards: widget.usedCards,
+        title: 'Your Hole Cards',
+      ),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _card1 = result.card1;
+        _card2 = result.card2;
+      });
+    }
+  }
+
+  void _toggleTag(String tag) {
+    setState(() {
+      if (_selectedTags.contains(tag)) {
+        _selectedTags.remove(tag);
+      } else {
+        _selectedTags.add(tag);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasCards = _card1 != null && _card2 != null;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF1A1A2E),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Title
+              Row(
+                children: [
+                  Text(
+                    'Edit Hand #${widget.handNumber}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: widget.onViewDetails,
+                    icon: const Icon(Icons.visibility, size: 16),
+                    label: const Text('View Details'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white54,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Hole Cards
+              const Text(
+                'Hole Cards',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: _editHoleCards,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2D2D44),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: hasCards ? Colors.green.withValues(alpha: 0.5) : Colors.white12,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (hasCards) ...[
+                        _buildCardDisplay(_card1!),
+                        const SizedBox(width: 8),
+                        _buildCardDisplay(_card2!),
+                      ] else ...[
+                        const Icon(Icons.add, color: Colors.white38, size: 24),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Tap to add hole cards',
+                          style: TextStyle(color: Colors.white38, fontSize: 14),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Notes
+              const Text(
+                'Notes',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _notesController,
+                maxLines: 3,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Add notes about this hand...',
+                  hintStyle: const TextStyle(color: Colors.white38),
+                  filled: true,
+                  fillColor: const Color(0xFF2D2D44),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Tags
+              const Text(
+                'Tags',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.availableTags.map((tag) {
+                  final isSelected = _selectedTags.contains(tag);
+                  return GestureDetector(
+                    onTap: () => _toggleTag(tag),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFFBAFF9A).withValues(alpha: 0.2)
+                            : const Color(0xFF2D2D44),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFFBAFF9A)
+                              : Colors.white12,
+                        ),
+                      ),
+                      child: Text(
+                        tag,
+                        style: TextStyle(
+                          color: isSelected
+                              ? const Color(0xFFBAFF9A)
+                              : Colors.white54,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+
+              // Save button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _saveChanges,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFBAFF9A),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.black,
+                          ),
+                        )
+                      : const Text(
+                          'Save Changes',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardDisplay(String card) {
+    final isRed = card.contains('♥') || card.contains('♦');
+    return Container(
+      width: 40,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          card,
+          style: TextStyle(
+            color: isRed ? Colors.red : Colors.black,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../design_system/poker_friend_theme.dart';
@@ -43,6 +44,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   bool _addedToCalendar = false;
   String? _calendarEventId;
   bool _isDealer = false;
+  StreamSubscription<List<EventAttendance>>? _attendanceSubscription;
 
   @override
   void initState() {
@@ -50,6 +52,54 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     _event = widget.event;
     _loadData();
     _checkDealerStatus();
+    _setupAttendanceListener();
+  }
+
+  @override
+  void dispose() {
+    _attendanceSubscription?.cancel();
+    super.dispose();
+  }
+
+  /// Setup real-time attendance listener
+  void _setupAttendanceListener() {
+    _attendanceSubscription = EventAttendanceService.watchEventAttendance(
+      widget.club.id,
+      _event.id,
+    ).listen((attendances) {
+      if (!mounted) return;
+
+      // Calculate counts
+      final counts = <AttendanceStatus, int>{
+        AttendanceStatus.going: 0,
+        AttendanceStatus.maybe: 0,
+        AttendanceStatus.notGoing: 0,
+      };
+      for (final a in attendances) {
+        counts[a.status] = (counts[a.status] ?? 0) + 1;
+      }
+
+      // Get going members
+      final goingMembers = attendances
+          .where((a) => a.status == AttendanceStatus.going)
+          .toList();
+
+      // Find current user's attendance
+      final userId = AuthService.userId;
+      final userAttendance = userId != null
+          ? attendances.where((a) => a.userId == userId).firstOrNull
+          : null;
+
+      setState(() {
+        _attendanceCounts = counts;
+        _goingMembers = goingMembers;
+        if (userAttendance != null) {
+          _userAttendance = userAttendance;
+          _addedToCalendar = userAttendance.addedToCalendar;
+          _calendarEventId = userAttendance.calendarEventId;
+        }
+      });
+    });
   }
 
   Future<void> _checkDealerStatus() async {

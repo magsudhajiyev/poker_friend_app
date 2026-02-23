@@ -39,6 +39,8 @@ import 'player/qr_scan_screen.dart';
 import 'club/event_detail_screen.dart';
 import 'invitations_screen.dart';
 import '../services/invitation_service.dart';
+import '../services/event_attendance_service.dart';
+import '../models/event_attendance.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {
@@ -50,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 2;
   List<Map<String, dynamic>> upcomingEvents = [];
+  Map<String, int> _eventGoingCounts = {};  // eventId -> going count
 
   // Seat assignment listener for dealer notifications
   StreamSubscription<List<SeatAssignment>>? _seatSubscription;
@@ -868,6 +871,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _progressAnimationController.reset();
         _progressAnimationController.forward();
 
+        // Load attendance counts for events
+        _loadEventAttendanceCounts();
+
         // Check for pending club invitations
         _checkPendingInvitations();
       }
@@ -959,6 +965,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } catch (e) {
       // Silently fail - invitations are not critical
       print('Error checking invitations: $e');
+    }
+  }
+
+  /// Load attendance counts for all upcoming events
+  Future<void> _loadEventAttendanceCounts() async {
+    for (final event in upcomingEvents) {
+      final clubId = event['clubId'] as String?;
+      final eventId = event['clubEventId'] as String?;
+
+      if (clubId != null && eventId != null) {
+        try {
+          final counts = await EventAttendanceService.getAttendanceCounts(
+            clubId,
+            eventId,
+          );
+          final goingCount = counts[AttendanceStatus.going] ?? 0;
+
+          if (mounted && goingCount > 0) {
+            setState(() {
+              _eventGoingCounts[eventId] = goingCount;
+            });
+          }
+        } catch (e) {
+          // Ignore errors for individual events
+        }
+      }
     }
   }
 
@@ -2050,6 +2082,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
     }
 
+    // Get going count for this event
+    final eventId = event['clubEventId'] as String?;
+    final goingCount = eventId != null ? (_eventGoingCounts[eventId] ?? 0) : 0;
+
     return GestureDetector(
       key: eventKey,
       behavior: HitTestBehavior.opaque,
@@ -2076,50 +2112,84 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-        // Left side: Event info
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            // Left side: Event info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event['title'] ?? 'Event',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 20,
+                      color: Color(0xFFF8FFF7),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text(
+                        formattedDate,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: Color(0xFFF8FFF7),
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0,
+                          height: 1.2,
+                        ),
+                      ),
+                      if (goingCount > 0) ...[
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: PokerFriendColors.green.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.people,
+                                size: 12,
+                                color: PokerFriendColors.green,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$goingCount going',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11,
+                                  color: PokerFriendColors.green,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Right side: Buy-in price
+            if (buyIn.isNotEmpty)
               Text(
-                event['title'] ?? 'Event',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 20,
-                  color: Color(0xFFF8FFF7),
+                buyIn,
+                style: GoogleFonts.robotoMono(
+                  fontSize: 22,
+                  color: Color(0xFF87ED81),
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0,
-                  height: 1.2,
+                  height: 1.0,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                formattedDate,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  color: Color(0xFFF8FFF7),
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0,
-                  height: 1.2,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Right side: Buy-in price
-        if (buyIn.isNotEmpty)
-          Text(
-            buyIn,
-            style: GoogleFonts.robotoMono(
-              fontSize: 22,
-              color: Color(0xFF87ED81),
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0,
-              height: 1.0,
-            ),
-          ),
-      ],
+          ],
         ),
       ),
     );
