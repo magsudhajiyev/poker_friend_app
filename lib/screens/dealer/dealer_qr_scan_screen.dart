@@ -421,7 +421,8 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
       onChanged(result);
     }
 
-    controller.dispose();
+    // Note: Don't dispose controller here - it can cause "used after disposed" error
+    // if the dialog is still animating. Controller will be garbage collected.
   }
 
   Future<void> _startSession({

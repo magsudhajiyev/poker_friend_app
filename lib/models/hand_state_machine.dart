@@ -384,6 +384,7 @@ class PokerSessionManager {
   Map<int, String> playerNames = {}; // seat number -> player name
   Set<int> activeSeats = {}; // seats that have players
   Map<int, double> playerStacks = {}; // seat number -> stack size
+  Map<int, String> playerIds = {}; // seat number -> Firebase userId (for dealer mode)
   int? actualSBSeat; // Track who actually posted SB (may differ from calculated)
   int? actualBBSeat; // Track who actually posted BB (may differ from calculated)
 
@@ -792,6 +793,8 @@ class PokerSessionManager {
         isStarred: hand.isStarred,
         tags: hand.tags,
         notes: hand.notes,
+        // Dealer mode: pass playerIds for stats tracking
+        playerIds: playerIds.isNotEmpty ? playerIds : null,
       );
 
       hand.markSaved();
@@ -1238,6 +1241,11 @@ class PokerSessionManager {
     if (seatNumber >= 1 && seatNumber <= playerCount) {
       playerStacks[seatNumber] = stack;
     }
+  }
+
+  /// Set playerIds map for dealer-assisted mode (seat → Firebase userId)
+  void setPlayerIds(Map<int, String> ids) {
+    playerIds = Map.from(ids);
   }
 
   double? getPlayerStack(int seatNumber) {

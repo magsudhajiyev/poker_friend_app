@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
+import '../utils/poker_positions.dart';
 import 'auth_service.dart';
 import 'local_storage_service.dart';
 import 'opponent_service.dart';
@@ -114,6 +115,8 @@ class FirebaseService {
     bool? isStarred,
     List<String>? tags,
     String? notes,
+    // Dealer mode: map of seat → Firebase userId for all players
+    Map<int, String>? playerIds,
   }) async {
     try {
       final handData = {
@@ -222,6 +225,11 @@ class FirebaseService {
         handData['notes'] = notes;
       }
 
+      // Store playerIds for dealer mode (seat → Firebase userId)
+      if (playerIds != null && playerIds.isNotEmpty) {
+        handData['playerIds'] = playerIds.map((k, v) => MapEntry(k.toString(), v));
+      }
+
       // Save to session's subcollection instead of top-level collection
       // Use timestamp to ensure unique document ID even if handNumber repeats
       final handDocId = 'hand_${handNumber}_${DateTime.now().millisecondsSinceEpoch}';
@@ -238,18 +246,34 @@ class FirebaseService {
         'totalHands': FieldValue.increment(1),
       });
 
-      // Update opponent statistics incrementally (performance optimization)
+      // Check if this is dealer-assisted mode (playerIds present)
+      final isDealerMode = playerIds != null && playerIds.isNotEmpty;
+
+      if (isDealerMode) {
+        // Dealer mode: update stats for ALL seated players (including dealer if playing)
+        final activeSeats = playerNames?.keys.toList() ?? [];
+        await _updateAllPlayerStatsFromHand(
+          actions: actions,
+          playerIds: playerIds,
+          buttonPosition: buttonPosition,
+          activeSeats: activeSeats,
+          winnerId: winnerId,
+          choppedWinners: choppedWinners,
+        );
+      } else {
+        // Normal mode: update stats for hero only
+        await _updateUserStatsFromHand(
+          actions: actions,
+          heroPositionName: heroPositionName,
+          heroSeatNumber: heroSeatNumber,
+          winnerId: winnerId,
+          playerNames: playerNames,
+        );
+      }
+
+      // Update opponent statistics incrementally (both modes)
       await _updateOpponentStatsFromHand(
         actions: actions,
-        playerNames: playerNames,
-      );
-
-      // Update user statistics incrementally (performance optimization)
-      await _updateUserStatsFromHand(
-        actions: actions,
-        heroPositionName: heroPositionName,
-        heroSeatNumber: heroSeatNumber,
-        winnerId: winnerId,
         playerNames: playerNames,
       );
     } catch (e) {
@@ -1106,6 +1130,118 @@ class FirebaseService {
     } catch (e) {
       print('⚠️ Error updating user stats: $e');
       // Don't rethrow - stats update failure shouldn't break hand saving
+    }
+  }
+
+  /// Update statistics for ALL players in dealer-assisted mode
+  /// This updates stats for each player in the playerIds map (seat → Firebase userId)
+  static Future<void> _updateAllPlayerStatsFromHand({
+    required List<Map<String, dynamic>> actions,
+    required Map<int, String> playerIds,
+    required int buttonPosition,
+    required List<int> activeSeats,
+    required int? winnerId,
+    required List<int>? choppedWinners,
+  }) async {
+    for (final entry in playerIds.entries) {
+      final seatNumber = entry.key;
+      final odUserId = entry.value;
+
+      // Skip manual players (no Firebase account)
+      if (odUserId.startsWith('manual_')) continue;
+
+      try {
+        // Initialize user stats if they don't exist
+        await UserStatsService.initializeUserStats(odUserId);
+
+        // Calculate position for this player
+        final positionName = PokerPositions.getPositionNameForActivePlayers(
+          seatNumber,
+          buttonPosition,
+          activeSeats,
+        );
+
+        // Analyze player's actions in this hand
+        bool didPlay = false;
+        bool didVpip = false;
+        bool didPfr = false;
+        bool didThreeBet = false;
+        bool didWin = (winnerId == seatNumber) ||
+            (choppedWinners?.contains(seatNumber) ?? false);
+
+        // Analyze player's actions
+        for (final action in actions) {
+          final playerId = action['player'] as int?;
+          final actionType = action['action']?.toString().toLowerCase() ?? '';
+          final street = action['street']?.toString().toLowerCase() ?? '';
+
+          if (playerId != seatNumber) continue;
+
+          // didPlay = any voluntary action
+          if (actionType == 'call' ||
+              actionType == 'bet' ||
+              actionType == 'raise' ||
+              actionType == 'check') {
+            didPlay = true;
+          }
+
+          // VPIP and PFR only apply to preflop
+          if (street == 'preflop') {
+            if (actionType == 'bet' ||
+                actionType == 'call' ||
+                actionType == 'raise') {
+              // VPIP = voluntarily put money in (excludes blind posts)
+              if (!_isBlindAction(action)) {
+                didVpip = true;
+              }
+              // PFR = preflop raise
+              if (actionType == 'bet' || actionType == 'raise') {
+                didPfr = true;
+              }
+            }
+          }
+        }
+
+        // Check for 3-bet (re-raise after seeing opponent's raise)
+        if (didPlay) {
+          didThreeBet = _didPlayerThreeBet(actions, seatNumber);
+        }
+
+        // Prepare deltas for atomic update
+        final Map<String, int> positionHandsDeltas = {};
+        final Map<String, int> positionVpipDeltas = {};
+        final Map<String, int> positionPfrDeltas = {};
+        final Map<String, int> positionThreeBetDeltas = {};
+
+        if (didPlay) {
+          positionHandsDeltas[positionName] = 1;
+          if (didVpip) positionVpipDeltas[positionName] = 1;
+          if (didPfr) positionPfrDeltas[positionName] = 1;
+          if (didThreeBet) positionThreeBetDeltas[positionName] = 1;
+        }
+
+        // Update this player's stats atomically
+        await UserStatsService.updateStatsAtomic(
+          userId: odUserId,
+          totalHandsDelta: 1, // Always increment total hands
+          handsDelta: didPlay ? 1 : 0,
+          vpipDelta: didVpip ? 1 : 0,
+          pfrDelta: didPfr ? 1 : 0,
+          threeBetDelta: didThreeBet ? 1 : 0,
+          wonHandsDelta: didWin ? 1 : 0,
+          positionHandsDeltas:
+              positionHandsDeltas.isNotEmpty ? positionHandsDeltas : null,
+          positionVpipDeltas:
+              positionVpipDeltas.isNotEmpty ? positionVpipDeltas : null,
+          positionPfrDeltas:
+              positionPfrDeltas.isNotEmpty ? positionPfrDeltas : null,
+          positionThreeBetDeltas:
+              positionThreeBetDeltas.isNotEmpty ? positionThreeBetDeltas : null,
+        );
+      } catch (e) {
+        print('⚠️ Error updating stats for player $odUserId at seat $seatNumber: $e');
+        // Continue with other players
+      }
     }
   }
 

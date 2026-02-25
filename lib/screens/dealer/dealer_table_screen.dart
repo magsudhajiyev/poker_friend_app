@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../config/app_config.dart';
+import '../../design_system/poker_friend_theme.dart';
 import '../../models/club.dart';
 import '../../models/poker_table.dart';
 import '../../models/dealer_session.dart';
@@ -106,6 +107,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   // Local blind state (can be changed during session)
   int _smallBlind = 0;
   int _bigBlind = 0;
+
+  // Dealer-player tracking: seat number if dealer is also playing, null otherwise
+  int? _dealerPlayingSeat;
 
   @override
   void initState() {
@@ -256,6 +260,21 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     setState(() {});
   }
 
+  /// Build a map of seat number → Firebase userId for registered players
+  /// Used for dealer mode stats tracking
+  Map<int, String> _getPlayerIdsMap() {
+    final ids = <int, String>{};
+    for (final entry in _seatAssignments.entries) {
+      final assignment = entry.value;
+      if (assignment.isOccupied &&
+          assignment.playerId != null &&
+          !assignment.playerId!.startsWith('manual_')) {
+        ids[entry.key] = assignment.playerId!;
+      }
+    }
+    return ids;
+  }
+
   /// Sync players from seat assignments to game state and session manager
   void _syncPlayersFromSeats() {
     if (!_isGameStateInitialized || _gameState == null || _sessionManager == null) {
@@ -288,6 +307,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         _gameState!.setPlayerActive(i, false);
       }
     }
+
+    // Update playerIds for dealer mode stats tracking
+    _sessionManager!.setPlayerIds(_getPlayerIdsMap());
   }
 
   List<int> get _activePlayers => _gameState?.getActivePlayers() ?? [];
@@ -1596,6 +1618,158 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     }
   }
 
+  /// Handle tap on empty seat - show choice to add player or sit as dealer
+  Future<void> _onEmptySeatTap(int seatNumber) async {
+    // If dealer is already playing at another seat, just add player
+    if (_dealerPlayingSeat != null) {
+      _showAddPlayerDialog(seatNumber);
+      return;
+    }
+
+    // Show choice dialog
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: PokerFriendColors.dark3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Seat $seatNumber', style: const TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.person_add, color: PokerFriendColors.green),
+              title: const Text('Add Player', style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Seat another player here', style: TextStyle(color: Colors.white54)),
+              onTap: () => Navigator.pop(context, 'add_player'),
+            ),
+            const Divider(color: Colors.white24),
+            ListTile(
+              leading: const Icon(Icons.casino, color: PokerFriendColors.purple),
+              title: const Text("Sit Here (I'm Playing)", style: TextStyle(color: Colors.white)),
+              subtitle: const Text('Join the game as dealer-player', style: TextStyle(color: Colors.white54)),
+              onTap: () => Navigator.pop(context, 'dealer_play'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+        ],
+      ),
+    );
+
+    if (choice == 'add_player') {
+      _showAddPlayerDialog(seatNumber);
+    } else if (choice == 'dealer_play') {
+      _seatDealerAsPlayer(seatNumber);
+    }
+  }
+
+  /// Seat the dealer as a player at the table
+  Future<void> _seatDealerAsPlayer(int seatNumber) async {
+    // Show stack input dialog
+    final stack = await _showStackInputDialog(
+      defaultStack: (_dealerSession.bigBlind * 100).toDouble(),
+    );
+    if (stack == null) return;
+
+    try {
+      final dealerId = AuthService.userId!;
+      final dealerName = AuthService.userDisplayName ?? 'Dealer';
+
+      // Seat dealer using same flow as registered user
+      await SeatService.seatUserDirectly(
+        clubId: widget.club.id,
+        tableId: widget.table.id,
+        seatNumber: seatNumber,
+        playerId: dealerId,
+        playerName: dealerName,
+        chipStack: stack,
+      );
+
+      // Add to dealer session players map
+      await DealerService.addPlayer(
+        sessionId: _dealerSession.id,
+        odPlayerId: dealerId,
+        displayName: dealerName,
+        seatNumber: seatNumber,
+        initialStack: stack,
+      );
+
+      // Update local state
+      _dealerPlayingSeat = seatNumber;
+      _gameState!.setPlayerStack(seatNumber, stack);
+      _gameState!.setPlayerActive(seatNumber, true);
+      _sessionManager!.activeSeats.add(seatNumber);
+      _sessionManager!.setPlayerName(seatNumber, dealerName);
+      _sessionManager!.setPlayerStack(seatNumber, stack);
+
+      // Update playerIds map to include dealer
+      _sessionManager!.setPlayerIds(_getPlayerIdsMap());
+
+      setState(() {});
+      _showSuccess('You are now playing at Seat $seatNumber');
+    } catch (e) {
+      _showError('Failed to sit at table: ${e.toString()}');
+    }
+  }
+
+  /// Show dialog to input stack size
+  Future<double?> _showStackInputDialog({required double defaultStack}) async {
+    final controller = TextEditingController(text: defaultStack.toStringAsFixed(0));
+
+    return showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: PokerFriendColors.dark3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Enter Starting Stack', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: PokerFriendColors.dark5,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onSubmitted: (value) {
+            final parsed = double.tryParse(value);
+            if (parsed != null && parsed > 0) {
+              Navigator.pop(context, parsed);
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final parsed = double.tryParse(controller.text);
+              if (parsed != null && parsed > 0) {
+                Navigator.pop(context, parsed);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PokerFriendColors.green,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('OK', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _showAddPlayerDialog(int seatNumber) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -1684,6 +1858,14 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       _gameState!.setPlayerStack(seatNumber, 0);
       _sessionManager!.activeSeats.remove(seatNumber);
       _sessionManager!.playerStacks.remove(seatNumber);
+
+      // Clear dealer playing seat if this was the dealer
+      if (seatNumber == _dealerPlayingSeat) {
+        _dealerPlayingSeat = null;
+      }
+
+      // Update playerIds map
+      _sessionManager!.setPlayerIds(_getPlayerIdsMap());
 
       setState(() {});
       _showSuccess('${playerName ?? 'Player'} removed from Seat $seatNumber');
@@ -2176,7 +2358,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               ? () => _showPlayerOptionsDialog(seatNumber, assignment?.playerName, stack)
               : null,
           onEmptyTap: !isOccupied && !playerState.isActive && !isPending && !_isHandActive
-              ? () => _showAddPlayerDialog(seatNumber)
+              ? () => _onEmptySeatTap(seatNumber)
               : null,
           canAcceptButtonDrop: !_isHandActive,
           onButtonDropped: _onButtonDroppedOnSeat,
