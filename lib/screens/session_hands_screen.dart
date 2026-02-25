@@ -5,6 +5,7 @@ import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../services/firebase_service.dart';
 import '../services/dealer_service.dart';
+import '../services/auth_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import 'hand_actions_screen.dart';
@@ -45,6 +46,28 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
         loadedHands = await DealerService.getSessionHands(dealerSessionId);
       } else {
         loadedHands = await FirebaseService.getSessionHands(widget.session['id']);
+      }
+
+      // Filter hands by participation periods for live sessions
+      // Filter applies to ANY user with participation periods (including dealer-players)
+      final isLiveSession = widget.session['isLive'] == true;
+      final currentUserId = AuthService.userId;
+
+      if (isLiveSession && currentUserId != null) {
+        final participationPeriods = widget.session['participationPeriods'] as Map<String, dynamic>?;
+        if (participationPeriods != null && participationPeriods.containsKey(currentUserId)) {
+          final periods = List<Map<String, dynamic>>.from(participationPeriods[currentUserId] ?? []);
+          if (periods.isNotEmpty) {
+            loadedHands = loadedHands.where((hand) {
+              final handNumber = hand['handNumber'] as int? ?? 0;
+              return periods.any((period) {
+                final joined = period['joinedAtHand'] as int? ?? 1;
+                final left = period['leftAtHand'] as int?;
+                return handNumber >= joined && (left == null || handNumber <= left);
+              });
+            }).toList();
+          }
+        }
       }
 
       setState(() {

@@ -14,6 +14,7 @@ import '../../models/hand_state_machine.dart';
 import '../../models/game_types.dart';
 import '../../services/dealer_service.dart';
 import '../../services/event_service.dart';
+import '../../services/firebase_service.dart';
 import '../../services/seat_service.dart';
 import '../../models/club_event.dart';
 import '../../services/websocket_service.dart';
@@ -111,6 +112,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   // Dealer-player tracking: seat number if dealer is also playing, null otherwise
   int? _dealerPlayingSeat;
 
+  // Track players seated before session starts (will be added as participants on first hand)
+  final Set<String> _pendingParticipants = {};
+
+  // Guard flag to prevent actions during hand completion transition
+  bool _isCompletingHand = false;
+
   @override
   void initState() {
     super.initState();
@@ -139,6 +146,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       playerCount: 9,
       gameType: _dealerSession.gameType == 'cash' ? GameType.cash : GameType.tournament,
       sessionName: 'Dealer Session - ${widget.table.name}',
+      isLive: true,  // Mark as live/dealer session
     );
 
     _isGameStateInitialized = true;
@@ -159,8 +167,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       _realtimeSpeechService.stopStreaming();
     }
 
-    // End session manager if active (with null check)
-    if (_sessionManager != null && _sessionManager!.sessionState == SessionState.active) {
+    // End session manager if active AND not already ended by _handleEventEnded()
+    // The _sessionStarted check prevents double-ending which can cause auth issues
+    if (_sessionStarted && _sessionManager != null &&
+        _sessionManager!.sessionState == SessionState.active) {
       _sessionManager!.endSession().catchError((e) {});
     }
 
@@ -228,6 +238,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           // Store event info for rebuy handling
           _currentEvent = event;
           _rebuyStack = event.startingStack ?? (_dealerSession.bigBlind * 100.0);
+          // Update session with event info
+          if (_sessionManager != null) {
+            _sessionManager!.sessionName = event.name;
+            // Set buy-in amount from event for Total Invested calculation
+            _sessionManager!.totalBuyIn = event.buyInAmount ?? 0.0;
+          }
         }
         if (event == null ||
             event.status == EventStatus.completed ||
@@ -324,18 +340,33 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       if (!_sessionStarted) {
         await _sessionManager!.startSession();
         _sessionStarted = true;
+
+        // Add all participants who were seated before session started
+        for (final participantId in _pendingParticipants) {
+          await FirebaseService.addSessionParticipant(
+            sessionId: _sessionManager!.sessionId!,
+            participantId: participantId,
+            joinedAtHand: 1,
+          );
+        }
+        _pendingParticipants.clear();
+
         // Only set button from dealer session for the first hand
         // After that, _gameState.startNewHand() moves the button automatically
         _gameState!.buttonPosition = _dealerSession.buttonPosition;
         // Only sync from seats for the FIRST hand - after that, game state is source of truth
         _syncPlayersFromSeats();
-      }
-      // NOTE: Don't call _syncPlayersFromSeats() for subsequent hands -
-      // game state tracks player stacks during active session
 
-      // Finalize game state initialization and calculate blinds
-      _gameState!.finalizeInitialization();
-      _gameState!.initializePot();
+        // For first hand: initialize
+        _gameState!.finalizeInitialization();
+        _gameState!.initializePot();
+      } else {
+        // For subsequent hands: ALWAYS call initializePot() here
+        // This ensures blinds are posted with the CURRENT player list
+        // (after any additions/removals since previous hand completed)
+        _gameState!.finalizeInitialization();
+        _gameState!.initializePot();
+      }
 
       // Start hand in session manager
       _sessionManager!.startHand(
@@ -398,7 +429,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     String? transcript,
     double? confidence,
   }) async {
-    if (!_isHandActive) {
+    // Guard: prevent actions if hand is not active or if hand is being completed
+    if (!_isHandActive || _isCompletingHand) {
       return;
     }
 
@@ -829,6 +861,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   Future<void> _completeHand(int winnerId) async {
     if (!_isHandActive) return;
 
+    // Immediately disable action buttons to prevent race conditions
+    setState(() {
+      _isCompletingHand = true;
+    });
+
     try {
       // Get winner's stack for tracking
       final winnerStack = _gameState!.getPlayerStack(winnerId) + _gameState!.currentPot;
@@ -876,14 +913,23 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
       setState(() {
         _isHandActive = false;
+        _isCompletingHand = false;
       });
     } catch (e) {
+      setState(() {
+        _isCompletingHand = false;
+      });
       _showError('Failed to complete hand: ${e.toString()}');
     }
   }
 
   Future<void> _completeHandWithChop(List<int> winnerIds, Map<int, double>? shares) async {
     if (!_isHandActive) return;
+
+    // Immediately disable action buttons to prevent race conditions
+    setState(() {
+      _isCompletingHand = true;
+    });
 
     try {
       final sharePerWinner = shares != null
@@ -940,8 +986,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
       setState(() {
         _isHandActive = false;
+        _isCompletingHand = false;
       });
     } catch (e) {
+      setState(() {
+        _isCompletingHand = false;
+      });
       _showError('Failed to complete hand: ${e.toString()}');
     }
   }
@@ -1071,6 +1121,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         // If multiple players bust on same hand, they all get same position
         final finishPosition = activePlayerCount + bustedPlayers.length;
 
+        // Get playerId BEFORE removing from seat assignments (for participation tracking)
+        final assignment = _seatAssignments[seatNumber];
+        final bustedPlayerId = assignment?.playerId;
+
         // Remove player from game
         _gameState!.players[seatNumber - 1].isActive = false;
         _gameState!.players[seatNumber - 1].currentStack = 0;
@@ -1092,6 +1146,17 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
         // Remove from local seat assignments to keep in sync
         _seatAssignments.remove(seatNumber);
+
+        // Mark participant as left for Session History hand filtering
+        if (bustedPlayerId != null &&
+            !bustedPlayerId.startsWith('manual_') &&
+            _sessionManager!.sessionId != null) {
+          await FirebaseService.markParticipantLeft(
+            sessionId: _sessionManager!.sessionId!,
+            participantId: bustedPlayerId,
+            leftAtHand: _sessionManager!.completedHands.length,
+          );
+        }
 
         // Emit player removal for rankings (busted with finish position)
         _wsService.emitPlayerStackUpdate(
@@ -1259,7 +1324,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   /// Handle event completion or cancellation by club admin
-  void _handleEventEnded(EventStatus? status) {
+  Future<void> _handleEventEnded(EventStatus? status) async {
     if (_isShowingEventEndDialog) return;
     _isShowingEventEndDialog = true;
 
@@ -1273,10 +1338,24 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     _sessionSubscription?.cancel();
     _eventSubscription?.cancel();
 
+    // End session BEFORE navigation to prevent dispose() issues
+    // This fixes the auto-logout bug when admin ends event
+    if (_sessionManager != null &&
+        _sessionManager!.sessionState == SessionState.active) {
+      try {
+        await _sessionManager!.endSession();
+      } catch (e) {
+        print('Error ending session during event end: $e');
+      }
+      _sessionStarted = false;
+    }
+
     final title = status == EventStatus.cancelled ? 'Event Cancelled' : 'Event Finished';
     final message = status == EventStatus.cancelled
         ? 'The club admin has cancelled this event. All sessions have been saved.'
         : 'The club admin has finished this event. All sessions have been saved.';
+
+    if (!mounted) return;
 
     showDialog(
       context: context,
@@ -1289,7 +1368,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Exit dealer screen
+              // Pop until first route (club home) to avoid going back to event_detail_screen
+              Navigator.of(context).popUntil((route) => route.isFirst);
             },
             child: const Text('OK'),
           ),
@@ -1415,8 +1495,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   Future<void> _showApproveJoinDialog(SeatAssignment pending) async {
+    // Use event's starting stack if available, otherwise default to 100BB
+    final defaultStack = _rebuyStack > 0 ? _rebuyStack : (_dealerSession.bigBlind * 100.0);
     final controller = TextEditingController(
-      text: (_dealerSession.bigBlind * 100).toString(),
+      text: defaultStack.toInt().toString(),
     );
 
     final chipStack = await showDialog<double>(
@@ -1512,6 +1594,22 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         _sessionManager!.activeSeats.add(pending.seatNumber);
         _sessionManager!.setPlayerName(pending.seatNumber, pending.playerName ?? 'Player ${pending.seatNumber}');
         _sessionManager!.setPlayerStack(pending.seatNumber, chipStack);
+
+        // Track participant in poker_sessions for Session History visibility
+        // Only for registered Firebase users (not manual players)
+        final playerId = pending.playerId;
+        if (playerId != null && !playerId.startsWith('manual_')) {
+          if (_sessionManager!.sessionId != null) {
+            await FirebaseService.addSessionParticipant(
+              sessionId: _sessionManager!.sessionId!,
+              participantId: playerId,
+              joinedAtHand: _sessionManager!.completedHands.length + 1,
+            );
+          } else {
+            // Session not started yet, queue for when it starts
+            _pendingParticipants.add(playerId);
+          }
+        }
 
         _showSuccess('${pending.playerName} joined with ${formatCompactCurrency(chipStack)}');
       } catch (e) {
@@ -1669,9 +1767,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
   /// Seat the dealer as a player at the table
   Future<void> _seatDealerAsPlayer(int seatNumber) async {
-    // Show stack input dialog
+    // Show stack input dialog - use event's starting stack if available
+    final defaultStack = _rebuyStack > 0 ? _rebuyStack : (_dealerSession.bigBlind * 100.0);
     final stack = await _showStackInputDialog(
-      defaultStack: (_dealerSession.bigBlind * 100).toDouble(),
+      defaultStack: defaultStack,
     );
     if (stack == null) return;
 
@@ -1705,9 +1804,23 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       _sessionManager!.activeSeats.add(seatNumber);
       _sessionManager!.setPlayerName(seatNumber, dealerName);
       _sessionManager!.setPlayerStack(seatNumber, stack);
+      // Set ourSeatNumber so stack tracking works for Avg Growth calculation
+      _sessionManager!.ourSeatNumber = seatNumber;
 
       // Update playerIds map to include dealer
       _sessionManager!.setPlayerIds(_getPlayerIdsMap());
+
+      // Track dealer as participant in poker_sessions for Session History visibility
+      if (_sessionManager!.sessionId != null) {
+        await FirebaseService.addSessionParticipant(
+          sessionId: _sessionManager!.sessionId!,
+          participantId: dealerId,
+          joinedAtHand: _sessionManager!.completedHands.length + 1,
+        );
+      } else {
+        // Session not started yet, queue for when it starts
+        _pendingParticipants.add(dealerId);
+      }
 
       setState(() {});
       _showSuccess('You are now playing at Seat $seatNumber');
@@ -1771,11 +1884,13 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   Future<void> _showAddPlayerDialog(int seatNumber) async {
+    // Use event's starting stack if available
+    final defaultStack = _rebuyStack > 0 ? _rebuyStack : (_dealerSession.bigBlind * 100.0);
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => _UserSearchDialog(
         seatNumber: seatNumber,
-        defaultStack: (_dealerSession.bigBlind * 100).toDouble(),
+        defaultStack: defaultStack,
       ),
     );
 
@@ -1804,6 +1919,18 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             seatNumber: seatNumber,
             initialStack: stack,
           );
+
+          // Track participant in poker_sessions for Session History visibility
+          if (_sessionManager!.sessionId != null) {
+            await FirebaseService.addSessionParticipant(
+              sessionId: _sessionManager!.sessionId!,
+              participantId: playerId,
+              joinedAtHand: _sessionManager!.completedHands.length + 1,
+            );
+          } else {
+            // Session not started yet, queue for when it starts
+            _pendingParticipants.add(playerId);
+          }
         } else {
           // Add manual/walk-up player (no user account)
           final seatAssignment = await SeatService.addManualPlayer(
@@ -1822,6 +1949,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             seatNumber: seatNumber,
             initialStack: stack,
           );
+          // Note: Manual players don't get tracked in participantIds (no Firebase account)
         }
 
         // Update local game state
@@ -1841,6 +1969,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
   Future<void> _removePlayer(int seatNumber, String? playerName) async {
     try {
+      // Get player ID before removing (for participation tracking)
+      final assignment = _seatAssignments[seatNumber];
+      final playerId = assignment?.playerId;
+
       await SeatService.removeSeatOccupant(
         clubId: widget.club.id,
         tableId: widget.table.id,
@@ -1866,6 +1998,18 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
       // Update playerIds map
       _sessionManager!.setPlayerIds(_getPlayerIdsMap());
+
+      // Mark participant as left in poker_sessions for Session History filtering
+      // Only for registered Firebase users (not manual players)
+      if (playerId != null &&
+          !playerId.startsWith('manual_') &&
+          _sessionManager!.sessionId != null) {
+        await FirebaseService.markParticipantLeft(
+          sessionId: _sessionManager!.sessionId!,
+          participantId: playerId,
+          leftAtHand: _sessionManager!.completedHands.length,
+        );
+      }
 
       setState(() {});
       _showSuccess('${playerName ?? 'Player'} removed from Seat $seatNumber');
@@ -3573,7 +3717,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     ];
 
     final random = math.Random();
-    final defaultStack = _dealerSession.bigBlind * 100.0;
+    // Use event's starting stack if available
+    final defaultStack = _rebuyStack > 0 ? _rebuyStack : (_dealerSession.bigBlind * 100.0);
 
     for (int seatNumber = 1; seatNumber <= 9; seatNumber++) {
       // Skip if seat is already occupied

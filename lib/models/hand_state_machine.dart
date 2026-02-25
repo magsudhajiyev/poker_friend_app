@@ -376,6 +376,7 @@ class PokerSessionManager {
   int? ourSeatNumber; // Our position at the table (1-playerCount)
   GameType gameType; // Cash game or tournament
   String? sessionName; // User-provided session name
+  bool isLive; // True for dealer/live sessions
   int buttonPosition = 1; // Current button position
   DateTime? sessionStartTime;
   DateTime? sessionEndTime;
@@ -406,6 +407,7 @@ class PokerSessionManager {
     this.ourSeatNumber,
     this.gameType = GameType.cash,
     this.sessionName,
+    this.isLive = false,  // True for dealer/live sessions
     String? existingSessionId,
     double? initialBuyIn,
     double? startingStack,
@@ -444,6 +446,7 @@ class PokerSessionManager {
           sessionName: sessionName,
           startingStack: initialStack,
           totalBuyIn: totalBuyIn, // Pass total buy-in (money invested)
+          isLive: isLive, // True for dealer/live sessions
         );
         sessionId = firebaseId;
       } catch (e) {

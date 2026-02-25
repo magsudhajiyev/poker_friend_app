@@ -934,12 +934,6 @@ class PokerGameState {
 
     // Only move button for subsequent hands (not the first hand)
     if (handNumber > 1) {
-      int oldButtonPosition = buttonPosition;
-
-      // Check if current button position is still active
-      if (!players[buttonPosition - 1].isActive || players[buttonPosition - 1].currentStack <= 0) {
-      }
-
       // Move button to next active player
       int nextButton = buttonPosition;
       int attempts = 0;
@@ -950,28 +944,25 @@ class PokerGameState {
 
       if (attempts < numberOfPlayers) {
         buttonPosition = nextButton;
-
-        // Button position moved successfully
-      } else {
       }
-    } else {
     }
-    
+
     // Reset all players
     for (PlayerState player in players) {
       player.reset();
     }
-    
+
     // Reset game state
     currentRound = BettingRound.preflop;
     bettingRoundComplete = false;
     hasBetThisRound = false;
     currentPot = 0.0;
     currentBet = 0.0;
-    
-    // Initialize pot with blinds for new hand
-    initializePot();
-    
+
+    // NOTE: Do NOT call initializePot() here!
+    // Blinds are posted in _startNewHand() AFTER any player additions/removals
+    // This ensures newly added players are included in blind rotation
+
     // Set action order for new hand
     _setInitialActionOrder();
   }
@@ -1139,6 +1130,18 @@ class PokerGameState {
   void setPlayerActive(int playerId, bool isActive) {
     PlayerState player = _getPlayer(playerId);
     player.isActive = isActive;
+
+    // When activating a player (e.g., adding them back after busting),
+    // reset their hand state so they can participate in the next hand
+    if (isActive) {
+      player.hasFolded = false;
+      player.hasActed = false;
+      player.hasCalledCurrentBet = false;
+      player.isAllIn = false;
+      player.lastAction = PlayerAction.none;
+      player.betThisRound = 0.0;
+      player.totalContribution = 0.0;
+    }
   }
 
   PlayerState? getCurrentPlayer() {
@@ -1216,13 +1219,11 @@ class PokerGameState {
         currentPot += sbAmount;
         _effectiveSBPosition = sbPosition; // Track who posted SB
       } else {
-
         // Find the next active player to post the SB
         int nextSBPosition = _findNextActivePlayer(sbPosition);
         PlayerState nextSBPlayer = _getPlayer(nextSBPosition);
 
         if (nextSBPlayer.isActive && nextSBPlayer.currentStack > 0 && nextSBPosition != sbPosition) {
-
           // Post the SB with the active player
           double sbAmount = smallBlind.toDouble();
           if (nextSBPlayer.currentStack < sbAmount) {
@@ -1233,7 +1234,6 @@ class PokerGameState {
           nextSBPlayer._updateAllInStatus();
           currentPot += sbAmount;
           _effectiveSBPosition = nextSBPosition; // Track who actually posted SB
-        } else {
         }
       }
 
@@ -1271,18 +1271,12 @@ class PokerGameState {
         bbPlayer._updateAllInStatus();
         currentPot += totalBBPost;
         _effectiveBBPosition = bbPosition; // Track who posted BB
-
-        if (hasBBante) {
-        } else {
-        }
       } else {
-
         // Find the next active player to post the BB
         int nextBBPosition = _findNextActivePlayer(bbPosition);
         PlayerState nextBBPlayer = _getPlayer(nextBBPosition);
 
         if (nextBBPlayer.isActive && nextBBPlayer.currentStack > 0 && nextBBPosition != bbPosition) {
-
           // Post the BB with the active player
           double bbAmount = bigBlind.toDouble();
           double anteAmount = 0.0;
@@ -1315,10 +1309,6 @@ class PokerGameState {
           nextBBPlayer._updateAllInStatus();
           currentPot += totalBBPost;
           _effectiveBBPosition = nextBBPosition; // Track who actually posted BB
-
-          if (hasBBante) {
-          } else {
-          }
         } else {
           // If BB seat is empty, adjust current bet based on what's actually in the pot
           if (sbPlayer.isActive && sbPlayer.currentStack > 0) {

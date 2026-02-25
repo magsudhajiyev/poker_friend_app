@@ -27,6 +27,7 @@ class FirebaseService {
     double? startingStack,
     bool hasBBante = false,
     double? totalBuyIn,
+    bool isLive = false,  // True for dealer/live sessions
   }) async {
     try {
       final userId = AuthService.userId;
@@ -47,8 +48,15 @@ class FirebaseService {
         'totalHands': 0,
         'createdAt': FieldValue.serverTimestamp(),
         'isIndividualSession': isIndividualSession,
+        'isLive': isLive,  // True for dealer/live sessions
         'sessionName': sessionName ?? (isIndividualSession ? 'Individual Session' : ''), // Always set sessionName
       };
+
+      // For live sessions, initialize participant tracking
+      if (isLive) {
+        sessionData['participantIds'] = <String>[]; // Will be populated when players join
+        sessionData['participationPeriods'] = <String, dynamic>{}; // Will track join/leave periods
+      }
 
       // Add individual session specific fields
       if (isIndividualSession) {
@@ -499,18 +507,35 @@ class FirebaseService {
   }
 
   // Get all sessions for current user (for session history)
+  // Includes both owned sessions and sessions where user participated (dealer events)
   static Future<List<Map<String, dynamic>>> getAllSessions() async {
     try {
       final userId = AuthService.userId;
       if (userId == null) throw 'User not authenticated';
-      
-      final sessionsSnapshot = await _firestore
+
+      // Query 1: Sessions the user owns (manual logging, individual sessions)
+      final ownedSnapshot = await _firestore
           .collection(_sessionsCollection)
           .where('userId', isEqualTo: userId)
           .get();
-      
+
+      // Query 2: Sessions the user participated in (dealer events)
+      final participatedSnapshot = await _firestore
+          .collection(_sessionsCollection)
+          .where('participantIds', arrayContains: userId)
+          .get();
+
+      // Combine and deduplicate (use Map to avoid duplicates)
+      final allDocs = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+      for (final doc in ownedSnapshot.docs) {
+        allDocs[doc.id] = doc;
+      }
+      for (final doc in participatedSnapshot.docs) {
+        allDocs[doc.id] = doc; // Won't overwrite if already exists
+      }
+
       // Sort in memory to avoid needing Firebase index
-      final docs = sessionsSnapshot.docs.toList();
+      final docs = allDocs.values.toList();
       docs.sort((a, b) {
         final aTime = a.data()['startTime'] as Timestamp?;
         final bTime = b.data()['startTime'] as Timestamp?;
@@ -532,7 +557,7 @@ class FirebaseService {
     } catch (e) {
       print('Error getting user sessions from Firebase: $e');
       print('Falling back to local storage...');
-      
+
       // Fallback to local storage
       try {
         return await LocalStorageService.getUserSessions();
@@ -540,6 +565,78 @@ class FirebaseService {
         print('Error getting sessions from local storage: $localError');
         return _getMockOfflineData();
       }
+    }
+  }
+
+  /// Add a participant to a session (for dealer events)
+  /// Called when a player joins the table
+  static Future<void> addSessionParticipant({
+    required String sessionId,
+    required String participantId,
+    required int joinedAtHand,
+  }) async {
+    try {
+      // First, add to participantIds array
+      await _firestore.collection(_sessionsCollection).doc(sessionId).update({
+        'participantIds': FieldValue.arrayUnion([participantId]),
+      });
+
+      // Then, add the participation period
+      // Firestore doesn't support arrayUnion on nested fields, so we need to read and update
+      final doc = await _firestore.collection(_sessionsCollection).doc(sessionId).get();
+      final data = doc.data() ?? {};
+      final participationPeriods = Map<String, dynamic>.from(data['participationPeriods'] ?? {});
+
+      // Get existing periods for this participant or create new list
+      final existingPeriods = List<Map<String, dynamic>>.from(
+        participationPeriods[participantId] ?? []
+      );
+
+      // Add new participation period
+      existingPeriods.add({
+        'joinedAtHand': joinedAtHand,
+        'leftAtHand': null, // Still playing
+      });
+
+      participationPeriods[participantId] = existingPeriods;
+
+      await doc.reference.update({
+        'participationPeriods': participationPeriods,
+      });
+    } catch (e) {
+      print('Error adding session participant: $e');
+      // Don't rethrow - this is a non-critical operation
+    }
+  }
+
+  /// Mark a participant as having left the session (bust/removed)
+  /// Called when a player busts or is removed from the table
+  static Future<void> markParticipantLeft({
+    required String sessionId,
+    required String participantId,
+    required int leftAtHand,
+  }) async {
+    try {
+      final doc = await _firestore.collection(_sessionsCollection).doc(sessionId).get();
+      final data = doc.data() ?? {};
+      final participationPeriods = Map<String, dynamic>.from(data['participationPeriods'] ?? {});
+
+      final periods = List<Map<String, dynamic>>.from(
+        participationPeriods[participantId] ?? []
+      );
+
+      // Update the last period's leftAtHand (if it's still null)
+      if (periods.isNotEmpty && periods.last['leftAtHand'] == null) {
+        periods.last['leftAtHand'] = leftAtHand;
+        participationPeriods[participantId] = periods;
+
+        await doc.reference.update({
+          'participationPeriods': participationPeriods,
+        });
+      }
+    } catch (e) {
+      print('Error marking participant left: $e');
+      // Don't rethrow - this is a non-critical operation
     }
   }
 

@@ -40,7 +40,8 @@ class DealerService {
     // Find active event that includes this table (for live rankings and buy-in amount)
     final activeEvent = await EventService.getActiveEventForTable(clubId, tableId);
     final eventId = activeEvent?.id;
-    final eventBuyIn = activeEvent?.startingStack?.toDouble() ?? 0;
+    // Use buyInAmount (actual dollars paid), NOT startingStack (chip count)
+    final eventBuyIn = activeEvent?.buyInAmount ?? 0;
 
     // Convert seat assignments to seated players
     final players = <int, SeatedPlayer>{};
@@ -187,7 +188,6 @@ class DealerService {
     if (!sessionDoc.exists) throw 'Session not found';
 
     final session = DealerSession.fromFirestore(sessionDoc);
-    final endTime = DateTime.now();
 
     // Update session status
     await _firestore
@@ -198,22 +198,10 @@ class DealerService {
           'endTime': FieldValue.serverTimestamp(),
         });
 
-    // Create poker_sessions records for each player who participated
-    // This allows players to see this session in their Session History
-    for (final entry in session.players.entries) {
-      final player = entry.value;
-      // Only create records for real users (not manual/walk-up players)
-      if (player.playerId.isNotEmpty && !player.playerId.startsWith('manual_')) {
-        await _createPlayerSessionRecord(
-          dealerSession: session,
-          sessionId: sessionId,
-          playerId: player.playerId,
-          playerName: player.displayName,
-          seatNumber: entry.key,
-          endTime: endTime,
-        );
-      }
-    }
+    // NOTE: Player session records are no longer created here to avoid duplicates.
+    // The main session (created by PokerSessionManager) now stores playerIds,
+    // allowing players to query sessions they participated in.
+    // The hands are only stored in the main session, not per-player sessions.
 
     // Clear all seats at the table
     await SeatService.clearAllSeats(
@@ -282,9 +270,9 @@ class DealerService {
         if (event != null) {
           sessionName = event.name;
           gameType = event.gameType;
-          // Use event's starting stack if available
-          if (event.startingStack != null && event.startingStack! > 0) {
-            eventBuyIn = event.startingStack!.toDouble();
+          // Use event's buy-in amount (actual dollars), NOT startingStack (chips)
+          if (event.buyInAmount != null && event.buyInAmount! > 0) {
+            eventBuyIn = event.buyInAmount!;
           }
         }
       } catch (e) {
