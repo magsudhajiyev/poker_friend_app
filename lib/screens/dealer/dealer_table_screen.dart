@@ -753,13 +753,33 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     }
 
     // Check for side pots
-    final sidePots = _gameState!.calculateSidePots();
+    final allSidePots = _gameState!.calculateSidePots();
 
-    if (sidePots.length > 1) {
-      // Multiple side pots - show multi-pot winner dialog
-      await _showMultiPotWinnerDialog(sidePots);
+    // Filter out side pots with only 1 eligible player (auto-award those)
+    // These are meaningless pots that only one player can win
+    final contestedPots = <SidePot>[];
+    final autoAwardPots = <SidePot>[];
+
+    for (final pot in allSidePots) {
+      if (pot.eligiblePlayers.length == 1) {
+        autoAwardPots.add(pot);
+      } else {
+        contestedPots.add(pot);
+      }
+    }
+
+    // Auto-award single-eligible pots (add chips back to that player's stack)
+    for (final pot in autoAwardPots) {
+      final winnerId = pot.eligiblePlayers.first;
+      _gameState!.players[winnerId - 1].currentStack += pot.amount;
+      _gameState!.currentPot -= pot.amount;
+    }
+
+    if (contestedPots.length > 1) {
+      // Multiple contested pots - show multi-pot winner dialog
+      await _showMultiPotWinnerDialog(contestedPots);
     } else {
-      // Single pot - show regular winner selection
+      // Single pot (or no contested pots) - show regular winner selection
       await _showWinnerSelectionDialog();
     }
   }
@@ -830,30 +850,111 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       final potResults = result['potResults'] as Map<int, Map<String, dynamic>>?;
       if (potResults == null || potResults.isEmpty) return;
 
-      // Collect all winners and their shares across all pots
-      final allWinners = <int>{};
-      final allShares = <int, double>{};
+      if (!_isHandActive) return;
 
-      for (final potResult in potResults.values) {
-        if (potResult['isChoppedPot'] == true) {
-          final winners = potResult['winners'] as List<int>;
-          final shares = potResult['individualShares'] as Map<int, double>;
-          allWinners.addAll(winners);
-          for (final entry in shares.entries) {
-            allShares[entry.key] = (allShares[entry.key] ?? 0) + entry.value;
+      // Immediately disable action buttons to prevent race conditions
+      setState(() {
+        _isCompletingHand = true;
+      });
+
+      try {
+        // Step 1: Calculate total shares for ALL winners across ALL pots (for stack updates)
+        final allShares = <int, double>{};
+        double totalDistributed = 0.0;
+
+        for (final potResult in potResults.values) {
+          if (potResult['isChoppedPot'] == true) {
+            final shares = potResult['individualShares'] as Map<int, double>;
+            for (final entry in shares.entries) {
+              allShares[entry.key] = (allShares[entry.key] ?? 0) + entry.value;
+              totalDistributed += entry.value;
+            }
+          } else {
+            final winner = potResult['winner'] as int;
+            final amount = potResult['potAmount'] as double;
+            allShares[winner] = (allShares[winner] ?? 0) + amount;
+            totalDistributed += amount;
           }
-        } else {
-          final winner = potResult['winner'] as int;
-          final amount = potResult['potAmount'] as double;
-          allWinners.add(winner);
-          allShares[winner] = (allShares[winner] ?? 0) + amount;
         }
-      }
 
-      if (allWinners.length > 1) {
-        await _completeHandWithChop(allWinners.toList(), allShares);
-      } else {
-        await _completeHand(allWinners.first);
+        // Step 2: Update ALL player stacks based on their winnings from all pots
+        for (final entry in allShares.entries) {
+          _gameState!.players[entry.key - 1].currentStack += entry.value;
+        }
+
+        // Step 3: For hand record, only use the MAIN POT winner(s)
+        // This is consistent with poker rules: the main pot winner is THE winner of the hand
+        final mainPotResult = potResults[0]!;
+        final bool isMainPotChopped = mainPotResult['isChoppedPot'] == true;
+        final List<int> mainPotWinners = isMainPotChopped
+            ? List<int>.from(mainPotResult['winners'])
+            : [mainPotResult['winner'] as int];
+        final int primaryWinnerId = mainPotWinners.first;
+
+        // Calculate shares for main pot winners only (for the hand record)
+        Map<int, double>? mainPotShares;
+        if (isMainPotChopped) {
+          mainPotShares = <int, double>{};
+          for (final winnerId in mainPotWinners) {
+            mainPotShares[winnerId] = allShares[winnerId] ?? 0;
+          }
+        }
+
+        // Step 4: Complete hand in session manager with main pot winner(s)
+        if (isMainPotChopped) {
+          _sessionManager!.completeCurrentHandWithChop(
+            potAmount: totalDistributed,
+            winnerIds: mainPotWinners,
+            individualShares: mainPotShares,
+          );
+        } else {
+          _sessionManager!.completeCurrentHand(
+            potAmount: totalDistributed,
+            winnerId: primaryWinnerId,
+          );
+        }
+
+        // Step 5: Update DealerService
+        await DealerService.completeHand(
+          sessionId: _dealerSession.id,
+          handId: _dealerSession.currentHandId ?? '',
+          winnerId: primaryWinnerId,
+          potAmount: totalDistributed,
+          isChoppedPot: isMainPotChopped,
+          choppedWinners: isMainPotChopped ? mainPotWinners : null,
+          individualShares: mainPotShares,
+        );
+
+        // Step 6: Emit WebSocket event
+        final winnerName = _sessionManager!.getPlayerName(primaryWinnerId);
+        final summary = isMainPotChopped
+            ? 'Chop: ${mainPotWinners.map((id) => _sessionManager!.getPlayerName(id)).join(', ')} split ${formatCompactCurrency(totalDistributed)}'
+            : '$winnerName wins ${formatCompactCurrency(totalDistributed)}';
+        _wsService.emitHandCompleted(
+          tableId: widget.table.id,
+          sessionId: _dealerSession.id,
+          handId: _dealerSession.currentHandId ?? '',
+          winnerSeat: primaryWinnerId,
+          potAmount: totalDistributed,
+          summary: summary,
+        );
+
+        _showSuccess(summary);
+
+        // Step 7: Check for busted players and prepare for next hand
+        await _checkForBustedPlayers();
+        _gameState!.startNewHand();
+        await _updateSeatChipStacks();
+
+        setState(() {
+          _isHandActive = false;
+          _isCompletingHand = false;
+        });
+      } catch (e) {
+        setState(() {
+          _isCompletingHand = false;
+        });
+        _showError('Failed to complete hand: ${e.toString()}');
       }
     }
   }

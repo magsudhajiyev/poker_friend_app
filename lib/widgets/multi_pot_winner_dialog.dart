@@ -30,6 +30,9 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
   Map<int, Set<int>> choppedWinners = {};
   Map<int, bool> isChoppedPot = {};
 
+  // Track which side pots are auto-awarded to main pot winner
+  Set<int> autoAwardedPots = {};
+
   @override
   void initState() {
     super.initState();
@@ -89,11 +92,119 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
     return shares;
   }
 
+  // Check if the main pot winner is eligible for a specific side pot
+  bool _isMainPotWinnerEligibleFor(int potIndex) {
+    final mainPotWinner = isChoppedPot[0] == true
+        ? null  // If main pot is chopped, don't auto-award
+        : singleWinners[0];
+
+    if (mainPotWinner == null) return false;
+
+    return widget.sidePots[potIndex].eligiblePlayers.contains(mainPotWinner);
+  }
+
+  // Called when any pot winner changes - cascade auto-awards through remaining pots
+  void _updateAutoAwards() {
+    autoAwardedPots.clear();
+
+    // Start with main pot winner (or null if chopped)
+    int? currentWinner = isChoppedPot[0] == true ? null : singleWinners[0];
+
+    // Cascade through each side pot
+    for (int i = 1; i < widget.sidePots.length; i++) {
+      // If we have a current winner from a previous pot, check if they're eligible
+      if (currentWinner != null &&
+          widget.sidePots[i].eligiblePlayers.contains(currentWinner)) {
+        // Auto-award this pot to the current winner
+        autoAwardedPots.add(i);
+        singleWinners[i] = currentWinner;
+        isChoppedPot[i] = false;
+        choppedWinners[i] = <int>{};
+      } else {
+        // Current winner not eligible - check if this pot has a manual selection
+        if (isChoppedPot[i] == true) {
+          // Chopped pot - no single winner to cascade
+          currentWinner = null;
+        } else if (singleWinners[i] != null) {
+          // Manual selection made - this becomes the new current winner
+          currentWinner = singleWinners[i];
+        } else {
+          // No selection yet - stop cascading
+          currentWinner = null;
+        }
+      }
+    }
+  }
+
   Widget _buildPotSection(int potIndex) {
     final sidePot = widget.sidePots[potIndex];
     final potName = potIndex == 0 ? 'Main Pot' : 'Side Pot $potIndex';
     final isChopped = isChoppedPot[potIndex] ?? false;
     final eligiblePlayers = sidePot.eligiblePlayers;
+    final isAutoAwarded = autoAwardedPots.contains(potIndex);
+
+    // If this side pot is auto-awarded, show simplified view
+    if (isAutoAwarded && potIndex > 0) {
+      final autoAwardWinner = singleWinners[potIndex]!;
+      final winnerName = widget.playerIdToName[autoAwardWinner] ?? 'Player $autoAwardWinner';
+
+      // Determine if this was awarded from main pot or a previous side pot
+      final isMainPotWinner = singleWinners[0] == autoAwardWinner;
+      final awardReason = isMainPotWinner
+          ? '(main pot winner)'
+          : '(eligible from previous pot)';
+
+      return Card(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        elevation: 2,
+        color: Colors.green.shade50,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    potName,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    _formatCurrency(sidePot.amount),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Auto-awarded to $winnerName $awardReason',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.green.shade700,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -137,6 +248,8 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                       // Clear selections when switching modes
                       singleWinners[potIndex] = null;
                       choppedWinners[potIndex] = <int>{};
+                      // Re-evaluate cascading auto-awards
+                      _updateAutoAwards();
                     });
                   },
                 ),
@@ -198,7 +311,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
               const SizedBox(height: 8),
             ],
 
@@ -224,6 +337,8 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                       } else {
                         choppedWinners[potIndex]!.remove(playerId);
                       }
+                      // Re-evaluate cascading auto-awards
+                      _updateAutoAwards();
                     });
                   },
                   dense: true,
@@ -237,13 +352,15 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                   onChanged: (value) {
                     setState(() {
                       singleWinners[potIndex] = value;
+                      // Re-evaluate cascading auto-awards
+                      _updateAutoAwards();
                     });
                   },
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 );
               }
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -253,6 +370,9 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
   bool _isFormValid() {
     // Check if all pots have a winner selected
     for (int i = 0; i < widget.sidePots.length; i++) {
+      // Skip auto-awarded pots - they're already filled
+      if (autoAwardedPots.contains(i)) continue;
+
       final isChopped = isChoppedPot[i] ?? false;
       if (isChopped) {
         if (choppedWinners[i]?.isEmpty ?? true) {
@@ -308,7 +428,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Multiple pots - select winner for each pot',
+              'Select the main pot winner first. Side pots will auto-award if the winner is eligible.',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
