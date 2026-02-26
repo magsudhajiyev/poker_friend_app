@@ -1170,11 +1170,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
 
     try {
-      // Fetch club and event data
+      // Fetch club and event data AND check admin status BEFORE closing dialog
+      // This ensures catch block can safely pop the dialog if any of these throw
       final club = await ClubService.getClub(notification.clubId);
       final event = await EventService.getEvent(notification.clubId, notification.eventId!);
+      final isAdmin = await ClubService.canManageEvents(notification.clubId);
 
-      // Close loading dialog
+      // Close loading dialog AFTER all async operations complete
       if (mounted) Navigator.pop(context);
 
       if (club == null || event == null) {
@@ -1185,9 +1187,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         }
         return;
       }
-
-      // Check if user is admin
-      final isAdmin = await ClubService.canManageEvents(notification.clubId);
 
       // Navigate to event detail
       if (mounted) {
@@ -1203,7 +1202,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         );
       }
     } catch (e) {
-      // Close loading dialog
+      // Close loading dialog (safe because all async ops are before pop)
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

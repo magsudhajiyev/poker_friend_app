@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/account_type.dart';
@@ -35,18 +36,8 @@ class AuthService {
         await ensureUserDocument();
         print('ensureUserDocument completed');
 
-        // Store FCM token for push notifications
-        try {
-          final token = await FCMService.getToken();
-          if (token != null) {
-            await FCMService.storeToken(token);
-          }
-          // Subscribe to all user's club topics
-          await FCMService.subscribeToUserClubs();
-        } catch (e) {
-          print('FCM setup failed: $e');
-          // Don't fail sign-in if FCM fails
-        }
+        // FCM setup runs in background - don't block sign-in
+        unawaited(_setupFcmInBackground());
       }
 
       return credential;
@@ -77,16 +68,8 @@ class AuthService {
         // Verify document was created (safety net)
         await ensureUserDocument();
 
-        // Store FCM token for push notifications
-        try {
-          final token = await FCMService.getToken();
-          if (token != null) {
-            await FCMService.storeToken(token);
-          }
-        } catch (e) {
-          print('FCM token storage failed: $e');
-          // Don't fail registration if FCM fails
-        }
+        // FCM setup runs in background - don't block registration
+        unawaited(_setupFcmInBackground());
       }
 
       print('User registered: ${credential.user?.email}');
@@ -178,14 +161,8 @@ class AuthService {
   // Sign out
   static Future<void> signOut() async {
     try {
-      // Unsubscribe from club topics and remove FCM token before signing out
-      try {
-        await FCMService.unsubscribeFromAllClubs();
-        await FCMService.removeToken();
-      } catch (e) {
-        print('FCM cleanup failed: $e');
-        // Don't fail sign-out if FCM fails
-      }
+      // FCM cleanup runs in background - don't block sign-out
+      unawaited(_cleanupFcmInBackground());
 
       clearAccountTypeCache();  // Clear cached account type
       await _auth.signOut();
@@ -193,6 +170,29 @@ class AuthService {
     } catch (e) {
       print('Sign out error: $e');
       throw 'Failed to sign out. Please try again.';
+    }
+  }
+
+  /// Setup FCM in background (fire-and-forget)
+  static Future<void> _setupFcmInBackground() async {
+    try {
+      final token = await FCMService.getToken();
+      if (token != null) {
+        await FCMService.storeToken(token);
+      }
+      await FCMService.subscribeToUserClubs();
+    } catch (e) {
+      print('FCM setup failed (background): $e');
+    }
+  }
+
+  /// Cleanup FCM in background (fire-and-forget)
+  static Future<void> _cleanupFcmInBackground() async {
+    try {
+      await FCMService.unsubscribeFromAllClubs();
+      await FCMService.removeToken();
+    } catch (e) {
+      print('FCM cleanup failed (background): $e');
     }
   }
   

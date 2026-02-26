@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -65,12 +66,9 @@ void main() async {
     await FCMService.initialize();
 
     // If user is already logged in, ensure FCM token is stored and clubs subscribed
+    // Fire-and-forget - don't block app startup
     if (AuthService.isSignedIn) {
-      final token = await FCMService.getToken();
-      if (token != null) {
-        await FCMService.storeToken(token);
-      }
-      await FCMService.subscribeToUserClubs();
+      unawaited(_setupFcmForLoggedInUser());
     }
   } catch (e) {
     // Continue without FCM
@@ -127,6 +125,19 @@ void _showInvitationAcceptedNotification(String clubName) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   );
+}
+
+/// Setup FCM for already logged-in user (fire-and-forget, runs in background)
+Future<void> _setupFcmForLoggedInUser() async {
+  try {
+    final token = await FCMService.getToken();
+    if (token != null) {
+      await FCMService.storeToken(token);
+    }
+    await FCMService.subscribeToUserClubs();
+  } catch (e) {
+    // Silent failure - FCM is non-critical for app functionality
+  }
 }
 
 /// Handle navigation when a notification is tapped (from background or terminated state)

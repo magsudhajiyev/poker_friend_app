@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,6 +21,9 @@ class FCMService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _tokensCollection = 'fcm_tokens';
+
+  /// Timeout for FCM operations to prevent blocking when service is unavailable
+  static const _fcmTimeout = Duration(seconds: 5);
 
   static String? _currentToken;
   static bool _isInitialized = false;
@@ -58,7 +62,8 @@ class FCMService {
 
       // Check if app was opened from a notification (terminated state)
       // Store the data to be processed after app has fully loaded
-      final initialMessage = await _messaging.getInitialMessage();
+      final initialMessage = await _messaging.getInitialMessage()
+          .timeout(_fcmTimeout, onTimeout: () => null);
       if (initialMessage != null) {
         pendingInitialMessage = initialMessage.data;
       }
@@ -81,7 +86,10 @@ class FCMService {
         criticalAlert: false,
         provisional: false,
         sound: true,
-      );
+      ).timeout(_fcmTimeout, onTimeout: () {
+        print('FCM: Permission request timed out');
+        throw TimeoutException('Permission request timed out');
+      });
 
       final isAuthorized = settings.authorizationStatus == AuthorizationStatus.authorized ||
                            settings.authorizationStatus == AuthorizationStatus.provisional;
@@ -99,15 +107,21 @@ class FCMService {
     try {
       // For iOS, get APNs token first (required for FCM)
       if (Platform.isIOS) {
-        final apnsToken = await _messaging.getAPNSToken();
+        final apnsToken = await _messaging.getAPNSToken()
+            .timeout(_fcmTimeout, onTimeout: () => null);
         if (apnsToken == null) {
           print('FCM: APNs token not available yet');
           return null;
         }
       }
 
-      _currentToken = await _messaging.getToken();
-      print('FCM: Token retrieved: ${_currentToken?.substring(0, 20)}...');
+      _currentToken = await _messaging.getToken()
+          .timeout(_fcmTimeout, onTimeout: () => null);
+      if (_currentToken != null) {
+        print('FCM: Token retrieved: ${_currentToken?.substring(0, 20)}...');
+      } else {
+        print('FCM: getToken timed out or returned null');
+      }
       return _currentToken;
     } catch (e) {
       print('FCM: Failed to get token: $e');
@@ -260,7 +274,10 @@ class FCMService {
   /// Subscribe to a topic (e.g., club notifications)
   static Future<void> subscribeToTopic(String topic) async {
     try {
-      await _messaging.subscribeToTopic(topic);
+      await _messaging.subscribeToTopic(topic)
+          .timeout(_fcmTimeout, onTimeout: () {
+        print('FCM: Subscribe to $topic timed out');
+      });
       print('FCM: Subscribed to topic: $topic');
     } catch (e) {
       print('FCM: Failed to subscribe to topic: $e');
@@ -270,7 +287,10 @@ class FCMService {
   /// Unsubscribe from a topic
   static Future<void> unsubscribeFromTopic(String topic) async {
     try {
-      await _messaging.unsubscribeFromTopic(topic);
+      await _messaging.unsubscribeFromTopic(topic)
+          .timeout(_fcmTimeout, onTimeout: () {
+        print('FCM: Unsubscribe from $topic timed out');
+      });
       print('FCM: Unsubscribed from topic: $topic');
     } catch (e) {
       print('FCM: Failed to unsubscribe from topic: $e');
@@ -301,15 +321,22 @@ class FCMService {
     if (userId == null) return;
 
     try {
-      // Get user's club IDs from dealers document
-      final dealerDoc = await _firestore.collection('dealers').doc(userId).get();
+      // Get user's club IDs from dealers document (with timeout)
+      final dealerDoc = await _firestore.collection('dealers').doc(userId).get()
+          .timeout(_fcmTimeout, onTimeout: () {
+        throw TimeoutException('Firestore timeout getting dealer doc');
+      });
       if (!dealerDoc.exists) return;
 
       final clubIds = (dealerDoc.data()?['clubIds'] as List<dynamic>?)?.cast<String>() ?? [];
 
-      for (final clubId in clubIds) {
-        await subscribeToClub(clubId);
-      }
+      // Subscribe in parallel instead of sequentially (with overall timeout)
+      await Future.wait(
+        clubIds.map((clubId) => subscribeToClub(clubId)),
+      ).timeout(const Duration(seconds: 10), onTimeout: () {
+        print('FCM: Bulk subscribe timed out');
+        return [];
+      });
 
       print('FCM: Subscribed to ${clubIds.length} club topics');
     } catch (e) {
@@ -323,15 +350,22 @@ class FCMService {
     if (userId == null) return;
 
     try {
-      // Get user's club IDs from dealers document
-      final dealerDoc = await _firestore.collection('dealers').doc(userId).get();
+      // Get user's club IDs from dealers document (with timeout)
+      final dealerDoc = await _firestore.collection('dealers').doc(userId).get()
+          .timeout(_fcmTimeout, onTimeout: () {
+        throw TimeoutException('Firestore timeout getting dealer doc');
+      });
       if (!dealerDoc.exists) return;
 
       final clubIds = (dealerDoc.data()?['clubIds'] as List<dynamic>?)?.cast<String>() ?? [];
 
-      for (final clubId in clubIds) {
-        await unsubscribeFromClub(clubId);
-      }
+      // Unsubscribe in parallel instead of sequentially (with overall timeout)
+      await Future.wait(
+        clubIds.map((clubId) => unsubscribeFromClub(clubId)),
+      ).timeout(const Duration(seconds: 10), onTimeout: () {
+        print('FCM: Bulk unsubscribe timed out');
+        return [];
+      });
 
       print('FCM: Unsubscribed from ${clubIds.length} club topics');
     } catch (e) {
