@@ -28,6 +28,74 @@ class ClubRequestService {
     }
   }
 
+  /// Get all app admins with their user details
+  static Future<List<Map<String, dynamic>>> _getAppAdmins() async {
+    try {
+      final snapshot = await _firestore.collection(_adminsCollection).get();
+      List<Map<String, dynamic>> admins = [];
+
+      for (final doc in snapshot.docs) {
+        final userDoc = await _firestore.collection('users').doc(doc.id).get();
+        if (userDoc.exists) {
+          admins.add({
+            'userId': doc.id,
+            'email': userDoc.data()?['email'] ?? '',
+            'displayName': userDoc.data()?['displayName'] ?? '',
+          });
+        }
+      }
+      return admins;
+    } catch (e) {
+      print('Error getting app admins: $e');
+      return [];
+    }
+  }
+
+  /// Notify app admins about a new club registration request
+  static Future<void> _notifyAppAdmins({
+    required String clubName,
+    required String requesterName,
+    required String requesterEmail,
+    required String requestId,
+    String? address,
+    String? phone,
+  }) async {
+    try {
+      final admins = await _getAppAdmins();
+      print('Notifying ${admins.length} app admins about new club request');
+
+      for (final admin in admins) {
+        // Send in-app notification (which triggers FCM via Cloud Function)
+        await ClubNotificationService.notifyUser(
+          userId: admin['userId'] as String,
+          type: NotificationType.newClubRequest,
+          title: 'New Club Request',
+          body: '$requesterName wants to register "$clubName"',
+          data: {
+            'action': 'view_club_requests',
+            'requestId': requestId,
+          },
+        );
+
+        // Send email notification
+        final email = admin['email'] as String;
+        if (email.isNotEmpty) {
+          await EmailService.sendNewClubRequestEmail(
+            toEmail: email,
+            clubName: clubName,
+            requesterName: requesterName,
+            requesterEmail: requesterEmail,
+            address: address,
+            phone: phone,
+          );
+        }
+      }
+    } catch (e) {
+      print('Error notifying app admins: $e');
+      // Don't throw - request was still created successfully
+    }
+  }
+
   /// Submit a new club registration request
   static Future<ClubRequest> submitRequest({
     required String clubName,
@@ -59,6 +127,16 @@ class ClubRequestService {
     final docRef = await _firestore
         .collection(_requestsCollection)
         .add(requestData.toFirestore());
+
+    // Notify app admins about the new request
+    await _notifyAppAdmins(
+      clubName: clubName,
+      requesterName: userName ?? 'Unknown',
+      requesterEmail: userEmail ?? '',
+      requestId: docRef.id,
+      address: address,
+      phone: phone,
+    );
 
     return ClubRequest(
       id: docRef.id,

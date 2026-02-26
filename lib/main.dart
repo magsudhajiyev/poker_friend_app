@@ -16,6 +16,7 @@ import 'config/env_config.dart';
 import 'design_system/poker_friend_theme.dart';
 import 'screens/club/event_detail_screen.dart';
 import 'screens/club/club_dashboard_screen.dart';
+import 'screens/admin/club_requests_screen.dart';
 
 /// Global navigator key for deep linking
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -159,6 +160,9 @@ Future<void> _handleNotificationNavigation(Map<String, dynamic> data) async {
         await _navigateToClub(context, clubId);
       }
       break;
+    case 'view_club_requests':
+      _navigateToClubRequests(context);
+      break;
   }
 }
 
@@ -174,6 +178,8 @@ String? _actionFromType(String? type) {
     case 'clubApproved':
     case 'invitationAccepted':
       return 'view_club';
+    case 'new_club_request':
+      return 'view_club_requests';
     default:
       return null;
   }
@@ -226,6 +232,18 @@ Future<void> _navigateToClub(BuildContext context, String clubId) async {
   } catch (e) {
     // Silently fail - user can navigate manually
   }
+}
+
+/// Navigate to club requests screen (for app admins)
+void _navigateToClubRequests(BuildContext context) {
+  if (!context.mounted) return;
+
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(
+      builder: (context) => const ClubRequestsScreen(),
+    ),
+    (route) => route.isFirst,
+  );
 }
 
 class PokerTrackerApp extends StatelessWidget {

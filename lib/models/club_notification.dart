@@ -8,6 +8,7 @@ enum NotificationType {
   eventStarting,    // 1 hour before
   eventStarted,     // When status -> active
   memberRSVP,       // When a member RSVPs to an event
+  newClubRequest,   // When a new club registration is submitted (for app admins)
   clubApproved,     // When a club request is approved
   clubRejected,     // When a club request is rejected
   memberInvited,    // When user is invited to join a club
@@ -30,6 +31,8 @@ extension NotificationTypeExtension on NotificationType {
         return 'Event Started';
       case NotificationType.memberRSVP:
         return 'Member RSVP';
+      case NotificationType.newClubRequest:
+        return 'New Club Request';
       case NotificationType.clubApproved:
         return 'Club Approved';
       case NotificationType.clubRejected:
@@ -57,6 +60,8 @@ extension NotificationTypeExtension on NotificationType {
         return 'event_started';
       case NotificationType.memberRSVP:
         return 'member_rsvp';
+      case NotificationType.newClubRequest:
+        return 'new_club_request';
       case NotificationType.clubApproved:
         return 'club_approved';
       case NotificationType.clubRejected:
@@ -84,6 +89,8 @@ extension NotificationTypeExtension on NotificationType {
         return NotificationType.eventStarted;
       case 'member_rsvp':
         return NotificationType.memberRSVP;
+      case 'new_club_request':
+        return NotificationType.newClubRequest;
       case 'club_approved':
         return NotificationType.clubApproved;
       case 'club_rejected':

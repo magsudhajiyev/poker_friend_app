@@ -61,6 +61,162 @@ class EmailService {
     }
   }
 
+  /// Send new club request notification email to app admins
+  static Future<bool> sendNewClubRequestEmail({
+    required String toEmail,
+    required String clubName,
+    required String requesterName,
+    required String requesterEmail,
+    String? address,
+    String? phone,
+  }) async {
+    final apiKey = EnvConfig.resendApiKey;
+    if (apiKey.isEmpty) {
+      print('EmailService: Resend API key not configured');
+      return false;
+    }
+
+    final emailBody = _buildNewClubRequestEmailHtml(
+      clubName: clubName,
+      requesterName: requesterName,
+      requesterEmail: requesterEmail,
+      address: address,
+      phone: phone,
+    );
+
+    try {
+      final response = await http.post(
+        Uri.parse(_resendApiUrl),
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'from': 'Poker Friend <admin@pokerfriend.app>',
+          'to': [toEmail],
+          'subject': 'New Club Request: $clubName',
+          'html': emailBody,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('EmailService: New club request email sent to $toEmail');
+        return true;
+      } else {
+        print('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('EmailService: Error sending email - $e');
+      return false;
+    }
+  }
+
+  /// Build styled HTML email for new club request notification
+  static String _buildNewClubRequestEmailHtml({
+    required String clubName,
+    required String requesterName,
+    required String requesterEmail,
+    String? address,
+    String? phone,
+  }) {
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Club Request</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f0f1a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0f0f1a;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" style="max-width: 500px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 32px 0;">
+              <table role="presentation" width="100%">
+                <tr>
+                  <td>
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 12px; display: inline-block; text-align: center; line-height: 50px;">
+                      <span style="font-size: 24px;">&#9824;</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Title -->
+          <tr>
+            <td style="padding: 24px 32px 8px;">
+              <h1 style="margin: 0; color: #f59e0b; font-size: 28px; font-weight: 700;">New Club Request</h1>
+            </td>
+          </tr>
+
+          <!-- Main Message -->
+          <tr>
+            <td style="padding: 16px 32px 32px;">
+              <p style="margin: 0; color: #ffffff; font-size: 18px; line-height: 1.6;">
+                A new club registration request has been submitted.
+              </p>
+              <table role="presentation" style="margin-top: 24px; width: 100%;">
+                <tr>
+                  <td style="padding: 8px 0; color: #9ca3af; font-size: 14px;">Club Name:</td>
+                  <td style="padding: 8px 0; color: #ffffff; font-size: 14px; font-weight: 600;">$clubName</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #9ca3af; font-size: 14px;">Requested By:</td>
+                  <td style="padding: 8px 0; color: #ffffff; font-size: 14px;">$requesterName</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #9ca3af; font-size: 14px;">Email:</td>
+                  <td style="padding: 8px 0; color: #ffffff; font-size: 14px;">$requesterEmail</td>
+                </tr>
+                ${address != null && address.isNotEmpty ? '''
+                <tr>
+                  <td style="padding: 8px 0; color: #9ca3af; font-size: 14px;">Address:</td>
+                  <td style="padding: 8px 0; color: #ffffff; font-size: 14px;">$address</td>
+                </tr>
+                ''' : ''}
+                ${phone != null && phone.isNotEmpty ? '''
+                <tr>
+                  <td style="padding: 8px 0; color: #9ca3af; font-size: 14px;">Phone:</td>
+                  <td style="padding: 8px 0; color: #ffffff; font-size: 14px;">$phone</td>
+                </tr>
+                ''' : ''}
+              </table>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 32px;">
+              <hr style="border: none; border-top: 1px solid #374151; margin: 0;">
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px 32px;">
+              <p style="margin: 0; color: #6b7280; font-size: 12px; line-height: 1.6;">
+                Open the Poker Friend app to review this request.
+              </p>
+              <p style="margin: 16px 0 0; color: #4b5563; font-size: 11px;">
+                Sent by Poker Friend Admin System
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+''';
+  }
+
   /// Send club approval notification email
   static Future<bool> sendClubApprovalEmail({
     required String toEmail,

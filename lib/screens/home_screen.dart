@@ -12,6 +12,7 @@ import '../screens/statistics_screen.dart';
 import '../screens/my_opponents_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/profile_screen.dart';
+import '../screens/admin/club_requests_screen.dart';
 import '../screens/calendar_screen.dart';
 import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
@@ -242,6 +243,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case NotificationType.invitationDeclined:
         icon = Icons.person_off;
         iconColor = const Color(0xFFEF5350);
+        break;
+      case NotificationType.newClubRequest:
+        icon = Icons.business;
+        iconColor = const Color(0xFFF59E0B);
         break;
     }
 
@@ -710,6 +715,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         icon = Icons.person_off;
         iconColor = const Color(0xFFEF5350);
         break;
+      case NotificationType.newClubRequest:
+        icon = Icons.business;
+        iconColor = const Color(0xFFF59E0B);
+        break;
     }
 
     // Format time ago
@@ -833,6 +842,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case NotificationType.eventStarted:
       case NotificationType.memberRSVP:
         _navigateToEventFromNotification(notification);
+        break;
+      case NotificationType.newClubRequest:
+        // Navigate to club requests screen for app admins
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ClubRequestsScreen(),
+          ),
+        );
         break;
     }
   }
