@@ -542,6 +542,14 @@ class EventService {
     bool? isPublic,
     String? accessCode,
     EventStatus? status,
+    DateTime? startTime,
+    String? description,
+    String? location,
+    double? buyInAmount,
+    double? startingStack,
+    int? maxPlayers,
+    String? gameType,
+    bool? notifyMembers,
   }) async {
     final updates = <String, dynamic>{};
     if (name != null) updates['name'] = name;
@@ -554,6 +562,14 @@ class EventService {
         updates['endTime'] = Timestamp.now();
       }
     }
+    if (startTime != null) updates['startTime'] = Timestamp.fromDate(startTime);
+    if (description != null) updates['description'] = description;
+    if (location != null) updates['location'] = location;
+    if (buyInAmount != null) updates['buyInAmount'] = buyInAmount;
+    if (startingStack != null) updates['startingStack'] = startingStack;
+    if (maxPlayers != null) updates['maxPlayers'] = maxPlayers;
+    if (gameType != null) updates['gameType'] = gameType;
+    if (notifyMembers != null) updates['notifyMembers'] = notifyMembers;
 
     if (updates.isNotEmpty) {
       await _firestore

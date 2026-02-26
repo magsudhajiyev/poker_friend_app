@@ -6,14 +6,17 @@ import '../../models/club_event.dart';
 import '../../models/poker_table.dart';
 import '../../services/event_service.dart';
 import '../../services/table_service.dart';
+import '../../services/club_notification_service.dart';
 
-/// Screen for creating a new club event
+/// Screen for creating or editing a club event
 class CreateEventScreen extends StatefulWidget {
   final Club club;
+  final ClubEvent? event; // If provided, we're in edit mode
 
   const CreateEventScreen({
     Key? key,
     required this.club,
+    this.event,
   }) : super(key: key);
 
   @override
@@ -39,10 +42,28 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   bool _isLoadingTables = true;
   int _totalTablesCount = 0;  // Track total tables for better messaging
 
+  bool get _isEditMode => widget.event != null;
+
   @override
   void initState() {
     super.initState();
     _loadTables();
+    _initializeFormFields();
+  }
+
+  void _initializeFormFields() {
+    if (_isEditMode) {
+      final event = widget.event!;
+      _nameController.text = event.name;
+      _descriptionController.text = event.description ?? '';
+      _buyInController.text = event.buyInAmount?.toString() ?? '';
+      _startingStackController.text = event.startingStack?.toString() ?? '';
+      _selectedDate = event.startTime;
+      _selectedTime = TimeOfDay.fromDateTime(event.startTime);
+      _notifyMembers = false; // Don't notify by default when editing
+      _gameType = event.gameType;
+      _selectedTableIds = event.tableIds.toSet();
+    }
   }
 
   Future<void> _loadTables() async {
@@ -63,7 +84,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       }
 
       // Filter out tables that are already in use
-      final availableTables = tables.where((t) => !usedTableIds.contains(t.id)).toList();
+      // But in edit mode, include tables that belong to the current event
+      final currentEventTableIds = _isEditMode ? widget.event!.tableIds.toSet() : <String>{};
+      final availableTables = tables.where((t) =>
+        !usedTableIds.contains(t.id) || currentEventTableIds.contains(t.id)
+      ).toList();
 
       setState(() {
         _availableTables = availableTables;
@@ -145,7 +170,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Future<void> _createEvent() async {
+  Future<void> _submitEvent() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
@@ -157,31 +182,67 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       final startingStack = _startingStackController.text.isNotEmpty
           ? double.tryParse(_startingStackController.text)
           : null;
+      final description = _descriptionController.text.trim().isEmpty
+          ? null
+          : _descriptionController.text.trim();
 
-      await EventService.createEventWithDetails(
-        clubId: widget.club.id,
-        name: _nameController.text.trim(),
-        startTime: _eventDateTime,
-        description: _descriptionController.text.trim().isEmpty
-            ? null
-            : _descriptionController.text.trim(),
-        buyInAmount: buyIn,
-        startingStack: startingStack,
-        notifyMembers: _notifyMembers,
-        tableIds: _selectedTableIds.toList(),
-        gameType: _gameType,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Event created successfully!')),
+      if (_isEditMode) {
+        // Update existing event
+        await EventService.updateEvent(
+          widget.club.id,
+          widget.event!.id,
+          name: _nameController.text.trim(),
+          startTime: _eventDateTime,
+          description: description ?? '',
+          buyInAmount: buyIn ?? 0,
+          startingStack: startingStack ?? 0,
+          tableIds: _selectedTableIds.toList(),
+          gameType: _gameType,
+          notifyMembers: _notifyMembers,
         );
-        Navigator.pop(context, true);
+
+        // Send notification if toggle is enabled
+        if (_notifyMembers) {
+          final updatedEvent = await EventService.getEvent(widget.club.id, widget.event!.id);
+          if (updatedEvent != null) {
+            await ClubNotificationService.notifyEventUpdated(
+              clubId: widget.club.id,
+              event: updatedEvent,
+            );
+          }
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event updated successfully!')),
+          );
+          Navigator.pop(context, true);
+        }
+      } else {
+        // Create new event
+        await EventService.createEventWithDetails(
+          clubId: widget.club.id,
+          name: _nameController.text.trim(),
+          startTime: _eventDateTime,
+          description: description,
+          buyInAmount: buyIn,
+          startingStack: startingStack,
+          notifyMembers: _notifyMembers,
+          tableIds: _selectedTableIds.toList(),
+          gameType: _gameType,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event created successfully!')),
+          );
+          Navigator.pop(context, true);
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create event: $e')),
+          SnackBar(content: Text('Failed to ${_isEditMode ? 'update' : 'create'} event: $e')),
         );
       }
     } finally {
@@ -309,8 +370,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
                       const SizedBox(height: 40),
 
-                      // Create button
-                      _buildCreateButton(),
+                      // Submit button
+                      _buildSubmitButton(),
 
                       const SizedBox(height: 24),
                     ],
@@ -346,10 +407,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             ),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Create Event',
-              style: TextStyle(
+              _isEditMode ? 'Edit Event' : 'Create Event',
+              style: const TextStyle(
                 fontSize: 20,
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -778,9 +839,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Widget _buildCreateButton() {
+  Widget _buildSubmitButton() {
     return GestureDetector(
-      onTap: _isSubmitting ? null : _createEvent,
+      onTap: _isSubmitting ? null : _submitEvent,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 18),
@@ -800,9 +861,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     strokeWidth: 2,
                   ),
                 )
-              : const Text(
-                  'Create Event',
-                  style: TextStyle(
+              : Text(
+                  _isEditMode ? 'Save Changes' : 'Create Event',
+                  style: const TextStyle(
                     fontSize: 18,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

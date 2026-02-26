@@ -16,6 +16,7 @@ import '../../services/seat_service.dart';
 import '../../models/seat_assignment.dart';
 import 'event_attendees_screen.dart';
 import 'club_dashboard_screen.dart';
+import 'create_event_screen.dart';
 import '../dealer/dealer_qr_scan_screen.dart';
 import '../spectator/event_rankings_screen.dart';
 import '../player/player_session_screen.dart';
@@ -655,9 +656,46 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               fontWeight: FontWeight.w500,
             ),
           ),
+          // Edit button - only for admins on scheduled events
+          if (widget.isAdmin && _event.status == EventStatus.scheduled) ...[
+            const SizedBox(width: 12),
+            GestureDetector(
+              onTap: _editEvent,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: PokerFriendColors.dark3,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.edit,
+                  color: PokerFriendColors.purple,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  Future<void> _editEvent() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateEventScreen(
+          club: widget.club,
+          event: _event,
+        ),
+      ),
+    );
+
+    // Refresh data if event was edited
+    if (result == true && mounted) {
+      _loadData();
+    }
   }
 
   Widget _buildStatusBadge() {
