@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/club.dart';
 import '../models/club_member.dart';
 import 'auth_service.dart';
+import 'fcm_service.dart';
 
 /// Service for managing poker clubs
 class ClubService {
@@ -296,6 +297,16 @@ class ClubService {
 
     // Add club to user's dealers document
     await _addClubToDealer(userId, clubId);
+
+    // Subscribe current user to club FCM topic for push notifications
+    if (userId == AuthService.userId) {
+      try {
+        await FCMService.subscribeToClub(clubId);
+      } catch (e) {
+        print('Failed to subscribe to club FCM topic: $e');
+        // Don't fail membership if FCM subscription fails
+      }
+    }
   }
 
   /// Add a club ID to a dealer's document
@@ -447,6 +458,16 @@ class ClubService {
 
       // Remove club from user's dealers document
       await removeClubFromDealer(userId, clubId);
+
+      // Unsubscribe current user from club FCM topic
+      if (userId == AuthService.userId) {
+        try {
+          await FCMService.unsubscribeFromClub(clubId);
+        } catch (e) {
+          print('Failed to unsubscribe from club FCM topic: $e');
+          // Don't fail removal if FCM unsubscription fails
+        }
+      }
     } catch (e) {
       print('Error removing member: $e');
       rethrow;

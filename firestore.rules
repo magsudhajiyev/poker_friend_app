@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // FCM tokens - users can only manage their own tokens
+    match /fcm_tokens/{tokenId} {
+      allow read, write: if isAuthenticated() &&
+        (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
+    }
+
+    // User notifications - users can only read/update their own notifications
+    match /user_notifications/{notificationId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Cloud Functions create notifications, so no client create allowed
+      allow create: if false;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // Dealers collection
+    match /dealers/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // Clubs collection
+    match /clubs/{clubId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+
+      // Club members subcollection
+      match /members/{memberId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated();
+      }
+
+      // Club notifications subcollection
+      match /notifications/{notificationId} {
+        allow read: if isAuthenticated();
+        // Only Cloud Functions should create notifications
+        allow create: if isAuthenticated();
+        allow update, delete: if false;
+      }
+    }
+
+    // Allow authenticated users to read/write their own data in other collections
+    // This is a permissive rule - tighten as needed for production
+    match /{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

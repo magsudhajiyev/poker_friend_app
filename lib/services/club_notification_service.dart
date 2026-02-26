@@ -103,6 +103,7 @@ class ClubNotificationService {
           .add(notification.toFirestore());
 
       // Also create individual user notification documents for easy querying
+      // These are for in-app notification list - FCM is already sent via club topic
       final batch = _firestore.batch();
       for (final userId in memberIds) {
         final userNotificationRef = _firestore
@@ -113,6 +114,7 @@ class ClubNotificationService {
           'notificationId': notificationRef.id,
           'userId': userId,
           'isRead': false,
+          'skipFcm': true,  // FCM already sent via club topic, don't send again
         });
       }
       await batch.commit();

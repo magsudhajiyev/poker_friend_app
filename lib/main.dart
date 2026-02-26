@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth_wrapper.dart';
 import 'screens/player/player_session_screen.dart';
 import 'services/notification_service.dart';
+import 'services/fcm_service.dart';
+import 'services/auth_service.dart';
 import 'services/logger_service.dart';
 import 'services/deep_link_service.dart';
+import 'services/club_service.dart';
+import 'services/event_service.dart';
 import 'config/env_config.dart';
 import 'design_system/poker_friend_theme.dart';
+import 'screens/club/event_detail_screen.dart';
+import 'screens/club/club_dashboard_screen.dart';
 
 /// Global navigator key for deep linking
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -33,14 +40,39 @@ void main() async {
     // Continue without Firebase for now
   }
 
-  // Initialize notification service
+  // Initialize local notification service
   try {
     await NotificationService.initialize();
     await NotificationService.requestPermissions();
-    print('Notification service initialized successfully');
+    print('Local notification service initialized successfully');
   } catch (e) {
-    print('Notification initialization failed: $e');
-    // Continue without notifications for now
+    print('Local notification initialization failed: $e');
+    // Continue without local notifications for now
+  }
+
+  // Initialize FCM push notification service
+  try {
+    // Set callbacks BEFORE initialize() to handle getInitialMessage() for terminated app state
+    FCMService.onForegroundMessage = (RemoteMessage message) {
+      // Don't show UI - the in-app notification system handles foreground notifications
+    };
+
+    FCMService.onNotificationTap = (Map<String, dynamic> data) {
+      _handleNotificationNavigation(data);
+    };
+
+    await FCMService.initialize();
+
+    // If user is already logged in, ensure FCM token is stored and clubs subscribed
+    if (AuthService.isSignedIn) {
+      final token = await FCMService.getToken();
+      if (token != null) {
+        await FCMService.storeToken(token);
+      }
+      await FCMService.subscribeToUserClubs();
+    }
+  } catch (e) {
+    // Continue without FCM
   }
 
   // Initialize logger service for debugging
@@ -68,6 +100,15 @@ void main() async {
   }
 
   runApp(PokerTrackerApp());
+
+  // Process any pending notification that opened the app (from terminated state)
+  // This must happen after runApp() so the navigation context is available
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Add a small delay to ensure the app is fully loaded and navigated to home
+    Future.delayed(const Duration(seconds: 1), () {
+      FCMService.processPendingInitialMessage();
+    });
+  });
 }
 
 /// Show a notification when an invitation is accepted via deep link
@@ -85,6 +126,106 @@ void _showInvitationAcceptedNotification(String clubName) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   );
+}
+
+/// Handle navigation when a notification is tapped (from background or terminated state)
+Future<void> _handleNotificationNavigation(Map<String, dynamic> data) async {
+  final action = data['action'] as String?;
+  final clubId = data['clubId'] as String?;
+  final eventId = data['eventId'] as String?;
+  final type = data['type'] as String?;
+
+  // Need either action or type to determine navigation
+  if (action == null && type == null) return;
+
+  final context = navigatorKey.currentContext;
+  if (context == null) return;
+
+  // Wait for navigation to be ready (especially for terminated app state)
+  await Future.delayed(const Duration(milliseconds: 500));
+
+  // Determine effective action from explicit action or notification type
+  final effectiveAction = action ?? _actionFromType(type);
+
+  switch (effectiveAction) {
+    case 'view_event':
+    case 'spectate_event':
+      if (clubId != null && eventId != null) {
+        await _navigateToEvent(context, clubId, eventId);
+      }
+      break;
+    case 'view_club':
+      if (clubId != null) {
+        await _navigateToClub(context, clubId);
+      }
+      break;
+  }
+}
+
+/// Map notification type to navigation action
+String? _actionFromType(String? type) {
+  switch (type) {
+    case 'eventCreated':
+    case 'eventUpdated':
+    case 'eventStarting':
+    case 'eventStarted':
+    case 'eventCancelled':
+      return 'view_event';
+    case 'clubApproved':
+    case 'invitationAccepted':
+      return 'view_club';
+    default:
+      return null;
+  }
+}
+
+/// Navigate to event detail screen by fetching club and event data
+Future<void> _navigateToEvent(BuildContext context, String clubId, String eventId) async {
+  try {
+    final club = await ClubService.getClub(clubId);
+    final event = await EventService.getEvent(clubId, eventId);
+
+    if (club == null || event == null) return;
+
+    final isAdmin = await ClubService.canManageEvents(clubId);
+
+    if (!context.mounted) return;
+
+    // Pop back to root first, then push event screen
+    // This ensures clean navigation even if already viewing another event
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => EventDetailScreen(
+          club: club,
+          event: event,
+          isAdmin: isAdmin,
+        ),
+      ),
+      (route) => route.isFirst,
+    );
+  } catch (e) {
+    // Silently fail - user can navigate manually
+  }
+}
+
+/// Navigate to club dashboard by fetching club data
+Future<void> _navigateToClub(BuildContext context, String clubId) async {
+  try {
+    final club = await ClubService.getClub(clubId);
+    if (club == null) return;
+
+    if (!context.mounted) return;
+
+    // Pop back to root first, then push club screen
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => ClubDashboardScreen(club: club),
+      ),
+      (route) => route.isFirst,
+    );
+  } catch (e) {
+    // Silently fail - user can navigate manually
+  }
 }
 
 class PokerTrackerApp extends StatelessWidget {

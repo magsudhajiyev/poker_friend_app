@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/account_type.dart';
+import 'fcm_service.dart';
 
 class AuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -33,6 +34,19 @@ class AuthService {
         print('Calling ensureUserDocument after sign in...');
         await ensureUserDocument();
         print('ensureUserDocument completed');
+
+        // Store FCM token for push notifications
+        try {
+          final token = await FCMService.getToken();
+          if (token != null) {
+            await FCMService.storeToken(token);
+          }
+          // Subscribe to all user's club topics
+          await FCMService.subscribeToUserClubs();
+        } catch (e) {
+          print('FCM setup failed: $e');
+          // Don't fail sign-in if FCM fails
+        }
       }
 
       return credential;
@@ -62,6 +76,17 @@ class AuthService {
         await _createUserDocument(credential.user!.uid, displayName, email);
         // Verify document was created (safety net)
         await ensureUserDocument();
+
+        // Store FCM token for push notifications
+        try {
+          final token = await FCMService.getToken();
+          if (token != null) {
+            await FCMService.storeToken(token);
+          }
+        } catch (e) {
+          print('FCM token storage failed: $e');
+          // Don't fail registration if FCM fails
+        }
       }
 
       print('User registered: ${credential.user?.email}');
@@ -153,6 +178,15 @@ class AuthService {
   // Sign out
   static Future<void> signOut() async {
     try {
+      // Unsubscribe from club topics and remove FCM token before signing out
+      try {
+        await FCMService.unsubscribeFromAllClubs();
+        await FCMService.removeToken();
+      } catch (e) {
+        print('FCM cleanup failed: $e');
+        // Don't fail sign-out if FCM fails
+      }
+
       clearAccountTypeCache();  // Clear cached account type
       await _auth.signOut();
       print('User signed out');
