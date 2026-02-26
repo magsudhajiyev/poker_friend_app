@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth_wrapper.dart';
@@ -37,6 +38,14 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     print('Firebase initialized successfully');
+
+    // Enable Firestore offline persistence for resilience to network issues
+    // This queues writes locally and syncs when connection recovers
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+    print('Firestore offline persistence enabled');
   } catch (e) {
     print('Firebase initialization failed: $e');
     // Continue without Firebase for now
