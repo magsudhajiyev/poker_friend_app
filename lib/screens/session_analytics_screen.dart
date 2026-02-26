@@ -239,7 +239,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 child: _buildMetricCardWithAsset(
                   'Total Invested',
                   _formatTotalInvested(_totalInvested),
-                  'icons/wallet_original.png',
+                  'icons/wallet.png',
                 ),
               ),
               SizedBox(width: 8),
