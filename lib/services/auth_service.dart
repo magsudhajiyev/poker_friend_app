@@ -11,6 +11,17 @@ class AuthService {
   // Cached account type
   static AccountType? _cachedAccountType;
   static String? _cachedAccountTypeUserId;  // Track which user the cache is for
+
+  // Track if user explicitly logged out (vs unexpected session loss)
+  static bool _isExplicitLogout = false;
+
+  /// Check if user explicitly logged out
+  static bool get isExplicitLogout => _isExplicitLogout;
+
+  /// Clear the explicit logout flag (call when user successfully signs in)
+  static void clearExplicitLogoutFlag() {
+    _isExplicitLogout = false;
+  }
   
   // Get current user
   static User? get currentUser => _auth.currentUser;
@@ -161,6 +172,11 @@ class AuthService {
   // Sign out
   static Future<void> signOut() async {
     try {
+      print('📍 LOGOUT: signOut() called');
+      print('📍 LOGOUT: Stack trace: ${StackTrace.current}');
+
+      _isExplicitLogout = true;  // Mark as explicit logout
+
       // FCM cleanup runs in background - don't block sign-out
       unawaited(_cleanupFcmInBackground());
 
@@ -168,6 +184,7 @@ class AuthService {
       await _auth.signOut();
       print('User signed out');
     } catch (e) {
+      _isExplicitLogout = false;  // Reset on error
       print('Sign out error: $e');
       throw 'Failed to sign out. Please try again.';
     }

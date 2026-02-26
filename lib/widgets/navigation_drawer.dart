@@ -188,6 +188,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                       label: 'Sign Out',
                       isDestructive: true,
                       onTap: () {
+                        print('📍 LOGOUT: Navigation drawer Sign Out tapped');
                         Navigator.pop(context);
                         _showSignOutConfirmation(context);
                       },
@@ -613,6 +614,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           ),
           TextButton(
             onPressed: () async {
+              print('📍 LOGOUT: Drawer confirmation confirmed');
               Navigator.pop(context);
               await AuthService.signOut();
               if (context.mounted) {

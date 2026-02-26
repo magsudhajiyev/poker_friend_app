@@ -268,7 +268,7 @@ class PokerTrackerApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       initialRoute: '/',
       routes: {
-        '/': (context) => AuthWrapper(),
+        '/': (context) => const AuthWrapper(),
       },
       onGenerateRoute: (settings) {
         // Handle player session route with arguments

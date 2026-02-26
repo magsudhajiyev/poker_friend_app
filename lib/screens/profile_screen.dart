@@ -710,6 +710,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
 
                       if (confirm == true) {
+                        print('📍 LOGOUT: Profile screen Log Out confirmed');
                         await AuthService.signOut();
                         if (mounted) {
                           // Navigate to AuthScreen and remove all routes
