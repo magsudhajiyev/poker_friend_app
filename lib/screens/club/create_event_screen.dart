@@ -34,7 +34,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   TimeOfDay _selectedTime = const TimeOfDay(hour: 19, minute: 0);
   bool _notifyMembers = true;
   bool _isSubmitting = false;
-  String _gameType = 'cash';  // 'cash' or 'tournament'
+  String _gameType = 'tournament';  // 'cash' or 'tournament'
 
   // Table selection
   List<PokerTable> _availableTables = [];
@@ -56,8 +56,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       final event = widget.event!;
       _nameController.text = event.name;
       _descriptionController.text = event.description ?? '';
-      _buyInController.text = event.buyInAmount?.toString() ?? '';
-      _startingStackController.text = event.startingStack?.toString() ?? '';
+
+      // For cash games, use stakes; for tournaments, use buyInAmount
+      if (event.gameType == 'cash') {
+        _buyInController.text = event.stakes ?? '';
+        _startingStackController.text = event.startingStack?.toStringAsFixed(0) ?? '';
+      } else {
+        _buyInController.text = event.buyInAmount?.toString() ?? '';
+        _startingStackController.text = event.startingStack?.toString() ?? '';
+      }
+
       _selectedDate = event.startTime;
       _selectedTime = TimeOfDay.fromDateTime(event.startTime);
       _notifyMembers = false; // Don't notify by default when editing
@@ -176,26 +184,52 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final buyIn = _buyInController.text.isNotEmpty
-          ? double.tryParse(_buyInController.text)
-          : null;
-      final startingStack = _startingStackController.text.isNotEmpty
-          ? double.tryParse(_startingStackController.text)
-          : null;
       final description = _descriptionController.text.trim().isEmpty
           ? null
           : _descriptionController.text.trim();
+
+      // Handle different field meanings for cash vs tournament
+      double? buyIn;
+      double? startingStack;
+      String? stakes;
+
+      if (_gameType == 'cash') {
+        // For cash: stakes is string, startingStack is min buy-in
+        stakes = _buyInController.text.trim().isNotEmpty
+            ? _buyInController.text.trim()
+            : null;
+        startingStack = _startingStackController.text.isNotEmpty
+            ? double.tryParse(_startingStackController.text)
+            : null;
+      } else {
+        // For tournament: buyIn is amount, startingStack is chips
+        buyIn = _buyInController.text.isNotEmpty
+            ? double.tryParse(_buyInController.text)
+            : null;
+        startingStack = _startingStackController.text.isNotEmpty
+            ? double.tryParse(_startingStackController.text)
+            : null;
+      }
+
+      // Generate event name for cash games if not provided
+      String eventName = _nameController.text.trim();
+      if (_gameType == 'cash' && eventName.isEmpty) {
+        eventName = stakes != null && stakes.isNotEmpty
+            ? 'Cash Game $stakes'
+            : 'Cash Game';
+      }
 
       if (_isEditMode) {
         // Update existing event
         await EventService.updateEvent(
           widget.club.id,
           widget.event!.id,
-          name: _nameController.text.trim(),
+          name: eventName,
           startTime: _eventDateTime,
           description: description ?? '',
           buyInAmount: buyIn ?? 0,
           startingStack: startingStack ?? 0,
+          stakes: stakes,
           tableIds: _selectedTableIds.toList(),
           gameType: _gameType,
           notifyMembers: _notifyMembers,
@@ -222,11 +256,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         // Create new event
         await EventService.createEventWithDetails(
           clubId: widget.club.id,
-          name: _nameController.text.trim(),
+          name: eventName,
           startTime: _eventDateTime,
           description: description,
           buyInAmount: buyIn,
           startingStack: startingStack,
+          stakes: stakes,
           notifyMembers: _notifyMembers,
           tableIds: _selectedTableIds.toList(),
           gameType: _gameType,
@@ -269,13 +304,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Event name
-                      _buildLabel('Event Name *'),
+                      _buildLabel(_gameType == 'cash' ? 'Event Name' : 'Event Name *'),
                       const SizedBox(height: 8),
                       _buildTextField(
                         controller: _nameController,
-                        hint: 'e.g., Friday Night Poker',
+                        hint: _gameType == 'cash'
+                            ? 'Optional (defaults to "Cash Game {stakes}")'
+                            : 'e.g., Friday Night Poker',
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
+                          // Only required for tournaments
+                          if (_gameType == 'tournament' && (value == null || value.trim().isEmpty)) {
                             return 'Please enter an event name';
                           }
                           return null;
@@ -313,19 +351,21 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       _buildGameTypeSelector(),
                       const SizedBox(height: 24),
 
-                      // Buy-in and Starting Stack
+                      // Buy-in/Stakes and Starting Stack/Min Buy-in
                       Row(
                         children: [
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel('Buy-in (\$)'),
+                                _buildLabel(_gameType == 'cash' ? 'Stakes' : 'Buy-in (\$)'),
                                 const SizedBox(height: 8),
                                 _buildTextField(
                                   controller: _buyInController,
-                                  hint: '0',
-                                  keyboardType: TextInputType.number,
+                                  hint: _gameType == 'cash' ? '1/2' : '0',
+                                  keyboardType: _gameType == 'cash'
+                                      ? TextInputType.text
+                                      : TextInputType.number,
                                 ),
                               ],
                             ),
@@ -335,11 +375,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel('Starting Stack'),
+                                _buildLabel(_gameType == 'cash' ? 'Min Buy-in (\$)' : 'Starting Stack'),
                                 const SizedBox(height: 8),
                                 _buildTextField(
                                   controller: _startingStackController,
-                                  hint: 'e.g., 10000',
+                                  hint: _gameType == 'cash' ? '200' : 'e.g., 10000',
                                   keyboardType: TextInputType.number,
                                 ),
                               ],
@@ -688,52 +728,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       children: [
         Expanded(
           child: GestureDetector(
-            onTap: () => setState(() => _gameType = 'cash'),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: _gameType == 'cash'
-                    ? PokerFriendColors.purple.withOpacity(0.2)
-                    : PokerFriendColors.dark3,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _gameType == 'cash'
-                      ? PokerFriendColors.purple
-                      : PokerFriendColors.dark5,
-                  width: 1.5,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.attach_money,
-                    color: _gameType == 'cash'
-                        ? PokerFriendColors.purple
-                        : PokerFriendColors.dark9,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Cash Game',
-                    style: TextStyle(
-                      color: _gameType == 'cash'
-                          ? Colors.white
-                          : PokerFriendColors.dark11,
-                      fontSize: 15,
-                      fontWeight: _gameType == 'cash'
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: GestureDetector(
             onTap: () => setState(() => _gameType = 'tournament'),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -768,6 +762,52 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           : PokerFriendColors.dark11,
                       fontSize: 15,
                       fontWeight: _gameType == 'tournament'
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _gameType = 'cash'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: _gameType == 'cash'
+                    ? PokerFriendColors.purple.withOpacity(0.2)
+                    : PokerFriendColors.dark3,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _gameType == 'cash'
+                      ? PokerFriendColors.purple
+                      : PokerFriendColors.dark5,
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.attach_money,
+                    color: _gameType == 'cash'
+                        ? PokerFriendColors.purple
+                        : PokerFriendColors.dark9,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Cash Game',
+                    style: TextStyle(
+                      color: _gameType == 'cash'
+                          ? Colors.white
+                          : PokerFriendColors.dark11,
+                      fontSize: 15,
+                      fontWeight: _gameType == 'cash'
                           ? FontWeight.w600
                           : FontWeight.w400,
                     ),

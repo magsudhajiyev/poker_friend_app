@@ -79,8 +79,9 @@ class ClubEvent {
   // New fields for events system
   final String? description;      // Event description
   final String? location;         // Physical location
-  final double? buyInAmount;      // Buy-in cost
-  final double? startingStack;    // Starting stack for tournament
+  final double? buyInAmount;      // Buy-in cost (tournament)
+  final double? startingStack;    // Starting stack for tournament, min buy-in for cash
+  final String? stakes;           // Stakes for cash games (e.g., "1/2", "5/5")
   final int? maxPlayers;          // Capacity limit
   final bool notifyMembers;       // Whether to send notifications
   final DateTime createdAt;       // Creation timestamp
@@ -101,6 +102,7 @@ class ClubEvent {
     this.location,
     this.buyInAmount,
     this.startingStack,
+    this.stakes,
     this.maxPlayers,
     this.notifyMembers = true,
     DateTime? createdAt,
@@ -143,6 +145,7 @@ class ClubEvent {
       location: data['location'],
       buyInAmount: (data['buyInAmount'] as num?)?.toDouble(),
       startingStack: (data['startingStack'] as num?)?.toDouble(),
+      stakes: data['stakes'],
       maxPlayers: data['maxPlayers'],
       notifyMembers: data['notifyMembers'] ?? true,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
@@ -167,6 +170,7 @@ class ClubEvent {
       location: map['location'],
       buyInAmount: (map['buyInAmount'] as num?)?.toDouble(),
       startingStack: (map['startingStack'] as num?)?.toDouble(),
+      stakes: map['stakes'],
       maxPlayers: map['maxPlayers'],
       notifyMembers: map['notifyMembers'] ?? true,
       createdAt: map['createdAt'] != null ? DateTime.tryParse(map['createdAt']) : null,
@@ -190,6 +194,7 @@ class ClubEvent {
       'location': location,
       'buyInAmount': buyInAmount,
       'startingStack': startingStack,
+      'stakes': stakes,
       'maxPlayers': maxPlayers,
       'notifyMembers': notifyMembers,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -214,6 +219,7 @@ class ClubEvent {
       'location': location,
       'buyInAmount': buyInAmount,
       'startingStack': startingStack,
+      'stakes': stakes,
       'maxPlayers': maxPlayers,
       'notifyMembers': notifyMembers,
       'createdAt': createdAt.toIso8601String(),
@@ -234,6 +240,7 @@ class ClubEvent {
     String? location,
     double? buyInAmount,
     double? startingStack,
+    String? stakes,
     int? maxPlayers,
     bool? notifyMembers,
     String? gameType,
@@ -253,6 +260,7 @@ class ClubEvent {
       location: location ?? this.location,
       buyInAmount: buyInAmount ?? this.buyInAmount,
       startingStack: startingStack ?? this.startingStack,
+      stakes: stakes ?? this.stakes,
       maxPlayers: maxPlayers ?? this.maxPlayers,
       notifyMembers: notifyMembers ?? this.notifyMembers,
       createdAt: createdAt,

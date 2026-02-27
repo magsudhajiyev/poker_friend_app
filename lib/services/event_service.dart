@@ -10,6 +10,7 @@ import 'auth_service.dart';
 import 'club_notification_service.dart';
 import 'dealer_service.dart';
 import 'seat_service.dart';
+import 'waitlist_service.dart';
 
 /// Service for managing club events and live rankings
 class EventService {
@@ -47,6 +48,7 @@ class EventService {
     DateTime? endTime,
     double? buyInAmount,
     double? startingStack,
+    String? stakes,
     int? maxPlayers,
     bool isPublic = false,
     String? accessCode,
@@ -73,6 +75,7 @@ class EventService {
       location: location,
       buyInAmount: buyInAmount,
       startingStack: startingStack,
+      stakes: stakes,
       maxPlayers: maxPlayers,
       notifyMembers: notifyMembers,
       createdAt: now,
@@ -85,6 +88,11 @@ class EventService {
         .doc(clubId)
         .collection(_eventsSubcollection)
         .add(eventData.toFirestore());
+
+    // Clear all seats on newly assigned tables (ensure clean slate for new event)
+    for (final tableId in tableIds) {
+      await SeatService.clearAllSeats(clubId: clubId, tableId: tableId);
+    }
 
     final event = ClubEvent(
       id: eventRef.id,
@@ -101,6 +109,7 @@ class EventService {
       location: location,
       buyInAmount: buyInAmount,
       startingStack: startingStack,
+      stakes: stakes,
       maxPlayers: maxPlayers,
       notifyMembers: notifyMembers,
       createdAt: now,
@@ -285,6 +294,13 @@ class EventService {
     // End all active dealer sessions for this event first
     await _endEventDealerSessions(eventId);
 
+    // Explicitly clear all seats on all tables (defensive cleanup)
+    if (event != null) {
+      for (final tableId in event.tableIds) {
+        await SeatService.clearAllSeats(clubId: clubId, tableId: tableId);
+      }
+    }
+
     await updateEvent(clubId, eventId, status: EventStatus.cancelled);
 
     // Send notification that event was cancelled
@@ -311,6 +327,13 @@ class EventService {
 
     // End all active dealer sessions for this event
     await _endEventDealerSessions(eventId);
+
+    // Explicitly clear all seats on all tables (defensive cleanup)
+    if (event != null) {
+      for (final tableId in event.tableIds) {
+        await SeatService.clearAllSeats(clubId: clubId, tableId: tableId);
+      }
+    }
 
     // Save final standings snapshot if we have rankings
     if (currentRankings != null && currentRankings.isNotEmpty && event != null) {
@@ -547,6 +570,7 @@ class EventService {
     String? location,
     double? buyInAmount,
     double? startingStack,
+    String? stakes,
     int? maxPlayers,
     String? gameType,
     bool? notifyMembers,
@@ -567,6 +591,7 @@ class EventService {
     if (location != null) updates['location'] = location;
     if (buyInAmount != null) updates['buyInAmount'] = buyInAmount;
     if (startingStack != null) updates['startingStack'] = startingStack;
+    if (stakes != null) updates['stakes'] = stakes;
     if (maxPlayers != null) updates['maxPlayers'] = maxPlayers;
     if (gameType != null) updates['gameType'] = gameType;
     if (notifyMembers != null) updates['notifyMembers'] = notifyMembers;
@@ -612,6 +637,79 @@ class EventService {
     } catch (e) {
       print('Error updating event on backend: $e');
     }
+  }
+
+  /// Add a table to a running event
+  static Future<void> addTableToEvent({
+    required String clubId,
+    required String eventId,
+    required String tableId,
+  }) async {
+    final event = await getEvent(clubId, eventId);
+    if (event == null) throw 'Event not found';
+
+    // Check if table is already in event
+    if (event.tableIds.contains(tableId)) {
+      throw 'Table is already assigned to this event';
+    }
+
+    // Add table to event
+    final newTableIds = [...event.tableIds, tableId];
+    await updateEvent(clubId, eventId, tableIds: newTableIds);
+
+    // Clear seats on the newly added table (ensure clean slate)
+    await SeatService.clearAllSeats(clubId: clubId, tableId: tableId);
+  }
+
+  /// Remove a table from a running event
+  /// Moves all seated players to the waitlist before removing
+  static Future<int> removeTableFromEvent({
+    required String clubId,
+    required String eventId,
+    required String tableId,
+  }) async {
+    final event = await getEvent(clubId, eventId);
+    if (event == null) throw 'Event not found';
+
+    // Check if table is in event
+    if (!event.tableIds.contains(tableId)) {
+      throw 'Table is not assigned to this event';
+    }
+
+    // Get all seated players from this table
+    final seats = await SeatService.getTableSeats(
+      clubId: clubId,
+      tableId: tableId,
+    );
+
+    int movedCount = 0;
+
+    // Move seated players to waitlist
+    for (final entry in seats.entries) {
+      final seat = entry.value;
+      if (seat.isOccupied && seat.playerId != null) {
+        // Add to waitlist
+        await WaitlistService.addPlayerToWaitlist(
+          clubId: clubId,
+          eventId: eventId,
+          userId: seat.playerId!,
+          displayName: seat.playerName ?? 'Player',
+        );
+        movedCount++;
+      }
+    }
+
+    // Clear all seats on this table
+    await SeatService.clearAllSeats(
+      clubId: clubId,
+      tableId: tableId,
+    );
+
+    // Remove table from event
+    final newTableIds = event.tableIds.where((id) => id != tableId).toList();
+    await updateEvent(clubId, eventId, tableIds: newTableIds);
+
+    return movedCount;
   }
 
   /// Delete an event

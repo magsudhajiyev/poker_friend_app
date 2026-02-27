@@ -245,6 +245,35 @@ class ClubNotificationService {
     );
   }
 
+  /// Send notification when a seat becomes available for a waitlist member
+  static Future<void> notifySeatAvailable({
+    required String clubId,
+    required String userId,
+    required String eventId,
+    required String eventName,
+  }) async {
+    try {
+      final club = await ClubService.getClub(clubId);
+      final clubName = club?.name ?? 'Club';
+
+      await notifyUser(
+        userId: userId,
+        type: NotificationType.seatAvailable,
+        title: 'Seat is open: $eventName',
+        body: 'A seat is now available at $clubName! Open the app to take your spot.',
+        clubId: clubId,
+        clubName: clubName,
+        data: {
+          'action': 'view_event',
+          'clubId': clubId,
+          'eventId': eventId,
+        },
+      );
+    } catch (e) {
+      print('Error sending seat available notification: $e');
+    }
+  }
+
   /// Send notification to admin when a member RSVPs
   static Future<void> notifyAdminRSVP({
     required String clubId,

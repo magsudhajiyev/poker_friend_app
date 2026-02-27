@@ -14,6 +14,7 @@ enum NotificationType {
   memberInvited,    // When user is invited to join a club
   invitationAccepted, // When invited user accepts the invitation
   invitationDeclined, // When invited user declines the invitation
+  seatAvailable,    // When a seat becomes available for waitlist member
 }
 
 extension NotificationTypeExtension on NotificationType {
@@ -43,6 +44,8 @@ extension NotificationTypeExtension on NotificationType {
         return 'Invitation Accepted';
       case NotificationType.invitationDeclined:
         return 'Invitation Declined';
+      case NotificationType.seatAvailable:
+        return 'Seat Available';
     }
   }
 
@@ -72,6 +75,8 @@ extension NotificationTypeExtension on NotificationType {
         return 'invitation_accepted';
       case NotificationType.invitationDeclined:
         return 'invitation_declined';
+      case NotificationType.seatAvailable:
+        return 'seat_available';
     }
   }
 
@@ -101,6 +106,8 @@ extension NotificationTypeExtension on NotificationType {
         return NotificationType.invitationAccepted;
       case 'invitation_declined':
         return NotificationType.invitationDeclined;
+      case 'seat_available':
+        return NotificationType.seatAvailable;
       default:
         return NotificationType.eventCreated;
     }

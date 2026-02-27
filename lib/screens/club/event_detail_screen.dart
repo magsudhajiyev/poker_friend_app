@@ -17,6 +17,10 @@ import '../../models/seat_assignment.dart';
 import 'event_attendees_screen.dart';
 import 'club_dashboard_screen.dart';
 import 'create_event_screen.dart';
+import 'admin_table_management_screen.dart';
+import 'admin_event_tables_screen.dart';
+import 'member_table_view_screen.dart';
+import 'member_event_tables_screen.dart';
 import '../dealer/dealer_qr_scan_screen.dart';
 import '../spectator/event_rankings_screen.dart';
 import '../player/player_session_screen.dart';
@@ -575,26 +579,41 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           if (_event.status == EventStatus.scheduled)
                             _buildRSVPSection(),
 
-                          // Start Dealing button (for dealers during live events)
-                          if (_isDealer && _event.isLive) ...[
+                          // Start Dealing button (for dealers during live tournament events)
+                          if (_isDealer && _event.isLive && _event.gameType == 'tournament') ...[
                             const SizedBox(height: 16),
                             _buildStartDealingButton(),
                           ],
 
-                          // View Rankings button (for everyone during live events)
-                          if (_event.isLive) ...[
+                          // View Rankings button (for everyone during live tournament events)
+                          if (_event.isLive && _event.gameType == 'tournament') ...[
                             const SizedBox(height: 12),
                             _buildViewRankingsButton(),
                           ],
 
-                          // Return to my seat button (for approved seated players during live events)
-                          if (_event.isLive && _isSeatedPlayer) ...[
+                          // Manage Tables button (for admins on live cash games)
+                          if (widget.isAdmin && _event.isLive && _event.gameType == 'cash') ...[
+                            const SizedBox(height: 12),
+                            _buildManageTablesButton(),
+                          ],
+
+                          // For cash games (non-admins only): Show "You're Seated" if seated, otherwise "See Availability"
+                          if (_event.isLive && _event.gameType == 'cash' && !widget.isAdmin) ...[
+                            const SizedBox(height: 12),
+                            if (_isSeatedPlayer)
+                              _buildYouAreSeatedIndicator()
+                            else
+                              _buildSeeAvailabilityButton(),
+                          ],
+
+                          // Return to my seat button (ONLY for tournaments, not cash games)
+                          if (_event.isLive && _isSeatedPlayer && _event.gameType == 'tournament') ...[
                             const SizedBox(height: 12),
                             _buildReturnToSeatButton(),
                           ],
 
-                          // View Final Standings button (for completed events)
-                          if (_event.status == EventStatus.completed) ...[
+                          // View Final Standings button (for completed tournaments only)
+                          if (_event.status == EventStatus.completed && _event.gameType == 'tournament') ...[
                             const SizedBox(height: 12),
                             _buildViewFinalStandingsButton(),
                           ],
@@ -1305,6 +1324,188 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildManageTablesButton() {
+    return GestureDetector(
+      onTap: () => _navigateToTableView(isAdmin: true),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              PokerFriendColors.green,
+              PokerFriendColors.green.withOpacity(0.8),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: PokerFriendColors.green.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.table_restaurant,
+              color: Colors.white,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              _event.tableIds.length > 1 ? 'Manage Tables' : 'Manage Table',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSeeAvailabilityButton() {
+    return GestureDetector(
+      onTap: () => _navigateToTableView(isAdmin: false),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: PokerFriendColors.dark3,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: PokerFriendColors.purple.withOpacity(0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.event_seat,
+              color: PokerFriendColors.purple,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'See Availability',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: PokerFriendColors.purple,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Unclickable indicator shown when player is seated in a cash game
+  Widget _buildYouAreSeatedIndicator() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: PokerFriendColors.green.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: PokerFriendColors.green.withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.check_circle,
+            color: PokerFriendColors.green,
+            size: 22,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            "You're Seated",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: PokerFriendColors.green,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _navigateToTableView({required bool isAdmin}) async {
+    if (_event.tableIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No tables assigned to this event'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
+    if (isAdmin) {
+      if (_event.tableIds.length > 1) {
+        // Multiple tables - show multi-table overview screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AdminEventTablesScreen(
+              club: widget.club,
+              event: _event,
+            ),
+          ),
+        );
+      } else {
+        // Single table - go directly to table management
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AdminTableManagementScreen(
+              club: widget.club,
+              event: _event,
+              tableId: _event.tableIds.first,
+            ),
+          ),
+        );
+      }
+    } else {
+      // Player view
+      if (_event.tableIds.length > 1) {
+        // Multiple tables - show multi-table overview screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MemberEventTablesScreen(
+              club: widget.club,
+              event: _event,
+            ),
+          ),
+        );
+      } else {
+        // Single table - go directly to table view
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MemberTableViewScreen(
+              club: widget.club,
+              event: _event,
+              tableId: _event.tableIds.first,
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildAdminActions() {

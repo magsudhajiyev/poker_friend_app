@@ -248,6 +248,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         icon = Icons.business;
         iconColor = const Color(0xFFF59E0B);
         break;
+      case NotificationType.seatAvailable:
+        icon = Icons.event_seat;
+        iconColor = const Color(0xFF4CAF50);
+        break;
     }
 
     SlidingNotificationOverlay.show(
@@ -719,6 +723,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         icon = Icons.business;
         iconColor = const Color(0xFFF59E0B);
         break;
+      case NotificationType.seatAvailable:
+        icon = Icons.event_seat;
+        iconColor = const Color(0xFF4CAF50);
+        break;
     }
 
     // Format time ago
@@ -851,6 +859,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             builder: (context) => const ClubRequestsScreen(),
           ),
         );
+        break;
+      case NotificationType.seatAvailable:
+        // Navigate to the event to claim the seat
+        _navigateToEventFromNotification(notification);
         break;
     }
   }

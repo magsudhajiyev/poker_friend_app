@@ -3,6 +3,7 @@ import '../models/seat_assignment.dart';
 import '../models/qr_seat_data.dart';
 import 'auth_service.dart';
 import 'club_service.dart';
+import 'waitlist_service.dart';
 
 /// Service for managing seat assignments at poker tables
 class SeatService {
@@ -86,7 +87,7 @@ class SeatService {
     required String clubId,
     required String tableId,
     required int seatNumber,
-    required double chipStack,
+    double? chipStack,
   }) async {
     final seatId = _getSeatId(clubId, tableId, seatNumber);
     final seatRef = _firestore.collection(_seatAssignmentsCollection).doc(seatId);
@@ -157,7 +158,7 @@ class SeatService {
     required int seatNumber,
     required String playerId,
     required String playerName,
-    required double chipStack,
+    double? chipStack,
   }) async {
     final seatId = _getSeatId(clubId, tableId, seatNumber);
     final seatRef = _firestore.collection(_seatAssignmentsCollection).doc(seatId);
@@ -280,6 +281,30 @@ class SeatService {
       'assignedAt': null,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Remove a player and trigger waitlist notification
+  /// This notifies the first person in line that a seat is available
+  static Future<void> removeSeatOccupantWithWaitlistNotify({
+    required String clubId,
+    required String tableId,
+    required int seatNumber,
+    required String eventId,
+    required String eventName,
+  }) async {
+    // Remove the occupant
+    await removeSeatOccupant(
+      clubId: clubId,
+      tableId: tableId,
+      seatNumber: seatNumber,
+    );
+
+    // Notify the first person in the waitlist
+    await WaitlistService.notifyNextInLine(
+      clubId: clubId,
+      eventId: eventId,
+      eventName: eventName,
+    );
   }
 
   /// Get the seat assignment for a specific seat
@@ -439,7 +464,7 @@ class SeatService {
     required String tableId,
     required int seatNumber,
     required String playerName,
-    required double chipStack,
+    double? chipStack,
   }) async {
     final seatId = _getSeatId(clubId, tableId, seatNumber);
     final seatRef = _firestore.collection(_seatAssignmentsCollection).doc(seatId);
