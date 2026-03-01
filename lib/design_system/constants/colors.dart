@@ -34,6 +34,15 @@ class AppColors {
   static const Color separatorColor = Color(0x4DEBEBF5);      // rgba(235,235,245,0.3)
   static const Color labelSecondary = Color(0xB3EBEBF5);      // rgba(235,235,245,0.7)
 
+  // Calendar Screen Colors
+  static const Color calendarAccentGreen = Color(0xFF62E3BC);
+  static const Color calendarCardBg = Color(0x12FFFFFF);       // rgba(255,255,255,0.07)
+  static const Color calendarCardOverlay = Color(0x08FFFFFF);  // rgba(255,255,255,0.03)
+  static const Color timePillBg = Color(0x1F76807F);           // rgba(118,118,128,0.12)
+  static const Color labelTertiary = Color(0x4DEBEBF5);        // rgba(235,235,245,0.3)
+  static const Color calendarDayText = Color(0xFFFFFFFF);
+  static const Color calendarDayDisabled = Color(0x4DEBEBF5);  // rgba(235,235,245,0.3)
+
   // Opacity helpers for commonly used transparent colors
   static Color glassyCardColor({double opacity = 0.74}) =>
     glassyCardBase.withOpacity(opacity);
