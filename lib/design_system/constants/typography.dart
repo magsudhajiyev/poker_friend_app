@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'colors.dart';
 
 /// Typography constants for the design system
@@ -7,6 +8,7 @@ class AppTypography {
   // Font Families
   static const String inter = 'Inter';
   static const String robotoMono = 'RobotoMono';
+  static const String ibmPlexSans = 'IBMPlexSans';
 
   // Section Headers (Lime green uppercase titles)
   static TextStyle sectionHeader({Color? color}) => TextStyle(
@@ -128,5 +130,83 @@ class AppTypography {
     color: color ?? Colors.white,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.5,
+  );
+
+  // IBM Plex Sans styles for Figma Home Screen
+  static TextStyle homeGreeting({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 32,
+    color: color ?? Colors.white,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -1.0,
+    height: 1.36,
+  );
+
+  static TextStyle homeSubtitle({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
+    color: color ?? AppColors.labelSecondary,
+    fontWeight: FontWeight.w500,
+    height: 1.44,
+  );
+
+  static TextStyle bankrollAmount({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 40,
+    color: color ?? Colors.white,
+    fontWeight: FontWeight.w500,
+    height: 1.0,
+  );
+
+  static TextStyle bankrollSubtext({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
+    color: color ?? Colors.white,
+    fontWeight: FontWeight.w500,
+    height: 1.44,
+  );
+
+  static TextStyle sectionHeadline({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
+    color: color ?? AppColors.tealAccent,
+    fontWeight: FontWeight.w400,
+    height: 1.44,
+  );
+
+  static TextStyle listRowText({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
+    color: color ?? Colors.white,
+    fontWeight: FontWeight.w400,
+    height: 1.44,
+  );
+
+  static TextStyle viewAllButton({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
+    color: color ?? Colors.white,
+    fontWeight: FontWeight.w400,
+    height: 1.44,
+  );
+
+  static TextStyle labelChip({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 15,
+    color: color ?? Colors.white,
+    fontWeight: FontWeight.w500,
+    height: 1.44,
+  );
+
+  static TextStyle chartAxisLabel({Color? color}) => GoogleFonts.robotoMono(
+    fontSize: 11,
+    color: color ?? Colors.white,
+    fontWeight: FontWeight.w300,
+  );
+
+  static TextStyle infoCardText({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
+    color: color ?? Colors.white,
+    fontWeight: FontWeight.w400,
+    height: 1.44,
+  );
+
+  static TextStyle infoCardAccent({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
+    color: color ?? AppColors.tealAccent,
+    fontWeight: FontWeight.w400,
+    height: 1.44,
   );
 }
