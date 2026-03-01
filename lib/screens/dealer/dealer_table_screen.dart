@@ -446,6 +446,19 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     final playerName = _sessionManager!.getPlayerName(currentSeat);
 
+    // Calculate actual amount for recording (especially for call actions)
+    double? recordAmount = amount;
+    if (action == PlayerAction.call && recordAmount == null) {
+      // For calls, calculate the amount needed to match the current bet
+      final player = _gameState!.players[currentSeat - 1];
+      recordAmount = _gameState!.getCurrentBet() - player.betThisRound;
+      if (recordAmount < 0) recordAmount = 0;
+      // If player is going all-in for less, cap at their stack
+      if (recordAmount > player.currentStack) {
+        recordAmount = player.currentStack;
+      }
+    }
+
     // Record action in session manager (for Firebase/stats)
     _sessionManager!.recordAction(
       currentSeat,
@@ -453,7 +466,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       _gameState!.currentRound,
       _gameState!.buttonPosition,
       playerStack: playerStack,
-      amount: amount,
+      amount: recordAmount,
     );
 
     // Perform action in game state (handles progression, pot, etc.)
@@ -2557,6 +2570,46 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             ),
             // Seats
             ..._buildSeatsAroundTable(centerX, centerY, radiusX, radiusY),
+            // Rollback/Undo button - bottom right with fade effect
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: AnimatedOpacity(
+                opacity: _canUndoLastAction() ? 0.85 : 0.3,
+                duration: const Duration(milliseconds: 300),
+                child: GestureDetector(
+                  onTap: _canUndoLastAction() ? _undoLastAction : null,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _canUndoLastAction()
+                            ? Colors.orange.withValues(alpha: 0.6)
+                            : Colors.white24,
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.undo_rounded,
+                      color: _canUndoLastAction()
+                          ? Colors.orange.shade300
+                          : Colors.white38,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         );
       },
@@ -3862,6 +3915,308 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     setState(() {});
     _showSuccess('Added ${9 - _seatAssignments.length} test players');
+  }
+
+  // ============== UNDO/ROLLBACK FUNCTIONALITY ==============
+
+  /// Check if we can undo the last action
+  bool _canUndoLastAction() {
+    if (_gameState == null || _sessionManager == null) return false;
+    if (_sessionManager!.currentHand == null) return false;
+    if (_sessionManager!.currentHand!.actions.isEmpty) return false;
+    if (_gameState!.bettingRoundComplete) return false;
+    if (!_isHandActive) return false;
+
+    // Find last non-blind action
+    final actions = _sessionManager!.currentHand!.actions;
+    for (int i = actions.length - 1; i >= 0; i--) {
+      final action = actions[i];
+      if (action.action != PlayerAction.none) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Undo the last action - restores chips, pot, and player state
+  void _undoLastAction() {
+    if (!_canUndoLastAction()) return;
+
+    final actions = _sessionManager!.currentHand!.actions;
+
+    // Find last non-blind action
+    int lastActionIndex = -1;
+    for (int i = actions.length - 1; i >= 0; i--) {
+      if (actions[i].action != PlayerAction.none) {
+        lastActionIndex = i;
+        break;
+      }
+    }
+
+    if (lastActionIndex == -1) return;
+
+    final lastAction = actions[lastActionIndex];
+    final seatNumber = lastAction.player;
+    final player = _gameState!.players[seatNumber - 1];
+
+    // Restore based on action type
+    switch (lastAction.action) {
+      case PlayerAction.fold:
+        player.hasFolded = false;
+        player.hasActed = false;
+        player.hasCalledCurrentBet = false;
+        player.lastAction = PlayerAction.none;
+        break;
+
+      case PlayerAction.check:
+        player.hasActed = false;
+        player.hasCalledCurrentBet = false;
+        player.lastAction = PlayerAction.none;
+        _recalculateAllPlayersCallStatus(lastActionIndex);
+        break;
+
+      case PlayerAction.call:
+        final callAmount = lastAction.amount ?? 0;
+        final previousCallBet = _getPreviousBetThisRound(seatNumber, lastActionIndex);
+        final callAdditional = callAmount - previousCallBet;
+
+        if (callAdditional > 0) {
+          player.currentStack += callAdditional;
+          player.isAllIn = false;
+          player.betThisRound = previousCallBet;
+          _gameState!.currentPot -= callAdditional;
+          if (_gameState!.currentPot < 0) _gameState!.currentPot = 0;
+        }
+
+        player.hasActed = false;
+        player.hasCalledCurrentBet = false;
+        player.lastAction = PlayerAction.none;
+        break;
+
+      case PlayerAction.bet:
+      case PlayerAction.raise:
+        final betAmount = lastAction.amount ?? 0;
+        final previousBet = _getPreviousBetThisRound(seatNumber, lastActionIndex);
+        final additionalAmount = betAmount - previousBet;
+
+        if (additionalAmount > 0) {
+          player.currentStack += additionalAmount;
+          player.isAllIn = false;
+          player.betThisRound = previousBet;
+          _gameState!.currentPot -= additionalAmount;
+          if (_gameState!.currentPot < 0) _gameState!.currentPot = 0;
+        }
+
+        player.hasActed = false;
+        player.hasCalledCurrentBet = false;
+        player.lastAction = PlayerAction.none;
+
+        _recalculateCurrentBet(lastActionIndex);
+        _recalculateHasBetThisRound(lastActionIndex);
+        _recalculateAllPlayersCallStatus(lastActionIndex);
+        break;
+
+      default:
+        break;
+    }
+
+    // Remove action from history
+    actions.removeAt(lastActionIndex);
+
+    // Check if all actions have been undone (only blinds remain)
+    bool onlyBlindsRemain = true;
+    for (final action in actions) {
+      if (action.action != PlayerAction.none) {
+        onlyBlindsRemain = false;
+        break;
+      }
+    }
+
+    if (onlyBlindsRemain && actions.isNotEmpty) {
+      _showHandResetDialog();
+    } else {
+      _gameState!.currentPlayer = seatNumber;
+    }
+
+    // Show feedback
+    final playerName = _sessionManager!.getPlayerName(seatNumber);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Undone: $playerName ${lastAction.action.name}'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Colors.orange,
+      ),
+    );
+
+    setState(() {});
+  }
+
+  /// Get the total bet a player had made before a specific action index
+  double _getPreviousBetThisRound(int seatNumber, int beforeIndex) {
+    double totalBet = 0;
+    final currentStreet = _gameState!.currentRound;
+    final actions = _sessionManager!.currentHand!.actions;
+
+    for (int i = 0; i < beforeIndex; i++) {
+      final action = actions[i];
+      if (action.player == seatNumber &&
+          action.street == currentStreet &&
+          (action.action == PlayerAction.bet ||
+           action.action == PlayerAction.raise ||
+           action.action == PlayerAction.call)) {
+        totalBet = action.amount ?? totalBet;
+      }
+    }
+    return totalBet;
+  }
+
+  /// Recalculate the current bet after undoing an action
+  void _recalculateCurrentBet(int upToIndex) {
+    double maxBet = 0;
+    final currentStreet = _gameState!.currentRound;
+    final actions = _sessionManager!.currentHand!.actions;
+
+    for (int i = 0; i < upToIndex; i++) {
+      final action = actions[i];
+      if (action.street == currentStreet &&
+          (action.action == PlayerAction.bet ||
+           action.action == PlayerAction.raise)) {
+        maxBet = (action.amount ?? 0) > maxBet ? (action.amount ?? 0) : maxBet;
+      }
+    }
+
+    // On preflop, minimum bet is the big blind (blinds are already posted)
+    if (currentStreet == BettingRound.preflop && maxBet == 0) {
+      maxBet = _dealerSession.bigBlind.toDouble();
+    }
+
+    _gameState!.currentBet = maxBet;
+  }
+
+  /// Recalculate if there has been a bet this round after undoing
+  void _recalculateHasBetThisRound(int upToIndex) {
+    final currentStreet = _gameState!.currentRound;
+    final actions = _sessionManager!.currentHand!.actions;
+    bool hasBet = false;
+
+    for (int i = 0; i < upToIndex; i++) {
+      final action = actions[i];
+      if (action.street == currentStreet &&
+          (action.action == PlayerAction.bet ||
+           action.action == PlayerAction.raise)) {
+        hasBet = true;
+        break;
+      }
+    }
+    _gameState!.hasBetThisRound = hasBet;
+  }
+
+  /// Recalculate all players' hasCalledCurrentBet status after undo
+  void _recalculateAllPlayersCallStatus(int upToIndex) {
+    final actions = _sessionManager!.currentHand!.actions;
+
+    // Reset all active players first
+    for (var player in _gameState!.players) {
+      if (!player.hasFolded && player.isActive) {
+        player.hasCalledCurrentBet = false;
+      }
+    }
+
+    // Find the last bet/raise before upToIndex
+    int lastBetIndex = -1;
+    for (int i = upToIndex - 1; i >= 0; i--) {
+      final action = actions[i];
+      if (action.action == PlayerAction.bet || action.action == PlayerAction.raise) {
+        lastBetIndex = i;
+        break;
+      }
+    }
+
+    // If there was a bet/raise, mark players who have called/raised after it
+    if (lastBetIndex >= 0) {
+      final bettor = actions[lastBetIndex].player;
+      final bettorPlayer = _gameState!.players[bettor - 1];
+      bettorPlayer.hasCalledCurrentBet = true;
+
+      for (int i = lastBetIndex + 1; i < upToIndex; i++) {
+        final action = actions[i];
+        if (action.action == PlayerAction.call ||
+            action.action == PlayerAction.raise ||
+            action.action == PlayerAction.bet) {
+          final player = _gameState!.players[action.player - 1];
+          player.hasCalledCurrentBet = true;
+        }
+      }
+    } else {
+      // No bet this round - check if players have checked
+      for (int i = 0; i < upToIndex; i++) {
+        final action = actions[i];
+        if (action.action == PlayerAction.check) {
+          final player = _gameState!.players[action.player - 1];
+          player.hasCalledCurrentBet = true;
+        }
+      }
+    }
+  }
+
+  /// Show dialog to reset hand when all actions are undone
+  void _showHandResetDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text(
+          'Reset Hand?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'All actions have been undone. Would you like to start a new hand?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Keep Current'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _abortAndRestartHand();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('New Hand'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Abort current hand and reset for a new one
+  void _abortAndRestartHand() {
+    // Return all bets to players
+    for (var player in _gameState!.players) {
+      if (player.betThisRound > 0) {
+        player.currentStack += player.betThisRound;
+        player.betThisRound = 0;
+      }
+      player.hasFolded = false;
+      player.hasActed = false;
+      player.hasCalledCurrentBet = false;
+      player.lastAction = PlayerAction.none;
+    }
+
+    // Reset pot
+    _gameState!.currentPot = 0;
+
+    // Clear actions
+    _sessionManager!.currentHand!.actions.clear();
+
+    // Reset hand state
+    _isHandActive = false;
+
+    setState(() {});
+
+    _showSuccess('Hand reset - ready for new hand');
   }
 }
 
