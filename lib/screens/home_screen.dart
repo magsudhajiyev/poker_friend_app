@@ -27,6 +27,9 @@ import '../services/calendar_event_service.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/poker_friend_theme.dart';
+import '../design_system/components.dart';
+import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
 import '../services/seat_service.dart';
 import '../services/club_notification_service.dart';
 import '../services/club_service.dart';
@@ -1541,7 +1544,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0B0A0A),
       extendBody: true,
       drawer: AppNavigationDrawer(
         username: userName,
@@ -1549,77 +1552,58 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
       body: Stack(
         children: [
-          // Gradient background from design system
-          GradientBackground(),
-
-          SafeArea(
-            child: RefreshIndicator(
-              onRefresh: _loadData,
-              color: const Color(0xFFA5EC44),
-              backgroundColor: const Color(0xFF1C2926),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 16),
-
-                      // Top Header Bar
-                      MainScreenHeader(
-                        username: userName,
-                        title: 'Home', // Fallback if no username
-                        subtitle: 'Welcome back',
-                        showHamburgerMenu: true,
-                        onHamburgerPressed: () {
-                          _scaffoldKey.currentState?.openDrawer();
-                        },
-                        showLeftIcon: true,
-                        leftIcon: Icons.qr_code_scanner,
-                        onLeftPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const QRScanScreen()),
-                          );
-                        },
-                        rightImagePath: 'icons/flat_icons/bell.png',
-                        showRightBadge: _unreadNotificationCount > 0,
-                        rightBadgeCount: _unreadNotificationCount,
-                        onRightPressed: () {
-                          _showNotificationsDropdown(context);
-                        },
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Goal Section
-                      _buildGoalSection(),
-
-                      const SizedBox(height: 40),
-
-                      // Stats Grid
-                      _buildStatsGrid(),
-
-                      const SizedBox(height: 28),
-
-                      // Earnings Chart
-                      _buildEarningsCard(),
-
-                      const SizedBox(height: 28),
-
-                      // Recent Sessions
-                      _buildRecentSessionsCard(),
-
-                      const SizedBox(height: 28),
-
-                      // Upcoming Events
-                      _buildUpcomingEventsCard(),
-
-                      const SizedBox(height: 100),
-                    ],
+          RefreshIndicator(
+            onRefresh: _loadData,
+            color: AppColors.tealAccent,
+            backgroundColor: const Color(0xFF1C2926),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Gradient Header with greeting and bankroll
+                  HomeHeader(
+                    userName: userName,
+                    subtitle: 'Welcome back',
+                    currentBankroll: currentBankroll,
+                    bankrollGoal: bankrollGoal,
+                    filterLabel: 'Label',
+                    onMenuPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const QRScanScreen()),
+                      );
+                    },
+                    onNotificationPressed: () {
+                      _showNotificationsDropdown(context);
+                    },
+                    onSettingsPressed: () {
+                      _scaffoldKey.currentState?.openDrawer();
+                    },
+                    showNotificationBadge: _unreadNotificationCount > 0,
+                    notificationCount: _unreadNotificationCount,
                   ),
-                ),
+
+                  // Recent Activity (Stats)
+                  _buildStatsGrid(),
+
+                  const SizedBox(height: 32),
+
+                  // Earnings Chart
+                  _buildEarningsCard(),
+
+                  const SizedBox(height: 32),
+
+                  // Recent Sessions
+                  _buildRecentSessionsCard(),
+
+                  const SizedBox(height: 32),
+
+                  // Upcoming Events
+                  _buildUpcomingEventsCard(),
+
+                  const SizedBox(height: 100),
+                ],
               ),
             ),
           ),
@@ -1844,264 +1828,83 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildGoalSection() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          // 144deg in CSS = Alignment(-0.8, -0.6) to Alignment(0.8, 0.6)
-          begin: Alignment(-0.8, -0.6),
-          end: Alignment(0.8, 0.6),
-          colors: [
-            Color(0xFF022F00), // rgba(2, 47, 0, 1) - darkest
-            Color(0xFF033800), // Very subtle step
-            Color(0xFF044100), // Very subtle step
-            Color(0xFF054A00), // Very subtle step
-            Color(0xFF055300), // Very subtle step
-            Color(0xFF065C00), // Very subtle step
-            Color(0xFF076500), // Softer bright green
-          ],
-          stops: [0.0, 0.25, 0.4, 0.55, 0.7, 0.85, 1.0],
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Wallet Balance label
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Text(
-              'Bankroll',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12,
-                color: Colors.white,
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0,
-                height: 1.0,
-              ),
-            ),
-          ),
-          SizedBox(height: 16),
-          // Main balance text
-          Text(
-            '\$${currentBankroll.toStringAsFixed(0)} of \$${bankrollGoal.toStringAsFixed(0)}',
-            style: GoogleFonts.robotoMono(
-              fontSize: 38,
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0,
-              height: 1.0,
-            ),
-          ),
-          SizedBox(height: 14),
-          // Remaining balance text
-          Text(
-            '\$${(bankrollGoal - currentBankroll).toStringAsFixed(0)} left',
-            style: GoogleFonts.robotoMono(
-              fontSize: 16,
-              color: Color(0xFFC2EFBA),
-              fontWeight: FontWeight.w500,
-              letterSpacing: -1.0,
-              height: 1.0,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildStatsGrid() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Recent Activity title
-        Text(
-          'RECENT ACTIVITY',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 12,
-            color: Color(0xFF87ED81),
-            fontWeight: FontWeight.w400,
-            letterSpacing: 1.0,
-            height: 1.0,
-          ),
+        // Recent Activity headline
+        SectionHeadline(title: 'Recent Activity'),
+
+        // Stats rows with separators
+        StatListRow(
+          label: 'Sessions',
+          value: '${playerStats['totalSessions'] ?? 0}',
         ),
-        SizedBox(height: 20),
-        // Stats cards with dividers
-        Column(
-          children: [
-            _buildStatCard(
-              'Sessions',
-              '${playerStats['totalSessions'] ?? 0}',
-              iconAsset: 'assets/session.png',
-            ),
-            _buildDivider(),
-            _buildStatCard(
-              'Win Rate',
-              '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
-              iconAsset: 'assets/trophy.png',
-            ),
-            _buildDivider(),
-            _buildStatCard(
-              'Hours',
-              '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(1)}',
-              iconAsset: 'assets/clock.png',
-            ),
-            _buildDivider(),
-            _buildStatCard(
-              'Play Style',
-              _getPlayStyleName(),
-              iconAsset: _getPlayStyleIcon(),
-            ),
-          ],
+        const ListSeparator(),
+        StatListRow(
+          label: 'Win Rate',
+          value: '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
+        ),
+        const ListSeparator(),
+        StatListRow(
+          label: 'Hours',
+          value: '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(1)}',
+        ),
+        const ListSeparator(),
+        StatListRow(
+          label: 'Play Style',
+          value: _getPlayStyleName(),
         ),
       ],
-    );
-  }
-
-  Widget _buildDivider() {
-    return Container(
-      height: 1,
-      margin: EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.3),
-            Colors.white.withOpacity(0.1),
-          ],
-          stops: [0.0, 0.5, 1.0],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String title, String value, {IconData? icon, String? iconAsset}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          Text(
-            value,
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildEarningsCard() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header row with title and avg badge
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'EARNINGS',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12,
-                color: Color(0xFF87ED81),
-                fontWeight: FontWeight.w400,
-                letterSpacing: 1.0,
-                height: 1.0,
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row with title and avg badge
+          SectionHeadline(
+            title: 'Earnings',
+            badgeText: 'Avg \$${avgEarnings.toStringAsFixed(0)}',
+          ),
+          const SizedBox(height: 16),
+          // Legend
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                _buildLegendItem('Tournament', AppColors.tournamentBlue),
+                const SizedBox(width: 17),
+                _buildLegendItem('Cash Game', AppColors.cashGameGreen),
+              ],
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF009548),
-                borderRadius: BorderRadius.circular(40),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Avg',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0,
-                      height: 1.2,
+          ),
+          const SizedBox(height: 24),
+          // Chart
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SizedBox(
+              height: 167,
+              child: earningsChartData.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No earnings data yet',
+                        style: AppTypography.listRowText(
+                          color: Colors.white.withOpacity(0.40),
+                        ),
+                      ),
+                    )
+                  : CustomPaint(
+                      painter: EarningsChartPainter(earningsChartData),
+                      size: Size.infinite,
                     ),
-                  ),
-                  SizedBox(width: 4),
-                  Text(
-                    '\$${avgEarnings.toStringAsFixed(0)}',
-                    style: GoogleFonts.robotoMono(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0,
-                      height: 1.2,
-                    ),
-                  ),
-                ],
-              ),
             ),
-          ],
-        ),
-        const SizedBox(height: 18),
-        // Legend
-        Row(
-          children: [
-            _buildLegendItem('Tournament', const Color(0xFF00C3FF)),
-            const SizedBox(width: 17),
-            _buildLegendItem('Cash Game', const Color(0xFF44EC49)),
-          ],
-        ),
-        const SizedBox(height: 24),
-        // Chart
-        Container(
-          height: 167,
-          child: earningsChartData.isEmpty
-              ? Center(
-                  child: Text(
-                    'No earnings data yet',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.40),
-                      fontSize: 16,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                )
-              : CustomPaint(
-                  painter: EarningsChartPainter(earningsChartData),
-                  size: Size.infinite,
-                ),
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -2110,107 +1913,64 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header row with title and view all
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'RECENT SESSIONS',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12,
-                color: Color(0xFF87ED81),
-                fontWeight: FontWeight.w400,
-                letterSpacing: 1.0,
-                height: 1.0,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
-                );
-              },
-              child: Text(
-                'View All',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0,
-                  height: 1.2,
-                ),
-              ),
-            ),
-          ],
+        SectionHeadline(
+          title: 'Recent Sessions',
+          actionText: 'View All',
+          onActionPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
+            );
+          },
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 8),
         // Content
-        recentSessions.isEmpty
-            ? Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 44, horizontal: 8),
-                decoration: BoxDecoration(
-                  color: Color(0xFF2B2B2B),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Icon (24x24)
-                    Image.asset(
-                      'icons/flat_icons/deuce.png',
-                      width: 24,
-                      height: 24,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 20),
-                    // Text content - centered, 200px width
-                    SizedBox(
-                      width: 200,
-                      child: Column(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: recentSessions.isEmpty
+              ? InfoCard(
+                  isEmpty: true,
+                  emptyTitle: 'No recent sessions',
+                  emptySubtitle: 'Start your first poker session!',
+                  onEmptyTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
+                    );
+                  },
+                )
+              : Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.infoCardBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // Three dots menu at top-right
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(
-                            'No recent sessions',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 14,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              height: 1.46,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Start your first poker session!',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w400,
-                              height: 1.5,
+                          GestureDetector(
+                            onTap: () {
+                              // TODO: Show sessions menu
+                            },
+                            child: const Icon(
+                              Icons.more_horiz,
+                              color: Color(0xFF7DCAB4),
+                              size: 24,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      // Sessions list
+                      ..._buildSessionsList(),
+                    ],
+                  ),
                 ),
-              )
-            : Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Color(0x4C2C3E2E), // #2c3e2e4c
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: _buildSessionsList(),
-                ),
-              ),
+        ),
       ],
     );
   }
@@ -2220,108 +1980,46 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header row with title and view all
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'UPCOMING EVENTS',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12,
-                color: Color(0xFF87ED81),
-                fontWeight: FontWeight.w500,
-                letterSpacing: 1.0,
-                height: 1.0,
-              ),
-            ),
-            GestureDetector(
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CalendarScreen()),
-                );
-                _loadData();
-              },
-              child: Text(
-                'View All',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0,
-                  height: 1.2,
-                ),
-              ),
-            ),
-          ],
+        SectionHeadline(
+          title: 'Upcoming Events',
+          actionText: 'View All',
+          onActionPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CalendarScreen()),
+            );
+            _loadData();
+          },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         // Content
-        upcomingEvents.isEmpty
-            ? Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 44, horizontal: 8),
-                decoration: BoxDecoration(
-                  color: Color(0xFF2B2B2B),
-                  borderRadius: BorderRadius.circular(18),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: upcomingEvents.isEmpty
+              ? InfoCard(
+                  isEmpty: true,
+                  emptyTitle: 'No recent sessions',
+                  emptySubtitle: 'Start your first poker session!',
+                  onEmptyTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CalendarScreen()),
+                    );
+                    _loadData();
+                  },
+                )
+              : Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.infoCardBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: _buildEventsList(),
+                  ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Icon (24x24)
-                    Image.asset(
-                      'icons/flat_icons/calendar_edit.png',
-                      width: 24,
-                      height: 24,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 20),
-                    // Text content - centered, 200px width
-                    SizedBox(
-                      width: 200,
-                      child: Column(
-                        children: [
-                          Text(
-                            'No upcoming events',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 14,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              height: 1.46,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Schedule your first event!',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w400,
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            : Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Color(0x4C2C3E2E), // #2c3e2e4c
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: _buildEventsList(),
-                ),
-              ),
+        ),
       ],
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import '../screens/home_screen.dart';
-import '../screens/statistics_screen.dart';
 import '../screens/my_opponents_screen.dart';
 import '../screens/session_history_screen.dart';
 import '../screens/profile_screen.dart';
@@ -21,82 +21,81 @@ class GlobalBottomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 268,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              border: Border.all(
-                color: const Color(0xFF292F29),
-                width: 1,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(70),
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+              child: Container(
+                width: 268,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1C1C1E).withOpacity(0.92),
+                  borderRadius: BorderRadius.circular(70),
+                  border: Border.all(
+                    color: const Color(0xFFA4B3A8).withOpacity(0.3),
+                    width: 0.5,
+                  ),
+                ),
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Home Icon
+                    _buildNavItem(
+                      iconPath: 'icons/flat_icons/home.png',
+                      isActive: currentScreen == 'home',
+                      onTap: () {
+                        if (currentScreen != 'home') {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => HomeScreen()),
+                          );
+                        }
+                      },
+                    ),
+                    // Opponents Icon
+                    _buildNavItem(
+                      iconPath: 'icons/flat_icons/people.png',
+                      isActive: currentScreen == 'opponents',
+                      onTap: () {
+                        if (currentScreen != 'opponents') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => MyOpponentsScreen()),
+                          );
+                        }
+                      },
+                    ),
+                    // Center Plus Button
+                    _buildPlusButton(context),
+                    // Game/Sessions Icon
+                    _buildNavItem(
+                      iconPath: 'icons/flat_icons/cards.png',
+                      isActive: currentScreen == 'sessions',
+                      onTap: () {
+                        if (currentScreen != 'sessions') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
+                          );
+                        }
+                      },
+                    ),
+                    // Profile Icon
+                    _buildNavItem(
+                      iconPath: 'icons/flat_icons/user.png',
+                      isActive: currentScreen == 'profile',
+                      onTap: () {
+                        if (currentScreen != 'profile') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ProfileScreen()),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
-              borderRadius: BorderRadius.circular(70),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x40000000),
-                  blurRadius: 74,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Home Icon
-                _buildNavItem(
-                  iconPath: 'icons/flat_icons/home.png',
-                  isActive: currentScreen == 'home',
-                  onTap: () {
-                    if (currentScreen != 'home') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()),
-                      );
-                    }
-                  },
-                ),
-                // Opponents Icon
-                _buildNavItem(
-                  iconPath: 'icons/flat_icons/people.png',
-                  isActive: currentScreen == 'opponents',
-                  onTap: () {
-                    if (currentScreen != 'opponents') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => MyOpponentsScreen()),
-                      );
-                    }
-                  },
-                ),
-                // Center Plus Button
-                _buildPlusButton(context),
-                // Game/Sessions Icon
-                _buildNavItem(
-                  iconPath: 'icons/flat_icons/cards.png',
-                  isActive: currentScreen == 'sessions',
-                  onTap: () {
-                    if (currentScreen != 'sessions') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
-                      );
-                    }
-                  },
-                ),
-                // Profile Icon
-                _buildNavItem(
-                  iconPath: 'icons/flat_icons/user.png',
-                  isActive: currentScreen == 'profile',
-                  onTap: () {
-                    if (currentScreen != 'profile') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ProfileScreen()),
-                      );
-                    }
-                  },
-                ),
-              ],
             ),
           ),
         ],
@@ -112,21 +111,18 @@ class GlobalBottomNavBar extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 38,
-        height: 38,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
-          color: isActive ? Colors.white : Colors.transparent,
+          color: isActive ? const Color(0xFF3A3A3C) : Colors.transparent,
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: Opacity(
-            opacity: isActive ? 1.0 : 0.6,
-            child: Image.asset(
-              iconPath,
-              width: 24,
-              height: 24,
-              color: isActive ? const Color(0xFF011100) : Colors.white,
-            ),
+          child: Image.asset(
+            iconPath,
+            width: 28,
+            height: 28,
+            color: isActive ? Colors.white : const Color(0xFF636366),
           ),
         ),
       ),
@@ -142,25 +138,18 @@ class GlobalBottomNavBar extends StatelessWidget {
         );
       },
       child: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: const Color(0xFFA5EC44),
+        width: 44,
+        height: 44,
+        decoration: const BoxDecoration(
+          color: Color(0xFF5CD9A4),
           shape: BoxShape.circle,
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0xD903350B),
-              blurRadius: 2,
-              offset: Offset(0, 1),
-            ),
-          ],
         ),
         child: Center(
           child: Image.asset(
             'icons/flat_icons/plus.png',
-            width: 24,
-            height: 24,
-            color: const Color(0xFF011100),
+            width: 28,
+            height: 28,
+            color: const Color(0xFF1C1C1E),
           ),
         ),
       ),

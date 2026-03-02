@@ -24,6 +24,25 @@ class AppColors {
   static const Color cashGameGreen = Color(0xFF44EC49);
   static const Color avgBadgeGreen = Color(0xFF009548);
 
+  // Figma Home Screen Colors
+  static const Color tealAccent = Color(0xFF7DCAB4);
+  static const Color headerGradientCyan = Color(0x574CDBFF);  // rgba(76,219,255,0.34)
+  static const Color headerGradientGreen = Color(0x572EB46A); // rgba(46,180,106,0.34)
+  static const Color darkPillBg = Color(0xFF0C1209);
+  static const Color iconButtonBg = Color(0x4D3C3C43);        // rgba(60,60,67,0.3)
+  static const Color infoCardBg = Color(0xFF131616);
+  static const Color separatorColor = Color(0x4DEBEBF5);      // rgba(235,235,245,0.3)
+  static const Color labelSecondary = Color(0xB3EBEBF5);      // rgba(235,235,245,0.7)
+
+  // Calendar Screen Colors
+  static const Color calendarAccentGreen = Color(0xFF62E3BC);
+  static const Color calendarCardBg = Color(0x12FFFFFF);       // rgba(255,255,255,0.07)
+  static const Color calendarCardOverlay = Color(0x08FFFFFF);  // rgba(255,255,255,0.03)
+  static const Color timePillBg = Color(0x1F76807F);           // rgba(118,118,128,0.12)
+  static const Color labelTertiary = Color(0x4DEBEBF5);        // rgba(235,235,245,0.3)
+  static const Color calendarDayText = Color(0xFFFFFFFF);
+  static const Color calendarDayDisabled = Color(0x4DEBEBF5);  // rgba(235,235,245,0.3)
+
   // Opacity helpers for commonly used transparent colors
   static Color glassyCardColor({double opacity = 0.74}) =>
     glassyCardBase.withOpacity(opacity);
