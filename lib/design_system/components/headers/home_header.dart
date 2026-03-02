@@ -64,10 +64,12 @@ class HomeHeader extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 18),
                 child: Row(
                   children: [
-                    // Left: QR/Menu button
-                    _buildIconButton(
-                      icon: Icons.qr_code_2,
+                    // Left: Scanner button (white bg, dark icon from Figma)
+                    _buildImageIconButton(
+                      imagePath: 'icons/flat_icons/scanner.png',
                       onPressed: onMenuPressed,
+                      backgroundColor: Colors.white,
+                      applyColorFilter: false,
                     ),
                     const SizedBox(width: 14),
 
@@ -88,7 +90,7 @@ class HomeHeader extends StatelessWidget {
                       ),
                     ),
 
-                    // Right: Dark pill with icons
+                    // Right: Dark pill with icons (no individual backgrounds)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       decoration: BoxDecoration(
@@ -98,14 +100,14 @@ class HomeHeader extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildImageIconButton(
+                          _buildPillIconButton(
                             imagePath: 'icons/flat_icons/bell.png',
                             onPressed: onNotificationPressed,
                             showBadge: showNotificationBadge,
                             badgeCount: notificationCount,
                           ),
                           const SizedBox(width: 4),
-                          _buildIconButton(
+                          _buildPillIconButton(
                             icon: Icons.menu,
                             onPressed: onSettingsPressed,
                           ),
@@ -118,25 +120,26 @@ class HomeHeader extends StatelessWidget {
 
               // Financial Snapshot section
               Padding(
-                padding: const EdgeInsets.only(top: 16, bottom: 32),
+                padding: const EdgeInsets.only(left: 8, right: 8, top: 24, bottom: 32),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Filter chip
+                    // Filter chip (pill shape)
                     if (filterLabel != null)
                       GestureDetector(
                         onTap: onFilterPressed,
                         child: Container(
+                          height: 32,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white,
                               width: 1,
                             ),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(78),
                           ),
                           child: Text(
                             filterLabel!,
@@ -173,6 +176,8 @@ class HomeHeader extends StatelessWidget {
     VoidCallback? onPressed,
     bool showBadge = false,
     int? badgeCount,
+    Color? backgroundColor,
+    Color? iconColor,
   }) {
     return GestureDetector(
       onTap: onPressed,
@@ -183,12 +188,12 @@ class HomeHeader extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.iconButtonBg,
+              color: backgroundColor ?? AppColors.iconButtonBg,
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
-              color: Colors.white,
+              color: iconColor ?? Colors.white,
               size: 24,
             ),
           ),
@@ -227,6 +232,8 @@ class HomeHeader extends StatelessWidget {
     VoidCallback? onPressed,
     bool showBadge = false,
     int? badgeCount,
+    Color? backgroundColor,
+    bool applyColorFilter = true,
   }) {
     return GestureDetector(
       onTap: onPressed,
@@ -237,7 +244,7 @@ class HomeHeader extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.iconButtonBg,
+              color: backgroundColor ?? AppColors.iconButtonBg,
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -245,7 +252,7 @@ class HomeHeader extends StatelessWidget {
                 imagePath,
                 width: 24,
                 height: 24,
-                color: Colors.white,
+                color: applyColorFilter ? Colors.white : null,
               ),
             ),
           ),
@@ -253,6 +260,67 @@ class HomeHeader extends StatelessWidget {
             Positioned(
               right: -2,
               top: -2,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 18,
+                  minHeight: 18,
+                ),
+                child: Text(
+                  badgeCount > 99 ? '99+' : badgeCount.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Icon button for use inside the dark pill container (no individual background)
+  Widget _buildPillIconButton({
+    IconData? icon,
+    String? imagePath,
+    VoidCallback? onPressed,
+    bool showBadge = false,
+    int? badgeCount,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: imagePath != null
+                  ? Image.asset(
+                      imagePath,
+                      width: 28,
+                      height: 28,
+                      color: Colors.white,
+                    )
+                  : Icon(
+                      icon,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+            ),
+          ),
+          if (showBadge && badgeCount != null && badgeCount > 0)
+            Positioned(
+              right: 2,
+              top: 2,
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: const BoxDecoration(

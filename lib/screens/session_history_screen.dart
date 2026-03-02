@@ -118,39 +118,47 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               showLeftIcon: true,
               leftIcon: Icons.arrow_back_rounded,
               onLeftPressed: () => Navigator.pop(context),
-              rightIcon: Icons.refresh_rounded,
-              onRightPressed: _loadSessions,
             ),
             SizedBox(height: 16),
             // Tab Bar
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 16),
+              margin: EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: Color(0x17FFFFFF),
-                borderRadius: BorderRadius.circular(58),
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(80),
+                border: Border.all(
+                  color: Color(0xFF2c2c2e),
+                  width: 1,
+                ),
               ),
               child: TabBar(
                 controller: _tabController,
                 indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(63),
-                  color: Color(0xFFBAFF9A),
+                  borderRadius: BorderRadius.circular(60),
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
+                  ),
+                  border: Border.all(
+                    color: Color(0x4DEBEBF5),
+                    width: 1,
+                  ),
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding: EdgeInsets.all(5),
+                indicatorPadding: EdgeInsets.all(0),
                 dividerColor: Colors.transparent,
-                labelColor: Color(0xFF000000),
-                unselectedLabelColor: Color(0xFFFFFFFF),
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white,
                 labelStyle: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16,
+                  fontFamily: 'IBMPlexSans',
+                  fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  letterSpacing: -1.0,
+                  letterSpacing: -0.43,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16,
+                  fontFamily: 'IBMPlexSans',
+                  fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  letterSpacing: -1.0,
+                  letterSpacing: -0.43,
                 ),
                 tabs: [
                   Tab(text: 'Cash'),

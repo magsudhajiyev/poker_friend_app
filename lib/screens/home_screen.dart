@@ -1567,7 +1567,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     subtitle: 'Welcome back',
                     currentBankroll: currentBankroll,
                     bankrollGoal: bankrollGoal,
-                    filterLabel: 'Label',
+                    filterLabel: 'Bankroll',
                     onMenuPressed: () {
                       Navigator.push(
                         context,
@@ -1583,6 +1583,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     showNotificationBadge: _unreadNotificationCount > 0,
                     notificationCount: _unreadNotificationCount,
                   ),
+
+                  const SizedBox(height: 24),  // Gap between header and Recent Activity
 
                   // Recent Activity (Stats)
                   _buildStatsGrid(),
@@ -1860,51 +1862,48 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildEarningsCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row with title and avg badge
-          SectionHeadline(
-            title: 'Earnings',
-            badgeText: 'Avg \$${avgEarnings.toStringAsFixed(0)}',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row with title and avg badge
+        SectionHeadline(
+          title: 'Earnings',
+          badgeText: 'Avg \$${avgEarnings.toStringAsFixed(0)}',
+        ),
+        const SizedBox(height: 16),
+        // Legend
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              _buildLegendItem('Tournament', AppColors.tournamentBlue),
+              const SizedBox(width: 17),
+              _buildLegendItem('Cash Game', AppColors.cashGameGreen),
+            ],
           ),
-          const SizedBox(height: 16),
-          // Legend
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _buildLegendItem('Tournament', AppColors.tournamentBlue),
-                const SizedBox(width: 17),
-                _buildLegendItem('Cash Game', AppColors.cashGameGreen),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Chart
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              height: 167,
-              child: earningsChartData.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No earnings data yet',
-                        style: AppTypography.listRowText(
-                          color: Colors.white.withOpacity(0.40),
-                        ),
+        ),
+        const SizedBox(height: 24),
+        // Chart
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SizedBox(
+            height: 167,
+            child: earningsChartData.isEmpty
+                ? Center(
+                    child: Text(
+                      'No earnings data yet',
+                      style: AppTypography.listRowText(
+                        color: Colors.white.withOpacity(0.40),
                       ),
-                    )
-                  : CustomPaint(
-                      painter: EarningsChartPainter(earningsChartData),
-                      size: Size.infinite,
                     ),
-            ),
+                  )
+                : CustomPaint(
+                    painter: EarningsChartPainter(earningsChartData),
+                    size: Size.infinite,
+                  ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -1932,6 +1931,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   isEmpty: true,
                   emptyTitle: 'No recent sessions',
                   emptySubtitle: 'Start your first poker session!',
+                  iconPath: 'icons/flat_icons/cards.png',
+                  useSessionLayout: true,
                   onEmptyTap: () {
                     Navigator.push(
                       context,
@@ -3496,11 +3497,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Row(
       children: [
         Container(
-          width: 7,
-          height: 7,
+          width: 8,
+          height: 8,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(3.5),
+            borderRadius: BorderRadius.circular(4),
           ),
         ),
         const SizedBox(width: 6),
@@ -3508,10 +3509,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           label,
           style: TextStyle(
             color: Colors.white,
-            fontSize: 12,
+            fontSize: 13,
             fontFamily: 'Inter',
-            fontWeight: FontWeight.w400,
-            letterSpacing: -0.24,
+            fontWeight: FontWeight.w500,
+            letterSpacing: -0.26,
           ),
         ),
       ],

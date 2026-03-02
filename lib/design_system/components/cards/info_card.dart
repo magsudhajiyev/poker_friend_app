@@ -11,6 +11,7 @@ class InfoCard extends StatelessWidget {
   final String emptySubtitle;
   final String? iconPath;
   final VoidCallback? onEmptyTap;
+  final bool useSessionLayout;  // Use left-aligned layout with icon in circle
 
   const InfoCard({
     Key? key,
@@ -20,6 +21,7 @@ class InfoCard extends StatelessWidget {
     this.emptySubtitle = 'Start your first poker session!',
     this.iconPath,
     this.onEmptyTap,
+    this.useSessionLayout = false,
   }) : super(key: key);
 
   @override
@@ -35,14 +37,22 @@ class InfoCard extends StatelessWidget {
   }
 
   Widget _buildEmptyState() {
+    if (useSessionLayout) {
+      return _buildSessionEmptyState();
+    }
+    return _buildCenteredEmptyState();
+  }
+
+  /// Centered empty state (default)
+  Widget _buildCenteredEmptyState() {
     return GestureDetector(
       onTap: onEmptyTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.only(top: 16, bottom: 20, left: 16, right: 16),
+        padding: const EdgeInsets.only(top: 28, bottom: 20, left: 44, right: 44),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Icon
             Container(
@@ -58,26 +68,94 @@ class InfoCard extends StatelessWidget {
                   : _buildPlaceholderIcon(),
             ),
             const SizedBox(height: 14),
-            // Main text row with arrow
+            // Main text (centered)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                emptyTitle,
+                style: AppTypography.infoCardText(),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            // Subtitle (centered)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                emptySubtitle,
+                style: AppTypography.infoCardAccent(),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Session layout - icon in circle on left, text on right with arrow
+  Widget _buildSessionEmptyState() {
+    return GestureDetector(
+      onTap: onEmptyTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top row: Icon in circle
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.iconButtonBg,
+                borderRadius: BorderRadius.circular(72),
+              ),
+              child: Center(
+                child: iconPath != null
+                    ? Image.asset(
+                        iconPath!,
+                        width: 20,
+                        height: 20,
+                        color: Colors.white,
+                      )
+                    : const Icon(Icons.style, color: Colors.white, size: 20),
+              ),
+            ),
+            const SizedBox(height: 14),
+            // Bottom row: Text with arrow
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  emptyTitle,
-                  style: AppTypography.infoCardText(),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          emptyTitle,
+                          style: AppTypography.infoCardText(),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          emptySubtitle,
+                          style: AppTypography.infoCardAccent().copyWith(fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const Icon(
-                  Icons.chevron_right,
-                  color: Colors.white,
-                  size: 24,
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Icon(
+                    Icons.chevron_right,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
               ],
-            ),
-            const SizedBox(height: 4),
-            // Subtitle
-            Text(
-              emptySubtitle,
-              style: AppTypography.infoCardAccent(),
             ),
           ],
         ),
