@@ -20,8 +20,10 @@ import '../../models/club_event.dart';
 import '../../services/websocket_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/qr_service.dart';
-import '../../services/continuous_speech_service.dart';
 import '../../services/soniox_service.dart';
+import '../../services/action_parser.dart';
+import '../../features/dealer_voice/cubit/dealer_voice_cubit.dart';
+import '../../features/dealer_voice/cubit/dealer_voice_state.dart';
 import '../../utils/poker_positions.dart';
 import '../../utils/number_formatter.dart';
 import '../../widgets/board_cards_dialog.dart';
@@ -78,14 +80,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   bool _isVoiceMode = false;
   bool _isListening = false;
   String _partialTranscript = '';
-
-  // Pending action state for bet/raise waiting for amount
-  String? _pendingActionType; // 'bet' or 'raise'
-  DateTime? _pendingActionTime;
-  static const int _pendingActionTimeoutMs = 3000; // 3 second timeout
   String _connectionStatus = 'disconnected';
-  DetectedPokerAction? _lastDetectedAction;
-  StreamSubscription? _actionSubscription;
   StreamSubscription? _partialSubscription;
   StreamSubscription? _statusSubscription;
 
@@ -93,7 +88,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   VoiceSessionState _voiceState = VoiceSessionState.uninitialized;
   String? _lockedDealerName;
   String? _lockedTableName;
-  bool _isHoldingActions = false;
+
+  // Voice pipeline orchestrator (replaces overlap-based dedup with game-state validation)
+  DealerVoiceCubit? _voiceCubit;
 
   // Guard flag to prevent duplicate board cards dialogs
   bool _isShowingBoardCardsDialog = false;
@@ -125,7 +122,63 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     _smallBlind = _dealerSession.smallBlind;
     _bigBlind = _dealerSession.bigBlind;
     _initializeGameState();
+    _initializeVoiceCubit();
     _initialize();
+  }
+
+  void _initializeVoiceCubit() {
+    _voiceCubit = DealerVoiceCubit(
+      sonioxService: _realtimeSpeechService,
+      onExecuteAction: _onVoiceActionValidated,
+    );
+  }
+
+  /// Called by voice cubit when an action is validated and ready to execute
+  Future<void> _onVoiceActionValidated(ParsedAction action) async {
+    debugPrint('[DealerTableScreen] _onVoiceActionValidated: ${action.action} (amount=${action.amount})');
+
+    // Map to PlayerAction and execute
+    final playerAction = _mapParsedActionToPlayerAction(action);
+    if (playerAction == null) {
+      debugPrint('[DealerTableScreen] Could not map action to PlayerAction');
+      return;
+    }
+
+    final currentSeat = _gameState?.currentPlayer;
+    debugPrint('[DealerTableScreen] Executing $playerAction for seat $currentSeat');
+
+    await _performAction(
+      playerAction,
+      amount: action.amount,
+      transcript: action.action,
+      confidence: action.confidence,
+    );
+
+    debugPrint('[DealerTableScreen] Action executed. New currentPlayer: ${_gameState?.currentPlayer}');
+
+    // CRITICAL: Update cubit with fresh game state after execution
+    // PokerGameState is mutated in place by _performAction, so currentPlayer
+    // will have advanced. The cubit needs the updated state to validate
+    // the next action in a multi-action sequence correctly.
+    _voiceCubit?.updateGameState(_gameState, _isHandActive);
+  }
+
+  /// Map parsed action string to PlayerAction enum
+  PlayerAction? _mapParsedActionToPlayerAction(ParsedAction parsed) {
+    switch (parsed.action.toLowerCase()) {
+      case 'fold':
+        return PlayerAction.fold;
+      case 'check':
+        return PlayerAction.check;
+      case 'call':
+        return PlayerAction.call;
+      case 'bet':
+        return PlayerAction.bet;
+      case 'raise':
+        return PlayerAction.raise;
+      default:
+        return null;
+    }
   }
 
   void _initializeGameState() {
@@ -158,14 +211,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     _sessionSubscription?.cancel();
     _pendingSubscription?.cancel();
     _eventSubscription?.cancel();
-    _actionSubscription?.cancel();
     _partialSubscription?.cancel();
     _statusSubscription?.cancel();
 
-    // Stop voice listening if active
-    if (_isListening) {
-      _realtimeSpeechService.stopStreaming();
-    }
+    // Close voice cubit (handles stopping and cleanup)
+    _voiceCubit?.close();
 
     // End session manager if active AND not already ended by _handleEventEnded()
     // The _sessionStarted check prevents double-ending which can cause auth issues
@@ -397,6 +447,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         _isHandActive = true;
         _isLoading = false;
       });
+
+      // Reset voice cubit for new hand and update game state
+      _voiceCubit?.onNewHand();
+      _voiceCubit?.updateGameState(_gameState, _isHandActive);
     } catch (e) {
       setState(() => _isLoading = false);
       _showError('Failed to start hand: ${e.toString()}');
@@ -963,6 +1017,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           _isHandActive = false;
           _isCompletingHand = false;
         });
+
+        // Update cubit with hand-ended state
+        _voiceCubit?.updateGameState(_gameState, _isHandActive);
       } catch (e) {
         setState(() {
           _isCompletingHand = false;
@@ -1029,6 +1086,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         _isHandActive = false;
         _isCompletingHand = false;
       });
+
+      // Update cubit with hand-ended state
+      _voiceCubit?.updateGameState(_gameState, _isHandActive);
     } catch (e) {
       setState(() {
         _isCompletingHand = false;
@@ -1102,6 +1162,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         _isHandActive = false;
         _isCompletingHand = false;
       });
+
+      // Update cubit with hand-ended state
+      _voiceCubit?.updateGameState(_gameState, _isHandActive);
     } catch (e) {
       setState(() {
         _isCompletingHand = false;
@@ -3041,11 +3104,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
   /// Build voice action UI based on current voice session state
   Widget _buildVoiceActionUI() {
-    // Show last detected action briefly
-    if (_lastDetectedAction != null) {
-      return _buildLastActionFeedback(_lastDetectedAction!);
-    }
-
     // State-based UI
     switch (_voiceState) {
       case VoiceSessionState.uninitialized:
@@ -3170,7 +3228,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _isHoldingActions ? Colors.amber.shade700 : Colors.green.shade700,
+        color: (_voiceCubit?.isHoldActive ?? false) ? Colors.amber.shade700 : Colors.green.shade700,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -3179,7 +3237,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           Row(
             children: [
               Icon(
-                _isHoldingActions ? Icons.pause : Icons.mic,
+                (_voiceCubit?.isHoldActive ?? false) ? Icons.pause : Icons.mic,
                 color: Colors.white,
                 size: 24,
               ),
@@ -3189,7 +3247,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _isHoldingActions ? 'Actions Paused' : 'Listening',
+                      (_voiceCubit?.isHoldActive ?? false) ? 'Actions Paused' : 'Listening',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -3205,14 +3263,14 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               // Hold Action Toggle
               IconButton(
                 icon: Icon(
-                  _isHoldingActions ? Icons.play_arrow : Icons.pause,
+                  (_voiceCubit?.isHoldActive ?? false) ? Icons.play_arrow : Icons.pause,
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  _realtimeSpeechService.toggleHoldAction();
-                  setState(() => _isHoldingActions = !_isHoldingActions);
+                  _voiceCubit?.toggleHold();
+                  setState(() {}); // Trigger UI rebuild
                 },
-                tooltip: _isHoldingActions ? 'Resume Actions' : 'Hold Actions',
+                tooltip: (_voiceCubit?.isHoldActive ?? false) ? 'Resume Actions' : 'Hold Actions',
               ),
               // Recalibrate
               IconButton(
@@ -3363,7 +3421,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       case VoiceSessionState.calibrating:
         return Colors.orange.shade600;
       case VoiceSessionState.dealerLocked:
-        return _isHoldingActions ? Colors.amber.shade700 : Colors.green.shade600;
+        return (_voiceCubit?.isHoldActive ?? false) ? Colors.amber.shade700 : Colors.green.shade600;
       case VoiceSessionState.connectionLost:
         return Colors.red.shade600;
       case VoiceSessionState.rotating:
@@ -3381,7 +3439,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       case VoiceSessionState.calibrating:
         return Colors.orange.shade400;
       case VoiceSessionState.dealerLocked:
-        return _isHoldingActions ? Colors.amber.shade500 : Colors.green.shade400;
+        return (_voiceCubit?.isHoldActive ?? false) ? Colors.amber.shade500 : Colors.green.shade400;
       case VoiceSessionState.connectionLost:
         return Colors.red.shade400;
       case VoiceSessionState.rotating:
@@ -3399,7 +3457,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       case VoiceSessionState.calibrating:
         return Icons.settings_voice;
       case VoiceSessionState.dealerLocked:
-        return _isHoldingActions ? Icons.pause : Icons.mic;
+        return (_voiceCubit?.isHoldActive ?? false) ? Icons.pause : Icons.mic;
       case VoiceSessionState.connectionLost:
         return Icons.signal_wifi_off;
       case VoiceSessionState.rotating:
@@ -3417,50 +3475,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       case VoiceSessionState.calibrating:
         return 'CALIB';
       case VoiceSessionState.dealerLocked:
-        return _isHoldingActions ? 'PAUSED' : 'LIVE';
+        return (_voiceCubit?.isHoldActive ?? false) ? 'PAUSED' : 'LIVE';
       case VoiceSessionState.connectionLost:
         return 'LOST';
       case VoiceSessionState.rotating:
         return 'ROTATE';
     }
-  }
-
-  /// Show brief feedback when action is detected and executed
-  Widget _buildLastActionFeedback(DetectedPokerAction action) {
-    final actionDisplay = action.action.toUpperCase();
-    final amountDisplay = action.amount != null ? ' ${formatCompactCurrency(action.amount!)}' : '';
-
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.green.shade700,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                '$actionDisplay$amountDisplay',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Heard: "${action.transcript}"',
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
-        ),
-      ],
-    );
   }
 
   /// Toggle voice mode on/off (shows/hides push-to-talk button)
@@ -3484,30 +3504,21 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   /// Start continuous listening using real-time WebSocket streaming
   Future<void> _startContinuousListening() async {
     try {
-      // Subscribe to action stream from realtime service
-      _actionSubscription?.cancel();
-      _actionSubscription = _realtimeSpeechService.actionStream.listen(
-        _onActionDetected,
-        onError: (e) {},
-      );
+      // Update cubit with current game state before starting
+      _voiceCubit?.updateGameState(_gameState, _isHandActive);
 
-      // Subscribe to partial results for UI feedback
+      // Subscribe to partial stream for UI display
       _partialSubscription?.cancel();
       _partialSubscription = _realtimeSpeechService.partialStream.listen(
         (partial) {
           if (mounted) {
             setState(() => _partialTranscript = partial);
-
-            // Check if this completes a pending bet/raise action
-            if (_pendingActionType != null) {
-              _checkForPendingAmount(partial);
-            }
           }
         },
         onError: (e) {},
       );
 
-      // Subscribe to status stream for connection state
+      // Subscribe to status stream for calibration/connection state
       _statusSubscription?.cancel();
       _statusSubscription = _realtimeSpeechService.statusStream.listen(
         (status) {
@@ -3515,7 +3526,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             setState(() {
               _connectionStatus = status;
               _voiceState = _realtimeSpeechService.state;
-              _isHoldingActions = _realtimeSpeechService.isHoldingActions;
             });
 
             // Handle dealer locked event
@@ -3547,16 +3557,17 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         onError: (e) {},
       );
 
-      final started = await _realtimeSpeechService.startStreaming();
+      // Start the voice cubit (handles SonioxService and SpeechBuffer)
+      await _voiceCubit?.startListening();
 
       if (mounted) {
         setState(() {
-          _isListening = started;
+          _isListening = _voiceCubit?.state.status != VoiceStatus.disabled;
           _voiceState = _realtimeSpeechService.state;
         });
       }
 
-      if (!started) {
+      if (_voiceCubit?.state.status == VoiceStatus.error) {
         _showError('Failed to start streaming - check server connection and microphone');
       }
     } catch (e) {
@@ -3574,12 +3585,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   /// Stop continuous listening
   /// Waits for final results before cancelling subscriptions
   Future<void> _stopContinuousListening() async {
-    // First stop the service (waits for final results from Soniox)
-    await _realtimeSpeechService.stopStreaming();
+    // Stop the voice cubit (handles SonioxService and cleanup)
+    await _voiceCubit?.stopListening();
 
-    // THEN cancel subscriptions after final results have been processed
-    _actionSubscription?.cancel();
-    _actionSubscription = null;
+    // Cancel subscriptions
     _partialSubscription?.cancel();
     _partialSubscription = null;
     _statusSubscription?.cancel();
@@ -3592,216 +3601,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       _voiceState = VoiceSessionState.uninitialized;
       _lockedDealerName = null;
       _lockedTableName = null;
-      _isHoldingActions = false;
     });
-  }
-
-  /// Handle detected action from speech
-  Future<void> _onActionDetected(DetectedPokerAction action) async {
-    if (!_isHandActive) {
-      return;
-    }
-
-    // Haptic feedback for action detection
-    HapticFeedback.mediumImpact();
-
-    // Show the detected action briefly
-    setState(() => _lastDetectedAction = action);
-
-    // Execute the action
-    await _executeVoiceAction(action);
-
-    // Clear the feedback after a delay
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() => _lastDetectedAction = null);
-      }
-    });
-  }
-
-  // Number words for extracting amounts from partial transcripts
-  static const Map<String, String> _numberWords = {
-    // English
-    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
-    'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10',
-    'eleven': '11', 'twelve': '12', 'thirteen': '13', 'fourteen': '14',
-    'fifteen': '15', 'sixteen': '16', 'seventeen': '17', 'eighteen': '18',
-    'nineteen': '19', 'twenty': '20', 'thirty': '30', 'forty': '40',
-    'fifty': '50', 'sixty': '60', 'seventy': '70', 'eighty': '80',
-    'ninety': '90', 'hundred': '100', 'thousand': '1000',
-    // Polish
-    'jeden': '1', 'dwa': '2', 'trzy': '3', 'cztery': '4', 'pięć': '5',
-    'sześć': '6', 'siedem': '7', 'osiem': '8', 'dziewięć': '9', 'dziesięć': '10',
-    'jedenaście': '11', 'dwanaście': '12', 'trzynaście': '13', 'czternaście': '14',
-    'piętnaście': '15', 'szesnaście': '16', 'siedemnaście': '17', 'osiemnaście': '18',
-    'dziewiętnaście': '19', 'dwadzieścia': '20', 'trzydzieści': '30',
-    'czterdzieści': '40', 'pięćdziesiąt': '50', 'sześćdziesiąt': '60',
-    'siedemdziesiąt': '70', 'osiemdziesiąt': '80', 'dziewięćdziesiąt': '90',
-    'sto': '100', 'tysiąc': '1000',
-  };
-
-  /// Extract a number from transcript (handles Polish and English number words)
-  /// Sorts by word length descending so "sixty" is replaced before "six".
-  double? _extractNumber(String transcript) {
-    var text = transcript.toLowerCase();
-
-    // Sort by length descending so longer words are replaced first
-    // This prevents "sixty" becoming "6ty" when "six" is replaced first
-    final sortedWords = _numberWords.keys.toList()
-      ..sort((a, b) => b.length.compareTo(a.length));
-
-    for (final word in sortedWords) {
-      text = text.replaceAll(word, _numberWords[word]!);
-    }
-
-    // Extract first number found
-    final match = RegExp(r'\d+').firstMatch(text);
-    if (match != null) {
-      return double.tryParse(match.group(0)!);
-    }
-    return null;
-  }
-
-  /// Check if a partial transcript contains an amount for a pending action
-  void _checkForPendingAmount(String transcript) {
-    if (_pendingActionType == null) return;
-
-    // Check timeout
-    if (_pendingActionTime != null &&
-        DateTime.now().difference(_pendingActionTime!).inMilliseconds > _pendingActionTimeoutMs) {
-      _pendingActionType = null;
-      _pendingActionTime = null;
-      return;
-    }
-
-    // Try to extract a number from the transcript
-    final amount = _extractNumber(transcript);
-    if (amount != null && amount > 0) {
-
-      // Create the complete action
-      final action = DetectedPokerAction(
-        action: _pendingActionType!,
-        amount: amount,
-        confidence: 1.0,
-        transcript: transcript,
-        matchScore: 100,
-      );
-
-      // Clear pending state
-      _pendingActionType = null;
-      _pendingActionTime = null;
-
-      // Execute the action
-      _executeVoiceAction(action);
-    }
-  }
-
-  /// Execute a detected voice action
-  Future<void> _executeVoiceAction(DetectedPokerAction action) async {
-    if (_gameState == null || !_isHandActive) {
-      return;
-    }
-
-    PlayerAction? playerAction;
-    double? amount = action.amount;
-
-    switch (action.action) {
-      case 'fold':
-        playerAction = PlayerAction.fold;
-        break;
-      case 'check':
-        // Auto-correct: if check is invalid, try call instead
-        if (!_gameState!.isValidAction(PlayerAction.check)) {
-          if (_gameState!.isValidAction(PlayerAction.call)) {
-            playerAction = PlayerAction.call;
-            _showAutoCorrection('check', 'call');
-          } else {
-            _showError('Cannot check or call');
-            return;
-          }
-        } else {
-          playerAction = PlayerAction.check;
-        }
-        break;
-      case 'call':
-        // Auto-correct: if call is invalid, try check instead
-        if (!_gameState!.isValidAction(PlayerAction.call)) {
-          if (_gameState!.isValidAction(PlayerAction.check)) {
-            playerAction = PlayerAction.check;
-            _showAutoCorrection('call', 'check');
-          } else {
-            _showError('Cannot call or check');
-            return;
-          }
-        } else {
-          playerAction = PlayerAction.call;
-        }
-        break;
-      case 'bet':
-        // If no amount, store as pending and wait for amount to be transcribed
-        if (amount == null) {
-          _pendingActionType = 'bet';
-          _pendingActionTime = DateTime.now();
-          return; // Don't execute yet, wait for amount
-        }
-        // Auto-correct: if bet is invalid, try raise instead
-        if (!_gameState!.isValidAction(PlayerAction.bet)) {
-          if (_gameState!.isValidAction(PlayerAction.raise)) {
-            playerAction = PlayerAction.raise;
-            _showAutoCorrection('bet', 'raise');
-          } else {
-            _showError('Cannot bet or raise');
-            return;
-          }
-        } else {
-          playerAction = PlayerAction.bet;
-        }
-        // Clear pending state since we're executing
-        _pendingActionType = null;
-        _pendingActionTime = null;
-        break;
-      case 'raise':
-        // If no amount, store as pending and wait for amount to be transcribed
-        if (amount == null) {
-          _pendingActionType = 'raise';
-          _pendingActionTime = DateTime.now();
-          return; // Don't execute yet, wait for amount
-        }
-        // Auto-correct: if raise is invalid, try bet instead
-        if (!_gameState!.isValidAction(PlayerAction.raise)) {
-          if (_gameState!.isValidAction(PlayerAction.bet)) {
-            playerAction = PlayerAction.bet;
-            _showAutoCorrection('raise', 'bet');
-          } else {
-            _showError('Cannot raise or bet');
-            return;
-          }
-        } else {
-          playerAction = PlayerAction.raise;
-        }
-        // Clear pending state since we're executing
-        _pendingActionType = null;
-        _pendingActionTime = null;
-        break;
-      case 'all-in':
-        final canBet = _gameState!.isValidAction(PlayerAction.bet);
-        playerAction = canBet ? PlayerAction.bet : PlayerAction.raise;
-        final currentPlayer = _gameState!.currentPlayer;
-        amount = _gameState!.getPlayerStack(currentPlayer) +
-            _gameState!.players[currentPlayer - 1].betThisRound;
-        break;
-      default:
-        _showError('Unknown action: ${action.action}');
-        return;
-    }
-
-    // Execute the action
-    await _performAction(
-      playerAction,
-      amount: amount,
-      transcript: action.transcript,
-      confidence: action.confidence,
-    );
   }
 
   Widget _buildActionButton(String label, Color color, VoidCallback onTap) {
@@ -4215,6 +4015,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     _isHandActive = false;
 
     setState(() {});
+
+    // Update cubit with hand-ended state
+    _voiceCubit?.updateGameState(_gameState, _isHandActive);
 
     _showSuccess('Hand reset - ready for new hand');
   }

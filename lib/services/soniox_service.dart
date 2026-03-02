@@ -7,8 +7,6 @@ import 'package:record/record.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../config/env_config.dart';
-import 'continuous_speech_service.dart'; // For DetectedPokerAction class
-import 'action_parser.dart';
 
 /// Voice session state for the dealer authority system
 enum VoiceSessionState {
@@ -27,124 +25,19 @@ class _CalibrationValidation {
   _CalibrationValidation(this.isValid, this.dealerName, this.tableName);
 }
 
-/// Transcript-level debouncer to prevent duplicate rapid actions
-class _TranscriptDebouncer {
-  DateTime? _lastTime;
-  String? _lastTranscript;
-  List<_ActionSignature>? _lastParsedActions;
-  int _currentOverlapCount = 0;  // Number of parsed actions to skip at start
-  static const int cooldownMs = 500;
-
-  /// Number of parsed actions to skip at start of current transcript (due to overlap)
-  int get overlapCount => _currentOverlapCount;
-
-  bool canProcess(String transcript) {
-    final now = DateTime.now();
-    final normalized = transcript.trim().toLowerCase();
-    _currentOverlapCount = 0;  // Reset for each call
-
-    // Check 1: Exact same transcript within cooldown
-    if (_lastTime != null &&
-        normalized == _lastTranscript &&
-        now.difference(_lastTime!).inMilliseconds < cooldownMs) {
-      // debugPrint('TranscriptDebouncer: Skipping exact duplicate within cooldown');
-      return false;
-    }
-
-    // Check 2: New transcript is a PROPER suffix of previous
-    // (Soniox sends trailing fragments as separate finals)
-    // Proper suffix = previous ends with new AND they're not equal
-    if (_lastTranscript != null &&
-        _lastTranscript!.isNotEmpty &&
-        _lastTranscript!.endsWith(normalized) &&
-        normalized != _lastTranscript) {
-      // debugPrint('TranscriptDebouncer: Skipping trailing fragment');
-      return false;
-    }
-
-    _lastTime = now;
-    _lastTranscript = normalized;
-    // Note: _lastParsedActions will be updated by updateParsedActions()
-    return true;
-  }
-
-  /// Update with parsed actions and calculate overlap
-  /// Call this AFTER canProcess returns true, passing the parsed actions
-  /// Returns number of actions to skip at start
-  int updateParsedActions(List<ParsedAction> newActions) {
-    final newSignatures = newActions.map((a) => _ActionSignature(a.action, a.amount)).toList();
-
-    if (_lastParsedActions != null && _lastParsedActions!.isNotEmpty && newSignatures.isNotEmpty) {
-      final overlap = _findStartEndOverlap(_lastParsedActions!, newSignatures);
-      if (overlap > 0) {
-        // debugPrint('TranscriptDebouncer: Found $overlap overlapping action(s)');
-        _currentOverlapCount = overlap;
-      }
-    }
-
-    _lastParsedActions = newSignatures;
-    return _currentOverlapCount;
-  }
-
-  /// Find how many actions at the START of new match the END of prev
-  int _findStartEndOverlap(List<_ActionSignature> prev, List<_ActionSignature> newActions) {
-    final maxOverlap = prev.length < newActions.length ? prev.length : newActions.length;
-
-    for (int overlapLen = maxOverlap; overlapLen > 0; overlapLen--) {
-      final prevSuffix = prev.sublist(prev.length - overlapLen);
-      final newPrefix = newActions.sublist(0, overlapLen);
-
-      bool match = true;
-      for (int i = 0; i < overlapLen; i++) {
-        if (!prevSuffix[i].matches(newPrefix[i])) {
-          match = false;
-          break;
-        }
-      }
-
-      if (match) {
-        return overlapLen;
-      }
-    }
-
-    return 0;
-  }
-
-  void reset() {
-    _lastTime = null;
-    _lastTranscript = null;
-    _lastParsedActions = null;
-    _currentOverlapCount = 0;
-  }
-}
-
-/// Signature for comparing parsed actions
-class _ActionSignature {
-  final String action;
-  final double? amount;
-
-  _ActionSignature(this.action, this.amount);
-
-  bool matches(_ActionSignature other) {
-    if (action != other.action) return false;
-    // For actions with amounts, amounts must match
-    if (amount != null && other.amount != null) {
-      return amount == other.amount;
-    }
-    // If one has amount and other doesn't, still consider it a match
-    // (e.g., "raise 5" vs "raise" - the raise action itself matches)
-    return true;
-  }
-
-  @override
-  String toString() => amount != null ? '$action($amount)' : action;
-}
-
-
 /// Direct Soniox speech recognition service with Dealer Voice Authority.
 ///
 /// Connects Flutter directly to Soniox WebSocket with speaker diarization
 /// to identify and lock to the dealer's voice.
+///
+/// REFACTORED: This service now only handles:
+/// - WebSocket connection lifecycle
+/// - Audio recording & streaming
+/// - Speaker diarization (dealer lock)
+/// - Hold mode gating
+///
+/// It emits raw transcript text via streams. Action parsing and validation
+/// are handled by DealerVoiceCubit.
 ///
 /// State machine:
 /// UNINITIALIZED -> CALIBRATING -> DEALER_LOCKED
@@ -187,12 +80,10 @@ class SonioxService {
   // Hold action mode
   bool _holdActionMode = false;
 
-  final _TranscriptDebouncer _debouncer = _TranscriptDebouncer();
   Completer<void>? _finishedCompleter;
-  String _lastPartialTranscript = '';
 
   // Stream controllers
-  final _actionController = StreamController<DetectedPokerAction>.broadcast();
+  final _finalTranscriptController = StreamController<String>.broadcast();
   final _partialController = StreamController<String>.broadcast();
   final _statusController = StreamController<String>.broadcast();
 
@@ -203,8 +94,9 @@ class SonioxService {
   String? get tableName => _tableName;
   bool get isHoldingActions => _holdActionMode;
 
-  /// Stream of parsed poker actions.
-  Stream<DetectedPokerAction> get actionStream => _actionController.stream;
+  /// Stream of final transcripts (complete utterances from Soniox).
+  /// Consumers should buffer and parse these.
+  Stream<String> get finalTranscriptStream => _finalTranscriptController.stream;
 
   /// Stream of partial transcriptions (for UI feedback).
   Stream<String> get partialStream => _partialController.stream;
@@ -220,13 +112,10 @@ class SonioxService {
   /// Connects to Soniox with speaker diarization enabled and starts calibration.
   Future<bool> startStreaming({String language = 'auto'}) async {
     if (_isStreaming) {
-      debugPrint('SonioxService: Already streaming');
       return true;
     }
 
     try {
-      _lastPartialTranscript = '';
-
       // Set state to calibrating
       _state = VoiceSessionState.calibrating;
       _calibrationStartTime = DateTime.now();
@@ -384,7 +273,6 @@ class SonioxService {
 
       // Check for session finished
       if (data['finished'] == true) {
-        debugPrint('SonioxService: Session finished');
         _finishedCompleter?.complete();
         return;
       }
@@ -564,18 +452,20 @@ class SonioxService {
     if (text.trim().isEmpty) return;
 
     final transcript = text.trim().toLowerCase();
-    _lastPartialTranscript = transcript;
+
+    // Always emit partial for UI feedback
     _partialController.add(transcript);
 
-    if (!anyFinal) return;
-
-    // Check hold action mode
-    if (_holdActionMode) {
-      _statusController.add('action_held:$transcript');
-      return;
+    // Only emit final transcripts (non-hold mode) for processing
+    if (anyFinal) {
+      if (_holdActionMode) {
+        // In hold mode, signal that we received but won't process
+        _statusController.add('action_held:$transcript');
+      } else {
+        // Emit final transcript for SpeechBuffer to accumulate
+        _finalTranscriptController.add(transcript);
+      }
     }
-
-    _processTranscriptAsAction(transcript);
   }
 
   /// Check if connection can be recovered with same dealer
@@ -596,49 +486,13 @@ class SonioxService {
     }
   }
 
-  /// Parse transcript and emit detected actions
-  void _processTranscriptAsAction(String transcript) {
-    if (!_debouncer.canProcess(transcript)) {
-      return;
-    }
-
-    final actions = ActionParser.parse(transcript);
-
-    // Check for start-end overlap with previous transcript
-    final overlapCount = _debouncer.updateParsedActions(actions);
-
-    // Skip if ALL actions are overlap
-    if (overlapCount >= actions.length) {
-      return;
-    }
-
-    // Start from overlapCount to skip overlapping actions
-    for (int i = overlapCount; i < actions.length; i++) {
-      final parsed = actions[i];
-
-      // Trigger haptic feedback
-      HapticFeedback.mediumImpact();
-
-      // Create DetectedPokerAction
-      final action = DetectedPokerAction(
-        action: parsed.action,
-        amount: parsed.amount,
-        confidence: parsed.confidence,
-        transcript: transcript,
-        matchScore: 100,
-      );
-
-      _actionController.add(action);
-    }
-  }
-
-  /// Enable hold action mode - transcriptions received but not executed
+  /// Enable hold action mode - transcriptions received but not emitted for processing
   void enableHoldAction() {
     _holdActionMode = true;
     _statusController.add('hold_action:enabled');
   }
 
-  /// Disable hold action mode - resume action execution
+  /// Disable hold action mode - resume emitting transcripts
   void disableHoldAction() {
     _holdActionMode = false;
     _statusController.add('hold_action:disabled');
@@ -691,6 +545,7 @@ class SonioxService {
 
   /// Stop speech recognition.
   /// Waits for Soniox to send final transcription before closing.
+  /// CRITICAL: Does NOT process any partial transcript on disconnect.
   Future<void> stopStreaming() async {
     if (!_isStreaming) return;
 
@@ -717,19 +572,14 @@ class SonioxService {
         // Note: Soniox doesn't accept JSON control messages after config
         _channel!.sink.add(Uint8List(0));
 
-        // Wait for finished signal (max 300ms timeout - shorter since we may not get response)
-        bool timedOut = false;
+        // Wait for finished signal (max 300ms timeout)
         await _finishedCompleter!.future.timeout(
           const Duration(milliseconds: 300),
-          onTimeout: () => timedOut = true,
+          onTimeout: () {},
         );
 
-        // Fallback: if timed out, process last partial transcript
-        if (timedOut && _lastPartialTranscript.isNotEmpty && !_holdActionMode) {
-          debugPrint(
-              'SonioxService: Processing partial: "$_lastPartialTranscript"');
-          _processTranscriptAsAction(_lastPartialTranscript);
-        }
+        // REMOVED: Do NOT process partial transcript on disconnect
+        // This was causing phantom actions when voice was stopped
       } catch (e) {
         debugPrint('SonioxService: Error waiting for finish: $e');
       }
@@ -748,8 +598,6 @@ class SonioxService {
 
     _isConnected = false;
     _finishedCompleter = null;
-    _lastPartialTranscript = '';
-    _debouncer.reset();
 
     // Reset state only if we're doing a full stop
     if (_state != VoiceSessionState.rotating) {
@@ -763,7 +611,7 @@ class SonioxService {
   void dispose() {
     stopStreaming();
     _gracePeriodTimer?.cancel();
-    _actionController.close();
+    _finalTranscriptController.close();
     _partialController.close();
     _statusController.close();
   }

@@ -52,23 +52,25 @@ class ActionParser {
     // Call
     _ActionPattern(RegExp(r'\b(call|calling)\b', caseSensitive: false), 'call'),
 
-    // Bet with amount
+    // Bet with amount (supports commas, decimals, and "k" suffix: 2,000 or 9.5k)
+    // Allows punctuation between action and amount (e.g., "bet. 500" or "bet 500")
     _ActionPattern(
-      RegExp(r'\b(?:bet|betting)\s+(\d+)', caseSensitive: false),
+      RegExp(r'\b(?:bet|betting)[.,\s]+([\d,]+\.?\d*k?)', caseSensitive: false),
       'bet',
       amountGroup: 1,
     ),
 
-    // Raise with amount
+    // Raise with amount (supports commas, decimals, and "k" suffix: 2,000 or 9.5k)
+    // Allows punctuation between action and amount (e.g., "raise. 3,000" or "raise 3000")
     _ActionPattern(
-      RegExp(r'\b(?:raise|re-raise|reraise|raising)\s+(\d+)', caseSensitive: false),
+      RegExp(r'\b(?:raise|re-raise|reraise|raising)[.,\s]+([\d,]+\.?\d*k?)', caseSensitive: false),
       'raise',
       amountGroup: 1,
     ),
 
-    // Raise without amount
+    // Raise without amount (only matches if NOT followed by punctuation+number)
     _ActionPattern(
-      RegExp(r'\b(raise|re-raise|reraise)\b(?!\s+\d)', caseSensitive: false),
+      RegExp(r'\b(raise|re-raise|reraise)\b(?![.,\s]+[\d,])', caseSensitive: false),
       'raise',
     ),
 
@@ -95,6 +97,26 @@ class ActionParser {
     return result;
   }
 
+  /// Parse amount string handling commas and "k" suffix.
+  /// Examples: "2,000" → 2000.0, "9.5k" → 9500.0, "500" → 500.0
+  static double? _parseAmount(String? amountStr) {
+    if (amountStr == null || amountStr.isEmpty) return null;
+
+    var cleaned = amountStr.toLowerCase().trim();
+
+    // Handle "k" suffix (e.g., "9.5k" → 9500)
+    if (cleaned.endsWith('k')) {
+      final numStr = cleaned.substring(0, cleaned.length - 1).replaceAll(',', '');
+      final num = double.tryParse(numStr);
+      if (num != null) return num * 1000;
+      return null;
+    }
+
+    // Remove commas and parse (e.g., "2,000" → 2000)
+    cleaned = cleaned.replaceAll(',', '');
+    return double.tryParse(cleaned);
+  }
+
   /// Parse a transcript into a list of poker actions.
   ///
   /// Returns actions in the order they appear in the transcript.
@@ -112,9 +134,7 @@ class ActionParser {
         // Extract amount if pattern has an amount group
         if (pattern.amountGroup != null && match.groupCount >= pattern.amountGroup!) {
           final amountStr = match.group(pattern.amountGroup!);
-          if (amountStr != null) {
-            amount = double.tryParse(amountStr);
-          }
+          amount = _parseAmount(amountStr);
         }
 
         matches.add(_MatchedAction(
