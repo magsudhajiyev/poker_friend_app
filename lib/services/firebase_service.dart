@@ -364,16 +364,28 @@ class FirebaseService {
         'endTime': FieldValue.serverTimestamp(),
       });
 
-      // Update user stats with session count and duration
+      // Update user stats with session count and duration (only if user actually participated)
       if (sessionDoc.exists) {
         final sessionData = sessionDoc.data()!;
         final startTime = sessionData['startTime'] as Timestamp?;
+        final userId = AuthService.userId;
 
-        if (startTime != null) {
-          final duration = DateTime.now().difference(startTime.toDate()).inMinutes;
+        if (startTime != null && userId != null) {
+          // Check if user actually participated in the session
+          final ourSeatNumber = sessionData['ourSeatNumber'] as int?;
+          final participantIds = (sessionData['participantIds'] as List<dynamic>?)?.cast<String>() ?? [];
+          final totalHands = sessionData['totalHands'] as int? ?? 0;
 
-          final userId = AuthService.userId;
-          if (userId != null) {
+          // User participated if:
+          // 1. They had a seat assigned (regular sessions), OR
+          // 2. They are in participantIds (live/dealer sessions), OR
+          // 3. They logged at least one hand
+          final userParticipated = ourSeatNumber != null ||
+              participantIds.contains(userId) ||
+              totalHands > 0;
+
+          if (userParticipated) {
+            final duration = DateTime.now().difference(startTime.toDate()).inMinutes;
             await UserStatsService.updateStatsAtomic(
               userId: userId,
               sessionsDelta: 1,
@@ -527,11 +539,24 @@ class FirebaseService {
 
       // Combine and deduplicate (use Map to avoid duplicates)
       final allDocs = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+
+      // For owned sessions, filter out live/dealer sessions where user didn't play
       for (final doc in ownedSnapshot.docs) {
-        allDocs[doc.id] = doc;
+        final data = doc.data();
+        final isLive = data['isLive'] as bool? ?? false;
+        final participantIds = (data['participantIds'] as List<dynamic>?)?.cast<String>() ?? [];
+
+        // Include if:
+        // 1. Not a live session (regular manual logging), OR
+        // 2. Live session AND user is in participantIds (dealer played)
+        if (!isLive || participantIds.contains(userId)) {
+          allDocs[doc.id] = doc;
+        }
       }
+
+      // Always include sessions where user participated
       for (final doc in participatedSnapshot.docs) {
-        allDocs[doc.id] = doc; // Won't overwrite if already exists
+        allDocs[doc.id] = doc;
       }
 
       // Sort in memory to avoid needing Firebase index
