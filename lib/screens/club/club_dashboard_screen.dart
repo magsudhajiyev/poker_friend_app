@@ -56,6 +56,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   @override
   void initState() {
     super.initState();
+    _initTabController(); // Initialize immediately to avoid hot reload issues
     _loadData();
     _setupEventsListener();
   }
@@ -154,10 +155,13 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   }
 
   void _initTabController() {
-    final tabCount = _isAdmin ? 4 : 3;
+    const tabCount = 3; // Upcoming, Live, Past (Dealers removed - available in Settings)
     if (_tabController == null || _tabController!.length != tabCount) {
+      // Preserve current index if valid, otherwise default to 0
+      final currentIndex = _tabController?.index ?? 0;
+      final newIndex = currentIndex.clamp(0, tabCount - 1);
       final oldController = _tabController;
-      _tabController = TabController(length: tabCount, vsync: this);
+      _tabController = TabController(length: tabCount, vsync: this, initialIndex: newIndex);
       oldController?.dispose();
     }
   }
@@ -283,7 +287,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         _buildEventList(_upcomingEvents, 'No upcoming events', 'scheduled'),
                         _buildEventList(_liveEvents, 'No live events', 'live'),
                         _buildEventList(_pastEvents, 'No past events', 'past'),
-                        if (_isAdmin) _buildDealersTab(),
                       ],
                     ),
             ),
@@ -297,32 +300,16 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   Widget? _buildFloatingActionButton() {
     if (!_isAdmin || _tabController == null) return null;
 
-    // Show different FAB based on current tab
-    final currentTab = _tabController!.index;
-
-    if (currentTab == 3) {
-      // Dealers tab - show Invite Dealer button
-      return FloatingActionButton.extended(
-        onPressed: _showInviteDealerDialog,
-        backgroundColor: PokerFriendColors.purple,
-        icon: const Icon(Icons.person_add, color: Colors.white),
-        label: const Text(
-          'Invite Dealer',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-      );
-    } else {
-      // Events tabs - show Create Event button
-      return FloatingActionButton.extended(
-        onPressed: _navigateToCreateEvent,
-        backgroundColor: PokerFriendColors.purple,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Create Event',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-      );
-    }
+    // Show Create Event button for admins
+    return FloatingActionButton.extended(
+      onPressed: _navigateToCreateEvent,
+      backgroundColor: PokerFriendColors.purple,
+      icon: const Icon(Icons.add, color: Colors.white),
+      label: const Text(
+        'Create Event',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+      ),
+    );
   }
 
   Widget _buildHeader() {
@@ -473,8 +460,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           fontWeight: FontWeight.w600,
           fontSize: 13,
         ),
-        isScrollable: _isAdmin, // Allow scrolling when we have 4 tabs
-        tabAlignment: _isAdmin ? TabAlignment.start : null,
         tabs: [
           Tab(
             child: Row(
@@ -503,20 +488,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             ),
           ),
           const Tab(text: 'Past'),
-          if (_isAdmin)
-            Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Dealers'),
-                  if (_dealers.isNotEmpty || _pendingInvitations.isNotEmpty) ...[
-                    const SizedBox(width: 6),
-                    _buildBadge(_dealers.length + _pendingInvitations.length),
-                  ],
-                ],
-              ),
-            ),
         ],
         onTap: (_) {
           // Force rebuild to update FAB
