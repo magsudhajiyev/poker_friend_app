@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 import '../../design_system/poker_friend_theme.dart';
+import '../../design_system/constants/colors.dart';
 import '../../models/club.dart';
 import '../../models/club_member.dart';
 import '../../models/poker_table.dart';
@@ -129,78 +131,97 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PokerFriendColors.dark1,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: PokerFriendColors.purple,
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadData,
-                      color: PokerFriendColors.purple,
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildClubInfoSection(),
-                            const SizedBox(height: 32),
-                            _buildTablesSection(),
-                            const SizedBox(height: 32),
-                            _buildMembersSection(),
-                            const SizedBox(height: 40),
-                          ],
-                        ),
+      backgroundColor: const Color(0xFF0B0A0A),
+      extendBodyBehindAppBar: true,
+      body: Column(
+        children: [
+          _buildGradientHeader(),
+          Expanded(
+            child: _isLoading
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.tealAccent,
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    color: AppColors.tealAccent,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildClubInfoSection(),
+                          const SizedBox(height: 28),
+                          _buildTablesSection(),
+                          const SizedBox(height: 28),
+                          _buildMembersSection(),
+                          const SizedBox(height: 40),
+                        ],
                       ),
                     ),
-            ),
-          ],
-        ),
+                  ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildGradientHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context, true),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: PokerFriendColors.dark3,
-                borderRadius: BorderRadius.circular(14),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.headerGradientCyan,
+            AppColors.headerGradientGreen,
+          ],
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(34),
+          bottomRight: Radius.circular(34),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Row(
+            children: [
+              // Back button (white bg, dark icon)
+              GestureDetector(
+                onTap: () => Navigator.pop(context, true),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.black87,
+                    size: 22,
+                  ),
+                ),
               ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 20,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Club Settings',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 24,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.5,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Text(
-              'Club Settings',
-              style: TextStyle(
-                fontSize: 24,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -210,10 +231,10 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 17,
+            color: AppColors.tealAccent,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const Spacer(),
@@ -233,65 +254,85 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: PokerFriendColors.dark3,
+            color: const Color(0xFF546165).withOpacity(0.74),
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.1),
+              width: 1,
+            ),
           ),
           child: Column(
             children: [
               _buildTextField(
                 controller: _nameController,
                 label: 'Club Name',
-                icon: Icons.home,
+                icon: Icons.home_outlined,
               ),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _addressController,
                 label: 'Address',
-                icon: Icons.location_on,
+                icon: Icons.location_on_outlined,
               ),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _phoneController,
                 label: 'Phone',
-                icon: Icons.phone,
+                icon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _descriptionController,
                 label: 'Description',
-                icon: Icons.description,
+                icon: Icons.description_outlined,
                 maxLines: 3,
               ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : _saveClubInfo,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: PokerFriendColors.purple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
                     ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.tealAccent.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                  child: ElevatedButton(
+                    onPressed: _isSaving ? null : _saveClubInfo,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Save Changes',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        )
-                      : const Text(
-                          'Save Changes',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                  ),
                 ),
               ),
             ],
@@ -312,20 +353,20 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
+      style: GoogleFonts.ibmPlexSans(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: PokerFriendColors.dark9),
-        prefixIcon: Icon(icon, color: PokerFriendColors.dark9),
+        labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
+        prefixIcon: Icon(icon, color: AppColors.tealAccent),
         filled: true,
-        fillColor: PokerFriendColors.dark5,
+        fillColor: Colors.white.withOpacity(0.1),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: PokerFriendColors.purple),
+          borderSide: BorderSide(color: AppColors.tealAccent),
         ),
       ),
     );
@@ -344,17 +385,19 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: PokerFriendColors.purple,
-                borderRadius: BorderRadius.circular(8),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
+                ),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.add, color: Colors.white, size: 18),
-                  SizedBox(width: 4),
+                  const Icon(Icons.add, color: Colors.white, size: 18),
+                  const SizedBox(width: 4),
                   Text(
                     'Add',
-                    style: TextStyle(
+                    style: GoogleFonts.ibmPlexSans(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
@@ -370,30 +413,47 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: PokerFriendColors.dark3,
+              color: const Color(0xFF546165).withOpacity(0.74),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.table_restaurant,
-                  size: 48,
-                  color: PokerFriendColors.dark7,
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppColors.tealAccent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.tealAccent.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.table_restaurant_outlined,
+                    size: 32,
+                    color: AppColors.tealAccent,
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Text(
                   'No tables yet',
-                  style: TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
-                    color: PokerFriendColors.dark9,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Add a table to get started',
-                  style: TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
-                    color: PokerFriendColors.dark7,
+                    color: Colors.white.withOpacity(0.5),
                   ),
                 ),
               ],
@@ -411,11 +471,18 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   }
 
   Widget _buildTableCard(PokerTable table) {
+    final isActive = table.status == TableStatus.active;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
+        color: const Color(0xFF546165).withOpacity(0.74),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isActive
+              ? PokerFriendColors.green.withOpacity(0.3)
+              : Colors.white.withOpacity(0.1),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
@@ -423,16 +490,20 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: PokerFriendColors.dark5,
+              color: AppColors.tealAccent.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.tealAccent.withOpacity(0.2),
+                width: 1,
+              ),
             ),
             child: Center(
               child: Text(
                 '${table.tableNumber}',
-                style: const TextStyle(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 20,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  color: AppColors.tealAccent,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -444,7 +515,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               children: [
                 Text(
                   table.name,
-                  style: const TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -453,11 +524,11 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 const SizedBox(height: 2),
                 Text(
                   table.status.name.toUpperCase(),
-                  style: TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
-                    color: table.status == TableStatus.active
+                    color: isActive
                         ? PokerFriendColors.green
-                        : PokerFriendColors.dark9,
+                        : Colors.white.withOpacity(0.5),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -467,21 +538,21 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           // QR button
           _buildIconButton(
             icon: Icons.qr_code,
-            color: PokerFriendColors.purple,
+            color: AppColors.tealAccent,
             onTap: () => _showTableQRDialog(table),
           ),
           const SizedBox(width: 8),
           // Edit button
           _buildIconButton(
             icon: Icons.edit,
-            color: PokerFriendColors.blue,
+            color: const Color(0xFF5AC8FA),
             onTap: () => _showEditTableDialog(table),
           ),
           const SizedBox(width: 8),
           // Delete button
           _buildIconButton(
             icon: Icons.delete,
-            color: PokerFriendColors.red,
+            color: const Color(0xFFFF4444),
             onTap: () => _confirmDeleteTable(table),
           ),
         ],
@@ -500,8 +571,12 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(8),
+          color: color.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: color.withOpacity(0.2),
+            width: 1,
+          ),
         ),
         child: Icon(icon, color: color, size: 18),
       ),
@@ -914,18 +989,22 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: PokerFriendColors.green,
-                borderRadius: BorderRadius.circular(8),
+                color: PokerFriendColors.green.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: PokerFriendColors.green.withOpacity(0.3),
+                  width: 1,
+                ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.person_add, color: Colors.white, size: 18),
-                  SizedBox(width: 4),
+                  const Icon(Icons.person_add_outlined, color: PokerFriendColors.green, size: 18),
+                  const SizedBox(width: 4),
                   Text(
                     'Invite',
-                    style: TextStyle(
-                      color: Colors.white,
+                    style: GoogleFonts.ibmPlexSans(
+                      color: PokerFriendColors.green,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -940,20 +1019,28 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: PokerFriendColors.dark3,
+              color: const Color(0xFF546165).withOpacity(0.74),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
             ),
             child: Text(
               'No members found',
-              style: TextStyle(color: PokerFriendColors.dark9),
+              style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
               textAlign: TextAlign.center,
             ),
           )
         else
           Container(
             decoration: BoxDecoration(
-              color: PokerFriendColors.dark3,
+              color: const Color(0xFF546165).withOpacity(0.74),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
             ),
             child: Column(
               children: List.generate(_members.length, (index) {
@@ -964,7 +1051,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                     if (index < _members.length - 1)
                       Divider(
                         height: 1,
-                        color: PokerFriendColors.dark5,
+                        color: Colors.white.withOpacity(0.1),
                         indent: 70,
                       ),
                   ],
@@ -985,16 +1072,20 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: _getRoleColor(member.role).withValues(alpha: 0.2),
+              color: _getRoleColor(member.role).withOpacity(0.15),
               shape: BoxShape.circle,
+              border: Border.all(
+                color: _getRoleColor(member.role).withOpacity(0.2),
+                width: 1,
+              ),
             ),
             child: Center(
               child: Text(
                 (member.displayName ?? 'U')[0].toUpperCase(),
-                style: TextStyle(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 18,
                   color: _getRoleColor(member.role),
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -1006,7 +1097,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               children: [
                 Text(
                   member.displayName ?? 'Unknown',
-                  style: const TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
@@ -1015,9 +1106,9 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 if (member.email != null)
                   Text(
                     member.email!,
-                    style: TextStyle(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
-                      color: PokerFriendColors.dark9,
+                      color: Colors.white.withOpacity(0.5),
                     ),
                   ),
               ],
@@ -1026,12 +1117,16 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: _getRoleColor(member.role).withValues(alpha: 0.15),
+              color: _getRoleColor(member.role).withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: _getRoleColor(member.role).withOpacity(0.2),
+                width: 1,
+              ),
             ),
             child: Text(
               member.role.name.toUpperCase(),
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 11,
                 color: _getRoleColor(member.role),
                 fontWeight: FontWeight.w600,
@@ -1046,11 +1141,11 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   Color _getRoleColor(ClubRole role) {
     switch (role) {
       case ClubRole.owner:
-        return PokerFriendColors.yellow;
+        return Colors.amber;
       case ClubRole.admin:
-        return PokerFriendColors.purple;
+        return AppColors.tealAccent;
       case ClubRole.dealer:
-        return PokerFriendColors.blue;
+        return const Color(0xFF5AC8FA);
       case ClubRole.player:
         return PokerFriendColors.green;
     }

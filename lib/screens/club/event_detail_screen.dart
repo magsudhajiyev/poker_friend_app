@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../design_system/poker_friend_theme.dart';
+import '../../design_system/constants/colors.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/club_member.dart';
@@ -459,20 +462,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: PokerFriendColors.dark1,
-        body: SafeArea(
-        child: Column(
+        backgroundColor: const Color(0xFF0B0A0A),
+        extendBodyBehindAppBar: true,
+        body: Column(
           children: [
-            _buildHeader(),
+            _buildGradientHeader(),
             Expanded(
               child: _isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: PokerFriendColors.purple,
+                        color: AppColors.tealAccent,
                       ),
                     )
                   : SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -483,24 +486,25 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           // Event name
                           Text(
                             _event.name,
-                            style: const TextStyle(
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 28,
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.5,
                             ),
                           ),
                           const SizedBox(height: 24),
 
                           // Date and time card
                           _buildInfoCard(
-                            icon: Icons.calendar_today,
+                            icon: Icons.calendar_today_outlined,
                             title: 'Date & Time',
                             content: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   dateFormat.format(_event.startTime),
-                                  style: const TextStyle(
+                                  style: GoogleFonts.ibmPlexSans(
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -509,8 +513,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   timeFormat.format(_event.startTime),
-                                  style: TextStyle(
-                                    color: PokerFriendColors.dark11,
+                                  style: GoogleFonts.ibmPlexSans(
+                                    color: Colors.white.withOpacity(0.7),
                                     fontSize: 14,
                                   ),
                                 ),
@@ -522,11 +526,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           if (_event.location != null && _event.location!.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             _buildInfoCard(
-                              icon: Icons.location_on,
+                              icon: Icons.location_on_outlined,
                               title: 'Location',
                               content: Text(
                                 _event.location!,
-                                style: const TextStyle(
+                                style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
                                   fontSize: 16,
                                 ),
@@ -542,10 +546,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               title: 'Buy-in',
                               content: Text(
                                 '\$${_event.buyInAmount?.toStringAsFixed(0)}',
-                                style: const TextStyle(
+                                style: GoogleFonts.ibmPlexSans(
                                   color: PokerFriendColors.green,
                                   fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
@@ -554,20 +558,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           // Description
                           if (_event.description != null && _event.description!.isNotEmpty) ...[
                             const SizedBox(height: 24),
-                            const Text(
+                            Text(
                               'About',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                color: AppColors.tealAccent,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               _event.description!,
-                              style: TextStyle(
+                              style: GoogleFonts.ibmPlexSans(
                                 fontSize: 15,
-                                color: PokerFriendColors.dark11,
+                                color: Colors.white.withOpacity(0.7),
                                 height: 1.5,
                               ),
                             ),
@@ -641,61 +645,82 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ],
         ),
       ),
-    ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildGradientHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: _navigateBackToClub,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: PokerFriendColors.dark3,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const Spacer(),
-          Text(
-            widget.club.name,
-            style: TextStyle(
-              fontSize: 16,
-              color: PokerFriendColors.dark9,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          // Edit button - only for admins on scheduled events
-          if (widget.isAdmin && _event.status == EventStatus.scheduled) ...[
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: _editEvent,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: PokerFriendColors.dark3,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.edit,
-                  color: PokerFriendColors.purple,
-                  size: 20,
-                ),
-              ),
-            ),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.headerGradientCyan,
+            AppColors.headerGradientGreen,
           ],
-        ],
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(34),
+          bottomRight: Radius.circular(34),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+          child: Row(
+            children: [
+              // Back button (white bg, dark icon)
+              GestureDetector(
+                onTap: _navigateBackToClub,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.black87,
+                    size: 22,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Club name
+              Expanded(
+                child: Text(
+                  widget.club.name,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Edit button - only for admins on scheduled events
+              if (widget.isAdmin && _event.status == EventStatus.scheduled)
+                GestureDetector(
+                  onTap: _editEvent,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppColors.darkPillBg,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.edit,
+                      color: AppColors.tealAccent,
+                      size: 20,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -721,30 +746,41 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     Color bgColor;
     Color textColor;
     String text;
+    bool hasGlow = false;
 
     if (_event.isLive) {
-      bgColor = PokerFriendColors.red;
+      bgColor = const Color(0xFFFF4444);
       textColor = Colors.white;
       text = 'LIVE NOW';
+      hasGlow = true;
     } else if (_event.status == EventStatus.cancelled) {
-      bgColor = PokerFriendColors.dark5;
-      textColor = PokerFriendColors.dark9;
+      bgColor = Colors.white.withOpacity(0.1);
+      textColor = Colors.white.withOpacity(0.5);
       text = 'CANCELLED';
     } else if (_event.status == EventStatus.completed) {
-      bgColor = PokerFriendColors.dark5;
-      textColor = PokerFriendColors.dark11;
+      bgColor = Colors.white.withOpacity(0.1);
+      textColor = Colors.white.withOpacity(0.7);
       text = 'COMPLETED';
     } else {
-      bgColor = PokerFriendColors.green.withOpacity(0.2);
-      textColor = PokerFriendColors.green;
+      bgColor = AppColors.tealAccent.withOpacity(0.2);
+      textColor = AppColors.tealAccent;
       text = 'UPCOMING';
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: hasGlow
+            ? [
+                BoxShadow(
+                  color: const Color(0xFFFF4444).withOpacity(0.4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -762,10 +798,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ],
           Text(
             text,
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               color: textColor,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
             ),
           ),
@@ -779,46 +815,60 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     required String title,
     required Widget content,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: PokerFriendColors.purple.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: PokerFriendColors.purple,
-              size: 20,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF546165).withOpacity(0.74),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.1),
+              width: 1,
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: PokerFriendColors.dark9,
-                    fontWeight: FontWeight.w500,
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.tealAccent.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.tealAccent.withOpacity(0.2),
+                    width: 1,
                   ),
                 ),
-                const SizedBox(height: 4),
-                content,
-              ],
-            ),
+                child: Icon(
+                  icon,
+                  color: AppColors.tealAccent,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.5),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    content,
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -827,11 +877,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Are you going?',
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 17,
+            color: AppColors.tealAccent,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -861,7 +911,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 status: AttendanceStatus.notGoing,
                 icon: Icons.cancel_outlined,
                 label: "Can't go",
-                color: PokerFriendColors.red,
+                color: const Color(0xFFFF4444),
               ),
             ),
           ],
@@ -884,27 +934,27 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.2) : PokerFriendColors.dark3,
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? color.withOpacity(0.2) : const Color(0xFF546165).withOpacity(0.5),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? color : Colors.transparent,
-            width: 2,
+            color: isSelected ? color : Colors.white.withOpacity(0.1),
+            width: isSelected ? 2 : 1,
           ),
         ),
         child: Column(
           children: [
             Icon(
               icon,
-              color: isSelected ? color : PokerFriendColors.dark9,
+              color: isSelected ? color : Colors.white.withOpacity(0.5),
               size: 24,
             ),
             const SizedBox(height: 8),
             Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 13,
-                color: isSelected ? color : PokerFriendColors.dark11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected ? color : Colors.white.withOpacity(0.7),
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           ],
@@ -925,26 +975,38 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: _addedToCalendar
-              ? PokerFriendColors.dark5
-              : PokerFriendColors.purple,
-          borderRadius: BorderRadius.circular(12),
+          gradient: _addedToCalendar
+              ? null
+              : const LinearGradient(
+                  colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
+                ),
+          color: _addedToCalendar ? Colors.white.withOpacity(0.1) : null,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: _addedToCalendar
+              ? null
+              : [
+                  BoxShadow(
+                    color: AppColors.tealAccent.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _addedToCalendar ? Icons.check : Icons.calendar_today,
-              color: _addedToCalendar ? PokerFriendColors.dark9 : Colors.white,
+              _addedToCalendar ? Icons.check : Icons.calendar_today_outlined,
+              color: _addedToCalendar ? Colors.white.withOpacity(0.5) : Colors.white,
               size: 20,
             ),
             const SizedBox(width: 10),
             Text(
               _addedToCalendar ? 'Added to Calendar' : 'Add to Calendar',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: _addedToCalendar ? PokerFriendColors.dark9 : Colors.white,
+                color: _addedToCalendar ? Colors.white.withOpacity(0.5) : Colors.white,
               ),
             ),
           ],
@@ -957,91 +1019,106 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final goingCount = _attendanceCounts[AttendanceStatus.going] ?? 0;
     final maybeCount = _attendanceCounts[AttendanceStatus.maybe] ?? 0;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                'Who\'s Coming',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: _navigateToAttendees,
-                child: Text(
-                  'See all',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: PokerFriendColors.purple,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF546165).withOpacity(0.74),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.1),
+              width: 1,
+            ),
           ),
-          const SizedBox(height: 16),
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildAttendanceCount(
-                count: goingCount,
-                label: 'Going',
-                color: PokerFriendColors.green,
-              ),
-              const SizedBox(width: 24),
-              _buildAttendanceCount(
-                count: maybeCount,
-                label: 'Maybe',
-                color: PokerFriendColors.yellow,
-              ),
-            ],
-          ),
-          if (_goingMembers.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            const Divider(color: PokerFriendColors.dark5),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _goingMembers.take(5).map((member) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark5,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    member.displayName,
-                    style: const TextStyle(
-                      fontSize: 13,
+              Row(
+                children: [
+                  Text(
+                    'Who\'s Coming',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
                       color: Colors.white,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                );
-              }).toList(),
-            ),
-            if (_goingMembers.length > 5) ...[
-              const SizedBox(height: 8),
-              Text(
-                '+${_goingMembers.length - 5} more',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: PokerFriendColors.dark9,
-                ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: _navigateToAttendees,
+                    child: Text(
+                      'See all',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 14,
+                        color: AppColors.tealAccent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _buildAttendanceCount(
+                    count: goingCount,
+                    label: 'Going',
+                    color: PokerFriendColors.green,
+                  ),
+                  const SizedBox(width: 24),
+                  _buildAttendanceCount(
+                    count: maybeCount,
+                    label: 'Maybe',
+                    color: PokerFriendColors.yellow,
+                  ),
+                ],
+              ),
+              if (_goingMembers.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Divider(color: Colors.white.withOpacity(0.1)),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _goingMembers.take(5).map((member) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.tealAccent.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.tealAccent.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        member.displayName,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                if (_goingMembers.length > 5) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '+${_goingMembers.length - 5} more',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                  ),
+                ],
+              ],
             ],
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
@@ -1064,18 +1141,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         const SizedBox(width: 8),
         Text(
           '$count',
-          style: TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 20,
             color: color,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 14,
-            color: PokerFriendColors.dark9,
+            color: Colors.white.withOpacity(0.5),
           ),
         ),
       ],
@@ -1099,16 +1176,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              PokerFriendColors.green,
-              PokerFriendColors.green.withOpacity(0.8),
-            ],
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: PokerFriendColors.green.withOpacity(0.3),
+              color: AppColors.tealAccent.withOpacity(0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -1117,7 +1191,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.qr_code_scanner,
               color: Colors.white,
               size: 24,
@@ -1125,9 +1199,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 12),
             Text(
               'Start Dealing',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Colors.white,
               ),
             ),
@@ -1154,10 +1228,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: PokerFriendColors.dark3,
-          borderRadius: BorderRadius.circular(16),
+          color: AppColors.tealAccent.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: PokerFriendColors.purple.withOpacity(0.5),
+            color: AppColors.tealAccent.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1165,16 +1239,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             Icon(
               Icons.leaderboard,
-              color: PokerFriendColors.purple,
+              color: AppColors.tealAccent,
               size: 22,
             ),
             const SizedBox(width: 10),
             Text(
               'View Live Rankings',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: PokerFriendColors.purple,
+                color: AppColors.tealAccent,
               ),
             ),
           ],
@@ -1251,16 +1325,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: PokerFriendColors.dark3,
-          borderRadius: BorderRadius.circular(16),
+          color: PokerFriendColors.green.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: PokerFriendColors.green.withOpacity(0.5),
+            color: PokerFriendColors.green.withOpacity(0.3),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.event_seat,
               color: PokerFriendColors.green,
               size: 22,
@@ -1268,7 +1342,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 10),
             Text(
               'Return to My Seat',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: PokerFriendColors.green,
@@ -1297,16 +1371,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: PokerFriendColors.dark3,
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.amber.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: Colors.amber.withOpacity(0.5),
+            color: Colors.amber.withOpacity(0.3),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.emoji_events,
               color: Colors.amber,
               size: 22,
@@ -1314,7 +1388,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 10),
             Text(
               'View Final Standings',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.amber,
@@ -1333,16 +1407,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              PokerFriendColors.green,
-              PokerFriendColors.green.withOpacity(0.8),
-            ],
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: PokerFriendColors.green.withOpacity(0.3),
+              color: AppColors.tealAccent.withOpacity(0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -1351,7 +1422,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.table_restaurant,
               color: Colors.white,
               size: 22,
@@ -1359,7 +1430,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 10),
             Text(
               _event.tableIds.length > 1 ? 'Manage Tables' : 'Manage Table',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -1378,10 +1449,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: PokerFriendColors.dark3,
-          borderRadius: BorderRadius.circular(16),
+          color: AppColors.tealAccent.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: PokerFriendColors.purple.withOpacity(0.5),
+            color: AppColors.tealAccent.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1389,16 +1460,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             Icon(
               Icons.event_seat,
-              color: PokerFriendColors.purple,
+              color: AppColors.tealAccent,
               size: 22,
             ),
             const SizedBox(width: 10),
             Text(
               'See Availability',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: PokerFriendColors.purple,
+                color: AppColors.tealAccent,
               ),
             ),
           ],
@@ -1414,7 +1485,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         color: PokerFriendColors.green.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: PokerFriendColors.green.withOpacity(0.3),
         ),
@@ -1422,7 +1493,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.check_circle,
             color: PokerFriendColors.green,
             size: 22,
@@ -1430,7 +1501,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           const SizedBox(width: 10),
           Text(
             "You're Seated",
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: PokerFriendColors.green,
@@ -1514,9 +1585,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       children: [
         Text(
           'Admin Actions',
-          style: TextStyle(
-            fontSize: 16,
-            color: PokerFriendColors.dark9,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 17,
+            color: AppColors.tealAccent,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -1551,7 +1622,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   color: (_event.status == EventStatus.active ||
                           _event.status == EventStatus.paused)
                       ? PokerFriendColors.green
-                      : PokerFriendColors.red,
+                      : const Color(0xFFFF4444),
                 ),
               ),
           ],
@@ -1572,7 +1643,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: color.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color.withOpacity(0.3)),
         ),
         child: Row(
@@ -1582,7 +1653,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(width: 8),
             Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 14,
                 color: color,
                 fontWeight: FontWeight.w600,

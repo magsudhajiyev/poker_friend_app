@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../design_system/poker_friend_theme.dart';
+import '../../design_system/constants/colors.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/club_member.dart';
@@ -268,30 +271,31 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PokerFriendColors.dark1,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            if (_tabController != null) _buildTabBar(),
-            Expanded(
-              child: _isLoading || _tabController == null
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: PokerFriendColors.purple,
-                      ),
-                    )
-                  : TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildEventList(_upcomingEvents, 'No upcoming events', 'scheduled'),
-                        _buildEventList(_liveEvents, 'No live events', 'live'),
-                        _buildEventList(_pastEvents, 'No past events', 'past'),
-                      ],
+      backgroundColor: const Color(0xFF0B0A0A),
+      extendBodyBehindAppBar: true,
+      body: Column(
+        children: [
+          _buildGradientHeader(),
+          const SizedBox(height: 16),
+          if (_tabController != null) _buildTabBar(),
+          const SizedBox(height: 16),
+          Expanded(
+            child: _isLoading || _tabController == null
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.tealAccent,
                     ),
-            ),
-          ],
-        ),
+                  )
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildEventList(_upcomingEvents, 'No upcoming events', 'scheduled'),
+                      _buildEventList(_liveEvents, 'No live events', 'live'),
+                      _buildEventList(_pastEvents, 'No past events', 'past'),
+                    ],
+                  ),
+          ),
+        ],
       ),
       floatingActionButton: _buildFloatingActionButton(),
     );
@@ -301,122 +305,197 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     if (!_isAdmin || _tabController == null) return null;
 
     // Show Create Event button for admins
-    return FloatingActionButton.extended(
-      onPressed: _navigateToCreateEvent,
-      backgroundColor: PokerFriendColors.purple,
-      icon: const Icon(Icons.add, color: Colors.white),
-      label: const Text(
-        'Create Event',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.tealAccent.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: FloatingActionButton.extended(
+        onPressed: _navigateToCreateEvent,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text(
+          'Create Event',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildGradientHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-      child: Row(
-        children: [
-          // Back button
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: PokerFriendColors.dark3,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Club info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.club.name,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.people,
-                      size: 14,
-                      color: PokerFriendColors.dark9,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$_memberCount members',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: PokerFriendColors.dark9,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.headerGradientCyan,
+            AppColors.headerGradientGreen,
+          ],
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(34),
+          bottomRight: Radius.circular(34),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Top row with back button and settings
+              Row(
+                children: [
+                  // Back button (white bg, dark icon)
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.black87,
+                        size: 22,
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          // Admin badge
-          if (_isAdmin)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: PokerFriendColors.purple.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.admin_panel_settings,
-                    size: 14,
-                    color: PokerFriendColors.purple,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Admin',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: PokerFriendColors.purple,
-                      fontWeight: FontWeight.w600,
+                  const Spacer(),
+                  // Right side: Settings in dark pill
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.darkPillBg,
+                      borderRadius: BorderRadius.circular(110),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_isAdmin)
+                          _buildPillButton(
+                            icon: Icons.admin_panel_settings,
+                            badge: 'Admin',
+                          ),
+                        _buildPillButton(
+                          icon: _isAdmin ? Icons.settings : Icons.info_outline,
+                          onTap: _navigateToSettingsOrInfo,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
-          const SizedBox(width: 12),
-          // Settings/Info button
-          GestureDetector(
-            onTap: _navigateToSettingsOrInfo,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: PokerFriendColors.dark3,
-                borderRadius: BorderRadius.circular(14),
+              const SizedBox(height: 20),
+              // Club name and member count
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.club.name,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 28,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.white, width: 1),
+                                borderRadius: BorderRadius.circular(78),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.people_outline,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '$_memberCount members',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              child: Icon(
-                _isAdmin ? Icons.settings : Icons.info_outline,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPillButton({
+    required IconData icon,
+    String? badge,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: badge != null ? null : 44,
+        height: 44,
+        padding: badge != null ? const EdgeInsets.symmetric(horizontal: 12) : null,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 22),
+            if (badge != null) ...[
+              const SizedBox(width: 6),
+              Text(
+                badge,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -441,24 +520,41 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
   Widget _buildTabBar() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(80),
+        border: Border.all(
+          color: const Color(0xFF2c2c2e),
+          width: 1,
+        ),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: PokerFriendColors.purple,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(60),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
+          ),
+          border: Border.all(
+            color: const Color(0x4DEBEBF5),
+            width: 1,
+          ),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        indicatorPadding: const EdgeInsets.all(4),
+        indicatorPadding: EdgeInsets.zero,
+        dividerColor: Colors.transparent,
         labelColor: Colors.white,
-        unselectedLabelColor: PokerFriendColors.dark9,
-        labelStyle: const TextStyle(
+        unselectedLabelColor: Colors.white,
+        labelStyle: GoogleFonts.ibmPlexSans(
+          fontSize: 15,
           fontWeight: FontWeight.w600,
-          fontSize: 13,
+          letterSpacing: -0.3,
+        ),
+        unselectedLabelStyle: GoogleFonts.ibmPlexSans(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          letterSpacing: -0.3,
         ),
         tabs: [
           Tab(
@@ -499,16 +595,17 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
   Widget _buildBadge(int count) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark5,
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.tealAccent.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         '$count',
-        style: const TextStyle(
+        style: GoogleFonts.ibmPlexSans(
           fontSize: 11,
           fontWeight: FontWeight.w600,
+          color: AppColors.tealAccent,
         ),
       ),
     );
@@ -516,18 +613,39 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
   Widget _buildLiveBadge(int count) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: PokerFriendColors.red,
-        borderRadius: BorderRadius.circular(8),
+        color: const Color(0xFFFF4444),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF4444).withOpacity(0.4),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Text(
-        '$count',
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '$count',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -539,9 +657,9 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: PokerFriendColors.purple,
+      color: AppColors.tealAccent,
       child: ListView.builder(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         itemCount: events.length,
         itemBuilder: (context, index) {
           return _buildEventCard(events[index], type);
@@ -556,7 +674,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
     switch (type) {
       case 'scheduled':
-        icon = Icons.event;
+        icon = Icons.event_outlined;
         subtitle = _isAdmin
             ? 'Tap the button below to create one'
             : 'Check back later for new events';
@@ -566,49 +684,60 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         subtitle = 'Events will appear here when they start';
         break;
       case 'past':
-        icon = Icons.history;
+        icon = Icons.history_outlined;
         subtitle = 'Completed events will appear here';
         break;
       default:
-        icon = Icons.event;
+        icon = Icons.event_outlined;
         subtitle = '';
     }
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: PokerFriendColors.dark3,
-              borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.tealAccent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: AppColors.tealAccent.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: 36,
+                color: AppColors.tealAccent,
+              ),
             ),
-            child: Icon(
-              icon,
-              size: 40,
-              color: PokerFriendColors.dark9,
+            const SizedBox(height: 20),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.3,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.5),
+                fontWeight: FontWeight.w400,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 14,
-              color: PokerFriendColors.dark9,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -616,184 +745,224 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   Widget _buildEventCard(ClubEvent event, String type) {
     final dateFormat = DateFormat('EEE, MMM d');
     final timeFormat = DateFormat('h:mm a');
+    final isLive = type == 'live';
 
     return GestureDetector(
       onTap: () => _navigateToEventDetail(event),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: PokerFriendColors.dark3,
-          borderRadius: BorderRadius.circular(20),
-          border: type == 'live'
-              ? Border.all(color: PokerFriendColors.red.withOpacity(0.5), width: 2)
-              : null,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top row with status
-            Row(
-              children: [
-                if (type == 'live')
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.red,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'LIVE',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.dark5,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      event.status.displayName,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: PokerFriendColors.dark11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                const Spacer(),
-                Icon(
-                  Icons.chevron_right,
-                  color: PokerFriendColors.dark9,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF546165).withOpacity(0.74),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isLive
+                      ? const Color(0xFFFF4444).withOpacity(0.5)
+                      : Colors.white.withOpacity(0.1),
+                  width: isLive ? 2 : 1,
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Event name
-            Text(
-              event.name,
-              style: const TextStyle(
-                fontSize: 20,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
               ),
-            ),
-            const SizedBox(height: 8),
-
-            // Date and time
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_today,
-                  size: 14,
-                  color: PokerFriendColors.dark9,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  dateFormat.format(event.startTime),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: PokerFriendColors.dark11,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Icon(
-                  Icons.access_time,
-                  size: 14,
-                  color: PokerFriendColors.dark9,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  timeFormat.format(event.startTime),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: PokerFriendColors.dark11,
-                  ),
-                ),
-              ],
-            ),
-
-            // Location if available
-            if (event.location != null && event.location!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.location_on,
-                    size: 14,
-                    color: PokerFriendColors.dark9,
+                  // Top row with status
+                  Row(
+                    children: [
+                      if (isLive)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF4444),
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF4444).withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'LIVE',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 11,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            event.status.displayName,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 11,
+                              color: Colors.white.withOpacity(0.8),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      const Spacer(),
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.chevron_right,
+                          color: Colors.white.withOpacity(0.7),
+                          size: 20,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    event.location!,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: PokerFriendColors.dark11,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  const SizedBox(height: 16),
 
-            // Buy-in and player count row
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                if (!event.isFree) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.green.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
+                  // Event name
+                  Text(
+                    event.name,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 20,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.3,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Date and time
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: AppColors.tealAccent,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        dateFormat.format(event.startTime),
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(
+                        Icons.access_time_outlined,
+                        size: 14,
+                        color: AppColors.tealAccent,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        timeFormat.format(event.startTime),
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Location if available
+                  if (event.location != null && event.location!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
                       children: [
                         Icon(
-                          Icons.attach_money,
+                          Icons.location_on_outlined,
                           size: 14,
-                          color: PokerFriendColors.green,
+                          color: AppColors.tealAccent,
                         ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${event.buyInAmount?.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: PokerFriendColors.green,
-                            fontWeight: FontWeight.w600,
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            event.location!,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.9),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
+                  ],
+
+                  // Buy-in and player count row
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      if (!event.isFree) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: PokerFriendColors.green.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: PokerFriendColors.green.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.attach_money,
+                                size: 14,
+                                color: PokerFriendColors.green,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                '${event.buyInAmount?.toStringAsFixed(0)}',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 13,
+                                  color: PokerFriendColors.green,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      // Player count badge
+                      _buildPlayerCountBadge(event, type),
+                    ],
                   ),
-                  const SizedBox(width: 8),
                 ],
-                // Player count badge
-                _buildPlayerCountBadge(event, type),
-              ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -809,19 +978,19 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     switch (type) {
       case 'scheduled':
         label = '$count going';
-        color = PokerFriendColors.purple;
+        color = AppColors.tealAccent;
         break;
       case 'live':
         label = '$count playing';
-        color = PokerFriendColors.blue;
+        color = const Color(0xFF5AC8FA);
         break;
       case 'past':
         label = '$count players';
-        color = PokerFriendColors.dark9;
+        color = Colors.white.withOpacity(0.6);
         break;
       default:
         label = '$count';
-        color = PokerFriendColors.dark9;
+        color = Colors.white.withOpacity(0.6);
     }
 
     return Container(
@@ -829,19 +998,23 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.people,
+            Icons.people_outline,
             size: 14,
             color: color,
           ),
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 13,
               color: color,
               fontWeight: FontWeight.w600,
