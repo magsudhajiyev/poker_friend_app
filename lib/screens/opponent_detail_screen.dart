@@ -51,7 +51,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   Future<void> _loadStatistics() async {
     try {
       final stats = await _calculateOpponentStatistics(_opponent.name);
-      final opponentStats = await OpponentStatsService.getOpponentStats(_opponent.name);
+      final opponentStats = await OpponentStatsService.getOpponentStats(_opponent.id);
       setState(() {
         _statistics = stats;
         _opponentStats = opponentStats;
@@ -67,7 +67,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   Future<Map<String, dynamic>> _calculateOpponentStatistics(String opponentName) async {
     try {
-      final optimizedStats = await OpponentStatsService.getOpponentStats(opponentName);
+      final optimizedStats = await OpponentStatsService.getOpponentStats(_opponent.id);
 
       if (optimizedStats != null) {
         print('✅ Using optimized stats for $opponentName (${optimizedStats.handsPlayed} hands)');

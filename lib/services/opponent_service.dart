@@ -253,7 +253,7 @@ class OpponentService {
     final typeDistribution = <String, int>{};
 
     for (final opponent in opponents) {
-      final stats = await OpponentStatsService.getOpponentStats(opponent.name);
+      final stats = await OpponentStatsService.getOpponentStats(opponent.id);
       if (stats != null) {
         final hands = stats.handsPlayed;
         totalHands += hands;

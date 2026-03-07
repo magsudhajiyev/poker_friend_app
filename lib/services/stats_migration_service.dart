@@ -131,7 +131,11 @@ class StatsMigrationService {
 
       // Check how many already have optimized stats
       for (final opponentName in allOpponents) {
-        final stats = await OpponentStatsService.getOpponentStats(opponentName);
+        // Look up the actual opponent ID
+        final opponent = await OpponentService.findOpponentByName(opponentName);
+        if (opponent == null) continue;
+
+        final stats = await OpponentStatsService.getOpponentStats(opponent.id);
         if (stats != null && (stats.handsPlayed ?? 0) > 0) {
           migratedCount++;
         }
@@ -325,8 +329,12 @@ class StatsMigrationService {
         return null;
       }
 
+      // Look up the actual opponent ID (not the name)
+      final opponent = await OpponentService.findOpponentByName(opponentName);
+      final actualOpponentId = opponent?.id ?? opponentName;
+
       final stats = OpponentStats(
-        opponentId: opponentName,
+        opponentId: actualOpponentId,
         handsPlayed: handsPlayed,
         sessionsPlayed: sessionsPlayed,
         vpipCount: vpipCount,

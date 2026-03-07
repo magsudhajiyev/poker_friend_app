@@ -170,7 +170,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
       // Load stats for each opponent
       for (final opponent in opponents) {
-        final stats = await OpponentStatsService.getOpponentStats(opponent.name);
+        final stats = await OpponentStatsService.getOpponentStats(opponent.id);
         if (stats != null) {
           statsMap[opponent.name] = stats;
         }
