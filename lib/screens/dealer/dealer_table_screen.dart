@@ -451,6 +451,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       // Reset voice cubit for new hand and update game state
       _voiceCubit?.onNewHand();
       _voiceCubit?.updateGameState(_gameState, _isHandActive);
+
+      // Auto-start voice mode on first hand (voice stays on throughout session)
+      if (!_isVoiceMode) {
+        setState(() => _isVoiceMode = true);
+        _startContinuousListening();
+      }
     } catch (e) {
       setState(() => _isLoading = false);
       _showError('Failed to start hand: ${e.toString()}');
@@ -3002,158 +3008,158 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Player info and mode toggle row
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '$playerName to act (${formatCompactCurrency(playerStack)})',
-                      style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Voice mode toggle - shows current state
-                GestureDetector(
-                  onTap: () => _toggleVoiceMode(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: _getVoiceModeColor(),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _getVoiceModeBorderColor(),
-                        width: 2,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _getVoiceModeIcon(),
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _getVoiceModeLabel(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            // Voice status bar (shown when voice is active)
+            if (_isVoiceMode && _voiceState == VoiceSessionState.dealerLocked)
+              _buildVoiceStatusBar(),
+            // Show calibration/connection UI only as fallback
+            if (_isVoiceMode && _voiceState == VoiceSessionState.calibrating)
+              _buildCalibrationUI(),
+            if (_isVoiceMode && _voiceState == VoiceSessionState.connectionLost)
+              _buildConnectionLostUI(),
+            if (_isVoiceMode && (_voiceState == VoiceSessionState.dealerLocked ||
+                _voiceState == VoiceSessionState.calibrating ||
+                _voiceState == VoiceSessionState.connectionLost))
+              const SizedBox(height: 12),
+            // Player info row
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '$playerName to act (${formatCompactCurrency(playerStack)})',
+                style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 12),
-            // Show voice UI or manual buttons based on mode
-            if (_isVoiceMode)
-              _buildVoiceActionUI()
-            else
-              Row(
-                children: [
-                  _buildActionButton('FOLD', Colors.red.shade700,
-                      () => _performAction(PlayerAction.fold)),
-                  const SizedBox(width: 8),
-                  if (canCheck)
-                    _buildActionButton('CHECK', Colors.grey.shade700,
-                        () => _performAction(PlayerAction.check))
-                  else if (canCall)
-                    _buildActionButton('CALL\n${formatCompactCurrency(callAmount)}', Colors.green.shade700,
-                        () => _performAction(PlayerAction.call)),
-                  const SizedBox(width: 8),
-                  if (canBet)
-                    _buildActionButton('BET', Colors.blue.shade700, () async {
-                      final amount = await _showAmountDialog('Bet amount');
-                      if (amount != null && amount > 0) {
-                        await _performAction(PlayerAction.bet, amount: amount);
-                      }
-                    })
-                  else if (canRaise)
-                    _buildActionButton('RAISE', Colors.blue.shade700, () async {
-                      final amount = await _showAmountDialog('Raise to');
-                      if (amount != null && amount > 0) {
-                        await _performAction(PlayerAction.raise, amount: amount);
-                      }
-                    }),
-                  const SizedBox(width: 8),
-                  _buildActionButton('ALL IN', Colors.purple.shade700, () async {
-                    // All-in is either a bet or raise for the player's full stack
-                    final stack = _gameState!.getPlayerStack(currentPlayer);
-                    final action = canBet ? PlayerAction.bet : PlayerAction.raise;
-                    await _performAction(action, amount: stack + _gameState!.players[currentPlayer - 1].betThisRound);
+            // Action buttons - always visible
+            Row(
+              children: [
+                _buildActionButton('FOLD', Colors.red.shade700,
+                    () => _performAction(PlayerAction.fold)),
+                const SizedBox(width: 8),
+                if (canCheck)
+                  _buildActionButton('CHECK', Colors.grey.shade700,
+                      () => _performAction(PlayerAction.check))
+                else if (canCall)
+                  _buildActionButton('CALL\n${formatCompactCurrency(callAmount)}', Colors.green.shade700,
+                      () => _performAction(PlayerAction.call)),
+                const SizedBox(width: 8),
+                if (canBet)
+                  _buildActionButton('BET', Colors.blue.shade700, () async {
+                    final amount = await _showAmountDialog('Bet amount');
+                    if (amount != null && amount > 0) {
+                      await _performAction(PlayerAction.bet, amount: amount);
+                    }
+                  })
+                else if (canRaise)
+                  _buildActionButton('RAISE', Colors.blue.shade700, () async {
+                    final amount = await _showAmountDialog('Raise to');
+                    if (amount != null && amount > 0) {
+                      await _performAction(PlayerAction.raise, amount: amount);
+                    }
                   }),
-                ],
-              ),
+                const SizedBox(width: 8),
+                _buildActionButton('ALL IN', Colors.purple.shade700, () async {
+                  // All-in is either a bet or raise for the player's full stack
+                  final stack = _gameState!.getPlayerStack(currentPlayer);
+                  final action = canBet ? PlayerAction.bet : PlayerAction.raise;
+                  await _performAction(action, amount: stack + _gameState!.players[currentPlayer - 1].betThisRound);
+                }),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  /// Build voice action UI based on current voice session state
-  Widget _buildVoiceActionUI() {
-    // State-based UI
-    switch (_voiceState) {
-      case VoiceSessionState.uninitialized:
-        return _buildStartVoiceModeUI();
-      case VoiceSessionState.calibrating:
-        return _buildCalibrationUI();
-      case VoiceSessionState.dealerLocked:
-        return _buildDealerLockedUI();
-      case VoiceSessionState.connectionLost:
-        return _buildConnectionLostUI();
-      case VoiceSessionState.rotating:
-        return _buildRotatingUI();
-    }
-  }
+  /// Compact voice status bar - shows listening/paused state with pause toggle
+  Widget _buildVoiceStatusBar() {
+    final isPaused = _voiceCubit?.isHoldActive ?? false;
+    final dealerInfo = _lockedDealerName != null
+        ? '${_lockedDealerName}${_lockedTableName != null ? ' • $_lockedTableName' : ''}'
+        : null;
 
-  /// Build UI to start voice mode
-  Widget _buildStartVoiceModeUI() {
-    return GestureDetector(
-      onTap: _startContinuousListening,
-      child: Container(
-        width: double.infinity,
-        height: 80,
-        decoration: BoxDecoration(
-          color: Colors.blueGrey.shade800,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.blueGrey.shade600, width: 2),
-        ),
-        child: const Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.mic_none, color: Colors.white, size: 32),
-              SizedBox(width: 12),
-              Text(
-                'TAP TO START VOICE MODE',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: isPaused ? Colors.amber.shade800 : Colors.green.shade800,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          // Status icon
+          Icon(
+            isPaused ? Icons.pause : Icons.mic,
+            color: Colors.white,
+            size: 20,
           ),
-        ),
+          const SizedBox(width: 10),
+          // Status text + dealer info + partial transcript
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      isPaused ? 'Paused' : 'Listening',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    if (dealerInfo != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '($dealerInfo)',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (_partialTranscript.isNotEmpty)
+                  Text(
+                    '"$_partialTranscript"',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+          ),
+          // Pause/Resume button
+          IconButton(
+            icon: Icon(
+              isPaused ? Icons.play_arrow : Icons.pause,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              _voiceCubit?.toggleHold();
+              setState(() {});
+            },
+            tooltip: isPaused ? 'Resume Voice' : 'Pause Voice',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
       ),
     );
   }
 
-  /// Build calibration UI - waiting for dealer to announce
+  /// Build calibration UI - waiting for dealer to announce (fallback for connection loss)
   Widget _buildCalibrationUI() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -3223,97 +3229,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     );
   }
 
-  /// Build dealer locked UI - ready to receive commands
-  Widget _buildDealerLockedUI() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: (_voiceCubit?.isHoldActive ?? false) ? Colors.amber.shade700 : Colors.green.shade700,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          // Status row
-          Row(
-            children: [
-              Icon(
-                (_voiceCubit?.isHoldActive ?? false) ? Icons.pause : Icons.mic,
-                color: Colors.white,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      (_voiceCubit?.isHoldActive ?? false) ? 'Actions Paused' : 'Listening',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Dealer: ${_lockedDealerName ?? 'Unknown'} • ${_lockedTableName ?? 'Table'}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 11),
-                    ),
-                  ],
-                ),
-              ),
-              // Hold Action Toggle
-              IconButton(
-                icon: Icon(
-                  (_voiceCubit?.isHoldActive ?? false) ? Icons.play_arrow : Icons.pause,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  _voiceCubit?.toggleHold();
-                  setState(() {}); // Trigger UI rebuild
-                },
-                tooltip: (_voiceCubit?.isHoldActive ?? false) ? 'Resume Actions' : 'Hold Actions',
-              ),
-              // Recalibrate
-              IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.white70),
-                onPressed: _recalibrateDealer,
-                tooltip: 'Recalibrate',
-              ),
-              // Stop button
-              IconButton(
-                icon: const Icon(Icons.stop, color: Colors.white70),
-                onPressed: _stopContinuousListening,
-                tooltip: 'Stop Voice Mode',
-              ),
-            ],
-          ),
-          // Transcript
-          if (_partialTranscript.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.black26,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _partialTranscript,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-              ),
-            ),
-          ],
-          // Help text
-          const SizedBox(height: 8),
-          const Text(
-            'Say: fold, check, call, bet [amount], raise [amount], all-in',
-            style: TextStyle(color: Colors.white54, fontSize: 10),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Build connection lost UI
+  /// Build connection lost UI (fallback for reconnection)
   Widget _buildConnectionLostUI() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -3364,141 +3280,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         ],
       ),
     );
-  }
-
-  /// Build rotating dealer UI
-  Widget _buildRotatingUI() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.purple.shade800,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              color: Colors.white,
-              strokeWidth: 2,
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Text(
-              'Rotating Dealer...',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Recalibrate dealer voice
-  void _recalibrateDealer() {
-    _realtimeSpeechService.recalibrate();
-    setState(() {
-      _voiceState = VoiceSessionState.calibrating;
-      _lockedDealerName = null;
-      _lockedTableName = null;
-      _partialTranscript = '';
-    });
-  }
-
-  /// Get voice mode button color based on state
-  Color _getVoiceModeColor() {
-    if (!_isVoiceMode) return Colors.blueGrey.shade700;
-
-    switch (_voiceState) {
-      case VoiceSessionState.uninitialized:
-        return Colors.blueGrey.shade700;
-      case VoiceSessionState.calibrating:
-        return Colors.orange.shade600;
-      case VoiceSessionState.dealerLocked:
-        return (_voiceCubit?.isHoldActive ?? false) ? Colors.amber.shade700 : Colors.green.shade600;
-      case VoiceSessionState.connectionLost:
-        return Colors.red.shade600;
-      case VoiceSessionState.rotating:
-        return Colors.purple.shade600;
-    }
-  }
-
-  /// Get voice mode button border color based on state
-  Color _getVoiceModeBorderColor() {
-    if (!_isVoiceMode) return Colors.blueGrey.shade500;
-
-    switch (_voiceState) {
-      case VoiceSessionState.uninitialized:
-        return Colors.blueGrey.shade500;
-      case VoiceSessionState.calibrating:
-        return Colors.orange.shade400;
-      case VoiceSessionState.dealerLocked:
-        return (_voiceCubit?.isHoldActive ?? false) ? Colors.amber.shade500 : Colors.green.shade400;
-      case VoiceSessionState.connectionLost:
-        return Colors.red.shade400;
-      case VoiceSessionState.rotating:
-        return Colors.purple.shade400;
-    }
-  }
-
-  /// Get voice mode icon based on state
-  IconData _getVoiceModeIcon() {
-    if (!_isVoiceMode) return Icons.touch_app;
-
-    switch (_voiceState) {
-      case VoiceSessionState.uninitialized:
-        return Icons.mic_none;
-      case VoiceSessionState.calibrating:
-        return Icons.settings_voice;
-      case VoiceSessionState.dealerLocked:
-        return (_voiceCubit?.isHoldActive ?? false) ? Icons.pause : Icons.mic;
-      case VoiceSessionState.connectionLost:
-        return Icons.signal_wifi_off;
-      case VoiceSessionState.rotating:
-        return Icons.sync;
-    }
-  }
-
-  /// Get voice mode label based on state
-  String _getVoiceModeLabel() {
-    if (!_isVoiceMode) return 'TAP';
-
-    switch (_voiceState) {
-      case VoiceSessionState.uninitialized:
-        return 'OFF';
-      case VoiceSessionState.calibrating:
-        return 'CALIB';
-      case VoiceSessionState.dealerLocked:
-        return (_voiceCubit?.isHoldActive ?? false) ? 'PAUSED' : 'LIVE';
-      case VoiceSessionState.connectionLost:
-        return 'LOST';
-      case VoiceSessionState.rotating:
-        return 'ROTATE';
-    }
-  }
-
-  /// Toggle voice mode on/off (shows/hides push-to-talk button)
-  Future<void> _toggleVoiceMode() async {
-    try {
-      if (_isVoiceMode) {
-        // Turn off voice mode - stop any active listening
-        await _stopContinuousListening();
-        if (mounted) setState(() => _isVoiceMode = false);
-      } else {
-        // Turn on voice mode - just show the push-to-talk UI
-        // Actual streaming starts when button is held
-        if (mounted) setState(() => _isVoiceMode = true);
-      }
-    } catch (e) {
-      _showError('Voice mode error: $e');
-      if (mounted) setState(() => _isVoiceMode = false);
-    }
   }
 
   /// Start continuous listening using real-time WebSocket streaming
