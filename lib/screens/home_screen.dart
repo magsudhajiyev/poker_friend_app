@@ -31,6 +31,7 @@ import '../design_system/components.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../services/seat_service.dart';
+import '../services/table_service.dart';
 import '../services/club_notification_service.dart';
 import '../services/club_service.dart';
 import '../services/event_service.dart';
@@ -274,24 +275,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   /// Show a sliding notification when user is seated by a dealer
-  void _showSeatedNotification(SeatAssignment seat) {
+  void _showSeatedNotification(SeatAssignment seat) async {
     if (!mounted) return;
 
-    final chipStackStr = seat.chipStack != null
-        ? '\$${seat.chipStack!.toStringAsFixed(0)}'
-        : 'Not set';
+    // Get event and table info for display and navigation
+    final event = await EventService.getActiveEventForTable(seat.clubId, seat.tableId);
+    final table = await TableService.getTable(seat.clubId, seat.tableId);
+    final tableNumber = table?.tableNumber ?? 1;
+
+    if (!mounted) return;
 
     SlidingNotificationOverlay.show(
       context: context,
-      title: "You've Been Seated!",
-      subtitle: 'Table: ${seat.tableId}',
-      detail: 'Seat #${seat.seatNumber}  •  Stack: $chipStackStr',
+      title: "You're seated, good luck!",
+      subtitle: 'Table $tableNumber, Seat #${seat.seatNumber}',
       icon: Icons.event_seat,
       iconColor: const Color(0xFF5AC95A),
       displayDuration: const Duration(seconds: 6),
-      onTap: () {
-        // Navigate to player session screen
-        _navigateToPlayerSession(seat);
+      onTap: () async {
+        if (event != null) {
+          // Navigate to event details page
+          final club = await ClubService.getClub(seat.clubId);
+          if (club == null || !mounted) return;
+          final isAdmin = await ClubService.canManageEvents(seat.clubId);
+          if (!mounted) return;
+
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => EventDetailScreen(
+                club: club,
+                event: event,
+                isAdmin: isAdmin,
+              ),
+            ),
+          );
+        }
       },
     );
   }

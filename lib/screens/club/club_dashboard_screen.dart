@@ -16,6 +16,7 @@ import '../../services/event_service.dart';
 import '../../services/event_attendance_service.dart';
 import '../../services/invitation_service.dart';
 import '../../services/dealer_service.dart';
+import '../../services/seat_service.dart';
 import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
 import 'club_settings_screen.dart';
@@ -55,6 +56,10 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
   // Real-time subscription for all events
   StreamSubscription<List<ClubEvent>>? _eventsSubscription;
+
+  // Real-time subscriptions for seat changes (cash games)
+  // Key: "eventId_tableId" -> subscription
+  Map<String, StreamSubscription> _seatSubscriptions = {};
 
   @override
   void initState() {
@@ -96,7 +101,68 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
       // Load player counts for all events
       _loadPlayerCounts(allEvents);
+
+      // Setup real-time seat listeners for live cash games
+      _setupSeatListeners(live);
     });
+  }
+
+  /// Setup real-time listeners for seat changes in live cash games
+  void _setupSeatListeners(List<ClubEvent> liveEvents) {
+    // Get current cash game table keys
+    final currentKeys = <String>{};
+    for (final event in liveEvents) {
+      if (event.gameType == 'cash') {
+        for (final tableId in event.tableIds) {
+          currentKeys.add('${event.id}_$tableId');
+        }
+      }
+    }
+
+    // Cancel subscriptions for tables no longer live
+    final keysToRemove = _seatSubscriptions.keys
+        .where((key) => !currentKeys.contains(key))
+        .toList();
+    for (final key in keysToRemove) {
+      _seatSubscriptions[key]?.cancel();
+      _seatSubscriptions.remove(key);
+    }
+
+    // Setup new subscriptions for cash game tables
+    for (final event in liveEvents) {
+      if (event.gameType != 'cash') continue;
+
+      for (final tableId in event.tableIds) {
+        final key = '${event.id}_$tableId';
+        if (_seatSubscriptions.containsKey(key)) continue; // Already listening
+
+        _seatSubscriptions[key] = SeatService.watchTableSeats(
+          clubId: widget.club.id,
+          tableId: tableId,
+        ).listen((seats) {
+          if (!mounted) return;
+          _updateCashGamePlayerCount(event);
+        });
+      }
+    }
+  }
+
+  /// Update player count for a specific cash game event
+  Future<void> _updateCashGamePlayerCount(ClubEvent event) async {
+    int count = 0;
+    for (final tableId in event.tableIds) {
+      final seats = await SeatService.getTableSeats(
+        clubId: widget.club.id,
+        tableId: tableId,
+      );
+      count += seats.values.where((s) => s.isOccupied).length;
+    }
+
+    if (mounted && _eventPlayerCounts[event.id] != count) {
+      setState(() {
+        _eventPlayerCounts[event.id] = count;
+      });
+    }
   }
 
   /// Load player counts for events based on their status
@@ -115,15 +181,28 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           );
           count = attendanceCounts[AttendanceStatus.going] ?? 0;
         } else if (event.status == EventStatus.active || event.status == EventStatus.paused) {
-          // For live events: get active (non-busted) player count
-          final rankings = await EventService.getRankingsFromFirestore(
-            widget.club.id,
-            event.id,
-          );
-          if (rankings != null) {
-            count = rankings.rankings
-                .where((r) => r.status == PlayerRankingStatus.active)
-                .length;
+          if (event.gameType == 'cash') {
+            // For cash games: count seated players across all tables
+            for (final tableId in event.tableIds) {
+              final seats = await SeatService.getTableSeats(
+                clubId: widget.club.id,
+                tableId: tableId,
+              );
+              count += seats.values
+                  .where((s) => s.isOccupied)
+                  .length;
+            }
+          } else {
+            // For tournaments: get active (non-busted) player count
+            final rankings = await EventService.getRankingsFromFirestore(
+              widget.club.id,
+              event.id,
+            );
+            if (rankings != null) {
+              count = rankings.rankings
+                  .where((r) => r.status == PlayerRankingStatus.active)
+                  .length;
+            }
           }
         } else if (event.status == EventStatus.completed) {
           // For completed events: get total players from final standings
@@ -172,6 +251,10 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   @override
   void dispose() {
     _eventsSubscription?.cancel();
+    for (final sub in _seatSubscriptions.values) {
+      sub.cancel();
+    }
+    _seatSubscriptions.clear();
     _tabController?.dispose();
     super.dispose();
   }
