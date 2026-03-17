@@ -7,7 +7,8 @@ import 'opponent_stats_service.dart';
 /// Service for Premium Session Analytics API
 /// Connects to the Python backend for full session analysis
 class SessionAnalyticsService {
-  static const String baseUrl = 'http://localhost:8080/api/v1/analytics';
+  static const String baseUrl = 'https://poker-friend-engine.onrender.com/api/v1/analytics';
+  static const String _apiKey = 'oCx_2Be-_wkxXGa_cacuG4Dm0--sglzSSddJD46bibI';
 
   /// Job status enum matching backend JobStatus
   static const String statusPending = 'pending';
@@ -60,6 +61,7 @@ class SessionAnalyticsService {
         headers: {
           'Content-Type': 'application/json',
           'X-User-ID': userId,
+          'X-API-Key': _apiKey,
         },
         body: jsonEncode(requestBody),
       ).timeout(const Duration(seconds: 30));
@@ -95,6 +97,7 @@ class SessionAnalyticsService {
         Uri.parse('$baseUrl/sessions/$sessionId/job'),
         headers: {
           'X-User-ID': userId,
+          'X-API-Key': _apiKey,
         },
       ).timeout(const Duration(seconds: 10));
 
@@ -121,6 +124,7 @@ class SessionAnalyticsService {
         Uri.parse('$baseUrl/sessions/$sessionId/statistics'),
         headers: {
           'X-User-ID': userId,
+          'X-API-Key': _apiKey,
         },
       ).timeout(const Duration(seconds: 30));
 
@@ -161,6 +165,7 @@ class SessionAnalyticsService {
         uri,
         headers: {
           'X-User-ID': userId,
+          'X-API-Key': _apiKey,
         },
       ).timeout(const Duration(seconds: 15));
 
@@ -196,6 +201,7 @@ class SessionAnalyticsService {
         uri,
         headers: {
           'X-User-ID': userId,
+          'X-API-Key': _apiKey,
         },
       ).timeout(const Duration(seconds: 15));
 
@@ -219,6 +225,7 @@ class SessionAnalyticsService {
         Uri.parse('$baseUrl/dashboard/config'),
         headers: {
           'X-User-ID': userId,
+          'X-API-Key': _apiKey,
         },
       ).timeout(const Duration(seconds: 10));
 
@@ -242,6 +249,7 @@ class SessionAnalyticsService {
         Uri.parse('$baseUrl/dashboard/widgets'),
         headers: {
           'X-User-ID': userId,
+          'X-API-Key': _apiKey,
         },
       ).timeout(const Duration(seconds: 10));
 

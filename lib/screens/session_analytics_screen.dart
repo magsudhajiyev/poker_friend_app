@@ -6,8 +6,9 @@ import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
-import '../services/session_analytics_service.dart';
-import '../services/auth_service.dart';
+// Commented out for MVP - SessionAnalyticsService endpoints not deployed yet
+// import '../services/session_analytics_service.dart';
+// import '../services/auth_service.dart';
 import '../services/dealer_service.dart';
 import 'session_hands_screen.dart';
 
@@ -34,13 +35,13 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   double _finalStack = 0.0;
   double _profitLoss = 0.0;
 
-  // Full Analysis Job State
-  bool _isRequestingAnalysis = false;
-  String? _analysisJobId;
-  String? _analysisSessionId;
-  String _analysisStatus = '';
-  double _analysisProgress = 0.0;
-  String? _analysisError;
+  // Full Analysis Job State - Commented out for MVP
+  // bool _isRequestingAnalysis = false;
+  // String? _analysisJobId;
+  // String? _analysisSessionId;
+  // String _analysisStatus = '';
+  // double _analysisProgress = 0.0;
+  // String? _analysisError;
 
   @override
   void initState() {
@@ -653,6 +654,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     );
   }
 
+  // Commented out for MVP - SessionAnalyticsService endpoints not deployed yet
+  /*
   Widget _buildFullAnalysisButton() {
     // Determine button state based on analysis status
     final bool hasEnoughHands = _hands.length >= 1;
@@ -897,6 +900,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       ),
     );
   }
+  */
 
   Widget _buildLoggedHandsButton() {
     return Container(
@@ -1025,9 +1029,10 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                             SizedBox(height: 16),
 
                             // Request Full Analysis Button (Premium Feature)
-                            _buildFullAnalysisButton(),
+                            // Commented out for MVP - SessionAnalyticsService endpoints not deployed yet
+                            // _buildFullAnalysisButton(),
 
-                            SizedBox(height: 16),
+                            // SizedBox(height: 16),
 
                             // Logged Hands Button
                             _buildLoggedHandsButton(),

@@ -5,7 +5,8 @@ import 'auth_service.dart';
 import 'logger_service.dart';
 
 class AIAnalyzerService {
-  static const String baseUrl = 'http://localhost:8080/api/v1';
+  static const String baseUrl = 'https://poker-friend-engine.onrender.com/api/v1';
+  static const String _apiKey = 'oCx_2Be-_wkxXGa_cacuG4Dm0--sglzSSddJD46bibI';
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Analyze a poker hand using the backend AI service
@@ -38,7 +39,10 @@ class AIAnalyzerService {
 
       final response = await http.post(
         Uri.parse('$baseUrl/analyze-hand'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': _apiKey,
+        },
         body: jsonEncode(requestBody),
       ).timeout(Duration(seconds: 30));
 
