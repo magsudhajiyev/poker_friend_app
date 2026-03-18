@@ -554,6 +554,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     if (confirmed == true) {
       try {
+        // Capture final stack before ending session
+        final ourSeat = sessionManager.ourSeatNumber;
+        if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+          final finalStack = gameState.players[ourSeat - 1].currentStack;
+          sessionManager.addFinalStackEntry(finalStack);
+        }
+
         // End the session and save all data
         await sessionManager.endSession();
 
@@ -1901,8 +1908,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     if (isCircle()) {
       _performPokerAction(PlayerAction.call);
     } else if (hasRightAngle()) {
-      // For raise, enter drag mode instead of immediate action
-      _enterDragBettingMode(PlayerAction.raise);
+      // For bet/raise, enter drag mode
+      // If no bet on current street, this is a BET; otherwise it's a RAISE
+      if (gameState.hasBetThisRound) {
+        _enterDragBettingMode(PlayerAction.raise);
+      } else {
+        _enterDragBettingMode(PlayerAction.bet);
+      }
     } else if (isLine(width, height)) {
       _performPokerAction(PlayerAction.fold);
     }
@@ -3141,6 +3153,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
           // Start new hand in game state
           gameState.startNewHand();
+          gameState.initializePot();
 
           // Start new hand in session manager
           sessionManager.startHand(
@@ -3254,6 +3267,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
           // Start new hand in game state
           gameState.startNewHand();
+          gameState.initializePot();
 
           // Start new hand in session manager
           sessionManager.startHand(
@@ -3354,8 +3368,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   // Navigate to session details screen
   Future<void> _showSessionDetails() async {
     // Get current stack for our seat
-    final ourSeat = sessionManager.ourSeatNumber;
-    final currentStack = ourSeat != null ? gameState.players[ourSeat - 1].currentStack : (widget.individualCurrentStack ?? 0.0);
+    // Try multiple sources to find the correct seat number
+    int? ourSeat = sessionManager.ourSeatNumber;
+
+    // Fallback: if ourSeat is null but we have a seat number from widget, use that
+    if (ourSeat == null && widget.initialSeat != null) {
+      ourSeat = widget.initialSeat;
+    }
+
+    // Get current stack from game state if we have a valid seat
+    double currentStack;
+    if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+      currentStack = gameState.players[ourSeat - 1].currentStack;
+    } else if (widget.individualCurrentStack != null) {
+      currentStack = widget.individualCurrentStack!;
+    } else {
+      // Last resort: use the starting stack
+      currentStack = sessionManager.initialStartingStack ?? widget.startingStack ?? 0.0;
+    }
 
     // Navigate to individual session tracking screen with current data
     final result = await Navigator.push<Map<String, dynamic>>(
@@ -3384,8 +3414,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
         // Update the player's stack in game state
         if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+          final seatIndex = ourSeat - 1;
           setState(() {
-            gameState.players[ourSeat - 1].currentStack = updatedStack;
+            gameState.players[seatIndex].currentStack = updatedStack;
             sessionManager.totalBuyIn = updatedTotalBuyIn;
           });
         }
@@ -3879,7 +3910,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   /// Check if undo is allowed
-  /// Returns true if there are actions that can be undone (non-blind posts)
+  /// Returns true if there are actions that can be undone on the current street
   bool _canUndoLastAction() {
     if (sessionManager.currentHand == null ||
         sessionManager.currentHand!.actions.isEmpty) {
@@ -3896,12 +3927,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       return false;
     }
 
-    // Find the last non-blind action
+    // Find the last non-blind action ON THE CURRENT STREET
     final actions = sessionManager.currentHand!.actions;
+    final currentStreet = gameState.currentRound;
+
     for (int i = actions.length - 1; i >= 0; i--) {
       final action = actions[i];
-      // Allow undo for any action except blind posts
-      if (action.action != PlayerAction.none) {
+      // Only allow undo for actions on current street (except blind posts)
+      if (action.action != PlayerAction.none && action.street == currentStreet) {
         return true;
       }
     }
@@ -3918,12 +3951,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
 
     final actions = sessionManager.currentHand!.actions;
+    final currentStreet = gameState.currentRound;
 
-    // Find the last non-blind action
+    // Find the last non-blind action ON CURRENT STREET
     int lastActionIndex = -1;
     for (int i = actions.length - 1; i >= 0; i--) {
       final action = actions[i];
-      if (action.action != PlayerAction.none) {
+      if (action.action != PlayerAction.none && action.street == currentStreet) {
         lastActionIndex = i;
         break;
       }
@@ -4026,6 +4060,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       }
 
       // Remove the action from the list
+      actions.removeAt(lastActionIndex);
 
       // Set current player back to the player who made the undone action
       gameState.currentPlayer = playerId;
@@ -4095,13 +4130,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     player.hasCalledCurrentBet = hasCalledAfterLastBet;
   }
 
-  /// Recalculate currentBet based on remaining bets/raises
+  /// Recalculate currentBet based on remaining bets/raises (current street only)
   void _recalculateCurrentBet(int upToIndex) {
     final actions = sessionManager.currentHand!.actions;
+    final currentStreet = gameState.currentRound.name;  // 'preflop', 'flop', 'turn', 'river'
     double maxBet = 0;
 
     for (int i = 0; i < upToIndex; i++) {
       final action = actions[i];
+      // Only consider actions from the current street
+      if (action.street != currentStreet) continue;
       if (action.action == PlayerAction.bet || action.action == PlayerAction.raise) {
         if (action.amount != null && action.amount! > maxBet) {
           maxBet = action.amount!;
@@ -4112,13 +4150,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     gameState.currentBet = maxBet;
   }
 
-  /// Recalculate hasBetThisRound based on remaining actions
+  /// Recalculate hasBetThisRound based on remaining actions (current street only)
   void _recalculateHasBetThisRound(int upToIndex) {
     final actions = sessionManager.currentHand!.actions;
+    final currentStreet = gameState.currentRound.name;  // 'preflop', 'flop', 'turn', 'river'
     bool hasBet = false;
 
     for (int i = 0; i < upToIndex; i++) {
       final action = actions[i];
+      // Only consider actions from the current street
+      if (action.street != currentStreet) continue;
       if (action.action == PlayerAction.bet || action.action == PlayerAction.raise) {
         hasBet = true;
         break;
@@ -4248,6 +4289,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       setState(() {
         _allInHandCompleted = false;
         gameState.startNewHand();
+        gameState.initializePot();
         sessionManager.startHand(
           gameState.handNumber,
           gameState.buttonPosition,
@@ -4297,6 +4339,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       // Start new hand in game state
       gameState.startNewHand();
+      gameState.initializePot();
 
       // Start new hand in session manager
       sessionManager.startHand(
@@ -4601,6 +4644,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       // Start new hand in game state
       gameState.startNewHand();
+      gameState.initializePot();
 
       // Start new hand in session manager
       sessionManager.startHand(
@@ -5105,6 +5149,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       // Start new hand in game state
       gameState.startNewHand();
+      gameState.initializePot();
 
       // Start new hand in session manager
       sessionManager.startHand(

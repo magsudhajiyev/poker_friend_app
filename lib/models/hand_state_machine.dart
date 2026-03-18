@@ -400,6 +400,9 @@ class PokerSessionManager {
   // Stack history tracking for analytics
   List<Map<String, dynamic>> stackHistory = [];
 
+  // Biggest pot tracking
+  double biggestPot = 0.0;
+
   PokerSessionManager({
     required this.smallBlind,
     required this.bigBlind,
@@ -632,6 +635,10 @@ class PokerSessionManager {
     // Set pot amount and winner if provided
     if (potAmount != null) {
       currentHand!.potAmount = potAmount;
+      // Track biggest pot
+      if (potAmount > biggestPot) {
+        biggestPot = potAmount;
+      }
     }
     if (winnerId != null) {
       currentHand!.winnerId = winnerId;
@@ -681,6 +688,11 @@ class PokerSessionManager {
 
     // Set pot amount
     currentHand!.potAmount = potAmount;
+
+    // Track biggest pot
+    if (potAmount > biggestPot) {
+      biggestPot = potAmount;
+    }
 
     // For chopped pots, we'll store the first winner in winnerId for compatibility
     // and store additional chop data in a custom field
@@ -957,25 +969,40 @@ class PokerSessionManager {
     stackHistory.add(entry);
   }
 
+  // Add final stack entry before ending session
+  void addFinalStackEntry(double finalStack) {
+    if (stackHistory.isEmpty) {
+      _addStackHistoryEntry(finalStack, 'final', 0.0, completedHands.length);
+    } else {
+      final lastStack = stackHistory.last['stackSize'] as double;
+      if (finalStack != lastStack) {
+        final change = finalStack - lastStack;
+        _addStackHistoryEntry(finalStack, 'final', change.abs(), completedHands.length);
+      }
+    }
+  }
+
   // Update session with current progress (hand count, etc.)
   Future<void> _updateSessionProgress() async {
     if (sessionId == null) return;
 
     try {
-      // Update Firebase session with stack history and totalBuyIn
+      // Update Firebase session with stack history, totalBuyIn, and stats
       await FirebaseService.updateSession(
         sessionId: sessionId!,
-        totalHands: completedHands.length,
+        handsLogged: completedHands.length,
+        biggestPot: biggestPot,
         stackHistory: stackHistory,
         totalBuyIn: totalBuyIn,
       );
     } catch (e) {
     }
 
-    // Always update local storage with stack history and totalBuyIn
+    // Always update local storage with stack history, totalBuyIn, and stats
     await LocalStorageService.updateSession(
       sessionId: sessionId!,
-      totalHands: completedHands.length,
+      handsLogged: completedHands.length,
+      biggestPot: biggestPot,
       stackHistory: stackHistory,
       totalBuyIn: totalBuyIn,
     );

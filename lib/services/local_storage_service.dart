@@ -19,7 +19,7 @@ class LocalStorageService {
     
     return await openDatabase(
       dbPath,
-      version: 12,
+      version: 13,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions(
@@ -137,6 +137,11 @@ class LocalStorageService {
           await db.execute('ALTER TABLE hands ADD COLUMN isStarred INTEGER DEFAULT 0');
           await db.execute('ALTER TABLE hands ADD COLUMN tags TEXT');
           await db.execute('ALTER TABLE hands ADD COLUMN notes TEXT');
+        }
+        if (oldVersion < 13) {
+          // Add handsLogged and biggestPot columns to sessions table
+          await db.execute('ALTER TABLE sessions ADD COLUMN handsLogged INTEGER DEFAULT 0');
+          await db.execute('ALTER TABLE sessions ADD COLUMN biggestPot REAL DEFAULT 0');
         }
       },
     );
@@ -492,7 +497,8 @@ class LocalStorageService {
   // Update session with progress data
   static Future<void> updateSession({
     required String sessionId,
-    int? totalHands,
+    int? handsLogged,
+    double? biggestPot,
     List<Map<String, dynamic>>? stackHistory,
     double? totalBuyIn,
   }) async {
@@ -503,8 +509,12 @@ class LocalStorageService {
         'updatedAt': DateTime.now().toIso8601String(),
       };
 
-      if (totalHands != null) {
-        updateData['totalHands'] = totalHands;
+      if (handsLogged != null) {
+        updateData['handsLogged'] = handsLogged;
+      }
+
+      if (biggestPot != null) {
+        updateData['biggestPot'] = biggestPot;
       }
 
       if (stackHistory != null) {
@@ -513,7 +523,6 @@ class LocalStorageService {
 
       if (totalBuyIn != null) {
         updateData['totalBuyIn'] = totalBuyIn;
-        print('💰 DEBUG: Updating session totalBuyIn to: $totalBuyIn');
       }
 
       await db.update(
@@ -523,7 +532,6 @@ class LocalStorageService {
         whereArgs: [sessionId],
       );
 
-      print('Session updated locally: $sessionId (totalHands: $totalHands, stackHistory entries: ${stackHistory?.length ?? 0}, totalBuyIn: $totalBuyIn)');
     } catch (e) {
       print('Error updating session locally: $e');
       rethrow;

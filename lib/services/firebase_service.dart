@@ -748,7 +748,8 @@ class FirebaseService {
   // Update session with progress data
   static Future<void> updateSession({
     required String sessionId,
-    int? totalHands,
+    int? handsLogged,
+    double? biggestPot,
     List<Map<String, dynamic>>? stackHistory,
     double? totalBuyIn,
     double? averageGrowth,
@@ -761,8 +762,12 @@ class FirebaseService {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-      if (totalHands != null) {
-        updateData['totalHands'] = totalHands;
+      if (handsLogged != null) {
+        updateData['handsLogged'] = handsLogged;
+      }
+
+      if (biggestPot != null) {
+        updateData['biggestPot'] = biggestPot;
       }
 
       if (stackHistory != null) {
