@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>311745459306-0q55sqdqnqd7le3c1s9ecpkg4janpf40.apps.googleusercontent.com</string>
+	<string>311745459306-3ds0agcuudl3ee4trbmmmk8lilkj7ph3.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.311745459306-0q55sqdqnqd7le3c1s9ecpkg4janpf40</string>
+	<string>com.googleusercontent.apps.311745459306-3ds0agcuudl3ee4trbmmmk8lilkj7ph3</string>
 	<key>API_KEY</key>
 	<string>AIzaSyAFVCGvv94GSHRdwbTwBJ5IRYj81Cj12PA</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.pokerLogger</string>
+	<string>com.pokerfriend.app</string>
 	<key>PROJECT_ID</key>
 	<string>poker-tracker-52df8</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,7 +29,7 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:311745459306:ios:adf852eb9338b24ad00613</string>
+	<string>1:311745459306:ios:6fcae08ea84ed55cd00613</string>
 	<key>DATABASE_URL</key>
 	<string>https://poker-tracker-52df8-default-rtdb.firebaseio.com</string>
 </dict>

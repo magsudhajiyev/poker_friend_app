@@ -20,9 +20,13 @@ class EnvConfig {
   static String get sonioxApiKey =>
       dotenv.env['SONIOX_API_KEY'] ?? '';
 
-  /// RevenueCat API key for subscriptions
-  static String get revenueCatApiKey =>
-      dotenv.env['REVENUECAT_API_KEY'] ?? '';
+  /// RevenueCat iOS API key for subscriptions
+  static String get revenueCatIosApiKey =>
+      dotenv.env['REVENUECAT_IOS_API_KEY'] ?? '';
+
+  /// RevenueCat Android API key for subscriptions
+  static String get revenueCatAndroidApiKey =>
+      dotenv.env['REVENUECAT_ANDROID_API_KEY'] ?? '';
 
   /// Resend API key for email sending
   static String get resendApiKey =>

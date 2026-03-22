@@ -8,6 +8,8 @@ import '../utils/number_formatter.dart';
 import '../models/game_types.dart';
 import '../services/ai_analyzer_service.dart';
 import '../services/firebase_service.dart';
+import '../services/subscription_service.dart';
+import 'paywall_screen.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -1311,14 +1313,19 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final card2 = ourHoleCards?['card2'] as String?;
     final hasHeroCards = card1 != null && card2 != null && card1.isNotEmpty && card2.isNotEmpty;
 
+    // Check premium status
+    final isPremium = SubscriptionService.isPremium;
+
     return Container(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: (_isAnalyzing || !hasHeroCards) ? null : _analyzeHand,
+        onPressed: (_isAnalyzing || !hasHeroCards) ? null : () => _handleAnalyzeButtonTap(isPremium),
         style: ElevatedButton.styleFrom(
           backgroundColor: !hasHeroCards
               ? Color(0xFF9A9A9A)
-              : (_aiAnalysis != null ? Color(0xFF8B5CF6) : Color(0xFF5AC95A)),
+              : isPremium
+                  ? (_aiAnalysis != null ? Color(0xFF8B5CF6) : Color(0xFF5AC95A))
+                  : Color(0xFFFFD700), // Gold for premium upsell
           padding: EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -1361,6 +1368,20 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+            ] else if (!isPremium) ...[
+              Icon(
+                Icons.star,
+                color: Colors.black,
+              ),
+              SizedBox(width: 12),
+              Text(
+                'Unlock AI Analysis',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ] else ...[
               Icon(
                 _aiAnalysis != null ? Icons.refresh : Icons.psychology,
@@ -1380,6 +1401,22 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ),
       ),
     );
+  }
+
+  /// Handle AI analyzer button tap - check premium status first
+  Future<void> _handleAnalyzeButtonTap(bool isPremium) async {
+    if (isPremium) {
+      // User is premium - proceed with analysis
+      _analyzeHand();
+    } else {
+      // Show paywall
+      final purchased = await PaywallScreen.show(context, featureName: 'AI Hand Analysis');
+      if (purchased == true && mounted) {
+        // User purchased - now analyze
+        setState(() {}); // Refresh UI to show premium status
+        _analyzeHand();
+      }
+    }
   }
 
   Widget _buildAnalysisError() {

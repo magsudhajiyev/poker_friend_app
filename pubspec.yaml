@@ -45,6 +45,7 @@ dependencies:
   pdf: ^3.11.0  # PDF generation
   flutter_bloc: ^8.1.3  # State management for voice pipeline
   equatable: ^2.0.5  # Value equality for state objects
+  purchases_flutter: ^8.1.0  # RevenueCat for subscription management
 
 dependency_overrides:
   # Fix Linux plugin incompatibility (not needed for iOS/Android/macOS development)

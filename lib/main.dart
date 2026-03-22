@@ -14,6 +14,7 @@ import 'services/logger_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/club_service.dart';
 import 'services/event_service.dart';
+import 'services/subscription_service.dart';
 import 'config/env_config.dart';
 import 'design_system/poker_friend_theme.dart';
 import 'screens/club/event_detail_screen.dart';
@@ -91,6 +92,15 @@ void main() async {
   } catch (e) {
     print('Logger initialization failed: $e');
     // Continue without logger
+  }
+
+  // Initialize RevenueCat subscription service
+  try {
+    await SubscriptionService.initialize();
+    print('Subscription service initialized successfully');
+  } catch (e) {
+    print('Subscription service initialization failed: $e');
+    // Continue without subscriptions
   }
 
   // Initialize deep link service for email invitation handling
