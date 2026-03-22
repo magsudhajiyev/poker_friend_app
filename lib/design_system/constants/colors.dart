@@ -28,7 +28,20 @@ class AppColors {
   static const Color tealAccent = Color(0xFF7DCAB4);
   static const Color headerGradientCyan = Color(0x574CDBFF);  // rgba(76,219,255,0.34)
   static const Color headerGradientGreen = Color(0x572EB46A); // rgba(46,180,106,0.34)
+
+  // Updated Header Gradient (Figma node 520-3288)
+  static const Color headerGradientBlack = Color(0xFF000000);
+  static const Color headerGradientTeal = Color(0xFF133538);
+
+  // Progress Bar Gradient
+  static const Color progressBarStart = Color(0xFF54E98A);
+  static const Color progressBarEnd = Color(0xFF66D9CC);
+
+  // Dark Pill (notification/menu container)
   static const Color darkPillBg = Color(0xFF0C1209);
+  static const Color darkPillGradientEnd = Color(0xFF253734);
+  static const Color darkPillBorder = Color(0xFF232517);
+  static const Color darkPillInnerShadow = Color(0x40416D70);  // rgba(65,109,112,0.25)
   static const Color iconButtonBg = Color(0x4D3C3C43);        // rgba(60,60,67,0.3)
   static const Color infoCardBg = Color(0xFF131616);
   static const Color separatorColor = Color(0x4DEBEBF5);      // rgba(235,235,245,0.3)

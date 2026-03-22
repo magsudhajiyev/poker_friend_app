@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
 import '../services/session_result_service.dart';
 import '../screens/settings_screen.dart';
-import '../screens/subscription_debug_screen.dart';
+import '../screens/paywall_screen.dart';
+import '../screens/intro_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -18,7 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double currentBankroll = 0.0;
   double bankrollGoal = 0.0;
   bool isLoading = true;
-  String _selectedGameType = 'cash'; // Default to cash
+  String _selectedGameType = 'tournament'; // Default to tournament as shown in Figma
 
   @override
   void initState() {
@@ -49,7 +51,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     } catch (e) {
-      print('Error loading data: $e');
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -69,12 +70,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Goal updated successfully!'),
-            backgroundColor: Color(0xFF5AC95A),
+            backgroundColor: Color(0xFF62E3BC),
           ),
         );
       }
     } catch (e) {
-      print('Error updating goal: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error updating goal'),
@@ -95,12 +95,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Bankroll updated successfully!'),
-            backgroundColor: Color(0xFF5AC95A),
+            backgroundColor: Color(0xFF62E3BC),
           ),
         );
       }
     } catch (e) {
-      print('Error updating bankroll: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error updating bankroll'),
@@ -124,28 +123,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return;
       }
 
-      // Add to bankroll
       await BankrollService.addToBankroll(result);
-
-      // Save session result with game type
       await SessionResultService.addSessionResult(
         amount: result,
         gameType: _selectedGameType,
       );
 
-      // Reload data
       await _loadData();
-
       _sessionResultController.clear();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Session result added!'),
-          backgroundColor: Color(0xFF5AC95A),
+          backgroundColor: Color(0xFF62E3BC),
         ),
       );
     } catch (e) {
-      print('Error adding session result: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error adding session result'),
@@ -157,617 +150,631 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     if (isLoading) {
       return Scaffold(
-        backgroundColor: Color(0xFF161618),
+        backgroundColor: Colors.black,
         body: Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5AC95A)),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF62E3BC)),
           ),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
-      body: SafeArea(
-        child: SingleChildScrollView(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Elliptical teal glow at top
+          Positioned(
+            top: -162,
+            left: (screenWidth - 412) / 2,
+            child: Container(
+              width: 412,
+              height: 217,
+              child: Transform.scale(
+                scaleX: 1.5,
+                scaleY: 0.7,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      center: Alignment.center,
+                      radius: 0.5,
+                      colors: [
+                        const Color(0xFF2E5A59).withOpacity(0.8),
+                        const Color(0xFF2E5A59).withOpacity(0.4),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Main content container
+          Positioned(
+            top: 68,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                border: Border.all(color: Color(0xFF262626), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF2E5A59),
+                    blurRadius: 64,
+                    offset: Offset(0, -6),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(20, 21, 20, 100),
+                child: Column(
+                  children: [
+                    // Header row
+                    _buildHeaderRow(),
+                    SizedBox(height: 36),
+
+                    // Profile section
+                    _buildProfileSection(),
+                    SizedBox(height: 36),
+
+                    // Cards
+                    _buildBankrollGoalCard(),
+                    SizedBox(height: 16),
+
+                    _buildCurrentBankrollCard(),
+                    SizedBox(height: 16),
+
+                    _buildSessionResultCard(),
+                    SizedBox(height: 16),
+
+                    _buildSettingsCard(),
+                    SizedBox(height: 36),
+
+                    // Footer
+                    _buildFooter(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Close button
+        GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: SizedBox(
+            width: 32,
+            height: 32,
+            child: Center(
+              child: Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
+        ),
+
+        // Upgrade button
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PaywallScreen()),
+            );
+          },
           child: Container(
-            constraints: BoxConstraints(maxWidth: 375),
-            margin: EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Color(0xFF104034).withOpacity(0.6),
+              borderRadius: BorderRadius.circular(70),
+              border: Border.all(color: Color(0xFF89F1EC), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF91FFFB).withOpacity(0.25),
+                  blurRadius: 21,
+                  offset: Offset(3, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Header Section
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 32, 0, 24),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.arrow_back_ios,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      SizedBox(width: 16),
-                      Text(
-                        'Profile',
-                        style: TextStyle(
-                          fontSize: 32,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ],
+                Icon(
+                  Icons.diamond_outlined,
+                  color: Color(0xFF89F1EC),
+                  size: 18,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'Upgrade',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF89F1EC),
                   ),
                 ),
-
-                // User Info Card
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(24),
-                  margin: EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                AuthService.userDisplayName,
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                AuthService.currentUser?.email ?? '',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF9A9A9A),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Bankroll Goal Card
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(24),
-                  margin: EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Bankroll Goal',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      TextField(
-                        controller: _goalController,
-                        keyboardType: TextInputType.number,
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                        decoration: InputDecoration(
-                          hintText: 'Enter your goal amount',
-                          hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                          prefixText: '\$ ',
-                          prefixStyle: TextStyle(color: Color(0xFF5AC95A), fontSize: 18),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF5AC95A)),
-                          ),
-                          filled: true,
-                          fillColor: Color(0xFF2A2A2E),
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _updateGoal,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF5AC95A),
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Update Goal',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Current Bankroll Card
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(24),
-                  margin: EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Current Bankroll',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      TextField(
-                        controller: _bankrollController,
-                        keyboardType: TextInputType.number,
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                        decoration: InputDecoration(
-                          hintText: 'Enter current amount',
-                          hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                          prefixText: '\$ ',
-                          prefixStyle: TextStyle(color: Color(0xFF5AC95A), fontSize: 18),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF5AC95A)),
-                          ),
-                          filled: true,
-                          fillColor: Color(0xFF2A2A2E),
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _updateBankroll,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF5B9CDF),
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Update Bankroll',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Add Session Result Card
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(24),
-                  margin: EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F1F23),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Add Session Result',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Enter positive for wins, negative for losses',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF9A9A9A),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      // Game Type Selector
-                      Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _selectedGameType = 'cash'),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: _selectedGameType == 'cash' ? Color(0xFF5AC95A) : Color(0xFF2A2A2E),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: _selectedGameType == 'cash' ? Color(0xFF5AC95A) : Color(0xFF3A3A3E),
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Cash Game',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _selectedGameType = 'tournament'),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: _selectedGameType == 'tournament' ? Color(0xFF5B9CDF) : Color(0xFF2A2A2E),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: _selectedGameType == 'tournament' ? Color(0xFF5B9CDF) : Color(0xFF3A3A3E),
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Tournament',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      TextField(
-                        controller: _sessionResultController,
-                        keyboardType: TextInputType.numberWithOptions(signed: true, decimal: true),
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                        decoration: InputDecoration(
-                          hintText: 'e.g., +250 or -150',
-                          hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                          prefixText: '\$ ',
-                          prefixStyle: TextStyle(color: Color(0xFF5AC95A), fontSize: 18),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF2A2A2E)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF5AC95A)),
-                          ),
-                          filled: true,
-                          fillColor: Color(0xFF2A2A2E),
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _addSessionResult,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF8B5CF6),
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Add Result',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Subscription Debug Card (DEV ONLY - Remove in production)
-                Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.only(bottom: 24),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SubscriptionDebugScreen()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF1F1F23),
-                      padding: EdgeInsets.all(20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        side: BorderSide(color: Color(0xFFE67E22).withOpacity(0.3)),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Color(0xFFE67E22).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            Icons.bug_report,
-                            color: Color(0xFFE67E22),
-                            size: 24,
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Subscription Debug',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                'DEV ONLY',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFFE67E22),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          color: Color(0xFFE67E22),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Settings Card
-                Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.only(bottom: 24),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SettingsScreen()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF1F1F23),
-                      padding: EdgeInsets.all(20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF2A2A2E),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            Icons.settings_outlined,
-                            color: Color(0xFF9A9A9A),
-                            size: 24,
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            'Settings',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          color: Color(0xFF9A9A9A),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Log Out Button
-                Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.only(bottom: 24),
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      // Show confirmation dialog
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          backgroundColor: Color(0xFF1F1F23),
-                          title: Text(
-                            'Log Out',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          content: Text(
-                            'Are you sure you want to log out?',
-                            style: TextStyle(color: Color(0xFF9A9A9A)),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(
-                                'Cancel',
-                                style: TextStyle(color: Color(0xFF9A9A9A)),
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                              ),
-                              child: Text(
-                                'Log Out',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-
-                      if (confirm == true) {
-                        print('📍 LOGOUT: Profile screen Log Out confirmed');
-                        await AuthService.signOut();
-                        if (mounted) {
-                          // Navigate to AuthScreen and remove all routes
-                          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-                        }
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF1F1F23),
-                      padding: EdgeInsets.all(20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        side: BorderSide(color: Colors.red.withOpacity(0.3)),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            Icons.logout,
-                            color: Colors.red,
-                            size: 24,
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            'Log Out',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.red,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.red,
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 100), // Space for bottom navigation
               ],
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildProfileSection() {
+    return Column(
+      children: [
+        // Avatar
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(240),
+            gradient: LinearGradient(
+              colors: [Color(0xFF2A5A30), Color(0xFF1A3A20)],
+            ),
+          ),
+          child: Center(
+            child: Text(
+              _getInitials(),
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF87ED81),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 12),
+
+        // Name
+        Text(
+          AuthService.userDisplayName,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 8),
+
+        // Email
+        Text(
+          AuthService.currentUser?.email ?? '',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: Colors.white.withOpacity(0.7),
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBankrollGoalCard() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Bankroll Goal',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              letterSpacing: -0.43,
+            ),
+          ),
+          SizedBox(height: 14),
+
+          // Input field
+          _buildInputField(_goalController, '\$ ${bankrollGoal.toStringAsFixed(0)}'),
+          SizedBox(height: 24),
+
+          // Button
+          _buildActionButton('Update Goal', _updateGoal),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCurrentBankrollCard() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Current Bankroll',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              letterSpacing: -0.43,
+            ),
+          ),
+          SizedBox(height: 14),
+
+          _buildInputField(_bankrollController, '\$ ${currentBankroll.toStringAsFixed(0)}'),
+          SizedBox(height: 24),
+
+          _buildActionButton('Update Bankroll', _updateBankroll),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSessionResultCard() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Add Session Result',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              letterSpacing: -0.43,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            'Enter positive for wins, negative for losses',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Colors.white.withOpacity(0.5),
+            ),
+          ),
+          SizedBox(height: 14),
+
+          // Cash/Tournament toggle
+          _buildGameTypeToggle(),
+          SizedBox(height: 14),
+
+          _buildInputField(_sessionResultController, '\$ 0'),
+          SizedBox(height: 24),
+
+          _buildActionButton('Add Result', _addSessionResult),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameTypeToggle() {
+    return Container(
+      height: 46,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(80),
+        border: Border.all(color: Color(0xFF2C2C2E), width: 1),
+      ),
+      child: Row(
+        children: [
+          // Cash option
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedGameType = 'cash'),
+              child: Container(
+                margin: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  gradient: _selectedGameType == 'cash'
+                      ? LinearGradient(
+                          colors: [Color(0xFF1E3B49), Color(0xFF4A887E)],
+                        )
+                      : null,
+                  borderRadius: BorderRadius.circular(60),
+                  border: _selectedGameType == 'cash'
+                      ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
+                      : null,
+                ),
+                child: Center(
+                  child: Text(
+                    'Cash',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Tournament option
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedGameType = 'tournament'),
+              child: Container(
+                margin: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  gradient: _selectedGameType == 'tournament'
+                      ? LinearGradient(
+                          colors: [Color(0xFF1E3B49), Color(0xFF4A887E)],
+                        )
+                      : null,
+                  borderRadius: BorderRadius.circular(60),
+                  border: _selectedGameType == 'tournament'
+                      ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
+                      : null,
+                ),
+                child: Center(
+                  child: Text(
+                    'Tournament',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputField(TextEditingController controller, String hint) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFF3C3C43).withOpacity(0.18),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Color(0xFF89F1EC).withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.numberWithOptions(signed: true, decimal: true),
+        style: GoogleFonts.ibmPlexSans(
+          fontSize: 17,
+          fontWeight: FontWeight.w400,
+          color: Colors.white,
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.ibmPlexSans(
+            fontSize: 17,
+            fontWeight: FontWeight.w400,
+            color: Colors.white.withOpacity(0.5),
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, VoidCallback onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        decoration: BoxDecoration(
+          color: Color(0xFF62E3BC),
+          borderRadius: BorderRadius.circular(110),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+              letterSpacing: -0.43,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsCard() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        children: [
+          // Settings
+          _buildMenuItem(
+            icon: Icons.settings_outlined,
+            label: 'Settings',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsScreen()),
+              );
+            },
+          ),
+          SizedBox(height: 24),
+
+          // Log out
+          _buildMenuItem(
+            icon: Icons.logout,
+            label: 'Log out',
+            onTap: _showSignOutConfirmation,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        height: 40,
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white.withOpacity(0.9), size: 24),
+            SizedBox(width: 6),
+            Text(
+              label,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w400,
+                color: Colors.white.withOpacity(0.9),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Column(
+      children: [
+        Text(
+          'Version 1.0',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Colors.white.withOpacity(0.7),
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'Final Table',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Colors.white.withOpacity(0.7),
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'Last login ${_getLastLoginText()}',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Colors.white.withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getInitials() {
+    final name = AuthService.userDisplayName;
+    if (name.isEmpty) return 'U';
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name[0].toUpperCase();
+  }
+
+  String _getLastLoginText() {
+    final now = DateTime.now();
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${now.day} ${months[now.month - 1]} ${now.year} at ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _showSignOutConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Color(0xFF1A1A1E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'Sign Out',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to sign out?',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 14,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withOpacity(0.7),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await AuthService.signOut();
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => IntroScreen()),
+                  (route) => false,
+                );
+              }
+            },
+            child: Text(
+              'Sign Out',
+              style: GoogleFonts.ibmPlexSans(
+                color: Color(0xFFFF6B6B),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

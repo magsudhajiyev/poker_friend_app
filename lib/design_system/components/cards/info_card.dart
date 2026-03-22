@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 import '../../constants/typography.dart';
 
@@ -10,8 +11,10 @@ class InfoCard extends StatelessWidget {
   final String emptyTitle;
   final String emptySubtitle;
   final String? iconPath;
+  final Color? iconColor;  // Custom icon color (defaults to white)
   final VoidCallback? onEmptyTap;
   final bool useSessionLayout;  // Use left-aligned layout with icon in circle
+  final String? buttonText;  // Optional button text for empty state
 
   const InfoCard({
     Key? key,
@@ -20,8 +23,10 @@ class InfoCard extends StatelessWidget {
     this.emptyTitle = 'No recent sessions',
     this.emptySubtitle = 'Start your first poker session!',
     this.iconPath,
+    this.iconColor,
     this.onEmptyTap,
     this.useSessionLayout = false,
+    this.buttonText,
   }) : super(key: key);
 
   @override
@@ -46,7 +51,7 @@ class InfoCard extends StatelessWidget {
   /// Centered empty state (default)
   Widget _buildCenteredEmptyState() {
     return GestureDetector(
-      onTap: onEmptyTap,
+      onTap: buttonText == null ? onEmptyTap : null,
       behavior: HitTestBehavior.opaque,
       child: Padding(
         padding: const EdgeInsets.only(top: 28, bottom: 20, left: 44, right: 44),
@@ -63,7 +68,7 @@ class InfoCard extends StatelessWidget {
                       iconPath!,
                       width: 24,
                       height: 24,
-                      color: Colors.white,
+                      color: iconColor ?? Colors.white,
                     )
                   : _buildPlaceholderIcon(),
             ),
@@ -86,6 +91,31 @@ class InfoCard extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
+            // White button (Figma design)
+            if (buttonText != null) ...[
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: onEmptyTap,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(110),
+                  ),
+                  child: Center(
+                    child: Text(
+                      buttonText!,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -95,7 +125,7 @@ class InfoCard extends StatelessWidget {
   /// Session layout - icon in circle on left, text on right with arrow
   Widget _buildSessionEmptyState() {
     return GestureDetector(
-      onTap: onEmptyTap,
+      onTap: buttonText == null ? onEmptyTap : null,
       behavior: HitTestBehavior.opaque,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -117,13 +147,13 @@ class InfoCard extends StatelessWidget {
                         iconPath!,
                         width: 20,
                         height: 20,
-                        color: Colors.white,
+                        color: iconColor ?? Colors.white,
                       )
-                    : const Icon(Icons.style, color: Colors.white, size: 20),
+                    : Icon(Icons.style, color: iconColor ?? Colors.white, size: 20),
               ),
             ),
             const SizedBox(height: 14),
-            // Bottom row: Text with arrow
+            // Bottom row: Text with arrow (hide arrow if button is shown)
             Row(
               children: [
                 Expanded(
@@ -147,16 +177,42 @@ class InfoCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: Colors.white,
-                    size: 24,
+                if (buttonText == null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
-                ),
               ],
             ),
+            // White button (Figma design)
+            if (buttonText != null) ...[
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: onEmptyTap,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(110),
+                  ),
+                  child: Center(
+                    child: Text(
+                      buttonText!,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

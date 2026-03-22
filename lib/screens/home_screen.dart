@@ -1562,8 +1562,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
-      backgroundColor: const Color(0xFF0B0A0A),
+      backgroundColor: const Color(0xFF000000),
       extendBody: true,
+      extendBodyBehindAppBar: true,
       drawer: AppNavigationDrawer(
         username: userName,
         email: AuthService.currentUser?.email,
@@ -1949,8 +1950,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   isEmpty: true,
                   emptyTitle: 'No recent sessions',
                   emptySubtitle: 'Start your first poker session!',
-                  iconPath: 'icons/flat_icons/cards.png',
-                  useSessionLayout: true,
+                  iconPath: 'icons/flat_icons/people.png',
+                  iconColor: const Color(0xFF89F1EC),
+                  buttonText: 'Add New Session',
                   onEmptyTap: () {
                     Navigator.push(
                       context,
@@ -2017,8 +2019,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: upcomingEvents.isEmpty
               ? InfoCard(
                   isEmpty: true,
-                  emptyTitle: 'No recent sessions',
-                  emptySubtitle: 'Start your first poker session!',
+                  emptyTitle: 'No recent events',
+                  emptySubtitle: 'Add your first poker event!',
+                  iconPath: 'icons/flat_icons/calendar.png',
+                  iconColor: const Color(0xFF89F1EC),
+                  buttonText: 'Add New Event',
                   onEmptyTap: () async {
                     await Navigator.push(
                       context,

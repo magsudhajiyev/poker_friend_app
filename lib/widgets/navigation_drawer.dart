@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/club.dart';
 import '../services/auth_service.dart';
 import '../services/club_service.dart';
@@ -6,9 +7,10 @@ import '../screens/statistics_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/intro_screen.dart';
 import '../screens/club/club_dashboard_screen.dart';
+import '../screens/paywall_screen.dart';
 import 'register_club_dialog.dart';
 
-/// Custom navigation drawer that slides from left to right
+/// Profile screen drawer matching Figma design (node 522-4548)
 class AppNavigationDrawer extends StatefulWidget {
   final String? username;
   final String? email;
@@ -24,194 +26,450 @@ class AppNavigationDrawer extends StatefulWidget {
 }
 
 class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
-  bool _isClubsExpanded = false;
   List<Club> _clubs = [];
-  bool _isLoadingClubs = false;
   bool _hasLoadedClubs = false;
+  bool _isClubsExpanded = false;
 
-  void _toggleClubsExpansion() async {
-    setState(() {
-      _isClubsExpanded = !_isClubsExpanded;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadClubs();
+  }
 
-    // Load clubs on first expansion
-    if (_isClubsExpanded && !_hasLoadedClubs) {
-      setState(() {
-        _isLoadingClubs = true;
-      });
+  Future<void> _loadClubs() async {
+    if (_hasLoadedClubs) return;
 
-      try {
-        final clubs = await ClubService.getClubs();
+    try {
+      final clubs = await ClubService.getClubs();
+      if (mounted) {
         setState(() {
           _clubs = clubs;
-          _isLoadingClubs = false;
           _hasLoadedClubs = true;
         });
-      } catch (e) {
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _isLoadingClubs = false;
           _hasLoadedClubs = true;
         });
       }
     }
   }
 
-  void _onClubTapped(Club club) {
-    Navigator.pop(context); // Close drawer
-
-    // Navigate to club dashboard
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ClubDashboardScreen(club: club),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Drawer(
       backgroundColor: Colors.transparent,
+      width: screenWidth, // Full screen width
       child: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0A1F0D),
-              Color(0xFF050F07),
-              Color(0xFF000000),
-            ],
-          ),
+          color: Color(0xFF0B0A0A),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header with user info
-              _buildHeader(context),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Calculate ellipse size for glow effect
+            final ellipseWidth = constraints.maxWidth * 1.5;
+            final ellipseHeight = constraints.maxHeight * 0.6;
 
-              const SizedBox(height: 24),
+            return Stack(
+              children: [
+                // Elliptical teal glow at top (same as home screen)
+                Positioned(
+                  top: -constraints.maxHeight * 0.15,
+                  right: -constraints.maxWidth * 0.25,
+                  child: Transform.scale(
+                    scaleX: 1.0,
+                    scaleY: 0.7,
+                    child: Container(
+                      width: ellipseWidth,
+                      height: ellipseHeight,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          center: Alignment.center,
+                          radius: 0.5,
+                          colors: [
+                            const Color(0xFF1A4A4A).withOpacity(0.6),
+                            const Color(0xFF133538).withOpacity(0.4),
+                            const Color(0xFF133538).withOpacity(0.2),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.0, 0.3, 0.6, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
 
-              // Divider
-              _buildDivider(),
-
-              const SizedBox(height: 16),
-
-              // Top menu items
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                // Main content
+                Padding(
+                  padding: EdgeInsets.only(top: topPadding),
                   child: Column(
                     children: [
-                      _buildMenuItem(
-                        context,
-                        icon: Icons.bar_chart_rounded,
-                        label: 'Statistics',
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => StatisticsScreen()),
-                          );
-                        },
+                      // Header row: Close button + Upgrade button
+                      _buildHeaderRow(context),
+
+                      const SizedBox(height: 32),
+
+                      // Profile section (avatar, name, email)
+                      _buildProfileSection(),
+
+                      const SizedBox(height: 32),
+
+                      // Menu cards
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            children: [
+                              // Menu Card 1: Statistics, Clubs (expandable), Bankroll
+                              _buildMenuCard1(),
+
+                              const SizedBox(height: 16),
+
+                              // Menu Card 2: Settings, Register Club, Help, Logout
+                              _buildMenuCard([
+                                _MenuItemData(
+                                  iconPath: 'icons/flat_icons/gear.png',
+                                  fallbackIcon: Icons.settings_rounded,
+                                  label: 'Settings',
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => SettingsScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                _MenuItemData(
+                                  iconPath: 'icons/flat_icons/plus.png',
+                                  fallbackIcon: Icons.add_circle_outline_rounded,
+                                  label: 'Register Club',
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => const RegisterClubDialog(),
+                                    );
+                                  },
+                                ),
+                                _MenuItemData(
+                                  iconPath: 'icons/flat_icons/question.png',
+                                  fallbackIcon: Icons.help_outline_rounded,
+                                  label: 'Help & Support',
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _showHelpDialog(context);
+                                  },
+                                ),
+                                _MenuItemData(
+                                  iconPath: 'icons/flat_icons/exit.png',
+                                  fallbackIcon: Icons.logout_rounded,
+                                  label: 'Log out',
+                                  isDestructive: true,
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _showSignOutConfirmation(context);
+                                  },
+                                ),
+                              ]),
+
+                              const SizedBox(height: 32),
+                            ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      // Expandable Clubs section
-                      _buildExpandableClubsMenuItem(context),
-                      const SizedBox(height: 8),
-                      _buildMenuItem(
-                        context,
-                        icon: Icons.account_balance_wallet_rounded,
-                        label: 'Bankroll',
-                        onTap: () {
-                          Navigator.pop(context);
-                          // TODO: Navigate to Bankroll screen
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Bankroll screen coming soon'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                      ),
+
+                      // Footer
+                      _buildFooter(),
                     ],
                   ),
                 ),
-              ),
-
-              // Bottom menu items
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    _buildDivider(),
-                    const SizedBox(height: 16),
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.settings_rounded,
-                      label: 'Settings',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SettingsScreen()),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.add_business_rounded,
-                      label: 'Register Club',
-                      onTap: () {
-                        Navigator.pop(context);
-                        showDialog(
-                          context: context,
-                          builder: (context) => const RegisterClubDialog(),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.help_outline_rounded,
-                      label: 'Help & Support',
-                      onTap: () {
-                        Navigator.pop(context);
-                        _showHelpDialog(context);
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.logout_rounded,
-                      label: 'Sign Out',
-                      isDestructive: true,
-                      onTap: () {
-                        print('📍 LOGOUT: Navigation drawer Sign Out tapped');
-                        Navigator.pop(context);
-                        _showSignOutConfirmation(context);
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                  ],
-                ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildExpandableClubsMenuItem(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Main "Clubs" row with rotating chevron
-        _buildClubsHeader(context),
+  Widget _buildHeaderRow(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Close button (X) - just the icon, no background
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: const SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
+          ),
 
-        // Animated clubs list
+          // Upgrade button with diamond icon and glow
+          GestureDetector(
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PaywallScreen()),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF104034).withOpacity(0.6),
+                borderRadius: BorderRadius.circular(70),
+                border: Border.all(
+                  color: const Color(0xFF89F1EC),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF91FFFB).withOpacity(0.25),
+                    blurRadius: 21,
+                    offset: const Offset(3, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Diamond icon
+                  const Icon(
+                    Icons.diamond_outlined,
+                    color: Color(0xFF89F1EC),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Upgrade',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF89F1EC),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileSection() {
+    return Column(
+      children: [
+        // Avatar (circular, 56px)
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF2A5A30),
+                Color(0xFF1A3A20),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(240),
+          ),
+          child: Center(
+            child: Text(
+              _getInitials(),
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF87ED81),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Name (24px, SemiBold)
+        Text(
+          widget.username ?? 'User',
+          style: GoogleFonts.inter(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+
+        const SizedBox(height: 4),
+
+        // Email (15px, 70% white)
+        if (widget.email != null)
+          Text(
+            widget.email!,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: Colors.white.withOpacity(0.7),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMenuCard(List<_MenuItemData> items) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        children: items.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          final isLast = index == items.length - 1;
+
+          return Column(
+            children: [
+              _buildMenuItem(item),
+              if (!isLast) const SizedBox(height: 24),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  /// Menu Card 1 with expandable Clubs section
+  Widget _buildMenuCard1() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        children: [
+          // Statistics
+          _buildMenuItem(_MenuItemData(
+            fallbackIcon: Icons.bar_chart_rounded,
+            label: 'Statistics',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => StatisticsScreen()),
+              );
+            },
+          )),
+          const SizedBox(height: 24),
+
+          // Clubs (expandable)
+          _buildExpandableClubsItem(),
+
+          const SizedBox(height: 24),
+
+          // Bankroll
+          _buildMenuItem(_MenuItemData(
+            fallbackIcon: Icons.account_balance_wallet_rounded,
+            label: 'Bankroll',
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Bankroll screen coming soon'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandableClubsItem() {
+    final color = Colors.white.withOpacity(0.9);
+
+    return Column(
+      children: [
+        // Clubs header row (tappable to expand/collapse)
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _isClubsExpanded = !_isClubsExpanded;
+              });
+            },
+            borderRadius: BorderRadius.circular(8),
+            splashColor: Colors.white.withOpacity(0.1),
+            highlightColor: Colors.white.withOpacity(0.05),
+            child: SizedBox(
+              height: 40,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    // Icon
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Icon(
+                        Icons.groups_rounded,
+                        color: color,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    // Label
+                    Expanded(
+                      child: Text(
+                        'Clubs',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w400,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                    // Chevron (rotates when expanded)
+                    AnimatedRotation(
+                      turns: _isClubsExpanded ? 0.25 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.chevron_right,
+                        color: Colors.white.withOpacity(0.5),
+                        size: 24,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Expandable clubs list
         AnimatedCrossFade(
           firstChild: const SizedBox.shrink(),
           secondChild: _buildClubsList(),
@@ -224,80 +482,15 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     );
   }
 
-  Widget _buildClubsHeader(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _toggleClubsExpansion,
-        borderRadius: BorderRadius.circular(12),
-        splashColor: Colors.white.withOpacity(0.1),
-        highlightColor: Colors.white.withOpacity(0.05),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.groups_rounded,
-                color: Colors.white.withOpacity(0.8),
-                size: 22,
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Text(
-                  'Clubs',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              // Rotating chevron (right → down when expanded)
-              AnimatedRotation(
-                turns: _isClubsExpanded ? 0.25 : 0.0, // 90 degrees
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  Icons.chevron_right,
-                  color: Colors.white.withOpacity(0.4),
-                  size: 20,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildClubsList() {
-    if (_isLoadingClubs) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: const Color(0xFF87ED81),
-            ),
-          ),
-        ),
-      );
-    }
-
     if (_clubs.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(54, 8, 16, 8),
+        padding: const EdgeInsets.only(left: 30, top: 12),
         child: Text(
           'No clubs yet',
-          style: TextStyle(
-            fontFamily: 'Inter',
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 14,
+            fontWeight: FontWeight.w400,
             color: Colors.white.withOpacity(0.5),
             fontStyle: FontStyle.italic,
           ),
@@ -305,9 +498,11 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       );
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: _clubs.map((club) => _buildClubItem(club)).toList(),
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        children: _clubs.map((club) => _buildClubItem(club)).toList(),
+      ),
     );
   }
 
@@ -315,15 +510,23 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _onClubTapped(club),
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ClubDashboardScreen(club: club),
+            ),
+          );
+        },
         borderRadius: BorderRadius.circular(8),
         splashColor: Colors.white.withOpacity(0.1),
         highlightColor: Colors.white.withOpacity(0.05),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          margin: const EdgeInsets.only(left: 38), // Indent under parent
+        child: Padding(
+          padding: const EdgeInsets.only(left: 30, top: 10, bottom: 10),
           child: Row(
             children: [
+              // Green dot indicator
               Container(
                 width: 8,
                 height: 8,
@@ -333,12 +536,12 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                 ),
               ),
               const SizedBox(width: 12),
+              // Club name
               Expanded(
                 child: Text(
                   club.name,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
                     fontWeight: FontWeight.w400,
                     color: Colors.white.withOpacity(0.85),
                   ),
@@ -353,87 +556,84 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF2A5A30),
-                  Color(0xFF1A3A20),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Center(
-              child: Text(
-                _getInitials(),
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF87ED81),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // User info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildMenuItem(_MenuItemData item) {
+    final color = item.isDestructive
+        ? const Color(0xFFFF6B6B)
+        : Colors.white.withOpacity(0.9);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: item.onTap,
+        borderRadius: BorderRadius.circular(8),
+        splashColor: Colors.white.withOpacity(0.1),
+        highlightColor: Colors.white.withOpacity(0.05),
+        child: SizedBox(
+          height: 40,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
               children: [
-                Text(
-                  widget.username ?? 'User',
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                // Icon
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Icon(
+                    item.fallbackIcon,
+                    color: color,
+                    size: 24,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                if (widget.email != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.email!,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white.withOpacity(0.6),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                const SizedBox(width: 6),
+                // Label
+                Text(
+                  item.label,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w400,
+                    color: color,
                   ),
-                ],
+                ),
               ],
             ),
           ),
-          // Close button
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.white,
-                size: 20,
-              ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Column(
+        children: [
+          // Version
+          Text(
+            'Version 1.0.0',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: Colors.white.withOpacity(0.4),
+            ),
+          ),
+          const SizedBox(height: 4),
+          // App name
+          Text(
+            'Final Table',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withOpacity(0.5),
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Last login
+          Text(
+            'Last login: Today',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: Colors.white.withOpacity(0.3),
             ),
           ),
         ],
@@ -450,76 +650,6 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     return widget.username![0].toUpperCase();
   }
 
-  Widget _buildDivider() {
-    return Container(
-      height: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Colors.white.withOpacity(0.0),
-            Colors.white.withOpacity(0.15),
-            Colors.white.withOpacity(0.0),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    final color = isDestructive ? const Color(0xFFFF6B6B) : Colors.white;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        splashColor: Colors.white.withOpacity(0.1),
-        highlightColor: Colors.white.withOpacity(0.05),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                color: color.withOpacity(0.8),
-                size: 22,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: color,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                color: color.withOpacity(0.4),
-                size: 20,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showHelpDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -528,11 +658,10 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
+        title: Text(
           'Help & Support',
-          style: TextStyle(
+          style: GoogleFonts.inter(
             color: Colors.white,
-            fontFamily: 'Inter',
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -540,20 +669,18 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Need help with Poker Logger?',
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 color: Colors.white,
-                fontFamily: 'Inter',
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              'Report issues or get help at:\ngithub.com/anthropics/claude-code/issues',
-              style: TextStyle(
+              'Contact us at:\nsupport@pokerlogger.app',
+              style: GoogleFonts.inter(
                 color: Colors.white.withOpacity(0.7),
-                fontFamily: 'Inter',
                 fontSize: 13,
               ),
             ),
@@ -562,11 +689,10 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Close',
-              style: TextStyle(
-                color: Color(0xFF87ED81),
-                fontFamily: 'Inter',
+              style: GoogleFonts.inter(
+                color: const Color(0xFF87ED81),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -584,19 +710,17 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
+        title: Text(
           'Sign Out',
-          style: TextStyle(
+          style: GoogleFonts.inter(
             color: Colors.white,
-            fontFamily: 'Inter',
             fontWeight: FontWeight.w600,
           ),
         ),
-        content: const Text(
+        content: Text(
           'Are you sure you want to sign out?',
-          style: TextStyle(
+          style: GoogleFonts.inter(
             color: Colors.white,
-            fontFamily: 'Inter',
             fontSize: 14,
           ),
         ),
@@ -605,16 +729,14 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 color: Colors.white.withOpacity(0.7),
-                fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
           TextButton(
             onPressed: () async {
-              print('📍 LOGOUT: Drawer confirmation confirmed');
               Navigator.pop(context);
               await AuthService.signOut();
               if (context.mounted) {
@@ -625,11 +747,10 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                 );
               }
             },
-            child: const Text(
+            child: Text(
               'Sign Out',
-              style: TextStyle(
-                color: Color(0xFFFF6B6B),
-                fontFamily: 'Inter',
+              style: GoogleFonts.inter(
+                color: const Color(0xFFFF6B6B),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -638,4 +759,21 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       ),
     );
   }
+}
+
+/// Data class for menu items
+class _MenuItemData {
+  final String? iconPath;
+  final IconData fallbackIcon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isDestructive;
+
+  _MenuItemData({
+    this.iconPath,
+    required this.fallbackIcon,
+    required this.label,
+    required this.onTap,
+    this.isDestructive = false,
+  });
 }

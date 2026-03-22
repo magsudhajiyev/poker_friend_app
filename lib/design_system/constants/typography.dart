@@ -164,7 +164,7 @@ class AppTypography {
 
   static TextStyle sectionHeadline({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? AppColors.tealAccent,
+    color: color ?? Colors.white.withOpacity(0.8),
     fontWeight: FontWeight.w400,
     height: 1.44,
   );
