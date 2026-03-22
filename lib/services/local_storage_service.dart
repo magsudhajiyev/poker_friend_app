@@ -39,7 +39,9 @@ class LocalStorageService {
             gameType TEXT DEFAULT 'cash',
             stackHistory TEXT,
             buyInAmount REAL,
-            totalBuyIn REAL
+            totalBuyIn REAL,
+            handsLogged INTEGER DEFAULT 0,
+            biggestPot REAL DEFAULT 0
           )
         ''');
         
@@ -72,6 +74,9 @@ class LocalStorageService {
             choppedWinners TEXT,
             individualShares TEXT,
             sharePerWinner REAL,
+            isStarred INTEGER DEFAULT 0,
+            tags TEXT,
+            notes TEXT,
             FOREIGN KEY (sessionId) REFERENCES sessions (id)
           )
         ''');

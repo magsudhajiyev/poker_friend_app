@@ -152,6 +152,12 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
       final currentStack = widget.gameState!.getPlayerStack(seatNumber);
       return widget.isCashGame ? currentStack.toStringAsFixed(2) : currentStack.toInt().toString();
     }
+    // Use startingStack from session setup if available
+    if (widget.startingStack != null) {
+      return widget.isCashGame
+          ? widget.startingStack!.toStringAsFixed(2)
+          : widget.startingStack!.toInt().toString();
+    }
     // Otherwise use default values
     return widget.isCashGame ? '100.00' : '1500';
   }
@@ -682,7 +688,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                             labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
                             hintText: _areSeatChangesLocked()
                                 ? 'Locked during active hand'
-                                : (widget.isCashGame ? '100.00' : '1500'),
+                                : _getCurrentStackForSeat(seatNumber),
                             hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
                             prefixText: widget.isCashGame ? '\$ ' : '',
                             prefixStyle: TextStyle(color: Color(0xFF9A9A9A)),
@@ -1361,7 +1367,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         try {
           stackSize = double.parse(stackText);
         } catch (e) {
-          stackSize = widget.isCashGame ? 100.0 : 1500.0;
+          stackSize = widget.startingStack ?? (widget.isCashGame ? 100.0 : 1500.0);
         }
         playerStacks[seat] = stackSize;
         widget.sessionManager?.setPlayerStack(seat, stackSize);

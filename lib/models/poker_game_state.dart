@@ -849,7 +849,8 @@ class PokerGameState {
       // Reset for new street
       bettingRoundComplete = false;
       hasBetThisRound = false;
-      
+      currentBet = 0.0;  // Reset current bet for new street
+
       // Reset all players for new street
       for (PlayerState player in players) {
         if (!player.hasFolded) {
