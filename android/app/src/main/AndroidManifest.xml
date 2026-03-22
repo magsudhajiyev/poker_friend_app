@@ -12,6 +12,9 @@
     <!-- Microphone permission for voice commands -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
+    <!-- Billing permission for in-app purchases -->
+    <uses-permission android:name="com.android.vending.BILLING"/>
+
     <application
         android:label="poker_logger"
         android:name="${applicationName}"
