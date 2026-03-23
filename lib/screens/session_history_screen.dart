@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'dart:ui' as ui;
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
-import 'session_hands_screen.dart';
 import 'session_analytics_screen.dart';
-import '../design_system/design_system.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -102,83 +100,159 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     });
   }
 
+  Widget _buildIcon(String path, double size, Color color) {
+    if (path.endsWith('.svg')) {
+      return SvgPicture.asset(
+        path,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      return Image.asset(
+        path,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBody: true,
       body: Stack(
         children: [
-          GradientBackground(),
+          // Subtle teal gradient at top (same as home/opponents screens)
+          Positioned(
+            top: -screenWidth * 0.3,
+            right: -screenWidth * 0.25,
+            child: Transform.scale(
+              scaleX: 1.0,
+              scaleY: 0.7,
+              child: Container(
+                width: screenWidth * 1.5,
+                height: screenWidth * 1.2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 0.5,
+                    colors: [
+                      Color(0xFF1A4A4A),
+                      Color(0xFF133538).withOpacity(0.7),
+                      Color(0xFF133538).withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.3, 0.6, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            MainScreenHeader(
-              title: 'Session History',
-              showLeftIcon: true,
-              leftIcon: Icons.arrow_back_rounded,
-              onLeftPressed: () => Navigator.pop(context),
-            ),
-            SizedBox(height: 16),
-            // Tab Bar
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(80),
-                border: Border.all(
-                  color: Color(0xFF2c2c2e),
-                  width: 1,
-                ),
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(60),
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Section with back arrow + title
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  child: Row(
+                    children: [
+                      // Back button
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: _buildIcon(
+                              'icons/figma_icons/back.svg',
+                              24,
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      // Title
+                      Text(
+                        'Session History',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 24,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.5,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
-                  border: Border.all(
-                    color: Color(0x4DEBEBF5),
-                    width: 1,
+                ),
+                // Tab Bar
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(80),
+                    border: Border.all(
+                      color: Color(0xFF2C2C2E),
+                      width: 1,
+                    ),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      borderRadius: BorderRadius.circular(60),
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF1E3B49), Color(0xFF4A887E)],
+                      ),
+                      border: Border.all(
+                        color: Color(0x4DEBEBF5),
+                        width: 1,
+                      ),
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicatorPadding: EdgeInsets.all(0),
+                    dividerColor: Colors.transparent,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.white,
+                    labelStyle: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.43,
+                    ),
+                    unselectedLabelStyle: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.43,
+                    ),
+                    tabs: [
+                      Tab(text: 'Cash'),
+                      Tab(text: 'Tournament'),
+                    ],
                   ),
                 ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding: EdgeInsets.all(0),
-                dividerColor: Colors.transparent,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white,
-                labelStyle: TextStyle(
-                  fontFamily: 'IBMPlexSans',
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.43,
+                SizedBox(height: 24),
+                // Content
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildSessionsList(cashSessions, 'Cash'),
+                      _buildSessionsList(tournamentSessions, 'Tournament'),
+                    ],
+                  ),
                 ),
-                unselectedLabelStyle: TextStyle(
-                  fontFamily: 'IBMPlexSans',
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.43,
-                ),
-                tabs: [
-                  Tab(text: 'Cash'),
-                  Tab(text: 'Tournament'),
-                ],
-              ),
-            ),
-            SizedBox(height: 24),
-            // Content
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildSessionsList(cashSessions, 'Cash'),
-                  _buildSessionsList(tournamentSessions, 'Tournament'),
-                ],
-              ),
-            ),
-          ],
+              ],
             ),
           ),
         ],
@@ -233,62 +307,55 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     }
 
     if (sessionList.isEmpty) {
-      return Padding(
-        padding: EdgeInsets.only(left: 16, right: 16, bottom: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Color(0x4C2C3E2E),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 44),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Icon
-                  Image.asset(
-                    gameType == 'Cash' ? 'icons/cash.png' : 'icons/podium.png',
-                    width: 48,
-                    height: 48,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(
-                        Icons.sports_esports,
-                        color: Color(0xFFF8FFF7),
-                        size: 48,
-                      );
-                    },
-                  ),
-                  SizedBox(height: 14),
-                  // Title
-                  Text(
-                    'No $gameType Sessions',
-                    style: GoogleFonts.ibmPlexSans(
-                      color: Color(0xFFF8FFF7),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 14),
-                  // Description
-                  Text(
-                    'Play some $gameType Poker hands to see the results',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.ibmPlexSans(
-                      color: Color(0xFFF8FFF7),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                ],
-              ),
+      return Align(
+        alignment: Alignment.topCenter,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Color(0xFF131616),
+              borderRadius: BorderRadius.circular(8),
             ),
-          ],
+            padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon - dollar for Cash, clubs for Tournament
+                _buildIcon(
+                  gameType == 'Cash'
+                      ? 'icons/figma_icons/dollar.svg'
+                      : 'icons/figma_icons/clubs.svg',
+                  24,
+                  Colors.white,
+                ),
+                SizedBox(height: 14),
+                // Title
+                Text(
+                  'No $gameType Sessions',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 4),
+                // Description - teal
+                Text(
+                  'Play some $gameType Poker hands \nto see the results',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Color(0xFF89F1EC),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -1002,9 +1069,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     final gameTypeStr = gameType ?? 'cash';
     switch (gameTypeStr.toLowerCase()) {
       case 'tournament':
-        return Image.asset('icons/podium.png', width: 24, height: 24);
+        return _buildIcon('icons/figma_icons/clubs.svg', 24, Colors.white);
       case 'cash':
-        return Image.asset('icons/cash.png', width: 24, height: 24);
+        return _buildIcon('icons/figma_icons/dollar.svg', 24, Colors.white);
       default:
         return Icon(
           Icons.sports_esports,
