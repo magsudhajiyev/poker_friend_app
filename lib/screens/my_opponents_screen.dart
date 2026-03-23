@@ -9,7 +9,6 @@ import '../services/opponent_stats_service.dart';
 import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import 'opponent_detail_screen.dart';
-import '../design_system/design_system.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
   @override
@@ -125,111 +124,159 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.black,
       extendBody: true,
       body: Stack(
         children: [
-          // Gradient background from design system
-          GradientBackground(),
+          // Subtle teal gradient at top (like home screen)
+          Positioned(
+            top: -screenWidth * 0.3,
+            right: -screenWidth * 0.25,
+            child: Transform.scale(
+              scaleX: 1.0,
+              scaleY: 0.7,
+              child: Container(
+                width: screenWidth * 1.5,
+                height: screenWidth * 1.2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 0.5,
+                    colors: [
+                      Color(0xFF1A4A4A),
+                      Color(0xFF133538).withOpacity(0.7),
+                      Color(0xFF133538).withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.3, 0.6, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Section with title + back/add buttons
+                // Header Section with back arrow + title
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Left: Title + subtitle
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Opponents',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 24,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.48,
-                              height: 1.0,
+                      // Back button on LEFT
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: _buildIcon(
+                              'icons/figma_icons/back.svg',
+                              24,
+                              Colors.white,
                             ),
                           ),
-                          SizedBox(height: 6),
-                          Text(
-                            '${opponents.length} tracked players',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 12,
-                              color: Color(0xFFFFFFFF).withOpacity(0.8),
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: -0.24,
-                              height: 1.0,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                      // Right: Back + Add buttons
-                      Row(
-                        children: [
-                          GlassyIconButton(
-                            imagePath: 'icons/flat_icons/back.png',
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                          SizedBox(width: 4),
-                          GlassyIconButton(
-                            imagePath: 'icons/flat_icons/plus.png',
-                            onPressed: _showAddOpponentDialog,
-                          ),
-                        ],
+                      SizedBox(width: 12),
+                      // Title + subtitle
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Opponents',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 24,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                                height: 1.2,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              '${opponents.length} tracked players',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 15,
+                                color: Color(0xFFEBEBF5).withOpacity(0.6),
+                                fontWeight: FontWeight.w400,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-                // Search bar - Fixed (pill shape with border)
+                // Search bar (Figma node 423-2584)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                   child: Container(
-                    margin: EdgeInsets.only(bottom: 24),
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    height: 50,
+                    height: 52, // padding 10px top + 10px bottom + 32px icon
                     decoration: BoxDecoration(
-                      color: Color(0xFF1A2925),
-                      borderRadius: BorderRadius.circular(90),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(80),
+                      border: Border.all(color: Color(0xFF2C2C2E)),
                     ),
-                    child: TextField(
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white,
-                        fontSize: 16,
-                        
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Search opponents...',
-                        hintStyle: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
-                                                  ),
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.only(right: 8),
-                          child: _buildIcon(
-                            'icons/flat_icons/search.png',
-                            20,
-                            Colors.white.withOpacity(0.7),
+                    child: Row(
+                      children: [
+                        SizedBox(width: 14), // pl-14px from Figma
+                        SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: Center(
+                            child: _buildIcon(
+                              'icons/figma_icons/search.svg',
+                              24,
+                              Colors.white,
+                            ),
                           ),
                         ),
-                        prefixIconConstraints: BoxConstraints(
-                          minWidth: 20,
-                          minHeight: 20,
+                        SizedBox(width: 8), // gap-8px from Figma
+                        Expanded(
+                          child: TextField(
+                            style: GoogleFonts.ibmPlexSans(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w400,
+                              height: 1.44,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Search opponents...',
+                              hintStyle: GoogleFonts.ibmPlexSans(
+                                color: Color(0xFFEBEBF5).withOpacity(0.7),
+                                fontSize: 17,
+                                fontWeight: FontWeight.w400,
+                                height: 1.44,
+                              ),
+                              filled: false,
+                              fillColor: Colors.transparent,
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                searchQuery = value;
+                              });
+                            },
+                          ),
                         ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 15),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          searchQuery = value;
-                        });
-                      },
+                        SizedBox(width: 8), // pr-8px from Figma
+                      ],
                     ),
                   ),
                 ),
@@ -309,50 +356,47 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     if (displayOpponents.isEmpty) {
       return Center(
         child: Container(
-          padding: EdgeInsets.fromLTRB(24, 24, 24, 280),
+          margin: EdgeInsets.symmetric(horizontal: 0),
+          padding: EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Color(0xFF131616),
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Icon section
               _buildIcon(
-                'icons/flat_icons/people.png',
-                44,
+                'icons/figma_icons/opponents.svg',
+                24,
                 Colors.white,
               ),
-              SizedBox(height: 20),
-              // Text section with horizontal padding
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 62),
-                child: Column(
-                  children: [
-                    Text(
-                      searchQuery.isEmpty ? 'No Opponents Yet' : 'No Results',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        height: 1.5, // line-height: 24px / 16px
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      searchQuery.isEmpty
-                        ? 'Add opponents to track their playing styles and statistics!'
-                        : 'Try a different search term',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 12,
-                        color: Color(0xFFF8FFF7),
-                        fontWeight: FontWeight.w400,
-                        height: 1.5, // line-height: 18px / 12px
-                      ),
-                    ),
-                  ],
+              SizedBox(height: 16),
+              // Text section
+              Text(
+                searchQuery.isEmpty ? 'No Opponents yet' : 'No Results',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                searchQuery.isEmpty
+                  ? 'Add opponents to track their playing\nstyles and statistics'
+                  : 'Try a different search term',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 14,
+                  color: Color(0xFF89F1EC),
+                  fontWeight: FontWeight.w400,
+                  height: 1.4,
                 ),
               ),
               if (searchQuery.isEmpty) ...[
-                SizedBox(height: 50),
+                SizedBox(height: 24),
                 // Button section
                 SizedBox(
                   width: double.infinity,
@@ -360,19 +404,19 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                   child: ElevatedButton(
                     onPressed: _showAddOpponentDialog,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFBAFF9A), // --secondary-100
-                      foregroundColor: Color(0xFF011100), // --primary-100
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(110),
                       ),
                       elevation: 0,
                     ),
                     child: Text(
                       'Add Opponent',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF011100), // --primary-100
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -385,9 +429,37 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.only(bottom: 20),
-      itemCount: displayOpponents.length,
+      padding: EdgeInsets.only(bottom: 100), // Extra padding for button and nav bar
+      itemCount: displayOpponents.length + 1, // +1 for the Add Opponent button
       itemBuilder: (context, index) {
+        // Last item is the Add Opponent button
+        if (index == displayOpponents.length) {
+          return Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: GestureDetector(
+              onTap: _showAddOpponentDialog,
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(110),
+                ),
+                child: Center(
+                  child: Text(
+                    'Add Opponent',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
         final opponent = displayOpponents[index];
         return _buildOpponentCard(opponent);
       },
@@ -396,13 +468,13 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
 
   Widget _buildOpponentCard(Opponent opponent) {
     final cardColor = _getColorForOpponent(opponent.color);
+    final dotsKey = GlobalKey();
 
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Color(0xFF1A2925),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        color: Color(0xFF131616), // Figma: #131616
+        borderRadius: BorderRadius.circular(18), // Figma: 18px
       ),
       child: Material(
         color: Colors.transparent,
@@ -419,156 +491,116 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
               _loadOpponents(useCache: false);
             }
           },
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16), // Figma: px-16 py-14
             child: Column(
               children: [
-                // Top section: User info + hands count
+                // Top row: Profile circle + dots menu (gap-12)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left: CardIcon + Name/Style
-                    Row(
+                    // Profile circle (32px)
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    // Dots menu icon (smaller per Figma inset, White/20 color)
+                    GestureDetector(
+                      key: dotsKey,
+                      onTap: () => _showOpponentOptionsMenu(opponent, dotsKey),
+                      child: _buildIcon(
+                        'icons/figma_icons/dots.svg',
+                        18,
+                        Color(0xFF555555), // Figma: White/20
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 12), // gap-12 from Figma
+
+                // Info Card section (gap-14 internally)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Name and Hands row (gap-4)
+                    Column(
                       children: [
-                        // Color indicator avatar (28px solid circle)
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        // Name and playing style column
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        // Player Name + Hands count
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               opponent.name,
                               style: GoogleFonts.ibmPlexSans(
-                                fontSize: 18,
-                                color: Color(0xFFFFFFFF),
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0,
-                                height: 1.4,
+                                fontSize: 17, // Figma: 17px
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500, // Medium
+                                height: 1.44,
                               ),
                             ),
                             Text(
-                              opponentStats[opponent.id]?.playingStyle ?? 'No Data',
+                              '${opponentHandsCounts[opponent.id] ?? 0}',
                               style: GoogleFonts.ibmPlexSans(
-                                fontSize: 12,
-                                color: _getStyleColor(opponentStats[opponent.id]?.playerType ?? PlayerType.unknown),
-                                fontWeight: FontWeight.w400,
-                                letterSpacing: 0,
-                                height: 1.4,
+                                fontSize: 17, // Figma: 17px
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500, // Medium
+                                height: 1.44,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4), // gap-4
+                        // Playing style + "Hands" label
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              opponentStats[opponent.id]?.playingStyle ?? 'No data',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 14, // Figma: 14px
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400, // Regular
+                              ),
+                            ),
+                            Text(
+                              'Hands',
+                              style: GoogleFonts.inter(
+                                fontSize: 12, // Figma: 12px
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400, // Regular
+                                height: 1.5,
                               ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                    // Right: Hands count
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${opponentHandsCounts[opponent.id] ?? 0}',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 18,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0,
-                            height: 1.4,
-                          ),
-                        ),
-                        Text(
-                          'Hands',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 12,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 0,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
 
-                SizedBox(height: 24),
+                    SizedBox(height: 14), // gap-14 from Figma
 
-                // Bottom section: Last seen + action buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Left: Last seen
+                    // Last seen row
                     Row(
                       children: [
                         _buildIcon(
-                          'icons/flat_icons/eye.png',
+                          'icons/figma_icons/eye.svg',
                           18,
-                          Color(0xFFFFFFFF).withOpacity(0.8),
+                          Color(0xFFB9B9B9), // Figma: #B9B9B9
                         ),
                         SizedBox(width: 4),
                         Text(
-                          'Last Seen: ${DateFormat('MMM dd').format(opponent.lastSeenAt)}',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 10,
-                            color: Color(0xFFFFFFFF).withOpacity(0.8),
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 0,
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Right: Action buttons
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => _showEditOpponentDialog(opponent),
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF1A291A), // --primary-90
-                              borderRadius: BorderRadius.circular(70),
-                            ),
-                            child: Center(
-                              child: _buildIcon(
-                                'icons/flat_icons/edit.png',
-                                20,
-                                Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () => _showDeleteConfirmation(opponent),
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFB63131),
-                              borderRadius: BorderRadius.circular(70),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color(0x33000000), // #00000033
-                                  blurRadius: 24,
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: _buildIcon(
-                                'icons/flat_icons/bin.png',
-                                20,
-                                Colors.white,
-                              ),
-                            ),
+                          DateFormat('MMM dd, h:mma').format(opponent.lastSeenAt).toLowerCase(),
+                          style: GoogleFonts.inter(
+                            fontSize: 10, // Figma: 10px
+                            color: Color(0xFFB9B9B9), // Figma: #B9B9B9
+                            fontWeight: FontWeight.w400, // Regular
+                            height: 1.5,
                           ),
                         ),
                       ],
@@ -579,6 +611,139 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showOpponentOptionsMenu(Opponent opponent, GlobalKey dotsKey) {
+    // Get position of the dots icon
+    final RenderBox renderBox = dotsKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+    final Size size = renderBox.size;
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (context) => Stack(
+        children: [
+          // Dismiss on tap outside
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          // Positioned popup menu (Figma node 622:5241)
+          Positioned(
+            right: 16, // Align to right side with 16px margin
+            top: offset.dy + size.height + 8, // Below the dots icon with 8px gap
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: 184, // Figma: 184px
+                decoration: BoxDecoration(
+                  color: Color(0xFF161619), // Figma: #161619
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.45), // rgba(0,0,0,0.45)
+                      blurRadius: 34,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Player Name header
+                    Text(
+                      opponent.name,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700, // Bold
+                        color: Colors.white,
+                        height: 1.5,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    // Separator (hairline per Figma)
+                    Container(
+                      height: 0.5,
+                      color: Color(0xFF545458).withOpacity(0.6),
+                    ),
+                    // Edit Opponent row
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showEditOpponentDialog(opponent);
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Edit Opponent',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500, // Medium
+                                color: Colors.white,
+                                height: 1.46,
+                              ),
+                            ),
+                            _buildIcon(
+                              'icons/figma_icons/edit.svg',
+                              18, // Slightly smaller
+                              Colors.white,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Separator (hairline per Figma)
+                    Container(
+                      height: 0.5,
+                      color: Color(0xFF545458).withOpacity(0.6),
+                    ),
+                    // Delete Opponent row
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showDeleteConfirmation(opponent);
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Delete Opponent',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500, // Medium
+                                color: Colors.white, // Text is white per Figma
+                                height: 1.46,
+                              ),
+                            ),
+                            _buildIcon(
+                              'icons/figma_icons/delete.svg',
+                              20, // Slightly smaller
+                              Color(0xFFD55A41), // Error/red color for delete icon
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -636,6 +801,179 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     final nameController = TextEditingController(text: opponent?.name ?? '');
     final notesController = TextEditingController(text: opponent?.notes ?? '');
     OpponentColor selectedColor = opponent?.color ?? OpponentColor.blue;
+    final colorPickerKey = GlobalKey();
+
+    // Color name mapping
+    String getColorName(OpponentColor color) {
+      switch (color) {
+        case OpponentColor.red: return 'Red';
+        case OpponentColor.blue: return 'Light Blue';
+        case OpponentColor.green: return 'Green';
+        case OpponentColor.orange: return 'Orange';
+        case OpponentColor.purple: return 'Purple';
+        case OpponentColor.teal: return 'Teal';
+        case OpponentColor.pink: return 'Pink';
+        case OpponentColor.indigo: return 'Indigo';
+      }
+    }
+
+    void showColorPicker(StateSetter setSheetState) {
+      final colors = OpponentColor.values;
+
+      // Get the position of the color picker row
+      final RenderBox renderBox = colorPickerKey.currentContext!.findRenderObject() as RenderBox;
+      final Offset offset = renderBox.localToGlobal(Offset.zero);
+
+      showDialog(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (context) {
+          return Stack(
+            children: [
+              // Dismiss on tap outside
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+              // Positioned dropdown
+              Positioned(
+                right: 32,
+                top: offset.dy,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    width: 184,
+                    decoration: BoxDecoration(
+                      color: Color(0xFF161619),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.45),
+                          blurRadius: 34,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ...colors.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final color = entry.value;
+                          final isSelected = color == selectedColor;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  setSheetState(() {
+                                    selectedColor = color;
+                                  });
+                                },
+                                behavior: HitTestBehavior.opaque,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                  child: Row(
+                                    children: [
+                                      if (isSelected) ...[
+                                        Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                        SizedBox(width: 8),
+                                      ],
+                                      Container(
+                                        width: 16,
+                                        height: 16,
+                                        margin: EdgeInsets.only(right: 8),
+                                        decoration: BoxDecoration(
+                                          color: _getColorForOpponent(color),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      Text(
+                                        getColorName(color),
+                                        style: GoogleFonts.ibmPlexSans(
+                                          color: Colors.white,
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (index < colors.length - 1)
+                                Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Container(
+                                    height: 1,
+                                    color: Colors.white.withOpacity(0.1),
+                                  ),
+                                ),
+                            ],
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    Future<void> saveOpponent() async {
+      final name = nameController.text.trim();
+      if (name.isEmpty) return;
+
+      try {
+        final newOpponent = isEditing
+            ? opponent!.copyWith(
+                name: name,
+                notes: notesController.text.trim().isEmpty
+                    ? null
+                    : notesController.text.trim(),
+                color: selectedColor,
+              )
+            : OpponentService.createNewOpponent(
+                name: name,
+                notes: notesController.text.trim().isEmpty
+                    ? null
+                    : notesController.text.trim(),
+                color: selectedColor,
+              );
+
+        await OpponentService.saveOpponent(newOpponent);
+        Navigator.pop(context);
+        _loadOpponents(useCache: false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isEditing
+                ? 'Opponent updated successfully'
+                : 'Opponent added successfully'),
+            backgroundColor: Color(0xFF44D69B),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -643,289 +981,229 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
       isDismissible: true,
       enableDrag: true,
       backgroundColor: Colors.transparent,
-      transitionAnimationController: AnimationController(
-        duration: const Duration(milliseconds: 600),
-        vsync: Navigator.of(context) as TickerProvider,
-      )..forward(),
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) {
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.elasticOut,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xFF1a2925),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.9,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
               ),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Drag handle line
-                      Container(
-                        width: 80,
-                        height: 2,
-                        margin: EdgeInsets.only(top: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(1),
+              border: Border.all(color: Color(0xFF262626)),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF2E5A59),
+                  blurRadius: 64,
+                  offset: Offset(0, -6),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Header with X, title, checkmark (px-16 from Figma)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    height: 68, // Match Figma header height
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Close button - 38px with icon centered (inset 18.75% = ~15px icon)
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF2C2C2E),
+                              borderRadius: BorderRadius.circular(58),
+                            ),
+                            child: Center(
+                              child: _buildIcon(
+                                'icons/figma_icons/close.svg',
+                                15,
+                                Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                        // Title
+                        Text(
+                          isEditing ? 'Edit Opponent' : 'Add Opponent',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            letterSpacing: -0.43,
+                            height: 22 / 17,
+                          ),
+                        ),
+                        // Save/Check button - 38px with icon centered (inset 12.5% = ~18px icon)
+                        GestureDetector(
+                          onTap: saveOpponent,
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF2C2C2E),
+                              borderRadius: BorderRadius.circular(58),
+                            ),
+                            child: Center(
+                              child: _buildIcon(
+                                'icons/figma_icons/check.svg',
+                                18,
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
-                      SizedBox(height: 38),
+                SizedBox(height: 22),
 
-                      // Title
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            isEditing ? 'Edit Opponent' : 'Add Opponent',
+                // Form card (Figma node 325-3251)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Color(0xFF131616),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Column(
+                      children: [
+                        // Opponent Name field - pl-10 pr-8 py-10 from Figma
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(10, 10, 8, 10),
+                          child: TextField(
+                            controller: nameController,
                             style: GoogleFonts.ibmPlexSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 17,
                               color: Colors.white,
-                              letterSpacing: 0,
-                              height: 1.2,
+                              fontWeight: FontWeight.w400,
+                              height: 1.44,
                             ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 24),
-
-                      // Input fields
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Column(
-                          children: [
-                            // Opponent Name field
-                            Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: TextField(
-                                controller: nameController,
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Opponent Name',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: Colors.white.withOpacity(0.5),
-                                  ),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            SizedBox(height: 18),
-
-                            // Notes field
-                            Container(
-                              height: 150,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: TextField(
-                                controller: notesController,
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Notes (Optional)',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: Colors.white.withOpacity(0.5),
-                                  ),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.all(16),
-                                ),
-                                maxLines: 6,
-                                maxLength: null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      SizedBox(height: 24),
-
-                      // Color picker section
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Pick a color:',
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
+                            decoration: InputDecoration(
+                              hintText: 'Opponent Name',
+                              hintStyle: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
                                 color: Colors.white,
-                                letterSpacing: -0.28,
+                                fontWeight: FontWeight.w400,
+                                height: 1.44,
                               ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              filled: false,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
                             ),
-                            SizedBox(height: 16),
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 12,
-                              children: OpponentColor.values.map((color) {
-                                final isSelected = selectedColor == color;
-                                return GestureDetector(
-                                  onTap: () {
-                                    setSheetState(() {
-                                      selectedColor = color;
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 48,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      color: _getColorForOpponent(color),
-                                      shape: BoxShape.circle,
-                                      border: isSelected
-                                          ? Border.all(
-                                              color: Colors.white,
-                                              width: 3,
-                                            )
-                                          : null,
+                          ),
+                        ),
+
+                        // Separator - h-21px container with px-8 from Figma
+                        Container(
+                          height: 21,
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          alignment: Alignment.center,
+                          child: Container(
+                            height: 1,
+                            color: Color(0xFF3A3A3C),
+                          ),
+                        ),
+
+                        // Notes field - p-10 from Figma
+                        Padding(
+                          padding: EdgeInsets.all(10),
+                          child: TextField(
+                            controller: notesController,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              height: 1.44,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Notes (Optional)',
+                              hintStyle: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400,
+                                height: 1.44,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              filled: false,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                            ),
+                            maxLines: 1,
+                          ),
+                        ),
+
+                        // Separator - h-21px container with px-8 from Figma
+                        Container(
+                          height: 21,
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          alignment: Alignment.center,
+                          child: Container(
+                            height: 1,
+                            color: Color(0xFF3A3A3C),
+                          ),
+                        ),
+
+                        // Pick a color row - p-10 from Figma
+                        GestureDetector(
+                          key: colorPickerKey,
+                          onTap: () => showColorPicker(setSheetState),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Pick a color',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 17,
+                                    color: Color(0xFFB9B9B9),
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.44,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      getColorName(selectedColor),
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 17,
+                                        color: Color(0xFFB9B9B9),
+                                        fontWeight: FontWeight.w400,
+                                        height: 1.44,
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      SizedBox(height: 56),
-
-                      // Update button
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              final name = nameController.text.trim();
-                              if (name.isEmpty) return;
-
-                              try {
-                                final newOpponent = isEditing
-                                    ? opponent!.copyWith(
-                                        name: name,
-                                        notes: notesController.text.trim().isEmpty
-                                            ? null
-                                            : notesController.text.trim(),
-                                        color: selectedColor,
-                                      )
-                                    : OpponentService.createNewOpponent(
-                                        name: name,
-                                        notes: notesController.text.trim().isEmpty
-                                            ? null
-                                            : notesController.text.trim(),
-                                        color: selectedColor,
-                                      );
-
-                                await OpponentService.saveOpponent(newOpponent);
-                                Navigator.pop(context);
-                                _loadOpponents(useCache: false);
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(isEditing
-                                        ? 'Opponent updated successfully'
-                                        : 'Opponent added successfully'),
-                                    backgroundColor: Color(0xFFA5EC44),
-                                  ),
-                                );
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Error: $e'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFFA5EC44),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              isEditing ? 'Update' : 'Add Opponent',
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
+                                    SizedBox(width: 10),
+                                    _buildIcon(
+                                      'icons/figma_icons/up_and_down.svg',
+                                      20,
+                                      Color(0xFFB9B9B9),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ),
-
-                      SizedBox(height: 16),
-
-                      // Cancel button
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              'Cancel',
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 24),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           );
         },
