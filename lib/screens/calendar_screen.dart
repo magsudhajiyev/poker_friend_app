@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import '../services/calendar_event_service.dart';
@@ -124,10 +125,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               ),
                             ),
                             // Title
-                            const Text(
-                              'New Event',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
+                            Text(                              'New Event',
+                              style: GoogleFonts.ibmPlexSans(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -231,10 +230,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      const Text(
-                                        'Event Type',
-                                        style: TextStyle(
-                                          fontFamily: 'Inter',
+                                      Text(                                        'Event Type',
+                                        style: GoogleFonts.ibmPlexSans(
                                           color: Colors.white,
                                           fontSize: 15,
                                           fontWeight: FontWeight.w400,
@@ -244,8 +241,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                         children: [
                                           Text(
                                             selectedType,
-                                            style: const TextStyle(
-                                              fontFamily: 'Inter',
+                                            style: GoogleFonts.ibmPlexSans(
                                               color: Color(0xFFB9B9B9),
                                               fontSize: 15,
                                               fontWeight: FontWeight.w400,
@@ -267,16 +263,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               // Title Input
                               TextField(
                                 controller: titleController,
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
+                                style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
                                   fontSize: 15,
                                   fontWeight: FontWeight.w400,
                                 ),
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: 'Title',
-                                  hintStyle: TextStyle(
-                                    fontFamily: 'Inter',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
                                     color: Color(0xFFB9B9B9),
                                     fontSize: 15,
                                     fontWeight: FontWeight.w400,
@@ -289,16 +283,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               // Location Input
                               TextField(
                                 controller: locationController,
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
+                                style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
                                   fontSize: 15,
                                   fontWeight: FontWeight.w400,
                                 ),
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: 'Location',
-                                  hintStyle: TextStyle(
-                                    fontFamily: 'Inter',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
                                     color: Color(0xFFB9B9B9),
                                     fontSize: 15,
                                     fontWeight: FontWeight.w400,
@@ -312,16 +304,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               TextField(
                                 controller: buyInController,
                                 keyboardType: TextInputType.number,
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
+                                style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
                                   fontSize: 15,
                                   fontWeight: FontWeight.w400,
                                 ),
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: 'Buy in amount',
-                                  hintStyle: TextStyle(
-                                    fontFamily: 'Inter',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
                                     color: Color(0xFFB9B9B9),
                                     fontSize: 15,
                                     fontWeight: FontWeight.w400,
@@ -348,10 +338,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Header
-                              const Text(
-                                'Event Date and Time',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
+                              Text(                                'Event Date and Time',
+                                style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
@@ -366,10 +354,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               // Starts Row
                               Row(
                                 children: [
-                                  const Text(
-                                    'Starts',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
+                                  Text(                                    'Starts',
+                                    style: GoogleFonts.ibmPlexSans(
                                       color: Colors.white,
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
@@ -397,8 +383,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                       ),
                                       child: Text(
                                         DateFormat('d MMM yyyy').format(dialogSelectedDate),
-                                        style: const TextStyle(
-                                          fontFamily: 'Inter',
+                                        style: GoogleFonts.ibmPlexSans(
                                           color: Colors.white,
                                           fontSize: 11,
                                           fontWeight: FontWeight.w500,
@@ -439,8 +424,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                       ),
                                       child: Text(
                                         dialogSelectedTime.format(context),
-                                        style: const TextStyle(
-                                          fontFamily: 'Inter',
+                                        style: GoogleFonts.ibmPlexSans(
                                           color: Colors.white,
                                           fontSize: 11,
                                           fontWeight: FontWeight.w500,
@@ -637,8 +621,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               children: [
                                 Text(
                                   'Select date:',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: GoogleFonts.ibmPlexSans(
                                     color: Color(0xFFBDBDBD),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -662,8 +645,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                         SizedBox(width: 4),
                                         Text(
                                           'Clear',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
+                                          style: GoogleFonts.ibmPlexSans(
                                             color: Color(0xFFD55A41),
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
@@ -696,8 +678,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                         SizedBox(width: 4),
                                         Text(
                                           'Today',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
+                                          style: GoogleFonts.ibmPlexSans(
                                             color: Color(0xFFFAFAFA),
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
@@ -744,8 +725,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                         children: [
                                           Text(
                                             '${displayMonth.year}',
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
+                                            style: GoogleFonts.ibmPlexSans(
                                               color: Color(0xFFFAFAFA),
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
@@ -772,8 +752,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                         ),
                                         Text(
                                           DateFormat('MMMM').format(displayMonth),
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
+                                          style: GoogleFonts.ibmPlexSans(
                                             color: Color(0xFFFAFAFA),
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
@@ -816,8 +795,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                                   child: Center(
                                                     child: Text(
                                                       day,
-                                                      style: TextStyle(
-                                                        fontFamily: 'Inter',
+                                                      style: GoogleFonts.ibmPlexSans(
                                                         color: Color(0xFFBDBDBD),
                                                         fontSize: 10,
                                                         fontWeight: FontWeight.w400,
@@ -855,8 +833,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                         child: Center(
                                           child: Text(
                                             prevMonthDay.toString(),
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
+                                            style: GoogleFonts.ibmPlexSans(
                                               color: Color(0x66FAFAFA), // Grayed out
                                               fontSize: 12,
                                               fontWeight: FontWeight.w400,
@@ -899,8 +876,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                         child: Center(
                                           child: Text(
                                             dayNumber.toString(),
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
+                                            style: GoogleFonts.ibmPlexSans(
                                               color: isSelected ? Colors.black : Color(0xFFFAFAFA),
                                               fontSize: 12,
                                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -935,8 +911,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     child: Center(
                                       child: Text(
                                         'Cancel',
-                                        style: TextStyle(
-                                          fontFamily: 'Inter',
+                                        style: GoogleFonts.ibmPlexSans(
                                           color: Color(0xFFFAFAFA),
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
@@ -959,8 +934,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                       child: Center(
                                         child: Text(
                                           'Done',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
+                                          style: GoogleFonts.ibmPlexSans(
                                             color: Colors.black,
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
@@ -1157,8 +1131,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           children: [
             Text(
               'Select Year',
-              style: TextStyle(
-                fontFamily: 'Inter',
+              style: GoogleFonts.ibmPlexSans(
                 color: Color(0xFFEBEBEB),
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -1188,8 +1161,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       child: Center(
                         child: Text(
                           year.toString(),
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             color: isCurrentYear ? Colors.black : Color(0xFFEBEBEB),
                             fontSize: 14,
                             fontWeight: isCurrentYear ? FontWeight.w600 : FontWeight.w400,

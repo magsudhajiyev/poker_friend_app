@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui' as ui;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -640,8 +641,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         // Recent Activity title
         Text(
           'RECENT ACTIVITY',
-          style: TextStyle(
-            fontFamily: 'Inter',
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
             color: Colors.white,
             fontWeight: FontWeight.w400,
@@ -687,20 +687,20 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 18,
-              fontFamily: 'Inter',
+              
               fontWeight: FontWeight.w500,
             ),
           ),
           Text(
             value,
             textAlign: TextAlign.right,
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 18,
-              fontFamily: 'Inter',
+              
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -719,8 +719,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         // Title
         Text(
           'POSITIONAL STATISTICS',
-          style: TextStyle(
-            fontFamily: 'Inter',
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
             color: Colors.white,
             fontWeight: FontWeight.w500,
@@ -752,8 +751,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   style: TextStyle(
                     color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                     fontSize: 12,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w500,
                     letterSpacing: 1.0,
                   ),
                   textAlign: TextAlign.center,
@@ -944,8 +942,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         // Title
         Text(
           'SESSION STATISTICS',
-          style: TextStyle(
-            fontFamily: 'Inter',
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
             color: Colors.white,
             fontWeight: FontWeight.w500,
@@ -994,8 +991,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   style: TextStyle(
                     color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                     fontSize: 12,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w500,
                     letterSpacing: 1.0,
                   ),
                   textAlign: TextAlign.center,

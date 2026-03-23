@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
 
 /// Glassy icon button with iOS-style glassmorphism effect
@@ -46,6 +47,25 @@ class GlassyIconButton extends StatelessWidget {
     this.badgeColor,
   }) : assert(icon != null || imagePath != null, 'Either icon or imagePath must be provided');
 
+  Widget _buildImageIcon(double size) {
+    final color = iconColor ?? Colors.white;
+    if (imagePath!.endsWith('.svg')) {
+      return SvgPicture.asset(
+        imagePath!,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      return Image.asset(
+        imagePath!,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final buttonSize = size ?? 38.0;
@@ -70,12 +90,7 @@ class GlassyIconButton extends StatelessWidget {
               highlightColor: Colors.white.withValues(alpha: 0.05),
               child: Center(
                 child: imagePath != null
-                    ? Image.asset(
-                        imagePath!,
-                        width: buttonIconSize,
-                        height: buttonIconSize,
-                        color: iconColor ?? Colors.white,
-                      )
+                    ? _buildImageIcon(buttonIconSize)
                     : Icon(
                         icon,
                         size: buttonIconSize,

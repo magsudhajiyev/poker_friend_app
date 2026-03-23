@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/club.dart';
 import '../services/auth_service.dart';
@@ -133,7 +134,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                               // Menu Card 2: Settings, Register Club, Help, Logout
                               _buildMenuCard([
                                 _MenuItemData(
-                                  iconPath: 'icons/flat_icons/gear.png',
+                                  iconPath: 'icons/figma_icons/gear.svg',
                                   fallbackIcon: Icons.settings_rounded,
                                   label: 'Settings',
                                   onTap: () {
@@ -147,7 +148,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   },
                                 ),
                                 _MenuItemData(
-                                  iconPath: 'icons/flat_icons/plus.png',
+                                  iconPath: 'icons/figma_icons/plus.svg',
                                   fallbackIcon: Icons.add_circle_outline_rounded,
                                   label: 'Register Club',
                                   onTap: () {
@@ -159,7 +160,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   },
                                 ),
                                 _MenuItemData(
-                                  iconPath: 'icons/flat_icons/question.png',
+                                  iconPath: 'icons/figma_icons/question.svg',
                                   fallbackIcon: Icons.help_outline_rounded,
                                   label: 'Help & Support',
                                   onTap: () {
@@ -168,7 +169,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   },
                                 ),
                                 _MenuItemData(
-                                  iconPath: 'icons/flat_icons/exit.png',
+                                  iconPath: 'icons/figma_icons/sign_out.svg',
                                   fallbackIcon: Icons.logout_rounded,
                                   label: 'Log out',
                                   isDestructive: true,
@@ -371,6 +372,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         children: [
           // Statistics
           _buildMenuItem(_MenuItemData(
+            iconPath: 'icons/figma_icons/stats.svg',
             fallbackIcon: Icons.bar_chart_rounded,
             label: 'Statistics',
             onTap: () {
@@ -390,6 +392,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
           // Bankroll
           _buildMenuItem(_MenuItemData(
+            iconPath: 'icons/figma_icons/bankroll.svg',
             fallbackIcon: Icons.account_balance_wallet_rounded,
             label: 'Bankroll',
             onTap: () {
@@ -434,11 +437,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     SizedBox(
                       width: 24,
                       height: 24,
-                      child: Icon(
-                        Icons.groups_rounded,
-                        color: color,
-                        size: 24,
-                      ),
+                      child: _buildIcon('icons/figma_icons/clubs.svg', 24, color),
                     ),
                     const SizedBox(width: 6),
                     // Label
@@ -449,6 +448,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           fontSize: 17,
                           fontWeight: FontWeight.w400,
                           color: color,
+                          height: 18 / 17, // line-height 18px
                         ),
                       ),
                     ),
@@ -556,6 +556,24 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     );
   }
 
+  Widget _buildIcon(String path, double size, Color color) {
+    if (path.endsWith('.svg')) {
+      return SvgPicture.asset(
+        path,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      return Image.asset(
+        path,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
+  }
+
   Widget _buildMenuItem(_MenuItemData item) {
     final color = item.isDestructive
         ? const Color(0xFFFF6B6B)
@@ -578,11 +596,13 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                 SizedBox(
                   width: 24,
                   height: 24,
-                  child: Icon(
-                    item.fallbackIcon,
-                    color: color,
-                    size: 24,
-                  ),
+                  child: item.iconPath != null
+                      ? _buildIcon(item.iconPath!, 24, color)
+                      : Icon(
+                          item.fallbackIcon,
+                          color: color,
+                          size: 24,
+                        ),
                 ),
                 const SizedBox(width: 6),
                 // Label
@@ -592,6 +612,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
                     color: color,
+                    height: 18 / 17, // line-height 18px
                   ),
                 ),
               ],

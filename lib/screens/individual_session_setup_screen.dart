@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../models/game_types.dart';
 import 'individual_session_tracking_screen.dart';
@@ -101,8 +102,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               children: [
                                 Text(
                                   'Session Name',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: GoogleFonts.ibmPlexSans(
                                     fontSize: 18,
                                     color: Color(0xFFF7FFF7),
                                     fontWeight: FontWeight.w700,
@@ -113,8 +113,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                 SizedBox(height: 16),
                                 TextField(
                                   controller: _sessionNameController,
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: GoogleFonts.ibmPlexSans(
                                     color: Colors.white,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400,
@@ -123,8 +122,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                   ),
                                   decoration: InputDecoration(
                                     hintText: 'e.g., "Friday Night Poker"',
-                                    hintStyle: TextStyle(
-                                      fontFamily: 'Inter',
+                                    hintStyle: GoogleFonts.ibmPlexSans(
                                       color: Color(0x99EBFFEF), // #ebffef99
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
@@ -167,8 +165,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             children: [
                               Text(
                                 'Choose Game Type',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
+                                style: GoogleFonts.ibmPlexSans(
                                   fontSize: 18,
                                   color: Color(0xFFF7FFF7),
                                   fontWeight: FontWeight.w700,
@@ -221,8 +218,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               children: [
                                 Text(
                                   'Buy-in Amount',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: GoogleFonts.ibmPlexSans(
                                     fontSize: 18,
                                     color: Color(0xFFF7FFF7),
                                     fontWeight: FontWeight.w700,
@@ -234,8 +230,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                 TextField(
                                   controller: _buyInController,
                                   keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: GoogleFonts.ibmPlexSans(
                                     color: Colors.white,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400,
@@ -244,8 +239,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                   ),
                                   decoration: InputDecoration(
                                     hintText: 'Enter buy-in amount',
-                                    hintStyle: TextStyle(
-                                      fontFamily: 'Inter',
+                                    hintStyle: GoogleFonts.ibmPlexSans(
                                       color: Color(0x99EBFFF0), // #ebfff099
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
@@ -253,8 +247,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                       height: 1.2,
                                     ),
                                     prefixText: '\$ ',
-                                    prefixStyle: TextStyle(
-                                      fontFamily: 'Inter',
+                                    prefixStyle: GoogleFonts.ibmPlexSans(
                                       color: Colors.white,
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
@@ -293,8 +286,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                       Expanded(
                                         child: Text(
                                           'In cash games your starting stack equals your buy-in amount.',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
+                                          style: GoogleFonts.ibmPlexSans(
                                             color: Color(0xFFC2C8C2), // #c2c8c2
                                             fontSize: 12,
                                             fontWeight: FontWeight.w400,
@@ -326,8 +318,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                 children: [
                                   Text(
                                     'Starting Stack',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
+                                    style: GoogleFonts.ibmPlexSans(
                                       fontSize: 18,
                                       color: Color(0xFFF7FFF7),
                                       fontWeight: FontWeight.w700,
@@ -339,8 +330,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                   TextField(
                                     controller: _startingStackController,
                                     keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
+                                    style: GoogleFonts.ibmPlexSans(
                                       color: Colors.white,
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
@@ -349,8 +339,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                     ),
                                     decoration: InputDecoration(
                                       hintText: 'Enter chip stack',
-                                      hintStyle: TextStyle(
-                                        fontFamily: 'Inter',
+                                      hintStyle: GoogleFonts.ibmPlexSans(
                                         color: Color(0x99EBFFF0), // #ebfff099
                                         fontSize: 14,
                                         fontWeight: FontWeight.w400,
@@ -456,8 +445,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                 children: [
                                   Text(
                                     'BB Ante',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
+                                    style: GoogleFonts.ibmPlexSans(
                                       fontSize: 18,
                                       color: Color(0xFFF7FFF7), // #f7fff7
                                       fontWeight: FontWeight.w700,
@@ -537,8 +525,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                 children: [
                                   Text(
                                     'Start Session',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
+                                    style: GoogleFonts.ibmPlexSans(
                                       fontSize: 18,
                                       color: isFormValid ? Colors.black : Color(0xFF9A9A9A),
                                       fontWeight: FontWeight.w700,
@@ -589,8 +576,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
         children: [
           Text(
             title,
-            style: TextStyle(
-              fontFamily: 'Inter',
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 16,
               color: Colors.white,
               fontWeight: FontWeight.w700,
@@ -729,8 +715,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
           backgroundColor: Color(0xFF1F1F23),
           title: Text(
             title,
-            style: TextStyle(
-              fontFamily: 'Inter',
+            style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
@@ -738,16 +723,14 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontFamily: 'Inter',
+            style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
             decoration: InputDecoration(
               hintText: 'Enter value',
-              hintStyle: TextStyle(
-                fontFamily: 'Inter',
+              hintStyle: GoogleFonts.ibmPlexSans(
                 color: Color(0xFF9A9A9A),
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
@@ -774,8 +757,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               onPressed: () => Navigator.pop(context),
               child: Text(
                 'Cancel',
-                style: TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.ibmPlexSans(
                   color: Color(0xFF9A9A9A),
                   fontWeight: FontWeight.w500,
                 ),
@@ -791,8 +773,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               },
               child: Text(
                 'OK',
-                style: TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.ibmPlexSans(
                   color: Color(0xFFB9FF99),
                   fontWeight: FontWeight.w600,
                 ),
@@ -905,8 +886,7 @@ class _GameTypeButton extends StatelessWidget {
           children: [
             Text(
               isCash ? 'Cash Game\n ' : 'MTT\n(Tournament)',
-              style: TextStyle(
-                fontFamily: 'Inter',
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 color: isCash ? Color(0xFFCDE63B) : Color(0xFF76C527), // #cde63b for cash, #76c527 for MTT
                 fontWeight: FontWeight.w700,
@@ -918,8 +898,7 @@ class _GameTypeButton extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               isCash ? 'Ring Game' : 'Multi-table',
-              style: TextStyle(
-                fontFamily: 'Inter',
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 color: Color(0xFFE4FFE3), // #e4ffe3
                 fontWeight: FontWeight.w400,

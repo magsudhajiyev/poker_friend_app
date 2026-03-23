@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 
@@ -163,10 +164,10 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         // Title
         Text(
           _isSignUp ? 'Sign up' : 'Log in to your account',
-          style: TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 32,
-            fontFamily: 'Inter',
+            
             fontWeight: FontWeight.w600,
             letterSpacing: -1,
           ),
@@ -182,8 +183,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
           style: TextStyle(
             color: Colors.white.withOpacity(0.70),
             fontSize: 16,
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w400,
           ),
         ),
       ],
@@ -271,8 +271,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.60),
                   fontSize: 13,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w400,
+                                    fontWeight: FontWeight.w400,
                   height: 1.5,
                 ),
                 children: [
@@ -326,9 +325,9 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                     )
                   : Text(
                       'Create account',
-                      style: TextStyle(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 16,
-                        fontFamily: 'Inter',
+                        
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -350,8 +349,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.70),
                     fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
+                                        fontWeight: FontWeight.w400,
                   ),
                   children: [
                     TextSpan(text: 'Already have an account? '),
@@ -452,9 +450,9 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                     )
                   : Text(
                       'Sign in',
-                      style: TextStyle(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 16,
-                        fontFamily: 'Inter',
+                        
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -476,8 +474,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.70),
                     fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
+                                        fontWeight: FontWeight.w400,
                   ),
                   children: [
                     TextSpan(text: "Don't have an account? "),
@@ -512,10 +509,10 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
-      style: TextStyle(
+      style: GoogleFonts.ibmPlexSans(
         color: Colors.white,
         fontSize: 16,
-        fontFamily: 'Inter',
+        
         fontWeight: FontWeight.w400,
       ),
       decoration: InputDecoration(
@@ -523,8 +520,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         labelStyle: TextStyle(
           color: Colors.white.withOpacity(0.50),
           fontSize: 16,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w400,
         ),
         filled: true,
         fillColor: Colors.white.withOpacity(0.10),

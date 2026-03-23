@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui' as ui;
 import '../../constants/typography.dart';
 import '../buttons/glassy_icon_button.dart';
@@ -61,8 +62,7 @@ class PageHeader extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 24,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -74,8 +74,7 @@ class PageHeader extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         subtitle!,
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
                           color: Colors.white,

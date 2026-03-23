@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../services/subscription_service.dart';
 
@@ -155,8 +156,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       SizedBox(width: 8),
                       Text(
                         'PREMIUM',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: Colors.black,
@@ -172,8 +172,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 // Title
                 Text(
                   'Unlock Premium Features',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -185,8 +184,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   SizedBox(height: 8),
                   Text(
                     '${widget.featureName} is a premium feature',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       color: Colors.white.withOpacity(0.7),
                     ),
@@ -231,8 +229,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         )
                       : Text(
                           'Restore Purchases',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 14,
                             color: Colors.white70,
                           ),
@@ -244,8 +241,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 // Terms and privacy
                 Text(
                   'Subscriptions auto-renew. Cancel anytime.',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
                     color: Colors.white.withOpacity(0.5),
                   ),
@@ -290,8 +286,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               Expanded(
                 child: Text(
                   feature['text'] as String,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     color: Colors.white,
                   ),
@@ -351,8 +346,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     children: [
                       Text(
                         _getPackageTitle(package),
-                        style: TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -368,8 +362,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           ),
                           child: Text(
                             'BEST VALUE',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: Colors.black,
@@ -382,8 +375,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   SizedBox(height: 4),
                   Text(
                     '$price $period',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       color: Colors.white.withOpacity(0.7),
                     ),
@@ -399,8 +391,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
               child: Text(
                 'Subscribe',
-                style: TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.black,
@@ -470,8 +461,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           ),
           child: Text(
             'Demo Mode - Sandbox Testing',
-            style: TextStyle(
-              fontFamily: 'Inter',
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               color: Colors.orange,
             ),
@@ -531,8 +521,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -548,8 +537,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           ),
                           child: Text(
                             'BEST VALUE',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: Colors.black,
@@ -562,8 +550,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   SizedBox(height: 4),
                   Text(
                     '$price $period',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       color: Colors.white.withOpacity(0.7),
                     ),
@@ -579,8 +566,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
               child: Text(
                 'Subscribe',
-                style: TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.black,

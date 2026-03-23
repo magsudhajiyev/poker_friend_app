@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import '../services/firebase_service.dart';
@@ -264,8 +265,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                   // Title
                   Text(
                     'No $gameType Sessions',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: GoogleFonts.ibmPlexSans(
                       color: Color(0xFFF8FFF7),
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -278,8 +278,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                   Text(
                     'Play some $gameType Poker hands to see the results',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: GoogleFonts.ibmPlexSans(
                       color: Color(0xFFF8FFF7),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

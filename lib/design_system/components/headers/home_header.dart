@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../constants/colors.dart';
 import '../../constants/typography.dart';
 
@@ -348,6 +349,30 @@ class HomeHeader extends StatelessWidget {
     );
   }
 
+  Widget _buildImageIcon(String path, double size, Color? color) {
+    if (path.endsWith('.svg')) {
+      return color != null
+          ? SvgPicture.asset(
+              path,
+              width: size,
+              height: size,
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            )
+          : SvgPicture.asset(
+              path,
+              width: size,
+              height: size,
+            );
+    } else {
+      return Image.asset(
+        path,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
+  }
+
   Widget _buildImageIconButton({
     required String imagePath,
     VoidCallback? onPressed,
@@ -369,11 +394,10 @@ class HomeHeader extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Image.asset(
+              child: _buildImageIcon(
                 imagePath,
-                width: 24,
-                height: 24,
-                color: applyColorFilter ? Colors.white : null,
+                24,
+                applyColorFilter ? Colors.white : null,
               ),
             ),
           ),
@@ -425,12 +449,7 @@ class HomeHeader extends StatelessWidget {
             height: 44,
             child: Center(
               child: imagePath != null
-                  ? Image.asset(
-                      imagePath,
-                      width: 28,
-                      height: 28,
-                      color: Colors.white,
-                    )
+                  ? _buildImageIcon(imagePath, 28, Colors.white)
                   : Icon(
                       icon,
                       color: Colors.white,

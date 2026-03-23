@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 import '../design_system/poker_friend_theme.dart';
@@ -480,8 +481,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 SizedBox(height: 16),
                 Text(
                   'Stop Session?',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
@@ -491,8 +491,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 Text(
                   'Are you sure you want to stop this session? All hands will be saved.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 14,
                   ),
@@ -512,8 +511,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         ),
                         child: Text(
                           'Cancel',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             color: Colors.white.withOpacity(0.8),
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -534,8 +532,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         ),
                         child: Text(
                           'Stop',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -873,8 +870,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         children: [
                           Text(
                             'Hand #${gameState.handNumber}',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 18,
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
@@ -883,8 +879,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           SizedBox(height: 2),
                           Text(
                             '${gameState.currentRound.name.toUpperCase()} • ${gameState.getActivePlayers().length} players',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 12,
                               color: Colors.white.withOpacity(0.6),
                               fontWeight: FontWeight.w400,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'auth_screen_experimental.dart';
 
 class IntroScreen extends StatelessWidget {
@@ -33,10 +34,10 @@ class IntroScreen extends StatelessWidget {
                       child: Center(
                         child: Text(
                           'P',
-                          style: TextStyle(
+                          style: GoogleFonts.ibmPlexSans(
                             color: Colors.white,
                             fontSize: 24,
-                            fontFamily: 'Inter',
+                            
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -45,10 +46,10 @@ class IntroScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Text(
                       'Welcome to Poker Friend',
-                      style: TextStyle(
+                      style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 16,
-                        fontFamily: 'Inter',
+                        
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -66,10 +67,10 @@ class IntroScreen extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 60),
                       child: Text(
                         'READ THE GAME\nLIKE A PRO',
-                        style: TextStyle(
+                        style: GoogleFonts.ibmPlexSans(
                           color: Colors.white,
                           fontSize: 40,
-                          fontFamily: 'Inter',
+                          
                           fontWeight: FontWeight.w800,
                           height: 1.1,
                           letterSpacing: -1.5,
@@ -109,9 +110,9 @@ class IntroScreen extends StatelessWidget {
                         ),
                         child: Text(
                           'Create account',
-                          style: TextStyle(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
-                            fontFamily: 'Inter',
+                            
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -148,9 +149,9 @@ class IntroScreen extends StatelessWidget {
                         ),
                         child: Text(
                           'Log in',
-                          style: TextStyle(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
-                            fontFamily: 'Inter',
+                            
                             fontWeight: FontWeight.w600,
                           ),
                         ),

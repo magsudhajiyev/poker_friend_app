@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui' as ui;
 import '../design_system/poker_friend_theme.dart';
 import '../widgets/global_bottom_nav_bar.dart';
@@ -111,8 +112,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 22,
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
@@ -123,8 +123,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
               SizedBox(height: 7),
               Text(
                 subtitle,
-                style: TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 14,
                   color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                   fontWeight: FontWeight.w500,
@@ -141,8 +140,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
             children: [
               Text(
                 'Features:',
-                style: TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 14,
                   color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                   fontWeight: FontWeight.w500,
@@ -155,8 +153,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                 padding: EdgeInsets.only(bottom: 4),
                 child: Text(
                   '• $feature',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
                     fontWeight: FontWeight.w400,
@@ -183,8 +180,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                 children: [
                   Text(
                     'Start',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 18,
                       color: Colors.black,
                       fontWeight: FontWeight.w500,

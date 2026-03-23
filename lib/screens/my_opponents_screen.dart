@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../models/opponent_stats.dart';
@@ -103,6 +105,24 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     }).toList();
   }
 
+  Widget _buildIcon(String path, double size, Color color) {
+    if (path.endsWith('.svg')) {
+      return SvgPicture.asset(
+        path,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      return Image.asset(
+        path,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,8 +148,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                         children: [
                           Text(
                             'Opponents',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 24,
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
@@ -140,8 +159,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                           SizedBox(height: 6),
                           Text(
                             '${opponents.length} tracked players',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 12,
                               color: Color(0xFFFFFFFF).withOpacity(0.8),
                               fontWeight: FontWeight.w400,
@@ -182,24 +200,22 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                       border: Border.all(color: Colors.white.withOpacity(0.1)),
                     ),
                     child: TextField(
-                      style: TextStyle(
+                      style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 16,
-                        fontFamily: 'Inter',
+                        
                       ),
                       decoration: InputDecoration(
                         hintText: 'Search opponents...',
                         hintStyle: TextStyle(
                           color: Colors.white.withOpacity(0.5),
-                          fontFamily: 'Inter',
-                        ),
+                                                  ),
                         prefixIcon: Padding(
                           padding: EdgeInsets.only(right: 8),
-                          child: Image.asset(
+                          child: _buildIcon(
                             'icons/flat_icons/search.png',
-                            width: 20,
-                            height: 20,
-                            color: Colors.white.withOpacity(0.7),
+                            20,
+                            Colors.white.withOpacity(0.7),
                           ),
                         ),
                         prefixIconConstraints: BoxConstraints(
@@ -298,11 +314,10 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Icon section
-              Image.asset(
+              _buildIcon(
                 'icons/flat_icons/people.png',
-                width: 44,
-                height: 44,
-                color: Colors.white,
+                44,
+                Colors.white,
               ),
               SizedBox(height: 20),
               // Text section with horizontal padding
@@ -313,8 +328,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                     Text(
                       searchQuery.isEmpty ? 'No Opponents Yet' : 'No Results',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 16,
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -327,8 +341,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                         ? 'Add opponents to track their playing styles and statistics!'
                         : 'Try a different search term',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 12,
                         color: Color(0xFFF8FFF7),
                         fontWeight: FontWeight.w400,
@@ -356,8 +369,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                     ),
                     child: Text(
                       'Add Opponent',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF011100), // --primary-100
@@ -435,8 +447,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                           children: [
                             Text(
                               opponent.name,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.ibmPlexSans(
                                 fontSize: 18,
                                 color: Color(0xFFFFFFFF),
                                 fontWeight: FontWeight.w500,
@@ -446,8 +457,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                             ),
                             Text(
                               opponentStats[opponent.id]?.playingStyle ?? 'No Data',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.ibmPlexSans(
                                 fontSize: 12,
                                 color: _getStyleColor(opponentStats[opponent.id]?.playerType ?? PlayerType.unknown),
                                 fontWeight: FontWeight.w400,
@@ -465,8 +475,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                       children: [
                         Text(
                           '${opponentHandsCounts[opponent.id] ?? 0}',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 18,
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
@@ -476,8 +485,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                         ),
                         Text(
                           'Hands',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 12,
                             color: Colors.white,
                             fontWeight: FontWeight.w400,
@@ -499,17 +507,15 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                     // Left: Last seen
                     Row(
                       children: [
-                        Image.asset(
+                        _buildIcon(
                           'icons/flat_icons/eye.png',
-                          width: 18,
-                          height: 18,
-                          color: Color(0xFFFFFFFF).withOpacity(0.8),
+                          18,
+                          Color(0xFFFFFFFF).withOpacity(0.8),
                         ),
                         SizedBox(width: 4),
                         Text(
                           'Last Seen: ${DateFormat('MMM dd').format(opponent.lastSeenAt)}',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 10,
                             color: Color(0xFFFFFFFF).withOpacity(0.8),
                             fontWeight: FontWeight.w400,
@@ -532,11 +538,10 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                               borderRadius: BorderRadius.circular(70),
                             ),
                             child: Center(
-                              child: Image.asset(
+                              child: _buildIcon(
                                 'icons/flat_icons/edit.png',
-                                width: 20,
-                                height: 20,
-                                color: Colors.white,
+                                20,
+                                Colors.white,
                               ),
                             ),
                           ),
@@ -558,11 +563,10 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                               ],
                             ),
                             child: Center(
-                              child: Image.asset(
+                              child: _buildIcon(
                                 'icons/flat_icons/bin.png',
-                                width: 20,
-                                height: 20,
-                                color: Colors.white,
+                                20,
+                                Colors.white,
                               ),
                             ),
                           ),
@@ -684,8 +688,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             isEditing ? 'Edit Opponent' : 'Add Opponent',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
@@ -716,15 +719,13 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                               ),
                               child: TextField(
                                 controller: nameController,
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
+                                style: GoogleFonts.ibmPlexSans(
                                   fontSize: 16,
                                   color: Colors.white,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Opponent Name',
-                                  hintStyle: TextStyle(
-                                    fontFamily: 'Inter',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
                                     color: Colors.white.withOpacity(0.5),
                                   ),
                                   border: InputBorder.none,
@@ -751,15 +752,13 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                               ),
                               child: TextField(
                                 controller: notesController,
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
+                                style: GoogleFonts.ibmPlexSans(
                                   fontSize: 16,
                                   color: Colors.white,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Notes (Optional)',
-                                  hintStyle: TextStyle(
-                                    fontFamily: 'Inter',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
                                     color: Colors.white.withOpacity(0.5),
                                   ),
                                   border: InputBorder.none,
@@ -783,8 +782,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                           children: [
                             Text(
                               'Pick a color:',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.ibmPlexSans(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
@@ -884,8 +882,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                             ),
                             child: Text(
                               isEditing ? 'Update' : 'Add Opponent',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.ibmPlexSans(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.black,
@@ -914,8 +911,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                             ),
                             child: Text(
                               'Cancel',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.ibmPlexSans(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.black,
@@ -963,8 +959,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                     // Title
                     Text(
                       'Delete opponents?',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -978,8 +973,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                       child: Text(
                         'Are you sure you want to delete "${opponent.name}"?\nThis action can not be undone',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Colors.white,
@@ -1022,8 +1016,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                         child: Text(
                           'Delete',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFFD55A41), // --error
@@ -1049,8 +1042,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                   child: Text(
                     'Cancel',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,

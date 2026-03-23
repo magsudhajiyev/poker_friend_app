@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
 import '../screens/home_screen.dart';
 import '../screens/my_opponents_screen.dart';
@@ -118,15 +119,32 @@ class GlobalBottomNavBar extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: Image.asset(
+          child: _buildIcon(
             iconPath,
-            width: 28,
-            height: 28,
-            color: isActive ? Colors.white : const Color(0xFF636366),
+            28,
+            isActive ? Colors.white : const Color(0xFF636366),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildIcon(String path, double size, Color color) {
+    if (path.endsWith('.svg')) {
+      return SvgPicture.asset(
+        path,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      return Image.asset(
+        path,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
   }
 
   Widget _buildPlusButton(BuildContext context) {
@@ -145,11 +163,10 @@ class GlobalBottomNavBar extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: Image.asset(
+          child: _buildIcon(
             'icons/flat_icons/plus.png',
-            width: 28,
-            height: 28,
-            color: const Color(0xFF1C1C1E),
+            28,
+            const Color(0xFF1C1C1E),
           ),
         ),
       ),

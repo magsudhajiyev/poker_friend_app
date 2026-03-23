@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
@@ -325,6 +326,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         'seatNumber': seat.seatNumber,
       },
     );
+  }
+
+  /// Build icon supporting both SVG and PNG formats
+  Widget _buildIcon(String path, double size, Color color) {
+    if (path.endsWith('.svg')) {
+      return SvgPicture.asset(
+        path,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      return Image.asset(
+        path,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
   }
 
   /// Show active sessions dropdown
@@ -1781,11 +1801,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Image.asset(
+                    child: _buildIcon(
                       'icons/flat_icons/stats.png',
-                      color: Colors.white,
-                      width: 26,
-                      height: 26,
+                      26,
+                      Colors.white,
                     ),
                   ),
                 ),
@@ -1807,11 +1826,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         shape: BoxShape.circle,
                       ),
                       child: Center(
-                        child: Image.asset(
+                        child: _buildIcon(
                           'icons/flat_icons/bell.png',
-                          color: Colors.white,
-                          width: 26,
-                          height: 26,
+                          26,
+                          Colors.white,
                         ),
                       ),
                     ),
@@ -2114,8 +2132,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Text(
                   sessionName,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 20,
                     color: Color(0xFFF8FFF7),
                     fontWeight: FontWeight.w600,
@@ -2126,8 +2143,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 const SizedBox(height: 6),
                 Text(
                   formattedDate,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
                     color: Color(0xFFF8FFF7),
                     fontWeight: FontWeight.w500,
@@ -2241,8 +2257,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   Text(
                     event['title'] ?? 'Event',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 20,
                       color: Color(0xFFF8FFF7),
                       fontWeight: FontWeight.w600,
@@ -2255,8 +2270,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     children: [
                       Text(
                         formattedDate,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           color: Color(0xFFF8FFF7),
                           fontWeight: FontWeight.w500,
@@ -2283,8 +2297,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               const SizedBox(width: 4),
                               Text(
                                 '$goingCount going',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
+                                style: GoogleFonts.ibmPlexSans(
                                   fontSize: 11,
                                   color: PokerFriendColors.green,
                                   fontWeight: FontWeight.w600,
@@ -2409,8 +2422,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               // Event title
               Text(
                 eventTitle,
-                style: TextStyle(
-                  fontFamily: 'Inter',
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 16,
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
@@ -2441,8 +2453,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         children: [
                           Text(
                             'Edit Event',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 14,
                               color: Color(0xFFEBFFEF),
                               fontWeight: FontWeight.w400,
@@ -2493,8 +2504,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         children: [
                           Text(
                             'Delete Event',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 14,
                               color: Color(0xFFEBFFEF),
                               fontWeight: FontWeight.w400,
@@ -2592,8 +2602,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             children: [
                               Text(
                                 'Edit Event',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
+                                style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
                                   fontSize: 20,
                                   fontWeight: FontWeight.w700,
@@ -2627,8 +2636,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 value: selectedType,
                                 dropdownColor: Color(0xFF000300),
                                 icon: Icon(Icons.keyboard_arrow_down, color: Color(0x99EBFFEF), size: 18),
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
+                                style: GoogleFonts.ibmPlexSans(
                                   color: Color(0x99EBFFEF),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
@@ -2653,16 +2661,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           // Event Name Field
                           TextField(
                             controller: titleController,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               color: Color(0x99EBFFEF),
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
                               hintText: 'Event Name',
-                              hintStyle: TextStyle(
-                                fontFamily: 'Inter',
+                              hintStyle: GoogleFonts.ibmPlexSans(
                                 color: Color(0x99EBFFEF),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
@@ -2689,16 +2695,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           // Location/Venue Field
                           TextField(
                             controller: locationController,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               color: Color(0x99EBFFEF),
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
                               hintText: 'Location/Venue',
-                              hintStyle: TextStyle(
-                                fontFamily: 'Inter',
+                              hintStyle: GoogleFonts.ibmPlexSans(
                                 color: Color(0x99EBFFEF),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
@@ -2726,16 +2730,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           TextField(
                             controller: buyInController,
                             keyboardType: TextInputType.number,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               color: Color(0x99EBFFEF),
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
                               hintText: 'Buy in amount',
-                              hintStyle: TextStyle(
-                                fontFamily: 'Inter',
+                              hintStyle: GoogleFonts.ibmPlexSans(
                                 color: Color(0x99EBFFEF),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
@@ -2787,8 +2789,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   SizedBox(width: 8),
                                   Text(
                                     DateFormat('MMM dd, yyyy').format(dialogSelectedDate),
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
+                                    style: GoogleFonts.ibmPlexSans(
                                       color: Color(0x99EBFFEF),
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
@@ -2830,8 +2831,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   SizedBox(width: 8),
                                   Text(
                                     selectedTime.format(context),
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
+                                    style: GoogleFonts.ibmPlexSans(
                                       color: Color(0x99EBFFEF),
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
@@ -2888,8 +2888,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               child: Center(
                                 child: Text(
                                   'Save Changes',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: GoogleFonts.ibmPlexSans(
                                     color: Colors.black,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w400,
@@ -2967,8 +2966,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               children: [
                                 Text(
                                   'Select date:',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: GoogleFonts.ibmPlexSans(
                                     color: Color(0xFFBDBDBD),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -2992,8 +2990,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         SizedBox(width: 4),
                                         Text(
                                           'Clear',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
+                                          style: GoogleFonts.ibmPlexSans(
                                             color: Color(0xFFD55A41),
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
@@ -3026,8 +3023,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         SizedBox(width: 4),
                                         Text(
                                           'Today',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
+                                          style: GoogleFonts.ibmPlexSans(
                                             color: Color(0xFFFAFAFA),
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
@@ -3074,8 +3070,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         children: [
                                           Text(
                                             '${displayMonth.year}',
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
+                                            style: GoogleFonts.ibmPlexSans(
                                               color: Color(0xFFFAFAFA),
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
@@ -3102,8 +3097,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         ),
                                         Text(
                                           DateFormat('MMMM').format(displayMonth),
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
+                                          style: GoogleFonts.ibmPlexSans(
                                             color: Color(0xFFFAFAFA),
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
@@ -3146,8 +3140,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                   child: Center(
                                                     child: Text(
                                                       day,
-                                                      style: TextStyle(
-                                                        fontFamily: 'Inter',
+                                                      style: GoogleFonts.ibmPlexSans(
                                                         color: Color(0xFFBDBDBD),
                                                         fontSize: 10,
                                                         fontWeight: FontWeight.w400,
@@ -3185,8 +3178,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         child: Center(
                                           child: Text(
                                             prevMonthDay.toString(),
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
+                                            style: GoogleFonts.ibmPlexSans(
                                               color: Color(0x66FAFAFA), // Grayed out
                                               fontSize: 12,
                                               fontWeight: FontWeight.w400,
@@ -3229,8 +3221,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         child: Center(
                                           child: Text(
                                             dayNumber.toString(),
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
+                                            style: GoogleFonts.ibmPlexSans(
                                               color: isSelected ? Colors.black : Color(0xFFFAFAFA),
                                               fontSize: 12,
                                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -3265,8 +3256,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     child: Center(
                                       child: Text(
                                         'Cancel',
-                                        style: TextStyle(
-                                          fontFamily: 'Inter',
+                                        style: GoogleFonts.ibmPlexSans(
                                           color: Color(0xFFFAFAFA),
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
@@ -3289,8 +3279,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       child: Center(
                                         child: Text(
                                           'Done',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
+                                          style: GoogleFonts.ibmPlexSans(
                                             color: Colors.black,
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
@@ -3377,8 +3366,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       padding: EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
                         'Delete $eventName?',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 16,
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -3397,8 +3385,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       padding: EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
                         'Are you sure you want to delete "$eventName"?',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
@@ -3431,8 +3418,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 10),
                         child: Text(
                           'Delete',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
                             color: Color(0xFFD55A41), // Red color
                             fontWeight: FontWeight.w600,
@@ -3464,8 +3450,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   width: double.infinity,
                   child: Text(
                     'Cancel',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 16,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -3530,10 +3515,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 13,
-            fontFamily: 'Inter',
+            
             fontWeight: FontWeight.w500,
             letterSpacing: -0.26,
           ),
@@ -3647,10 +3632,10 @@ class EarningsChartPainter extends CustomPainter {
       final value = minValue + (i * valueRange / 4);
       textPainter.text = TextSpan(
         text: '\$${value.toInt()}',
-        style: TextStyle(
+        style: GoogleFonts.ibmPlexSans(
           color: Colors.white,
           fontSize: 11,
-          fontFamily: 'Inter',
+          
           fontWeight: FontWeight.w300,
         ),
       );
@@ -3718,10 +3703,10 @@ class EarningsChartPainter extends CustomPainter {
 
       textPainter.text = TextSpan(
         text: data[i]['date'],
-        style: TextStyle(
+        style: GoogleFonts.ibmPlexSans(
           color: Colors.white,
           fontSize: 11,
-          fontFamily: 'Inter',
+          
           fontWeight: FontWeight.w300,
         ),
       );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Success popup shown after successfully adding a calendar event.
 /// Slides up from the bottom of the screen with two action buttons.
@@ -76,8 +77,7 @@ class EventSuccessPopup extends StatelessWidget {
                 Text(
                   'Nice! Your event is now on\nthe calendar.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -89,8 +89,7 @@ class EventSuccessPopup extends StatelessWidget {
                 Text(
                   'You can edit or remove it anytime.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     color: Color(0xFFF8FFF7),
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
@@ -116,8 +115,7 @@ class EventSuccessPopup extends StatelessWidget {
                         ),
                         child: Text(
                           'Go to calendar',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -139,8 +137,7 @@ class EventSuccessPopup extends StatelessWidget {
                         ),
                         child: Text(
                           'Add another event',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w400,
                           ),

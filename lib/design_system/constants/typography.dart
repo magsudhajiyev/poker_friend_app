@@ -4,15 +4,10 @@ import 'colors.dart';
 
 /// Typography constants for the design system
 /// Provides reusable text styles used throughout the app
+/// Primary font: IBM Plex Sans (17px base)
 class AppTypography {
-  // Font Families
-  static const String inter = 'Inter';
-  static const String robotoMono = 'RobotoMono';
-  static const String ibmPlexSans = 'IBMPlexSans';
-
   // Section Headers (Lime green uppercase titles)
-  static TextStyle sectionHeader({Color? color}) => TextStyle(
-    fontFamily: inter,
+  static TextStyle sectionHeader({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 12,
     color: color ?? AppColors.limeGreen,
     fontWeight: FontWeight.w600,
@@ -20,32 +15,28 @@ class AppTypography {
   );
 
   // Page Titles
-  static TextStyle pageTitle({Color? color}) => TextStyle(
-    fontFamily: inter,
+  static TextStyle pageTitle({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 28,
     color: color ?? Colors.white,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.56,
   );
 
-  static TextStyle pageTitleLarge({Color? color}) => TextStyle(
-    fontFamily: inter,
+  static TextStyle pageTitleLarge({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 32,
     color: color ?? Colors.white,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.w700,
     letterSpacing: -0.5,
   );
 
   // Subtitles
-  static TextStyle pageSubtitle({Color? color}) => TextStyle(
-    fontFamily: inter,
+  static TextStyle pageSubtitle({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 16,
     color: color ?? Colors.white.withOpacity(0.8),
     fontWeight: FontWeight.w500,
   );
 
-  static TextStyle subtitle({Color? color}) => TextStyle(
-    fontFamily: inter,
+  static TextStyle subtitle({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 14,
     color: color ?? Colors.white,
     fontWeight: FontWeight.w500,
@@ -54,8 +45,7 @@ class AppTypography {
   );
 
   // Card Titles
-  static TextStyle cardTitle({Color? color}) => TextStyle(
-    fontFamily: inter,
+  static TextStyle cardTitle({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 24,
     color: color ?? AppColors.limeGreen,
     fontWeight: FontWeight.w700,
@@ -63,69 +53,57 @@ class AppTypography {
     height: 1.0,
   );
 
-  // Body Text
-  static TextStyle bodyLarge({Color? color}) => TextStyle(
-    fontFamily: inter,
-    fontSize: 18,
+  // Body Text - base 17px
+  static TextStyle bodyLarge({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
     color: color ?? Colors.white,
     fontWeight: FontWeight.w400,
-    letterSpacing: 1.0,
-    height: 1.0,
+    height: 1.44,
   );
 
-  static TextStyle bodyMedium({Color? color}) => TextStyle(
-    fontFamily: inter,
-    fontSize: 16,
+  static TextStyle bodyMedium({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 15,
     color: color ?? Colors.white,
     fontWeight: FontWeight.w400,
-    letterSpacing: 1.0,
-    height: 1.0,
+    height: 1.44,
   );
 
-  static TextStyle bodySmall({Color? color}) => TextStyle(
-    fontFamily: inter,
+  static TextStyle bodySmall({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 14,
     color: color ?? Colors.white,
     fontWeight: FontWeight.w400,
-    letterSpacing: 1.0,
-    height: 1.0,
+    height: 1.44,
   );
 
   // Button Text
-  static TextStyle buttonText({Color? color}) => TextStyle(
-    fontFamily: inter,
-    fontSize: 18,
+  static TextStyle buttonText({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
     color: color ?? Colors.black,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 1.0,
-    height: 1.5,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.43,
   );
 
-  // Monetary Values (RobotoMono)
-  static TextStyle monetaryLarge({Color? color}) => TextStyle(
-    fontFamily: robotoMono,
+  // Monetary Values (Roboto Mono for numbers)
+  static TextStyle monetaryLarge({Color? color}) => GoogleFonts.robotoMono(
     fontSize: 38,
     color: color ?? Colors.white,
     fontWeight: FontWeight.w700,
   );
 
-  static TextStyle monetaryMedium({Color? color}) => TextStyle(
-    fontFamily: robotoMono,
+  static TextStyle monetaryMedium({Color? color}) => GoogleFonts.robotoMono(
     fontSize: 24,
     color: color ?? Colors.white,
     fontWeight: FontWeight.w500,
   );
 
   // Labels
-  static TextStyle label({Color? color}) => TextStyle(
-    fontFamily: inter,
+  static TextStyle label({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 14,
     color: color ?? Colors.white.withOpacity(0.8),
     fontWeight: FontWeight.w400,
   );
 
-  static TextStyle pillLabel({Color? color}) => TextStyle(
-    fontFamily: inter,
+  static TextStyle pillLabel({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 14,
     color: color ?? Colors.white,
     fontWeight: FontWeight.w500,

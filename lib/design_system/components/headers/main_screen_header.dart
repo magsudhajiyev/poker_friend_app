@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui' as ui;
 import '../buttons/glassy_icon_button.dart';
 
@@ -101,8 +102,7 @@ class MainScreenHeader extends StatelessWidget {
                           // Title (greeting with username or just title)
                           Text(
                             username != null ? 'Hey, $username' : title,
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
@@ -115,8 +115,7 @@ class MainScreenHeader extends StatelessWidget {
                             const SizedBox(height: 6),
                             Text(
                               subtitle!,
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
+                              style: GoogleFonts.ibmPlexSans(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w400,
                                 color: Colors.white,

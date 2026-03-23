@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 import '../../constants/typography.dart';
@@ -64,12 +65,7 @@ class InfoCard extends StatelessWidget {
               width: 24,
               height: 24,
               child: iconPath != null
-                  ? Image.asset(
-                      iconPath!,
-                      width: 24,
-                      height: 24,
-                      color: iconColor ?? Colors.white,
-                    )
+                  ? _buildIcon(24)
                   : _buildPlaceholderIcon(),
             ),
             const SizedBox(height: 14),
@@ -143,12 +139,7 @@ class InfoCard extends StatelessWidget {
               ),
               child: Center(
                 child: iconPath != null
-                    ? Image.asset(
-                        iconPath!,
-                        width: 20,
-                        height: 20,
-                        color: iconColor ?? Colors.white,
-                      )
+                    ? _buildIcon(20)
                     : Icon(Icons.style, color: iconColor ?? Colors.white, size: 20),
               ),
             ),
@@ -217,6 +208,26 @@ class InfoCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Build icon supporting both SVG and PNG formats
+  Widget _buildIcon(double size) {
+    final color = iconColor ?? Colors.white;
+    if (iconPath!.endsWith('.svg')) {
+      return SvgPicture.asset(
+        iconPath!,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      return Image.asset(
+        iconPath!,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
   }
 
   Widget _buildPlaceholderIcon() {

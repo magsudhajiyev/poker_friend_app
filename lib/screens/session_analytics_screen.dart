@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui' as ui;
 import 'package:fl_chart/fl_chart.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
@@ -708,8 +709,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                           SizedBox(width: 10),
                           Text(
                             'Analyzing... ${(_analysisProgress * 100).toInt()}%',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                               color: textColor,
@@ -736,8 +736,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                                 : analysisFailed
                                     ? 'Retry Analysis'
                                     : 'Request Full GTO Analysis',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                               color: textColor,
@@ -922,8 +921,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 SizedBox(width: 10),
                 Text(
                   'View Logged Hands',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     color: Colors.black,
