@@ -10,7 +10,6 @@ import '../services/firebase_service.dart';
 import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
-import '../design_system/design_system.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
   final Opponent opponent;
@@ -29,25 +28,12 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   Map<String, dynamic>? _statistics;
   OpponentStats? _opponentStats;
   bool _isLoadingStats = true;
-  int _totalOpponents = 0;
 
   @override
   void initState() {
     super.initState();
     _opponent = widget.opponent;
     _loadStatistics();
-    _loadTotalOpponents();
-  }
-
-  Future<void> _loadTotalOpponents() async {
-    try {
-      final opponents = await OpponentService.getAllOpponents();
-      setState(() {
-        _totalOpponents = opponents.length;
-      });
-    } catch (e) {
-      // Ignore errors
-    }
   }
 
   Future<void> _loadStatistics() async {
@@ -328,51 +314,95 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBody: true,
       body: Stack(
         children: [
-          GradientBackground(),
+          // Subtle teal gradient at top (same as home/opponents/session screens)
+          Positioned(
+            top: -screenWidth * 0.3,
+            right: -screenWidth * 0.25,
+            child: Transform.scale(
+              scaleX: 1.0,
+              scaleY: 0.7,
+              child: Container(
+                width: screenWidth * 1.5,
+                height: screenWidth * 1.2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 0.5,
+                    colors: [
+                      Color(0xFF1A4A4A),
+                      Color(0xFF133538).withOpacity(0.7),
+                      Color(0xFF133538).withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.3, 0.6, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
               children: [
-                // Header Section (same as Opponents screen)
+                // Header Section with back button + opponent name
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Left: Title + subtitle
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Opponents',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 24,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.48,
-                              height: 1.0,
+                      // Back button
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: _buildIcon(
+                              'icons/figma_icons/back.svg',
+                              24,
+                              Colors.white,
                             ),
                           ),
-                          SizedBox(height: 6),
-                          Text(
-                            '$_totalOpponents tracked players',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 12,
-                              color: Color(0xFFFFFFFF).withOpacity(0.8),
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: -0.24,
-                              height: 1.0,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                      // Right: Back button only
-                      GlassyIconButton(
-                        imagePath: 'icons/flat_icons/back.png',
-                        onPressed: () => Navigator.pop(context),
+                      SizedBox(width: 12),
+                      // Opponent name + playing style
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _opponent.name,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 24,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                                height: 1.2,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              _opponentStats?.playingStyle ?? 'Unknown Style',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 15,
+                                color: _getStyleColor(_opponentStats?.playerType ?? PlayerType.unknown),
+                                fontWeight: FontWeight.w400,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -397,14 +427,12 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     ),
                   ),
                 ),
-
-                // Global Bottom Navigation Bar
-                GlobalBottomNavBar(currentScreen: 'opponent_detail'),
               ],
             ),
           ),
         ],
       ),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'opponent_detail'),
     );
   }
 
@@ -413,162 +441,115 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF1A2925),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        padding: EdgeInsets.all(20),
         child: Column(
           children: [
-            // Top section: User info + hands count
+            // Top section: Color indicator + stats
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Left: CardIcon + Name/Style
-                Row(
-                  children: [
-                    // Color indicator avatar (28px solid circle)
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    // Name and playing style column
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _opponent.name,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 18,
-                            color: Color(0xFFFFFFFF),
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0,
-                            height: 1.4,
-                          ),
-                        ),
-                        Text(
-                          _opponentStats?.playingStyle ?? 'No Data',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 12,
-                            color: _getStyleColor(_opponentStats?.playerType ?? PlayerType.unknown),
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 0,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                // Color indicator avatar (32px solid circle)
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-                // Right: Hands count
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '${_statistics?['totalHands'] ?? 0}',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0,
-                        height: 1.4,
-                      ),
-                    ),
-                    Text(
-                      'Hands',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 12,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 0,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            SizedBox(height: 24),
-
-            // Bottom section: Last seen + action buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Left: Last seen
-                Row(
-                  children: [
-                    _buildIcon(
-                      'icons/flat_icons/eye.png',
-                      18,
-                      Color(0xFFFFFFFF).withOpacity(0.8),
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      'Last Seen: ${DateFormat('MMM dd').format(_opponent.lastSeenAt)}',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 10,
-                        color: Color(0xFFFFFFFF).withOpacity(0.8),
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 0,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-                // Right: Action buttons
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => _showEditOpponentDialog(),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF1A291A), // --primary-90
-                          borderRadius: BorderRadius.circular(70),
-                        ),
-                        child: Center(
-                          child: _buildIcon(
-                            'icons/flat_icons/edit.png',
-                            20,
-                            Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => _showDeleteConfirmation(),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Color(0xFFB63131),
-                          borderRadius: BorderRadius.circular(70),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0x33000000),
-                              blurRadius: 24,
+                SizedBox(width: 16),
+                // Stats row
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Hands count
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${_statistics?['totalHands'] ?? 0}',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
                             ),
-                          ],
-                        ),
-                        child: Center(
-                          child: _buildIcon(
-                            'icons/flat_icons/bin.png',
-                            20,
-                            Colors.white,
                           ),
-                        ),
+                          Text(
+                            'Hands',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              color: Colors.white.withOpacity(0.6),
+                              fontWeight: FontWeight.w400,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      // Sessions count
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${_statistics?['totalSessions'] ?? 0}',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
+                            ),
+                          ),
+                          Text(
+                            'Sessions',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              color: Colors.white.withOpacity(0.6),
+                              fontWeight: FontWeight.w400,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Last seen
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Row(
+                            children: [
+                              _buildIcon(
+                                'icons/figma_icons/eye.svg',
+                                16,
+                                Colors.white.withOpacity(0.6),
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                DateFormat('MMM dd').format(_opponent.lastSeenAt),
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            'Last Seen',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              color: Colors.white.withOpacity(0.6),
+                              fontWeight: FontWeight.w400,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -580,26 +561,25 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 width: double.infinity,
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.notes_outlined,
-                      size: 16,
-                      color: Color(0xFFFFFFFF).withOpacity(0.6),
+                    _buildIcon(
+                      'icons/figma_icons/notes.svg',
+                      16,
+                      Colors.white.withOpacity(0.6),
                     ),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _opponent.notes!,
                         style: GoogleFonts.ibmPlexSans(
-                          fontSize: 12,
-                          color: Color(0xFFFFFFFF).withOpacity(0.8),
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.8),
                           fontWeight: FontWeight.w400,
-                          letterSpacing: 0,
                           height: 1.4,
                         ),
                       ),
@@ -608,6 +588,77 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 ),
               ),
             ],
+
+            SizedBox(height: 16),
+
+            // Action buttons row
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _showEditOpponentDialog(),
+                    child: Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildIcon(
+                            'icons/figma_icons/edit.svg',
+                            18,
+                            Colors.white,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Edit',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _showDeleteConfirmation(),
+                    child: Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFB63131).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildIcon(
+                            'icons/figma_icons/delete.svg',
+                            18,
+                            Color(0xFFFF6B6B),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Delete',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 14,
+                              color: Color(0xFFFF6B6B),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -618,7 +669,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     if (_isLoadingStats) {
       return Center(
         child: CircularProgressIndicator(
-          color: Color(0xFFBAFF9A),
+          color: Color(0xFF89F1EC),
         ),
       );
     }
@@ -626,44 +677,50 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     if (_statistics == null) {
       return Container(
         padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Color(0xFF131616),
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Text(
           'No statistics available',
-          style: TextStyle(
-            color: Color(0xFF9A9A9A),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white.withOpacity(0.6),
             fontSize: 14,
           ),
         ),
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Section header
-        Text(
-          'Statistics',
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFFBAFF9A), // --secondary-100
-            letterSpacing: 1.0,
-            height: 1.0,
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      padding: EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Text(
+            'Statistics',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.2,
+            ),
           ),
-        ),
-        SizedBox(height: 12),
-        // List items with dividers
-        _buildStatListItem('Hands Played', '${_statistics!['totalHands']}'),
-        _buildDivider(),
-        _buildStatListItem('Sessions', '${_statistics!['totalSessions']}'),
-        _buildDivider(),
-        _buildStatListItem('VPIP', '${_formatStat(_statistics!['vpip'])}%'),
-        _buildDivider(),
-        _buildStatListItem('PFR', '${_formatStat(_statistics!['pfr'])}%'),
-        _buildDivider(),
-        _buildStatListItem('Aggression', _formatAggression(_statistics!['aggression'])),
-        _buildDivider(),
-        _buildStatListItem('Fold', '${_formatStat(_statistics!['foldPercentage'])}%'),
-      ],
+          SizedBox(height: 16),
+          // List items with dividers
+          _buildStatListItem('VPIP', '${_formatStat(_statistics!['vpip'])}%'),
+          _buildDivider(),
+          _buildStatListItem('PFR', '${_formatStat(_statistics!['pfr'])}%'),
+          _buildDivider(),
+          _buildStatListItem('Aggression', _formatAggression(_statistics!['aggression'])),
+          _buildDivider(),
+          _buildStatListItem('Fold %', '${_formatStat(_statistics!['foldPercentage'])}%'),
+        ],
+      ),
     );
   }
 
@@ -672,34 +729,36 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       return SizedBox.shrink();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Section header
-        Text(
-          'Action Distribution',
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFFBAFF9A), // --secondary-100
-            letterSpacing: 1.0,
-            height: 1.0,
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      padding: EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Text(
+            'Action Distribution',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.2,
+            ),
           ),
-        ),
-        SizedBox(height: 12),
-        // List items with dividers
-        _buildStatListItem('Call', '${_formatStat(_statistics!['callPercentage'])}%'),
-        _buildDivider(),
-        _buildStatListItem('Bet', '${_formatStat(_statistics!['betPercentage'])}%'),
-        _buildDivider(),
-        _buildStatListItem('Raise', '${_formatStat(_statistics!['raisePercentage'])}%'),
-        _buildDivider(),
-        _buildStatListItem('Check', '${_formatStat(_statistics!['checkPercentage'])}%'),
-        _buildDivider(),
-        _buildStatListItem('Fold', '${_formatStat(_statistics!['foldPercentage'])}%'),
-        _buildDivider(),
-        _buildStatListItem('Aggression', _formatAggression(_statistics!['aggression'])),
-      ],
+          SizedBox(height: 16),
+          // List items with dividers
+          _buildStatListItem('Call', '${_formatStat(_statistics!['callPercentage'])}%'),
+          _buildDivider(),
+          _buildStatListItem('Bet', '${_formatStat(_statistics!['betPercentage'])}%'),
+          _buildDivider(),
+          _buildStatListItem('Raise', '${_formatStat(_statistics!['raisePercentage'])}%'),
+          _buildDivider(),
+          _buildStatListItem('Check', '${_formatStat(_statistics!['checkPercentage'])}%'),
+        ],
+      ),
     );
   }
 
@@ -712,18 +771,18 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           Text(
             label,
             style: GoogleFonts.ibmPlexSans(
-              fontSize: 14,
+              fontSize: 15,
               fontWeight: FontWeight.w400,
-              color: Colors.white,
+              color: Colors.white.withOpacity(0.8),
               height: 1.0,
             ),
           ),
           Text(
             value,
             style: GoogleFonts.ibmPlexSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFFBAFF9A), // --secondary-100
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF89F1EC),
               height: 1.0,
             ),
           ),
@@ -740,70 +799,77 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   }
 
   Widget _buildHandHistorySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Title
-        Text(
-          'Hand History',
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            height: 1.5,
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      padding: EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          Text(
+            'Hand History',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.2,
+            ),
           ),
-        ),
-        SizedBox(height: 4),
-        // Description
-        Text(
-          'View all hands played with this opponent',
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFFF8FFF7),
+          SizedBox(height: 8),
+          // Description
+          Text(
+            'View all hands played with this opponent',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF89F1EC),
+            ),
           ),
-        ),
-        SizedBox(height: 24),
-        // Button
-        SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: ElevatedButton(
-            onPressed: () {
-              // Check if there are hands before navigating
-              final totalHands = _statistics?['totalHands'] ?? 0;
-              if (totalHands == 0) {
-                _showNoHandsFoundDialog();
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => OpponentHandsScreen(
-                      opponent: _opponent,
+          SizedBox(height: 20),
+          // Button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () {
+                // Check if there are hands before navigating
+                final totalHands = _statistics?['totalHands'] ?? 0;
+                if (totalHands == 0) {
+                  _showNoHandsFoundDialog();
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OpponentHandsScreen(
+                        opponent: _opponent,
+                      ),
                     ),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFBAFF9A), // --secondary-100
-              foregroundColor: Color(0xFF011100), // --primary-100
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(110),
+                ),
+                elevation: 0,
               ),
-              elevation: 0,
-            ),
-            child: Text(
-              'View Hand History',
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF011100), // --primary-100
+              child: Text(
+                'View Hand History',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -813,7 +879,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: BoxDecoration(
-          color: Color(0xFF131613), // --background
+          color: Color(0xFF131616),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(24),
             topRight: Radius.circular(24),
@@ -830,19 +896,18 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 child: GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: _buildIcon(
-                    'icons/flat_icons/close.png',
+                    'icons/figma_icons/close.svg',
                     24,
                     Colors.white,
                   ),
                 ),
               ),
               SizedBox(height: 8),
-              // Sad face icon
-              Image.asset(
-                'icons/flat_icons/sad_face.png',
-                width: 44,
-                height: 44,
-                color: Colors.white,
+              // Info icon
+              _buildIcon(
+                'icons/figma_icons/info.svg',
+                44,
+                Colors.white,
               ),
               SizedBox(height: 20),
               // Title
@@ -850,28 +915,25 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 'No Hands Found',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
                   color: Colors.white,
-                  height: 1.5,
+                  height: 1.4,
                 ),
               ),
               SizedBox(height: 12),
               // Description
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 62),
-                child: Text(
-                  'You haven\'t played any hands with "${_opponent.name}" yet',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFFF8FFF7),
-                    height: 1.5,
-                  ),
+              Text(
+                'You haven\'t played any hands with "${_opponent.name}" yet',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF89F1EC),
+                  height: 1.5,
                 ),
               ),
-              SizedBox(height: 50),
+              SizedBox(height: 32),
               // Close button
               SizedBox(
                 width: double.infinity,
@@ -879,19 +941,19 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFBAFF9A), // --secondary-100
-                    foregroundColor: Color(0xFF011100), // --primary-100
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(110),
                     ),
                     elevation: 0,
                   ),
                   child: Text(
                     'Close',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF011100), // --primary-100
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
                     ),
                   ),
                 ),

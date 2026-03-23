@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../design_system/poker_friend_theme.dart';
 import '../models/game_types.dart';
 import 'individual_session_tracking_screen.dart';
 import 'logging_mode_selection_screen.dart';
 import 'seat_setup_screen.dart';
 import '../models/hand_state_machine.dart';
-import '../design_system/design_system.dart';
 
 class IndividualSessionSetupScreen extends StatefulWidget {
   final LoggingMode? loggingMode;
@@ -64,26 +63,121 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
     super.dispose();
   }
 
+  Widget _buildIcon(String path, double size, Color color) {
+    if (path.endsWith('.svg')) {
+      return SvgPicture.asset(
+        path,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      return Image.asset(
+        path,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          GradientBackground(),
+          // Teal gradient background (consistent with other screens)
+          Positioned(
+            top: -screenWidth * 0.3,
+            right: -screenWidth * 0.25,
+            child: Transform.scale(
+              scaleX: 1.0,
+              scaleY: 0.7,
+              child: Container(
+                width: screenWidth * 1.5,
+                height: screenWidth * 1.2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 0.5,
+                    colors: [
+                      Color(0xFF1A4A4A),
+                      Color(0xFF133538).withOpacity(0.7),
+                      Color(0xFF133538).withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.3, 0.6, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
               children: [
-                // Header
-                MainScreenHeader(
-                  title: 'Session Setup',
-                  subtitle: widget.loggingMode == LoggingMode.full
-                      ? 'Full session tracking'
-                      : 'Individual session tracking',
-                  rightIcon: Icons.close_rounded,
-                  onRightPressed: () => Navigator.pop(context),
-                  showLeftIcon: false,
-                  padding: const EdgeInsets.all(16),
+                // Header with X, title, and checkmark
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // X button (close)
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: _buildIcon(
+                              'icons/figma_icons/close.svg',
+                              16,
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Title
+                      Text(
+                        'Session Setup',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.43,
+                          height: 1.3,
+                        ),
+                      ),
+                      // Checkmark button (confirm/start)
+                      GestureDetector(
+                        onTap: isFormValid ? _startSession : null,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isFormValid
+                              ? Color(0xFF62E3BC)
+                              : Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: _buildIcon(
+                              'icons/figma_icons/check.svg',
+                              16,
+                              isFormValid ? Colors.black : Colors.white.withOpacity(0.5),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
                 // Content
@@ -94,56 +188,68 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Session Name Input
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 24),
+                          // Session Name Card
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF131616),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Session Name',
                                   style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 18,
-                                    color: Color(0xFFF7FFF7),
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0,
-                                    height: 1.0,
+                                    fontSize: 17,
+                                    color: Color(0xFF62E3BC),
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.43,
+                                    height: 1.3,
                                   ),
                                 ),
-                                SizedBox(height: 16),
+                                SizedBox(height: 12),
                                 TextField(
                                   controller: _sessionNameController,
                                   style: GoogleFonts.ibmPlexSans(
                                     color: Colors.white,
-                                    fontSize: 14,
+                                    fontSize: 17,
                                     fontWeight: FontWeight.w400,
-                                    letterSpacing: 0,
-                                    height: 1.2,
+                                    height: 1.44,
                                   ),
                                   decoration: InputDecoration(
                                     hintText: 'e.g., "Friday Night Poker"',
                                     hintStyle: GoogleFonts.ibmPlexSans(
-                                      color: Color(0x99EBFFEF), // #ebffef99
-                                      fontSize: 14,
+                                      color: Colors.white.withOpacity(0.4),
+                                      fontSize: 17,
                                       fontWeight: FontWeight.w400,
-                                      letterSpacing: 0,
-                                      height: 1.2,
+                                      height: 1.44,
                                     ),
                                     filled: true,
-                                    fillColor: Color(0x0AFFFFFF), // #ffffff0a
+                                    fillColor: Color(0xFF1C1C1E),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(58),
-                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: Color(0xFF1B262D).withOpacity(0.6),
+                                        width: 1,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(58),
-                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: Color(0xFF1B262D).withOpacity(0.6),
+                                        width: 1,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(58),
-                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: Color(0xFF89F1EC),
+                                        width: 1,
+                                      ),
                                     ),
-                                    contentPadding: EdgeInsets.fromLTRB(20, 14, 14, 14),
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   ),
                                   onChanged: (value) => setState(() {}),
                                 ),
@@ -151,147 +257,157 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             ),
                           ),
 
-                          // Section Divider
+                          SizedBox(height: 16),
+
+                          // Game Type Card
                           Container(
-                            height: 1,
-                            color: Color(0xFF214027), // #214027
-                          ),
-
-                          SizedBox(height: 32),
-
-                          // Game Type Selection
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Choose Game Type',
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 18,
-                                  color: Color(0xFFF7FFF7),
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0,
-                                  height: 1.0,
+                            width: double.infinity,
+                            padding: EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF131616),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Game Type',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 17,
+                                    color: Color(0xFF62E3BC),
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.43,
+                                    height: 1.3,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _GameTypeButton(
-                                      gameType: GameType.cash,
-                                      selectedGameType: gameType,
-                                      onTap: () => setState(() {
-                                        gameType = GameType.cash;
-                                        _updateStackForGameType();
-                                      }),
+                                SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildGameTypeToggle(
+                                        title: 'Cash Game',
+                                        isSelected: gameType == GameType.cash,
+                                        onTap: () => setState(() {
+                                          gameType = GameType.cash;
+                                          _updateStackForGameType();
+                                        }),
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(width: 16),
-                                  Expanded(
-                                    child: _GameTypeButton(
-                                      gameType: GameType.tournament,
-                                      selectedGameType: gameType,
-                                      onTap: () => setState(() {
-                                        gameType = GameType.tournament;
-                                        _updateStackForGameType();
-                                      }),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: _buildGameTypeToggle(
+                                        title: 'Tournament',
+                                        isSelected: gameType == GameType.tournament,
+                                        onTap: () => setState(() {
+                                          gameType = GameType.tournament;
+                                          _updateStackForGameType();
+                                        }),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
 
-                          SizedBox(height: 32),
+                          SizedBox(height: 16),
 
-                          // Section Divider
+                          // Buy-in Amount Card
                           Container(
-                            height: 1,
-                            color: Color(0xFF214028), // #214028
-                          ),
-
-                          // Buy-in Amount Section with padding
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 32),
+                            width: double.infinity,
+                            padding: EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF131616),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Buy-in Amount',
                                   style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 18,
-                                    color: Color(0xFFF7FFF7),
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0,
-                                    height: 1.0,
+                                    fontSize: 17,
+                                    color: Color(0xFF62E3BC),
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.43,
+                                    height: 1.3,
                                   ),
                                 ),
-                                SizedBox(height: 16),
+                                SizedBox(height: 12),
                                 TextField(
                                   controller: _buyInController,
                                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                                   style: GoogleFonts.ibmPlexSans(
                                     color: Colors.white,
-                                    fontSize: 14,
+                                    fontSize: 17,
                                     fontWeight: FontWeight.w400,
-                                    letterSpacing: 0,
-                                    height: 1.2,
+                                    height: 1.44,
                                   ),
                                   decoration: InputDecoration(
-                                    hintText: 'Enter buy-in amount',
+                                    hintText: 'Enter amount',
                                     hintStyle: GoogleFonts.ibmPlexSans(
-                                      color: Color(0x99EBFFF0), // #ebfff099
-                                      fontSize: 14,
+                                      color: Colors.white.withOpacity(0.4),
+                                      fontSize: 17,
                                       fontWeight: FontWeight.w400,
-                                      letterSpacing: 0,
-                                      height: 1.2,
+                                      height: 1.44,
                                     ),
                                     prefixText: '\$ ',
                                     prefixStyle: GoogleFonts.ibmPlexSans(
                                       color: Colors.white,
-                                      fontSize: 14,
+                                      fontSize: 17,
                                       fontWeight: FontWeight.w400,
-                                      letterSpacing: 0,
-                                      height: 1.2,
+                                      height: 1.44,
                                     ),
                                     filled: true,
-                                    fillColor: Color(0x0AFFFFFF), // #ffffff0a
+                                    fillColor: Color(0xFF1C1C1E),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(58),
-                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: Color(0xFF1B262D).withOpacity(0.6),
+                                        width: 1,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(58),
-                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: Color(0xFF1B262D).withOpacity(0.6),
+                                        width: 1,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(58),
-                                      borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: Color(0xFF89F1EC),
+                                        width: 1,
+                                      ),
                                     ),
-                                    contentPadding: EdgeInsets.fromLTRB(20, 14, 14, 14),
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   ),
                                   onChanged: (value) {
                                     setState(() {});
                                     _updateStackForGameType();
                                   },
                                 ),
-                                // Cash game explanation - 24px gap after input
+                                // Cash game explanation
                                 if (gameType == GameType.cash) ...[
-                                  SizedBox(height: 24),
+                                  SizedBox(height: 12),
                                   Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Icon(Icons.info_outline, color: Color(0xFFB9FF99), size: 24),
+                                      _buildIcon(
+                                        'icons/figma_icons/info.svg',
+                                        18,
+                                        Color(0xFF89F1EC),
+                                      ),
                                       SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
                                           'In cash games your starting stack equals your buy-in amount.',
                                           style: GoogleFonts.ibmPlexSans(
-                                            color: Color(0xFFC2C8C2), // #c2c8c2
-                                            fontSize: 12,
+                                            color: Colors.white.withOpacity(0.6),
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w400,
-                                            letterSpacing: 0,
-                                            height: 1.5,
+                                            height: 1.44,
                                           ),
                                         ),
                                       ),
@@ -302,65 +418,71 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             ),
                           ),
 
-                          // Starting Stack Input - only show for MTT
+                          // Starting Stack Card - only show for MTT
                           if (gameType == GameType.tournament) ...[
-                            // Section Divider
+                            SizedBox(height: 16),
                             Container(
-                              height: 1,
-                              color: Color(0xFF214028), // #214028
-                            ),
-
-                            // Starting Stack with padding
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 32),
+                              width: double.infinity,
+                              padding: EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF131616),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Starting Stack',
                                     style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 18,
-                                      color: Color(0xFFF7FFF7),
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0,
-                                      height: 1.0,
+                                      fontSize: 17,
+                                      color: Color(0xFF62E3BC),
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: -0.43,
+                                      height: 1.3,
                                     ),
                                   ),
-                                  SizedBox(height: 16),
+                                  SizedBox(height: 12),
                                   TextField(
                                     controller: _startingStackController,
                                     keyboardType: TextInputType.numberWithOptions(decimal: true),
                                     style: GoogleFonts.ibmPlexSans(
                                       color: Colors.white,
-                                      fontSize: 14,
+                                      fontSize: 17,
                                       fontWeight: FontWeight.w400,
-                                      letterSpacing: 0,
-                                      height: 1.2,
+                                      height: 1.44,
                                     ),
                                     decoration: InputDecoration(
                                       hintText: 'Enter chip stack',
                                       hintStyle: GoogleFonts.ibmPlexSans(
-                                        color: Color(0x99EBFFF0), // #ebfff099
-                                        fontSize: 14,
+                                        color: Colors.white.withOpacity(0.4),
+                                        fontSize: 17,
                                         fontWeight: FontWeight.w400,
-                                        letterSpacing: 0,
-                                        height: 1.2,
+                                        height: 1.44,
                                       ),
                                       filled: true,
-                                      fillColor: Color(0x0AFFFFFF), // #ffffff0a
+                                      fillColor: Color(0xFF1C1C1E),
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(58),
-                                        borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Color(0xFF1B262D).withOpacity(0.6),
+                                          width: 1,
+                                        ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(58),
-                                        borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Color(0xFF1B262D).withOpacity(0.6),
+                                          width: 1,
+                                        ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(58),
-                                        borderSide: BorderSide(color: Color(0xFF13321B), width: 1),
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: Color(0xFF89F1EC),
+                                          width: 1,
+                                        ),
                                       ),
-                                      contentPadding: EdgeInsets.fromLTRB(20, 14, 14, 14),
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                     ),
                                     onChanged: (value) => setState(() {}),
                                   ),
@@ -369,62 +491,35 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             ),
                           ],
 
-                          // Section Divider
-                          Container(
-                            height: 1,
-                            color: Color(0xFF214028), // #214028
-                          ),
+                          SizedBox(height: 16),
 
-                          SizedBox(height: 24),
-
-                          // Blinds Settings - Grid Layout
-                          GridView.count(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 1.0,
+                          // Blinds Row
+                          Row(
                             children: [
-                              _buildBlindCard(
-                                title: 'Small Blind',
-                                value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
-                                onDecrement: () => setState(() {
-                                  if (smallBlind > 1) {
-                                    smallBlind--;
-                                    _smallBlindController.text = smallBlind.toString();
-                                  }
-                                }),
-                                onIncrement: () => setState(() {
-                                  smallBlind++;
-                                  _smallBlindController.text = smallBlind.toString();
-                                }),
-                                onValueTap: () => _showBlindInputDialog('Small Blind', smallBlind, (value) {
-                                  setState(() {
-                                    smallBlind = value;
-                                    _smallBlindController.text = smallBlind.toString();
-                                  });
-                                }),
+                              Expanded(
+                                child: _buildBlindCard(
+                                  title: 'Small Blind',
+                                  value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
+                                  onTap: () => _showBlindInputDialog('Small Blind', smallBlind, (value) {
+                                    setState(() {
+                                      smallBlind = value;
+                                      _smallBlindController.text = smallBlind.toString();
+                                    });
+                                  }),
+                                ),
                               ),
-                              _buildBlindCard(
-                                title: 'Big Blind',
-                                value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
-                                onDecrement: () => setState(() {
-                                  if (bigBlind > 1) {
-                                    bigBlind--;
-                                    _bigBlindController.text = bigBlind.toString();
-                                  }
-                                }),
-                                onIncrement: () => setState(() {
-                                  bigBlind++;
-                                  _bigBlindController.text = bigBlind.toString();
-                                }),
-                                onValueTap: () => _showBlindInputDialog('Big Blind', bigBlind, (value) {
-                                  setState(() {
-                                    bigBlind = value;
-                                    _bigBlindController.text = bigBlind.toString();
-                                  });
-                                }),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: _buildBlindCard(
+                                  title: 'Big Blind',
+                                  value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
+                                  onTap: () => _showBlindInputDialog('Big Blind', bigBlind, (value) {
+                                    setState(() {
+                                      bigBlind = value;
+                                      _bigBlindController.text = bigBlind.toString();
+                                    });
+                                  }),
+                                ),
                               ),
                             ],
                           ),
@@ -433,12 +528,11 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                           if (gameType == GameType.tournament) ...[
                             SizedBox(height: 16),
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+                              width: double.infinity,
+                              padding: EdgeInsets.all(18),
                               decoration: BoxDecoration(
-                                border: Border(
-                                  top: BorderSide(color: Color(0xFF214028), width: 1),
-                                  bottom: BorderSide(color: Color(0xFF214028), width: 1),
-                                ),
+                                color: Color(0xFF131616),
+                                borderRadius: BorderRadius.circular(18),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -446,58 +540,42 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                   Text(
                                     'BB Ante',
                                     style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 18,
-                                      color: Color(0xFFF7FFF7), // #f7fff7
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0,
-                                      height: 1.0,
+                                      fontSize: 17,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.44,
                                     ),
                                   ),
                                   GestureDetector(
                                     onTap: () => setState(() => hasBBante = !hasBBante),
                                     child: Container(
-                                      width: 48,
-                                      padding: EdgeInsets.all(4),
+                                      width: 51,
+                                      height: 31,
+                                      padding: EdgeInsets.all(2),
                                       decoration: BoxDecoration(
-                                        color: Color(0x0AFFFFFF), // #ffffff0a
-                                        border: Border.all(color: Color(0xFF13321B), width: 1),
-                                        borderRadius: BorderRadius.circular(58),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.white.withOpacity(0.4),
-                                            offset: Offset(0, 1),
-                                            blurRadius: 0,
-                                            spreadRadius: 0,
-                                          ),
-                                          BoxShadow(
-                                            color: Colors.white.withOpacity(0.32),
-                                            offset: Offset(1, 0),
-                                            blurRadius: 0,
-                                            spreadRadius: 0,
-                                          ),
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.13),
-                                            offset: Offset(0, -1),
-                                            blurRadius: 1,
-                                            spreadRadius: 0,
-                                          ),
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.11),
-                                            offset: Offset(-1, 0),
-                                            blurRadius: 1,
-                                            spreadRadius: 0,
-                                          ),
-                                        ],
+                                        color: hasBBante ? Color(0xFF62E3BC) : Color(0xFF1C1C1E),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: hasBBante ? null : Border.all(
+                                          color: Color(0xFF1B262D).withOpacity(0.6),
+                                          width: 1,
+                                        ),
                                       ),
                                       child: AnimatedAlign(
                                         duration: Duration(milliseconds: 200),
                                         alignment: hasBBante ? Alignment.centerRight : Alignment.centerLeft,
                                         child: Container(
-                                          width: 18,
-                                          height: 18,
+                                          width: 27,
+                                          height: 27,
                                           decoration: BoxDecoration(
-                                            color: Color(0xFFBAFF9A), // #baff9a
-                                            borderRadius: BorderRadius.circular(9),
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.15),
+                                                blurRadius: 4,
+                                                offset: Offset(0, 2),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
@@ -516,30 +594,21 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             child: Container(
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: isFormValid ? Color(0xFFB9FF99) : Color(0x1AFFFFFF),
-                                borderRadius: BorderRadius.circular(60),
+                                color: isFormValid ? Color(0xFF62E3BC) : Color(0xFF1C1C1E),
+                                borderRadius: BorderRadius.circular(110),
                               ),
-                              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Start Session',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 18,
-                                      color: isFormValid ? Colors.black : Color(0xFF9A9A9A),
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0,
-                                      height: 27 / 18, // line-height: 27px
-                                    ),
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: Text(
+                                  'Start Session',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 17,
+                                    color: isFormValid ? Colors.black : Colors.white.withOpacity(0.4),
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.43,
+                                    height: 1.3,
                                   ),
-                                  SizedBox(width: 12),
-                                  Icon(
-                                    Icons.arrow_forward,
-                                    color: isFormValid ? Colors.black : Color(0xFF9A9A9A),
-                                    size: 24,
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
@@ -558,147 +627,86 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
     );
   }
 
+  Widget _buildGameTypeToggle({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: Color(0xFF1C1C1E),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? Color(0xFF89F1EC) : Color(0xFF1B262D).withOpacity(0.6),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            title,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              color: isSelected ? Color(0xFF89F1EC) : Colors.white.withOpacity(0.6),
+              fontWeight: FontWeight.w500,
+              height: 1.44,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildBlindCard({
     required String title,
     required String value,
-    required VoidCallback onDecrement,
-    required VoidCallback onIncrement,
-    VoidCallback? onValueTap,
+    required VoidCallback onTap,
   }) {
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Color(0x4C2B3E2E), // #2b3e2e4c
-        borderRadius: BorderRadius.circular(8),
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             title,
             style: GoogleFonts.ibmPlexSans(
-              fontSize: 16,
+              fontSize: 15,
               color: Colors.white,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -1.0,
-              height: 1.0,
+              fontWeight: FontWeight.w500,
+              height: 1.44,
             ),
-            textAlign: TextAlign.center,
           ),
-          SizedBox(height: 10),
+          SizedBox(height: 12),
           GestureDetector(
-            onTap: onValueTap,
+            onTap: onTap,
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.all(8),
+              padding: EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Color(0x1AFFFFFF), width: 1), // #ffffff1a
-              ),
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontFamily: 'RobotoMono',
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: -1.0,
-                  height: 1.0,
+                color: Color(0xFF1C1C1E),
+                borderRadius: BorderRadius.circular(80),
+                border: Border.all(
+                  color: Color(0xFF1B262D).withOpacity(0.6),
+                  width: 1,
                 ),
-                textAlign: TextAlign.center,
+              ),
+              child: Center(
+                child: Text(
+                  value,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    color: Colors.white.withOpacity(0.6),
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
+                ),
               ),
             ),
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: onDecrement,
-                child: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Color(0x1400FF66), // #00ff6614
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white, width: 0.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.4),
-                        offset: Offset(0, 1),
-                        blurRadius: 0,
-                        spreadRadius: 0,
-                      ),
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.32),
-                        offset: Offset(1, 0),
-                        blurRadius: 0,
-                        spreadRadius: 0,
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.13),
-                        offset: Offset(0, -1),
-                        blurRadius: 1,
-                        spreadRadius: 0,
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.11),
-                        offset: Offset(-1, 0),
-                        blurRadius: 1,
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.remove,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-              SizedBox(width: 10),
-              GestureDetector(
-                onTap: onIncrement,
-                child: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Color(0x1400FF66), // #00ff6614
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white, width: 0.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.4),
-                        offset: Offset(0, 1),
-                        blurRadius: 0,
-                        spreadRadius: 0,
-                      ),
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.32),
-                        offset: Offset(1, 0),
-                        blurRadius: 0,
-                        spreadRadius: 0,
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.13),
-                        offset: Offset(0, -1),
-                        blurRadius: 1,
-                        spreadRadius: 0,
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.11),
-                        offset: Offset(-1, 0),
-                        blurRadius: 1,
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.add,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -712,11 +720,15 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Color(0xFF1F1F23),
+          backgroundColor: Color(0xFF131616),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
           title: Text(
             title,
             style: GoogleFonts.ibmPlexSans(
-              color: Colors.white,
+              color: Color(0xFF62E3BC),
+              fontSize: 17,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -725,29 +737,29 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
             keyboardType: TextInputType.number,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontSize: 17,
+              fontWeight: FontWeight.w400,
             ),
             decoration: InputDecoration(
               hintText: 'Enter value',
               hintStyle: GoogleFonts.ibmPlexSans(
-                color: Color(0xFF9A9A9A),
-                fontSize: 14,
+                color: Colors.white.withOpacity(0.4),
+                fontSize: 17,
                 fontWeight: FontWeight.w400,
               ),
               filled: true,
-              fillColor: Color(0x0AFFFFFF),
+              fillColor: Color(0xFF1C1C1E),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Color(0xFF13321B)),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Color(0xFF1B262D).withOpacity(0.6)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Color(0xFF13321B)),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Color(0xFF1B262D).withOpacity(0.6)),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Color(0xFFB9FF99)),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Color(0xFF89F1EC)),
               ),
             ),
             autofocus: true,
@@ -758,7 +770,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               child: Text(
                 'Cancel',
                 style: GoogleFonts.ibmPlexSans(
-                  color: Color(0xFF9A9A9A),
+                  color: Colors.white.withOpacity(0.6),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -774,7 +786,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               child: Text(
                 'OK',
                 style: GoogleFonts.ibmPlexSans(
-                  color: Color(0xFFB9FF99),
+                  color: Color(0xFF62E3BC),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -792,8 +804,18 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
       if (buyInText.isNotEmpty && double.tryParse(buyInText) != null) {
         _startingStackController.text = buyInText;
       }
+      // Set default cash game blinds
+      smallBlind = 1;
+      bigBlind = 2;
+      _smallBlindController.text = smallBlind.toString();
+      _bigBlindController.text = bigBlind.toString();
+    } else {
+      // For MTT, set default tournament blinds
+      smallBlind = 100;
+      bigBlind = 200;
+      _smallBlindController.text = smallBlind.toString();
+      _bigBlindController.text = bigBlind.toString();
     }
-    // For MTT, user enters starting stack manually
   }
 
   void _startSession() {
@@ -853,63 +875,5 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
         ),
       );
     }
-  }
-}
-
-class _GameTypeButton extends StatelessWidget {
-  final GameType gameType;
-  final GameType selectedGameType;
-  final VoidCallback onTap;
-
-  const _GameTypeButton({
-    required this.gameType,
-    required this.selectedGameType,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = gameType == selectedGameType;
-    final isCash = gameType == GameType.cash;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: isSelected ? Color(0x4C6DE17F) : Color(0x4C2B3E2E), // #6de17f4c selected, #2b3e2e4c unselected
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              isCash ? 'Cash Game\n ' : 'MTT\n(Tournament)',
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 16,
-                color: isCash ? Color(0xFFCDE63B) : Color(0xFF76C527), // #cde63b for cash, #76c527 for MTT
-                fontWeight: FontWeight.w700,
-                letterSpacing: -1.0,
-                height: 1.0,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              isCash ? 'Ring Game' : 'Multi-table',
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 16,
-                color: Color(0xFFE4FFE3), // #e4ffe3
-                fontWeight: FontWeight.w400,
-                letterSpacing: -1.0,
-                height: 1.0,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

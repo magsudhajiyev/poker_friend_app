@@ -1,84 +1,145 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:ui' as ui;
-import '../design_system/poker_friend_theme.dart';
 import '../widgets/global_bottom_nav_bar.dart';
-import 'introduction_screen.dart';
 import 'individual_session_setup_screen.dart';
-import '../design_system/design_system.dart';
 
 class LoggingModeSelectionScreen extends StatelessWidget {
   const LoggingModeSelectionScreen({super.key});
 
+  Widget _buildIcon(String path, double size, Color color) {
+    if (path.endsWith('.svg')) {
+      return SvgPicture.asset(
+        path,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      return Image.asset(
+        path,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBody: true,
       body: Stack(
         children: [
-          GradientBackground(),
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Main Screen Header with glassmorphic blur
-                  MainScreenHeader(
-                    title: 'Choose Mode',
-                    subtitle: 'Select your logging preference',
-                    rightIcon: Icons.close_rounded,
-                    onRightPressed: () => Navigator.pop(context),
-                    showLeftIcon: false,
-                    padding: const EdgeInsets.all(16),
+          // Subtle teal gradient at top
+          Positioned(
+            top: -screenWidth * 0.3,
+            right: -screenWidth * 0.25,
+            child: Transform.scale(
+              scaleX: 1.0,
+              scaleY: 0.7,
+              child: Container(
+                width: screenWidth * 1.5,
+                height: screenWidth * 1.2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 0.5,
+                    colors: [
+                      Color(0xFF1A4A4A),
+                      Color(0xFF133538).withOpacity(0.7),
+                      Color(0xFF133538).withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.3, 0.6, 1.0],
                   ),
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                // Header with title and close button
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Choose Mode',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.43,
+                          height: 1.3,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          child: Center(
+                            child: _buildIcon(
+                              'icons/figma_icons/close.svg',
+                              24,
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-                  // Mode Selection Cards
-                  Padding(
+                // Mode Selection Cards
+                Expanded(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 16),
-              // Full Logging Mode Card
-              _buildModeCard(
-                context: context,
-                title: 'Full Logging Mode',
-                subtitle: 'Complete session tracking',
-                description: 'Track entire poker sessions with multiple hands, detailed statistics, and comprehensive analysis.',
-                iconPath: 'icons/notebook.png',
-                features: [
-                  'Multi-hand session tracking',
-                  'Real-time statistics',
-                  'Detailed hand history',
-                  'Session analytics'
-                ],
-                onTap: () => _navigateToMode(context, LoggingMode.full),
-              ),
+                        // Full Logging Mode Card
+                        _buildModeCard(
+                          context: context,
+                          title: 'Full Logging Mode',
+                          subtitle: 'Complete Session Tracking',
+                          features: [
+                            'Multi-hand session tracking',
+                            'Real time statistics',
+                            'Detailed hand history',
+                            'Session analytics',
+                          ],
+                          onTap: () => _navigateToMode(context, LoggingMode.full),
+                        ),
 
-              SizedBox(height: 24),
+                        SizedBox(height: 16),
 
-              // Individual Logging Mode Card
-              _buildModeCard(
-                context: context,
-                title: 'Individual Logging Mode',
-                subtitle: 'Single hand tracking',
-                description: 'Log individual hands quickly and efficiently. Perfect for spot tracking or specific hand analysis.',
-                iconPath: 'icons/notepad.png',
-                features: [
-                  'Single hand focus',
-                  'Quick logging',
-                  'Hand analysis',
-                  'Instant results'
-                ],
-                onTap: () => _navigateToMode(context, LoggingMode.individual),
-              ),
+                        // Individual Logging Mode Card
+                        _buildModeCard(
+                          context: context,
+                          title: 'Individual Logging Mode',
+                          subtitle: 'Single hand tracking',
+                          features: [
+                            'Single hand focus',
+                            'Quick logging',
+                            'Hand analysis',
+                            'Instant results',
+                          ],
+                          onTap: () => _navigateToMode(context, LoggingMode.individual),
+                        ),
 
                         SizedBox(height: 120),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -91,109 +152,141 @@ class LoggingModeSelectionScreen extends StatelessWidget {
     required BuildContext context,
     required String title,
     required String subtitle,
-    required String description,
-    required String iconPath,
     required List<String> features,
     required VoidCallback onTap,
   }) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Color(0x4C2C3E2E), // #2c3e2e4c - matches Figma design
-        borderRadius: BorderRadius.circular(24),
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
       ),
-      padding: EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title and subtitle
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 22,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.0,
-                  height: 1.0,
-                ),
-              ),
-              SizedBox(height: 7),
-              Text(
-                subtitle,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 14,
-                  color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0,
-                  height: 1.0,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 32),
-          // Features section
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Features:',
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 14,
-                  color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.0,
-                  height: 1.0,
-                ),
-              ),
-              SizedBox(height: 14),
-              ...features.map((feature) => Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Text(
-                  '• $feature',
+          // Title and subtitle section
+          Padding(
+            padding: EdgeInsets.fromLTRB(18, 14, 18, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
                   style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    color: Color(0xFFF8FFF7), // #f8fff7 - matches Figma design
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 1.0,
-                    height: 1.0,
+                    fontSize: 17,
+                    color: Color(0xFF62E3BC),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.43,
+                    height: 1.3,
                   ),
                 ),
-              )).toList(),
-            ],
+                SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
+                  ),
+                ),
+              ],
+            ),
           ),
-          SizedBox(height: 32),
-          // Log in button
-          GestureDetector(
-            onTap: onTap,
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(60),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
+
+          // Separator line
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 8),
+            height: 0.5,
+            color: Color(0xFF545458),
+          ),
+
+          // Features section
+          Padding(
+            padding: EdgeInsets.fromLTRB(18, 10, 18, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Features header with info icon
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Features',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                        height: 1.44,
+                      ),
+                    ),
+                    _buildIcon(
+                      'icons/figma_icons/info.svg',
+                      24,
+                      Color(0xFF62E3BC),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4),
+                // Feature list
+                ...features.map((feature) => Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '•  ',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          color: Colors.white.withOpacity(0.8),
+                          fontWeight: FontWeight.w400,
+                          height: 1.44,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          feature,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            color: Colors.white.withOpacity(0.8),
+                            fontWeight: FontWeight.w400,
+                            height: 1.44,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )).toList(),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 34),
+
+          // Start button
+          Padding(
+            padding: EdgeInsets.fromLTRB(8, 0, 8, 20),
+            child: GestureDetector(
+              onTap: onTap,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0xFF62E3BC),
+                  borderRadius: BorderRadius.circular(110),
+                ),
+                padding: EdgeInsets.symmetric(vertical: 14),
+                child: Center(
+                  child: Text(
                     'Start',
                     style: GoogleFonts.ibmPlexSans(
-                      fontSize: 18,
+                      fontSize: 17,
                       color: Colors.black,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 1.0,
-                      height: 1.5,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.43,
+                      height: 1.3,
                     ),
                   ),
-                  Icon(
-                    Icons.arrow_forward,
-                    color: Colors.black,
-                    size: 24,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
