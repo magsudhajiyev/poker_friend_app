@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../models/hand_state_machine.dart';
-import '../design_system/design_system.dart';
 
 class AllInBoardCardsDialog extends StatefulWidget {
   final List<String> excludedCards; // Hole cards to exclude from selection
@@ -64,133 +64,38 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-          child: Container(
-            constraints: BoxConstraints(
-              maxWidth: 400,
-              maxHeight: MediaQuery.of(context).size.height * 0.85,
+      insetPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 361),
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.white.withOpacity(0.15),
+              blurRadius: 64,
+              offset: Offset(0, 4),
             ),
-            decoration: BoxDecoration(
-              color: AppColors.glassyCardColor(),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.whiteBorder(),
-                width: 1,
-              ),
-            ),
+          ],
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
-                Container(
-                  padding: EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppColors.accentGreen.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.casino,
-                          color: AppColors.accentGreen,
-                          size: 20,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'All-In Board Cards',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Content
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Complete all 5 community cards:',
-                            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
-                          ),
-                          SizedBox(height: 12),
-                          // Show currently selected cards
-                          _buildSelectedCardsRow(),
-                          SizedBox(height: 16),
-                          // Rank-then-suit selection
-                          _buildRankAndSuitSelection(),
-                          SizedBox(height: 20),
-                          // Actions
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: AppColors.whiteBorder()),
-                                  ),
-                                  child: TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text(
-                                      'Cancel',
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.6),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Container(
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: _canSave() ? Color(0xFFBAFF9A) : Colors.grey[700],
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: TextButton(
-                                    onPressed: _canSave() ? () => _saveCards() : null,
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Save Cards',
-                                      style: TextStyle(
-                                        color: _canSave() ? Colors.black : Colors.white.withOpacity(0.5),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                _buildHeader(),
+                SizedBox(height: 16),
+                // Selected Cards Section
+                _buildSelectedCardsSection(),
+                SizedBox(height: 8),
+                // Card Grid Section
+                _buildCardGridSection(),
+                SizedBox(height: 24),
+                // Action Buttons
+                _buildActionButtons(),
               ],
             ),
           ),
@@ -199,45 +104,107 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
     );
   }
 
-  Widget _buildSelectedCardsRow() {
+  Widget _buildHeader() {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          // Cards icon
+          SvgPicture.asset(
+            'icons/figma_icons/Capa_1.svg',
+            width: 24,
+            height: 24,
+          ),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'All-In Board Cards',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: -0.43,
+                height: 22 / 17,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedCardsSection() {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.whiteBorder()),
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Flop cards
-          Text('Flop', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
-          SizedBox(height: 4),
+          Text(
+            'Select all 5 community cards:',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 14),
+          // Flop row
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              for (int i = 0; i < 3; i++) ...[
-                _buildCardSlot(i),
-                if (i < 2) SizedBox(width: 8),
-              ],
+              Text(
+                'Flop',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.6),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildCardSlot(0),
+              SizedBox(width: 8),
+              _buildCardSlot(1),
+              SizedBox(width: 8),
+              _buildCardSlot(2),
             ],
           ),
           SizedBox(height: 12),
-
-          // Turn and River
+          // Turn and River row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Column(
                 children: [
-                  Text('Turn', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
-                  SizedBox(height: 4),
+                  Text(
+                    'Turn',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.6),
+                    ),
+                  ),
+                  SizedBox(height: 6),
                   _buildCardSlot(3),
                 ],
               ),
+              SizedBox(width: 24),
               Column(
                 children: [
-                  Text('River', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
-                  SizedBox(height: 4),
+                  Text(
+                    'River',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.6),
+                    ),
+                  ),
+                  SizedBox(height: 6),
                   _buildCardSlot(4),
                 ],
               ),
@@ -269,115 +236,120 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
     return GestureDetector(
       onTap: !isEmpty && !isPreFilled ? () => _clearCard(index) : null,
       child: Container(
-        width: 50,
-        height: 70,
+        width: 56,
+        height: 72,
         decoration: BoxDecoration(
-          color: isEmpty ? Colors.black.withOpacity(0.3) : isPreFilled ? Color(0xFF2A4A2A) : Colors.white,
+          color: isPreFilled ? Color(0xFF2A4A2A) : Color(0xFF2B2B2B),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isEmpty ? AppColors.whiteBorder() : isPreFilled ? Color(0xFF3A5A3A) : Colors.grey[300]!,
-            width: 2,
-          ),
         ),
-        child: isEmpty
-            ? Center(
-                child: Text(
-                  '?',
+        child: Center(
+          child: isEmpty
+              ? Text(
+                  '${index + 1}',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
-                    fontSize: 20,
-                  ),
-                ),
-              )
-            : Center(
-                child: Text(
-                  card,
-                  style: TextStyle(
-                    color: isIncomplete ? Colors.grey : _getCardColor(card),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                )
+              : Text(
+                  card,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isIncomplete ? Colors.white.withOpacity(0.5) : _getCardColor(card),
                   ),
                 ),
-              ),
+        ),
       ),
     );
   }
 
-  Widget _buildRankAndSuitSelection() {
+  Widget _buildCardGridSection() {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.whiteBorder()),
+        color: Color(0xFF131616),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
           // Row 1: A, K, Q, J, T
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: _ranks.sublist(0, 5).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
-          ),
+          _buildRankRow(_ranks.sublist(0, 5)),
           // Suit selection after row 1
           if (_selectedRank != null && _selectedRankRow == 0) ...[
             SizedBox(height: 8),
-            _buildSuitSelection(),
+            _buildSuitSelectionRow(),
           ],
           SizedBox(height: 8),
           // Row 2: 9, 8, 7, 6, 5
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: _ranks.sublist(5, 10).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
-          ),
+          _buildRankRow(_ranks.sublist(5, 10)),
           // Suit selection after row 2
           if (_selectedRank != null && _selectedRankRow == 1) ...[
             SizedBox(height: 8),
-            _buildSuitSelection(),
+            _buildSuitSelectionRow(),
           ],
           SizedBox(height: 8),
-          // Row 3: 4, 3, 2 (centered)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(child: Container()), // Spacer before
-              ..._ranks.sublist(10, 13).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
-              Expanded(child: Container()), // Spacer after
-            ],
-          ),
+          // Row 3: 4, 3, 2 (centered with padding)
+          _buildCenteredRankRow(_ranks.sublist(10, 13)),
           // Suit selection after row 3
           if (_selectedRank != null && _selectedRankRow == 2) ...[
             SizedBox(height: 8),
-            _buildSuitSelection(),
+            _buildSuitSelectionRow(),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildRankCard(String rank) {
-    // Rank cards are always selectable - exclusion happens at suit level
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: GestureDetector(
-        onTap: () => _selectRank(rank),
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.3),
-            border: Border.all(
-              color: AppColors.whiteBorder(),
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(8),
+  Widget _buildRankRow(List<String> ranks) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: ranks.map((rank) {
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 2),
+            child: _buildRankCard(rank),
           ),
-          child: Center(
-            child: Text(
-              rank,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildCenteredRankRow(List<String> ranks) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Spacer(),
+        ...ranks.map((rank) {
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 2),
+              child: _buildRankCard(rank),
+            ),
+          );
+        }).toList(),
+        Spacer(),
+      ],
+    );
+  }
+
+  Widget _buildRankCard(String rank) {
+    return GestureDetector(
+      onTap: () => _selectRank(rank),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: Color(0xFF2B2B2B),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Center(
+          child: Text(
+            rank,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
         ),
@@ -385,10 +357,20 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
     );
   }
 
-  Widget _buildSuitSelection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: _suits.map((suit) => Expanded(child: _buildSuitCard(suit))).toList(),
+  Widget _buildSuitSelectionRow() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: _suits.map((suit) {
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: _buildSuitCard(suit),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -399,58 +381,93 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
 
     Color suitColor = _getSuitColor(suit);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: GestureDetector(
-        onTap: isExcluded ? null : () => _selectSuit(suit),
-        child: Container(
-          height: 70,
-          decoration: BoxDecoration(
-            color: isExcluded ? Colors.black.withOpacity(0.1) : Colors.black.withOpacity(0.3),
-            border: Border.all(
-              color: isExcluded ? Colors.grey[700]! : AppColors.whiteBorder(),
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Stack(
-            children: [
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _selectedRank!,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isExcluded ? Colors.grey[600] : suitColor,
-                      ),
-                    ),
-                    Text(
-                      suit,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isExcluded ? Colors.grey[600] : suitColor,
-                      ),
-                    ),
-                  ],
-                ),
+    return GestureDetector(
+      onTap: isExcluded ? null : () => _selectSuit(suit),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: Color(0xFF2B2B2B),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _selectedRank!,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isExcluded ? Colors.grey[600] : Colors.white,
               ),
-              if (isExcluded)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Icon(
-                    Icons.close,
-                    color: Colors.red[400],
-                    size: 14,
+            ),
+            Text(
+              suit,
+              style: TextStyle(
+                fontSize: 24,
+                color: isExcluded ? Colors.grey[600] : suitColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          // Cancel Button
+          Expanded(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white, width: 1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-            ],
+              ),
+            ),
           ),
-        ),
+          SizedBox(width: 14),
+          // Save Button
+          Expanded(
+            child: GestureDetector(
+              onTap: _canSave() ? () => _saveCards() : null,
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: _canSave() ? Color(0xFF62E3BC) : Colors.grey[700],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    'Save',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: _canSave() ? Colors.black : Colors.white.withOpacity(0.5),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -539,20 +556,18 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
   }
 
   Color _getCardColor(String card) {
-    if (card.length > 1) {
-      final suit = card.substring(card.length - 1);
-      if (suit == '♥' || suit == '♦') {
-        return Colors.red[300]!;
-      }
+    if (card.isEmpty || card.length == 1) return Colors.white;
+    if (card.contains('♥') || card.contains('♦')) {
+      return Colors.red;
     }
-    return Color(0xFFE0E0E0);
+    return Colors.white;
   }
 
   Color _getSuitColor(String suit) {
     if (suit == '♥' || suit == '♦') {
-      return Colors.red[300]!;
+      return Colors.red;
     }
-    return Color(0xFFE0E0E0);
+    return Colors.white;
   }
 
   bool _canSave() {

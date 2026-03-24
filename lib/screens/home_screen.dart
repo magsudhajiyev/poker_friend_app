@@ -1987,23 +1987,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      // Three dots menu at top-right
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              // TODO: Show sessions menu
-                            },
-                            child: const Icon(
-                              Icons.more_horiz,
-                              color: Color(0xFF7DCAB4),
-                              size: 24,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
                       // Sessions list
                       ..._buildSessionsList(),
                     ],

@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/design_system.dart';
 import '../widgets/drawing_painter.dart';
+import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/board_cards_dialog.dart';
 import '../widgets/all_in_board_cards_dialog.dart';
 import '../widgets/hole_cards_dialog.dart';
@@ -104,6 +106,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   
   // Race condition prevention
   bool _isProcessingPostFrameAction = false;
+
+  // Menu overlay state
+  bool _showMenuOverlay = false;
+  final GlobalKey _menuButtonKey = GlobalKey();
 
   @override
   void initState() {
@@ -840,252 +846,192 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBody: true,
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: ''),
       body: Stack(
         children: [
-          // Gradient background from design system
-          GradientBackground(),
+          // Teal gradient background (consistent with other screens)
+          Positioned(
+            top: -screenWidth * 0.3,
+            right: -screenWidth * 0.25,
+            child: Transform.scale(
+              scaleX: 1.0,
+              scaleY: 0.7,
+              child: Container(
+                width: screenWidth * 1.5,
+                height: screenWidth * 1.2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 0.5,
+                    colors: [
+                      Color(0xFF1A4A4A),
+                      Color(0xFF133538).withOpacity(0.7),
+                      Color(0xFF133538).withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.3, 0.6, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
               children: [
-                // Modern Header with glassmorphic style
-                Container(
+                // Header - Figma Design
+                Padding(
                   padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Row(
-                children: [
-                  // Back button - glassmorphic style
-                  GlassyIconButton(
-                    icon: Icons.arrow_back,
-                    onPressed: () => Navigator.pop(context),
-                    size: 40,
-                    iconSize: 20,
-                  ),
-
-                  // Title section
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Hand #${gameState.handNumber}',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            '${gameState.currentRound.name.toUpperCase()} • ${gameState.getActivePlayers().length} players',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.6),
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Action buttons - glassmorphic style
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Row(
                     children: [
-                      GlassyIconButton(
-                        icon: Icons.skip_next,
-                        onPressed: _skipCurrentAction,
-                        size: 38,
-                        iconSize: 18,
-                      ),
-                      SizedBox(width: 8),
-                      if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river)
-                        Padding(
-                          padding: EdgeInsets.only(right: 8),
-                          child: GlassyIconButton(
-                            icon: Icons.fast_forward,
-                            onPressed: nextStreet,
-                            size: 38,
-                            iconSize: 18,
-                            backgroundColor: Color(0xFF87ED81).withOpacity(0.3),
+                      // Back button - 44px circle
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: _buildIcon('icons/figma_icons/back.svg', 24, Colors.white),
                           ),
                         ),
-                      GlassyIconButton(
-                        icon: Icons.check,
-                        onPressed: _allInHandCompleted ? () {} : completeHand,
-                        size: 38,
-                        iconSize: 18,
-                        backgroundColor: _allInHandCompleted
-                            ? Colors.grey.withOpacity(0.3)
-                            : Color(0xFF87ED81).withOpacity(0.3),
-                        iconColor: _allInHandCompleted ? Colors.grey : Colors.white,
+                      ),
+                      SizedBox(width: 12),
+                      // Title section
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Hand #${gameState.handNumber}',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.43,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              '${gameState.currentRound.name.toUpperCase()} • ${gameState.getActivePlayers().length} players',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 13,
+                                color: Colors.white.withOpacity(0.6),
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Action buttons - 44px circles
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Skip button
+                          GestureDetector(
+                            onTap: _skipCurrentAction,
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF3C3C43).withOpacity(0.3),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: _buildIcon('icons/figma_icons/forward.svg', 20, Colors.white),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          // Next street button (when betting complete)
+                          if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river)
+                            Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: GestureDetector(
+                                onTap: nextStreet,
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF62E3BC).withOpacity(0.3),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Icon(Icons.fast_forward, color: Colors.white, size: 20),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Complete hand button
+                          GestureDetector(
+                            onTap: _allInHandCompleted ? () {} : completeHand,
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: _allInHandCompleted
+                                    ? Colors.grey.withOpacity(0.3)
+                                    : Color(0xFF3C3C43).withOpacity(0.3),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: _buildIcon(
+                                  'icons/figma_icons/check.svg',
+                                  20,
+                                  _allInHandCompleted ? Colors.grey : Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          // Menu button
+                          _buildMenuButton(context),
+                        ],
                       ),
                     ],
                   ),
-
-                  SizedBox(width: 8),
-
-                  // Menu button - glassmorphic style
-                  ClipOval(
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: Color(0x1AFFFFFF),
-                        shape: BoxShape.circle,
-                      ),
-                      child: PopupMenuButton<String>(
-                        icon: Icon(
-                          Icons.more_vert,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      color: AppColors.glassyCardBase,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-            onSelected: (value) {
-              if (value == 'endStreet') {
-                endStreetManually();
-              } else if (value == 'sessionDetails') {
-                _showSessionDetails();
-              } else if (value == 'managePlayers') {
-                _managePlayersDialog();
-              } else if (value == 'rebuy') {
-                _showRebuyDialog();
-              } else if (value == 'stopSession') {
-                _stopSession();
-              } else if (value == 'settings') {
-                _showSettingsDialog();
-              }
-            },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'endStreet',
-                          child: Row(
-                            children: [
-                              Icon(Icons.stop, color: Color(0xFF9A9A9A), size: 18),
-                              const SizedBox(width: 12),
-                              Text(
-                                'End Street',
-                                style: TextStyle(color: Colors.white, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'sessionDetails',
-                          child: Row(
-                            children: [
-                              Icon(Icons.info_outline, color: Color(0xFF9A9A9A), size: 18),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Session Details',
-                                style: TextStyle(color: Colors.white, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'managePlayers',
-                          child: Row(
-                            children: [
-                              Icon(Icons.people, color: Color(0xFF9A9A9A), size: 18),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Manage Players',
-                                style: TextStyle(color: Colors.white, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Only show rebuy option for tournaments
-                        if (widget.gameType == GameType.tournament)
-                          PopupMenuItem(
-                            value: 'rebuy',
-                            child: Row(
-                              children: [
-                                Icon(Icons.add_circle_outline, color: AppColors.accentGreen, size: 18),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Rebuy',
-                                  style: TextStyle(color: Colors.white, fontSize: 14),
-                                ),
-                              ],
-                            ),
-                          ),
-                        PopupMenuItem(
-                          value: 'stopSession',
-                          child: Row(
-                            children: [
-                              Icon(Icons.exit_to_app, color: Colors.red, size: 18),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Stop Session',
-                                style: TextStyle(color: Colors.red, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'settings',
-                          child: Row(
-                            children: [
-                              Icon(Icons.settings, color: Color(0xFF9A9A9A), size: 18),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Settings',
-                                style: TextStyle(color: Colors.white, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
-                ],
-              ),
-            ),
 
-            // Game Info Header - Individual Cards (Dark Theme)
+            // Game Info Header - Info Cards with teal accent
             Container(
-              margin: const EdgeInsets.all(PokerFriendSpacing.xs),
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: gameState.areAllPlayersAllIn()
                 ? // All-in situation: Show single unified card
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.accentGreen.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(PokerFriendRadius.l),
-                      border: Border.all(color: AppColors.accentGreen, width: 2),
+                      color: Color(0xFF62E3BC).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Color(0xFF62E3BC), width: 2),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(PokerFriendSpacing.m),
+                      padding: EdgeInsets.all(16),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.casino,
-                            color: AppColors.accentGreen,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 12),
+                          Icon(Icons.casino, color: Color(0xFF62E3BC), size: 24),
+                          SizedBox(width: 12),
                           Text(
                             'ALL IN HAND',
-                            style: TextStyle(
+                            style: GoogleFonts.ibmPlexSans(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 2,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Text(
                             '• POT: ${gameState.formatCurrency(gameState.currentPot)}',
-                            style: TextStyle(
-                              color: AppColors.accentGreen,
+                            style: GoogleFonts.ibmPlexSans(
+                              color: Color(0xFF62E3BC),
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1094,129 +1040,29 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                       ),
                     ),
                   )
-                : // Normal situation: Show three compact cards
+                : // Normal situation: Show three info cards with teal left border
                   Row(
                     children: [
-                      Expanded(
-                        child: Container(
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.whiteBorder(), width: 1),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Pot',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                gameState.formatCurrency(gameState.currentPot),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 6),
-                      Expanded(
-                        child: Container(
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.whiteBorder(), width: 1),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'To Act',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 4),
-                                child: Text(
-                                  _getCurrentPlayerNameSafely(),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 6),
-                      Expanded(
-                        child: Container(
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.whiteBorder(), width: 1),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Stack',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                _getCurrentPlayerStackSafely(),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      Expanded(child: _buildInfoCard('Pot', gameState.formatCurrency(gameState.currentPot))),
+                      SizedBox(width: 8),
+                      Expanded(child: _buildInfoCard('To Act', _getCurrentPlayerNameSafely())),
+                      SizedBox(width: 8),
+                      Expanded(child: _buildInfoCard('Stack', _getCurrentPlayerStackSafely())),
                     ],
                   ),
             ),
 
           
-              // Main Gesture Area
+              // Main Gesture Area - Light background
               Expanded(
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: PokerFriendSpacing.xs),
-                  decoration: PokerFriendWidgets.primaryCard,
+                  margin: EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFF0F0F0), // Light cream/gray background
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(PokerFriendRadius.l),
+                    borderRadius: BorderRadius.circular(16),
                     child: Stack(
                   children: [
                     // Drawing area for gesture input
@@ -1262,7 +1108,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         child: Container(
                           width: double.infinity,
                           height: double.infinity,
-                          color: Colors.black.withOpacity(0.4),
+                          color: Colors.transparent, // Transparent to show light background
                           child: CustomPaint(
                             painter: DrawingPainter(points: points),
                             size: Size.infinite,
@@ -1284,120 +1130,131 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         left: 16,
                         child: _buildSimpleDragBetDisplay(context),
                       ),
-                    
-                    
-                    // Firebase Connection Status
-                    Positioned(
-                      bottom: 16,
-                      left: 16,
-                      child: _buildFirebaseStatus(context),
-                    ),
                   ],
                 ),
               ),
             ),
           ),
           
-          // End Street Button (when needed)
+          // End Street Button (when needed) - Teal design
           if (!gameState.bettingRoundComplete && gameState.getActivePlayers().length > 1)
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: _canUndoLastAction() ? 4 : 8),
               width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: endStreetManually,
-                icon: const Icon(Icons.skip_next_outlined),
-                label: Text('End ${gameState.getCurrentStreetName()} Betting',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFBAFF9A),
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              child: GestureDetector(
+                onTap: endStreetManually,
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: _canUndoLastAction() ? 12 : 14),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF62E3BC),
+                    borderRadius: BorderRadius.circular(110),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'End ${gameState.getCurrentStreetName()} Betting',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: _canUndoLastAction() ? 15 : 17,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      _buildIcon('icons/figma_icons/forward.svg', _canUndoLastAction() ? 18 : 20, Colors.black),
+                    ],
                   ),
                 ),
               ),
             ),
 
-          // Undo Last Action Button
+          // Undo Last Action Button - Teal design
           if (_canUndoLastAction())
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _undoLastAction,
-                icon: const Icon(Icons.undo_outlined),
-                label: const Text('Undo Last Action',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFBAFF9A),
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              child: GestureDetector(
+                onTap: _undoLastAction,
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF62E3BC),
+                    borderRadius: BorderRadius.circular(110),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildIcon('icons/figma_icons/undo.svg', 18, Colors.black),
+                      SizedBox(width: 8),
+                      Text(
+                        'Undo Last Action',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
 
-          // Pot & Stack Info Panel (compact)
+          // Stats Row - Three separate cards
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1F1F23),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF2A2A2E)),
-            ),
-            child: Column(
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: _canUndoLastAction() ? 4 : 8),
+            child: Row(
               children: [
-                // Stats Row (no header to save space)
-                Row(
-                  children: [
-                    // Pot Size
-                    Expanded(child: _buildInfoStat('POT', _formatPotAmount(gameState.currentPot))),
-                    Container(width: 1, height: 28, color: const Color(0xFF2A2A2E)),
-                    // Effective Stack
-                    Expanded(child: _buildInfoStat('EFF', _formatPotAmount(gameState.getEffectiveStackForInfoPanel()))),
-                    Container(width: 1, height: 28, color: const Color(0xFF2A2A2E)),
-                    // SPR
-                    Expanded(child: _buildInfoStat('SPR', gameState.getSPR().toStringAsFixed(1))),
-                  ],
-                ),
-                // Pot Odds Row (only shown when facing a bet)
-                if (_shouldShowPotOdds()) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF9500).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'To Call: ${_formatPotAmount(gameState.getToCall(sessionManager.ourSeatNumber ?? 1))}',
-                          style: const TextStyle(color: Color(0xFFFF9500), fontSize: 12),
-                        ),
-                        Text(
-                          'Odds: ${gameState.getPotOdds(sessionManager.ourSeatNumber ?? 1)?.toStringAsFixed(1) ?? "0"}%',
-                          style: const TextStyle(
-                            color: Color(0xFFFF9500),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                Expanded(child: _buildStatCard(_formatPotAmount(gameState.currentPot), 'POT')),
+                SizedBox(width: 8),
+                Expanded(child: _buildStatCard(_formatPotAmount(gameState.getEffectiveStackForInfoPanel()), 'EFF')),
+                SizedBox(width: 8),
+                Expanded(child: _buildStatCard(gameState.getSPR().toStringAsFixed(1), 'SPR')),
               ],
             ),
           ),
+
+          // Bottom Info Row (To Call / Odds)
+          if (_shouldShowPotOdds())
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'To Call: ${_formatPotAmount(gameState.getToCall(sessionManager.ourSeatNumber ?? 1))}',
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    'Odds: ${gameState.getPotOdds(sessionManager.ourSeatNumber ?? 1)?.toStringAsFixed(1) ?? "0"}%',
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Bottom padding for nav bar - less when undo button is visible
+          SizedBox(height: _canUndoLastAction() ? 85 : 100),
             ],
           ),
         ),
+        // Menu overlay backdrop (closes menu when tapping outside)
+        if (_showMenuOverlay)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => setState(() => _showMenuOverlay = false),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        // Menu overlay
+        if (_showMenuOverlay)
+          _buildMenuOverlay(),
         ],  // Stack children
       ),  // Stack
     );
@@ -1430,6 +1287,269 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // === Icon Helper ===
+
+  Widget _buildIcon(String path, double size, Color color) {
+    if (path.endsWith('.svg')) {
+      return SvgPicture.asset(
+        path,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      return Image.asset(
+        path,
+        width: size,
+        height: size,
+        color: color,
+      );
+    }
+  }
+
+  // === Menu Button with Custom Overlay ===
+
+  Widget _buildMenuButton(BuildContext context) {
+    return GestureDetector(
+      key: _menuButtonKey,
+      onTap: () {
+        setState(() {
+          _showMenuOverlay = !_showMenuOverlay;
+        });
+      },
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Color(0xFF3C3C43).withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: _buildIcon('icons/figma_icons/dots_vertical.svg', 20, Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuOverlay() {
+    // Get the position of the menu button
+    final RenderBox? renderBox = _menuButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return SizedBox.shrink();
+
+    final buttonPosition = renderBox.localToGlobal(Offset.zero);
+    final buttonSize = renderBox.size;
+
+    return Positioned(
+      top: buttonPosition.dy + buttonSize.height + 8,
+      right: 25,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Color(0xFF141414),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: SizedBox(
+            width: 113,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _buildMenuItem(
+                  icon: 'icons/figma_icons/end_street.svg',
+                  label: 'End Street',
+                  onTap: () {
+                    setState(() => _showMenuOverlay = false);
+                    endStreetManually();
+                  },
+                ),
+                SizedBox(height: 12),
+                _buildMenuSeparator(),
+                SizedBox(height: 12),
+                _buildMenuItem(
+                  icon: 'icons/figma_icons/menu_info.svg',
+                  label: 'Session Details',
+                  onTap: () {
+                    setState(() => _showMenuOverlay = false);
+                    _showSessionDetails();
+                  },
+                ),
+                SizedBox(height: 12),
+                _buildMenuSeparator(),
+                SizedBox(height: 12),
+                _buildMenuItem(
+                  icon: 'icons/figma_icons/menu_players.svg',
+                  label: 'Manage Players',
+                  onTap: () {
+                    setState(() => _showMenuOverlay = false);
+                    _managePlayersDialog();
+                  },
+                ),
+                if (widget.gameType == GameType.tournament) ...[
+                  SizedBox(height: 12),
+                  _buildMenuSeparator(),
+                  SizedBox(height: 12),
+                  _buildMenuItem(
+                    icon: 'icons/figma_icons/plus.svg',
+                    label: 'Rebuy',
+                    onTap: () {
+                      setState(() => _showMenuOverlay = false);
+                      _showRebuyDialog();
+                    },
+                    iconColor: Color(0xFF62E3BC),
+                  ),
+                ],
+                SizedBox(height: 12),
+                _buildMenuSeparator(),
+                SizedBox(height: 12),
+                _buildMenuItem(
+                  icon: 'icons/figma_icons/menu_settings.svg',
+                  label: 'Settings',
+                  onTap: () {
+                    setState(() => _showMenuOverlay = false);
+                    _showSettingsDialog();
+                  },
+                ),
+                SizedBox(height: 12),
+                _buildMenuSeparator(),
+                SizedBox(height: 12),
+                _buildMenuItem(
+                  icon: 'icons/figma_icons/menu_stop.svg',
+                  label: 'Stop Session',
+                  onTap: () {
+                    setState(() => _showMenuOverlay = false);
+                    _stopSession();
+                  },
+                  textColor: Color(0xFFD55A41),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required String icon,
+    required String label,
+    required VoidCallback onTap,
+    Color textColor = Colors.white,
+    Color? iconColor,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 113,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: iconColor != null
+                ? _buildIcon(icon, 16, iconColor)
+                : SvgPicture.asset(icon, width: 16, height: 16),
+            ),
+            SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: textColor,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuSeparator() {
+    return Container(
+      height: 1,
+      width: 113,
+      color: Color(0xFF555555),
+    );
+  }
+
+  // === Info Card (simple dark card) ===
+
+  Widget _buildInfoCard(String label, String value) {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: Color(0xFF1C1C1E),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withOpacity(0.6),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 2),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              value,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // === Stat Card for bottom panel ===
+
+  Widget _buildStatCard(String value, String label) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: Color(0xFF1C1C1E),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withOpacity(0.5),
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1526,7 +1646,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Info icon button
+            // Info icon button - black bg with teal icon
             GestureDetector(
               onTap: () {
                 setStateLocal(() {
@@ -1534,24 +1654,17 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 });
               },
               child: Container(
-                width: 36,
-                height: 36,
+                padding: EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: PokerFriendColors.white.withOpacity(0.9),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: PokerFriendColors.light6.withOpacity(0.5)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: PokerFriendColors.light6.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                child: Icon(
-                  Icons.info_outline,
-                  color: PokerFriendColors.purple,
-                  size: 20,
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: Center(
+                    child: _buildIcon('icons/figma_icons/info.svg', 15, Color(0xFF62E3BC)),
+                  ),
                 ),
               ),
             ),
@@ -1567,49 +1680,95 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   Widget _buildGestureTooltip(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: PokerFriendColors.white.withOpacity(0.98),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: PokerFriendColors.light6.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: PokerFriendColors.light6.withOpacity(0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: Color(0xFF141414),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.gesture_rounded,
-                color: PokerFriendColors.purple,
-                size: 16,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Gestures',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: PokerFriendColors.midnightPurple,
-                ),
-              ),
-            ],
+          // Header - 10px Inter Regular
+          Text(
+            'Gestures',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w400,
+              color: Colors.white,
+              fontSize: 10,
+              height: 1.5,
+            ),
           ),
-          const SizedBox(height: 6),
-          _buildGestureItem(context, '👆', 'Tap', 'Bet'),
-          _buildGestureItem(context, '👆👆', 'Double Tap', 'Check'),
-          _buildGestureItem(context, '📏', 'Draw Line', 'Fold'),
-          _buildGestureItem(context, '⭕', 'Draw Circle', 'Call'),
-          _buildGestureItem(context, '📐', 'Draw L', 'Raise'),
+          SizedBox(height: 4),
+          Container(height: 0.5, width: 127, color: Color(0xFF555555)),
+          SizedBox(height: 4),
+          // Gesture rows - 127px width
+          SizedBox(
+            width: 127,
+            child: Column(
+              children: [
+                _buildGestureRowFigma('👆', 'Tap:', 'Bet'),
+                Container(height: 0.5, color: Color(0xFF555555)),
+                SizedBox(height: 4),
+                _buildGestureRowFigma('👆', 'Double Tap:', 'Check'),
+                Container(height: 0.5, color: Color(0xFF555555)),
+                SizedBox(height: 4),
+                _buildGestureRowFigma('╱', 'Draw Line:', 'Fold'),
+                Container(height: 0.5, color: Color(0xFF555555)),
+                SizedBox(height: 4),
+                _buildGestureRowFigma('○', 'Draw Circle:', 'Call'),
+                Container(height: 0.5, color: Color(0xFF555555)),
+                SizedBox(height: 4),
+                _buildGestureRowFigma('L', 'Draw L:', 'Raise'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGestureRowFigma(String icon, String gesture, String action) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          // Icon 14x14
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: Center(
+              child: Text(
+                icon,
+                style: TextStyle(fontSize: 10, color: Colors.white),
+              ),
+            ),
+          ),
+          SizedBox(width: 6),
+          // Text - 12px Inter Regular
+          Text(
+            gesture,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w400,
+              color: Colors.white,
+              fontSize: 12,
+              height: 1.5,
+            ),
+          ),
+          SizedBox(width: 2),
+          Text(
+            action,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w400,
+              color: Colors.white,
+              fontSize: 12,
+              height: 1.5,
+            ),
+          ),
         ],
       ),
     );
@@ -1706,26 +1865,25 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   Widget _buildGestureItem(BuildContext context, String emoji, String gesture, String action) {
-    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: EdgeInsets.symmetric(vertical: 2),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 12)),
-          const SizedBox(width: 6),
+          Text(emoji, style: TextStyle(fontSize: 12)),
+          SizedBox(width: 6),
           Text(
             '$gesture: ',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.black54,
               fontSize: 12,
             ),
           ),
           Text(
             action,
-            style: theme.textTheme.bodySmall?.copyWith(
+            style: GoogleFonts.ibmPlexSans(
               fontWeight: FontWeight.w600,
-              color: theme.colorScheme.primary,
+              color: Colors.black87,
               fontSize: 12,
             ),
           ),

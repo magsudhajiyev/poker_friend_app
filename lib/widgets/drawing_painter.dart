@@ -10,7 +10,7 @@ class DrawingPainter extends CustomPainter {
     if (points.isEmpty) return;
     
     final paint = Paint()
-      ..color = Colors.white
+      ..color = Colors.black
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round;
 
