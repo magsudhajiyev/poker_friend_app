@@ -91,6 +91,34 @@ class FirebaseService {
     }
   }
 
+  // Delete a session (used when navigating away without logging any hands)
+  static Future<void> deleteSession(String sessionId) async {
+    try {
+      final userId = AuthService.userId;
+      if (userId == null) return;
+
+      final sessionRef = _firestore.collection(_sessionsCollection).doc(sessionId);
+
+      // Verify the session belongs to this user before deleting
+      final sessionDoc = await sessionRef.get();
+      if (!sessionDoc.exists) return;
+
+      final sessionData = sessionDoc.data();
+      if (sessionData?['userId'] != userId) return;
+
+      // Delete any hands in this session
+      final handsSnapshot = await sessionRef.collection(_handsCollection).get();
+      for (final handDoc in handsSnapshot.docs) {
+        await handDoc.reference.delete();
+      }
+
+      // Delete the session
+      await sessionRef.delete();
+    } catch (e) {
+      // Silently fail - deletion errors are not critical
+    }
+  }
+
   // Save a completed poker hand
   static Future<void> saveHand({
     required String sessionId,

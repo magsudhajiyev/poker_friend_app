@@ -793,14 +793,203 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void dispose() {
     _tapTimer?.cancel();
     _tapTimer = null;
-    
-    // End session when leaving
+
+    // End session when leaving, but only if there's actual data to save
     if (sessionManager.sessionState == SessionState.active) {
-      sessionManager.endSession().catchError((e) {
-      });
+      final hasData = sessionManager.completedHands.isNotEmpty ||
+          (sessionManager.currentHand?.actions.isNotEmpty ?? false);
+      if (hasData) {
+        sessionManager.endSession().catchError((e) {});
+      }
     }
-    
+
     super.dispose();
+  }
+
+  // Navigation confirmation helpers
+
+  /// Returns true if there's unsaved session data that should be confirmed before leaving
+  bool _hasUnsavedSessionData() {
+    // Session must be active
+    if (sessionManager.sessionState != SessionState.active) {
+      return false;
+    }
+
+    // Check if there are any completed hands OR current hand has actions
+    final hasCompletedHands = sessionManager.completedHands.isNotEmpty;
+    final hasCurrentHandActions = sessionManager.currentHand?.actions.isNotEmpty ?? false;
+
+    return hasCompletedHands || hasCurrentHandActions;
+  }
+
+  /// Shows confirmation dialog when user tries to navigate away from active session
+  /// Returns: 'save' to save and exit, 'discard' to exit without saving, null to cancel
+  Future<String?> _showNavigationConfirmationDialog() async {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: GlassyCard(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: Color(0xFFFFB84D),
+                  size: 48,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Leave Session?',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'You have an active session with ${sessionManager.completedHands.length} hand(s) logged. What would you like to do?',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 14,
+                  ),
+                ),
+                SizedBox(height: 24),
+                // Save & Exit button (primary action)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, 'save'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF5CD9A4),
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Save & Exit',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Color(0xFF1C1C1E),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
+                // Discard button (destructive)
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context, 'discard'),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Color(0xFFFF6B6B).withOpacity(0.5)),
+                      ),
+                    ),
+                    child: Text(
+                      'Discard & Exit',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Color(0xFFFF6B6B),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
+                // Cancel button
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context, null),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Handles navigation attempt with confirmation if needed
+  Future<void> _handleNavigationAttempt({bool isBackButton = false}) async {
+    if (!_hasUnsavedSessionData()) {
+      // No data logged - delete the empty session from Firebase/local storage
+      final sessionId = sessionManager.sessionId;
+      if (sessionId != null) {
+        await FirebaseService.deleteSession(sessionId);
+        await LocalStorageService.deleteSession(sessionId);
+      }
+      sessionManager.sessionState = SessionState.ended;
+      if (isBackButton) {
+        Navigator.pop(context);
+      }
+      return;
+    }
+
+    final result = await _showNavigationConfirmationDialog();
+
+    if (result == null) {
+      // User cancelled, stay on screen
+      return;
+    }
+
+    if (result == 'save') {
+      // Save session and exit
+      try {
+        // Capture final stack before ending session
+        final ourSeat = sessionManager.ourSeatNumber;
+        if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+          final finalStack = gameState.players[ourSeat - 1].currentStack;
+          sessionManager.addFinalStackEntry(finalStack);
+        }
+
+        await sessionManager.endSession();
+
+        if (!mounted) return;
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save session: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else if (result == 'discard') {
+      // Discard - delete the session from Firebase and local storage
+      final sessionId = sessionManager.sessionId;
+      if (sessionId != null) {
+        await FirebaseService.deleteSession(sessionId);
+        await LocalStorageService.deleteSession(sessionId);
+      }
+      sessionManager.sessionState = SessionState.ended;
+
+      if (!mounted) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
 
   // Null-safe helper methods to prevent crashes
@@ -854,11 +1043,67 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      extendBody: true,
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: ''),
-      body: Stack(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          await _handleNavigationAttempt(isBackButton: true);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        extendBody: true,
+        bottomNavigationBar: GlobalBottomNavBar(
+          currentScreen: '',
+          onNavigationAttempt: () async {
+            if (!_hasUnsavedSessionData()) {
+              // No data logged - delete the empty session from Firebase/local storage
+              final sessionId = sessionManager.sessionId;
+              if (sessionId != null) {
+                await FirebaseService.deleteSession(sessionId);
+                await LocalStorageService.deleteSession(sessionId);
+              }
+              sessionManager.sessionState = SessionState.ended;
+              return true; // Allow navigation
+            }
+
+            final result = await _showNavigationConfirmationDialog();
+
+            if (result == 'save') {
+              try {
+                final ourSeat = sessionManager.ourSeatNumber;
+                if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+                  final finalStack = gameState.players[ourSeat - 1].currentStack;
+                  sessionManager.addFinalStackEntry(finalStack);
+                }
+                await sessionManager.endSession();
+                return true; // Allow navigation after save
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to save session: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+                return false; // Block navigation on error
+              }
+            } else if (result == 'discard') {
+              // Discard - delete the session from Firebase and local storage
+              final sessionId = sessionManager.sessionId;
+              if (sessionId != null) {
+                await FirebaseService.deleteSession(sessionId);
+                await LocalStorageService.deleteSession(sessionId);
+              }
+              sessionManager.sessionState = SessionState.ended;
+              return true; // Allow navigation after discard
+            }
+
+            return false; // Cancel - block navigation
+          },
+        ),
+        body: Stack(
         children: [
           // Teal gradient background (consistent with other screens)
           Positioned(
@@ -897,7 +1142,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                     children: [
                       // Back button - 44px circle
                       GestureDetector(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () => _handleNavigationAttempt(isBackButton: true),
                         child: Container(
                           width: 44,
                           height: 44,
@@ -1240,8 +1485,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         if (_showMenuOverlay)
           _buildMenuOverlay(),
         ],  // Stack children
-      ),  // Stack
-    );
+        ),  // Stack
+      ),  // Scaffold
+    );  // PopScope
   }
 
   Widget _buildInfoItem(BuildContext context, String label, String value, IconData icon) {

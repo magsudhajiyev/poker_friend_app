@@ -197,7 +197,22 @@ class LocalStorageService {
       print('Error saving session locally: $e');
     }
   }
-  
+
+  // Delete a session (used when navigating away without logging any hands)
+  static Future<void> deleteSession(String sessionId) async {
+    try {
+      final db = await database;
+
+      // Delete any hands in this session
+      await db.delete('hands', where: 'sessionId = ?', whereArgs: [sessionId]);
+
+      // Delete the session
+      await db.delete('sessions', where: 'id = ?', whereArgs: [sessionId]);
+    } catch (e) {
+      // Silently fail - not critical
+    }
+  }
+
   // Save hand locally
   static Future<void> saveHand({
     required String sessionId,

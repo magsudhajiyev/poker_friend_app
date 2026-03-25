@@ -9,10 +9,12 @@ import '../screens/logging_mode_selection_screen.dart';
 
 class GlobalBottomNavBar extends StatelessWidget {
   final String currentScreen;
+  final Future<bool> Function()? onNavigationAttempt;
 
   const GlobalBottomNavBar({
     Key? key,
     required this.currentScreen,
+    this.onNavigationAttempt,
   }) : super(key: key);
 
   @override
@@ -42,10 +44,15 @@ class GlobalBottomNavBar extends StatelessWidget {
                   children: [
                     // Home Icon
                     _buildNavItem(
+                      context: context,
                       iconPath: 'icons/flat_icons/home.png',
                       isActive: currentScreen == 'home',
-                      onTap: () {
+                      onTap: () async {
                         if (currentScreen != 'home') {
+                          if (onNavigationAttempt != null) {
+                            final shouldProceed = await onNavigationAttempt!();
+                            if (!shouldProceed) return;
+                          }
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -55,10 +62,15 @@ class GlobalBottomNavBar extends StatelessWidget {
                     ),
                     // Opponents Icon
                     _buildNavItem(
+                      context: context,
                       iconPath: 'icons/flat_icons/people.png',
                       isActive: currentScreen == 'opponents',
-                      onTap: () {
+                      onTap: () async {
                         if (currentScreen != 'opponents') {
+                          if (onNavigationAttempt != null) {
+                            final shouldProceed = await onNavigationAttempt!();
+                            if (!shouldProceed) return;
+                          }
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => MyOpponentsScreen()),
@@ -70,10 +82,15 @@ class GlobalBottomNavBar extends StatelessWidget {
                     _buildPlusButton(context),
                     // Game/Sessions Icon
                     _buildNavItem(
+                      context: context,
                       iconPath: 'icons/flat_icons/cards.png',
                       isActive: currentScreen == 'sessions',
-                      onTap: () {
+                      onTap: () async {
                         if (currentScreen != 'sessions') {
+                          if (onNavigationAttempt != null) {
+                            final shouldProceed = await onNavigationAttempt!();
+                            if (!shouldProceed) return;
+                          }
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => SessionHistoryScreen()),
@@ -83,10 +100,15 @@ class GlobalBottomNavBar extends StatelessWidget {
                     ),
                     // Profile Icon
                     _buildNavItem(
+                      context: context,
                       iconPath: 'icons/flat_icons/user.png',
                       isActive: currentScreen == 'profile',
-                      onTap: () {
+                      onTap: () async {
                         if (currentScreen != 'profile') {
+                          if (onNavigationAttempt != null) {
+                            final shouldProceed = await onNavigationAttempt!();
+                            if (!shouldProceed) return;
+                          }
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => ProfileScreen()),
@@ -105,9 +127,10 @@ class GlobalBottomNavBar extends StatelessWidget {
   }
 
   Widget _buildNavItem({
+    required BuildContext context,
     required String iconPath,
     required bool isActive,
-    required VoidCallback onTap,
+    required Future<void> Function() onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -149,7 +172,11 @@ class GlobalBottomNavBar extends StatelessWidget {
 
   Widget _buildPlusButton(BuildContext context) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
+        if (onNavigationAttempt != null) {
+          final shouldProceed = await onNavigationAttempt!();
+          if (!shouldProceed) return;
+        }
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
