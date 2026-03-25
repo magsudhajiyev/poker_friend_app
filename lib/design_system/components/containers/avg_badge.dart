@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../constants/colors.dart';
-import '../../constants/typography.dart';
 
 /// Rounded pill badge showing average earnings
 /// Used in the Earnings section header
@@ -15,14 +13,19 @@ class AvgBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.iconButtonBg,
-        borderRadius: BorderRadius.circular(300),
+        color: const Color(0xFF89F1EC), // Mint background
+        borderRadius: BorderRadius.circular(140),
       ),
       child: Text(
         text,
-        style: AppTypography.labelChip(),
+        style: const TextStyle(
+          fontFamily: 'IBMPlexSans',
+          fontWeight: FontWeight.w500,
+          fontSize: 15,
+          color: Colors.black,
+        ),
       ),
     );
   }
