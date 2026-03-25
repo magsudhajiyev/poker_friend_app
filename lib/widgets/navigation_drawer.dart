@@ -1,14 +1,17 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/club.dart';
 import '../services/auth_service.dart';
 import '../services/club_service.dart';
+import '../services/session_result_service.dart';
 import '../screens/statistics_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/intro_screen.dart';
 import '../screens/club/club_dashboard_screen.dart';
 import '../screens/paywall_screen.dart';
+import '../screens/earnings_chart_screen.dart';
 import 'register_club_dialog.dart';
 
 /// Profile screen drawer matching Figma design (node 522-4548)
@@ -388,23 +391,15 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           // Clubs (expandable)
           _buildExpandableClubsItem(),
 
-          // TODO: Uncomment when Bankroll feature is ready
-          // const SizedBox(height: 24),
-          // // Bankroll
-          // _buildMenuItem(_MenuItemData(
-          //   iconPath: 'icons/figma_icons/bankroll.svg',
-          //   fallbackIcon: Icons.account_balance_wallet_rounded,
-          //   label: 'Bankroll',
-          //   onTap: () {
-          //     Navigator.pop(context);
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       const SnackBar(
-          //         content: Text('Bankroll screen coming soon'),
-          //         duration: Duration(seconds: 2),
-          //       ),
-          //     );
-          //   },
-          // )),
+          const SizedBox(height: 24),
+
+          // Bankroll
+          _buildMenuItem(_MenuItemData(
+            iconPath: 'icons/figma_icons/bankroll.svg',
+            fallbackIcon: Icons.account_balance_wallet_rounded,
+            label: 'Bankroll',
+            onTap: () => _navigateToBankroll(context),
+          )),
         ],
       ),
     );
@@ -669,6 +664,173 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
     return widget.username![0].toUpperCase();
+  }
+
+  Future<void> _navigateToBankroll(BuildContext context) async {
+    Navigator.pop(context); // Close drawer first
+
+    // Check if there are any session results
+    try {
+      final results = await SessionResultService.getAllSessionResults();
+      if (results.isEmpty) {
+        if (context.mounted) {
+          _showNoEarningsDataDialog(context);
+        }
+      } else {
+        if (context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const EarningsChartScreen(),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showNoEarningsDataDialog(context);
+      }
+    }
+  }
+
+  void _showNoEarningsDataDialog(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOut,
+          )),
+          child: child,
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            // Blurred backdrop
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.0),
+                  ),
+                ),
+              ),
+            ),
+
+            // Dialog content
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Main dialog container
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF131613),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      padding: const EdgeInsets.only(top: 24),
+                      child: Column(
+                        children: [
+                          // Icon
+                          const Icon(
+                            Icons.show_chart_rounded,
+                            color: Color(0xFF89F1EC),
+                            size: 48,
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Title section
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Text(
+                              'No Earnings Data Yet',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0,
+                                height: 1.2,
+                                decoration: TextDecoration.none,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Description section
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Text(
+                              'Add some session results first to view your earnings chart. You can add results from the Profile page.',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.6),
+                                fontWeight: FontWeight.w400,
+                                letterSpacing: 0.24,
+                                height: 1.5,
+                                decoration: TextDecoration.none,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Divider
+                          Container(
+                            height: 1,
+                            color: Colors.white.withOpacity(0.1),
+                          ),
+
+                          // OK button
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                              child: Text(
+                                'OK',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 16,
+                                  color: const Color(0xFF89F1EC),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0,
+                                  height: 1.2,
+                                  decoration: TextDecoration.none,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16), // Bottom safe area padding
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showHelpDialog(BuildContext context) {

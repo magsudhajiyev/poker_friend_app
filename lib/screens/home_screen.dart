@@ -15,6 +15,7 @@ import '../screens/settings_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/admin/club_requests_screen.dart';
 import '../screens/calendar_screen.dart';
+import '../screens/earnings_chart_screen.dart';
 import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
 import '../services/firebase_service.dart';
@@ -1920,24 +1921,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         const SizedBox(height: 16),
-        // Chart
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SizedBox(
-            height: 167,
-            child: earningsChartData.isEmpty
-                ? Center(
-                    child: Text(
-                      'No earnings data yet',
-                      style: AppTypography.listRowText(
-                        color: Colors.white.withOpacity(0.40),
+        // Chart - tap to open full-screen Bankroll view
+        GestureDetector(
+          onTap: () => _navigateToEarningsChart(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SizedBox(
+              height: 167,
+              child: earningsChartData.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No earnings data yet',
+                        style: AppTypography.listRowText(
+                          color: Colors.white.withOpacity(0.40),
+                        ),
                       ),
+                    )
+                  : CustomPaint(
+                      painter: EarningsChartPainter(earningsChartData),
+                      size: Size.infinite,
                     ),
-                  )
-                : CustomPaint(
-                    painter: EarningsChartPainter(earningsChartData),
-                    size: Size.infinite,
-                  ),
+            ),
           ),
         ),
       ],
@@ -3447,6 +3451,171 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
 
               SizedBox(height: 16), // Bottom safe area padding
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _navigateToEarningsChart() async {
+    // Check if there are any session results
+    try {
+      final results = await SessionResultService.getAllSessionResults();
+      if (results.isEmpty) {
+        if (mounted) {
+          _showNoEarningsDataDialog();
+        }
+      } else {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const EarningsChartScreen(),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showNoEarningsDataDialog();
+      }
+    }
+  }
+
+  void _showNoEarningsDataDialog() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOut,
+          )),
+          child: child,
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            // Blurred backdrop
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.0),
+                  ),
+                ),
+              ),
+            ),
+
+            // Dialog content
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Main dialog container
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF131613),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      padding: const EdgeInsets.only(top: 24),
+                      child: Column(
+                        children: [
+                          // Icon
+                          Icon(
+                            Icons.show_chart_rounded,
+                            color: const Color(0xFF89F1EC),
+                            size: 48,
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Title section
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Text(
+                              'No Earnings Data Yet',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0,
+                                height: 1.2,
+                                decoration: TextDecoration.none,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Description section
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Text(
+                              'Add some session results first to view your earnings chart. You can add results from the Profile page.',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.6),
+                                fontWeight: FontWeight.w400,
+                                letterSpacing: 0.24,
+                                height: 1.5,
+                                decoration: TextDecoration.none,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Divider
+                          Container(
+                            height: 1,
+                            color: Colors.white.withOpacity(0.1),
+                          ),
+
+                          // OK button
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                              child: Text(
+                                'OK',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 16,
+                                  color: const Color(0xFF89F1EC),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0,
+                                  height: 1.2,
+                                  decoration: TextDecoration.none,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16), // Bottom safe area padding
                   ],
                 ),
               ),
