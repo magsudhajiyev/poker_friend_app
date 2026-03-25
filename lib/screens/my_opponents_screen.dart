@@ -223,6 +223,25 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                           ],
                         ),
                       ),
+                      // Add opponent button on RIGHT
+                      GestureDetector(
+                        onTap: _showAddOpponentDialog,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF89F1EC),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.add,
+                              color: Colors.black,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -481,8 +500,9 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Color(0xFF131616), // Figma: #131616
-        borderRadius: BorderRadius.circular(18), // Figma: 18px
+        color: Color(0xFF101115),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black),
       ),
       child: Material(
         color: Colors.transparent,
@@ -499,15 +519,13 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
               _loadOpponents(useCache: false);
             }
           },
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16), // Figma: px-16 py-14
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Column(
               children: [
-                // Top row: Profile circle + dots menu (gap-12)
+                // Top row: Profile circle + Name + dots menu
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Profile circle (32px)
                     Container(
@@ -518,102 +536,117 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    // Dots menu icon (smaller per Figma inset, White/20 color)
+                    SizedBox(width: 8),
+                    // Player name
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          opponent.name,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w400,
+                            height: 1.44,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Dots menu icon (24px container)
                     GestureDetector(
                       key: dotsKey,
                       onTap: () => _showOpponentOptionsMenu(opponent, dotsKey),
                       child: _buildIcon(
                         'icons/figma_icons/dots.svg',
-                        18,
-                        Color(0xFF555555), // Figma: White/20
+                        24,
+                        Color(0xFF555555),
                       ),
                     ),
                   ],
                 ),
 
-                SizedBox(height: 12), // gap-12 from Figma
+                SizedBox(height: 12),
 
-                // Info Card section (gap-14 internally)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // Separator line
+                Container(
+                  height: 1,
+                  color: Color(0xFF1C1F21),
+                ),
+
+                SizedBox(height: 14),
+
+                // Hands row: "Hands" label on left, count on right
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Name and Hands row (gap-4)
-                    Column(
-                      children: [
-                        // Player Name + Hands count
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              opponent.name,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 17, // Figma: 17px
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500, // Medium
-                                height: 1.44,
-                              ),
-                            ),
-                            Text(
-                              '${opponentHandsCounts[opponent.id] ?? 0}',
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 17, // Figma: 17px
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500, // Medium
-                                height: 1.44,
-                              ),
-                            ),
-                          ],
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        'Hands',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          color: Color(0xFFB3B4B6),
+                          fontWeight: FontWeight.w500,
+                          height: 1.44,
                         ),
-                        SizedBox(height: 4), // gap-4
-                        // Playing style + "Hands" label
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              opponentStats[opponent.id]?.playingStyle ?? 'No data',
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 14, // Figma: 14px
-                                color: Colors.white,
-                                fontWeight: FontWeight.w400, // Regular
-                              ),
-                            ),
-                            Text(
-                              'Hands',
-                              style: GoogleFonts.inter(
-                                fontSize: 12, // Figma: 12px
-                                color: Colors.white,
-                                fontWeight: FontWeight.w400, // Regular
-                                height: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                      ),
                     ),
-
-                    SizedBox(height: 14), // gap-14 from Figma
-
-                    // Last seen row
-                    Row(
-                      children: [
-                        _buildIcon(
-                          'icons/figma_icons/eye.svg',
-                          18,
-                          Color(0xFFB9B9B9), // Figma: #B9B9B9
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        '${opponentHandsCounts[opponent.id] ?? 0}',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          color: Color(0xFFD3FFFD),
+                          fontWeight: FontWeight.w500,
+                          height: 1.44,
                         ),
-                        SizedBox(width: 4),
-                        Text(
-                          DateFormat('MMM dd, h:mma').format(opponent.lastSeenAt).toLowerCase(),
-                          style: GoogleFonts.inter(
-                            fontSize: 10, // Figma: 10px
-                            color: Color(0xFFB9B9B9), // Figma: #B9B9B9
-                            fontWeight: FontWeight.w400, // Regular
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
+                ),
+
+                SizedBox(height: 14),
+
+                // Last seen row: eye icon + "Last Seen:" + date on right
+                Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Row(
+                    children: [
+                      _buildIcon(
+                        'icons/figma_icons/eye.svg',
+                        22,
+                        Color(0xFF808285),
+                      ),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            'Last Seen:',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              color: Color(0xFF808285),
+                              fontWeight: FontWeight.w500,
+                              height: 1.44,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          DateFormat('MMM dd, h:mm a').format(opponent.lastSeenAt),
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            color: Color(0xFFE6E6E7),
+                            fontWeight: FontWeight.w500,
+                            height: 1.44,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -648,13 +681,13 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
             child: Material(
               color: Colors.transparent,
               child: Container(
-                width: 184, // Figma: 184px
+                width: 184,
                 decoration: BoxDecoration(
-                  color: Color(0xFF161619), // Figma: #161619
+                  color: Color(0xFF02050B),
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.45), // rgba(0,0,0,0.45)
+                      color: Colors.black.withOpacity(0.45),
                       blurRadius: 34,
                       offset: Offset(0, 4),
                     ),
@@ -665,22 +698,6 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Player Name header
-                    Text(
-                      opponent.name,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700, // Bold
-                        color: Colors.white,
-                        height: 1.5,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    // Separator (hairline per Figma)
-                    Container(
-                      height: 0.5,
-                      color: Color(0xFF545458).withOpacity(0.6),
-                    ),
                     // Edit Opponent row
                     GestureDetector(
                       onTap: () {
@@ -688,33 +705,35 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                         _showEditOpponentDialog(opponent);
                       },
                       behavior: HitTestBehavior.opaque,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Edit Opponent',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500, // Medium
-                                color: Colors.white,
-                                height: 1.46,
+                      child: Row(
+                        children: [
+                          _buildIcon(
+                            'icons/figma_icons/edit.svg',
+                            16,
+                            Colors.white,
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                'Edit Opponent',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                  height: 1.44,
+                                ),
                               ),
                             ),
-                            _buildIcon(
-                              'icons/figma_icons/edit.svg',
-                              18, // Slightly smaller
-                              Colors.white,
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    // Separator (hairline per Figma)
+                    // Separator
                     Container(
-                      height: 0.5,
-                      color: Color(0xFF545458).withOpacity(0.6),
+                      height: 1,
+                      color: Color(0xFF1C1F21),
                     ),
                     // Delete Opponent row
                     GestureDetector(
@@ -723,27 +742,29 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                         _showDeleteConfirmation(opponent);
                       },
                       behavior: HitTestBehavior.opaque,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Delete Opponent',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500, // Medium
-                                color: Colors.white, // Text is white per Figma
-                                height: 1.46,
+                      child: Row(
+                        children: [
+                          _buildIcon(
+                            'icons/figma_icons/delete.svg',
+                            16,
+                            Color(0xFFD55A41),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                'Delete Opponent',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                  height: 1.44,
+                                ),
                               ),
                             ),
-                            _buildIcon(
-                              'icons/figma_icons/delete.svg',
-                              20, // Slightly smaller
-                              Color(0xFFD55A41), // Error/red color for delete icon
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -951,6 +972,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                 notes: notesController.text.trim().isEmpty
                     ? null
                     : notesController.text.trim(),
+                clearNotes: notesController.text.trim().isEmpty,
                 color: selectedColor,
               )
             : OpponentService.createNewOpponent(
@@ -1048,21 +1070,21 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                             height: 22 / 17,
                           ),
                         ),
-                        // Save/Check button - 38px with icon centered (inset 12.5% = ~18px icon)
+                        // Save/Check button - 38px with green background, dark check
                         GestureDetector(
                           onTap: saveOpponent,
                           child: Container(
                             width: 38,
                             height: 38,
                             decoration: BoxDecoration(
-                              color: Color(0xFF2C2C2E),
+                              color: Color(0xFF54E98A),
                               borderRadius: BorderRadius.circular(58),
                             ),
                             child: Center(
                               child: _buildIcon(
                                 'icons/figma_icons/check.svg',
                                 18,
-                                Colors.white,
+                                Color(0xFF1A4A4A),
                               ),
                             ),
                           ),
@@ -1125,7 +1147,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                           ),
                         ),
 
-                        // Notes field - p-10 from Figma
+                        // Notes field - text area for more visibility
                         Padding(
                           padding: EdgeInsets.all(10),
                           child: TextField(
@@ -1140,7 +1162,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                               hintText: 'Notes (Optional)',
                               hintStyle: GoogleFonts.ibmPlexSans(
                                 fontSize: 17,
-                                color: Colors.white,
+                                color: Colors.white.withOpacity(0.5),
                                 fontWeight: FontWeight.w400,
                                 height: 1.44,
                               ),
@@ -1151,7 +1173,8 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                               contentPadding: EdgeInsets.zero,
                               isDense: true,
                             ),
-                            maxLines: 1,
+                            maxLines: 4,
+                            minLines: 4,
                           ),
                         ),
 

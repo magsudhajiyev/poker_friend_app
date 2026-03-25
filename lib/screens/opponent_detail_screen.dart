@@ -416,6 +416,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildBasicInfoCard(),
+                        if (_opponent.notes != null && _opponent.notes!.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          _buildNotesSection(),
+                        ],
                         const SizedBox(height: 32),
                         _buildStatisticsSection(),
                         const SizedBox(height: 32),
@@ -438,20 +442,22 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   Widget _buildBasicInfoCard() {
     final cardColor = _getColorForOpponent(_opponent.color);
+    final dotsKey = GlobalKey();
 
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF131616),
-        borderRadius: BorderRadius.circular(18),
+        color: Color(0xFF101115),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black),
       ),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           children: [
-            // Top section: Color indicator + stats
+            // Top row: Profile circle + Name + dots menu
             Row(
               children: [
-                // Color indicator avatar (32px solid circle)
+                // Profile circle (32px)
                 Container(
                   width: 32,
                   height: 32,
@@ -460,207 +466,289 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     shape: BoxShape.circle,
                   ),
                 ),
-                SizedBox(width: 16),
-                // Stats row
+                SizedBox(width: 8),
+                // Player name
                 Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Hands count
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${_statistics?['totalHands'] ?? 0}',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              height: 1.2,
-                            ),
-                          ),
-                          Text(
-                            'Hands',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 13,
-                              color: Colors.white.withOpacity(0.6),
-                              fontWeight: FontWeight.w400,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      _opponent.name,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                        height: 1.44,
                       ),
-                      // Sessions count
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${_statistics?['totalSessions'] ?? 0}',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              height: 1.2,
-                            ),
-                          ),
-                          Text(
-                            'Sessions',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 13,
-                              color: Colors.white.withOpacity(0.6),
-                              fontWeight: FontWeight.w400,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Last seen
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Row(
-                            children: [
-                              _buildIcon(
-                                'icons/figma_icons/eye.svg',
-                                16,
-                                Colors.white.withOpacity(0.6),
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                DateFormat('MMM dd').format(_opponent.lastSeenAt),
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.2,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            'Last Seen',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 13,
-                              color: Colors.white.withOpacity(0.6),
-                              fontWeight: FontWeight.w400,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
+                  ),
+                ),
+                // Dots menu icon (24px container)
+                GestureDetector(
+                  key: dotsKey,
+                  onTap: () => _showOpponentOptionsMenu(dotsKey),
+                  child: _buildIcon(
+                    'icons/figma_icons/dots.svg',
+                    24,
+                    Color(0xFF555555),
                   ),
                 ),
               ],
             ),
 
-            // Notes section (if available)
-            if (_opponent.notes != null && _opponent.notes!.isNotEmpty) ...[
-              SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(8),
+            SizedBox(height: 12),
+
+            // Separator line
+            Container(
+              height: 1,
+              color: Color(0xFF1C1F21),
+            ),
+
+            SizedBox(height: 14),
+
+            // Hands row: "Hands" label on left, count on right
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    'Hands',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      color: Color(0xFFB3B4B6),
+                      fontWeight: FontWeight.w500,
+                      height: 1.44,
+                    ),
+                  ),
                 ),
-                child: Row(
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    '${_statistics?['totalHands'] ?? 0}',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      color: Color(0xFFD3FFFD),
+                      fontWeight: FontWeight.w500,
+                      height: 1.44,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 14),
+
+            // Last seen row: eye icon + "Last Seen:" + date on right
+            Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  _buildIcon(
+                    'icons/figma_icons/eye.svg',
+                    22,
+                    Color(0xFF808285),
+                  ),
+                  SizedBox(width: 6),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        'Last Seen:',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13,
+                          color: Color(0xFF808285),
+                          fontWeight: FontWeight.w500,
+                          height: 1.44,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      DateFormat('MMM dd, h:mm a').format(_opponent.lastSeenAt),
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 13,
+                        color: Color(0xFFE6E6E7),
+                        fontWeight: FontWeight.w500,
+                        height: 1.44,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotesSection() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Color(0xFF101115),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black),
+      ),
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row with icon and label
+          Row(
+            children: [
+              _buildIcon(
+                'icons/figma_icons/notes.svg',
+                18,
+                Color(0xFF808285),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Notes',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  color: Color(0xFF808285),
+                  fontWeight: FontWeight.w500,
+                  height: 1.44,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          // Notes content
+          Text(
+            _opponent.notes!,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              color: Colors.white,
+              fontWeight: FontWeight.w400,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOpponentOptionsMenu(GlobalKey dotsKey) {
+    // Get position of the dots icon
+    final RenderBox renderBox = dotsKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+    final Size size = renderBox.size;
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (context) => Stack(
+        children: [
+          // Dismiss on tap outside
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          // Positioned popup menu
+          Positioned(
+            right: 16,
+            top: offset.dy + size.height + 8,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: 184,
+                decoration: BoxDecoration(
+                  color: Color(0xFF02050B),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.45),
+                      blurRadius: 34,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildIcon(
-                      'icons/figma_icons/notes.svg',
-                      16,
-                      Colors.white.withOpacity(0.6),
+                    // Edit Opponent row
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showEditOpponentDialog();
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Row(
+                        children: [
+                          _buildIcon(
+                            'icons/figma_icons/edit.svg',
+                            16,
+                            Colors.white,
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                'Edit Opponent',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                  height: 1.44,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _opponent.notes!,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 14,
-                          color: Colors.white.withOpacity(0.8),
-                          fontWeight: FontWeight.w400,
-                          height: 1.4,
-                        ),
+                    // Separator
+                    Container(
+                      height: 1,
+                      color: Color(0xFF1C1F21),
+                    ),
+                    // Delete Opponent row
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showDeleteConfirmation();
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Row(
+                        children: [
+                          _buildIcon(
+                            'icons/figma_icons/delete.svg',
+                            16,
+                            Color(0xFFD55A41),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                'Delete Opponent',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                  height: 1.44,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-
-            SizedBox(height: 16),
-
-            // Action buttons row
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showEditOpponentDialog(),
-                    child: Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildIcon(
-                            'icons/figma_icons/edit.svg',
-                            18,
-                            Colors.white,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Edit',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 14,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showDeleteConfirmation(),
-                    child: Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFB63131).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildIcon(
-                            'icons/figma_icons/delete.svg',
-                            18,
-                            Color(0xFFFF6B6B),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Delete',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 14,
-                              color: Color(0xFFFF6B6B),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -799,77 +887,80 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   }
 
   Widget _buildHandHistorySection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFF131616),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      padding: EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          Text(
-            'Hand History',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              height: 1.2,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header section (matches CardHeader from Figma)
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title
+              Text(
+                'Hand History',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF8C8C8C),
+                  height: 1.44,
+                ),
+              ),
+              // Subtitle
+              Text(
+                'View all hands played with this opponent',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF8C8C8C),
+                  height: 1.44,
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 8),
-          // Description
-          Text(
-            'View all hands played with this opponent',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF89F1EC),
-            ),
-          ),
-          SizedBox(height: 20),
-          // Button
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: () {
-                // Check if there are hands before navigating
-                final totalHands = _statistics?['totalHands'] ?? 0;
-                if (totalHands == 0) {
-                  _showNoHandsFoundDialog();
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => OpponentHandsScreen(
-                        opponent: _opponent,
-                      ),
+        ),
+        SizedBox(height: 14),
+        // Button (mint background per Figma)
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            onPressed: () {
+              // Check if there are hands before navigating
+              final totalHands = _statistics?['totalHands'] ?? 0;
+              if (totalHands == 0) {
+                _showNoHandsFoundDialog();
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OpponentHandsScreen(
+                      opponent: _opponent,
                     ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(110),
-                ),
-                elevation: 0,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF89F1EC),
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(110),
               ),
-              child: Text(
-                'View Hand History',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
-                ),
+              elevation: 0,
+            ),
+            child: Text(
+              'View Hand History',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+                letterSpacing: -0.5,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -988,6 +1079,173 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     final nameController = TextEditingController(text: _opponent.name);
     final notesController = TextEditingController(text: _opponent.notes ?? '');
     OpponentColor selectedColor = _opponent.color;
+    final colorPickerKey = GlobalKey();
+
+    // Color name mapping
+    String getColorName(OpponentColor color) {
+      switch (color) {
+        case OpponentColor.red: return 'Red';
+        case OpponentColor.blue: return 'Light Blue';
+        case OpponentColor.green: return 'Green';
+        case OpponentColor.orange: return 'Orange';
+        case OpponentColor.purple: return 'Purple';
+        case OpponentColor.teal: return 'Teal';
+        case OpponentColor.pink: return 'Pink';
+        case OpponentColor.indigo: return 'Indigo';
+      }
+    }
+
+    void showColorPicker(StateSetter setSheetState) {
+      final colors = OpponentColor.values;
+
+      // Get the position of the color picker row
+      final RenderBox renderBox = colorPickerKey.currentContext!.findRenderObject() as RenderBox;
+      final Offset offset = renderBox.localToGlobal(Offset.zero);
+
+      showDialog(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (context) {
+          return Stack(
+            children: [
+              // Dismiss on tap outside
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+              // Positioned dropdown
+              Positioned(
+                right: 32,
+                top: offset.dy,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    width: 184,
+                    decoration: BoxDecoration(
+                      color: Color(0xFF161619),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.45),
+                          blurRadius: 34,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ...colors.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final color = entry.value;
+                          final isSelected = color == selectedColor;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  setSheetState(() {
+                                    selectedColor = color;
+                                  });
+                                },
+                                behavior: HitTestBehavior.opaque,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                  child: Row(
+                                    children: [
+                                      if (isSelected) ...[
+                                        Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                        SizedBox(width: 8),
+                                      ],
+                                      Container(
+                                        width: 16,
+                                        height: 16,
+                                        margin: EdgeInsets.only(right: 8),
+                                        decoration: BoxDecoration(
+                                          color: _getColorForOpponent(color),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      Text(
+                                        getColorName(color),
+                                        style: GoogleFonts.ibmPlexSans(
+                                          color: Colors.white,
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (index < colors.length - 1)
+                                Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Container(
+                                    height: 1,
+                                    color: Colors.white.withOpacity(0.1),
+                                  ),
+                                ),
+                            ],
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    Future<void> saveOpponent() async {
+      final name = nameController.text.trim();
+      if (name.isEmpty) return;
+
+      try {
+        final updatedOpponent = _opponent.copyWith(
+          name: name,
+          notes: notesController.text.trim().isEmpty
+              ? null
+              : notesController.text.trim(),
+          clearNotes: notesController.text.trim().isEmpty,
+          color: selectedColor,
+        );
+
+        await OpponentService.saveOpponent(updatedOpponent);
+        Navigator.pop(context);
+
+        setState(() {
+          _opponent = updatedOpponent;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Opponent updated successfully'),
+            backgroundColor: Color(0xFF44D69B),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -998,271 +1256,227 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) {
           return Container(
+            height: MediaQuery.of(context).size.height * 0.9,
             decoration: BoxDecoration(
-              color: Color(0xFF1a2925),
+              color: Colors.black,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
               ),
-            ),
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
+              border: Border.all(color: Color(0xFF262626)),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF2E5A59),
+                  blurRadius: 64,
+                  offset: Offset(0, -6),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Drag handle line
-                    Container(
-                      width: 80,
-                      height: 2,
-                      margin: EdgeInsets.only(top: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(1),
-                      ),
-                    ),
-
-                    SizedBox(height: 38),
-
-                    // Title
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
+              ],
+            ),
+            child: Column(
+              children: [
+                // Header with X, title, checkmark
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    height: 68,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Close button
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF2C2C2E),
+                              borderRadius: BorderRadius.circular(58),
+                            ),
+                            child: Center(
+                              child: _buildIcon(
+                                'icons/figma_icons/close.svg',
+                                15,
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Title
+                        Text(
                           'Edit Opponent',
                           style: GoogleFonts.ibmPlexSans(
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
-                            letterSpacing: 0,
-                            height: 1.2,
+                            letterSpacing: -0.43,
+                            height: 22 / 17,
                           ),
                         ),
-                      ),
-                    ),
-
-                    SizedBox(height: 24),
-
-                    // Input fields
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        children: [
-                          // Opponent Name field
-                          Container(
-                            height: 56,
+                        // Save/Check button - green background
+                        GestureDetector(
+                          onTap: saveOpponent,
+                          child: Container(
+                            width: 38,
+                            height: 38,
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.2),
-                                width: 1,
-                              ),
+                              color: Color(0xFF54E98A),
+                              borderRadius: BorderRadius.circular(58),
                             ),
-                            child: TextField(
-                              controller: nameController,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'Opponent Name',
-                                hintStyle: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white.withOpacity(0.5),
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
+                            child: Center(
+                              child: _buildIcon(
+                                'icons/figma_icons/check.svg',
+                                18,
+                                Color(0xFF1A4A4A),
                               ),
                             ),
                           ),
-
-                          SizedBox(height: 18),
-
-                          // Notes field
-                          Container(
-                            height: 150,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.2),
-                                width: 1,
-                              ),
-                            ),
-                            child: TextField(
-                              controller: notesController,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'Notes (Optional)',
-                                hintStyle: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white.withOpacity(0.5),
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.all(16),
-                              ),
-                              maxLines: 6,
-                              maxLength: null,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ),
+                ),
 
-                    SizedBox(height: 24),
+                SizedBox(height: 22),
 
-                    // Color picker section
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pick a color:',
+                // Form card
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Color(0xFF131616),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Column(
+                      children: [
+                        // Opponent Name field
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(10, 10, 8, 10),
+                          child: TextField(
+                            controller: nameController,
                             style: GoogleFonts.ibmPlexSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 17,
                               color: Colors.white,
-                              letterSpacing: -0.28,
+                              fontWeight: FontWeight.w400,
+                              height: 1.44,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Opponent Name',
+                              hintStyle: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400,
+                                height: 1.44,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              filled: false,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
                             ),
                           ),
-                          SizedBox(height: 16),
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            children: OpponentColor.values.map((color) {
-                              final isSelected = selectedColor == color;
-                              return GestureDetector(
-                                onTap: () {
-                                  setSheetState(() {
-                                    selectedColor = color;
-                                  });
-                                },
-                                child: Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: _getColorForOpponent(color),
-                                    shape: BoxShape.circle,
-                                    border: isSelected
-                                        ? Border.all(
-                                            color: Colors.white,
-                                            width: 3,
-                                          )
-                                        : null,
+                        ),
+
+                        // Separator
+                        Container(
+                          height: 21,
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          alignment: Alignment.center,
+                          child: Container(
+                            height: 1,
+                            color: Color(0xFF3A3A3C),
+                          ),
+                        ),
+
+                        // Notes field - text area for more visibility
+                        Padding(
+                          padding: EdgeInsets.all(10),
+                          child: TextField(
+                            controller: notesController,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              height: 1.44,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Notes (Optional)',
+                              hintStyle: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                color: Colors.white.withOpacity(0.5),
+                                fontWeight: FontWeight.w400,
+                                height: 1.44,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              filled: false,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                            ),
+                            maxLines: 4,
+                            minLines: 4,
+                          ),
+                        ),
+
+                        // Separator
+                        Container(
+                          height: 21,
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          alignment: Alignment.center,
+                          child: Container(
+                            height: 1,
+                            color: Color(0xFF3A3A3C),
+                          ),
+                        ),
+
+                        // Pick a color row
+                        GestureDetector(
+                          key: colorPickerKey,
+                          onTap: () => showColorPicker(setSheetState),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Pick a color',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 17,
+                                    color: Color(0xFFB9B9B9),
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.44,
                                   ),
                                 ),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: 56),
-
-                    // Update button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            final name = nameController.text.trim();
-                            if (name.isEmpty) return;
-
-                            try {
-                              final updatedOpponent = _opponent.copyWith(
-                                name: name,
-                                notes: notesController.text.trim().isEmpty
-                                    ? null
-                                    : notesController.text.trim(),
-                                color: selectedColor,
-                              );
-
-                              await OpponentService.saveOpponent(updatedOpponent);
-                              Navigator.pop(context);
-
-                              setState(() {
-                                _opponent = updatedOpponent;
-                              });
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Opponent updated successfully'),
-                                  backgroundColor: Color(0xFFA5EC44),
+                                Row(
+                                  children: [
+                                    Text(
+                                      getColorName(selectedColor),
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 17,
+                                        color: Color(0xFFB9B9B9),
+                                        fontWeight: FontWeight.w400,
+                                        height: 1.44,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    _buildIcon(
+                                      'icons/figma_icons/up_and_down.svg',
+                                      20,
+                                      Color(0xFFB9B9B9),
+                                    ),
+                                  ],
                                 ),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Error: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFFA5EC44),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            'Update',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
+                              ],
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-
-                    SizedBox(height: 16),
-
-                    // Cancel button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 24),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           );
         },
