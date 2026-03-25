@@ -236,8 +236,8 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
     return GestureDetector(
       onTap: !isEmpty && !isPreFilled ? () => _clearCard(index) : null,
       child: Container(
-        width: 56,
-        height: 72,
+        width: 48,
+        height: 62,
         decoration: BoxDecoration(
           color: isPreFilled ? Color(0xFF2A4A2A) : Color(0xFF2B2B2B),
           borderRadius: BorderRadius.circular(8),

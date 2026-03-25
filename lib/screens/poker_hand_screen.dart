@@ -567,9 +567,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         // End the session and save all data
         await sessionManager.endSession();
 
+        // Check if widget is still mounted before using context
+        if (!mounted) return;
+
         // Navigate back to main screen
         Navigator.of(context).popUntil((route) => route.isFirst);
       } catch (e) {
+        // Check if widget is still mounted before showing snackbar
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to end session: $e'),
@@ -2668,7 +2674,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     } else {
       // Check if everyone has folded to BB preflop (special case)
       _checkForAutomaticHandEnd();
-      
+
       // Check for auto-advance scenarios: all-in OR regular betting round completion
       if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
         // Use a post frame callback to avoid calling setState during build
@@ -2685,6 +2691,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             nextStreet();
           }
         });
+      } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
+        // River betting complete - trigger showdown/winner selection
+        _schedulePostFrameAction(() {
+          // Save river pot before completing hand
+          sessionManager.savePotForStreet(BettingRound.river, gameState.currentPot);
+          _handleHandComplete();
+        });
       } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
         // Handle edge case: all-in detected but betting round not marked complete yet
         _schedulePostFrameAction(() {
@@ -2694,7 +2707,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         });
       }
     }
-    
+
     // Update UI
     setState(() {});
   }
@@ -2846,7 +2859,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     } else {
       // Check if everyone has folded to BB preflop (special case)
       _checkForAutomaticHandEnd();
-      
+
       // Check for auto-advance scenarios: all-in OR regular betting round completion
       if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river) {
         // Use a post frame callback to avoid calling setState during build
@@ -2863,6 +2876,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             nextStreet();
           }
         });
+      } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
+        // River betting complete - trigger showdown/winner selection
+        _schedulePostFrameAction(() {
+          // Save river pot before completing hand
+          sessionManager.savePotForStreet(BettingRound.river, gameState.currentPot);
+          _handleHandComplete();
+        });
       } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
         // Handle edge case: all-in detected but betting round not marked complete yet
         _schedulePostFrameAction(() {
@@ -2872,7 +2892,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         });
       }
     }
-    
+
     // Update UI
     setState(() {});
   }

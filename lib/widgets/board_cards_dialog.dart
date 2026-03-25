@@ -158,14 +158,14 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
               ] else if (widget.currentRound == BettingRound.turn) ...[
                 // Show existing flop cards
                 ..._buildExistingFlopCards(),
-                SizedBox(width: 8),
+                SizedBox(width: 6),
                 _buildTurnSlot(),
               ] else if (widget.currentRound == BettingRound.river) ...[
-                // Show existing flop and turn cards
+                // Show existing flop and turn cards (smaller to fit all 5)
                 ..._buildExistingFlopCards(),
-                SizedBox(width: 8),
+                SizedBox(width: 6),
                 _buildExistingTurnCard(),
-                SizedBox(width: 8),
+                SizedBox(width: 6),
                 _buildRiverSlot(),
               ],
             ],
@@ -178,8 +178,8 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
   List<Widget> _buildExistingFlopCards() {
     return _flop.where((c) => c.isNotEmpty && c.length > 1).map((card) {
       return Container(
-        width: 56,
-        height: 72,
+        width: 48,
+        height: 62,
         decoration: BoxDecoration(
           color: Color(0xFF2B2B2B),
           borderRadius: BorderRadius.circular(8),
@@ -203,8 +203,8 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
       return SizedBox.shrink();
     }
     return Container(
-      width: 56,
-      height: 72,
+      width: 48,
+      height: 62,
       decoration: BoxDecoration(
         color: Color(0xFF2B2B2B),
         borderRadius: BorderRadius.circular(8),
@@ -230,8 +230,8 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
     return GestureDetector(
       onTap: !isEmpty ? () => _clearCard(index) : null,
       child: Container(
-        width: 56,
-        height: 72,
+        width: 48,
+        height: 62,
         decoration: BoxDecoration(
           color: Color(0xFF2B2B2B),
           borderRadius: BorderRadius.circular(8),
@@ -267,8 +267,8 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
     return GestureDetector(
       onTap: !isEmpty ? () => _clearTurn() : null,
       child: Container(
-        width: 56,
-        height: 72,
+        width: 48,
+        height: 62,
         decoration: BoxDecoration(
           color: Color(0xFF2B2B2B),
           borderRadius: BorderRadius.circular(8),
@@ -304,8 +304,8 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
     return GestureDetector(
       onTap: !isEmpty ? () => _clearRiver() : null,
       child: Container(
-        width: 56,
-        height: 72,
+        width: 48,
+        height: 62,
         decoration: BoxDecoration(
           color: Color(0xFF2B2B2B),
           borderRadius: BorderRadius.circular(8),
