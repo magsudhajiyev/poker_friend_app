@@ -388,23 +388,23 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           // Clubs (expandable)
           _buildExpandableClubsItem(),
 
-          const SizedBox(height: 24),
-
-          // Bankroll
-          _buildMenuItem(_MenuItemData(
-            iconPath: 'icons/figma_icons/bankroll.svg',
-            fallbackIcon: Icons.account_balance_wallet_rounded,
-            label: 'Bankroll',
-            onTap: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Bankroll screen coming soon'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-          )),
+          // TODO: Uncomment when Bankroll feature is ready
+          // const SizedBox(height: 24),
+          // // Bankroll
+          // _buildMenuItem(_MenuItemData(
+          //   iconPath: 'icons/figma_icons/bankroll.svg',
+          //   fallbackIcon: Icons.account_balance_wallet_rounded,
+          //   label: 'Bankroll',
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(
+          //         content: Text('Bankroll screen coming soon'),
+          //         duration: Duration(seconds: 2),
+          //       ),
+          //     );
+          //   },
+          // )),
         ],
       ),
     );

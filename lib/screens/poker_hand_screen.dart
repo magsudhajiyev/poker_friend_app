@@ -970,28 +970,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                                 ),
                               ),
                             ),
-                          // Complete hand button
-                          GestureDetector(
-                            onTap: _allInHandCompleted ? () {} : completeHand,
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: _allInHandCompleted
-                                    ? Colors.grey.withOpacity(0.3)
-                                    : Color(0xFF3C3C43).withOpacity(0.3),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: _buildIcon(
-                                  'icons/figma_icons/check.svg',
-                                  20,
-                                  _allInHandCompleted ? Colors.grey : Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 8),
                           // Menu button
                           _buildMenuButton(context),
                         ],
@@ -2062,11 +2040,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       _performPokerAction(PlayerAction.call);
     } else if (hasRightAngle()) {
       // For bet/raise, enter drag mode
-      // If no bet on current street, this is a BET; otherwise it's a RAISE
-      if (gameState.hasBetThisRound) {
-        _enterDragBettingMode(PlayerAction.raise);
-      } else {
+      // Use isValidAction to determine correct action (handles preflop where bet is invalid)
+      if (gameState.isValidAction(PlayerAction.bet)) {
         _enterDragBettingMode(PlayerAction.bet);
+      } else if (gameState.isValidAction(PlayerAction.raise)) {
+        _enterDragBettingMode(PlayerAction.raise);
       }
     } else if (isLine(width, height)) {
       _performPokerAction(PlayerAction.fold);
@@ -4062,6 +4040,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     });
   }
 
+  /// Check if any meaningful actions have been logged (excluding blind posts)
+  /// Returns true if there are any actions with PlayerAction != none
   /// Check if undo is allowed
   /// Returns true if there are actions that can be undone on the current street
   bool _canUndoLastAction() {
@@ -4453,8 +4433,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       });
     } else {
       // Multiple players remain, show winner selection dialog
-      await LoggerService.info('  ↪️ Multiple players path - calling completeHand()');
-      completeHand();
+      await LoggerService.info('  ↪️ Multiple players path - calling _showWinnerSelectionAndComplete()');
+      _showWinnerSelectionAndComplete();
     }
   }
 
@@ -4505,8 +4485,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     });
   }
 
-  void completeHand() async {
-    await LoggerService.info('═══ completeHand() called ═══');
+  /// Internal function to show winner selection dialog and complete the hand.
+  /// Only called by game logic (showdown, auto-completion), not by user action.
+  void _showWinnerSelectionAndComplete() async {
+    await LoggerService.info('═══ _showWinnerSelectionAndComplete() called ═══');
 
     // Save the pot amount BEFORE showing any dialogs
     final potAmount = gameState.currentPot;
@@ -5217,7 +5199,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     LoggerService.debug('  All-in players: $allInPlayers (count: ${allInPlayers.length})');
     LoggerService.debug('  Active players: $activePlayers (count: ${activePlayers.length})');
     LoggerService.debug('  Players who can act: $playersWhoCanAct (count: ${playersWhoCanAct.length})');
-    completeHand();
+    _showWinnerSelectionAndComplete();
   }
 
   List<int> _getActivePlayers() {
