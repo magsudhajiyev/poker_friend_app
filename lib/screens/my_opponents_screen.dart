@@ -11,6 +11,18 @@ import '../widgets/global_bottom_nav_bar.dart';
 import 'opponent_detail_screen.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
+  // Static cache accessible from other screens
+  static List<Opponent>? _cachedOpponents;
+  static Map<String, int>? _cachedHandsCounts;
+  static Map<String, OpponentStats>? _cachedStats;
+
+  /// Clear the static cache - call this when opponents are added/modified from other screens
+  static void invalidateCache() {
+    _cachedOpponents = null;
+    _cachedHandsCounts = null;
+    _cachedStats = null;
+  }
+
   @override
   _MyOpponentsScreenState createState() => _MyOpponentsScreenState();
 }
@@ -23,15 +35,11 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
   String? error;
   String searchQuery = '';
 
-  // In-memory cache to avoid reloading on every screen visit
-  static List<Opponent>? _cachedOpponents;
-  static Map<String, int>? _cachedHandsCounts;
-  static Map<String, OpponentStats>? _cachedStats;
-
   @override
   void initState() {
     super.initState();
-    _loadOpponents(useCache: true);
+    // Always load fresh data on screen init to catch any opponents added from other screens
+    _loadOpponents(useCache: false);
   }
 
   Future<void> _loadOpponents({bool useCache = false}) async {
@@ -42,11 +50,11 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
       });
 
       // Use cache if available and requested
-      if (useCache && _cachedOpponents != null && _cachedHandsCounts != null && _cachedStats != null) {
+      if (useCache && MyOpponentsScreen._cachedOpponents != null && MyOpponentsScreen._cachedHandsCounts != null && MyOpponentsScreen._cachedStats != null) {
         setState(() {
-          opponents = _cachedOpponents!;
-          opponentHandsCounts = _cachedHandsCounts!;
-          opponentStats = _cachedStats!;
+          opponents = MyOpponentsScreen._cachedOpponents!;
+          opponentHandsCounts = MyOpponentsScreen._cachedHandsCounts!;
+          opponentStats = MyOpponentsScreen._cachedStats!;
           isLoading = false;
         });
         return;
@@ -76,9 +84,9 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
       }
 
       // Cache the results
-      _cachedOpponents = loadedOpponents;
-      _cachedHandsCounts = handsCounts;
-      _cachedStats = statsMap;
+      MyOpponentsScreen._cachedOpponents = loadedOpponents;
+      MyOpponentsScreen._cachedHandsCounts = handsCounts;
+      MyOpponentsScreen._cachedStats = statsMap;
 
       setState(() {
         opponents = loadedOpponents;

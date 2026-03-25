@@ -12,6 +12,7 @@ import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import 'poker_hand_screen.dart';
+import 'my_opponents_screen.dart';
 import 'dart:math' as math;
 
 class SeatSetupScreen extends StatefulWidget {
@@ -286,36 +287,19 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     final tempStackController = TextEditingController(text: tempStack);
 
     void saveChanges() {
-      setState(() {
-        // Apply all changes
-        seatActive[seatNumber] = tempIsActive;
-        nameControllers[seatNumber]?.text = tempName;
-        stackControllers[seatNumber]?.text = tempStack;
-
-        if (tempIsMySeat && selectedSeat != seatNumber) {
-          // Restore defaults for previous seat if changing my seat
-          if (selectedSeat != null && selectedSeat != seatNumber) {
-            _restoreDefaultsForPreviousSeat(selectedSeat);
-          }
-          selectedSeat = seatNumber;
-          widget.sessionManager?.setPlayerName(seatNumber, tempName);
-        } else if (!tempIsMySeat && originalSelectedSeat == seatNumber) {
-          // Unchecked "this is my seat"
-          selectedSeat = null;
-        }
-
-        // Update session manager
-        if (tempIsActive) {
-          widget.sessionManager?.setPlayerName(seatNumber, tempName);
-        }
+      // Pop with save data - state update happens in .then() callback
+      Navigator.pop(context, {
+        'save': true,
+        'isActive': tempIsActive,
+        'isMySeat': tempIsMySeat,
+        'name': tempName,
+        'stack': tempStack,
       });
-
-      Navigator.pop(context);
     }
 
     void cancelChanges() {
       // Just close - no changes applied
-      Navigator.pop(context);
+      Navigator.pop(context, null);
     }
 
     showModalBottomSheet(
@@ -722,6 +706,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               try {
                                 final opponent = OpponentService.createNewOpponent(name: tempName);
                                 await OpponentService.saveOpponent(opponent);
+                                // Invalidate MyOpponentsScreen cache so it shows the new opponent
+                                MyOpponentsScreen.invalidateCache();
                                 await _loadOpponents();
 
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -803,10 +789,44 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
           );
         },
       ),
-    ).then((_) {
-      // Dispose temporary controllers when dialog closes
-      tempNameController.dispose();
-      tempStackController.dispose();
+    ).then((result) {
+      // Apply changes if save was requested
+      if (result != null && result['save'] == true) {
+        setState(() {
+          final isActive = result['isActive'] as bool;
+          final isMySeat = result['isMySeat'] as bool;
+          final name = result['name'] as String;
+          final stack = result['stack'] as String;
+
+          // Apply all changes
+          seatActive[seatNumber] = isActive;
+          nameControllers[seatNumber]?.text = name;
+          stackControllers[seatNumber]?.text = stack;
+
+          if (isMySeat && selectedSeat != seatNumber) {
+            // Restore defaults for previous seat if changing my seat
+            if (selectedSeat != null && selectedSeat != seatNumber) {
+              _restoreDefaultsForPreviousSeat(selectedSeat);
+            }
+            selectedSeat = seatNumber;
+            widget.sessionManager?.setPlayerName(seatNumber, name);
+          } else if (!isMySeat && originalSelectedSeat == seatNumber) {
+            // Unchecked "this is my seat"
+            selectedSeat = null;
+          }
+
+          // Update session manager
+          if (isActive) {
+            widget.sessionManager?.setPlayerName(seatNumber, name);
+          }
+        });
+      }
+
+      // Dispose controllers after animation completes (300ms is typical modal animation duration)
+      Future.delayed(const Duration(milliseconds: 350), () {
+        tempNameController.dispose();
+        tempStackController.dispose();
+      });
     });
   }
 
