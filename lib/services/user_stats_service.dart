@@ -40,13 +40,24 @@ class UserStatsService {
   }
 
   /// Update user stats atomically using incremental counters
+  /// Updated to support full 7-metric parity with opponent stats
   static Future<void> updateStatsAtomic({
     required String userId,
     int handsDelta = 0,
     int totalHandsDelta = 0,
+    int walksDelta = 0,
     int vpipDelta = 0,
     int pfrDelta = 0,
     int threeBetDelta = 0,
+    int threeBetOpportunityDelta = 0,
+    int fold3betDelta = 0,
+    int facing3BetDelta = 0,
+    int cbetDelta = 0,
+    int cbetOpportunityDelta = 0,
+    int stealDelta = 0,
+    int stealOpportunityDelta = 0,
+    int checkRaiseFlopDelta = 0,
+    int checkRaiseFlopOpportunityDelta = 0,
     int wonHandsDelta = 0,
     int sessionsDelta = 0,
     int playTimeMinutesDelta = 0,
@@ -72,9 +83,19 @@ class UserStatsService {
 
         if (handsDelta != 0) updates['handsPlayed'] = FieldValue.increment(handsDelta);
         if (totalHandsDelta != 0) updates['totalHands'] = FieldValue.increment(totalHandsDelta);
+        if (walksDelta != 0) updates['walksCount'] = FieldValue.increment(walksDelta);
         if (vpipDelta != 0) updates['vpipCount'] = FieldValue.increment(vpipDelta);
         if (pfrDelta != 0) updates['pfrCount'] = FieldValue.increment(pfrDelta);
         if (threeBetDelta != 0) updates['threeBetCount'] = FieldValue.increment(threeBetDelta);
+        if (threeBetOpportunityDelta != 0) updates['threeBetOpportunity'] = FieldValue.increment(threeBetOpportunityDelta);
+        if (fold3betDelta != 0) updates['fold3betCount'] = FieldValue.increment(fold3betDelta);
+        if (facing3BetDelta != 0) updates['facing3BetCount'] = FieldValue.increment(facing3BetDelta);
+        if (cbetDelta != 0) updates['cbetCount'] = FieldValue.increment(cbetDelta);
+        if (cbetOpportunityDelta != 0) updates['cbetOpportunity'] = FieldValue.increment(cbetOpportunityDelta);
+        if (stealDelta != 0) updates['stealCount'] = FieldValue.increment(stealDelta);
+        if (stealOpportunityDelta != 0) updates['stealOpportunity'] = FieldValue.increment(stealOpportunityDelta);
+        if (checkRaiseFlopDelta != 0) updates['checkRaiseFlopCount'] = FieldValue.increment(checkRaiseFlopDelta);
+        if (checkRaiseFlopOpportunityDelta != 0) updates['checkRaiseFlopOpportunity'] = FieldValue.increment(checkRaiseFlopOpportunityDelta);
         if (wonHandsDelta != 0) updates['wonHands'] = FieldValue.increment(wonHandsDelta);
         if (sessionsDelta != 0) updates['totalSessions'] = FieldValue.increment(sessionsDelta);
         if (playTimeMinutesDelta != 0) updates['totalPlayTimeMinutes'] = FieldValue.increment(playTimeMinutesDelta);

@@ -6,6 +6,7 @@ import 'auth_service.dart';
 import 'local_storage_service.dart';
 import 'opponent_service.dart';
 import 'opponent_stats_service.dart';
+import 'stats_calculator.dart';
 import 'user_stats_service.dart';
 
 class FirebaseService {
@@ -452,21 +453,32 @@ class FirebaseService {
           .collection(_handsCollection)
           .orderBy('handNumber', descending: false)
           .get();
-      
+
       return querySnapshot.docs.map((doc) {
         final data = doc.data();
         return {
           'id': doc.id,
           'sessionId': sessionId, // Include sessionId for updates
           ...data,
-          'startTime': data['startTime']?.toDate()?.toIso8601String() ?? DateTime.now().toIso8601String(),
-          'endTime': data['endTime']?.toDate()?.toIso8601String(),
+          'startTime': _parseTimestamp(data['startTime']) ?? DateTime.now().toIso8601String(),
+          'endTime': _parseTimestamp(data['endTime']),
         };
       }).toList();
     } catch (e) {
       print('Error getting session hands from Firebase: $e');
       return [];
     }
+  }
+
+  /// Helper to parse timestamp from either Firestore Timestamp or String format
+  static String? _parseTimestamp(dynamic value) {
+    if (value == null) return null;
+    if (value is Timestamp) {
+      return value.toDate().toIso8601String();
+    } else if (value is String) {
+      return value; // Already a string
+    }
+    return null;
   }
 
   // Mock hand data for offline testing  
@@ -590,8 +602,23 @@ class FirebaseService {
       // Sort in memory to avoid needing Firebase index
       final docs = allDocs.values.toList();
       docs.sort((a, b) {
-        final aTime = a.data()['startTime'] as Timestamp?;
-        final bTime = b.data()['startTime'] as Timestamp?;
+        final aTimeRaw = a.data()['startTime'];
+        final bTimeRaw = b.data()['startTime'];
+        DateTime? aTime;
+        DateTime? bTime;
+
+        // Handle both Timestamp and String formats
+        if (aTimeRaw is Timestamp) {
+          aTime = aTimeRaw.toDate();
+        } else if (aTimeRaw is String) {
+          aTime = DateTime.tryParse(aTimeRaw);
+        }
+        if (bTimeRaw is Timestamp) {
+          bTime = bTimeRaw.toDate();
+        } else if (bTimeRaw is String) {
+          bTime = DateTime.tryParse(bTimeRaw);
+        }
+
         if (aTime == null && bTime == null) return 0;
         if (aTime == null) return 1;
         if (bTime == null) return -1;
@@ -603,8 +630,8 @@ class FirebaseService {
         return {
           'id': doc.id,
           ...data,
-          'startTime': data['startTime']?.toDate()?.toIso8601String() ?? DateTime.now().toIso8601String(),
-          'endTime': data['endTime']?.toDate()?.toIso8601String(),
+          'startTime': _parseTimestamp(data['startTime']) ?? DateTime.now().toIso8601String(),
+          'endTime': _parseTimestamp(data['endTime']),
         };
       }).toList();
     } catch (e) {
@@ -1033,6 +1060,15 @@ class FirebaseService {
           'threeBetDelta': 0,
           'cbetDelta': 0,
           'fold3betDelta': 0,
+          // New opportunity counters
+          'walksCountDelta': 0,
+          'threeBetOpportunityDelta': 0,
+          'facing3BetCountDelta': 0,
+          'cbetOpportunityDelta': 0,
+          'stealCountDelta': 0,
+          'stealOpportunityDelta': 0,
+          'checkRaiseFlopCountDelta': 0,
+          'checkRaiseFlopOpportunityDelta': 0,
         };
 
         final deltas = opponentDeltas[opponentId]!;
@@ -1053,7 +1089,7 @@ class FirebaseService {
             deltas['callDelta'] = (deltas['callDelta'] ?? 0) + 1;
             deltas['passiveDelta'] = (deltas['passiveDelta'] ?? 0) + 1;
             // VPIP if putting money in voluntarily (not blind)
-            if (!_isBlindAction(action)) {
+            if (!StatsCalculator.isBlindAction(action)) {
               deltas['vpipDelta'] = (deltas['vpipDelta'] ?? 0) + 1;
             }
             break;
@@ -1078,30 +1114,95 @@ class FirebaseService {
       }
 
       // Set hand delta to 1 for each opponent that participated in this hand
-      // Also check for 3-bet using proper detection logic
+      // Also check for advanced stats using proper detection logic
       for (final opponentId in handParticipants) {
         if (opponentDeltas.containsKey(opponentId)) {
           opponentDeltas[opponentId]!['handsDelta'] = 1;
 
-          // Find the opponent's seat number for 3-bet detection
+          // Find the opponent's seat number for stat detection
           // Use defensive programming: handle case where opponent might not be found
-          // This can happen if the opponent list changes between operations or due to data inconsistencies
           final opponent = savedOpponents.where((o) => o.id == opponentId).firstOrNull;
-          
+
           if (opponent == null) {
-            // Opponent not found - log warning but continue processing other opponents
-            // This prevents silent failures while maintaining resilience
-            print('Warning: Opponent with ID $opponentId not found in savedOpponents, skipping 3-bet detection');
+            print('Warning: Opponent with ID $opponentId not found in savedOpponents, skipping advanced stat detection');
             continue;
           }
-          
+
           final opponentSeat = playerNames.entries
               .where((e) => e.value == opponent.name)
               .map((e) => e.key)
               .firstOrNull;
 
-          if (opponentSeat != null && _didPlayerThreeBet(actions, opponentSeat)) {
+          if (opponentSeat == null) continue;
+
+          // 3-Bet Detection
+          if (StatsCalculator.didPlayerThreeBet(actions, opponentSeat)) {
             opponentDeltas[opponentId]!['threeBetDelta'] = 1;
+          }
+
+          // 3-Bet Opportunity: Player faced a raise pre-flop (could have 3-bet)
+          if (StatsCalculator.hadThreeBetOpportunity(actions, opponentSeat)) {
+            opponentDeltas[opponentId]!['threeBetOpportunityDelta'] = 1;
+          }
+
+          // Fold to 3-Bet: Player raised pre-flop, faced 3-bet, and folded
+          if (StatsCalculator.didFoldTo3Bet(actions, opponentSeat)) {
+            opponentDeltas[opponentId]!['fold3betDelta'] =
+                (opponentDeltas[opponentId]!['fold3betDelta'] ?? 0) + 1;
+          }
+
+          // Facing 3-Bet: Player raised pre-flop and faced a re-raise
+          if (StatsCalculator.facedThreeBet(actions, opponentSeat)) {
+            opponentDeltas[opponentId]!['facing3BetCountDelta'] = 1;
+          }
+
+          // C-Bet Opportunity: Was last aggressor pre-flop and saw flop
+          if (StatsCalculator.hadCbetOpportunity(actions, opponentSeat)) {
+            opponentDeltas[opponentId]!['cbetOpportunityDelta'] = 1;
+
+            // C-Bet: Actually bet on flop as last aggressor
+            if (StatsCalculator.didCbet(actions, opponentSeat)) {
+              opponentDeltas[opponentId]!['cbetDelta'] =
+                  (opponentDeltas[opponentId]!['cbetDelta'] ?? 0) + 1;
+            }
+          }
+
+          // Steal Opportunity: In CO/BTN/SB with unopened pot
+          if (StatsCalculator.hadStealOpportunity(actions, opponentSeat)) {
+            opponentDeltas[opponentId]!['stealOpportunityDelta'] = 1;
+
+            // Steal: Raised from steal position
+            if (StatsCalculator.didSteal(actions, opponentSeat)) {
+              opponentDeltas[opponentId]!['stealCountDelta'] = 1;
+            }
+          }
+
+          // Check/Raise on Flop: Checked, faced bet, then raised (when OOP)
+          if (StatsCalculator.hadCheckRaiseFlopOpportunity(actions, opponentSeat)) {
+            opponentDeltas[opponentId]!['checkRaiseFlopOpportunityDelta'] = 1;
+
+            if (StatsCalculator.didCheckRaiseFlop(actions, opponentSeat)) {
+              opponentDeltas[opponentId]!['checkRaiseFlopCountDelta'] = 1;
+            }
+          }
+        }
+      }
+
+      // Walk Detection: Everyone folded to BB
+      final isWalk = StatsCalculator.isWalkHand(actions);
+      if (isWalk) {
+        // Find BB player and increment their walks count
+        for (final opponentId in handParticipants) {
+          final opponent = savedOpponents.where((o) => o.id == opponentId).firstOrNull;
+          if (opponent == null) continue;
+
+          final opponentSeat = playerNames.entries
+              .where((e) => e.value == opponent.name)
+              .map((e) => e.key)
+              .firstOrNull;
+
+          if (opponentSeat != null && StatsCalculator.isBigBlind(actions, opponentSeat)) {
+            opponentDeltas[opponentId]!['walksCountDelta'] = 1;
           }
         }
       }
@@ -1126,6 +1227,15 @@ class FirebaseService {
           threeBetDelta: deltas['threeBetDelta'] ?? 0,
           cbetDelta: deltas['cbetDelta'] ?? 0,
           fold3betDelta: deltas['fold3betDelta'] ?? 0,
+          // New opportunity counters
+          walksCountDelta: deltas['walksCountDelta'] ?? 0,
+          threeBetOpportunityDelta: deltas['threeBetOpportunityDelta'] ?? 0,
+          facing3BetCountDelta: deltas['facing3BetCountDelta'] ?? 0,
+          cbetOpportunityDelta: deltas['cbetOpportunityDelta'] ?? 0,
+          stealCountDelta: deltas['stealCountDelta'] ?? 0,
+          stealOpportunityDelta: deltas['stealOpportunityDelta'] ?? 0,
+          checkRaiseFlopCountDelta: deltas['checkRaiseFlopCountDelta'] ?? 0,
+          checkRaiseFlopOpportunityDelta: deltas['checkRaiseFlopOpportunityDelta'] ?? 0,
         );
 
       }
@@ -1136,60 +1246,8 @@ class FirebaseService {
     }
   }
 
-  /// Helper to detect if an action is a blind (not voluntary)
-  static bool _isBlindAction(Map<String, dynamic> action) {
-    final actionType = (action['action'] as String?)?.toLowerCase();
-    return actionType == 'small blind' ||
-           actionType == 'big blind' ||
-           actionType == 'ante';
-  }
-
-  /// Helper to count preflop raises for 3-bet detection (DEPRECATED - kept for compatibility)
-  static int _countPreflopRaises(List<Map<String, dynamic>> actions, int playerId) {
-    int count = 0;
-    for (final action in actions) {
-      if (action['player'] == playerId &&
-          action['street']?.toLowerCase() == 'preflop' &&
-          action['action']?.toLowerCase() == 'raise') {
-        count++;
-      }
-    }
-    return count;
-  }
-
-  /// Detect if a player made a 3-bet (re-raised AFTER seeing an opponent's raise)
-  ///
-  /// A 3-bet is when:
-  /// 1. An opponent raises preflop
-  /// 2. The player then raises (re-raises) after seeing that raise
-  ///
-  /// This is different from just counting how many times a player raised.
-  /// A player can only make ONE 3-bet per hand (by definition).
-  static bool _didPlayerThreeBet(List<Map<String, dynamic>> actions, int playerSeatNumber) {
-    bool sawOpponentRaise = false;
-
-    for (final action in actions) {
-      final street = action['street']?.toString().toLowerCase() ?? '';
-      if (street != 'preflop') continue;
-
-      final playerId = action['player'] as int?;
-      final actionType = action['action']?.toString().toLowerCase() ?? '';
-
-      // Only look at raise actions (not bets - opening bet is not a raise)
-      if (actionType != 'raise') continue;
-
-      if (playerId != playerSeatNumber) {
-        // Opponent raised
-        sawOpponentRaise = true;
-      } else if (sawOpponentRaise) {
-        // Hero raised AFTER seeing an opponent raise = 3-bet
-        return true;
-      }
-    }
-    return false;
-  }
-
   /// Update user statistics from hand data incrementally
+  /// Updated to support full 7-metric parity with opponent stats
   static Future<void> _updateUserStatsFromHand({
     required List<Map<String, dynamic>> actions,
     required String? heroPositionName,
@@ -1237,7 +1295,7 @@ class FirebaseService {
         if (street == 'preflop') {
           if (actionType == 'bet' || actionType == 'call' || actionType == 'raise') {
             // VPIP = voluntarily put money in (excludes blind posts)
-            if (!_isBlindAction(action)) {
+            if (!StatsCalculator.isBlindAction(action)) {
               didVpip = true;
             }
             // PFR = preflop raise
@@ -1250,8 +1308,33 @@ class FirebaseService {
 
       // Check for 3-bet (re-raise after seeing opponent's raise)
       if (didPlay) {
-        didThreeBet = _didPlayerThreeBet(actions, heroSeatNumber);
+        didThreeBet = StatsCalculator.didPlayerThreeBet(actions, heroSeatNumber);
       }
+
+      // === Advanced stat detection using helper methods (7-metric parity) ===
+
+      // Walk detection: Everyone folded to BB
+      final isWalk = StatsCalculator.isWalkHand(actions);
+      final isBBAndWalk = isWalk && StatsCalculator.isBigBlind(actions, heroSeatNumber);
+
+      // 3-Bet opportunity: Hero faced a raise pre-flop
+      final had3BetOpportunity = StatsCalculator.hadThreeBetOpportunity(actions, heroSeatNumber);
+
+      // Fold to 3-Bet: Hero raised, faced 3-bet, and folded
+      final didFoldTo3Bet = StatsCalculator.didFoldTo3Bet(actions, heroSeatNumber);
+      final facedA3Bet = StatsCalculator.facedThreeBet(actions, heroSeatNumber);
+
+      // C-Bet: Hero was last aggressor pre-flop and saw flop
+      final hadCbetOpp = StatsCalculator.hadCbetOpportunity(actions, heroSeatNumber);
+      final didCbet = hadCbetOpp && StatsCalculator.didCbet(actions, heroSeatNumber);
+
+      // Steal: Hero in CO/BTN/SB with unopened pot
+      final hadStealOpp = StatsCalculator.hadStealOpportunity(actions, heroSeatNumber);
+      final didSteal = hadStealOpp && StatsCalculator.didSteal(actions, heroSeatNumber);
+
+      // Check/Raise on flop: Hero checked, faced bet, raised
+      final hadCRFlopOpp = StatsCalculator.hadCheckRaiseFlopOpportunity(actions, heroSeatNumber);
+      final didCRFlop = hadCRFlopOpp && StatsCalculator.didCheckRaiseFlop(actions, heroSeatNumber);
 
       // Prepare deltas for atomic update
       final Map<String, int> positionHandsDeltas = {};
@@ -1266,14 +1349,24 @@ class FirebaseService {
         if (didThreeBet) positionThreeBetDeltas[positionName] = 1;
       }
 
-      // Update user stats atomically
+      // Update user stats atomically with all 7 metrics
       await UserStatsService.updateStatsAtomic(
         userId: userId,
         totalHandsDelta: 1, // Always increment total hands
+        walksDelta: isBBAndWalk ? 1 : 0,
         handsDelta: didPlay ? 1 : 0,
         vpipDelta: didVpip ? 1 : 0,
         pfrDelta: didPfr ? 1 : 0,
         threeBetDelta: didThreeBet ? 1 : 0,
+        threeBetOpportunityDelta: had3BetOpportunity ? 1 : 0,
+        fold3betDelta: didFoldTo3Bet ? 1 : 0,
+        facing3BetDelta: facedA3Bet ? 1 : 0,
+        cbetDelta: didCbet ? 1 : 0,
+        cbetOpportunityDelta: hadCbetOpp ? 1 : 0,
+        stealDelta: didSteal ? 1 : 0,
+        stealOpportunityDelta: hadStealOpp ? 1 : 0,
+        checkRaiseFlopDelta: didCRFlop ? 1 : 0,
+        checkRaiseFlopOpportunityDelta: hadCRFlopOpp ? 1 : 0,
         wonHandsDelta: didWin ? 1 : 0,
         positionHandsDeltas: positionHandsDeltas.isNotEmpty ? positionHandsDeltas : null,
         positionVpipDeltas: positionVpipDeltas.isNotEmpty ? positionVpipDeltas : null,
@@ -1346,7 +1439,7 @@ class FirebaseService {
                 actionType == 'call' ||
                 actionType == 'raise') {
               // VPIP = voluntarily put money in (excludes blind posts)
-              if (!_isBlindAction(action)) {
+              if (!StatsCalculator.isBlindAction(action)) {
                 didVpip = true;
               }
               // PFR = preflop raise
@@ -1359,7 +1452,7 @@ class FirebaseService {
 
         // Check for 3-bet (re-raise after seeing opponent's raise)
         if (didPlay) {
-          didThreeBet = _didPlayerThreeBet(actions, seatNumber);
+          didThreeBet = StatsCalculator.didPlayerThreeBet(actions, seatNumber);
         }
 
         // Prepare deltas for atomic update

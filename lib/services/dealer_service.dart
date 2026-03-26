@@ -737,12 +737,20 @@ class DealerService {
       final data = doc.data();
 
       // Convert Timestamps to ISO strings (same format as FirebaseService.getSessionHands)
+      // Handle both Timestamp and String formats for flexibility
+      String? parseTimestamp(dynamic value) {
+        if (value == null) return null;
+        if (value is Timestamp) return value.toDate().toIso8601String();
+        if (value is String) return value;
+        return null;
+      }
+
       final hand = {
         'id': doc.id,
         'sessionId': sessionId,
         ...data,
-        'startTime': (data['startTime'] as Timestamp?)?.toDate().toIso8601String() ?? DateTime.now().toIso8601String(),
-        'endTime': (data['endTime'] as Timestamp?)?.toDate().toIso8601String(),
+        'startTime': parseTimestamp(data['startTime']) ?? DateTime.now().toIso8601String(),
+        'endTime': parseTimestamp(data['endTime']),
       };
 
       // Fetch player-specific data (hole cards, notes, tags) for current user

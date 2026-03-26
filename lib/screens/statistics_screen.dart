@@ -35,9 +35,20 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   double vpip = 0.0;
   double pfr = 0.0;
   double threeBet = 0.0;
+  double fold3Bet = 0.0;
+  double cbet = 0.0;
+  double steal = 0.0;
+  double checkRaise = 0.0;
   double winRate = 0.0;
   int totalSessions = 0;
   int totalPlayTime = 0;
+
+  // Opportunity counts for N/A detection
+  int threeBetOpportunity = 0;
+  int facing3BetCount = 0;
+  int cbetOpportunity = 0;
+  int stealOpportunity = 0;
+  int checkRaiseFlopOpportunity = 0;
 
   // Positional statistics
   Map<String, PositionalStats> positionalStats = {};
@@ -79,9 +90,20 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     vpip = 0.0;
     pfr = 0.0;
     threeBet = 0.0;
+    fold3Bet = 0.0;
+    cbet = 0.0;
+    steal = 0.0;
+    checkRaise = 0.0;
     winRate = 0.0;
     totalSessions = 0;
     totalPlayTime = 0;
+
+    // Reset opportunity counts
+    threeBetOpportunity = 0;
+    facing3BetCount = 0;
+    cbetOpportunity = 0;
+    stealOpportunity = 0;
+    checkRaiseFlopOpportunity = 0;
 
     try {
       setState(() {
@@ -105,18 +127,36 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       totalSessions = userStats.totalSessions;
       totalPlayTime = userStats.totalPlayTimeMinutes;
 
-      // Calculate percentages from database stats
-      if (totalHands > 0) {
-        vpip = (userStats.vpipCount / totalHands) * 100;
-        pfr = (userStats.pfrCount / totalHands) * 100;
-        threeBet = (userStats.threeBetCount / totalHands) * 100;
-      }
+      // Use opportunity-based percentages from UserStats model
+      // These use proper denominators (eligibleHands for VPIP/PFR, opportunity counts for others)
+      vpip = userStats.vpipPercentage;
+      pfr = userStats.pfrPercentage;
+      threeBet = userStats.threeBetPercentage;
+      fold3Bet = userStats.fold3betPercentage;
+      cbet = userStats.cbetPercentage;
+      steal = userStats.stealPercentage;
+      checkRaise = userStats.checkRaiseFlopPercentage;
+
       // Win rate uses handsPlayed (only count hands you actually played)
       if (handsPlayed > 0) {
         winRate = (userStats.wonHands / handsPlayed) * 100;
       }
 
-      print('📊 Stats from UserStatsService: Total Hands: $totalHands, Hands Played: $handsPlayed, Won: ${userStats.wonHands}, Win Rate: ${winRate.toStringAsFixed(1)}%');
+      // Store opportunity counts for N/A detection in UI
+      threeBetOpportunity = userStats.threeBetOpportunity;
+      facing3BetCount = userStats.facing3BetCount;
+      cbetOpportunity = userStats.cbetOpportunity;
+      stealOpportunity = userStats.stealOpportunity;
+      checkRaiseFlopOpportunity = userStats.checkRaiseFlopOpportunity;
+
+      print('📊 Stats from UserStatsService:');
+      print('  Total Hands: $totalHands, Eligible: ${userStats.eligibleHands}, Walks: ${userStats.walksCount}');
+      print('  VPIP: ${vpip.toStringAsFixed(1)}%, PFR: ${pfr.toStringAsFixed(1)}%');
+      print('  3-Bet: ${threeBet.toStringAsFixed(1)}% (opp: $threeBetOpportunity)');
+      print('  Fold to 3-Bet: ${fold3Bet.toStringAsFixed(1)}% (opp: $facing3BetCount)');
+      print('  C-Bet: ${cbet.toStringAsFixed(1)}% (opp: $cbetOpportunity)');
+      print('  Steal: ${steal.toStringAsFixed(1)}% (opp: $stealOpportunity)');
+      print('  Check/Raise: ${checkRaise.toStringAsFixed(1)}% (opp: $checkRaiseFlopOpportunity)');
 
       setState(() {
         loadingMessage = 'Calculating positional stats...';
@@ -635,6 +675,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
 
   Widget _buildOverallStats() {
+    // Helper to format stat value with N/A handling
+    String formatStat(double value, int opportunity) {
+      if (opportunity == 0) return 'N/A';
+      return '${value.toStringAsFixed(1)}%';
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -650,20 +696,35 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ),
         ),
         SizedBox(height: 24),
-        // Stats cards with dividers
+        // Stats cards with dividers - All 7 poker metrics
         Column(
           children: [
             _buildStatCard('Total Hands', totalHands.toString()),
             _buildDivider(),
             _buildStatCard('Hands Played', handsPlayed.toString()),
             _buildDivider(),
-            _buildStatCard('VPIP', '${vpip.toStringAsFixed(1)}%'),
+            // VPIP - uses totalHands - walks as denominator
+            _buildStatCard('VPIP', totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : 'N/A'),
             _buildDivider(),
-            _buildStatCard('PFR', '${pfr.toStringAsFixed(1)}%'),
+            // PFR - uses totalHands - walks as denominator
+            _buildStatCard('PFR', totalHands > 0 ? '${pfr.toStringAsFixed(1)}%' : 'N/A'),
             _buildDivider(),
-            _buildStatCard('3-Bet', '${threeBet.toStringAsFixed(1)}%'),
+            // 3-Bet - uses threeBetOpportunity as denominator
+            _buildStatCard('3-Bet', formatStat(threeBet, threeBetOpportunity)),
             _buildDivider(),
-            _buildStatCard('Win Rate', '${winRate.toStringAsFixed(1)}%'),
+            // Fold to 3-Bet - uses facing3BetCount as denominator
+            _buildStatCard('Fold to 3-Bet', formatStat(fold3Bet, facing3BetCount)),
+            _buildDivider(),
+            // C-Bet - uses cbetOpportunity as denominator
+            _buildStatCard('C-Bet', formatStat(cbet, cbetOpportunity)),
+            _buildDivider(),
+            // Steal - uses stealOpportunity as denominator
+            _buildStatCard('Steal', formatStat(steal, stealOpportunity)),
+            _buildDivider(),
+            // Check/Raise - uses checkRaiseFlopOpportunity as denominator
+            _buildStatCard('Check/Raise', formatStat(checkRaise, checkRaiseFlopOpportunity)),
+            _buildDivider(),
+            _buildStatCard('Win Rate', handsPlayed > 0 ? '${winRate.toStringAsFixed(1)}%' : 'N/A'),
           ],
         ),
       ],

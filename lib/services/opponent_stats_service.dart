@@ -76,6 +76,15 @@ class OpponentStatsService {
     int threeBetDelta = 0,
     int cbetDelta = 0,
     int fold3betDelta = 0,
+    // New opportunity counters
+    int walksCountDelta = 0,
+    int threeBetOpportunityDelta = 0,
+    int facing3BetCountDelta = 0,
+    int cbetOpportunityDelta = 0,
+    int stealCountDelta = 0,
+    int stealOpportunityDelta = 0,
+    int checkRaiseFlopCountDelta = 0,
+    int checkRaiseFlopOpportunityDelta = 0,
   }) async {
     // Get current stats (or create new if doesn't exist)
     OpponentStats currentStats = await getOpponentStats(opponentId) ??
@@ -97,6 +106,15 @@ class OpponentStatsService {
       threeBetDelta: threeBetDelta,
       cbetDelta: cbetDelta,
       fold3betDelta: fold3betDelta,
+      // New opportunity counters
+      walksDelta: walksCountDelta,
+      threeBetOpportunityDelta: threeBetOpportunityDelta,
+      facing3BetDelta: facing3BetCountDelta,
+      cbetOpportunityDelta: cbetOpportunityDelta,
+      stealDelta: stealCountDelta,
+      stealOpportunityDelta: stealOpportunityDelta,
+      checkRaiseFlopDelta: checkRaiseFlopCountDelta,
+      checkRaiseFlopOpportunityDelta: checkRaiseFlopOpportunityDelta,
     );
 
     // Save updated stats
@@ -120,6 +138,15 @@ class OpponentStatsService {
     int threeBetDelta = 0,
     int cbetDelta = 0,
     int fold3betDelta = 0,
+    // New opportunity counters
+    int walksCountDelta = 0,
+    int threeBetOpportunityDelta = 0,
+    int facing3BetCountDelta = 0,
+    int cbetOpportunityDelta = 0,
+    int stealCountDelta = 0,
+    int stealOpportunityDelta = 0,
+    int checkRaiseFlopCountDelta = 0,
+    int checkRaiseFlopOpportunityDelta = 0,
   }) async {
     try {
       final docRef = _statsCollection.doc(opponentId);
@@ -144,6 +171,15 @@ class OpponentStatsService {
             'threeBetCount': FieldValue.increment(threeBetDelta),
             'cbetCount': FieldValue.increment(cbetDelta),
             'fold3betCount': FieldValue.increment(fold3betDelta),
+            // New opportunity counters
+            'walksCount': FieldValue.increment(walksCountDelta),
+            'threeBetOpportunity': FieldValue.increment(threeBetOpportunityDelta),
+            'facing3BetCount': FieldValue.increment(facing3BetCountDelta),
+            'cbetOpportunity': FieldValue.increment(cbetOpportunityDelta),
+            'stealCount': FieldValue.increment(stealCountDelta),
+            'stealOpportunity': FieldValue.increment(stealOpportunityDelta),
+            'checkRaiseFlopCount': FieldValue.increment(checkRaiseFlopCountDelta),
+            'checkRaiseFlopOpportunity': FieldValue.increment(checkRaiseFlopOpportunityDelta),
             'lastUpdated': FieldValue.serverTimestamp(),
           });
         } else {
@@ -164,6 +200,15 @@ class OpponentStatsService {
             threeBetCount: threeBetDelta,
             cbetCount: cbetDelta,
             fold3betCount: fold3betDelta,
+            // New opportunity counters
+            walksCount: walksCountDelta,
+            threeBetOpportunity: threeBetOpportunityDelta,
+            facing3BetCount: facing3BetCountDelta,
+            cbetOpportunity: cbetOpportunityDelta,
+            stealCount: stealCountDelta,
+            stealOpportunity: stealOpportunityDelta,
+            checkRaiseFlopCount: checkRaiseFlopCountDelta,
+            checkRaiseFlopOpportunity: checkRaiseFlopOpportunityDelta,
           );
           transaction.set(docRef, newStats.toFirestore());
         }
@@ -188,6 +233,15 @@ class OpponentStatsService {
         threeBetDelta: threeBetDelta,
         cbetDelta: cbetDelta,
         fold3betDelta: fold3betDelta,
+        // New opportunity counters
+        walksCountDelta: walksCountDelta,
+        threeBetOpportunityDelta: threeBetOpportunityDelta,
+        facing3BetCountDelta: facing3BetCountDelta,
+        cbetOpportunityDelta: cbetOpportunityDelta,
+        stealCountDelta: stealCountDelta,
+        stealOpportunityDelta: stealOpportunityDelta,
+        checkRaiseFlopCountDelta: checkRaiseFlopCountDelta,
+        checkRaiseFlopOpportunityDelta: checkRaiseFlopOpportunityDelta,
       );
     }
   }

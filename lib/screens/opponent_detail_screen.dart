@@ -88,13 +88,18 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       int totalSessions = 0;
       int vpipHands = 0;
       int pfrHands = 0;
-      int foldCount = 0;
-      int callCount = 0;
-      int betCount = 0;
-      int raiseCount = 0;
-      int checkCount = 0;
-      int aggressiveActions = 0;
-      int passiveActions = 0;
+      // New stat counters
+      int threeBetCount = 0;
+      int threeBetOpportunity = 0;
+      int fold3BetCount = 0;
+      int facing3BetCount = 0;
+      int cbetCount = 0;
+      int cbetOpportunity = 0;
+      int stealCount = 0;
+      int stealOpportunity = 0;
+      int checkRaiseFlopCount = 0;
+      int checkRaiseFlopOpportunity = 0;
+      int walksCount = 0;
 
       Set<String> sessionsPlayed = <String>{};
 
@@ -111,9 +116,11 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
         if (playerNames != null) {
           bool opponentInSession = false;
-          for (final playerName in playerNames.values) {
-            if (playerName.toString().toLowerCase() == opponentName.toLowerCase()) {
+          int? opponentSeat;
+          for (final entry in playerNames.entries) {
+            if (entry.value.toString().toLowerCase() == opponentName.toLowerCase()) {
               opponentInSession = true;
+              opponentSeat = int.tryParse(entry.key);
               break;
             }
           }
@@ -134,58 +141,48 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               bool pfrThisHand = false;
 
               if (hand['actions'] != null) {
-                final actions = hand['actions'] as List<dynamic>;
-                String currentStreet = 'preflop';
+                final actions = (hand['actions'] as List<dynamic>).cast<Map<String, dynamic>>();
 
+                // Check each action for opponent participation
                 for (final action in actions) {
-                  final actionMap = action as Map<String, dynamic>;
-                  final actionPlayerName = actionMap['playerName'] as String?;
-                  final actionType = actionMap['action'] as String?;
-                  final street = actionMap['street'] as String?;
-
-                  if (street != null) {
-                    currentStreet = street.toLowerCase();
-                  }
-
-                  if (actionPlayerName != null && actionType != null &&
+                  final actionPlayerName = action['playerName'] as String?;
+                  if (actionPlayerName != null &&
                       actionPlayerName.toLowerCase().contains(opponentName.toLowerCase())) {
-
                     opponentInThisHand = true;
-                    final actionKey = actionType.toLowerCase();
 
-                    switch (actionKey) {
-                      case 'fold':
-                        foldCount++;
-                        break;
-                      case 'call':
-                        callCount++;
-                        passiveActions++;
-                        if (currentStreet == 'preflop' && !vpipThisHand) {
-                          vpipThisHand = true;
-                        }
-                        break;
-                      case 'bet':
-                        betCount++;
-                        aggressiveActions++;
-                        if (currentStreet == 'preflop') {
-                          if (!vpipThisHand) vpipThisHand = true;
-                          if (!pfrThisHand) pfrThisHand = true;
-                        }
-                        break;
-                      case 'raise':
-                        raiseCount++;
-                        aggressiveActions++;
-                        if (currentStreet == 'preflop') {
-                          if (!vpipThisHand) vpipThisHand = true;
-                          if (!pfrThisHand) pfrThisHand = true;
-                        }
-                        break;
-                      case 'check':
-                        checkCount++;
-                        passiveActions++;
-                        break;
+                    final actionType = (action['action'] as String?)?.toLowerCase() ?? '';
+                    final street = (action['street'] as String?)?.toLowerCase() ?? '';
+
+                    // VPIP: voluntary money in preflop
+                    if (street == 'preflop' && !vpipThisHand) {
+                      if (actionType == 'call' || actionType == 'bet' || actionType == 'raise') {
+                        vpipThisHand = true;
+                      }
+                    }
+
+                    // PFR: preflop raise
+                    if (street == 'preflop' && !pfrThisHand) {
+                      if (actionType == 'bet' || actionType == 'raise') {
+                        pfrThisHand = true;
+                      }
                     }
                   }
+                }
+
+                if (opponentInThisHand && opponentSeat != null) {
+                  // Advanced stat detection using helper methods similar to firebase_service
+                  final result = _detectAdvancedStats(actions, opponentSeat, opponentName);
+                  threeBetCount += result['threeBetCount'] as int;
+                  threeBetOpportunity += result['threeBetOpportunity'] as int;
+                  fold3BetCount += result['fold3BetCount'] as int;
+                  facing3BetCount += result['facing3BetCount'] as int;
+                  cbetCount += result['cbetCount'] as int;
+                  cbetOpportunity += result['cbetOpportunity'] as int;
+                  stealCount += result['stealCount'] as int;
+                  stealOpportunity += result['stealOpportunity'] as int;
+                  checkRaiseFlopCount += result['checkRaiseFlopCount'] as int;
+                  checkRaiseFlopOpportunity += result['checkRaiseFlopOpportunity'] as int;
+                  walksCount += result['walksCount'] as int;
                 }
               }
 
@@ -201,56 +198,203 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
       totalSessions = sessionsPlayed.length;
 
-      final vpip = totalHands > 0 ? (vpipHands / totalHands * 100) : 0.0;
-      final pfr = totalHands > 0 ? (pfrHands / totalHands * 100) : 0.0;
-      final foldPercentage = totalHands > 0 ? (foldCount / totalHands * 100) : 0.0;
-      final callPercentage = totalHands > 0 ? (callCount / totalHands * 100) : 0.0;
-      final betPercentage = totalHands > 0 ? (betCount / totalHands * 100) : 0.0;
-      final raisePercentage = totalHands > 0 ? (raiseCount / totalHands * 100) : 0.0;
-      final checkPercentage = totalHands > 0 ? (checkCount / totalHands * 100) : 0.0;
-
-      final totalActions = aggressiveActions + passiveActions;
-      final aggression = totalActions > 0 ? (aggressiveActions / totalActions) : 0.0;
+      // Calculate percentages with proper denominators
+      final eligibleHands = totalHands - walksCount;
+      final vpip = eligibleHands > 0 ? (vpipHands / eligibleHands * 100).clamp(0.0, 100.0) : 0.0;
+      final pfr = eligibleHands > 0 ? (pfrHands / eligibleHands * 100).clamp(0.0, 100.0) : 0.0;
+      final threeBet = threeBetOpportunity > 0 ? (threeBetCount / threeBetOpportunity * 100).clamp(0.0, 100.0) : 0.0;
+      final fold3Bet = facing3BetCount > 0 ? (fold3BetCount / facing3BetCount * 100).clamp(0.0, 100.0) : 0.0;
+      final cbet = cbetOpportunity > 0 ? (cbetCount / cbetOpportunity * 100).clamp(0.0, 100.0) : 0.0;
+      final steal = stealOpportunity > 0 ? (stealCount / stealOpportunity * 100).clamp(0.0, 100.0) : 0.0;
+      final checkRaise = checkRaiseFlopOpportunity > 0 ? (checkRaiseFlopCount / checkRaiseFlopOpportunity * 100).clamp(0.0, 100.0) : 0.0;
 
       return {
         'totalHands': totalHands,
         'totalSessions': totalSessions,
         'vpip': vpip,
         'pfr': pfr,
-        'aggression': aggression,
-        'foldPercentage': foldPercentage,
-        'callPercentage': callPercentage,
-        'betPercentage': betPercentage,
-        'raisePercentage': raisePercentage,
-        'checkPercentage': checkPercentage,
-        'actions': {
-          'preflop': {'fold': foldCount, 'call': callCount, 'bet': betCount, 'raise': raiseCount},
-          'flop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-          'turn': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-          'river': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-        },
+        'threeBet': threeBet,
+        'fold3Bet': fold3Bet,
+        'cbet': cbet,
+        'steal': steal,
+        'checkRaise': checkRaise,
+        // Opportunity counts for N/A detection
+        'eligibleHands': eligibleHands,
+        'threeBetOpportunity': threeBetOpportunity,
+        'facing3BetCount': facing3BetCount,
+        'cbetOpportunity': cbetOpportunity,
+        'stealOpportunity': stealOpportunity,
+        'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
       };
     } catch (e) {
       print('❌ Error calculating legacy stats: $e');
-      return {
-        'totalHands': 0,
-        'totalSessions': 0,
-        'vpip': 0.0,
-        'pfr': 0.0,
-        'aggression': 0.0,
-        'foldPercentage': 0.0,
-        'callPercentage': 0.0,
-        'betPercentage': 0.0,
-        'raisePercentage': 0.0,
-        'checkPercentage': 0.0,
-        'actions': {
-          'preflop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-          'flop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-          'turn': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-          'river': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-        },
-      };
+      return _getEmptyStatsMap();
     }
+  }
+
+  /// Get empty stats map with all required fields
+  Map<String, dynamic> _getEmptyStatsMap() {
+    return {
+      'totalHands': 0,
+      'totalSessions': 0,
+      'vpip': 0.0,
+      'pfr': 0.0,
+      'threeBet': 0.0,
+      'fold3Bet': 0.0,
+      'cbet': 0.0,
+      'steal': 0.0,
+      'checkRaise': 0.0,
+      'eligibleHands': 0,
+      'threeBetOpportunity': 0,
+      'facing3BetCount': 0,
+      'cbetOpportunity': 0,
+      'stealOpportunity': 0,
+      'checkRaiseFlopOpportunity': 0,
+    };
+  }
+
+  /// Detect advanced stats from hand actions
+  Map<String, int> _detectAdvancedStats(List<Map<String, dynamic>> actions, int playerSeat, String opponentName) {
+    int threeBetCount = 0;
+    int threeBetOpportunity = 0;
+    int fold3BetCount = 0;
+    int facing3BetCount = 0;
+    int cbetCount = 0;
+    int cbetOpportunity = 0;
+    int stealCount = 0;
+    int stealOpportunity = 0;
+    int checkRaiseFlopCount = 0;
+    int checkRaiseFlopOpportunity = 0;
+    int walksCount = 0;
+
+    // 3-Bet detection
+    bool sawOpponentRaise = false;
+    bool playerRaised = false;
+    bool facedReRaise = false;
+    int? lastPreflopAggressor;
+    String? playerPosition;
+    bool potUnopenedWhenPlayerActs = true;
+    bool playerCheckedFlop = false;
+    bool facedBetAfterCheck = false;
+    bool isWalk = true;
+
+    for (int i = 0; i < actions.length; i++) {
+      final action = actions[i];
+      final street = (action['street'] as String?)?.toLowerCase() ?? '';
+      final playerId = action['player'] as int?;
+      final actionType = (action['action'] as String?)?.toLowerCase() ?? '';
+      final position = (action['playerPosition'] as String?)?.toUpperCase() ?? '';
+
+      // Track player position
+      if (playerId == playerSeat && playerPosition == null) {
+        playerPosition = position;
+      }
+
+      if (street == 'preflop') {
+        // Skip blind actions for walk detection
+        if (actionType != 'small blind' && actionType != 'big blind' && actionType != 'ante') {
+          if (actionType != 'fold') {
+            isWalk = false;
+          }
+
+          // 3-bet opportunity detection
+          if (actionType == 'raise') {
+            if (playerId != playerSeat) {
+              sawOpponentRaise = true;
+            } else if (sawOpponentRaise) {
+              threeBetCount = 1;
+            }
+
+            // Track for fold to 3-bet
+            if (playerId == playerSeat) {
+              playerRaised = true;
+            } else if (playerRaised) {
+              facedReRaise = true;
+            }
+          }
+
+          // Check if player acted after seeing a raise (3-bet opportunity)
+          if (playerId == playerSeat && sawOpponentRaise) {
+            threeBetOpportunity = 1;
+          }
+
+          // Fold to 3-bet
+          if (actionType == 'fold' && playerId == playerSeat && facedReRaise) {
+            fold3BetCount = 1;
+          }
+
+          // Facing 3-bet
+          if (facedReRaise && facing3BetCount == 0) {
+            facing3BetCount = 1;
+          }
+
+          // Steal opportunity check
+          if (playerId == playerSeat && potUnopenedWhenPlayerActs) {
+            if (position == 'CO' || position == 'BTN' || position == 'BU' || position == 'SB') {
+              stealOpportunity = 1;
+              if (actionType == 'raise') {
+                stealCount = 1;
+              }
+            }
+          }
+
+          // Track if pot opened before player acts
+          if (playerId != playerSeat) {
+            if (actionType == 'raise' || actionType == 'bet' || actionType == 'call') {
+              potUnopenedWhenPlayerActs = false;
+            }
+          }
+
+          // Track last preflop aggressor
+          if (actionType == 'bet' || actionType == 'raise') {
+            lastPreflopAggressor = playerId;
+          }
+        }
+      } else if (street == 'flop') {
+        // C-bet opportunity (was last aggressor pre and saw flop)
+        if (lastPreflopAggressor == playerSeat && cbetOpportunity == 0) {
+          cbetOpportunity = 1;
+        }
+
+        // C-bet detection
+        if (playerId == playerSeat && actionType == 'bet' && lastPreflopAggressor == playerSeat) {
+          cbetCount = 1;
+        }
+
+        // Check/raise detection
+        if (playerId == playerSeat && actionType == 'check') {
+          playerCheckedFlop = true;
+        }
+
+        if (playerCheckedFlop && playerId != playerSeat && (actionType == 'bet' || actionType == 'raise')) {
+          facedBetAfterCheck = true;
+          checkRaiseFlopOpportunity = 1;
+        }
+
+        if (playerCheckedFlop && facedBetAfterCheck && playerId == playerSeat && actionType == 'raise') {
+          checkRaiseFlopCount = 1;
+        }
+      }
+    }
+
+    // Walk detection (BB wins by default)
+    if (isWalk && playerPosition == 'BB') {
+      walksCount = 1;
+    }
+
+    return {
+      'threeBetCount': threeBetCount,
+      'threeBetOpportunity': threeBetOpportunity,
+      'fold3BetCount': fold3BetCount,
+      'facing3BetCount': facing3BetCount,
+      'cbetCount': cbetCount,
+      'cbetOpportunity': cbetOpportunity,
+      'stealCount': stealCount,
+      'stealOpportunity': stealOpportunity,
+      'checkRaiseFlopCount': checkRaiseFlopCount,
+      'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
+      'walksCount': walksCount,
+    };
   }
 
 
@@ -422,8 +566,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         ],
                         const SizedBox(height: 32),
                         _buildStatisticsSection(),
-                        const SizedBox(height: 32),
-                        _buildActionDistributionSection(),
                         const SizedBox(height: 32),
                         _buildHandHistorySection(),
                         const SizedBox(height: 100), // Bottom padding for nav bar
@@ -799,55 +941,34 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             ),
           ),
           SizedBox(height: 16),
-          // List items with dividers
-          _buildStatListItem('VPIP', '${_formatStat(_statistics!['vpip'])}%'),
+          // List items with dividers - 7 proper poker stats
+          _buildStatListItem('VPIP', _formatStatWithOpportunity(_statistics!['vpip'], _statistics!['eligibleHands'])),
           _buildDivider(),
-          _buildStatListItem('PFR', '${_formatStat(_statistics!['pfr'])}%'),
+          _buildStatListItem('PFR', _formatStatWithOpportunity(_statistics!['pfr'], _statistics!['eligibleHands'])),
           _buildDivider(),
-          _buildStatListItem('Aggression', _formatAggression(_statistics!['aggression'])),
+          _buildStatListItem('3-Bet', _formatStatWithOpportunity(_statistics!['threeBet'], _statistics!['threeBetOpportunity'])),
           _buildDivider(),
-          _buildStatListItem('Fold %', '${_formatStat(_statistics!['foldPercentage'])}%'),
+          _buildStatListItem('Fold to 3-Bet', _formatStatWithOpportunity(_statistics!['fold3Bet'], _statistics!['facing3BetCount'])),
+          _buildDivider(),
+          _buildStatListItem('C-Bet', _formatStatWithOpportunity(_statistics!['cbet'], _statistics!['cbetOpportunity'])),
+          _buildDivider(),
+          _buildStatListItem('Steal', _formatStatWithOpportunity(_statistics!['steal'], _statistics!['stealOpportunity'])),
+          _buildDivider(),
+          _buildStatListItem('Check/Raise', _formatStatWithOpportunity(_statistics!['checkRaise'], _statistics!['checkRaiseFlopOpportunity'])),
         ],
       ),
     );
   }
 
-  Widget _buildActionDistributionSection() {
-    if (_isLoadingStats || _statistics == null) {
-      return SizedBox.shrink();
-    }
+  /// Format stat as percentage or 'N/A' if no opportunity data
+  String _formatStatWithOpportunity(dynamic value, dynamic opportunity) {
+    // Check if there's any opportunity data
+    final opp = opportunity is num ? opportunity.toInt() : 0;
+    if (opp <= 0) return 'N/A';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFF131616),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      padding: EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section header
-          Text(
-            'Action Distribution',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              height: 1.2,
-            ),
-          ),
-          SizedBox(height: 16),
-          // List items with dividers
-          _buildStatListItem('Call', '${_formatStat(_statistics!['callPercentage'])}%'),
-          _buildDivider(),
-          _buildStatListItem('Bet', '${_formatStat(_statistics!['betPercentage'])}%'),
-          _buildDivider(),
-          _buildStatListItem('Raise', '${_formatStat(_statistics!['raisePercentage'])}%'),
-          _buildDivider(),
-          _buildStatListItem('Check', '${_formatStat(_statistics!['checkPercentage'])}%'),
-        ],
-      ),
-    );
+    if (value == null) return 'N/A';
+    if (value is num && value.isNaN) return 'N/A';
+    return '${_formatStat(value)}%';
   }
 
   Widget _buildStatListItem(String label, String value) {
@@ -1064,17 +1185,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     }
     return '-';
   }
-
-  /// Helper function to format aggression factor with infinity handling
-  String _formatAggression(dynamic value) {
-    if (value == null) return '-';
-    if (value is num) {
-      if (value >= 999) return '∞';
-      return value.toStringAsFixed(2);
-    }
-    return '-';
-  }
-
   void _showEditOpponentDialog() {
     final nameController = TextEditingController(text: _opponent.name);
     final notesController = TextEditingController(text: _opponent.notes ?? '');
