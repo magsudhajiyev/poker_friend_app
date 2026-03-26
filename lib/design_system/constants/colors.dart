@@ -29,6 +29,15 @@ class AppColors {
   static const Color headerGradientCyan = Color(0x574CDBFF);  // rgba(76,219,255,0.34)
   static const Color headerGradientGreen = Color(0x572EB46A); // rgba(46,180,106,0.34)
 
+  // Figma Design System Colors (node 20:774)
+  static const Color backgroundPaper = Color(0xFF02050B);    // Main screen background
+  static const Color backgroundSurface = Color(0xFF101115);  // Cards, nav, progress bar bg
+  static const Color textSecondary = Color(0xFFD3FFFD);      // Mint - subtitle, view all, accents
+  static const Color textDisabled = Color(0xFF8C8C8C);       // Section headers
+  static const Color buttonPrimary = Color(0xFF89F1EC);      // Mint button
+  static const Color accentGreenBright = Color(0xFF54E98A);  // Progress bar fill
+  static const Color separatorDark = Color(0xFF1C1F21);      // List separators
+
   // Updated Header Gradient (Figma node 520-3288)
   static const Color headerGradientBlack = Color(0xFF000000);
   static const Color headerGradientTeal = Color(0xFF133538);

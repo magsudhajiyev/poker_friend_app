@@ -14,10 +14,10 @@ class ListSeparator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding + 4),
       child: Container(
         height: 1,
-        color: AppColors.separatorColor,
+        color: AppColors.separatorDark,
       ),
     );
   }

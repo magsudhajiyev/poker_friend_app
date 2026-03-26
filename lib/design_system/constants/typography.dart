@@ -121,15 +121,15 @@ class AppTypography {
 
   static TextStyle homeSubtitle({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? AppColors.labelSecondary,
+    color: color ?? AppColors.textSecondary,
     fontWeight: FontWeight.w500,
     height: 1.44,
   );
 
-  static TextStyle bankrollAmount({Color? color}) => GoogleFonts.ibmPlexSans(
+  static TextStyle bankrollAmount({Color? color}) => GoogleFonts.familjenGrotesk(
     fontSize: 40,
     color: color ?? Colors.white,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w600,
     height: 1.0,
   );
 
@@ -142,22 +142,32 @@ class AppTypography {
 
   static TextStyle sectionHeadline({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? Colors.white.withOpacity(0.8),
-    fontWeight: FontWeight.w400,
+    color: color ?? AppColors.textDisabled,
+    fontWeight: FontWeight.w500,
     height: 1.44,
   );
 
-  static TextStyle listRowText({Color? color}) => GoogleFonts.ibmPlexSans(
+  static TextStyle listRowLabel({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
+    color: color ?? Colors.white,
+    fontWeight: FontWeight.w500,
+    height: 1.44,
+  );
+
+  static TextStyle listRowValue({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
     color: color ?? Colors.white,
     fontWeight: FontWeight.w400,
     height: 1.44,
   );
+
+  // Keep old method for backwards compatibility
+  static TextStyle listRowText({Color? color}) => listRowLabel(color: color);
 
   static TextStyle viewAllButton({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? Colors.white,
-    fontWeight: FontWeight.w400,
+    color: color ?? AppColors.textSecondary,
+    fontWeight: FontWeight.w500,
     height: 1.44,
   );
 
@@ -183,7 +193,7 @@ class AppTypography {
 
   static TextStyle infoCardAccent({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? AppColors.tealAccent,
+    color: color ?? AppColors.textSecondary,
     fontWeight: FontWeight.w400,
     height: 1.44,
   );

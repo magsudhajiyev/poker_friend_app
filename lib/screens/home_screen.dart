@@ -1583,7 +1583,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
-      backgroundColor: const Color(0xFF000000),
+      backgroundColor: AppColors.backgroundPaper,
       extendBody: true,
       extendBodyBehindAppBar: true,
       drawer: AppNavigationDrawer(

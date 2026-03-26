@@ -21,17 +21,17 @@ class StatListRow extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               label,
-              style: AppTypography.listRowText(),
+              style: AppTypography.listRowLabel(),
             ),
             Text(
               value,
-              style: AppTypography.listRowText(),
+              style: AppTypography.listRowValue(),
             ),
           ],
         ),

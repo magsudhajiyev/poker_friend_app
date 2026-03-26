@@ -35,8 +35,9 @@ class InfoCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.infoCardBg,
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.backgroundSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black, width: 1),
       ),
       child: isEmpty ? _buildEmptyState() : child,
     );
@@ -87,27 +88,37 @@ class InfoCard extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            // White button (Figma design)
+            // Mint button (Figma design)
             if (buttonText != null) ...[
               const SizedBox(height: 16),
               GestureDetector(
                 onTap: onEmptyTap,
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.buttonPrimary,
                     borderRadius: BorderRadius.circular(110),
                   ),
-                  child: Center(
-                    child: Text(
-                      buttonText!,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.add,
                         color: Colors.black,
+                        size: 24,
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Text(
+                        buttonText!,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -179,27 +190,37 @@ class InfoCard extends StatelessWidget {
                   ),
               ],
             ),
-            // White button (Figma design)
+            // Mint button (Figma design)
             if (buttonText != null) ...[
               const SizedBox(height: 16),
               GestureDetector(
                 onTap: onEmptyTap,
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.buttonPrimary,
                     borderRadius: BorderRadius.circular(110),
                   ),
-                  child: Center(
-                    child: Text(
-                      buttonText!,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.add,
                         color: Colors.black,
+                        size: 24,
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Text(
+                        buttonText!,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -257,29 +257,24 @@ class HomeHeader extends StatelessWidget {
     return Container(
       height: 8,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
+        color: AppColors.backgroundSurface,
         borderRadius: BorderRadius.circular(9999),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           return Stack(
             children: [
-              // Progress fill with gradient and glow
+              // Progress fill with solid color and glow (Figma design)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 width: constraints.maxWidth * progress,
                 height: 8,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      AppColors.progressBarStart,
-                      AppColors.progressBarEnd,
-                    ],
-                  ),
+                  color: AppColors.accentGreenBright,
                   borderRadius: BorderRadius.circular(9999),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.progressBarStart.withOpacity(0.4),
+                      color: AppColors.accentGreenBright.withOpacity(0.4),
                       blurRadius: 10,
                       spreadRadius: 0,
                     ),
