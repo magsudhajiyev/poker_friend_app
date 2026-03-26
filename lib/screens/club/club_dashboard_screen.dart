@@ -353,30 +353,63 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0A0A),
+      backgroundColor: const Color(0xFF02050B), // Figma: Background/Paper
       extendBodyBehindAppBar: true,
-      body: Column(
+      body: Stack(
         children: [
-          _buildGradientHeader(),
-          const SizedBox(height: 16),
-          if (_tabController != null) _buildTabBar(),
-          const SizedBox(height: 16),
-          Expanded(
-            child: _isLoading || _tabController == null
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.tealAccent,
-                    ),
-                  )
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildEventList(_upcomingEvents, 'No upcoming events', 'scheduled'),
-                      _buildEventList(_liveEvents, 'No live events', 'live'),
-                      _buildEventList(_pastEvents, 'No past events', 'past'),
+          // Cyan ellipse glow at top (Figma node 357:3863)
+          Positioned(
+            top: -162,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                width: 412,
+                height: 217,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 1.0,
+                    colors: [
+                      const Color(0xFF4CDBFF).withValues(alpha: 0.25),
+                      const Color(0xFF2EB46A).withValues(alpha: 0.12),
+                      Colors.transparent,
                     ],
+                    stops: const [0.0, 0.5, 1.0],
                   ),
+                ),
+              ),
+            ),
+          ),
+
+          // Main content
+          Column(
+            children: [
+              SizedBox(height: statusBarHeight),
+              _buildHeader(),
+              const SizedBox(height: 16),
+              if (_tabController != null) _buildTabBar(),
+              const SizedBox(height: 16),
+              Expanded(
+                child: _isLoading || _tabController == null
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.tealAccent,
+                        ),
+                      )
+                    : TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildEventList(_upcomingEvents, 'No upcoming events', 'scheduled'),
+                          _buildEventList(_liveEvents, 'No live events', 'live'),
+                          _buildEventList(_pastEvents, 'No past events', 'past'),
+                        ],
+                      ),
+              ),
+            ],
           ),
         ],
       ),
@@ -418,166 +451,108 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     );
   }
 
-  Widget _buildGradientHeader() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.headerGradientCyan,
-            AppColors.headerGradientGreen,
-          ],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(34),
-          bottomRight: Radius.circular(34),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+  /// Header matching Figma design (node 357:3911)
+  /// Backdrop blur 20px, height 84px, padding 16px
+  Widget _buildHeader() {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          height: 84,
+          padding: const EdgeInsets.all(16),
+          child: Row(
             children: [
-              // Top row with back button and settings
-              Row(
-                children: [
-                  // Back button (white bg, dark icon)
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.black87,
-                        size: 22,
-                      ),
+              // Back button (Figma: 44x44, bg #101115, rounded 88.733px)
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF101115), // Background/Surface
+                    borderRadius: BorderRadius.circular(88.733),
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      'icons/flat_icons/back.png',
+                      width: 24,
+                      height: 24,
+                      color: Colors.white,
                     ),
                   ),
-                  const Spacer(),
-                  // Right side: Settings in dark pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.darkPillBg,
-                      borderRadius: BorderRadius.circular(110),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_isAdmin)
-                          _buildPillButton(
-                            icon: Icons.admin_panel_settings,
-                            badge: 'Admin',
-                          ),
-                        _buildPillButton(
-                          icon: _isAdmin ? Icons.settings : Icons.info_outline,
-                          onTap: _navigateToSettingsOrInfo,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-              const SizedBox(height: 20),
-              // Club name and member count
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.club.name,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 28,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.white, width: 1),
-                                borderRadius: BorderRadius.circular(78),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.people_outline,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '$_memberCount members',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildPillButton({
-    required IconData icon,
-    String? badge,
-    VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: badge != null ? null : 44,
-        height: 44,
-        padding: badge != null ? const EdgeInsets.symmetric(horizontal: 12) : null,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 22),
-            if (badge != null) ...[
-              const SizedBox(width: 6),
-              Text(
-                badge,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 14,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
+              const SizedBox(width: 12),
+
+              // Club name and member count (Figma: flex-1)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Club name (Figma: SemiBold 27px, white, tracking -0.5)
+                    Text(
+                      widget.club.name,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                        height: 1.0,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    // Member count row (Figma: gap 6px)
+                    Row(
+                      children: [
+                        // Members icon (Figma: 18x18, #D3FFFD)
+                        Icon(
+                          Icons.people_outline,
+                          size: 18,
+                          color: const Color(0xFFD3FFFD), // Text/Secondary
+                        ),
+                        const SizedBox(width: 6),
+                        // Member count text (Figma: Regular 13px, #D3FFFD)
+                        Text(
+                          '$_memberCount member${_memberCount == 1 ? '' : 's'}',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFFD3FFFD), // mint/100
+                            height: 1.47,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              // Settings button (Figma: 44x44, bg #101115, rounded 88.733px)
+              GestureDetector(
+                onTap: _navigateToSettingsOrInfo,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF101115), // Background/Surface
+                    borderRadius: BorderRadius.circular(88.733),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.settings_outlined,
+                      size: 24,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );

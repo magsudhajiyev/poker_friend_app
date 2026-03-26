@@ -197,48 +197,102 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                     ],
                   ),
                 ),
-                // Tab Bar
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(80),
-                    border: Border.all(
-                      color: Color(0xFF2C2C2E),
-                      width: 1,
-                    ),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      borderRadius: BorderRadius.circular(60),
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF1E3B49), Color(0xFF4A887E)],
-                      ),
-                      border: Border.all(
-                        color: Color(0x4DEBEBF5),
-                        width: 1,
-                      ),
-                    ),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicatorPadding: EdgeInsets.all(0),
-                    dividerColor: Colors.transparent,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white,
-                    labelStyle: GoogleFonts.ibmPlexSans(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.43,
-                    ),
-                    unselectedLabelStyle: GoogleFonts.ibmPlexSans(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.43,
-                    ),
-                    tabs: [
-                      Tab(text: 'Cash'),
-                      Tab(text: 'Tournament'),
-                    ],
+                // Tab Bar - Unified container with both tabs (Figma node 136:1342)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final tabWidth = constraints.maxWidth / 2;
+                      return AnimatedBuilder(
+                        animation: _tabController.animation!,
+                        builder: (context, child) {
+                          // Get animation value (0.0 = Cash, 1.0 = Tournament)
+                          final animValue = _tabController.animation!.value;
+
+                          return Container(
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1B1E24), // neutrals/800
+                              borderRadius: BorderRadius.circular(150),
+                              border: Border.all(
+                                color: const Color(0xFF35373C), // neutrals/700
+                                width: 1,
+                              ),
+                            ),
+                            child: Stack(
+                              children: [
+                                // Active tab indicator (slides smoothly with swipe)
+                                Positioned(
+                                  left: animValue * tabWidth,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: tabWidth,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF02050B), // neutrals/900
+                                      borderRadius: BorderRadius.circular(160),
+                                      border: Border.all(
+                                        color: const Color(0xFF73D4CF), // mint/400
+                                        width: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Tab buttons row
+                                Row(
+                                  children: [
+                                    // Cash tab
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () => _tabController.animateTo(0),
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Center(
+                                          child: Text(
+                                            'Cash',
+                                            style: GoogleFonts.ibmPlexSans(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color.lerp(
+                                                Colors.white,
+                                                const Color(0xFF8C8C8C),
+                                                animValue,
+                                              ),
+                                              height: 1.44,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // Tournament tab
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () => _tabController.animateTo(1),
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Center(
+                                          child: Text(
+                                            'Tournament',
+                                            style: GoogleFonts.ibmPlexSans(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color.lerp(
+                                                const Color(0xFF8C8C8C),
+                                                Colors.white,
+                                                animValue,
+                                              ),
+                                              height: 1.44,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
                 SizedBox(height: 24),

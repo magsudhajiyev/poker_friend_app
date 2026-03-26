@@ -156,10 +156,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   label: 'Register Club',
                                   onTap: () {
                                     Navigator.pop(context);
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => const RegisterClubDialog(),
-                                    );
+                                    showRegisterClubDialog(context);
                                   },
                                 ),
                                 _MenuItemData(
