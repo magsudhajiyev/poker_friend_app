@@ -1,12 +1,13 @@
-# Poker Logger - Project Documentation
+# Poker Friend - Project Documentation
 
 ## Overview
-Flutter/Dart poker hand logging application with Firebase backend. Allows users to track poker hands, sessions, statistics, opponents, and bankroll.
+Flutter/Dart poker hand logging application with Firebase backend, club management, dealer-assisted voice logging, and real-time WebSocket sync. Allows users to track poker hands, sessions, statistics, opponents, and bankroll.
 
 ---
 
 ## Project Rules
 - **DO NOT push to git unless explicitly asked by user**
+- **DO NOT commit unless explicitly asked by user**
 - Always check `/diary` folder for previously solved bugs before implementing fixes
 - Create diary entry after user confirms a fix
 - Never commit debug logging, unnecessary files, or unstabilized code
@@ -17,19 +18,93 @@ Flutter/Dart poker hand logging application with Firebase backend. Allows users 
 ## Architecture
 
 ### Tech Stack
-- **Frontend**: Flutter/Dart
-- **Backend**: Firebase (Firestore, Auth)
-- **Local Storage**: SharedPreferences
-- **State Management**: StatefulWidget pattern
+- **Frontend**: Flutter/Dart (179+ Dart files)
+- **Backend**: Firebase (Firestore, Auth, FCM) + FastAPI backend (Render)
+- **Local Storage**: SQLite (sqflite v13) + SharedPreferences
+- **Real-time**: Socket.IO WebSocket + Firestore Snapshot listeners
+- **Voice Recognition**: Deepgram ASR via backend "Dealer Brain" endpoint
+- **Payments**: RevenueCat SDK
+- **State Management**: StatefulWidget pattern (no Provider/BLoC/Riverpod)
 
 ### Data Flow
 1. User logs hand actions during gameplay
 2. Actions saved to HandRecord with player stacks
 3. On hand completion:
    - Saved to Firebase (`poker_sessions/{sessionId}/poker_hands`)
-   - Saved to local storage (backup)
-   - User stats updated **incrementally** (not recalculated)
-   - Opponent stats updated **incrementally**
+   - Saved to local SQLite (backup)
+   - User stats updated **incrementally** via atomic transactions (not recalculated)
+   - Opponent stats updated **incrementally** (only saved opponents)
+4. Dual storage: ALL writes go to both Firebase and local storage
+
+### API Endpoints
+- **Backend**: `https://poker-friend-engine.onrender.com/api/v1`
+- **Hand Analysis**: `/api/v1/analyze-hand` (deployed)
+- **Session Analytics**: `/api/v1/analytics/sessions` (not deployed yet)
+- **Speech**: `/api/v1/speech/transcribe-brain` (Deepgram via backend)
+- All API calls require `X-API-Key` header
+
+---
+
+## Design System
+
+### Two Coexisting Themes
+The app has two themes. **Modern Dark (AppTheme)** is used in all newer screens. **Legacy (PokerFriendTheme)** exists in older screens being phased out.
+
+### Modern Dark Theme (AppTheme) — Primary
+- **Primary**: Teal `#62E3BC`
+- **Secondary/Buttons**: Cyan/Mint `#89F1EC`
+- **Tertiary/Section Headers**: Lime `#87ED81`
+- **Background**: Paper `#02050B`, Surface `#101115`
+- **NavBar**: `#1E1E1E`
+- **Text**: White (primary), Mint `#D3FFFD` (secondary), `#8C8C8C` (disabled)
+- **Progress Bar**: `#54E98A` → `#66D9CC` gradient
+- **Separator**: `#1C1F21`
+- **Glassy Card Base**: `#546165` at 74% opacity
+
+### Fonts
+- **IBM Plex Sans** — Primary body/UI text (Google Fonts)
+- **Roboto Mono** — Numbers, chart labels, monetary values
+- **Familjen Grotesk** — Bankroll display amount
+
+### Typography (AppTypography in `lib/design_system/constants/typography.dart`)
+- Section headers: 12px w600 uppercase, lime green, letterSpacing 1.0
+- Page titles: 28-32px w600-700, letterSpacing -0.5
+- Body: 14-17px w400, height 1.44
+- List rows: 17px w500 (label) / w400 (value)
+- Buttons: 17px w600, letterSpacing -0.43
+- Monetary large: 38px w700 Roboto Mono
+- Bankroll: 40px w600 Familjen Grotesk
+
+### Spacing (AppSpacing in `lib/design_system/constants/spacing.dart`)
+- xxxs=4, xxs=8, xs=12, sm=14, md=16, lg=18, xl=24, xxl=28, xxxl=32
+- bottomPadding=120 (nav bar clearance)
+
+### Border Radius (AppDecorations in `lib/design_system/constants/decorations.dart`)
+- card=12, button=60, navBar=70, pill=40, modeCard=24
+
+### Effects
+- Blur light: 45px (glassy cards via BackdropFilter)
+- Blur heavy: 132px (gradient backgrounds)
+- Glassmorphism: BackdropFilter + white 10% border + semi-transparent bg
+
+### Reusable Components (`lib/design_system/components/`)
+- **GlassyCard** — blur 45, border white 10%, radius 12, padding 16x18
+- **PrimaryButton** — white bg, radius 60, padding 32x14, black text
+- **GlassyIconButton** — white 10% bg, blur 2, circle, 38px default
+- **HomeHeader** — gradient black→teal, elliptical glow, dark pill container
+- **SectionHeader** — lime uppercase 12px w600
+- **GradientBackground** — teal ellipse 595x727 at (-98,-148), blur 132
+- **PillLabel** — white 20% bg, radius 40
+- **AvgBadge** — mint bg, radius 140
+- **InfoCard** — surface #101115, radius 16, black border
+- **StatListRow** — padding 4x8, space-between layout
+- **ListSeparator** — 1px #1C1F21
+- **GradientDivider** — 1px white opacity gradient [10%,30%,10%]
+- **CalendarPicker** — glassy card with day cells, green accent
+
+### Legacy Theme (PokerFriendTheme) — Being Phased Out
+- Purple `#AB9FF2` based, Material 3 enabled, Roboto font
+- Used in some older dialogs and components
 
 ---
 
@@ -42,47 +117,77 @@ Flutter/Dart poker hand logging application with Firebase backend. Allows users 
 - Track board cards (flop, turn, river)
 - Track hole cards (hero only by default)
 - Track showdown data
-- Support chopped pots (multiple winners)
+- Support chopped pots (multiple winners) and side pots
+- Undo last action with full state restoration
+- Navigation confirmation dialog prevents accidental data loss
 
 ### 2. Individual Session Tracking (Quick Logging)
 - Quick profit/loss tracking without full hand details
 - Records: start time, end time, profit/loss, session name
 - Does NOT update hand-based stats (VPIP, PFR, etc.)
 
-### 3. Statistics Tracking
-Tracks per-hand stats incrementally:
-- **Total Hands**: All hands dealt to player
-- **Hands Played**: Hands where player voluntarily put money in (VPIP hands)
-- **Won Hands**: Hands won by player
-- **VPIP Count**: Times player voluntarily put money in preflop
-- **PFR Count**: Times player raised/bet preflop
-- **3-Bet Count**: Times player re-raised preflop after seeing a raise
-- **Total Sessions**: Number of completed sessions
-- **Total Play Time**: Minutes played across all sessions
+### 3. Statistics Tracking (7 Core Metrics)
+All stats use **incremental atomic updates** (O(1)) with opportunity-based denominators:
 
-### 4. Play Style Detection
-Automatically categorizes player style based on stats:
-- **Tight-Aggressive (TAG)**: VPIP < 25%, PFR/VPIP > 0.65, AF > 1.5
-- **Loose-Aggressive (LAG)**: VPIP > 28%, PFR/VPIP > 0.5, AF > 1.5
-- **Tight-Passive**: VPIP < 20%, AF < 1.0
-- **Loose-Passive (Calling Station)**: VPIP > 35%, AF < 1.0
-- **Unknown**: Not enough data (< 50 hands)
+| Metric | Counter | Denominator | Notes |
+|--------|---------|-------------|-------|
+| VPIP | vpipCount | totalHands - walksCount | Excludes blind posts & walks |
+| PFR | pfrCount | totalHands - walksCount | Preflop raises only |
+| 3-Bet | threeBetCount | threeBetOpportunity | Re-raise after opponent's raise |
+| Fold-3Bet | fold3betCount | facing3BetCount | After raising then facing 3-bet |
+| C-Bet | cbetCount | cbetOpportunity | Flop bet as last pre-aggressor |
+| Steal | stealCount | stealOpportunity | CO/BTN/SB with unopened pot |
+| Check-Raise | checkRaiseFlopCount | checkRaiseFlopOpportunity | Flop only |
+
+Additional: Win Rate = wonHands / handsPlayed, AF = pfrCount / (vpipCount - pfrCount)
+
+Position-specific breakdowns tracked for: handsPlayed, vpipCount, pfrCount, threeBetCount
+
+### 4. Play Style Detection (`lib/services/play_style_detector.dart`)
+Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
+- **Maniac**: VPIP≥40%, PFR≥20%, gap≤15%, 3-bet≥12%, AF≥4
+- **LAG**: VPIP>25%, PFR>18%, gap≤8%, 3-bet≥7%, AF≥3
+- **TAG**: VPIP 15-22%, PFR 12-18%, gap 2-4%, 3-bet 6-10%, AF 2.5-3.5
+- **Balanced**: VPIP 20-28%, PFR 17-22%, gap 2-5%, AF 2-4
+- **Calling Station**: VPIP≥25%, PFR<10%, gap≥15%, 3-bet<3%, AF<1
+- **Nit**: VPIP≤15%, PFR≤12%, 3-bet≤5%, AF≤2
+- **Unknown**: < 50 hands
 
 ### 5. Opponent Tracking
 - Automatically creates opponent profiles from logged hands
-- Tracks same stats as user
-- Associates opponents with userId via `playerNames` map
-- Displays opponent hands filtered by opponent
+- Tracks same 7 metrics as user (only for saved opponents)
+- Associates opponents with userId via `playerNames` + `playerIds` maps
 
 ### 6. Bankroll Management
-- Track current bankroll and goals
-- Calculate progress to goal
-- Show bankroll statistics
+- Track current bankroll and goals (SharedPreferences)
+- Progress bar with animated fill
+- Earnings chart with pinch-to-zoom (landscape, cumulative lines)
 
 ### 7. AI Hand Analysis
-- Analyze specific hands using AI
-- Store analysis results per hand
-- Retrieve cached analysis
+- Per-hand analysis via deployed API endpoint
+- Analysis results cached per hand
+- Subscription-gated feature (RevenueCat)
+
+### 8. Club Management
+- **Roles**: Owner > Admin > Dealer > Player
+- Club registration flow (user submits request, admin approves)
+- Member invitation via email + in-app notifications
+- Multi-table event management with live rankings
+- QR-based seat assignments (per-seat and per-table QR codes)
+
+### 9. Dealer-Assisted Voice Logging
+- Real-time speech recognition via Deepgram/Soniox
+- Voice + manual action buttons coexist
+- Speaker diarization for dealer voice locking
+- Multi-layered transcript debouncing for echo prevention
+- Rollback/undo for voice recognition mistakes
+- Auto-starts on first hand, pause/resume toggle
+
+### 10. Real-Time Sync
+- WebSocket (Socket.IO) broadcasts actions to all players/spectators
+- Event types: hand_started, action_logged, board_dealt, hand_completed, ranking_update
+- Firestore Snapshot listeners as primary, WebSocket for fast broadcasting
+- Fallback: Firestore-based rankings when backend unavailable
 
 ---
 
@@ -102,36 +207,21 @@ Automatically categorizes player style based on stats:
     'turn': String?,       // '2♣'
     'river': String?       // '9♠'
   },
-  'ourHoleCards': {
-    'card1': String,  // 'A♠'
-    'card2': String   // 'K♥'
-  },
-  'showdownData': {
-    'seat1': {'card1': String, 'card2': String},
-    'seat2': {...},
-    ...
-  },
+  'ourHoleCards': { 'card1': String, 'card2': String },
+  'showdownData': { 'seat1': {'card1': String, 'card2': String}, ... },
   'reachedShowdown': bool,
   'potAmount': double,
-  'preflopPot': double?,
-  'flopPot': double?,
-  'turnPot': double?,
-  'riverPot': double?,
+  'preflopPot': double?, 'flopPot': double?, 'turnPot': double?, 'riverPot': double?,
   'winnerId': int,
   'heroPositionName': String,  // 'BTN', 'CO', 'MP', etc.
   'heroSeatNumber': int,
-  'playerNames': {
-    '1': String,  // seat number -> player name
-    '2': String,
-    ...
-  },
-  'smallBlind': int,
-  'bigBlind': int,
+  'playerNames': { '1': String, '2': String, ... },  // seat → name
+  'playerIds': { '1': String, ... },                  // seat → userId (for dealer mode)
+  'smallBlind': int, 'bigBlind': int,
   'gameType': String,  // 'cash' or 'tournament'
-  'isChoppedPot': bool?,
-  'choppedWinners': List<int>?,
-  'individualShares': Map<int, double>?,
-  'sharePerWinner': double?
+  'isChoppedPot': bool?, 'choppedWinners': List<int>?,
+  'individualShares': Map<int, double>?, 'sharePerWinner': double?,
+  'isStarred': bool?, 'tags': List<String>?, 'notes': String?
 }
 ```
 
@@ -143,137 +233,230 @@ Automatically categorizes player style based on stats:
   'street': String,           // 'preflop', 'flop', 'turn', 'river'
   'timestamp': String,        // ISO 8601
   'buttonPosition': int,
-  'playerName': String?,      // Display name
+  'playerName': String?,
   'playerId': String?,        // userId or opponentId
   'isCurrentUser': bool,
-  'playerPosition': String?,  // 'BTN', 'CO', etc.
+  'playerPosition': String?,  // 'BTN', 'CO', etc. — calculated once at hand start
   'playerStack': double?,     // CRITICAL: Stack size at time of action
   'amount': double?           // Amount for bet/raise/call
 }
 ```
 
-**Important Notes on Action Amounts:**
+**Action Amount Rules:**
 - **Preflop raises**: Store TOTAL amount (e.g., raise to 1500)
-- **Postflop raises**: Store ADDITIONAL amount (e.g., raise 20000 on top of current bet)
+- **Postflop raises**: Store ADDITIONAL amount (e.g., raise 20000 on top)
 - **Calls**: Store actual amount player put in (handles all-in for less)
+- **All-in**: Treated as equivalent to bet/raise for stats detection
 
-### User Stats Format
+### User Stats Format (`user_stats/{userId}`)
 ```dart
 {
   'userId': String,
-  'totalHands': int,        // All hands dealt
+  'totalHands': int,        // ALL hands dealt (denominator for VPIP/PFR)
   'handsPlayed': int,       // VPIP hands only
+  'walksCount': int,        // Everyone folded to BB
   'wonHands': int,
-  'vpipCount': int,
-  'pfrCount': int,
-  'threeBetCount': int,
-  'totalSessions': int,
-  'totalPlayTimeMinutes': int
-}
-```
-
-### Session Data Format
-```dart
-{
-  'userId': String,
-  'sessionName': String?,
-  'smallBlind': int,
-  'bigBlind': int,
-  'hasBBante': bool,
-  'playerCount': int,
-  'ourSeatNumber': int?,
-  'gameType': String,        // 'cash' or 'tournament'
-  'startTime': Timestamp,
-  'endTime': Timestamp?,
-  'totalHands': int,
-  'isIndividualSession': bool,  // Quick tracking vs full hand logging
-  'buyInAmount': double?,       // Money paid (for cash games)
-  'totalBuyIn': double?,        // Total invested including rebuys
-  'startingStack': double?,     // Chips received
-  'currentStack': double?,      // Current chip count
-  'stackHistory': List<Map>,    // Stack changes over time
+  'vpipCount': int, 'pfrCount': int,
+  'threeBetCount': int, 'threeBetOpportunity': int,
+  'fold3betCount': int, 'facing3BetCount': int,
+  'cbetCount': int, 'cbetOpportunity': int,
+  'stealCount': int, 'stealOpportunity': int,
+  'checkRaiseFlopCount': int, 'checkRaiseFlopOpportunity': int,
+  'totalSessions': int, 'totalPlayTimeMinutes': int,
+  'positionHandsPlayed': Map, 'positionVpipCount': Map,
+  'positionPfrCount': Map, 'positionThreeBetCount': Map,
+  'lastUpdated': Timestamp
 }
 ```
 
 ---
 
-## Critical Statistics Calculations
+## Critical Statistics Logic
 
-### VPIP (Voluntarily Put Money In Pot)
+### VPIP/PFR Denominator
 ```dart
-vpip% = (vpipCount / totalHands) * 100
+eligibleHands = totalHands - walksCount
+vpip% = (vpipCount / eligibleHands) * 100
+pfr% = (pfrCount / eligibleHands) * 100
 ```
-- **Denominator**: `totalHands` (ALL dealt hands)
-- **NOT**: `handsPlayed` (that would give 100%)
+- **NEVER** use `handsPlayed` as denominator (gives ~100%)
+- Walk hands excluded because BB had no opportunity to act
 
-### PFR (Preflop Raise)
+### 3-Bet Detection (`StatsCalculator.didPlayerThreeBet`)
+A 3-bet is a **re-raise** after seeing another player's raise preflop:
 ```dart
-pfr% = (pfrCount / totalHands) * 100
+bool sawOpponentRaise = false;
+bool playerAlreadyRaised = false;
+for action in preflop_actions:
+  if action.player == hero && isRaiseAction(action):
+    if sawOpponentRaise && !playerAlreadyRaised:
+      return true;  // THIS is a 3-bet
+    playerAlreadyRaised = true;  // 4-bet+ if raises again
+  else if isRaiseAction(action):
+    sawOpponentRaise = true;
 ```
-- **Denominator**: `totalHands` (ALL dealt hands)
+- All-in counts as raise for detection purposes
+- `playerAlreadyRaised` flag prevents 4-bet from being counted as 3-bet
 
-### 3-Bet Percentage
-```dart
-threeBet% = (threeBetCount / totalHands) * 100
+### Stats Update Flow
 ```
-- **Definition**: A 3-bet is when a player **re-raises** after seeing another player's raise
-- **NOT**: Just raising 2+ times in a hand (that never happens)
-- **Detection Logic**:
-  1. Track if we've seen a raise from another player
-  2. If hero raises AFTER seeing that raise → 3-bet
-  3. Must be preflop only
+saveHand() called
+  ├─ Save to Firestore + local SQLite
+  ├─ _updateUserStatsFromHand() → UserStatsService.updateStatsAtomic()
+  │   └─ Runs ALL 7 StatsCalculator detection methods
+  │   └─ Builds delta map, atomic Firestore transaction
+  ├─ _updateOpponentStatsFromHand() → OpponentStatsService.updateStatsAtomic()
+  │   └─ Only for saved opponents with created profiles
+  └─ Session totalHands++
+```
 
-### Win Rate
-```dart
-winRate% = (wonHands / handsPlayed) * 100
-```
-- Only count hands where player VPIP'd
-
-### Aggression Factor
-```dart
-AF = aggressiveActions / passiveActions
-AF = pfrCount / (vpipCount - pfrCount)
-```
+**CRITICAL**: Stats must be updated in ONE place only. Previously had double-counting bug where both `FirebaseService._updateUserStatsFromHand()` and `PokerSessionManager._updateOptimizedStats()` updated stats.
 
 ---
 
 ## Key Services
 
-### FirebaseService (`lib/services/firebase_service.dart`)
-- `createSession()` - Create new poker session
-- `saveHand()` - Save completed hand to Firestore
-- `endSession()` - End current session
-- `getAllSessions()` - Fetch all user sessions
-- `_updateUserStatsFromHand()` - Incrementally update user stats
-- `_updateOpponentStatsFromHand()` - Incrementally update opponent stats
-- `_didPlayerThreeBet()` - Detect if player 3-bet
+### Core Services
+| Service | File | Purpose |
+|---------|------|---------|
+| FirebaseService | `lib/services/firebase_service.dart` (1631 lines) | Session/hand CRUD, stats orchestration |
+| LocalStorageService | `lib/services/local_storage_service.dart` | SQLite v13 mirror of Firebase |
+| UserStatsService | `lib/services/user_stats_service.dart` | Atomic user stat transactions |
+| OpponentStatsService | `lib/services/opponent_stats_service.dart` | Atomic opponent stat transactions |
+| StatsCalculator | `lib/services/stats_calculator.dart` | Pure stat detection functions (testable) |
+| PlayStyleDetector | `lib/services/play_style_detector.dart` | Player classification |
+| BankrollService | `lib/services/bankroll_service.dart` | Bankroll goals + stats aggregation |
+| AuthService | `lib/services/auth_service.dart` | Firebase Auth wrapper |
 
-### LocalStorageService (`lib/services/local_storage_service.dart`)
-- Mirrors FirebaseService operations for offline backup
-- Uses SharedPreferences for persistence
-- `saveHand()`, `getUserSessions()`, etc.
+### Club/Dealer Services
+| Service | File | Purpose |
+|---------|------|---------|
+| ClubService | `lib/services/club_service.dart` | Club CRUD, membership, roles |
+| EventService | `lib/services/event_service.dart` | Event lifecycle, rankings |
+| DealerService | `lib/services/dealer_service.dart` | Dealer sessions, hand management |
+| SeatService | `lib/services/seat_service.dart` | QR-based seat assignments |
+| TableService | `lib/services/table_service.dart` | Table management |
+| ClubNotificationService | `lib/services/club_notification_service.dart` | Club notifications |
+| WaitlistService | `lib/services/waitlist_service.dart` | Cash game waitlist |
 
-### UserStatsService (`lib/services/user_stats_service.dart`)
-- `getUserStats()` - Fetch user stats document
-- `updateStatsAtomic()` - Atomic increment/decrement operations
-- Uses Firestore transactions for consistency
+### Voice/Real-time Services
+| Service | File | Purpose |
+|---------|------|---------|
+| CloudSpeechService | `lib/services/cloud_speech_service.dart` | Voice recognition (2.5s segments → Deepgram) |
+| SonioxService | `lib/services/soniox_service.dart` | Direct Soniox WebSocket with poker context |
+| WebSocketService | `lib/services/websocket_service.dart` | Socket.IO real-time sync |
+| ActionParser | `lib/services/action_parser.dart` | Parse speech transcripts to poker actions |
 
-### BankrollService (`lib/services/bankroll_service.dart`)
-- `getCurrentBankroll()`, `setBankrollGoal()`
-- `getPlayerStatistics()` - Aggregates stats from UserStatsService
-- **IMPORTANT**: Calculates VPIP/PFR/3-bet using `totalHands`
+### Other Services
+| Service | File | Purpose |
+|---------|------|---------|
+| SubscriptionService | `lib/services/subscription_service.dart` | RevenueCat integration |
+| FCMService | `lib/services/fcm_service.dart` | Push notifications (fire-and-forget!) |
+| DeepLinkService | `lib/services/deep_link_service.dart` | Email invitation deep links |
+| AiAnalyzerService | `lib/services/ai_analyzer_service.dart` | Hand analysis API calls |
 
-### OpponentService (`lib/services/opponent_service.dart`)
-- `getOrCreateOpponent()` - Get or create opponent by name
-- `getOpponentById()`, `getAllOpponents()`
+---
 
-### OpponentStatsService (`lib/services/opponent_stats_service.dart`)
-- Same structure as UserStatsService but for opponents
-- Tracks per-opponent statistics
+## Key Models
 
-### AuthService (`lib/services/auth_service.dart`)
-- Firebase Authentication wrapper
-- `currentUser`, `userId`, `userDisplayName`
+| Model | File | Purpose |
+|-------|------|---------|
+| HandRecord, ActionRecord, PokerSessionManager | `lib/models/hand_state_machine.dart` | Hand/session state machine |
+| PokerGameState, PlayerState | `lib/models/poker_game_state.dart` | Game state, player tracking |
+| GameType, PlayerAction, BettingRound | `lib/models/game_types.dart` | Core enums |
+| UserStats | `lib/models/user_stats.dart` | 7 metrics + position breakdowns |
+| OpponentStats | `lib/models/opponent_stats.dart` | Same structure for opponents |
+| Opponent, PlayerType | `lib/models/opponent.dart` | Opponent profile + classification |
+| ClubEvent | `lib/models/club_event.dart` | Event data model |
+| EventRanking | `lib/models/event_ranking.dart` | Live ranking data |
+
+---
+
+## Navigation
+
+### Bottom Navigation Bar (`lib/widgets/global_bottom_nav_bar.dart`)
+- **Home** → HomeScreen
+- **Opponents** → MyOpponentsScreen
+- **+FAB** (center) → LoggingModeSelectionScreen
+- **Sessions** → SessionHistoryScreen
+- **Profile** → ProfileScreen
+
+### Key Screens
+| Screen | File | Notes |
+|--------|------|-------|
+| Home | `lib/screens/home_screen.dart` | Bankroll, activity, events, club links |
+| Hand Logging | `lib/screens/poker_hand_screen.dart` | Main gameplay interface |
+| Hand Details | `lib/screens/hand_actions_screen.dart` | Review hand with AI analysis |
+| Statistics | `lib/screens/statistics_screen.dart` | Overview only (tabs removed) |
+| Session History | `lib/screens/session_history_screen.dart` | Cash/Tournament tabs |
+| Opponents | `lib/screens/my_opponents_screen.dart` | Opponent list with stats |
+| Profile | `lib/screens/profile_screen.dart` | User profile, bankroll |
+| Seat Setup | `lib/screens/seat_setup_screen.dart` | Table config with visual layout |
+| Logging Mode | `lib/screens/logging_mode_selection_screen.dart` | Full vs quick logging |
+| Earnings Chart | `lib/screens/earnings_chart_screen.dart` | Landscape zoom/pan chart |
+| Dealer Table | `lib/screens/dealer/dealer_table_screen.dart` | Dealer voice + manual logging |
+| Club Dashboard | `lib/screens/club/club_dashboard_screen.dart` | Club overview, events |
+| Event Dashboard | `lib/screens/club/event_dashboard_screen.dart` | Live rankings |
+
+### Navigation Patterns
+- Push/pop with MaterialPageRoute
+- Named route `/player_session` for PlayerSessionScreen
+- Deep links: `pkr://` scheme for club/event/seat invitations
+- PopScope on poker_hand_screen prevents accidental back navigation
+
+---
+
+## Firebase Structure
+
+```
+users/{userId}/
+  uid, displayName, displayNameLower, email, createdAt, updatedAt
+
+user_stats/{userId}/
+  totalHands, handsPlayed, walksCount, vpipCount, pfrCount,
+  threeBetCount, threeBetOpportunity, fold3betCount, facing3BetCount,
+  cbetCount, cbetOpportunity, stealCount, stealOpportunity,
+  checkRaiseFlopCount, checkRaiseFlopOpportunity,
+  wonHands, totalSessions, totalPlayTimeMinutes,
+  positionHandsPlayed, positionVpipCount, positionPfrCount, positionThreeBetCount
+
+poker_sessions/{sessionId}/
+  userId, sessionName, smallBlind, bigBlind, hasBBante, playerCount,
+  ourSeatNumber, gameType, startTime, endTime, totalHands, handsLogged,
+  biggestPot, isIndividualSession, buyInAmount, totalBuyIn, startingStack,
+  currentStack, stackHistory, participantIds, isLive, isDealerSession
+  poker_hands/{handId}/
+    handNumber, buttonPosition, actions[], boardCards, ourHoleCards,
+    showdownData, potAmount, winnerId, playerNames, playerIds,
+    isChoppedPot, choppedWinners, tags, notes, isStarred
+
+opponents/{opponentId}/
+  name, notes, createdAt, lastSeenAt, color, userId
+
+opponent_stats/{opponentId}/
+  (same structure as user_stats)
+
+clubs/{clubId}/
+  name, ownerId, settings, address, phone, description
+  members/{memberId}/ - role, joinDate
+  tables/{tableId}/ - status, dealerId, qrCodes
+  events/{eventId}/ - status, tableIds, startTime, gameType, isPublic
+    final_standings/results - ranked player list
+  notifications/{notificationId}/
+
+dealers/{userId}/
+  accountType: 'player'|'dealer'|'admin', clubIds[]
+
+dealer_sessions/{sessionId}/
+  players, status, blinds, eventId
+  hands/{handId}/ - actions, board, winner
+
+seat_assignments/{id}/
+  clubId, tableId, seatNumber, playerId, playerName, status, chipStack
+
+user_notifications/{notificationId}/
+  (club notifications for specific users)
+```
 
 ---
 
@@ -282,130 +465,96 @@ AF = pfrCount / (vpipCount - pfrCount)
 ### BB Ante
 - **Immutable**: Set at session creation, cannot be changed mid-session
 - Stored as `hasBBante: bool` in session document
-- Applied automatically before each hand
+- BB ante amount included in player's `betThisRound` for pot calculations
 
 ### Blinds
-- Must be synchronized: SB and BB always set together
-- Stored in session document
+- SB and BB always set together
 - Can increase during tournament (level changes)
+- On preflop: BET is always invalid, RAISE is always valid
 
 ### Button Position
-- Tracks dealer button location (seat 1-9)
-- Used to calculate blinds positions
-- Rotates each hand
+- Locked during active hand (cannot be moved)
+- Rotates each hand automatically
+- Used to calculate SB/BB/UTG positions based on active players only
 
 ### Empty Seats
-- Some seats may be unoccupied (e.g., 6-handed at 9-max table)
-- Only occupied seats should be listed in hand histories
-- Blinds skip empty seats
+- Table supports up to 9 seats, some may be unoccupied
+- Blinds and action order skip empty/inactive seats
+- Player count uses active players, NOT total seats
 
 ---
 
-## UI Screens
+## Known Bug Patterns & Prevention
 
-### Home Screen (`lib/screens/home_screen.dart`)
-- Main navigation hub
-- Start new session
-- View statistics
-- Access opponents
+### Stats Bugs (Most Common)
+1. **Double-counting**: Stats must be updated in ONE place only (FirebaseService)
+2. **Wrong denominator**: Use `totalHands - walksCount` for VPIP/PFR, NOT `handsPlayed`
+3. **4-bet as 3-bet**: Track `playerAlreadyRaised` to distinguish 3-bet from 4-bet
+4. **All-in ignored**: Always use `isRaiseAction()`/`isBetAction()` helpers that include 'all-in'
+5. **Dealer mode zero stats**: Must pass `playerIds` map and update ALL players' stats
 
-### Hand Actions Screen (`lib/screens/hand_actions_screen.dart`)
-- Display single hand details
-- Show all actions by street
-- AI hand analysis button
-- View opponent cards at showdown
+### Hand Logging Bugs
+1. **Pot not initialized**: Must call `initializePot()` after `startNewHand()` in ALL code paths
+2. **River no winner dialog**: Handle river betting completion case explicitly
+3. **Preflop gesture**: Use `gameState.isValidAction()` not `hasBetThisRound` for raise detection
+4. **Hole cards lost**: Show hole cards dialog BEFORE hand completion, not after
+5. **Hand ID collision**: Always use timestamp suffix in hand document IDs
 
-### Statistics Screen (`lib/screens/statistics_screen.dart`)
-- **REMOVED**: Tabs (Sessions, Overview, Opponents)
-- **NOW**: Only shows Overview content directly
-- Displays: Play style, VPIP, PFR, win rate, etc.
+### Position Bugs
+1. **UTG wrong seat**: Use active player count, NOT total seats (9)
+2. **Position after skip**: Skip button must call `sessionManager.startHand()` to recalculate
+3. **Calculate once**: Store position name in action records at hand start, never recalculate
 
-### Poker Hand Screen (`lib/screens/poker_hand_screen.dart`)
-- Main screen during hand logging
-- Action buttons (fold, check, call, bet, raise)
-- Board card input
-- Pot tracking
+### Session Bugs
+1. **Field name mismatch**: Ensure save and read use same field names (totalHands vs handsLogged)
+2. **Final stack lost**: Call `addFinalStackEntry()` before `endSession()`
+3. **Duplicate sessions**: Only ONE code path should create poker_sessions records
+4. **Non-player sessions**: Check `participantIds` before updating stats for live sessions
 
-### Seat Setup Screen (`lib/screens/seat_setup_screen.dart`)
-- Configure table layout
-- Set button position
-- Assign player names
-- Set starting stacks
+### UI Bugs
+1. **FAB hit testing**: Stack clipBehavior is visual only — add GestureDetector within Row bounds
+2. **Controller disposal crash**: Move `setState()` to `.then()` callback after dialog closes
+3. **Cache staleness**: Static caches must be invalidated when data changes
+4. **Gradient harshness**: Apply 0.6 opacity to ALL gradient colors, use elliptical shape
 
----
-
-## Recent Major Changes
-
-### ✅ Completed (Current State)
-1. **Statistics Screen Tabs Removed**
-   - Removed Sessions, Overview, Opponents tabs
-   - Now shows only Overview content
-   - File: `lib/screens/statistics_screen.dart`
-
-2. **BB Ante Made Immutable**
-   - Cannot change after session starts
-   - Set only in session creation dialog
-   - Files: Multiple dialogs and screens
-
-3. **Button Mode Feature Removed**
-   - Removed "Button View" toggle
-   - Removed associated UI elements
-   - File: `lib/screens/seat_setup_screen.dart`
-
-4. **VPIP/PFR/3-Bet Calculations Fixed**
-   - Changed denominator from `handsPlayed` to `totalHands`
-   - Fixed in: `lib/services/bankroll_service.dart`
-   - Now correctly shows percentages (e.g., 42% not 100%)
-
-5. **3-Bet Detection Logic Fixed**
-   - Old: Counted if player raised 2+ times (wrong)
-   - New: Detects re-raise after seeing another raise (correct)
-   - Added `_didPlayerThreeBet()` function
-   - File: `lib/services/firebase_service.dart` (lines 904-934)
-
-6. **Debug Logs Cleaned Up**
-   - Commented out most debug print statements
-   - Kept only critical logs
-   - Files: Multiple service files
+### Auth/Network Bugs
+1. **Auto-logout**: Firebase authStateChanges emits null on network issues → add 3s recovery delay
+2. **FCM blocking**: ALL FCM operations must be fire-and-forget with 5s timeouts using `unawaited()`
+3. **Blind posting stale**: Always post blinds with CURRENT player list, not previous hand's
 
 ---
 
-## Common Issues & Solutions
+## Testing
 
-### Issue: VPIP showing 100% or incorrect values
-**Cause**: Using `handsPlayed` as denominator instead of `totalHands`
-**Solution**: Always use `totalHands` for VPIP/PFR/3-bet percentages
+### Test Files (`test/`)
+- `stats_calculator_test.dart` — 950+ lines, 95+ test cases for all 7 metrics
+- `user_stats_test.dart` — 388 lines, percentage calculations and edge cases
+- `all_in_test.dart` + `all_in_edge_cases_test.dart` — All-in logic
+- `side_pot_calculator_test.dart` — Side pot calculations
+- `mock_hand_actions.dart` — Reusable test fixtures
+- `multi_pot_dialog_selection_test.dart` — Dialog selection logic
 
-### Issue: 3-bet count always 0
-**Cause**: Wrong detection logic (checking if player raised 2+ times)
-**Solution**: Use `_didPlayerThreeBet()` to detect sequential re-raises
-
-### Issue: Play style shows "N/A" or "Unknown"
-**Cause**: Not enough hands (< 50) or missing `handsPlayed` field
-**Solution**: Wait for 50+ hands, ensure stats are updating
-
-### Issue: Player actions missing in hand history
-**Cause**: Actions not logged during gameplay
-**Solution**: Ensure all player actions are recorded, including folds
-
-### Issue: Stack sizes incorrect
-**Cause**: Not extracting from `playerStack` field in actions
-**Solution**: Extract stacks from action records, not using defaults
-
----
-
-## Testing Checklist
-
-When testing new features:
+### Testing Checklist
 - [ ] Test with both cash and tournament games
 - [ ] Test with different player counts (2-9 players)
 - [ ] Test with empty seats (e.g., 6-handed at 9-max)
 - [ ] Verify stats update correctly after each hand
-- [ ] Check VPIP/PFR/3-bet calculations
+- [ ] Check VPIP/PFR/3-bet calculations use correct denominators
 - [ ] Verify play style detection with 50+ hands
 - [ ] Test with BB ante enabled and disabled
 - [ ] Test blind level changes in tournaments
 - [ ] Verify local storage fallback when offline
+- [ ] Test all-in with side pots and chopped pots
+- [ ] Test dealer mode stats track for all players
+- [ ] Verify navigation confirmation on active session
+
+### Common Debug Commands
+```bash
+flutter clean && flutter pub get
+flutter run --debug
+flutter test
+flutter test test/services/stats_calculator_test.dart
+```
 
 ---
 
@@ -415,162 +564,31 @@ When testing new features:
 - Classes: PascalCase (`HandStateManager`)
 - Files: snake_case (`hand_state_machine.dart`)
 - Variables: camelCase (`heroSeatNumber`)
-- Constants: SCREAMING_SNAKE_CASE (`DEFAULT_STACK`)
+- Constants: camelCase or SCREAMING_SNAKE_CASE
 
 ### Debug Logging
-- Comment out debug logs in production
-- Keep critical error logs
-- Use format: `// print('Debug message')`
+- Comment out debug logs in production: `// print('Debug message')`
+- Keep critical error logs only
+- Never commit active print statements
 
-### Comments
-- Document complex logic
-- Explain "why" not "what"
-- Update comments when changing code
-
----
-
-## Firebase Structure
-
-```
-users/
-  {userId}/
-    email, displayName, createdAt, stats
-
-poker_sessions/
-  {sessionId}/
-    userId, smallBlind, bigBlind, hasBBante, playerCount,
-    gameType, startTime, endTime, totalHands, isIndividualSession,
-    buyInAmount, totalBuyIn, startingStack, stackHistory
-
-    poker_hands/
-      {handId}/
-        handNumber, buttonPosition, actions[], boardCards,
-        ourHoleCards, showdownData, potAmount, winnerId, etc.
-
-user_stats/
-  {userId}/
-    totalHands, handsPlayed, wonHands, vpipCount, pfrCount,
-    threeBetCount, totalSessions, totalPlayTimeMinutes
-
-opponents/
-  {opponentId}/
-    name, userId, gamesPlayed, lastPlayed
-
-opponent_stats/
-  {opponentId}/
-    Same structure as user_stats
-```
+### Design System Usage
+- Always use `AppColors`, `AppTypography`, `AppSpacing`, `AppDecorations` constants
+- Use design system components (GlassyCard, PrimaryButton, etc.) over custom containers
+- New screens must use Modern Dark theme (AppTheme), not legacy PokerFriendTheme
 
 ---
 
-## Important Files Reference
-
-### Models
-- `lib/models/hand_state_machine.dart` - Hand and session state management
-- `lib/models/poker_game_state.dart` - Player state and game state
-- `lib/models/game_types.dart` - Enums for game types, actions, streets
-
-### Services
-- `lib/services/firebase_service.dart` - Firebase operations (CRITICAL)
-- `lib/services/local_storage_service.dart` - Local backup
-- `lib/services/user_stats_service.dart` - User statistics
-- `lib/services/bankroll_service.dart` - Bankroll and aggregated stats
-- `lib/services/opponent_service.dart` - Opponent management
-- `lib/services/opponent_stats_service.dart` - Opponent stats
-- `lib/services/auth_service.dart` - Authentication
-
-### Screens
-- `lib/screens/home_screen.dart` - Main navigation
-- `lib/screens/poker_hand_screen.dart` - Hand logging interface
-- `lib/screens/hand_actions_screen.dart` - Hand detail view
-- `lib/screens/statistics_screen.dart` - User statistics (Overview only)
-- `lib/screens/seat_setup_screen.dart` - Table configuration
-
----
-
-## Version History
-
-### Recent Sessions
-1. **BB Ante Immutability & Button Mode Removal**
-   - Made BB Ante immutable after session start
-   - Removed Button Mode feature completely
-   - Synchronized blind changes
-
-2. **Statistics Fixes**
-   - Fixed VPIP/PFR calculations (use totalHands not handsPlayed)
-   - Fixed 3-bet detection (re-raise logic)
-   - Cleaned up debug logs
-   - Fixed play style detection
-
-3. **Copy Hand Feature** (Discarded)
-   - Attempted to add hand history export
-   - Issues with GTO Wizard format compatibility
-   - Feature removed, code reverted
-
----
-
-## Future Considerations
-
-### Potential Features
-- Advanced filtering for hand history
-- Multi-table support
-- Tournament structure tracking
-- Graph/chart visualizations
-- Export to CSV/Excel
-- Backup/restore functionality
-- Hand replay animations
-
-### Known Limitations
-- No real-time sync between devices
-- Limited offline functionality
-- No hand history import from other sources
+## Open Items / Known Limitations
+- Position mismatch between hand card and details view (needs investigation)
+- Deep link app-not-installed handling not implemented
+- Hand logging screen not yet migrated to new design system (plan exists)
+- Voice speaker enrollment blocked (Soniox WebSocket doesn't support speaker ID)
+- No real-time sync between user devices
 - Play style detection requires 50+ hands
+- Session analytics endpoint not deployed on backend
 
 ---
 
-## Troubleshooting
-
-### Stats not updating
-1. Check if Firebase is connected
-2. Verify user is authenticated
-3. Check if hand was saved successfully
-4. Look for errors in console
-
-### App crashes on hand completion
-1. Check all required fields are present
-2. Verify action amounts are valid
-3. Check playerStack values exist
-4. Review recent code changes
-
-### Incorrect statistics
-1. Verify calculation logic in BankrollService
-2. Check UserStatsService atomic updates
-3. Review firebase_service.dart hand processing
-4. Run StatsVerificationService to debug
-
----
-
-## Support & Debugging
-
-### Debug Tools
-- `StatsVerificationService` - Verify stats calculations
-- Firebase Console - View/edit Firestore data
-- Flutter DevTools - Performance and state inspection
-
-### Common Debug Commands
-```bash
-flutter clean
-flutter pub get
-flutter run --debug
-```
-
-### Log Locations
-- User stats: Firestore `user_stats/{userId}`
-- Hands: Firestore `poker_sessions/{sessionId}/poker_hands`
-- Local: SharedPreferences (device storage)
-
----
-
-**Last Updated**: January 2026
+**Last Updated**: March 2026
 **Maintained by**: User + Claude
-**Update this file**: After major feature additions or architectural changes
+**Update this file**: After major feature additions, architectural changes, or new bug patterns
