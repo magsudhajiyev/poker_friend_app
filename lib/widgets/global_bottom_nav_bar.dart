@@ -186,13 +186,18 @@ class GlobalBottomNavBar extends StatelessWidget {
               ),
             ),
             // Label
-            Text(
-              label,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                color: color,
-                height: 1.47,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: color,
+                  height: 1.47,
+                ),
               ),
             ),
           ],
