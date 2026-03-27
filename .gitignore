@@ -55,9 +55,6 @@ android/app/google-services.json
 # Environment variables (contain API keys and secrets)
 .env
 
-# Development diary and notes
-diary/
-
 # Node.js dependencies
 node_modules/table_1_qr.html
 node_modules/
