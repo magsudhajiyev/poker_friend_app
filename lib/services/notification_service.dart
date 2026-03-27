@@ -34,7 +34,7 @@ class NotificationService {
       );
 
       await _notifications.initialize(
-        initSettings,
+        settings: initSettings,
         onDidReceiveNotificationResponse: _onNotificationTapped,
       );
 
@@ -154,11 +154,11 @@ class NotificationService {
   }) async {
     try {
       await _notifications.zonedSchedule(
-        id,
-        title,
-        body,
-        tz.TZDateTime.from(scheduledDate, tz.local),
-        NotificationDetails(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'poker_events',
             'Poker Events',
@@ -180,8 +180,6 @@ class NotificationService {
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload,
       );
     } catch (e) {
@@ -193,8 +191,8 @@ class NotificationService {
   /// Cancel all notifications for an event
   static Future<void> cancelEventNotifications(String eventId) async {
     try {
-      await _notifications.cancel(_get24HourNotificationId(eventId));
-      await _notifications.cancel(_get1HourNotificationId(eventId));
+      await _notifications.cancel(id: _get24HourNotificationId(eventId));
+      await _notifications.cancel(id: _get1HourNotificationId(eventId));
       print('✅ Cancelled notifications for event: $eventId');
     } catch (e) {
       print('❌ Error cancelling notifications: $e');
@@ -241,10 +239,10 @@ class NotificationService {
       }
 
       await _notifications.show(
-        999999, // Test notification ID
-        '🧪 Test Notification',
-        'If you see this, notifications are working!',
-        NotificationDetails(
+        id: 999999, // Test notification ID
+        title: '🧪 Test Notification',
+        body: 'If you see this, notifications are working!',
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'poker_events',
             'Poker Events',

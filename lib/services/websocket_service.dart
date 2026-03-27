@@ -109,12 +109,7 @@ class WebSocketService {
       _updateState(WebSocketConnectionState.disconnected);
     });
 
-    _socket!.onReconnecting((_) {
-      // print('WebSocket reconnecting');
-      _updateState(WebSocketConnectionState.reconnecting);
-    });
-
-    _socket!.onReconnect((_) {
+_socket!.onReconnect((_) {
       // print('WebSocket reconnected');
       _updateState(WebSocketConnectionState.connected);
     });

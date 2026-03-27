@@ -558,7 +558,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                             }
 
                             return SideTitleWidget(
-                              axisSide: meta.axisSide,
+                              meta: meta,
                               space: 8.0,
                               child: Text(
                                 label,

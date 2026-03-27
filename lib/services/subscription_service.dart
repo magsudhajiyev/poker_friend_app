@@ -136,7 +136,7 @@ class SubscriptionService {
       await LoggerService.info('🛒 Purchasing package: ${package.identifier}');
 
       final result = await Purchases.purchasePackage(package);
-      _updatePremiumStatus(result);
+      _updatePremiumStatus(result.customerInfo);
 
       if (_isPremium) {
         await LoggerService.info('✅ Purchase successful - Premium activated');
