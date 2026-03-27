@@ -381,70 +381,94 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     final displayOpponents = filteredOpponents;
 
     if (displayOpponents.isEmpty) {
-      return Center(
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
+        child: Align(
+        alignment: Alignment.topCenter,
         child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 0),
-          padding: EdgeInsets.all(32),
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
           decoration: BoxDecoration(
-            color: Color(0xFF131616),
-            borderRadius: BorderRadius.circular(8),
+            color: const Color(0xFF101115),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icon section
+              // Icon
               _buildIcon(
                 'icons/figma_icons/opponents.svg',
                 24,
-                Colors.white,
+                const Color(0xFF89F1EC),
               ),
-              SizedBox(height: 16),
-              // Text section
-              Text(
-                searchQuery.isEmpty ? 'No Opponents yet' : 'No Results',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 17,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+              const SizedBox(height: 6),
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  searchQuery.isEmpty ? 'No Opponents Yet' : 'No Results',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
                 ),
               ),
-              SizedBox(height: 8),
-              Text(
-                searchQuery.isEmpty
-                  ? 'Add opponents to track their playing\nstyles and statistics'
-                  : 'Try a different search term',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 14,
-                  color: Color(0xFF89F1EC),
-                  fontWeight: FontWeight.w400,
-                  height: 1.4,
+              // Subtitle
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  searchQuery.isEmpty
+                    ? 'Opponents to track their playing styles and statistics'
+                    : 'Try a different search term',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    color: const Color(0xFFD3FFFD),
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
                 ),
               ),
               if (searchQuery.isEmpty) ...[
-                SizedBox(height: 24),
-                // Button section
+                const SizedBox(height: 24),
+                // Add Opponent button
                 SizedBox(
                   width: double.infinity,
-                  height: 48,
                   child: ElevatedButton(
                     onPressed: _showAddOpponentDialog,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF89F1EC),
                       foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(110),
                       ),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
                       elevation: 0,
                     ),
-                    child: Text(
-                      'Add Opponent',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildIcon(
+                          'icons/figma_icons/plus.svg',
+                          24,
+                          Colors.black,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Add Opponent',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                            letterSpacing: -0.5,
+                            height: 24 / 17,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -452,6 +476,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
             ],
           ),
         ),
+      ),
       );
     }
 

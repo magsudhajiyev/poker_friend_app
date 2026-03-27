@@ -255,9 +255,9 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   Offset _getSeatPosition(int seatNumber, Size tableSize) {
     final double centerX = tableSize.width / 2;
     final double centerY = tableSize.height / 2;
-    // Match the new table dimensions (70% width, 80% height) - vertical oval
-    final double radiusX = (tableSize.width * 0.70) / 2;
-    final double radiusY = (tableSize.height * 0.80) / 2;
+    // Match the table dimensions - vertical oval
+    final double radiusX = (tableSize.width * 0.80) / 2;
+    final double radiusY = (tableSize.height * 0.88) / 2;
 
     final double startAngle = math.pi * 1.25;
     final double angleStep = (2 * math.pi) / 9;
@@ -267,6 +267,132 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     final y = centerY + radiusY * math.sin(angle);
 
     return Offset(x, y);
+  }
+
+  /// Returns the layout variant for a seat number:
+  /// - 'top': seat 1 (label below)
+  /// - 'right': seats on the left side of table (label to the left of circle)
+  /// - 'left': seats on the right side of table (label to the right of circle)
+  String _getSeatLayoutVariant(int seatNumber) {
+    if (seatNumber == 1) return 'top';
+    // Left side of table: label goes to the right of circle (away from table)
+    if ([6, 7, 8, 9].contains(seatNumber)) return 'right';
+    // Right side of table: label goes to the left of circle (away from table)
+    return 'left';
+  }
+
+  Widget _buildSeatCircle(int seatNumber, bool isActive) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: isActive ? Colors.black : const Color(0xFF2A2A2E),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isActive
+              ? const Color(0xFF89F1EC)
+              : const Color(0xFF89F1EC).withOpacity(0.3),
+          width: 2,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          '$seatNumber',
+          style: GoogleFonts.inter(
+            color: isActive ? Colors.white : Colors.white.withOpacity(0.4),
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+            height: 1.45,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSeatLabel(int seatNumber, bool isActive) {
+    // Check if name is a default "Player N" pattern — if so, just show "Player"
+    final name = nameControllers[seatNumber]?.text ?? '';
+    final isDefaultName = name.isEmpty || RegExp(r'^Player\s*\d*$').hasMatch(name);
+    final displayName = isDefaultName
+        ? 'Player'
+        : (name.length > 8 ? '${name.substring(0, 8)}...' : name);
+    return Text(
+      displayName,
+      style: GoogleFonts.ibmPlexSans(
+        color: isActive ? Colors.white : Colors.white.withOpacity(0.4),
+        fontSize: 10,
+        fontWeight: FontWeight.w500,
+        height: 1.44,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  /// Build positioned seat widgets (circle + label) anchored so the circle
+  /// center is always at [position].
+  List<Widget> _buildPositionedSeatWidgets(int seatNumber, bool isActive, Offset position) {
+    const double circleR = 19.0; // half of 38
+    final variant = _getSeatLayoutVariant(seatNumber);
+
+    // Circle always centered at position
+    final circleWidget = Positioned(
+      left: position.dx - circleR,
+      top: position.dy - circleR,
+      child: GestureDetector(
+        onTap: () => _showSeatDialog(seatNumber),
+        child: _buildSeatCircle(seatNumber, isActive),
+      ),
+    );
+
+    // Label positioned relative to circle based on variant
+    Widget labelWidget;
+    if (variant == 'top') {
+      // Label below circle, centered
+      labelWidget = Positioned(
+        left: position.dx - 30, // wide enough for label text
+        top: position.dy + circleR + 4,
+        child: SizedBox(
+          width: 60,
+          child: GestureDetector(
+            onTap: () => _showSeatDialog(seatNumber),
+            child: Center(child: _buildSeatLabel(seatNumber, isActive)),
+          ),
+        ),
+      );
+    } else if (variant == 'right') {
+      // Left-side seats (6,7,8,9): label to the right of circle
+      labelWidget = Positioned(
+        left: position.dx + circleR + 8,
+        top: position.dy - 7, // vertically center ~14px label
+        child: GestureDetector(
+          onTap: () => _showSeatDialog(seatNumber),
+          child: _buildSeatLabel(seatNumber, isActive),
+        ),
+      );
+    } else {
+      // Right-side seats (2,3,4,5): label to the left of circle
+      labelWidget = Positioned(
+        right: null,
+        left: position.dx - circleR - 8,
+        top: position.dy - 7,
+        child: GestureDetector(
+          onTap: () => _showSeatDialog(seatNumber),
+          child: Transform.translate(
+            offset: const Offset(0, 0),
+            child: DefaultTextStyle.merge(
+              textAlign: TextAlign.right,
+              child: FractionalTranslation(
+                translation: const Offset(-1.0, 0.0),
+                child: _buildSeatLabel(seatNumber, isActive),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return [circleWidget, labelWidget];
   }
 
   void _showSeatDialog(int seatNumber) {
@@ -420,9 +546,23 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                 onTap: _areSeatChangesLocked() ? null : () {
                                   setDialogState(() {
                                     tempIsActive = !tempIsActive;
-                                    if (tempIsActive && tempName.isEmpty) {
-                                      tempName = 'Player $seatNumber';
-                                      tempNameController.text = tempName;
+                                    if (tempIsActive) {
+                                      if (tempName.isEmpty) {
+                                        tempName = 'Player $seatNumber';
+                                        tempNameController.text = tempName;
+                                      }
+                                    } else {
+                                      // Reset to defaults when deactivating
+                                      tempName = '';
+                                      tempNameController.text = '';
+                                      final defaultStack = widget.startingStack != null
+                                          ? (widget.gameType == GameType.cash
+                                              ? widget.startingStack!.toStringAsFixed(2)
+                                              : widget.startingStack!.toInt().toString())
+                                          : (widget.isCashGame ? '100.00' : '1500');
+                                      tempStack = defaultStack;
+                                      tempStackController.text = defaultStack;
+                                      tempIsMySeat = false;
                                     }
                                   });
                                 },
@@ -800,23 +940,38 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
           // Apply all changes
           seatActive[seatNumber] = isActive;
-          nameControllers[seatNumber]?.text = name;
-          stackControllers[seatNumber]?.text = stack;
 
-          if (isMySeat && selectedSeat != seatNumber) {
-            // Restore defaults for previous seat if changing my seat
-            if (selectedSeat != null && selectedSeat != seatNumber) {
-              _restoreDefaultsForPreviousSeat(selectedSeat);
+          if (!isActive) {
+            // Reset seat to defaults when deactivated
+            nameControllers[seatNumber]?.text = '';
+            final defaultStack = widget.startingStack != null
+                ? (widget.gameType == GameType.cash
+                    ? widget.startingStack!.toStringAsFixed(2)
+                    : widget.startingStack!.toInt().toString())
+                : (widget.isCashGame ? '100.00' : '1500');
+            stackControllers[seatNumber]?.text = defaultStack;
+            widget.sessionManager?.setPlayerName(seatNumber, 'Player $seatNumber');
+
+            // If this was my seat, clear selection
+            if (selectedSeat == seatNumber) {
+              selectedSeat = null;
             }
-            selectedSeat = seatNumber;
-            widget.sessionManager?.setPlayerName(seatNumber, name);
-          } else if (!isMySeat && originalSelectedSeat == seatNumber) {
-            // Unchecked "this is my seat"
-            selectedSeat = null;
-          }
+          } else {
+            nameControllers[seatNumber]?.text = name;
+            stackControllers[seatNumber]?.text = stack;
 
-          // Update session manager
-          if (isActive) {
+            if (isMySeat && selectedSeat != seatNumber) {
+              // Restore defaults for previous seat if changing my seat
+              if (selectedSeat != null && selectedSeat != seatNumber) {
+                _restoreDefaultsForPreviousSeat(selectedSeat);
+              }
+              selectedSeat = seatNumber;
+              widget.sessionManager?.setPlayerName(seatNumber, name);
+            } else if (!isMySeat && originalSelectedSeat == seatNumber) {
+              // Unchecked "this is my seat"
+              selectedSeat = null;
+            }
+
             widget.sessionManager?.setPlayerName(seatNumber, name);
           }
         });
@@ -935,8 +1090,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           // Table with teal border - vertical oval shape
                           Center(
                             child: Container(
-                              width: constraints.maxWidth * 0.70,
-                              height: constraints.maxHeight * 0.80,
+                              width: constraints.maxWidth * 0.80,
+                              height: constraints.maxHeight * 0.88,
                               decoration: BoxDecoration(
                                 color: Color(0xFF0A0A0C),
                                 borderRadius: BorderRadius.circular(200),
@@ -965,62 +1120,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
                             return Stack(
                               children: [
-                                // Seat circle with label below
-                                Positioned(
-                                  left: position.dx - 24,
-                                  top: position.dy - 24,
-                                  child: GestureDetector(
-                                    onTap: () => _showSeatDialog(seatNumber),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        // Seat circle
-                                        Container(
-                                          width: 48,
-                                          height: 48,
-                                          decoration: BoxDecoration(
-                                            color: !isActive
-                                                ? Color(0xFF2A2A2E) // Gray for empty seats
-                                                : isSelected
-                                                    ? Color(0xFF62E3BC) // Teal for selected
-                                                    : Colors.white, // White for active
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              '$seatNumber',
-                                              style: GoogleFonts.ibmPlexSans(
-                                                color: !isActive
-                                                    ? Colors.white.withOpacity(0.4) // Dim text for empty
-                                                    : Colors.black,
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 18,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        // Player label
-                                        Text(
-                                          isActive && nameControllers[seatNumber]!.text.isNotEmpty
-                                              ? (nameControllers[seatNumber]!.text.length > 8
-                                                  ? '${nameControllers[seatNumber]!.text.substring(0, 8)}...'
-                                                  : nameControllers[seatNumber]!.text)
-                                              : 'Player',
-                                          style: GoogleFonts.ibmPlexSans(
-                                            color: isActive
-                                                ? Colors.white.withOpacity(0.8)
-                                                : Colors.white.withOpacity(0.4), // Dim label for empty
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                                // Seat circle + label
+                                ..._buildPositionedSeatWidgets(seatNumber, isActive, position),
                                 // Button positioned towards center
                                 if (isButtonSeat)
                                   Positioned(
@@ -1112,7 +1213,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
                 // Bottom buttons
                 Padding(
-                  padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
                   child: Column(
                     children: [
                       // Start Session button

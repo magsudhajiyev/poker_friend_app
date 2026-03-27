@@ -1044,7 +1044,6 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         // Button (mint background per Figma)
         SizedBox(
           width: double.infinity,
-          height: 48,
           child: ElevatedButton(
             onPressed: () {
               // Check if there are hands before navigating
@@ -1063,11 +1062,12 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF89F1EC),
+              backgroundColor: const Color(0xFF89F1EC),
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(110),
               ),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
               elevation: 0,
             ),
             child: Text(
@@ -1077,6 +1077,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 fontWeight: FontWeight.w600,
                 color: Colors.black,
                 letterSpacing: -0.5,
+                height: 24 / 17,
               ),
             ),
           ),
@@ -1091,14 +1092,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: BoxDecoration(
-          color: Color(0xFF131616),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
+          color: const Color(0xFF101115),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
           ),
         ),
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1107,65 +1108,73 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 alignment: Alignment.topRight,
                 child: GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: _buildIcon(
-                    'icons/figma_icons/close.svg',
-                    24,
-                    Colors.white,
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Center(
+                      child: _buildIcon(
+                        'icons/figma_icons/close.svg',
+                        15,
+                        Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              SizedBox(height: 8),
-              // Info icon
+              const SizedBox(height: 34),
+              // Ghost icon
               _buildIcon(
-                'icons/figma_icons/info.svg',
-                44,
-                Colors.white,
+                'icons/figma_icons/ghost.svg',
+                24,
+                const Color(0xFFB3B4B6),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 18),
               // Title
               Text(
                 'No Hands Found',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   color: Colors.white,
-                  height: 1.4,
+                  height: 1.44,
                 ),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 7),
               // Description
               Text(
-                'You haven\'t played any hands with "${_opponent.name}" yet',
+                'You haven\'t played any hands with\n"${_opponent.name}" yet',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF89F1EC),
-                  height: 1.5,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFFCCCDCE),
+                  height: 1.44,
                 ),
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 34),
               // Close button
               SizedBox(
                 width: double.infinity,
-                height: 48,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF4B9A96),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(110),
                     ),
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
                     elevation: 0,
                   ),
                   child: Text(
                     'Close',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
                       color: Colors.black,
+                      letterSpacing: -0.5,
+                      height: 24 / 17,
                     ),
                   ),
                 ),
