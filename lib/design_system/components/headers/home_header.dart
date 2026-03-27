@@ -188,26 +188,29 @@ class HomeHeader extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Filter chip (pill shape)
+                      // Filter chip (Figma node 393:6752 - Label/Outline)
+                      // Specs: border white 1px, rounded-140px, px-10, py-5, text centered
                       if (filterLabel != null)
                         GestureDetector(
                           onTap: onFilterPressed,
                           child: Container(
-                            height: 32,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 6,
+                              horizontal: 10,
+                              vertical: 5,
                             ),
                             decoration: BoxDecoration(
                               border: Border.all(
                                 color: Colors.white,
                                 width: 1,
                               ),
-                              borderRadius: BorderRadius.circular(78),
+                              borderRadius: BorderRadius.circular(140),
                             ),
-                            child: Text(
-                              filterLabel!,
-                              style: AppTypography.labelChip(),
+                            child: Center(
+                              child: Text(
+                                filterLabel!,
+                                style: AppTypography.labelChip(),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           ),
                         ),

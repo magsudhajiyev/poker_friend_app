@@ -21,7 +21,8 @@ class StatListRow extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        // Figma: px-4, py-8 (inside Table-list container which has px-16)
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

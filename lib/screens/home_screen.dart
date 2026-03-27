@@ -1559,28 +1559,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Recent Activity headline
+        // Recent Activity headline (Figma: Card Header, h-40, px-16, py-8)
         SectionHeadline(title: 'Recent Activity'),
 
-        // Stats rows with separators
-        StatListRow(
-          label: 'Sessions',
-          value: '${playerStats['totalSessions'] ?? 0}',
-        ),
-        const ListSeparator(),
-        StatListRow(
-          label: 'Win Rate',
-          value: '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
-        ),
-        const ListSeparator(),
-        StatListRow(
-          label: 'Hours',
-          value: '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(1)}',
-        ),
-        const ListSeparator(),
-        StatListRow(
-          label: 'Play Style',
-          value: _getPlayStyleName(),
+        // Table-list container (Figma node I393:6764;20:550: px-16, py-8)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            children: [
+              // Stats rows with separators (Figma: gap-4 between items)
+              StatListRow(
+                label: 'Sessions',
+                value: '${playerStats['totalSessions'] ?? 0}',
+              ),
+              const SizedBox(height: 4),
+              const ListSeparator(),
+              const SizedBox(height: 4),
+              StatListRow(
+                label: 'Win Rate',
+                value: '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
+              ),
+              const SizedBox(height: 4),
+              const ListSeparator(),
+              const SizedBox(height: 4),
+              StatListRow(
+                label: 'Hours',
+                value: '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(1)}',
+              ),
+              const SizedBox(height: 4),
+              const ListSeparator(),
+              const SizedBox(height: 4),
+              StatListRow(
+                label: 'Play Style',
+                value: _getPlayStyleName(),
+              ),
+            ],
+          ),
         ),
       ],
     );
