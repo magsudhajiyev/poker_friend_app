@@ -1675,7 +1675,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Container(
-        height: 213,
         decoration: BoxDecoration(
           color: const Color(0xFF121F24),
           borderRadius: BorderRadius.circular(24),
@@ -1697,7 +1696,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             // Top-right subtle elliptical glow
             Positioned(
               top: -36,
-              left: 227,
+              right: -20,
               child: Container(
                 width: 212,
                 height: 140,
@@ -1714,7 +1713,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             // Bottom-left subtle elliptical glow
             Positioned(
-              top: 170,
+              bottom: -30,
               left: -15,
               child: Container(
                 width: 180,
@@ -1789,23 +1788,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
-                      const Spacer(),
+                      const SizedBox(height: 16),
                       // Bankroll amount
                       ImageFiltered(
                         imageFilter: _isBankrollHidden
                             ? ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10)
                             : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                        child: Text(
-                          '\$${currentBankroll.toInt()} of \$${bankrollGoal.toInt()}',
-                          style: GoogleFonts.familjenGrotesk(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            height: 1.0,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '\$${currentBankroll.toInt()} of \$${bankrollGoal.toInt()}',
+                            style: GoogleFonts.familjenGrotesk(
+                              fontSize: 40,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              height: 1.0,
+                            ),
+                            maxLines: 1,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 12),
                       // Remaining
                       ImageFiltered(
                         imageFilter: _isBankrollHidden
