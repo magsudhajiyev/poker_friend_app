@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
+import 'package:flutter_svg/flutter_svg.dart';
 import '../services/calendar_event_service.dart';
 import '../services/notification_service.dart';
 import '../services/club_service.dart';
@@ -11,7 +12,8 @@ import '../models/club_event.dart';
 import '../design_system/design_system.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/event_success_popup.dart';
-import 'club/event_detail_screen.dart';
+import 'club/event_detail_screen.dart' as club_detail;
+import 'event_detail_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -99,9 +101,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Header
+                      // Header - Overlay Header style
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                        padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -112,7 +114,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 width: 38,
                                 height: 38,
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFF2B2B2B),
+                                  color: Color(0xFF35373C),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Center(
@@ -125,11 +127,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               ),
                             ),
                             // Title
-                            Text(                              'New Event',
+                            Text(
+                              'New Event',
                               style: GoogleFonts.ibmPlexSans(
                                 color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.43,
                               ),
                             ),
                             // Confirm button
@@ -189,14 +193,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 width: 38,
                                 height: 38,
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFF2B2B2B),
+                                  color: Color(0xFF54E98A),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Center(
                                   child: Icon(
                                     Icons.check,
-                                    color: Colors.white,
-                                    size: 20,
+                                    color: Colors.black,
+                                    size: 16,
                                   ),
                                 ),
                               ),
@@ -204,15 +208,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 24),
                       // Form Card 1 - Input Fields
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFF131616),
-                            borderRadius: BorderRadius.circular(18),
+                            color: const Color(0xFF101115),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Column(
                             children: [
                               // Event Type Row
@@ -226,15 +231,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 },
                                 child: Container(
                                   key: eventTypeKey,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(                                        'Event Type',
+                                      Text(
+                                        'Event Type',
                                         style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w400,
+                                          color: const Color(0xFFD3FFFD),
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.44,
                                         ),
                                       ),
                                       Row(
@@ -242,16 +249,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                           Text(
                                             selectedType,
                                             style: GoogleFonts.ibmPlexSans(
-                                              color: Color(0xFFB9B9B9),
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w400,
+                                              color: Colors.white,
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.44,
                                             ),
                                           ),
                                           const SizedBox(width: 4),
                                           const Icon(
                                             Icons.unfold_more,
-                                            color: Color(0xFFB9B9B9),
-                                            size: 18,
+                                            color: Colors.white,
+                                            size: 24,
                                           ),
                                         ],
                                       ),
@@ -265,18 +273,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 controller: titleController,
                                 style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w400,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.44,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Title',
                                   hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: Color(0xFFB9B9B9),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF8C8C8C),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.44,
                                   ),
+                                  filled: false,
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 ),
                               ),
                               _buildSeparator(),
@@ -285,18 +298,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 controller: locationController,
                                 style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w400,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.44,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Location',
                                   hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: Color(0xFFB9B9B9),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF8C8C8C),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.44,
                                   ),
+                                  filled: false,
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 ),
                               ),
                               _buildSeparator(),
@@ -306,31 +324,36 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 keyboardType: TextInputType.number,
                                 style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w400,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.44,
                                 ),
                                 decoration: InputDecoration(
-                                  hintText: 'Buy in amount',
+                                  hintText: 'Buy-in amount',
                                   hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: Color(0xFFB9B9B9),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF8C8C8C),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.44,
                                   ),
+                                  filled: false,
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       // Form Card 2 - Date/Time
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2B2B2B),
+                            color: const Color(0xFF101115),
                             borderRadius: BorderRadius.circular(18),
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -338,11 +361,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Header
-                              Text(                                'Event Date and Time',
+                              Text(
+                                'Event Date and Time',
                                 style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.43,
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -354,11 +379,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               // Starts Row
                               Row(
                                 children: [
-                                  Text(                                    'Starts',
+                                  Text(
+                                    'Starts',
                                     style: GoogleFonts.ibmPlexSans(
                                       color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.44,
                                     ),
                                   ),
                                   const Spacer(),
@@ -378,15 +405,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF555555),
+                                        color: const Color(0xFF1B1E24),
                                         borderRadius: BorderRadius.circular(40),
                                       ),
                                       child: Text(
                                         DateFormat('d MMM yyyy').format(dialogSelectedDate),
                                         style: GoogleFonts.ibmPlexSans(
                                           color: Colors.white,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400,
                                         ),
                                       ),
                                     ),
@@ -403,7 +430,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                             data: Theme.of(context).copyWith(
                                               colorScheme: const ColorScheme.dark(
                                                 primary: Color(0xFF5CD9A4),
-                                                surface: Color(0xFF2B2B2B),
+                                                surface: Color(0xFF1B1E24),
                                               ),
                                             ),
                                             child: child!,
@@ -419,15 +446,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF555555),
+                                        color: const Color(0xFF1B1E24),
                                         borderRadius: BorderRadius.circular(40),
                                       ),
                                       child: Text(
                                         dialogSelectedTime.format(context),
                                         style: GoogleFonts.ibmPlexSans(
                                           color: Colors.white,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400,
                                         ),
                                       ),
                                     ),
@@ -454,9 +481,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Widget _buildSeparator() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       height: 1,
-      color: const Color(0xFF2A2A2A),
+      color: const Color(0xFF1C1F21),
     );
   }
 
@@ -966,7 +993,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final eventDates = events.map((e) => DateTime(e.date.year, e.date.month, e.date.day)).toSet();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF020005),
+      backgroundColor: const Color(0xFF02050B),
       body: Stack(
         children: [
           // Top gradient blur
@@ -994,8 +1021,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
               // Header
               CalendarHeader(
                 title: 'Poker Calendar',
-                subtitle: 'Track your events',
                 onBackPressed: () => Navigator.pop(context),
+                onAddPressed: _showAddEventDialog,
               ),
               // Scrollable content
               Expanded(
@@ -1059,15 +1086,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       const SizedBox(height: 8),
                       // Events info card
                       _buildEventsForSelectedDate(),
-                      const SizedBox(height: 8),
-                      // Add New Event Button
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: AddEventButton(
-                          text: 'Add New Event',
-                          onPressed: _showAddEventDialog,
-                        ),
-                      ),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -1086,29 +1104,84 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     if (eventsForDate.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: InfoCard(
-          isEmpty: true,
-          emptyTitle: 'No events scheduled',
-          emptySubtitle: 'Tap below to add your first event!',
-          onEmptyTap: _showAddEventDialog,
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF101115),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black),
+          ),
+          child: Column(
+            children: [
+              // Calendar icon
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 24,
+                color: const Color(0xFF89F1EC),
+              ),
+              const SizedBox(height: 6),
+              // Title
+              Text(
+                'No recent events',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white,
+                  height: 1.44,
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Subtitle
+              Text(
+                'Add your first poker event!',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFFD3FFFD),
+                  height: 1.44,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // Add New Event button
+              GestureDetector(
+                onTap: _showAddEventDialog,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF89F1EC),
+                    borderRadius: BorderRadius.circular(110),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add, size: 24, color: Colors.black),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Add New Event',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                          letterSpacing: -0.5,
+                          height: 24 / 17,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.infoCardBg,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: eventsForDate.map((event) => _buildEventCard(event)).toList(),
-        ),
-      ),
+    return Column(
+      children: eventsForDate.map((event) => _buildEventCard(event)).toList(),
     );
   }
 
@@ -1180,130 +1253,1229 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildEventCard(PokerEvent event) {
-    return GestureDetector(
-      onTap: () => _navigateToEventDetail(event),
-      child: Container(
-        margin: EdgeInsets.only(bottom: 8),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Color(0xFF1F1F23),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 4,
-              height: 40,
-              decoration: BoxDecoration(
-                color: _getEventTypeColor(event.type),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event.title,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (event.location.isNotEmpty)
-                    Text(
-                      event.location,
-                      style: TextStyle(
-                        color: Color(0xFF9A9A9A),
-                        fontSize: 14,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: GestureDetector(
+        onTap: () => _navigateToEventDetail(event),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF101115),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black),
+          ),
+          child: Column(
+            children: [
+              // Top row: Title + 3-dot menu
+              SizedBox(
+                height: 48,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        event.title,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white,
+                          height: 1.44,
+                        ),
                       ),
                     ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  DateFormat('HH:mm').format(event.date),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (event.buyIn > 0)
-                  Text(
-                    '\$${event.buyIn.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      color: Color(0xFF5AC95A),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    Builder(
+                      builder: (ctx) => GestureDetector(
+                        onTap: () {
+                          final box = ctx.findRenderObject() as RenderBox;
+                          final offset = box.localToGlobal(Offset.zero);
+                          _showEventOptions(event, offset, box.size);
+                        },
+                        child: const Icon(
+                          Icons.more_horiz,
+                          size: 24,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
-              ],
-            ),
-            // Show arrow if it's a club event
-            if (event.clubId != null && event.clubEventId != null) ...[
-              SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right,
-                color: Color(0xFF9A9A9A),
-                size: 20,
+                  ],
+                ),
+              ),
+              // Separator
+              Container(
+                height: 1,
+                color: const Color(0xFF1C1F21),
+              ),
+              // Bottom row: Date + Buy-in
+              SizedBox(
+                height: 48,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          DateFormat('MMM d, h:mm a').format(event.date).toLowerCase(),
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFFB3B4B6),
+                            height: 1.64,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (event.buyIn > 0)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          '\$ ${event.buyIn.toStringAsFixed(0)}',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFFD3FFFD),
+                            height: 1.44,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 
+  void _showEventOptions(PokerEvent event, Offset iconOffset, Size iconSize) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
+
+    entry = OverlayEntry(
+      builder: (context) {
+        const tooltipWidth = 184.0;
+        // Position: right-aligned to the icon, below it
+        final left = iconOffset.dx + iconSize.width - tooltipWidth;
+        final top = iconOffset.dy + iconSize.height + 8;
+
+        return Stack(
+          children: [
+            // Dismiss on tap outside
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => entry.remove(),
+                child: const SizedBox.expand(),
+              ),
+            ),
+            Positioned(
+              left: left,
+              top: top,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: tooltipWidth,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF02050B),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x73000000),
+                        blurRadius: 34,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Edit Event
+                      GestureDetector(
+                        onTap: () {
+                          entry.remove();
+                          _showEditEventDialog(event);
+                        },
+                        child: Row(
+                          children: [
+                            SvgPicture.asset(
+                              'icons/figma_icons/edit.svg',
+                              width: 16,
+                              height: 16,
+                              colorFilter: const ColorFilter.mode(
+                                Colors.white,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                child: Text(
+                                  'Edit Event',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                    height: 1.64,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Separator
+                      Container(
+                        height: 1,
+                        color: const Color(0xFF1C1F21),
+                      ),
+                      // Delete Event
+                      GestureDetector(
+                        onTap: () {
+                          entry.remove();
+                          _deleteEvent(event);
+                        },
+                        child: Row(
+                          children: [
+                            SvgPicture.asset(
+                              'icons/figma_icons/delete.svg',
+                              width: 16,
+                              height: 16,
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFFD55A41),
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                child: Text(
+                                  'Delete Event',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                    height: 1.64,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    overlay.insert(entry);
+  }
+
   Future<void> _navigateToEventDetail(PokerEvent event) async {
-    // Only navigate if this is a club event
-    if (event.clubId == null || event.clubEventId == null) {
+    // Club events -> club detail screen
+    if (event.clubId != null && event.clubEventId != null) {
+      try {
+        final club = await ClubService.getClub(event.clubId!);
+        if (club == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Club not found')),
+          );
+          return;
+        }
+
+        final clubEvent = await EventService.getEvent(event.clubId!, event.clubEventId!);
+        if (clubEvent == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event not found')),
+          );
+          return;
+        }
+
+        final isAdmin = await ClubService.canManageEvents(event.clubId!);
+        if (!mounted) return;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => club_detail.EventDetailScreen(
+              club: club,
+              event: clubEvent,
+              isAdmin: isAdmin,
+            ),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load event: $e')),
+        );
+      }
       return;
     }
 
+    // Local events -> new event detail screen
+    final deleted = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EventDetailScreen(
+          title: event.title,
+          type: event.type,
+          location: event.location,
+          date: event.date,
+          buyIn: event.buyIn,
+          onDelete: () => _performDeleteEvent(event),
+          onEdit: (updateDetail) {
+            _showEditEventDialogFromDetail(event, updateDetail);
+          },
+        ),
+      ),
+    );
+
+    // Reload events when returning (covers both delete and edit cases)
+    _loadEvents();
+  }
+
+  void _showEditEventDialog(PokerEvent event) {
+    final titleController = TextEditingController(text: event.title);
+    final locationController = TextEditingController(text: event.location);
+    final buyInController = TextEditingController(
+      text: event.buyIn > 0 ? event.buyIn.toStringAsFixed(0) : '',
+    );
+    TimeOfDay dialogSelectedTime = TimeOfDay.fromDateTime(event.date);
+    DateTime dialogSelectedDate = event.date;
+    String selectedType = event.type;
+    final eventTypeKey = GlobalKey();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.9,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                border: Border.all(color: const Color(0xFF262626), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2E5A59),
+                    blurRadius: 64,
+                    offset: const Offset(0, -6),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Close button
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF35373C),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Title
+                            Text(
+                              'Edit Event',
+                              style: GoogleFonts.ibmPlexSans(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.43,
+                              ),
+                            ),
+                            // Confirm button
+                            GestureDetector(
+                              onTap: () async {
+                                final eventDate = DateTime(
+                                  dialogSelectedDate.year,
+                                  dialogSelectedDate.month,
+                                  dialogSelectedDate.day,
+                                  dialogSelectedTime.hour,
+                                  dialogSelectedTime.minute,
+                                );
+
+                                try {
+                                  await CalendarEventService.updateEvent(
+                                    eventId: event.id,
+                                    title: titleController.text.isEmpty ? selectedType : titleController.text,
+                                    type: selectedType,
+                                    location: locationController.text,
+                                    date: eventDate,
+                                    buyIn: double.tryParse(buyInController.text) ?? 0.0,
+                                  );
+
+                                  Navigator.pop(context);
+                                  _loadEvents(); // Reload to reflect changes
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed to update event: $e')),
+                                  );
+                                }
+                              },
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF54E98A),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.check,
+                                    color: Colors.black,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Form Card 1 - Input Fields
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF101115),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(
+                            children: [
+                              // Event Type Row
+                              GestureDetector(
+                                onTap: () {
+                                  _showEventTypePicker(context, selectedType, (type) {
+                                    setSheetState(() {
+                                      selectedType = type;
+                                    });
+                                  }, eventTypeKey);
+                                },
+                                child: Container(
+                                  key: eventTypeKey,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Event Type',
+                                        style: GoogleFonts.ibmPlexSans(
+                                          color: const Color(0xFFD3FFFD),
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.44,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            selectedType,
+                                            style: GoogleFonts.ibmPlexSans(
+                                              color: Colors.white,
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.44,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.unfold_more,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              _buildSeparator(),
+                              // Title Input
+                              TextField(
+                                controller: titleController,
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.44,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Title',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
+                                    color: const Color(0xFF8C8C8C),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.44,
+                                  ),
+                                  filled: false,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                              ),
+                              _buildSeparator(),
+                              // Location Input
+                              TextField(
+                                controller: locationController,
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.44,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Location',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
+                                    color: const Color(0xFF8C8C8C),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.44,
+                                  ),
+                                  filled: false,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                              ),
+                              _buildSeparator(),
+                              // Buy In Input
+                              TextField(
+                                controller: buyInController,
+                                keyboardType: TextInputType.number,
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.44,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Buy-in amount',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
+                                    color: const Color(0xFF8C8C8C),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.44,
+                                  ),
+                                  filled: false,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      // Form Card 2 - Date/Time
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF101115),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Event Date and Time',
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.43,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                height: 0.5,
+                                color: const Color(0xFF545458),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Text(
+                                    'Starts',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      color: Colors.white,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.44,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final date = await _showCustomDatePicker(
+                                        context,
+                                        dialogSelectedDate,
+                                      );
+                                      if (date != null) {
+                                        setSheetState(() {
+                                          dialogSelectedDate = date;
+                                        });
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1B1E24),
+                                        borderRadius: BorderRadius.circular(40),
+                                      ),
+                                      child: Text(
+                                        DateFormat('d MMM yyyy').format(dialogSelectedDate),
+                                        style: GoogleFonts.ibmPlexSans(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final time = await showTimePicker(
+                                        context: context,
+                                        initialTime: dialogSelectedTime,
+                                        builder: (context, child) {
+                                          return Theme(
+                                            data: Theme.of(context).copyWith(
+                                              colorScheme: const ColorScheme.dark(
+                                                primary: Color(0xFF5CD9A4),
+                                                surface: Color(0xFF1B1E24),
+                                              ),
+                                            ),
+                                            child: child!,
+                                          );
+                                        },
+                                      );
+                                      if (time != null) {
+                                        setSheetState(() {
+                                          dialogSelectedTime = time;
+                                        });
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1B1E24),
+                                        borderRadius: BorderRadius.circular(40),
+                                      ),
+                                      child: Text(
+                                        dialogSelectedTime.format(context),
+                                        style: GoogleFonts.ibmPlexSans(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(height: MediaQuery.of(context).padding.bottom),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Edit event from the detail screen — updates detail screen in-place after save
+  void _showEditEventDialogFromDetail(
+    PokerEvent event,
+    void Function({
+      required String title,
+      required String type,
+      required String location,
+      required DateTime date,
+      required double buyIn,
+    }) updateDetail,
+  ) {
+    final titleController = TextEditingController(text: event.title);
+    final locationController = TextEditingController(text: event.location);
+    final buyInController = TextEditingController(
+      text: event.buyIn > 0 ? event.buyIn.toStringAsFixed(0) : '',
+    );
+    TimeOfDay dialogSelectedTime = TimeOfDay.fromDateTime(event.date);
+    DateTime dialogSelectedDate = event.date;
+    String selectedType = event.type;
+    final eventTypeKey = GlobalKey();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.9,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                border: Border.all(color: const Color(0xFF262626), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2E5A59),
+                    blurRadius: 64,
+                    offset: const Offset(0, -6),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Close button
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF35373C),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Title
+                            Text(
+                              'Edit Event',
+                              style: GoogleFonts.ibmPlexSans(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.43,
+                              ),
+                            ),
+                            // Confirm button
+                            GestureDetector(
+                              onTap: () async {
+                                final eventDate = DateTime(
+                                  dialogSelectedDate.year,
+                                  dialogSelectedDate.month,
+                                  dialogSelectedDate.day,
+                                  dialogSelectedTime.hour,
+                                  dialogSelectedTime.minute,
+                                );
+                                final newTitle = titleController.text.isEmpty ? selectedType : titleController.text;
+                                final newBuyIn = double.tryParse(buyInController.text) ?? 0.0;
+
+                                try {
+                                  await CalendarEventService.updateEvent(
+                                    eventId: event.id,
+                                    title: newTitle,
+                                    type: selectedType,
+                                    location: locationController.text,
+                                    date: eventDate,
+                                    buyIn: newBuyIn,
+                                  );
+
+                                  Navigator.pop(context);
+                                  // Update the detail screen in-place
+                                  updateDetail(
+                                    title: newTitle,
+                                    type: selectedType,
+                                    location: locationController.text,
+                                    date: eventDate,
+                                    buyIn: newBuyIn,
+                                  );
+                                  // Also update local event list
+                                  _loadEvents();
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed to update event: $e')),
+                                  );
+                                }
+                              },
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF54E98A),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.check,
+                                    color: Colors.black,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Form Card 1 - Input Fields
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF101115),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(
+                            children: [
+                              // Event Type Row
+                              GestureDetector(
+                                onTap: () {
+                                  _showEventTypePicker(context, selectedType, (type) {
+                                    setSheetState(() {
+                                      selectedType = type;
+                                    });
+                                  }, eventTypeKey);
+                                },
+                                child: Container(
+                                  key: eventTypeKey,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Event Type',
+                                        style: GoogleFonts.ibmPlexSans(
+                                          color: const Color(0xFFD3FFFD),
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.44,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            selectedType,
+                                            style: GoogleFonts.ibmPlexSans(
+                                              color: Colors.white,
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.44,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.unfold_more,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              _buildSeparator(),
+                              // Title Input
+                              TextField(
+                                controller: titleController,
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.44,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Title',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
+                                    color: const Color(0xFF8C8C8C),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.44,
+                                  ),
+                                  filled: false,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                              ),
+                              _buildSeparator(),
+                              // Location Input
+                              TextField(
+                                controller: locationController,
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.44,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Location',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
+                                    color: const Color(0xFF8C8C8C),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.44,
+                                  ),
+                                  filled: false,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                              ),
+                              _buildSeparator(),
+                              // Buy In Input
+                              TextField(
+                                controller: buyInController,
+                                keyboardType: TextInputType.number,
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.44,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Buy-in amount',
+                                  hintStyle: GoogleFonts.ibmPlexSans(
+                                    color: const Color(0xFF8C8C8C),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.44,
+                                  ),
+                                  filled: false,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      // Form Card 2 - Date/Time
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF101115),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Event Date and Time',
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.43,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                height: 0.5,
+                                color: const Color(0xFF545458),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Text(
+                                    'Starts',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      color: Colors.white,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.44,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final date = await _showCustomDatePicker(
+                                        context,
+                                        dialogSelectedDate,
+                                      );
+                                      if (date != null) {
+                                        setSheetState(() {
+                                          dialogSelectedDate = date;
+                                        });
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1B1E24),
+                                        borderRadius: BorderRadius.circular(40),
+                                      ),
+                                      child: Text(
+                                        DateFormat('dd/MM/yyyy').format(dialogSelectedDate),
+                                        style: GoogleFonts.ibmPlexSans(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final time = await showTimePicker(
+                                        context: context,
+                                        initialTime: dialogSelectedTime,
+                                        builder: (context, child) {
+                                          return Theme(
+                                            data: Theme.of(context).copyWith(
+                                              timePickerTheme: TimePickerThemeData(
+                                                backgroundColor: const Color(0xFF101115),
+                                                hourMinuteTextColor: Colors.white,
+                                                dialHandColor: const Color(0xFF54E98A),
+                                                dialBackgroundColor: const Color(0xFF1B1E24),
+                                                dialTextColor: Colors.white,
+                                                entryModeIconColor: Colors.white,
+                                                helpTextStyle: GoogleFonts.ibmPlexSans(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              textButtonTheme: TextButtonThemeData(
+                                                style: TextButton.styleFrom(
+                                                  foregroundColor: const Color(0xFF54E98A),
+                                                ),
+                                              ),
+                                            ),
+                                            child: child!,
+                                          );
+                                        },
+                                      );
+                                      if (time != null) {
+                                        setSheetState(() {
+                                          dialogSelectedTime = time;
+                                        });
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1B1E24),
+                                        borderRadius: BorderRadius.circular(40),
+                                      ),
+                                      child: Text(
+                                        dialogSelectedTime.format(context),
+                                        style: GoogleFonts.ibmPlexSans(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(height: MediaQuery.of(context).padding.bottom),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Delete with confirmation (used from tooltip menu)
+  Future<void> _deleteEvent(PokerEvent event) async {
+    final confirmed = await _showDeleteConfirmation(event.title);
+    if (confirmed != true) return;
+    await _performDeleteEvent(event);
+  }
+
+  /// Actual deletion (no confirmation)
+  Future<void> _performDeleteEvent(PokerEvent event) async {
     try {
-      // Fetch the club and event data
-      final club = await ClubService.getClub(event.clubId!);
-      if (club == null) {
+      await CalendarEventService.deleteEvent(event.id);
+      setState(() {
+        events.removeWhere((e) => e.id == event.id);
+      });
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Club not found')),
+          const SnackBar(content: Text('Failed to delete event')),
         );
-        return;
       }
+    }
+  }
 
-      final clubEvent = await EventService.getEvent(event.clubId!, event.clubEventId!);
-      if (clubEvent == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Event not found')),
-        );
-        return;
-      }
-
-      // Check if user is admin
-      final isAdmin = await ClubService.canManageEvents(event.clubId!);
-
-      if (!mounted) return;
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EventDetailScreen(
-            club: club,
-            event: clubEvent,
-            isAdmin: isAdmin,
+  Future<bool?> _showDeleteConfirmation(String eventTitle) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Main card with title, description, and delete button
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF101115),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 24),
+                    // Title
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Delete $eventTitle?',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Description
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Are you sure you want to delete "$eventTitle"?\nThis action cannot be undone.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Delete button
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context, true),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                        child: Text(
+                          'Delete',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFFDA5B5E),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Cancel button (separate card)
+              GestureDetector(
+                onTap: () => Navigator.pop(context, false),
+                child: Container(
+                  width: double.infinity,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF101115),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load event: $e')),
-      );
-    }
+      ),
+    );
   }
 
   Color _getEventTypeColor(String type) {

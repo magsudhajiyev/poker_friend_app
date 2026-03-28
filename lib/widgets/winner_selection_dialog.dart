@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/game_types.dart';
 
 class WinnerSelectionDialog extends StatefulWidget {
@@ -52,7 +54,6 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
     final baseShare = (widget.potAmount / numWinners).floor().toDouble();
     final extraChips = (widget.potAmount % numWinners).toInt();
 
-    // Sort winners by position (earliest first to get extra chips)
     final sortedWinners = selectedWinners.toList()..sort((a, b) {
       final positionA = _getPositionOrder(a);
       final positionB = _getPositionOrder(b);
@@ -70,14 +71,9 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
   }
 
   int _getPositionOrder(int playerId) {
-    // Calculate position order based on seat number relative to button
-    // Lower numbers = earlier in position (closer to left of button)
-
     final buttonPos = widget.buttonPosition;
     final totalPlayers = widget.playerCount;
 
-    // Calculate how many seats after the button this player is
-    // Button is last to act, so position 0 is earliest (UTG)
     int positionFromButton;
     if (playerId > buttonPos) {
       positionFromButton = playerId - buttonPos;
@@ -89,179 +85,431 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
   }
 
   String _getPlayerDisplayName(int playerId) {
-    // Find the index of this player in activePlayers list
     final playerIndex = widget.activePlayers.indexOf(playerId);
 
     if (playerIndex >= 0 && playerIndex < widget.playerNames.length) {
-      // playerNames already includes position from sessionManager.getPlayerNameWithPosition()
       return widget.playerNames[playerIndex];
     }
 
-    // Fallback if player not found (shouldn't happen)
     return 'Player $playerId';
   }
 
-  List<Widget> _buildIndividualSharesDisplay() {
-    final shares = _calculateIndividualShares();
-    if (shares.isEmpty) return [];
+  void _saveChanges() {
+    if (isChoppedPot) {
+      if (selectedWinners.isNotEmpty) {
+        Navigator.pop(context, {
+          'isChoppedPot': true,
+          'winners': selectedWinners.toList(),
+          'individualShares': _calculateIndividualShares(),
+          'sharePerWinner': _getSharePerWinner(),
+        });
+      }
+    } else {
+      if (selectedWinner != null) {
+        Navigator.pop(context, {
+          'isChoppedPot': false,
+          'winner': selectedWinner,
+          'sharePerWinner': widget.potAmount,
+        });
+      }
+    }
+  }
 
-    return [
-      const Text(
-        'Individual shares:',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: Colors.grey,
+  bool get _canSave {
+    if (isChoppedPot) return selectedWinners.isNotEmpty;
+    return selectedWinner != null;
+  }
+
+  Widget _buildToggle() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          isChoppedPot = !isChoppedPot;
+          selectedWinner = null;
+          selectedWinners.clear();
+        });
+      },
+      child: Container(
+        width: 50,
+        height: 20,
+        decoration: BoxDecoration(
+          color: isChoppedPot ? const Color(0xFF1B4341) : const Color(0xFF39393D),
+          borderRadius: BorderRadius.circular(74),
+          border: Border.all(
+            color: isChoppedPot ? const Color(0xFF4B9A96) : const Color(0xFF555555),
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.all(2),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 200),
+          alignment: isChoppedPot ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            width: 15,
+            height: 15,
+            decoration: BoxDecoration(
+              color: isChoppedPot ? const Color(0xFF73D4CF) : const Color(0xFF8C8C8C),
+              shape: BoxShape.circle,
+            ),
+          ),
         ),
       ),
-      const SizedBox(height: 4),
-      ...shares.entries.map((entry) {
-        final playerId = entry.key;
-        final amount = entry.value;
-        final playerDisplayName = _getPlayerDisplayName(playerId);
+    );
+  }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 1),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  playerDisplayName,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.blue,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+  Widget _buildPlayerRow(int playerId) {
+    final playerDisplayName = _getPlayerDisplayName(playerId);
+    final bool isSelected;
+
+    if (isChoppedPot) {
+      isSelected = selectedWinners.contains(playerId);
+    } else {
+      isSelected = selectedWinner == playerId;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (isChoppedPot) {
+            if (selectedWinners.contains(playerId)) {
+              selectedWinners.remove(playerId);
+            } else {
+              selectedWinners.add(playerId);
+            }
+          } else {
+            selectedWinner = playerId;
+          }
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        decoration: BoxDecoration(
+          color: const Color(0xFF101115),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            // Radio/Checkbox circle
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF89F1EC) : const Color(0xFF555555),
+                  width: isSelected ? 2 : 1.5,
+                ),
+                color: isSelected ? const Color(0xFF89F1EC) : Colors.transparent,
+              ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: isChoppedPot ? 10 : 8,
+                        height: isChoppedPot ? 10 : 8,
+                        decoration: BoxDecoration(
+                          shape: isChoppedPot ? BoxShape.rectangle : BoxShape.circle,
+                          color: isChoppedPot ? Colors.transparent : Colors.black,
+                          borderRadius: isChoppedPot ? BorderRadius.circular(2) : null,
+                        ),
+                        child: isChoppedPot
+                            ? const Icon(Icons.check, size: 10, color: Colors.black)
+                            : null,
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                playerDisplayName,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white,
+                  height: 1.44,
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                _formatCurrency(amount),
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.blue,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    ];
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(isChoppedPot ? 'Who chopped this pot?' : 'Who won this hand?'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-          Text(
-            'Pot Size: ${_formatCurrency(widget.potAmount)}',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-            ),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.zero,
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top,
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
           ),
-          if (isChoppedPot && selectedWinners.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            ..._buildIndividualSharesDisplay(),
+          border: Border.all(color: const Color(0xFF262626)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0xFF2E5A59),
+              blurRadius: 64,
+              offset: Offset(0, -6),
+            ),
           ],
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Switch(
-                value: isChoppedPot,
-                onChanged: (value) {
-                  setState(() {
-                    isChoppedPot = value;
-                    // Clear selections when switching modes
-                    selectedWinner = null;
-                    selectedWinners.clear();
-                  });
-                },
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Overlay Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // X close button
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF35373C),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'icons/figma_icons/close.svg',
+                          width: 16,
+                          height: 16,
+                          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Title
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        isChoppedPot ? 'Who chopped this pot?' : 'Who won this hand?',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          letterSpacing: -0.43,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Green checkmark button
+                  GestureDetector(
+                    onTap: _canSave ? _saveChanges : null,
+                    child: Opacity(
+                      opacity: _canSave ? 1.0 : 0.4,
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF54E98A),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: SvgPicture.asset(
+                            'icons/figma_icons/check.svg',
+                            width: 16,
+                            height: 16,
+                            colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  isChoppedPot ? 'Chopped Pot' : 'Single Winner',
-                  style: const TextStyle(fontSize: 16),
+            ),
+
+            // Scrollable content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 34, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Single Winner toggle card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF101115),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            isChoppedPot ? 'Chopped Pot' : 'Single Winner',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white,
+                              height: 1.44,
+                            ),
+                          ),
+                          _buildToggle(),
+                        ],
+                      ),
+                    ),
+
+                    // Individual shares display for chopped pot
+                    if (isChoppedPot && selectedWinners.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF101115),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Individual shares:',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF8C8C8C),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ..._calculateIndividualShares().entries.map((entry) {
+                              final playerDisplayName = _getPlayerDisplayName(entry.key);
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 2),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        playerDisplayName,
+                                        style: GoogleFonts.ibmPlexSans(
+                                          fontSize: 14,
+                                          color: const Color(0xFF89F1EC),
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatCurrency(entry.value),
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF89F1EC),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 24),
+
+                    // "Select the winner:" label
+                    Text(
+                      isChoppedPot ? 'Select all winners:' : 'Select the winner:',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white,
+                        height: 1.44,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Player rows
+                    ...widget.activePlayers.map((playerId) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildPlayerRow(playerId),
+                      );
+                    }),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(isChoppedPot ? 'Select all winners:' : 'Select the winner:'),
-          const SizedBox(height: 12),
-          ...widget.activePlayers.map((playerId) {
-            final playerDisplayName = _getPlayerDisplayName(playerId);
+            ),
 
-            if (isChoppedPot) {
-              return CheckboxListTile(
-                title: Text(playerDisplayName),
-                value: selectedWinners.contains(playerId),
-                onChanged: (bool? value) {
-                  setState(() {
-                    if (value == true) {
-                      selectedWinners.add(playerId);
-                    } else {
-                      selectedWinners.remove(playerId);
-                    }
-                  });
-                },
-                dense: true,
-              );
-            } else {
-              return RadioListTile<int>(
-                title: Text(playerDisplayName),
-                value: playerId,
-                groupValue: selectedWinner,
-                onChanged: (value) {
-                  setState(() {
-                    selectedWinner = value;
-                  });
-                },
-                dense: true,
-              );
-            }
-          }).toList(),
+            // Bottom buttons
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 34, 16, 34),
+              child: Column(
+                children: [
+                  // Save button
+                  GestureDetector(
+                    onTap: _canSave ? _saveChanges : null,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _canSave
+                            ? const Color(0xFF89F1EC)
+                            : const Color(0xFF89F1EC).withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(110),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Save',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                            letterSpacing: -0.5,
+                            height: 24 / 17,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  // Cancel button
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(110),
+                        border: Border.all(
+                          color: const Color(0xFFD3FFFD),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFFD3FFFD),
+                            letterSpacing: -0.5,
+                            height: 24 / 17,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: isChoppedPot
-                ? (selectedWinners.isNotEmpty
-                    ? () {
-                        Navigator.pop(context,{
-                        'isChoppedPot': true,
-                        'winners': selectedWinners.toList(),
-                        'individualShares': _calculateIndividualShares(),
-                        'sharePerWinner': _getSharePerWinner(), // Keep for backward compatibility
-                      });
-                    }
-                    : null)
-                : (selectedWinner != null
-                    ? () {
-                        Navigator.pop(context,{
-                        'isChoppedPot': false,
-                        'winner': selectedWinner,
-                        'sharePerWinner': widget.potAmount,
-                        });
-                      }
-                    : null),
-            child: Text(isChoppedPot ? 'Confirm Winners' : 'Confirm Winner'),
-          ),
-        ],
-      );
+    );
   }
 }

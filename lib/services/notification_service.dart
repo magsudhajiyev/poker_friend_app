@@ -174,9 +174,6 @@ class NotificationService {
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
-            attachments: <DarwinNotificationAttachment>[
-              DarwinNotificationAttachment('icons/logo.png'),
-            ],
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -258,9 +255,6 @@ class NotificationService {
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
-            attachments: <DarwinNotificationAttachment>[
-              DarwinNotificationAttachment('icons/logo.png'),
-            ],
           ),
         ),
       );

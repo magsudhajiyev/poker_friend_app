@@ -33,8 +33,8 @@ class CalendarDayCell extends StatelessWidget {
           shape: BoxShape.circle,
           border: isSelected
               ? Border.all(
-                  color: AppColors.calendarAccentGreen,
-                  width: 2,
+                  color: const Color(0xFF89F1EC).withValues(alpha: 0.5),
+                  width: 1.5,
                 )
               : null,
         ),
@@ -45,19 +45,19 @@ class CalendarDayCell extends StatelessWidget {
               Text(
                 day.toString(),
                 style: GoogleFonts.ibmPlexSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w400,
+                  fontSize: isSelected ? 24 : 20,
+                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                   color: _getTextColor(),
-                  letterSpacing: -0.45,
+                  letterSpacing: isSelected ? 0 : -0.45,
                 ),
               ),
-              if (hasEvent)
+              if (hasEvent && !isSelected)
                 Container(
                   margin: const EdgeInsets.only(top: 2),
                   width: 4,
                   height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.calendarAccentGreen,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF89F1EC),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -71,6 +71,9 @@ class CalendarDayCell extends StatelessWidget {
   Color _getTextColor() {
     if (isDisabled) {
       return AppColors.calendarDayDisabled;
+    }
+    if (isSelected || isToday) {
+      return const Color(0xFF89F1EC);
     }
     return AppColors.calendarDayText;
   }

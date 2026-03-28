@@ -484,17 +484,17 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                       GestureDetector(
                         onTap: saveChanges,
                         child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF3C3C43).withOpacity(0.3),
+                          width: 38,
+                          height: 38,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF54E98A),
                             shape: BoxShape.circle,
                           ),
                           child: Center(
                             child: _buildIcon(
                               'icons/figma_icons/check.svg',
                               16,
-                              Colors.white,
+                              Colors.black,
                             ),
                           ),
                         ),
@@ -567,21 +567,25 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   });
                                 },
                                 child: Container(
-                                  width: 51,
-                                  height: 31,
+                                  width: 50,
+                                  height: 20,
                                   decoration: BoxDecoration(
-                                    color: tempIsActive ? Color(0xFF62E3BC) : Color(0xFF39393D),
-                                    borderRadius: BorderRadius.circular(16),
+                                    color: tempIsActive ? const Color(0xFF1B4341) : const Color(0xFF39393D),
+                                    borderRadius: BorderRadius.circular(74),
+                                    border: Border.all(
+                                      color: tempIsActive ? const Color(0xFF4B9A96) : const Color(0xFF555555),
+                                      width: 1,
+                                    ),
                                   ),
-                                  padding: EdgeInsets.all(2),
+                                  padding: const EdgeInsets.all(2),
                                   child: AnimatedAlign(
-                                    duration: Duration(milliseconds: 200),
+                                    duration: const Duration(milliseconds: 200),
                                     alignment: tempIsActive ? Alignment.centerRight : Alignment.centerLeft,
                                     child: Container(
-                                      width: 27,
-                                      height: 27,
+                                      width: 15,
+                                      height: 15,
                                       decoration: BoxDecoration(
-                                        color: Colors.white,
+                                        color: tempIsActive ? const Color(0xFF73D4CF) : const Color(0xFF8C8C8C),
                                         shape: BoxShape.circle,
                                       ),
                                     ),

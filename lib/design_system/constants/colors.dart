@@ -58,7 +58,7 @@ class AppColors {
 
   // Calendar Screen Colors
   static const Color calendarAccentGreen = Color(0xFF62E3BC);
-  static const Color calendarCardBg = Color(0x12FFFFFF);       // rgba(255,255,255,0.07)
+  static const Color calendarCardBg = Color(0xFF101115);       // #101115
   static const Color calendarCardOverlay = Color(0x08FFFFFF);  // rgba(255,255,255,0.03)
   static const Color timePillBg = Color(0x1F76807F);           // rgba(118,118,128,0.12)
   static const Color labelTertiary = Color(0x4DEBEBF5);        // rgba(235,235,245,0.3)

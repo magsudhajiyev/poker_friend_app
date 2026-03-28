@@ -91,9 +91,12 @@ class CalendarPicker extends StatelessWidget {
                 Text(
                   '›',
                   style: TextStyle(
+                    fontFamily: 'SF Pro',
                     fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.calendarAccentGreen,
+                    letterSpacing: -0.5,
+                    height: 18 / 15,
                   ),
                 ),
               ],
@@ -105,33 +108,37 @@ class CalendarPicker extends StatelessWidget {
               GestureDetector(
                 onTap: onPreviousMonth,
                 child: Container(
-                  width: 30,
+                  width: 24,
                   height: 24,
                   alignment: Alignment.center,
                   child: Text(
                     '‹',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontFamily: 'SF Pro',
+                      fontSize: 28,
                       fontWeight: FontWeight.w500,
                       color: AppColors.calendarAccentGreen,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
-              const SizedBox(width: 28),
+              const SizedBox(width: 20),
               GestureDetector(
                 onTap: onNextMonth,
                 child: Container(
-                  width: 30,
+                  width: 24,
                   height: 24,
                   alignment: Alignment.center,
                   child: Text(
                     '›',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontFamily: 'SF Pro',
+                      fontSize: 28,
                       fontWeight: FontWeight.w500,
                       color: AppColors.calendarAccentGreen,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),

@@ -1146,8 +1146,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         child: Container(
                           width: 44,
                           height: 44,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF3C3C43).withOpacity(0.3),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF101115),
                             shape: BoxShape.circle,
                           ),
                           child: Center(
@@ -1155,7 +1155,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       // Title section
                       Expanded(
                         child: Column(
@@ -1164,19 +1164,21 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                             Text(
                               'Hand #${gameState.handNumber}',
                               style: GoogleFonts.ibmPlexSans(
-                                fontSize: 17,
+                                fontSize: 27,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
-                                letterSpacing: -0.43,
+                                letterSpacing: -0.5,
+                                height: 1,
                               ),
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 6),
                             Text(
                               '${gameState.currentRound.name.toUpperCase()} • ${gameState.getActivePlayers().length} players',
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 13,
-                                color: Colors.white.withOpacity(0.6),
+                                color: const Color(0xFFD3FFFD),
                                 fontWeight: FontWeight.w400,
+                                height: 1.47,
                               ),
                             ),
                           ],
@@ -1192,31 +1194,31 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                             child: Container(
                               width: 44,
                               height: 44,
-                              decoration: BoxDecoration(
-                                color: Color(0xFF3C3C43).withOpacity(0.3),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF101115),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
-                                child: _buildIcon('icons/figma_icons/forward.svg', 20, Colors.white),
+                                child: _buildIcon('icons/figma_icons/forward.svg', 24, Colors.white),
                               ),
                             ),
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           // Next street button (when betting complete)
                           if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river)
                             Padding(
-                              padding: EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.only(right: 8),
                               child: GestureDetector(
                                 onTap: nextStreet,
                                 child: Container(
                                   width: 44,
                                   height: 44,
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFF62E3BC).withOpacity(0.3),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF101115),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(
-                                    child: Icon(Icons.fast_forward, color: Colors.white, size: 20),
+                                    child: Icon(Icons.fast_forward, color: Colors.white, size: 24),
                                   ),
                                 ),
                               ),
@@ -1446,22 +1448,31 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           // Bottom Info Row (To Call / Odds)
           if (_shouldShowPotOdds())
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF101115),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'To Call: ${_formatPotAmount(gameState.getToCall(sessionManager.ourSeatNumber ?? 1))}',
                     style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white,
                       fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      height: 1.46,
                     ),
                   ),
                   Text(
                     'Odds: ${gameState.getPotOdds(sessionManager.ourSeatNumber ?? 1)?.toStringAsFixed(1) ?? "0"}%',
                     style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white,
                       fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      height: 1.46,
                     ),
                   ),
                 ],
@@ -1469,7 +1480,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             ),
 
           // Bottom padding for nav bar - less when undo button is visible
-          SizedBox(height: _canUndoLastAction() ? 85 : 100),
+          SizedBox(height: _canUndoLastAction() ? 65 : 80),
             ],
           ),
         ),
@@ -1553,12 +1564,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       child: Container(
         width: 44,
         height: 44,
-        decoration: BoxDecoration(
-          color: Color(0xFF3C3C43).withOpacity(0.3),
+        decoration: const BoxDecoration(
+          color: Color(0xFF101115),
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: _buildIcon('icons/figma_icons/dots_vertical.svg', 20, Colors.white),
+          child: _buildIcon('icons/figma_icons/dots_vertical.svg', 24, Colors.white),
         ),
       ),
     );
@@ -1715,10 +1726,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
   Widget _buildInfoCard(String label, String value) {
     return Container(
-      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
-        color: Color(0xFF1C1C1E),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFF101115),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1726,25 +1737,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           Text(
             label,
             style: GoogleFonts.ibmPlexSans(
-              color: Colors.white.withOpacity(0.6),
-              fontSize: 11,
+              color: const Color(0xFF8C8C8C),
+              fontSize: 17,
               fontWeight: FontWeight.w500,
+              height: 1.44,
             ),
+            textAlign: TextAlign.center,
           ),
-          SizedBox(height: 2),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              value,
-              style: GoogleFonts.ibmPlexSans(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
+          Text(
+            value,
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              height: 1.44,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -1755,10 +1765,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
   Widget _buildStatCard(String value, String label) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Color(0xFF1C1C1E),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFF101115),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
@@ -1766,16 +1776,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             value,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              height: 1.46,
             ),
           ),
-          SizedBox(height: 2),
           Text(
             label,
             style: GoogleFonts.ibmPlexSans(
-              color: Colors.white.withOpacity(0.5),
-              fontSize: 13,
+              color: const Color(0xFF8C8C8C),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              height: 1.46,
             ),
           ),
         ],
