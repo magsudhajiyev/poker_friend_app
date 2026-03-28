@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
 import 'dart:math' as math;
-import '../design_system/components/backgrounds/gradient_background.dart';
-import '../design_system/components/buttons/glassy_icon_button.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../utils/poker_positions.dart';
 import '../utils/number_formatter.dart';
 import '../models/game_types.dart';
@@ -35,7 +33,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize star and tags from hand data
     _isStarred = widget.hand['isStarred'] == true;
     _tags = (widget.hand['tags'] as List<dynamic>?)?.cast<String>() ?? [];
     _notes = widget.hand['notes'] as String?;
@@ -54,7 +51,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       _isStarred = newStarredState;
     });
 
-    // Save to Firebase
     try {
       final sessionId = widget.hand['sessionId'] as String?;
       final handId = widget.hand['id'] as String?;
@@ -67,7 +63,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         );
       }
     } catch (e) {
-      // Revert on error
       if (mounted) {
         setState(() {
           _isStarred = !newStarredState;
@@ -105,28 +100,26 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
 
   Future<void> _analyzeHand() async {
-    // Check if hero has hole cards
     final ourHoleCards = widget.hand['ourHoleCards'] as Map<String, dynamic>?;
     final card1 = ourHoleCards?['card1'] as String?;
     final card2 = ourHoleCards?['card2'] as String?;
 
     if (card1 == null || card2 == null || card1.isEmpty || card2.isEmpty) {
-      // Show error dialog
       if (mounted) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            backgroundColor: Color(0xFF1F1F23),
+            backgroundColor: const Color(0xFF131616),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
             ),
             title: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.orange, size: 28),
-                SizedBox(width: 12),
+                const Icon(Icons.error_outline, color: Colors.orange, size: 28),
+                const SizedBox(width: 12),
                 Text(
                   'Missing Hero Cards',
-                  style: TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -136,8 +129,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             ),
             content: Text(
               'AI analysis requires your hole cards to be recorded. This hand cannot be analyzed because hero cards are missing.',
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withOpacity(0.5),
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -147,8 +140,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   'OK',
-                  style: TextStyle(
-                    color: Color(0xFF5AC95A),
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF89F1EC),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -167,16 +160,13 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     });
 
     try {
-      // Prepare hand data for analysis
       final handData = AIAnalyzerService.prepareHandDataForAnalysis(widget.hand);
 
-      // Call AI analyzer
       final analysis = await AIAnalyzerService.analyzeHand(
         handId: handData['handId'] as String,
         handData: handData,
       );
 
-      // Save to Firebase
       final sessionId = widget.hand['sessionId'] as String?;
       final handId = widget.hand['id'] as String?;
 
@@ -194,12 +184,11 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           _isAnalyzing = false;
         });
 
-        // Auto-scroll to show the analysis results
-        Future.delayed(Duration(milliseconds: 300), () {
+        Future.delayed(const Duration(milliseconds: 300), () {
           if (_scrollController.hasClients) {
             _scrollController.animateTo(
               _scrollController.position.maxScrollExtent,
-              duration: Duration(milliseconds: 500),
+              duration: const Duration(milliseconds: 500),
               curve: Curves.easeInOut,
             );
           }
@@ -217,43 +206,64 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final actions = List<Map<String, dynamic>>.from(widget.hand['actions'] ?? []);
-    final startTime = DateTime.parse(widget.hand['startTime']);
-    final buttonPosition = widget.hand['buttonPosition'] ?? 1;
-    // Ensure playerCount is at least 2 to avoid division by zero in position calculations
-    final rawPlayerCount = (widget.hand['playerCount'] as int?) ?? 6;
-    final playerCount = math.max(2, rawPlayerCount);
-    // New fields for position tracking
+    final screenWidth = MediaQuery.of(context).size.width;
     final heroPositionName = widget.hand['heroPositionName'] as String?;
     final heroSeatNumber = widget.hand['heroSeatNumber'] as int?;
-    // Old field for backward compatibility - prefer widget.ourSeat from navigation
+    final buttonPosition = widget.hand['buttonPosition'] ?? 1;
+    final rawPlayerCount = (widget.hand['playerCount'] as int?) ?? 6;
+    final playerCount = math.max(2, rawPlayerCount);
     final heroPosition = widget.ourSeat ?? heroSeatNumber ?? widget.hand['heroPosition'] ?? 1;
-    
+
     return Scaffold(
-      backgroundColor: Color(0xFF161618),
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          GradientBackground(),
+          // Teal radial gradient at top
+          Positioned(
+            top: -screenWidth * 0.3,
+            right: -screenWidth * 0.2,
+            child: Container(
+              width: screenWidth * 1.2,
+              height: screenWidth * 1.2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF1A4A4A).withOpacity(0.6),
+                    const Color(0xFF133538).withOpacity(0.3),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.4, 1.0],
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
-          children: [
-            // Glassmorphic Header
-            ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                child: Container(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  decoration: BoxDecoration(
-                    color: Color(0x03FFFFFF),
-                  ),
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   child: Row(
                     children: [
-                      // Back button
-                      GlassyIconButton(
-                        icon: Icons.arrow_back,
-                        onPressed: () => Navigator.pop(context),
+                      // Back button - glassy circle
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       // Hand info
                       Expanded(
                         child: Column(
@@ -261,18 +271,18 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           children: [
                             Text(
                               'Hand #${widget.hand['handNumber'] ?? 'N/A'}',
-                              style: TextStyle(
+                              style: GoogleFonts.ibmPlexSans(
                                 fontSize: 20,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 2),
                             Text(
-                              'Your Position: ${heroPositionName ?? PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white,
+                              'Position: ${heroPositionName ?? PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)}',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 13,
+                                color: Colors.white.withOpacity(0.5),
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -286,8 +296,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: _isStarred ? Color(0x33FFD700) : Color(0x1AFFFFFF),
-                            borderRadius: BorderRadius.circular(10),
+                            color: _isStarred
+                                ? Colors.amber.withOpacity(0.2)
+                                : const Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
                           ),
                           child: Icon(
                             _isStarred ? Icons.star : Icons.star_border,
@@ -299,64 +311,62 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     ],
                   ),
                 ),
-              ),
-            ),
-            
-            // Content
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Tags row (if any)
-                    if (_tags.isNotEmpty) ...[
-                      _buildTagsSection(),
-                      SizedBox(height: 12),
-                    ],
 
-                    // Notes section (if any)
-                    if (_notes != null && _notes!.isNotEmpty) ...[
-                      _buildNotesSection(),
-                      SizedBox(height: 12),
-                    ],
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Tags row
+                        if (_tags.isNotEmpty) ...[
+                          _buildTagsSection(),
+                          const SizedBox(height: 12),
+                        ],
 
-                    // Hand Summary Stats (compact)
-                    _buildHandSummaryCards(),
+                        // Notes section
+                        if (_notes != null && _notes!.isNotEmpty) ...[
+                          _buildNotesSection(),
+                          const SizedBox(height: 12),
+                        ],
 
-                    SizedBox(height: 16),
+                        // Hand Summary Stats
+                        _buildHandSummaryCards(),
 
-                    // Hero Cards and Winner Info
-                    _buildHeroCardsAndWinner(),
+                        const SizedBox(height: 16),
 
-                    SizedBox(height: 16),
+                        // Hero Cards and Winner Info
+                        _buildHeroCardsAndWinner(),
 
-                    // Street-by-street action table
-                    _buildStreetByStreetTable(),
+                        const SizedBox(height: 16),
 
-                    SizedBox(height: 16),
+                        // Street-by-street action table
+                        _buildStreetByStreetTable(),
 
-                    // AI Analyzer Button
-                    _buildAIAnalyzerButton(),
+                        const SizedBox(height: 16),
 
-                    // AI Analysis Results
-                    if (_aiAnalysis != null) ...[
-                      SizedBox(height: 16),
-                      _buildAIAnalysisResults(),
-                    ],
+                        // AI Analyzer Button
+                        _buildAIAnalyzerButton(),
 
-                    // Analysis Error
-                    if (_analysisError != null) ...[
-                      SizedBox(height: 16),
-                      _buildAnalysisError(),
-                    ],
-                  ],
+                        // AI Analysis Results
+                        if (_aiAnalysis != null) ...[
+                          const SizedBox(height: 16),
+                          _buildAIAnalysisResults(),
+                        ],
+
+                        // Analysis Error
+                        if (_analysisError != null) ...[
+                          const SizedBox(height: 16),
+                          _buildAnalysisError(),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
           ),
         ],
       ),
@@ -375,7 +385,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       heroCard2 = ourHoleCardsData['card2'];
     }
 
-    // Get opponent cards from showdown data
     Map<int, Map<String, String?>>? opponentCards;
     if (showdownData != null && showdownData is Map) {
       final playerCardsData = showdownData['playerCards'];
@@ -399,7 +408,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final bool hasOpponentCards = opponentCards != null && opponentCards.isNotEmpty;
 
     if (!hasHeroCards && !hasOpponentCards) {
-      return SizedBox.shrink(); // Don't show section if no data
+      return const SizedBox.shrink();
     }
 
     return Row(
@@ -408,35 +417,35 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         if (hasHeroCards)
           Expanded(
             child: Container(
-              padding: EdgeInsets.all(12),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color(0xFF1F1F23),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Color(0xFF5AC95A)),
+                color: const Color(0xFF131616),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFF89F1EC).withOpacity(0.4)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.style, color: Color(0xFF5AC95A), size: 16),
-                      SizedBox(width: 6),
+                      Icon(Icons.style, color: const Color(0xFF89F1EC), size: 16),
+                      const SizedBox(width: 6),
                       Text(
                         'Your Cards',
-                        style: TextStyle(
-                          color: Color(0xFF5AC95A),
+                        style: GoogleFonts.ibmPlexSans(
+                          color: const Color(0xFF89F1EC),
                           fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (heroCard1 != null) _buildCard(heroCard1),
-                      if (heroCard1 != null && heroCard2 != null) SizedBox(width: 8),
+                      if (heroCard1 != null && heroCard2 != null) const SizedBox(width: 8),
                       if (heroCard2 != null) _buildCard(heroCard2),
                     ],
                   ),
@@ -446,9 +455,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           ),
 
         if (hasHeroCards && hasOpponentCards)
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
 
-        // Opponent Cards (replaces Winner Card)
+        // Opponent Cards
         if (hasOpponentCards)
           Expanded(
             child: _buildOpponentCardsCard(opponentCards!, playerNamesData),
@@ -459,31 +468,30 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   Widget _buildOpponentCardsCard(Map<int, Map<String, String?>> opponentCards, dynamic playerNamesData) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFF8B5CF6)),
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.people, color: Color(0xFF8B5CF6), size: 16),
-              SizedBox(width: 6),
+              const Icon(Icons.people, color: Color(0xFF8B5CF6), size: 16),
+              const SizedBox(width: 6),
               Text(
                 'Opponent Cards',
-                style: TextStyle(
-                  color: Color(0xFF8B5CF6),
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF8B5CF6),
                   fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 8),
-          // Show each opponent's cards
+          const SizedBox(height: 8),
           ...opponentCards.entries.map((entry) {
             final playerId = entry.key;
             final cards = entry.value;
@@ -491,7 +499,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             final card2 = cards['card2'];
 
             if (card1 == null || card2 == null) {
-              return SizedBox.shrink();
+              return const SizedBox.shrink();
             }
 
             String? playerName;
@@ -501,23 +509,23 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             playerName ??= 'Player $playerId';
 
             return Padding(
-              padding: EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
                   Expanded(
                     flex: 2,
                     child: Text(
                       playerName,
-                      style: TextStyle(
+                      style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 12,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  SizedBox(width: 6),
+                  const SizedBox(width: 6),
                   _buildSmallCard(card1),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   _buildSmallCard(card2),
                 ],
               ),
@@ -535,7 +543,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
       child: Center(
         child: Text(
@@ -557,7 +565,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final gameTypeStr = widget.hand['gameType'] ?? 'cash';
     final gameType = GameTypeExtension.fromString(gameTypeStr);
 
-    // Format values
     String potText = gameType == GameType.cash
         ? formatCompactCurrency(pot)
         : formatCompactNumber(pot);
@@ -567,19 +574,18 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     String? winnerText = _getWinnerText();
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFF2A2A2E)),
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
           Expanded(child: _buildCompactStat('POT', potText)),
-          Container(width: 1, height: 32, color: Color(0xFF2A2A2E)),
+          Container(width: 1, height: 32, color: Colors.white.withOpacity(0.1)),
           Expanded(child: _buildCompactStat('BLINDS', blindsText)),
           if (winnerText != null) ...[
-            Container(width: 1, height: 32, color: Color(0xFF2A2A2E)),
+            Container(width: 1, height: 32, color: Colors.white.withOpacity(0.1)),
             Expanded(child: _buildCompactStat('WINNER', winnerText, isWinner: true)),
           ],
         ],
@@ -619,20 +625,20 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       children: [
         Text(
           value,
-          style: TextStyle(
-            color: isWinner ? Color(0xFFFFD700) : Colors.white,
+          style: GoogleFonts.ibmPlexSans(
+            color: isWinner ? const Color(0xFFFFD700) : const Color(0xFF89F1EC),
             fontSize: 15,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
           textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 2),
+        const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
-            color: Color(0xFF9A9A9A),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white.withOpacity(0.5),
             fontSize: 10,
             fontWeight: FontWeight.w500,
           ),
@@ -650,7 +656,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
 
   Widget _buildTagBadge(String tag) {
-    // Get icon for tag
     IconData tagIcon;
     switch (tag) {
       case 'Bluff':
@@ -676,12 +681,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Color(0xFFBAFF9A).withOpacity(0.15),
+        color: const Color(0xFF89F1EC).withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Color(0xFFBAFF9A).withOpacity(0.4),
+          color: const Color(0xFF89F1EC).withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -691,14 +696,14 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           Icon(
             tagIcon,
             size: 14,
-            color: Color(0xFFBAFF9A),
+            color: const Color(0xFF89F1EC),
           ),
-          SizedBox(width: 6),
+          const SizedBox(width: 6),
           Text(
             tag,
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 13,
-              color: Color(0xFFBAFF9A),
+              color: const Color(0xFF89F1EC),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -709,33 +714,32 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   Widget _buildNotesSection() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFF2A2A2E)),
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.note, color: Color(0xFF9A9A9A), size: 18),
-              SizedBox(width: 8),
+              Icon(Icons.note, color: Colors.white.withOpacity(0.5), size: 18),
+              const SizedBox(width: 8),
               Text(
                 'Notes',
-                style: TextStyle(
-                  color: Color(0xFF9A9A9A),
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white.withOpacity(0.5),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             _notes!,
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 14,
               height: 1.4,
@@ -750,7 +754,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final actions = List<Map<String, dynamic>>.from(widget.hand['actions'] ?? []);
     final boardCardsData = widget.hand['boardCards'];
     final buttonPosition = widget.hand['buttonPosition'] ?? 1;
-    // Ensure playerCount is at least 2 to avoid division by zero
     final rawPlayerCount = (widget.hand['playerCount'] as int?) ?? 6;
     final playerCount = math.max(2, rawPlayerCount);
     final heroPosition = widget.ourSeat ?? widget.hand['heroPosition'];
@@ -758,16 +761,14 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final winnerId = widget.hand['winnerId'];
     final gameTypeStr = widget.hand['gameType'] ?? 'cash';
     final gameType = GameTypeExtension.fromString(gameTypeStr);
-    
-    // Parse player names
+
     Map<String, String> playerNamesMap = {};
     if (playerNamesData != null && playerNamesData is Map) {
       playerNamesData.forEach((key, value) {
         playerNamesMap[key.toString()] = value.toString();
       });
     }
-    
-    // Parse board cards
+
     List<String> flop = [];
     String? turn;
     String? river;
@@ -776,66 +777,63 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       turn = boardCardsData['turn'] as String?;
       river = boardCardsData['river'] as String?;
     }
-    
-    // Group actions by street
+
     Map<String, List<Map<String, dynamic>>> actionsByStreet = {
       'preflop': [],
       'flop': [],
       'turn': [],
       'river': [],
     };
-    
+
     for (final action in actions) {
       final street = action['street'] as String? ?? 'preflop';
       actionsByStreet[street]?.add(action);
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Action Summary',
-          style: TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: 16),
-        
+        const SizedBox(height: 16),
+
         // Preflop
         if (actionsByStreet['preflop']!.isNotEmpty)
-          _buildStreetSection('PREFLOP', null, actionsByStreet['preflop']!, 
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['preflopPot']),
-        
-        // Show board cards - either by street (if there were actions) or combined (if all-in)
+          _buildStreetSection('PREFLOP', null, actionsByStreet['preflop']!,
+              buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['preflopPot']),
+
         _buildPostflopSections(widget.hand, flop, turn, river, actionsByStreet,
-                             buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType),
+            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType),
       ],
     );
   }
-  
+
   Widget _buildStreetSection(String streetName, List<String>? cards, List<Map<String, dynamic>> actions,
-                            int buttonPosition, int playerCount, int? heroPosition,
-                            Map<String, String> playerNamesMap, int? winnerId, String gameType, dynamic potAmount) {
+      int buttonPosition, int playerCount, int? heroPosition,
+      Map<String, String> playerNamesMap, int? winnerId, String gameType, dynamic potAmount) {
     return Container(
-      margin: EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFF2A2A2E)),
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Street header with cards
           Container(
-            padding: EdgeInsets.all(12),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Color(0xFF161618),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
               ),
             ),
             child: Row(
@@ -845,37 +843,37 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   children: [
                     Text(
                       streetName,
-                      style: TextStyle(
-                        color: Color(0xFF5AC95A),
+                      style: GoogleFonts.ibmPlexSans(
+                        color: const Color(0xFF89F1EC),
                         fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: 1.0,
                       ),
                     ),
                     if (cards != null && cards.isNotEmpty) ...[
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       ...cards.map((card) => Padding(
-                        padding: EdgeInsets.only(right: 6),
+                        padding: const EdgeInsets.only(right: 6),
                         child: _buildCard(card),
                       )),
                     ],
                   ],
                 ),
-                // Pot amount on the right side
+                // Pot amount
                 if (potAmount != null && (potAmount as double) > 0)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Color(0xFF5AC95A).withOpacity(0.1),
+                      color: const Color(0xFF89F1EC).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Color(0xFF5AC95A).withOpacity(0.3)),
+                      border: Border.all(color: const Color(0xFF89F1EC).withOpacity(0.3)),
                     ),
                     child: Text(
                       _formatPotAmount(potAmount as double, gameType),
-                      style: TextStyle(
-                        color: Color(0xFF5AC95A),
+                      style: GoogleFonts.ibmPlexSans(
+                        color: const Color(0xFF89F1EC),
                         fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -889,20 +887,19 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       ),
     );
   }
-  
+
   Widget _buildActionTable(List<Map<String, dynamic>> actions, int buttonPosition, int playerCount,
-                          int? heroPosition, Map<String, String> playerNamesMap, int? winnerId, String gameType) {
+      int? heroPosition, Map<String, String> playerNamesMap, int? winnerId, String gameType) {
     return Container(
-      padding: EdgeInsets.all(10),
+      padding: const EdgeInsets.all(10),
       child: Table(
-        columnWidths: {
-          0: FlexColumnWidth(2.5), // Player (Position)
-          1: FlexColumnWidth(1.5), // Stack
-          2: FlexColumnWidth(1.5), // Action
-          3: FlexColumnWidth(1), // Amount
+        columnWidths: const {
+          0: FlexColumnWidth(2.5),
+          1: FlexColumnWidth(1.5),
+          2: FlexColumnWidth(1.5),
+          3: FlexColumnWidth(1),
         },
         children: [
-          // Header row
           TableRow(
             children: [
               _buildTableHeader('PLAYER'),
@@ -911,9 +908,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               _buildTableHeader('AMT'),
             ],
           ),
-          // Data rows
           ...actions.map((action) => _buildActionRow(
-            action, buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType
+              action, buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType
           )),
         ],
       ),
@@ -922,20 +918,19 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   Widget _buildTableHeader(String text) {
     return Container(
-      padding: EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: TextStyle(
-          color: Color(0xFF9A9A9A),
+        style: GoogleFonts.ibmPlexSans(
+          color: Colors.white.withOpacity(0.4),
           fontSize: 10,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
         ),
       ),
     );
   }
-  
-  // Check if an action is an all-in action
+
   bool _isAllInAction(Map<String, dynamic> action) {
     final actionType = action['action'] as String?;
     final amount = action['amount'];
@@ -950,109 +945,99 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final betAmount = (amount as num).toDouble();
     final stack = (playerStack as num).toDouble();
 
-    return betAmount >= (stack - 0.01); // Allow for small rounding errors
+    return betAmount >= (stack - 0.01);
   }
 
-  // Check if this hand has any all-in actions
   bool _isAllInSituation(Map<String, dynamic> hand) {
     final actions = hand['actions'] as List<dynamic>? ?? [];
     return actions.any((action) => _isAllInAction(action));
   }
 
-  // Check if there are any postflop actions
   bool _hasPostflopActions(Map<String, dynamic> hand) {
     final actions = hand['actions'] as List<dynamic>? ?? [];
     return actions.any((action) =>
-      action['street'] != null &&
-      action['street'].toString().toLowerCase() != 'preflop'
+        action['street'] != null &&
+            action['street'].toString().toLowerCase() != 'preflop'
     );
   }
 
-  // Build postflop sections with smart layout for all-in vs regular hands
   Widget _buildPostflopSections(
-    Map<String, dynamic> hand,
-    List<String> flop,
-    String? turn,
-    String? river,
-    Map<String, List<Map<String, dynamic>>> actionsByStreet,
-    int buttonPosition,
-    int playerCount,
-    int? heroPosition,
-    Map<String, String> playerNamesMap,
-    int? winnerId,
-    GameType gameType,
-  ) {
+      Map<String, dynamic> hand,
+      List<String> flop,
+      String? turn,
+      String? river,
+      Map<String, List<Map<String, dynamic>>> actionsByStreet,
+      int buttonPosition,
+      int playerCount,
+      int? heroPosition,
+      Map<String, String> playerNamesMap,
+      int? winnerId,
+      GameType gameType,
+      ) {
     final hasPostflopActions = _hasPostflopActions(hand);
     final isAllInSituation = _isAllInSituation(hand);
 
-    // If it's an all-in situation with no postflop actions, combine all cards in one section
     if (isAllInSituation && !hasPostflopActions) {
       return _buildCombinedBoardSection(flop, turn, river, gameType);
     } else {
-      // Regular situation or all-in with postflop actions: show by street
       return _buildStreetByStreetSections(
-        flop, turn, river, actionsByStreet,
-        buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType
+          flop, turn, river, actionsByStreet,
+          buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType
       );
     }
   }
 
-  // Build combined board section for all-in situations
   Widget _buildCombinedBoardSection(List<String> flop, String? turn, String? river, GameType gameType) {
-    // Collect all board cards
     final allCards = <String>[];
     allCards.addAll(flop);
     if (turn != null && turn.isNotEmpty) allCards.add(turn);
     if (river != null && river.isNotEmpty) allCards.add(river);
 
-    if (allCards.isEmpty) return SizedBox.shrink();
+    if (allCards.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      margin: EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFF2A2A2E)),
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Color(0xFF161618),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
               ),
             ),
             child: Row(
               children: [
                 Text(
                   'BOARD',
-                  style: TextStyle(
-                    color: Color(0xFF5AC95A),
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF89F1EC),
                     fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: 1.2,
                   ),
                 ),
               ],
             ),
           ),
-          // Cards
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Wrap(
               spacing: 8,
               runSpacing: 4,
               children: allCards.map((card) => Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: Colors.white.withOpacity(0.2)),
                 ),
                 child: Text(
                   card,
@@ -1070,97 +1055,87 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
-  // Build street-by-street sections for regular hands
   Widget _buildStreetByStreetSections(
-    List<String> flop,
-    String? turn,
-    String? river,
-    Map<String, List<Map<String, dynamic>>> actionsByStreet,
-    int buttonPosition,
-    int playerCount,
-    int? heroPosition,
-    Map<String, String> playerNamesMap,
-    int? winnerId,
-    GameType gameType,
-  ) {
+      List<String> flop,
+      String? turn,
+      String? river,
+      Map<String, List<Map<String, dynamic>>> actionsByStreet,
+      int buttonPosition,
+      int playerCount,
+      int? heroPosition,
+      Map<String, String> playerNamesMap,
+      int? winnerId,
+      GameType gameType,
+      ) {
     return Column(
       children: [
-        // Flop - show if there are cards (with or without actions)
         if (flop.isNotEmpty)
           _buildStreetSection('FLOP', flop, actionsByStreet['flop']!,
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['flopPot']),
+              buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['flopPot']),
 
-        // Turn - show if there are cards (with or without actions)
         if (turn != null && turn.isNotEmpty)
           _buildStreetSection('TURN', [turn], actionsByStreet['turn']!,
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['turnPot']),
+              buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['turnPot']),
 
-        // River - show if there are cards (with or without actions)
         if (river != null && river.isNotEmpty)
           _buildStreetSection('RIVER', [river], actionsByStreet['river']!,
-                            buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['riverPot']),
+              buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['riverPot']),
       ],
     );
   }
 
   TableRow _buildActionRow(Map<String, dynamic> action, int buttonPosition, int playerCount,
-                          int? heroPosition, Map<String, String> playerNamesMap, int? winnerId, String gameType) {
+      int? heroPosition, Map<String, String> playerNamesMap, int? winnerId, String gameType) {
     final playerSeat = action['player'] as int? ?? action['playerSeat'] as int? ?? 1;
     final actionType = action['action'] as String? ?? 'Unknown';
     final amount = action['amount'];
     final stack = action['playerStack'] ?? action['stack'] ?? 0;
-    
-    // Get player name
-    String playerName = playerNamesMap[playerSeat.toString()] ?? 
-                       action['playerName'] as String? ?? 
-                       'Player $playerSeat';
-    
+
+    String playerName = playerNamesMap[playerSeat.toString()] ??
+        action['playerName'] as String? ??
+        'Player $playerSeat';
+
     final isHero = heroPosition != null && playerSeat == heroPosition;
     final isWinner = winnerId != null && playerSeat == winnerId;
-    // CRITICAL: Use saved position from action (calculated with active seats during hand)
-    // DO NOT recalculate with playerCount=9 as it will give wrong positions
     final positionName = action['playerPosition'] as String? ??
-                        PokerPositions.getPositionName(playerSeat, buttonPosition, playerCount);
-    
-    // Format player display
+        PokerPositions.getPositionName(playerSeat, buttonPosition, playerCount);
+
     String playerDisplay = isHero ? 'You' : playerName;
     playerDisplay = '$playerDisplay ($positionName)';
-    
-    // Get action color
-    Color actionColor = Color(0xFF9A9A9A);
+
+    Color actionColor = Colors.white.withOpacity(0.5);
     switch (actionType.toLowerCase()) {
       case 'fold':
         actionColor = Colors.red;
         break;
       case 'call':
       case 'check':
-        actionColor = Color(0xFF5AC95A);
+        actionColor = const Color(0xFF89F1EC);
         break;
       case 'raise':
       case 'bet':
-        actionColor = Color(0xFFFF9500);
+        actionColor = const Color(0xFFFF9500);
         break;
       case 'all in':
       case 'allin':
         actionColor = Colors.red;
         break;
     }
-    
+
     return TableRow(
       children: [
-        // Player column
         Container(
-          padding: EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(
             children: [
               if (isWinner)
-                Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 12),
-              if (isWinner) SizedBox(width: 3),
+                const Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 12),
+              if (isWinner) const SizedBox(width: 3),
               Expanded(
                 child: Text(
                   playerDisplay,
-                  style: TextStyle(
-                    color: isHero ? Color(0xFF5AC95A) : Colors.white,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: isHero ? const Color(0xFF89F1EC) : Colors.white,
                     fontSize: 11,
                     fontWeight: isHero ? FontWeight.w600 : FontWeight.normal,
                   ),
@@ -1170,36 +1145,33 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             ],
           ),
         ),
-        // Stack column
         Container(
-          padding: EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
             _formatStack(stack, gameType),
-            style: TextStyle(
-              color: Color(0xFF9A9A9A),
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withOpacity(0.5),
               fontSize: 11,
             ),
           ),
         ),
-        // Action column
         Container(
-          padding: EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
             _isAllInAction(action) ? 'ALL IN' : actionType.toUpperCase(),
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               color: actionColor,
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
-        // Amount column
         Container(
-          padding: EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
             _formatAmount(amount, gameType),
-            style: TextStyle(
-              color: Color(0xFF9A9A9A),
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withOpacity(0.5),
               fontSize: 11,
             ),
           ),
@@ -1208,9 +1180,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
-
   Widget _buildCard(String? card) {
-    if (card == null || card.isEmpty) return SizedBox.shrink();
+    if (card == null || card.isEmpty) return const SizedBox.shrink();
 
     final suit = card.length > 1 ? card.substring(1) : '';
     final rank = card.isNotEmpty ? card[0] : '';
@@ -1224,12 +1195,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Color(0xFF2A2A2E)),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
             blurRadius: 3,
-            offset: Offset(0, 1),
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -1244,7 +1215,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 1),
+          const SizedBox(height: 1),
           Text(
             suit,
             style: TextStyle(
@@ -1278,7 +1249,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     if (isCashGame) {
       return formatCompactCurrency(stackNum);
     } else {
-      // For tournaments, show compact without $ prefix
       return formatCompactNumber(stackNum);
     }
   }
@@ -1294,7 +1264,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     if (isCashGame) {
       return formatCompactCurrency(amountNum);
     } else {
-      // For tournaments, show compact without $ prefix
       return formatCompactNumber(amountNum);
     }
   }
@@ -1307,31 +1276,37 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
 
   Widget _buildAIAnalyzerButton() {
-    // Check if hero has hole cards
     final ourHoleCards = widget.hand['ourHoleCards'] as Map<String, dynamic>?;
     final card1 = ourHoleCards?['card1'] as String?;
     final card2 = ourHoleCards?['card2'] as String?;
     final hasHeroCards = card1 != null && card2 != null && card1.isNotEmpty && card2.isNotEmpty;
 
-    // Check premium status
     final isPremium = SubscriptionService.isPremium;
 
-    return Container(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: (_isAnalyzing || !hasHeroCards) ? null : () => _handleAnalyzeButtonTap(isPremium),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: !hasHeroCards
-              ? Color(0xFF9A9A9A)
-              : isPremium
-                  ? (_aiAnalysis != null ? Color(0xFF8B5CF6) : Color(0xFF5AC95A))
-                  : Color(0xFFFFD700), // Gold for premium upsell
-          padding: EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0,
-          disabledBackgroundColor: Color(0xFF9A9A9A).withOpacity(0.3),
+    Color buttonColor;
+    Color textColor;
+    if (!hasHeroCards) {
+      buttonColor = Colors.white.withOpacity(0.1);
+      textColor = Colors.white.withOpacity(0.3);
+    } else if (!isPremium) {
+      buttonColor = const Color(0xFF89F1EC);
+      textColor = Colors.black;
+    } else if (_aiAnalysis != null) {
+      buttonColor = const Color(0xFF8B5CF6);
+      textColor = Colors.white;
+    } else {
+      buttonColor = const Color(0xFF89F1EC);
+      textColor = Colors.black;
+    }
+
+    return GestureDetector(
+      onTap: (_isAnalyzing || !hasHeroCards) ? null : () => _handleAnalyzeButtonTap(isPremium),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: buttonColor,
+          borderRadius: BorderRadius.circular(60),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1342,58 +1317,52 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(textColor),
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Text(
                 'Analyzing Hand...',
-                style: TextStyle(
-                  color: Colors.white,
+                style: GoogleFonts.ibmPlexSans(
+                  color: textColor,
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ] else if (!hasHeroCards) ...[
-              Icon(
-                Icons.block,
-                color: Color(0xFF9A9A9A),
-              ),
-              SizedBox(width: 12),
+              Icon(Icons.block, color: textColor),
+              const SizedBox(width: 12),
               Text(
                 'Hero Cards Missing',
-                style: TextStyle(
-                  color: Color(0xFF9A9A9A),
+                style: GoogleFonts.ibmPlexSans(
+                  color: textColor,
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ] else if (!isPremium) ...[
-              Icon(
-                Icons.star,
-                color: Colors.black,
-              ),
-              SizedBox(width: 12),
+              Icon(Icons.lock_open, color: textColor),
+              const SizedBox(width: 12),
               Text(
                 'Unlock AI Analysis',
-                style: TextStyle(
-                  color: Colors.black,
+                style: GoogleFonts.ibmPlexSans(
+                  color: textColor,
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ] else ...[
               Icon(
                 _aiAnalysis != null ? Icons.refresh : Icons.psychology,
-                color: Colors.white,
+                color: textColor,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Text(
                 _aiAnalysis != null ? 'Re-analyze Hand' : 'AI Analyzer',
-                style: TextStyle(
-                  color: Colors.white,
+                style: GoogleFonts.ibmPlexSans(
+                  color: textColor,
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -1403,17 +1372,13 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
-  /// Handle AI analyzer button tap - check premium status first
   Future<void> _handleAnalyzeButtonTap(bool isPremium) async {
     if (isPremium) {
-      // User is premium - proceed with analysis
       _analyzeHand();
     } else {
-      // Show paywall
       final purchased = await PaywallScreen.show(context, featureName: 'AI Hand Analysis');
       if (purchased == true && mounted) {
-        // User purchased - now analyze
-        setState(() {}); // Refresh UI to show premium status
+        setState(() {});
         _analyzeHand();
       }
     }
@@ -1421,33 +1386,33 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
   Widget _buildAnalysisError() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red),
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.red.withOpacity(0.4)),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: Colors.red, size: 24),
-          SizedBox(width: 12),
+          const Icon(Icons.error_outline, color: Colors.red, size: 24),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Analysis Failed',
-                  style: TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     color: Colors.red,
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   _analysisError ?? 'Unknown error',
-                  style: TextStyle(
-                    color: Color(0xFF9A9A9A),
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white.withOpacity(0.5),
                     fontSize: 12,
                   ),
                 ),
@@ -1460,7 +1425,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
 
   Widget _buildAIAnalysisResults() {
-    if (_aiAnalysis == null) return SizedBox.shrink();
+    if (_aiAnalysis == null) return const SizedBox.shrink();
 
     final correct = _aiAnalysis!['correct'] as bool? ?? false;
     final severity = _aiAnalysis!['severity'] as String? ?? 'unknown';
@@ -1469,22 +1434,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final aiAnalysis = _aiAnalysis!['aiAnalysis'] as Map<String, dynamic>?;
     final processingTime = _aiAnalysis!['processingTimeMs'] as int? ?? 0;
 
-    // Determine if this is a preflop-only hand or went postflop
-    final actions = List<Map<String, dynamic>>.from(widget.hand['actions'] ?? []);
-    final wentPostflop = actions.any((action) {
-      final street = action['street'] as String? ?? 'preflop';
-      return street != 'preflop';
-    });
-
     Color severityColor;
     IconData severityIcon;
     switch (severity.toLowerCase()) {
       case 'optimal':
-        severityColor = Color(0xFF5AC95A);
+        severityColor = const Color(0xFF89F1EC);
         severityIcon = Icons.check_circle;
         break;
       case 'minor':
-        severityColor = Color(0xFFFFD700);
+        severityColor = const Color(0xFFFFD700);
         severityIcon = Icons.warning;
         break;
       case 'major':
@@ -1496,31 +1454,30 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         severityIcon = Icons.dangerous;
         break;
       default:
-        severityColor = Color(0xFF9A9A9A);
+        severityColor = Colors.white.withOpacity(0.5);
         severityIcon = Icons.help;
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         Text(
           'AI Analysis',
-          style: TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
 
         // Overall Result
         Container(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Color(0xFF1F1F23),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: severityColor),
+            color: const Color(0xFF131616),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: severityColor.withOpacity(0.4)),
           ),
           child: Column(
             children: [
@@ -1535,24 +1492,24 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     ),
                     child: Icon(severityIcon, color: severityColor, size: 28),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           correct ? 'Correct Play' : 'Mistake Detected',
-                          style: TextStyle(
+                          style: GoogleFonts.ibmPlexSans(
                             color: severityColor,
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
                           'Severity: ${severity.toUpperCase()}',
-                          style: TextStyle(
-                            color: Color(0xFF9A9A9A),
+                          style: GoogleFonts.ibmPlexSans(
+                            color: Colors.white.withOpacity(0.5),
                             fontSize: 14,
                           ),
                         ),
@@ -1565,46 +1522,44 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           ),
         ),
 
-        // AI Analysis
+        // AI Insights
         if (aiAnalysis != null) ...[
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Container(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Color(0xFF1F1F23),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Color(0xFF2A2A2E)),
+              color: const Color(0xFF131616),
+              borderRadius: BorderRadius.circular(18),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.psychology, color: Color(0xFF5AC95A), size: 20),
-                    SizedBox(width: 8),
+                    const Icon(Icons.psychology, color: Color(0xFF89F1EC), size: 20),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'AI Insights (Preflop Only)',
-                        style: TextStyle(
-                          color: Color(0xFF5AC95A),
+                        style: GoogleFonts.ibmPlexSans(
+                          color: const Color(0xFF89F1EC),
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    // Show range % when available
                     if (scenarioCovered && gtoAnalysis != null && gtoAnalysis['rangePercentile'] != null) ...[
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Color(0xFF8B5CF6).withOpacity(0.15),
+                          color: const Color(0xFF8B5CF6).withOpacity(0.15),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Color(0xFF8B5CF6).withOpacity(0.3)),
+                          border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.3)),
                         ),
                         child: Text(
                           'Range: ${gtoAnalysis['rangePercentile']}%',
-                          style: TextStyle(
-                            color: Color(0xFF8B5CF6),
+                          style: GoogleFonts.ibmPlexSans(
+                            color: const Color(0xFF8B5CF6),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1613,43 +1568,43 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     ],
                   ],
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 if (aiAnalysis['reasoning'] != null) ...[
                   Text(
                     aiAnalysis['reasoning'],
-                    style: TextStyle(
+                    style: GoogleFonts.ibmPlexSans(
                       color: Colors.white,
                       fontSize: 14,
                       height: 1.5,
                     ),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                 ],
                 if (aiAnalysis['optimalAction'] != null) ...[
                   _buildHighlightedText('Optimal Play', aiAnalysis['optimalAction']),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                 ],
                 if (aiAnalysis['exploitativeAdjustment'] != null) ...[
                   _buildHighlightedText('Exploitative Adjustment', aiAnalysis['exploitativeAdjustment']),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                 ],
                 if (aiAnalysis['learningPoint'] != null) ...[
                   Container(
-                    padding: EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Color(0xFFFFD700).withOpacity(0.1),
+                      color: const Color(0xFFFFD700).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Color(0xFFFFD700).withOpacity(0.3)),
+                      border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.lightbulb, color: Color(0xFFFFD700), size: 20),
-                        SizedBox(width: 12),
+                        const Icon(Icons.lightbulb, color: Color(0xFFFFD700), size: 20),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             aiAnalysis['learningPoint'],
-                            style: TextStyle(
-                              color: Color(0xFFFFD700),
+                            style: GoogleFonts.ibmPlexSans(
+                              color: const Color(0xFFFFD700),
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               height: 1.4,
@@ -1666,12 +1621,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ],
 
         // Processing Time
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Center(
           child: Text(
             'Analysis completed in ${(processingTime / 1000).toStringAsFixed(2)}s',
-            style: TextStyle(
-              color: Color(0xFF9A9A9A),
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withOpacity(0.4),
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
@@ -1687,17 +1642,17 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       children: [
         Text(
           title,
-          style: TextStyle(
-            color: Color(0xFF5AC95A),
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF89F1EC),
             fontSize: 13,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           content,
-          style: TextStyle(
-            color: Color(0xFF9A9A9A),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white.withOpacity(0.5),
             fontSize: 13,
             height: 1.4,
           ),

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../design_system/components/backgrounds/gradient_background.dart';
-import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../services/firebase_service.dart';
 import '../services/dealer_service.dart';
 import '../services/auth_service.dart';
@@ -49,7 +47,6 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
       }
 
       // Filter hands by participation periods for live sessions
-      // Filter applies to ANY user with participation periods (including dealer-players)
       final isLiveSession = widget.session['isLive'] == true;
       final currentUserId = AuthService.userId;
 
@@ -84,62 +81,87 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          GradientBackground(),
+          // Teal radial gradient at top
+          Positioned(
+            top: -screenWidth * 0.3,
+            right: -screenWidth * 0.2,
+            child: Container(
+              width: screenWidth * 1.2,
+              height: screenWidth * 1.2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF1A4A4A).withOpacity(0.6),
+                    const Color(0xFF133538).withOpacity(0.3),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.4, 1.0],
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
               children: [
-                // Glassmorphic Header
-                ClipRect(
-                  child: BackdropFilter(
-                    filter: ui.ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                    child: Container(
-                      padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-                      decoration: BoxDecoration(
-                        color: Color(0x03FFFFFF),
-                      ),
-                      child: Row(
-                        children: [
-                          // Back button
-                          GlassyIconButton(
-                            icon: Icons.arrow_back,
-                            onPressed: () => Navigator.pop(context),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: Row(
+                    children: [
+                      // Back button - glassy circle
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
                           ),
-                          SizedBox(width: 12),
-                          // Session info
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.session['sessionName'] != null &&
-                                  widget.session['sessionName'].isNotEmpty
-                                      ? widget.session['sessionName']
-                                      : 'Session ${widget.session['id'].substring(0, 8)}...',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  '${hands.length} hands logged',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ],
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Session info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.session['sessionName'] != null &&
+                              widget.session['sessionName'].isNotEmpty
+                                  ? widget.session['sessionName']
+                                  : 'Session ${widget.session['id'].substring(0, 8)}...',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 20,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              '${hands.length} hands logged',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 13,
+                                color: Colors.white.withOpacity(0.5),
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
 
@@ -165,30 +187,39 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, color: Colors.red, size: 64),
-            SizedBox(height: 16),
+            const Icon(Icons.error_outline, color: Colors.red, size: 64),
+            const SizedBox(height: 16),
             Text(
               'Error',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               error!,
-              style: TextStyle(color: Color(0xFF9A9A9A)),
+              style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loadHands,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF5AC95A),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: _loadHands,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF89F1EC),
+                  borderRadius: BorderRadius.circular(60),
+                ),
+                child: Text(
+                  'Retry',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-              child: Text('Retry', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -204,7 +235,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Color(0xFF2A2A2E),
+                color: const Color(0xFF131616),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: ClipRRect(
@@ -217,27 +248,27 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                   errorBuilder: (context, error, stackTrace) {
                     return Icon(
                       Icons.casino_outlined,
-                      color: Color(0xFF9A9A9A),
+                      color: Colors.white.withOpacity(0.3),
                       size: 40,
                     );
                   },
                 ),
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             Text(
               'No Hands Logged',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'This session has no recorded hands yet.',
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withOpacity(0.5),
                 fontSize: 14,
               ),
             ),
@@ -247,7 +278,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       itemCount: hands.length,
       itemBuilder: (context, index) => _buildHandCard(hands[index], index + 1),
     );
@@ -262,154 +293,148 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     return GestureDetector(
       onTap: () => _navigateToHandActions(hand),
       child: Container(
-        margin: EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Color(0xFF1F1F23),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isStarred ? Colors.amber.withOpacity(0.5) : Color(0xFF2A2A2E),
-            width: isStarred ? 2 : 1,
-          ),
+          color: const Color(0xFF131616),
+          borderRadius: BorderRadius.circular(18),
+          border: isStarred
+              ? Border.all(color: Colors.amber.withOpacity(0.5), width: 1.5)
+              : null,
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Hand Header
-          Row(
-            children: [
-              // Hand number with star overlay if starred
-              Stack(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF5AC95A), Color(0xFF4CAF50)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hand Header
+            Row(
+              children: [
+                // Hand number badge
+                Stack(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF89F1EC).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      borderRadius: BorderRadius.circular(10),
+                      child: Center(
+                        child: Text(
+                          '#$handNumber',
+                          style: GoogleFonts.ibmPlexSans(
+                            color: const Color(0xFF89F1EC),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: Center(
-                      child: Text(
-                        '#$handNumber',
-                        style: TextStyle(
+                    // Star badge
+                    if (isStarred)
+                      Positioned(
+                        top: -3,
+                        right: -3,
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: const BoxDecoration(
+                            color: Colors.amber,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.star,
+                            color: Colors.white,
+                            size: 10,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Position: ${hand['heroPositionName'] ?? PokerPositions.getPositionName(hand['heroPosition'] ?? 1, hand['buttonPosition'], hand['playerCount'])}',
+                        style: GoogleFonts.ibmPlexSans(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${actions.length} actions  •  ${DateFormat('HH:mm:ss').format(startTime)}',
+                        style: GoogleFonts.ibmPlexSans(
+                          color: Colors.white.withOpacity(0.5),
                           fontSize: 12,
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                  // Star badge
-                  if (isStarred)
-                    Positioned(
-                      top: -3,
-                      right: -3,
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.amber,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.star,
-                          color: Colors.white,
-                          size: 10,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Your Position: ${hand['heroPositionName'] ?? PokerPositions.getPositionName(hand['heroPosition'] ?? 1, hand['buttonPosition'], hand['playerCount'])}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      '${actions.length} actions • ${DateFormat('HH:mm:ss').format(startTime)}',
-                      style: TextStyle(
-                        color: Color(0xFF9A9A9A),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: Color(0xFF9A9A9A),
-                size: 14,
-              ),
-            ],
-          ),
-
-          SizedBox(height: 12),
-
-          // Hand Info Grid
-          Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Color(0xFF161618),
-              borderRadius: BorderRadius.circular(10),
+                Icon(
+                  Icons.chevron_right,
+                  color: Colors.white.withOpacity(0.3),
+                  size: 20,
+                ),
+              ],
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildHandStat('Players', '${hand['playerCount']}'),
-                ),
-                Container(
-                  width: 1,
-                  height: 24,
-                  color: Color(0xFF2A2A2E),
-                ),
-                Expanded(
-                  child: _buildHandStat('Actions', '${actions.length}'),
-                ),
-                // Show hero cards if available
-                if (_hasHeroCards(hand)) ...[
+
+            const SizedBox(height: 12),
+
+            // Hand Info Row
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildHandStat('Players', '${hand['playerCount']}'),
+                  ),
                   Container(
                     width: 1,
                     height: 24,
-                    color: Color(0xFF2A2A2E),
+                    color: Colors.white.withOpacity(0.1),
                   ),
                   Expanded(
-                    child: _buildHeroCardsColumn(hand),
+                    child: _buildHandStat('Actions', '${actions.length}'),
                   ),
+                  // Show hero cards if available
+                  if (_hasHeroCards(hand)) ...[
+                    Container(
+                      width: 1,
+                      height: 24,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+                    Expanded(
+                      child: _buildHeroCardsColumn(hand),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
 
-          // Tags row (if any)
-          if (tags.isNotEmpty) ...[
-            SizedBox(height: 10),
-            Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: tags.map((tag) => _buildTagBadge(tag)).toList(),
-            ),
+            // Tags row (if any)
+            if (tags.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: tags.map((tag) => _buildTagBadge(tag)).toList(),
+              ),
+            ],
           ],
-        ],
         ),
       ),
     );
   }
 
   Widget _buildTagBadge(String tag) {
-    // Get icon for tag
     IconData tagIcon;
     switch (tag) {
       case 'Bluff':
@@ -435,12 +460,12 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Color(0xFFBAFF9A).withOpacity(0.15),
+        color: const Color(0xFF89F1EC).withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: Color(0xFFBAFF9A).withOpacity(0.4),
+          color: const Color(0xFF89F1EC).withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -450,14 +475,14 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
           Icon(
             tagIcon,
             size: 10,
-            color: Color(0xFFBAFF9A),
+            color: const Color(0xFF89F1EC),
           ),
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           Text(
             tag,
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 10,
-              color: Color(0xFFBAFF9A),
+              color: const Color(0xFF89F1EC),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -471,17 +496,17 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
       children: [
         Text(
           value,
-          style: TextStyle(
-            color: Colors.white,
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF89F1EC),
             fontSize: 15,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: 2),
+        const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
-            color: Color(0xFF9A9A9A),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white.withOpacity(0.5),
             fontSize: 10,
           ),
         ),
@@ -506,15 +531,15 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (card1 != null) _buildMiniCard(card1),
-            if (card1 != null && card2 != null) SizedBox(width: 3),
+            if (card1 != null && card2 != null) const SizedBox(width: 3),
             if (card2 != null) _buildMiniCard(card2),
           ],
         ),
-        SizedBox(height: 2),
+        const SizedBox(height: 2),
         Text(
           'Hero Cards',
-          style: TextStyle(
-            color: Color(0xFF9A9A9A),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white.withOpacity(0.5),
             fontSize: 10,
           ),
         ),
@@ -523,12 +548,11 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
   }
 
   Widget _buildMiniCard(String? card) {
-    if (card == null || card.isEmpty) return SizedBox.shrink();
+    if (card == null || card.isEmpty) return const SizedBox.shrink();
 
     final suit = card.length > 1 ? card.substring(1) : '';
     final rank = card.isNotEmpty ? card[0] : '';
 
-    // Determine if suit is red (hearts, diamonds) or black (spades, clubs)
     final isRedSuit = suit == '♥' || suit == '♦';
     final cardColor = isRedSuit ? Colors.red : Colors.black;
 
@@ -538,7 +562,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: Color(0xFF2A2A2E), width: 0.5),
+        border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.5),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
