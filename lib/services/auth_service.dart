@@ -1,12 +1,27 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../models/account_type.dart';
 import 'fcm_service.dart';
+
+/// Thrown when Google sign-in detects an existing email/password account.
+/// The UI should catch this and show a password dialog to link accounts.
+class GoogleSignInAccountLinkException implements Exception {
+  final String email;
+  final AuthCredential googleCredential;
+  const GoogleSignInAccountLinkException({
+    required this.email,
+    required this.googleCredential,
+  });
+}
 
 class AuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: '311745459306-povk09gd7ll56fgng8rsac54lrbgguq6.apps.googleusercontent.com',
+  );
 
   // Cached account type
   static AccountType? _cachedAccountType;
@@ -182,11 +197,125 @@ class AuthService {
 
       clearAccountTypeCache();  // Clear cached account type
       await _auth.signOut();
+      // Sign out of Google so account picker appears next time
+      try { await _googleSignIn.signOut(); } catch (_) {}
       print('User signed out');
     } catch (e) {
       _isExplicitLogout = false;  // Reset on error
       print('Sign out error: $e');
       throw 'Failed to sign out. Please try again.';
+    }
+  }
+
+  // ==================== Google Sign-In ====================
+
+  /// Sign in (or register) with Google.
+  /// Returns null if user cancels the Google dialog.
+  /// Throws [GoogleSignInAccountLinkException] if the email is already
+  /// registered with email/password — the UI should catch this and show
+  /// a password dialog to link accounts.
+  static Future<UserCredential?> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null; // User cancelled
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      UserCredential userCredential;
+
+      try {
+        userCredential = await _auth.signInWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'account-exists-with-different-credential') {
+          // Email already registered with email/password — let UI handle linking
+          final email = e.email ?? googleUser.email;
+          throw GoogleSignInAccountLinkException(
+            email: email,
+            googleCredential: credential,
+          );
+        }
+        rethrow;
+      }
+
+      if (userCredential.user != null) {
+        await _syncGoogleProfileData(userCredential.user!, googleUser);
+        await ensureUserDocument();
+        clearExplicitLogoutFlag();
+        unawaited(_setupFcmInBackground());
+      }
+
+      return userCredential;
+    } on GoogleSignInAccountLinkException {
+      rethrow; // Let UI handle this
+    } on FirebaseAuthException catch (e) {
+      throw _getAuthException(e);
+    } catch (e) {
+      if (e.toString().contains('sign_in_canceled') ||
+          e.toString().contains('network_error')) {
+        return null;
+      }
+      throw 'Google sign-in failed. Please try again.';
+    }
+  }
+
+  /// Link a Google credential to an existing email/password account.
+  /// Called from the UI after the user enters their password.
+  static Future<UserCredential> linkGoogleToExistingAccount({
+    required String email,
+    required String password,
+    required AuthCredential googleCredential,
+  }) async {
+    try {
+      // Sign in with existing email/password
+      final emailCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Link the Google credential to this account
+      final linked = await emailCredential.user!
+          .linkWithCredential(googleCredential);
+
+      // Sync Google photo
+      final googleAccount = await _googleSignIn.signInSilently();
+      if (googleAccount != null && linked.user != null) {
+        await _syncGoogleProfileData(linked.user!, googleAccount);
+      }
+
+      await ensureUserDocument();
+      clearExplicitLogoutFlag();
+      unawaited(_setupFcmInBackground());
+
+      return linked;
+    } on FirebaseAuthException catch (e) {
+      throw _getAuthException(e);
+    }
+  }
+
+  /// Sync Google profile photo to Firebase Auth and Firestore.
+  static Future<void> _syncGoogleProfileData(
+    User firebaseUser,
+    GoogleSignInAccount googleAccount,
+  ) async {
+    final photoUrl = googleAccount.photoUrl;
+    if (photoUrl == null) return;
+
+    try {
+      await firebaseUser.updatePhotoURL(photoUrl);
+      await firebaseUser.reload();
+
+      await _firestore.collection('users').doc(firebaseUser.uid).set({
+        'photoURL': photoUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      // Non-fatal: photo sync failure should not block sign-in
     }
   }
 
@@ -231,6 +360,9 @@ class AuthService {
   static String get userDisplayName {
     return currentUser?.displayName ?? currentUser?.email?.split('@').first ?? 'Player';
   }
+
+  // Get user photo URL (from Google profile or manually set)
+  static String? get userPhotoURL => currentUser?.photoURL;
   
   // Get user ID for database operations
   static String? get userId => currentUser?.uid;
@@ -252,6 +384,10 @@ class AuthService {
         return 'This account has been disabled.';
       case 'too-many-requests':
         return 'Too many failed attempts. Please try again later.';
+      case 'account-exists-with-different-credential':
+        return 'This email is already registered. Please sign in with your password.';
+      case 'credential-already-in-use':
+        return 'This Google account is already linked to another account.';
       case 'network-request-failed':
         return 'Network error. Please check your connection.';
       case 'internal-error':

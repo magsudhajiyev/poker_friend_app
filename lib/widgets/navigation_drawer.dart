@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/club.dart';
 import '../services/auth_service.dart';
 import '../services/club_service.dart';
@@ -323,32 +324,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   Widget _buildProfileSection() {
     return Column(
       children: [
-        // Avatar (circular, 56px)
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF2A5A30),
-                Color(0xFF1A3A20),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(240),
-          ),
-          child: Center(
-            child: Text(
-              _getInitials(),
-              style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF87ED81),
-              ),
-            ),
-          ),
-        ),
+        // Avatar — Google photo or initials fallback
+        _buildAvatar(56),
 
         const SizedBox(height: 16),
 
@@ -773,6 +750,49 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(double size) {
+    final photoURL = AuthService.userPhotoURL;
+    if (photoURL != null && photoURL.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(size / 2),
+        child: CachedNetworkImage(
+          imageUrl: photoURL,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => _buildInitialsAvatar(size),
+          errorWidget: (context, url, error) => _buildInitialsAvatar(size),
+        ),
+      );
+    }
+    return _buildInitialsAvatar(size);
+  }
+
+  Widget _buildInitialsAvatar(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2A5A30), Color(0xFF1A3A20)],
+        ),
+        borderRadius: BorderRadius.circular(size / 2),
+      ),
+      child: Center(
+        child: Text(
+          _getInitials(),
+          style: GoogleFonts.inter(
+            fontSize: size * 0.357,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF87ED81),
+          ),
+        ),
       ),
     );
   }

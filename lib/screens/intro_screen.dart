@@ -6,7 +6,7 @@ class IntroScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A3A2E), // Dark forest green
+      backgroundColor: const Color(0xFF1A3A2E),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -23,7 +23,6 @@ class IntroScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
                 child: Row(
                   children: [
-                    // Logo placeholder (P icon)
                     Container(
                       width: 44,
                       height: 44,
@@ -37,7 +36,6 @@ class IntroScreen extends StatelessWidget {
                           style: GoogleFonts.ibmPlexSans(
                             color: Colors.white,
                             fontSize: 24,
-                            
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -49,7 +47,6 @@ class IntroScreen extends StatelessWidget {
                       style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 16,
-                        
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -70,7 +67,6 @@ class IntroScreen extends StatelessWidget {
                         style: GoogleFonts.ibmPlexSans(
                           color: Colors.white,
                           fontSize: 40,
-                          
                           fontWeight: FontWeight.w800,
                           height: 1.1,
                           letterSpacing: -1.5,
@@ -112,7 +108,6 @@ class IntroScreen extends StatelessWidget {
                           'Create account',
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
-                            
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -151,7 +146,6 @@ class IntroScreen extends StatelessWidget {
                           'Log in',
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
-                            
                             fontWeight: FontWeight.w600,
                           ),
                         ),

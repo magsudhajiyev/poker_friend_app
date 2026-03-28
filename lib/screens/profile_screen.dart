@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
 import '../services/session_result_service.dart';
@@ -325,27 +326,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileSection() {
     return Column(
       children: [
-        // Avatar
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(240),
-            gradient: LinearGradient(
-              colors: [Color(0xFF2A5A30), Color(0xFF1A3A20)],
-            ),
-          ),
-          child: Center(
-            child: Text(
-              _getInitials(),
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF87ED81),
-              ),
-            ),
-          ),
-        ),
+        // Avatar — Google photo or initials fallback
+        _buildAvatar(56),
         SizedBox(height: 12),
 
         // Name
@@ -702,6 +684,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAvatar(double size) {
+    final photoURL = AuthService.userPhotoURL;
+    if (photoURL != null && photoURL.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(size / 2),
+        child: CachedNetworkImage(
+          imageUrl: photoURL,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => _buildInitialsAvatar(size),
+          errorWidget: (context, url, error) => _buildInitialsAvatar(size),
+        ),
+      );
+    }
+    return _buildInitialsAvatar(size);
+  }
+
+  Widget _buildInitialsAvatar(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size / 2),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2A5A30), Color(0xFF1A3A20)],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          _getInitials(),
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: size * 0.357,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF87ED81),
+          ),
+        ),
+      ),
     );
   }
 

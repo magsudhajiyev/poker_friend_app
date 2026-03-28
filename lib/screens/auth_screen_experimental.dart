@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
@@ -105,6 +106,163 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      final credential = await AuthService.signInWithGoogle();
+      if (credential != null && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+        );
+      }
+    } on GoogleSignInAccountLinkException catch (e) {
+      if (mounted) _showAccountLinkDialog(e);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showAccountLinkDialog(GoogleSignInAccountLinkException e) {
+    final passwordController = TextEditingController();
+    bool isLinking = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('Link Google Account',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'An account with ${e.email} already exists. '
+                'Enter your password to link your Google account.',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: TextStyle(color: Colors.white54),
+                  filled: true,
+                  fillColor: Colors.white10,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Cancel', style: TextStyle(color: Colors.white54)),
+            ),
+            ElevatedButton(
+              onPressed: isLinking
+                  ? null
+                  : () async {
+                      setDialogState(() => isLinking = true);
+                      try {
+                        await AuthService.linkGoogleToExistingAccount(
+                          email: e.email,
+                          password: passwordController.text,
+                          googleCredential: e.googleCredential,
+                        );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (mounted) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => HomeScreen()),
+                          );
+                        }
+                      } catch (err) {
+                        setDialogState(() => isLinking = false);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(err.toString()),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+              child: isLinking
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Link Account'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoogleSection() {
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(child: Divider(color: Colors.white24)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text('or', style: TextStyle(color: Colors.white54, fontSize: 14)),
+            ),
+            Expanded(child: Divider(color: Colors.white24)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: OutlinedButton(
+            onPressed: _isLoading ? null : _handleGoogleSignIn,
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Colors.white.withOpacity(0.30)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset('assets/icons/google_logo.svg', height: 20, width: 20),
+                const SizedBox(width: 10),
+                Text(
+                  'Continue with Google',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -366,6 +524,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
               ),
             ),
           ),
+
+          _buildGoogleSection(),
         ],
       ),
     );
@@ -491,6 +651,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
               ),
             ),
           ),
+
+          _buildGoogleSection(),
         ],
       ),
     );
