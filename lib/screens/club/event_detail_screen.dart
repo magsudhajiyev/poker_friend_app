@@ -726,14 +726,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Future<void> _editEvent() async {
-    final result = await Navigator.push(
+    final result = await showCreateEventDrawer(
       context,
-      MaterialPageRoute(
-        builder: (context) => CreateEventScreen(
-          club: widget.club,
-          event: _event,
-        ),
-      ),
+      club: widget.club,
+      event: _event,
     );
 
     // Refresh data if event was edited

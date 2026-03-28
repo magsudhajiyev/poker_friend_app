@@ -116,17 +116,17 @@ class EventService {
       gameType: gameType,
     );
 
-    // Send notification to club members if enabled
+    // Send notification to club members in background — don't block event creation
     if (notifyMembers) {
-      await ClubNotificationService.notifyEventCreated(
+      ClubNotificationService.notifyEventCreated(
         clubId: clubId,
         event: event,
-      );
+      ).catchError((_) {});
     }
 
-    // Also register with backend for real-time tracking if it has tables
+    // Register with backend in background — Firestore is the source of truth
     if (tableIds.isNotEmpty) {
-      await _registerEventWithBackend(event);
+      _registerEventWithBackend(event);
     }
 
     return event;

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -15,8 +16,10 @@ import '../../models/poker_table.dart';
 import '../../services/club_service.dart';
 import '../../services/table_service.dart';
 import '../../widgets/invite_member_dialog.dart';
+import '../../widgets/global_bottom_nav_bar.dart';
 
 /// Club settings screen for admins to manage club info, tables, and members
+/// Matches Figma node 436:5292
 class ClubSettingsScreen extends StatefulWidget {
   final Club club;
 
@@ -110,7 +113,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Club info saved'),
-            backgroundColor: PokerFriendColors.green,
+            backgroundColor: Color(0xFF4CAF50),
           ),
         );
       }
@@ -119,7 +122,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error saving: $e'),
-            backgroundColor: PokerFriendColors.red,
+            backgroundColor: const Color(0xFFDA5B5E),
           ),
         );
       }
@@ -130,92 +133,120 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0A0A),
+      backgroundColor: const Color(0xFF02050B),
       extendBodyBehindAppBar: true,
-      body: Column(
+      body: Stack(
         children: [
-          _buildGradientHeader(),
-          Expanded(
-            child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.tealAccent,
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _loadData,
-                    color: AppColors.tealAccent,
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildClubInfoSection(),
-                          const SizedBox(height: 28),
-                          _buildTablesSection(),
-                          const SizedBox(height: 28),
-                          _buildMembersSection(),
-                          const SizedBox(height: 40),
-                        ],
-                      ),
-                    ),
+          // Cyan ellipse glow at top
+          Positioned(
+            top: -162,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                width: 412,
+                height: 217,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 1.0,
+                    colors: [
+                      const Color(0xFF4CDBFF).withValues(alpha: 0.25),
+                      const Color(0xFF2EB46A).withValues(alpha: 0.12),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.5, 1.0],
                   ),
+                ),
+              ),
+            ),
+          ),
+
+          // Main content
+          Column(
+            children: [
+              SizedBox(height: statusBarHeight),
+              _buildHeader(),
+              Expanded(
+                child: _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.tealAccent,
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadData,
+                        color: AppColors.tealAccent,
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildClubInfoSection(),
+                              _buildTablesSection(),
+                              const SizedBox(height: 8),
+                              _buildMembersSection(),
+                              const SizedBox(height: 40),
+                            ],
+                          ),
+                        ),
+                      ),
+              ),
+            ],
           ),
         ],
       ),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home'),
     );
   }
 
-  Widget _buildGradientHeader() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.headerGradientCyan,
-            AppColors.headerGradientGreen,
-          ],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(34),
-          bottomRight: Radius.circular(34),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+  /// Header matching Figma design
+  Widget _buildHeader() {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          height: 84,
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Back button (white bg, dark icon)
+              // Back button
               GestureDetector(
                 onTap: () => Navigator.pop(context, true),
                 child: Container(
                   width: 44,
                   height: 44,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF101115),
+                    borderRadius: BorderRadius.circular(88),
                   ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.black87,
-                    size: 22,
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'icons/figma_icons/back.svg',
+                      width: 18,
+                      height: 15,
+                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+
+              const SizedBox(width: 12),
+
+              // Title
               Expanded(
                 child: Text(
                   'Club Settings',
                   style: GoogleFonts.ibmPlexSans(
-                    fontSize: 24,
-                    color: Colors.white,
+                    fontSize: 27,
                     fontWeight: FontWeight.w600,
+                    color: Colors.white,
                     letterSpacing: -0.5,
+                    height: 1.0,
                   ),
                 ),
               ),
@@ -223,129 +254,92 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title, {Widget? trailing}) {
-    return Row(
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 17,
-            color: AppColors.tealAccent,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const Spacer(),
-        if (trailing != null) trailing,
-      ],
     );
   }
 
   // ========== Club Info Section ==========
 
   Widget _buildClubInfoSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Club Information'),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color(0xFF546165).withOpacity(0.74),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section label
+          Text(
+            'Club Information',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF8C8C8C),
+              height: 1.44,
             ),
           ),
-          child: Column(
-            children: [
-              _buildTextField(
-                controller: _nameController,
-                label: 'Club Name',
-                icon: Icons.home_outlined,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _addressController,
-                label: 'Address',
-                icon: Icons.location_on_outlined,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _phoneController,
-                label: 'Phone',
-                icon: Icons.phone_outlined,
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _descriptionController,
-                label: 'Description',
-                icon: Icons.description_outlined,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.tealAccent.withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: _isSaving ? null : _saveClubInfo,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: _isSaving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            'Save Changes',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(height: 24),
+          // Text fields with 28px gap
+          _buildOutlineTextField(
+            controller: _nameController,
+            label: 'Club Name',
           ),
-        ),
-      ],
+          const SizedBox(height: 28),
+          _buildOutlineTextField(
+            controller: _addressController,
+            label: 'Address',
+          ),
+          const SizedBox(height: 28),
+          _buildOutlineTextField(
+            controller: _phoneController,
+            label: 'Phone',
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: 28),
+          _buildOutlineTextField(
+            controller: _descriptionController,
+            label: 'Description',
+            maxLines: 3,
+          ),
+          const SizedBox(height: 24),
+          // Save Changes button
+          GestureDetector(
+            onTap: _isSaving ? null : _saveClubInfo,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF89F1EC),
+                borderRadius: BorderRadius.circular(110),
+              ),
+              child: Center(
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
+                      )
+                    : Text(
+                        'Save Changes',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                          letterSpacing: -0.5,
+                          height: 24 / 17,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildOutlineTextField({
     required TextEditingController controller,
     required String label,
-    required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
   }) {
@@ -353,20 +347,38 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: GoogleFonts.ibmPlexSans(color: Colors.white),
+      style: GoogleFonts.ibmPlexSans(
+        fontSize: 17,
+        fontWeight: FontWeight.w500,
+        color: const Color(0xFF8C8C8C),
+        height: 1.44,
+      ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
-        prefixIcon: Icon(icon, color: AppColors.tealAccent),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
+        labelStyle: GoogleFonts.ibmPlexSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+        floatingLabelStyle: GoogleFonts.ibmPlexSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        filled: false,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.tealAccent),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF89F1EC), width: 1),
         ),
       ),
     );
@@ -378,94 +390,152 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(
-          'Tables',
-          trailing: GestureDetector(
-            onTap: _showAddTableDialog,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.add, color: Colors.white, size: 18),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Add',
-                    style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+        // Section label
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            'Tables',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF8C8C8C),
+              height: 1.44,
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         if (_tables.isEmpty)
+          // Empty state card
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
             decoration: BoxDecoration(
-              color: const Color(0xFF546165).withOpacity(0.74),
+              color: const Color(0xFF101115),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-                width: 1,
-              ),
+              border: Border.all(color: Colors.black, width: 1),
             ),
             child: Column(
               children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: AppColors.tealAccent.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.tealAccent.withOpacity(0.2),
-                      width: 1,
+                // Icon
+                Icon(
+                  Icons.table_restaurant_outlined,
+                  size: 24,
+                  color: Colors.white,
+                ),
+                const SizedBox(height: 6),
+                // Title
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    'No tables yet',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                      height: 1.44,
                     ),
                   ),
-                  child: Icon(
-                    Icons.table_restaurant_outlined,
-                    size: 32,
-                    color: AppColors.tealAccent,
+                ),
+                // Subtitle
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    'Add a table to get started',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFFD3FFFD),
+                      height: 1.44,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'No tables yet',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Add a table to get started',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.5),
+                const SizedBox(height: 24),
+                // Add New Table button (outline)
+                GestureDetector(
+                  onTap: _showAddTableDialog,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(110),
+                      border: Border.all(
+                        color: const Color(0xFF75A6CB),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset(
+                          'icons/figma_icons/plus.svg',
+                          width: 24,
+                          height: 24,
+                          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Add New Table',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                            height: 24 / 17,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           )
-        else
+        else ...[
           ...List.generate(_tables.length, (index) {
             return Padding(
-              padding: EdgeInsets.only(bottom: index < _tables.length - 1 ? 12 : 0),
+              padding: const EdgeInsets.only(bottom: 12),
               child: _buildTableCard(_tables[index]),
             );
           }),
+          // Add New Table button below existing tables
+          Center(
+            child: GestureDetector(
+              onTap: _showAddTableDialog,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(110),
+                  border: Border.all(
+                    color: const Color(0xFF75A6CB),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SvgPicture.asset(
+                      'icons/figma_icons/plus.svg',
+                      width: 24,
+                      height: 24,
+                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Add New Table',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                        height: 24 / 17,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -475,12 +545,12 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF546165).withOpacity(0.74),
+        color: const Color(0xFF101115),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isActive
-              ? PokerFriendColors.green.withOpacity(0.3)
-              : Colors.white.withOpacity(0.1),
+              ? const Color(0xFF4CAF50).withValues(alpha: 0.3)
+              : Colors.black,
           width: 1,
         ),
       ),
@@ -490,19 +560,15 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.tealAccent.withOpacity(0.15),
+              color: const Color(0xFF1B1E24),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.tealAccent.withOpacity(0.2),
-                width: 1,
-              ),
             ),
             child: Center(
               child: Text(
                 '${table.tableNumber}',
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 20,
-                  color: AppColors.tealAccent,
+                  color: Colors.white,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -516,19 +582,19 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 Text(
                   table.name,
                   style: GoogleFonts.ibmPlexSans(
-                    fontSize: 16,
+                    fontSize: 17,
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   table.status.name.toUpperCase(),
                   style: GoogleFonts.ibmPlexSans(
-                    fontSize: 12,
+                    fontSize: 13,
                     color: isActive
-                        ? PokerFriendColors.green
-                        : Colors.white.withOpacity(0.5),
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFF808285),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -538,21 +604,19 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           // QR button
           _buildIconButton(
             icon: Icons.qr_code,
-            color: AppColors.tealAccent,
             onTap: () => _showTableQRDialog(table),
           ),
           const SizedBox(width: 8),
           // Edit button
           _buildIconButton(
             icon: Icons.edit,
-            color: const Color(0xFF5AC8FA),
             onTap: () => _showEditTableDialog(table),
           ),
           const SizedBox(width: 8),
           // Delete button
           _buildIconButton(
             icon: Icons.delete,
-            color: const Color(0xFFFF4444),
+            color: const Color(0xFFDA5B5E),
             onTap: () => _confirmDeleteTable(table),
           ),
         ],
@@ -562,26 +626,169 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
 
   Widget _buildIconButton({
     required IconData icon,
-    required Color color,
+    Color? color,
     required VoidCallback onTap,
   }) {
+    final c = color ?? Colors.white;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
+          color: const Color(0xFF1B1E24),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-            width: 1,
-          ),
         ),
-        child: Icon(icon, color: color, size: 18),
+        child: Icon(icon, color: c, size: 18),
       ),
     );
   }
+
+  // ========== Members Section ==========
+
+  Widget _buildMembersSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section label
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            'Members (${_members.length})',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF8C8C8C),
+              height: 1.44,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (_members.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(
+              'No members found',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                color: const Color(0xFF8C8C8C),
+              ),
+            ),
+          )
+        else
+          ...List.generate(_members.length, (index) {
+            return _buildMemberRow(_members[index]);
+          }),
+      ],
+    );
+  }
+
+  Widget _buildMemberRow(ClubMember member) {
+    final initials = _getInitials(member.displayName ?? 'U');
+    final avatarColor = _getAvatarColor(member.role);
+    final roleLabel = member.role == ClubRole.owner
+        ? 'Owner'
+        : member.role == ClubRole.admin
+            ? 'Admin'
+            : member.role == ClubRole.dealer
+                ? 'Dealer'
+                : 'Player';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          // Avatar (rounded rect)
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: avatarColor,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                initials,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Name and subtitle
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  member.displayName ?? 'Unknown',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white,
+                    height: 1.44,
+                  ),
+                ),
+                if (member.email != null)
+                  Text(
+                    member.email!,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF808285),
+                      height: 1.64,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Role badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1B4341),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              roleLabel,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF89F1EC),
+                height: 1.64,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getInitials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name.substring(0, name.length.clamp(0, 3)).toUpperCase();
+  }
+
+  Color _getAvatarColor(ClubRole role) {
+    switch (role) {
+      case ClubRole.owner:
+        return const Color(0xFF7C3AED);
+      case ClubRole.admin:
+        return const Color(0xFF2563EB);
+      case ClubRole.dealer:
+        return const Color(0xFF0891B2);
+      case ClubRole.player:
+        return const Color(0xFF059669);
+    }
+  }
+
+  // ========== Dialogs ==========
 
   Future<void> _showAddTableDialog() async {
     final nameController = TextEditingController(text: 'Table ${_tables.length + 1}');
@@ -589,20 +796,23 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
+        backgroundColor: const Color(0xFF101115),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
+        title: Text(
           'Add Table',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         content: TextField(
           controller: nameController,
-          style: const TextStyle(color: Colors.white),
+          style: GoogleFonts.ibmPlexSans(color: Colors.white),
           decoration: InputDecoration(
             labelText: 'Table Name',
-            labelStyle: TextStyle(color: PokerFriendColors.dark9),
+            labelStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             filled: true,
-            fillColor: PokerFriendColors.dark5,
+            fillColor: const Color(0xFF1B1E24),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -612,15 +822,24 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: PokerFriendColors.dark9)),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: PokerFriendColors.purple,
-              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFF89F1EC),
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(110),
+              ),
             ),
-            child: const Text('Add'),
+            child: Text(
+              'Add',
+              style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -639,14 +858,17 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Table added'),
-              backgroundColor: PokerFriendColors.green,
+              backgroundColor: Color(0xFF4CAF50),
             ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: const Color(0xFFDA5B5E),
+            ),
           );
         }
       }
@@ -660,20 +882,23 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
+        backgroundColor: const Color(0xFF101115),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
+        title: Text(
           'Edit Table',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         content: TextField(
           controller: nameController,
-          style: const TextStyle(color: Colors.white),
+          style: GoogleFonts.ibmPlexSans(color: Colors.white),
           decoration: InputDecoration(
             labelText: 'Table Name',
-            labelStyle: TextStyle(color: PokerFriendColors.dark9),
+            labelStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             filled: true,
-            fillColor: PokerFriendColors.dark5,
+            fillColor: const Color(0xFF1B1E24),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -683,15 +908,24 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: PokerFriendColors.dark9)),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: PokerFriendColors.purple,
-              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFF89F1EC),
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(110),
+              ),
             ),
-            child: const Text('Save'),
+            child: Text(
+              'Save',
+              style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -708,7 +942,10 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: const Color(0xFFDA5B5E),
+            ),
           );
         }
       }
@@ -720,21 +957,33 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
-        title: const Text('Delete Table?', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF101115),
+        title: Text(
+          'Delete Table?',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         content: Text(
           'Are you sure you want to delete "${table.name}"? This cannot be undone.',
-          style: TextStyle(color: PokerFriendColors.dark11),
+          style: GoogleFonts.ibmPlexSans(color: Colors.white),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: PokerFriendColors.red),
-            child: const Text('Delete'),
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFDA5B5E)),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -752,7 +1001,10 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: const Color(0xFFDA5B5E),
+            ),
           );
         }
       }
@@ -760,7 +1012,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   }
 
   Future<void> _showTableQRDialog(PokerTable table) async {
-    // Get the table with QR code
     final tableWithQR = await TableService.getTableWithQRCode(_club.id, table.id);
     final qrCode = tableWithQR?.tableQRCode;
 
@@ -769,11 +1020,14 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
+        backgroundColor: const Color(0xFF101115),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           '${table.name} QR Code',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
           textAlign: TextAlign.center,
         ),
         content: SizedBox(
@@ -799,16 +1053,16 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                   ),
                 )
               else
-                const Text(
+                Text(
                   'QR code not available',
-                  style: TextStyle(color: Colors.white),
+                  style: GoogleFonts.ibmPlexSans(color: Colors.white),
                 ),
               const SizedBox(height: 16),
               Text(
                 'Dealers scan this to start a session at this table',
-                style: TextStyle(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 14,
-                  color: PokerFriendColors.dark9,
+                  color: const Color(0xFF8C8C8C),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -816,14 +1070,16 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           ),
         ),
         actions: [
-          // Download PDF button
           if (qrCode != null)
             TextButton.icon(
               onPressed: () => _downloadQRCodePDF(table, qrCode),
               icon: const Icon(Icons.download, size: 18),
-              label: const Text('PDF'),
+              label: Text(
+                'PDF',
+                style: GoogleFonts.ibmPlexSans(),
+              ),
               style: TextButton.styleFrom(
-                foregroundColor: PokerFriendColors.green,
+                foregroundColor: const Color(0xFF89F1EC),
               ),
             ),
           TextButton(
@@ -836,7 +1092,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('QR codes regenerated'),
-                      backgroundColor: PokerFriendColors.green,
+                      backgroundColor: Color(0xFF4CAF50),
                     ),
                   );
                 }
@@ -848,15 +1104,24 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 }
               }
             },
-            child: Text('Regenerate', style: TextStyle(color: PokerFriendColors.yellow)),
+            child: Text(
+              'Regenerate',
+              style: GoogleFonts.ibmPlexSans(color: const Color(0xFFFFB300)),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: PokerFriendColors.purple,
-              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFF89F1EC),
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(110),
+              ),
             ),
-            child: const Text('Done'),
+            child: Text(
+              'Done',
+              style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -866,7 +1131,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   /// Generate and download/share QR code as PDF
   Future<void> _downloadQRCodePDF(PokerTable table, String qrCode) async {
     try {
-      // Generate QR code image bytes
       final qrPainter = QrPainter(
         data: qrCode,
         version: QrVersions.auto,
@@ -877,13 +1141,11 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
 
-      // Draw white background
       canvas.drawRect(
         Rect.fromLTWH(0, 0, qrImageSize, qrImageSize),
         Paint()..color = Colors.white,
       );
 
-      // Draw QR code
       qrPainter.paint(canvas, Size(qrImageSize, qrImageSize));
 
       final picture = recorder.endRecording();
@@ -891,9 +1153,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
       final qrImageBytes = byteData!.buffer.asUint8List();
 
-      // Create PDF document
       final pdf = pw.Document();
-
       final qrImage = pw.MemoryImage(qrImageBytes);
 
       pdf.addPage(
@@ -904,7 +1164,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               child: pw.Column(
                 mainAxisAlignment: pw.MainAxisAlignment.center,
                 children: [
-                  // Club name
                   pw.Text(
                     _club.name,
                     style: pw.TextStyle(
@@ -913,7 +1172,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                     ),
                   ),
                   pw.SizedBox(height: 20),
-                  // Table name
                   pw.Text(
                     table.name,
                     style: pw.TextStyle(
@@ -922,7 +1180,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                     ),
                   ),
                   pw.SizedBox(height: 30),
-                  // QR Code
                   pw.Container(
                     padding: const pw.EdgeInsets.all(20),
                     decoration: pw.BoxDecoration(
@@ -932,7 +1189,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                     child: pw.Image(qrImage, width: 250, height: 250),
                   ),
                   pw.SizedBox(height: 30),
-                  // Instructions
                   pw.Text(
                     'Scan this QR code to start a session',
                     style: const pw.TextStyle(fontSize: 16),
@@ -952,9 +1208,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         ),
       );
 
-      // Save PDF to temp directory and share
       final pdfBytes = await pdf.save();
-
       final tempDir = await getTemporaryDirectory();
       final fileName = '${_club.name}_${table.name}_QR.pdf'.replaceAll(' ', '_');
       final file = File('${tempDir.path}/$fileName');
@@ -969,185 +1223,10 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error generating PDF: $e'),
-            backgroundColor: PokerFriendColors.red,
+            backgroundColor: const Color(0xFFDA5B5E),
           ),
         );
       }
-    }
-  }
-
-  // ========== Members Section ==========
-
-  Widget _buildMembersSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle(
-          'Members (${_members.length})',
-          trailing: GestureDetector(
-            onTap: _showInviteMemberDialog,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: PokerFriendColors.green.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: PokerFriendColors.green.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.person_add_outlined, color: PokerFriendColors.green, size: 18),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Invite',
-                    style: GoogleFonts.ibmPlexSans(
-                      color: PokerFriendColors.green,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        if (_members.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: const Color(0xFF546165).withOpacity(0.74),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-                width: 1,
-              ),
-            ),
-            child: Text(
-              'No members found',
-              style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
-              textAlign: TextAlign.center,
-            ),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF546165).withOpacity(0.74),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              children: List.generate(_members.length, (index) {
-                final member = _members[index];
-                return Column(
-                  children: [
-                    _buildMemberRow(member),
-                    if (index < _members.length - 1)
-                      Divider(
-                        height: 1,
-                        color: Colors.white.withOpacity(0.1),
-                        indent: 70,
-                      ),
-                  ],
-                );
-              }),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildMemberRow(ClubMember member) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: _getRoleColor(member.role).withOpacity(0.15),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: _getRoleColor(member.role).withOpacity(0.2),
-                width: 1,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                (member.displayName ?? 'U')[0].toUpperCase(),
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 18,
-                  color: _getRoleColor(member.role),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  member.displayName ?? 'Unknown',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 15,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                if (member.email != null)
-                  Text(
-                    member.email!,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 13,
-                      color: Colors.white.withOpacity(0.5),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: _getRoleColor(member.role).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: _getRoleColor(member.role).withOpacity(0.2),
-                width: 1,
-              ),
-            ),
-            child: Text(
-              member.role.name.toUpperCase(),
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 11,
-                color: _getRoleColor(member.role),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getRoleColor(ClubRole role) {
-    switch (role) {
-      case ClubRole.owner:
-        return Colors.amber;
-      case ClubRole.admin:
-        return AppColors.tealAccent;
-      case ClubRole.dealer:
-        return const Color(0xFF5AC8FA);
-      case ClubRole.player:
-        return PokerFriendColors.green;
     }
   }
 
@@ -1157,7 +1236,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       builder: (context) => InviteMemberDialog(club: _club),
     );
 
-    // Refresh members list if a member was added
     if (result == true) {
       await _loadData();
     }

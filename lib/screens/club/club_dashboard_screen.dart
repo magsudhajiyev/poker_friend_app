@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../design_system/poker_friend_theme.dart';
@@ -17,12 +18,14 @@ import '../../services/event_attendance_service.dart';
 import '../../services/invitation_service.dart';
 import '../../services/dealer_service.dart';
 import '../../services/seat_service.dart';
+import '../../widgets/global_bottom_nav_bar.dart';
 import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
 import 'club_settings_screen.dart';
 import 'club_info_screen.dart';
 
-/// Club dashboard showing events with tabs for Upcoming, Live, and Past
+/// Club dashboard showing events with segmented tabs for Upcoming, Live, Past, Dealers
+/// Matches Figma node 357:3862
 class ClubDashboardScreen extends StatefulWidget {
   final Club club;
 
@@ -49,22 +52,26 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   // Dealers tab data
   List<ClubMember> _dealers = [];
   List<ClubInvitation> _pendingInvitations = [];
-  Map<String, String?> _dealerTableAssignments = {}; // dealerId -> tableId
+  Map<String, String?> _dealerTableAssignments = {};
 
   // Player counts for event cards
-  Map<String, int> _eventPlayerCounts = {}; // eventId -> player count
+  Map<String, int> _eventPlayerCounts = {};
 
   // Real-time subscription for all events
   StreamSubscription<List<ClubEvent>>? _eventsSubscription;
 
   // Real-time subscriptions for seat changes (cash games)
-  // Key: "eventId_tableId" -> subscription
   Map<String, StreamSubscription> _seatSubscriptions = {};
 
   @override
   void initState() {
     super.initState();
-    _initTabController(); // Initialize immediately to avoid hot reload issues
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController!.addListener(() {
+      if (!_tabController!.indexIsChanging) {
+        setState(() {});
+      }
+    });
     _loadData();
     _setupEventsListener();
   }
@@ -75,19 +82,16 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         .listen((allEvents) {
       if (!mounted) return;
 
-      // Upcoming: scheduled events, sorted by start time (soonest first)
       final upcoming = allEvents
           .where((e) => e.status == EventStatus.scheduled)
           .toList()
         ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
-      // Live: active or paused events, sorted by start time (most recent first)
       final live = allEvents
           .where((e) => e.status == EventStatus.active || e.status == EventStatus.paused)
           .toList()
         ..sort((a, b) => b.startTime.compareTo(a.startTime));
 
-      // Past: completed or cancelled events, sorted by start time (most recent first)
       final past = allEvents
           .where((e) => e.status == EventStatus.completed || e.status == EventStatus.cancelled)
           .toList()
@@ -99,17 +103,13 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         _pastEvents = past;
       });
 
-      // Load player counts for all events
       _loadPlayerCounts(allEvents);
-
-      // Setup real-time seat listeners for live cash games
       _setupSeatListeners(live);
     });
   }
 
   /// Setup real-time listeners for seat changes in live cash games
   void _setupSeatListeners(List<ClubEvent> liveEvents) {
-    // Get current cash game table keys
     final currentKeys = <String>{};
     for (final event in liveEvents) {
       if (event.gameType == 'cash') {
@@ -119,7 +119,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       }
     }
 
-    // Cancel subscriptions for tables no longer live
     final keysToRemove = _seatSubscriptions.keys
         .where((key) => !currentKeys.contains(key))
         .toList();
@@ -128,13 +127,12 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       _seatSubscriptions.remove(key);
     }
 
-    // Setup new subscriptions for cash game tables
     for (final event in liveEvents) {
       if (event.gameType != 'cash') continue;
 
       for (final tableId in event.tableIds) {
         final key = '${event.id}_$tableId';
-        if (_seatSubscriptions.containsKey(key)) continue; // Already listening
+        if (_seatSubscriptions.containsKey(key)) continue;
 
         _seatSubscriptions[key] = SeatService.watchTableSeats(
           clubId: widget.club.id,
@@ -147,7 +145,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     }
   }
 
-  /// Update player count for a specific cash game event
   Future<void> _updateCashGamePlayerCount(ClubEvent event) async {
     int count = 0;
     for (final tableId in event.tableIds) {
@@ -165,7 +162,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     }
   }
 
-  /// Load player counts for events based on their status
   Future<void> _loadPlayerCounts(List<ClubEvent> events) async {
     final counts = <String, int>{};
 
@@ -174,7 +170,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         int count = 0;
 
         if (event.status == EventStatus.scheduled) {
-          // For upcoming events: get "going" RSVP count
           final attendanceCounts = await EventAttendanceService.getAttendanceCounts(
             widget.club.id,
             event.id,
@@ -182,18 +177,14 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           count = attendanceCounts[AttendanceStatus.going] ?? 0;
         } else if (event.status == EventStatus.active || event.status == EventStatus.paused) {
           if (event.gameType == 'cash') {
-            // For cash games: count seated players across all tables
             for (final tableId in event.tableIds) {
               final seats = await SeatService.getTableSeats(
                 clubId: widget.club.id,
                 tableId: tableId,
               );
-              count += seats.values
-                  .where((s) => s.isOccupied)
-                  .length;
+              count += seats.values.where((s) => s.isOccupied).length;
             }
           } else {
-            // For tournaments: get active (non-busted) player count
             final rankings = await EventService.getRankingsFromFirestore(
               widget.club.id,
               event.id,
@@ -205,7 +196,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             }
           }
         } else if (event.status == EventStatus.completed) {
-          // For completed events: get total players from final standings
           final finalStandings = await EventService.getFinalStandings(
             widget.club.id,
             event.id,
@@ -213,7 +203,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           if (finalStandings != null) {
             count = finalStandings.totalPlayers;
           } else {
-            // Fallback to rankings if final standings not available
             final rankings = await EventService.getRankingsFromFirestore(
               widget.club.id,
               event.id,
@@ -224,7 +213,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
         counts[event.id] = count;
       } catch (e) {
-        // Silently ignore errors for individual event counts
         counts[event.id] = 0;
       }
     }
@@ -233,18 +221,6 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       setState(() {
         _eventPlayerCounts = counts;
       });
-    }
-  }
-
-  void _initTabController() {
-    const tabCount = 3; // Upcoming, Live, Past (Dealers removed - available in Settings)
-    if (_tabController == null || _tabController!.length != tabCount) {
-      // Preserve current index if valid, otherwise default to 0
-      final currentIndex = _tabController?.index ?? 0;
-      final newIndex = currentIndex.clamp(0, tabCount - 1);
-      final oldController = _tabController;
-      _tabController = TabController(length: tabCount, vsync: this, initialIndex: newIndex);
-      oldController?.dispose();
     }
   }
 
@@ -264,11 +240,9 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     setState(() => _isLoading = true);
 
     try {
-      // First check if user is admin (needed for tab count)
       final isAdmin = await ClubService.canManageEvents(widget.club.id);
       if (!mounted) return;
 
-      // Load all data in parallel
       final results = await Future.wait([
         ClubService.getMemberCount(widget.club.id),
         EventService.getUpcomingEvents(widget.club.id),
@@ -279,13 +253,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       ]);
       if (!mounted) return;
 
-      // Get active dealer sessions to show dealer status
       Map<String, String?> dealerTableAssignments = {};
       if (isAdmin) {
         final members = results[4] as List<ClubMember>;
         final dealers = members.where((m) => m.role == ClubRole.dealer).toList();
         for (final dealer in dealers) {
-          // Check if dealer has active session
           final sessions = await DealerService.getDealerActiveSessions();
           if (!mounted) return;
           final activeSession = sessions.where((s) => s.dealerId == dealer.userId && s.clubId == widget.club.id).firstOrNull;
@@ -310,11 +282,9 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               .toList();
           _dealerTableAssignments = dealerTableAssignments;
         }
-        _initTabController();
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading club data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -322,15 +292,10 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   }
 
   void _navigateToCreateEvent() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CreateEventScreen(club: widget.club),
-      ),
-    );
+    final result = await showCreateEventDrawer(context, club: widget.club);
 
     if (result == true) {
-      _loadData(); // Refresh events
+      _loadData();
     }
   }
 
@@ -347,7 +312,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     );
 
     if (result == true) {
-      _loadData(); // Refresh events
+      _loadData();
     }
   }
 
@@ -356,11 +321,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     final statusBarHeight = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF02050B), // Figma: Background/Paper
+      backgroundColor: const Color(0xFF02050B),
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          // Cyan ellipse glow at top (Figma node 357:3863)
+          // Cyan ellipse glow at top
           Positioned(
             top: -162,
             left: 0,
@@ -390,8 +355,8 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             children: [
               SizedBox(height: statusBarHeight),
               _buildHeader(),
-              const SizedBox(height: 16),
-              if (_tabController != null) _buildTabBar(),
+              const SizedBox(height: 10),
+              if (_tabController != null) _buildSegmentedControl(),
               const SizedBox(height: 16),
               Expanded(
                 child: _isLoading || _tabController == null
@@ -401,7 +366,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         ),
                       )
                     : TabBarView(
-                        controller: _tabController,
+                        controller: _tabController!,
                         children: [
                           _buildEventList(_upcomingEvents, 'No upcoming events', 'scheduled'),
                           _buildEventList(_liveEvents, 'No live events', 'live'),
@@ -411,48 +376,15 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               ),
             ],
           ),
+
+          // (Create Event button is now inline in empty state)
         ],
       ),
-      floatingActionButton: _buildFloatingActionButton(),
-    );
-  }
-
-  Widget? _buildFloatingActionButton() {
-    if (!_isAdmin || _tabController == null) return null;
-
-    // Show Create Event button for admins
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.tealAccent.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: FloatingActionButton.extended(
-        onPressed: _navigateToCreateEvent,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
-          'Create Event',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home'),
     );
   }
 
   /// Header matching Figma design (node 357:3911)
-  /// Backdrop blur 20px, height 84px, padding 16px
   Widget _buildHeader() {
     return ClipRect(
       child: BackdropFilter(
@@ -462,22 +394,22 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Back button (Figma: 44x44, bg #101115, rounded 88.733px)
+              // Back button
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF101115), // Background/Surface
-                    borderRadius: BorderRadius.circular(88.733),
+                    color: const Color(0xFF101115),
+                    borderRadius: BorderRadius.circular(88),
                   ),
                   child: Center(
-                    child: Image.asset(
-                      'icons/flat_icons/back.png',
-                      width: 24,
-                      height: 24,
-                      color: Colors.white,
+                    child: SvgPicture.asset(
+                      'icons/figma_icons/back.svg',
+                      width: 18,
+                      height: 15,
+                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                     ),
                   ),
                 ),
@@ -485,13 +417,12 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
               const SizedBox(width: 12),
 
-              // Club name and member count (Figma: flex-1)
+              // Club name and member count
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Club name (Figma: SemiBold 27px, white, tracking -0.5)
                     Text(
                       widget.club.name,
                       style: GoogleFonts.ibmPlexSans(
@@ -504,23 +435,21 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    // Member count row (Figma: gap 6px)
                     Row(
                       children: [
-                        // Members icon (Figma: 18x18, #D3FFFD)
-                        Icon(
-                          Icons.people_outline,
-                          size: 18,
-                          color: const Color(0xFFD3FFFD), // Text/Secondary
+                        SvgPicture.asset(
+                          'icons/figma_icons/opponents.svg',
+                          width: 18,
+                          height: 18,
+                          colorFilter: const ColorFilter.mode(Color(0xFFD3FFFD), BlendMode.srcIn),
                         ),
                         const SizedBox(width: 6),
-                        // Member count text (Figma: Regular 13px, #D3FFFD)
                         Text(
                           '$_memberCount member${_memberCount == 1 ? '' : 's'}',
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
-                            color: const Color(0xFFD3FFFD), // mint/100
+                            color: const Color(0xFFD3FFFD),
                             height: 1.47,
                           ),
                         ),
@@ -532,21 +461,59 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
               const SizedBox(width: 8),
 
-              // Settings button (Figma: 44x44, bg #101115, rounded 88.733px)
+              // Admin badge (only if admin)
+              if (_isAdmin) ...[
+                Container(
+                  height: 25,
+                  padding: const EdgeInsets.symmetric(horizontal: 11),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF02050B),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFF89F1EC),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.star,
+                        size: 14,
+                        color: Color(0xFF89F1EC),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Admin',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          height: 1.47,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+
+              // Settings button
               GestureDetector(
                 onTap: _navigateToSettingsOrInfo,
                 child: Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF101115), // Background/Surface
-                    borderRadius: BorderRadius.circular(88.733),
+                    color: const Color(0xFF101115),
+                    borderRadius: BorderRadius.circular(88),
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.settings_outlined,
-                      size: 24,
-                      color: Colors.white,
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'icons/figma_icons/gear.svg',
+                      width: 24,
+                      height: 24,
+                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                     ),
                   ),
                 ),
@@ -565,7 +532,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         MaterialPageRoute(
           builder: (context) => ClubSettingsScreen(club: widget.club),
         ),
-      ).then((_) => _loadData()); // Refresh data when returning
+      ).then((_) => _loadData());
     } else {
       Navigator.push(
         context,
@@ -576,134 +543,103 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     }
   }
 
-  Widget _buildTabBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(80),
-        border: Border.all(
-          color: const Color(0xFF2c2c2e),
-          width: 1,
-        ),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(60),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1e3b49), Color(0xFF4a887e)],
-          ),
+  /// Segmented control matching Figma (node 416:4363)
+  /// Uses AnimatedBuilder to smoothly slide the indicator during swipe
+  Widget _buildSegmentedControl() {
+    final tabs = ['Upcoming', 'Live', 'Past'];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(9),
+        decoration: BoxDecoration(
+          color: const Color(0xFF101115),
+          borderRadius: BorderRadius.circular(90),
           border: Border.all(
-            color: const Color(0x4DEBEBF5),
+            color: const Color(0xFF35373C),
             width: 1,
           ),
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        indicatorPadding: EdgeInsets.zero,
-        dividerColor: Colors.transparent,
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.white,
-        labelStyle: GoogleFonts.ibmPlexSans(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          letterSpacing: -0.3,
-        ),
-        unselectedLabelStyle: GoogleFonts.ibmPlexSans(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          letterSpacing: -0.3,
-        ),
-        tabs: [
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Upcoming'),
-                if (_upcomingEvents.isNotEmpty) ...[
-                  const SizedBox(width: 6),
-                  _buildBadge(_upcomingEvents.length),
-                ],
-              ],
-            ),
-          ),
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Live'),
-                if (_liveEvents.isNotEmpty) ...[
-                  const SizedBox(width: 6),
-                  _buildLiveBadge(_liveEvents.length),
-                ],
-              ],
-            ),
-          ),
-          const Tab(text: 'Past'),
-        ],
-        onTap: (_) {
-          // Force rebuild to update FAB
-          setState(() {});
-        },
-      ),
-    );
-  }
+        child: AnimatedBuilder(
+          animation: _tabController!.animation!,
+          builder: (context, _) {
+            final animValue = _tabController!.animation!.value;
 
-  Widget _buildBadge(int count) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.tealAccent.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        '$count',
-        style: GoogleFonts.ibmPlexSans(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: AppColors.tealAccent,
-        ),
-      ),
-    );
-  }
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final tabWidth = constraints.maxWidth / tabs.length;
 
-  Widget _buildLiveBadge(int count) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFF4444),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF4444).withOpacity(0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '$count',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ],
+                return Stack(
+                  children: [
+                    // Sliding indicator
+                    Positioned(
+                      left: animValue * tabWidth,
+                      child: Container(
+                        width: tabWidth,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF89F1EC),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                    // Tab labels
+                    Row(
+                      children: tabs.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final label = entry.value;
+                        // Compute how "selected" this tab is (1.0 = fully selected)
+                        final distance = (animValue - index).abs();
+                        final selected = (1.0 - distance).clamp(0.0, 1.0);
+
+                        final hasLiveIndicator = index == 1 && _liveEvents.isNotEmpty;
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () => _tabController!.animateTo(index),
+                            child: Container(
+                              height: 30,
+                              color: Colors.transparent,
+                              child: Center(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      label,
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: lerpDouble(17, 15, selected)!,
+                                        fontWeight: selected > 0.5 ? FontWeight.w500 : FontWeight.w400,
+                                        color: Color.lerp(
+                                          const Color(0xFF8C8C8C),
+                                          Colors.black,
+                                          selected,
+                                        ),
+                                      ),
+                                    ),
+                                    if (hasLiveIndicator) ...[
+                                      const SizedBox(width: 5),
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFFF4444),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -713,85 +649,131 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       return _buildEmptyState(emptyMessage, type);
     }
 
+    final showButton = _isAdmin && type == 'scheduled';
     return RefreshIndicator(
       onRefresh: _loadData,
       color: AppColors.tealAccent,
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-        itemCount: events.length,
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+        itemCount: events.length + (showButton ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index == events.length && showButton) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 16),
+              child: Center(child: _buildCreateEventButton()),
+            );
+          }
           return _buildEventCard(events[index], type);
         },
       ),
     );
   }
 
+  /// Empty state matching Figma (node 427:4377)
   Widget _buildEmptyState(String message, String type) {
-    IconData icon;
     String subtitle;
-
     switch (type) {
       case 'scheduled':
-        icon = Icons.event_outlined;
         subtitle = _isAdmin
             ? 'Tap the button below to create one'
             : 'Check back later for new events';
         break;
       case 'live':
-        icon = Icons.play_circle_outline;
         subtitle = 'Events will appear here when they start';
         break;
       case 'past':
-        icon = Icons.history_outlined;
         subtitle = 'Completed events will appear here';
         break;
       default:
-        icon = Icons.event_outlined;
         subtitle = '';
     }
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
+      children: [
+        // Push content up from center — roughly 40% from top of available space
+        const Spacer(flex: 3),
+        // Icon container: 72x72, #1B1E24 bg, 20px radius
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: const Color(0xFF1B1E24),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Center(
+            child: SvgPicture.asset(
+              'icons/figma_icons/calendar.svg',
+              width: 34,
+              height: 34,
+              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Heading: 22px w600 white
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            letterSpacing: -0.3,
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Subtitle: 15px w400 #8C8C8C
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: const Color(0xFF8C8C8C),
+            height: 1.47,
+          ),
+        ),
+        // Create Event button (admin only, upcoming tab only)
+        if (_isAdmin && type == 'scheduled') ...[
+          const Spacer(flex: 3),
+          _buildCreateEventButton(),
+        ],
+        // Gap between button and navbar
+        const Spacer(flex: 1),
+      ],
+    );
+  }
+
+  /// Create Event button matching Figma (node 416:4374)
+  /// Auto-width, centered, pinned near bottom
+  Widget _buildCreateEventButton() {
+    return GestureDetector(
+      onTap: _navigateToCreateEvent,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF89F1EC),
+          borderRadius: BorderRadius.circular(110),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.tealAccent.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: AppColors.tealAccent.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                icon,
-                size: 36,
-                color: AppColors.tealAccent,
-              ),
+            SvgPicture.asset(
+              'icons/figma_icons/plus.svg',
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(width: 8),
             Text(
-              message,
-              textAlign: TextAlign.center,
+              'Create Event',
               style: GoogleFonts.ibmPlexSans(
-                fontSize: 18,
-                color: Colors.white,
+                fontSize: 17,
                 fontWeight: FontWeight.w600,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.5),
-                fontWeight: FontWeight.w400,
+                color: Colors.black,
+                letterSpacing: -0.5,
+                height: 24 / 17,
               ),
             ),
           ],
@@ -801,284 +783,237 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   }
 
   Widget _buildEventCard(ClubEvent event, String type) {
-    final dateFormat = DateFormat('EEE, MMM d');
-    final timeFormat = DateFormat('h:mm a');
     final isLive = type == 'live';
+    final playerCount = _eventPlayerCounts[event.id] ?? 0;
+
+    // Format date/time
+    final dateStr = DateFormat('MMM d, h:mm a').format(event.startTime).toLowerCase();
+
+    // Build buy-in display
+    String? buyInDisplay;
+    if (event.gameType == 'cash' && event.stakes != null && event.stakes!.isNotEmpty) {
+      buyInDisplay = event.stakes!;
+    } else if (event.buyInAmount != null && event.buyInAmount! > 0) {
+      buyInDisplay = '\$${event.buyInAmount!.toStringAsFixed(0)}';
+    }
+
+    // Player count label
+    String playerLabel;
+    switch (type) {
+      case 'live':
+        playerLabel = '$playerCount playing';
+        break;
+      case 'past':
+        playerLabel = '$playerCount players';
+        break;
+      default:
+        playerLabel = '$playerCount going';
+    }
 
     return GestureDetector(
       onTap: () => _navigateToEventDetail(event),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        child: ClipRRect(
+        decoration: BoxDecoration(
+          color: const Color(0xFF101115),
           borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF546165).withOpacity(0.74),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isLive
-                      ? const Color(0xFFFF4444).withOpacity(0.5)
-                      : Colors.white.withOpacity(0.1),
-                  width: isLive ? 2 : 1,
-                ),
-              ),
+          border: Border.all(
+            color: isLive ? const Color(0xFFFF4444).withValues(alpha: 0.5) : Colors.black,
+            width: isLive ? 1.5 : 1,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _navigateToEventDetail(event),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top row with status
+                  // Top row: Event name + live badge or dots
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      if (isLive)
+                      // Live indicator dot
+                      if (isLive) ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          width: 8,
+                          height: 8,
                           decoration: BoxDecoration(
                             color: const Color(0xFFFF4444),
-                            borderRadius: BorderRadius.circular(8),
+                            shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFF4444).withOpacity(0.4),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                                color: const Color(0xFFFF4444).withValues(alpha: 0.5),
+                                blurRadius: 6,
                               ),
                             ],
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'LIVE',
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 11,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      else
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                        ),
+                        const SizedBox(width: 10),
+                      ],
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
-                            event.status.displayName,
+                            event.name,
                             style: GoogleFonts.ibmPlexSans(
-                              fontSize: 11,
-                              color: Colors.white.withOpacity(0.8),
-                              fontWeight: FontWeight.w600,
+                              fontSize: 17,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              height: 1.44,
                             ),
                           ),
                         ),
-                      const Spacer(),
+                      ),
+                      // Game type pill
                       Container(
-                        width: 32,
-                        height: 32,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          color: const Color(0xFF1B4341),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(
-                          Icons.chevron_right,
-                          color: Colors.white.withOpacity(0.7),
-                          size: 20,
+                        child: Text(
+                          event.gameType == 'cash' ? 'Cash' : 'Tournament',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 11,
+                            color: const Color(0xFF89F1EC),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
 
-                  // Event name
-                  Text(
-                    event.name,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.3,
-                    ),
+                  const SizedBox(height: 12),
+
+                  // Separator
+                  Container(
+                    height: 1,
+                    color: const Color(0xFF1C1F21),
                   ),
-                  const SizedBox(height: 10),
 
-                  // Date and time
+                  const SizedBox(height: 14),
+
+                  // Date/time row
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 14,
-                        color: AppColors.tealAccent,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        dateFormat.format(event.startTime),
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 14,
-                          color: Colors.white.withOpacity(0.9),
-                          fontWeight: FontWeight.w500,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          'Date',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            color: const Color(0xFFB3B4B6),
+                            fontWeight: FontWeight.w500,
+                            height: 1.44,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Icon(
-                        Icons.access_time_outlined,
-                        size: 14,
-                        color: AppColors.tealAccent,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        timeFormat.format(event.startTime),
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 14,
-                          color: Colors.white.withOpacity(0.9),
-                          fontWeight: FontWeight.w500,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          dateStr,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            color: const Color(0xFFD3FFFD),
+                            fontWeight: FontWeight.w500,
+                            height: 1.44,
+                          ),
                         ),
                       ),
                     ],
                   ),
 
-                  // Location if available
-                  if (event.location != null && event.location!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
+                  // Buy-in row
+                  if (buyInDisplay != null) ...[
+                    const SizedBox(height: 6),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          size: 14,
-                          color: AppColors.tealAccent,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
-                            event.location!,
+                            event.gameType == 'cash' ? 'Stakes' : 'Buy-in',
                             style: GoogleFonts.ibmPlexSans(
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 17,
+                              color: const Color(0xFFB3B4B6),
                               fontWeight: FontWeight.w500,
+                              height: 1.44,
                             ),
-                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            buyInDisplay,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              color: const Color(0xFFD3FFFD),
+                              fontWeight: FontWeight.w500,
+                              height: 1.44,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ],
 
-                  // Buy-in and player count row
                   const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      if (!event.isFree) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: PokerFriendColors.green.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: PokerFriendColors.green.withOpacity(0.3),
-                              width: 1,
+
+                  // Bottom row: player count
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 18,
+                          color: const Color(0xFF808285),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              playerLabel,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 13,
+                                color: const Color(0xFF808285),
+                                fontWeight: FontWeight.w500,
+                                height: 1.44,
+                              ),
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.attach_money,
-                                size: 14,
-                                color: PokerFriendColors.green,
-                              ),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${event.buyInAmount?.toStringAsFixed(0)}',
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 13,
-                                  color: PokerFriendColors.green,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
-                        const SizedBox(width: 8),
+                        // Location if available
+                        if (event.location != null && event.location!.isNotEmpty) ...[
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 14,
+                            color: const Color(0xFF808285),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            event.location!,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              color: const Color(0xFF808285),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ],
-                      // Player count badge
-                      _buildPlayerCountBadge(event, type),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildPlayerCountBadge(ClubEvent event, String type) {
-    final count = _eventPlayerCounts[event.id] ?? 0;
-
-    // Determine label based on event type
-    String label;
-    Color color;
-
-    switch (type) {
-      case 'scheduled':
-        label = '$count going';
-        color = AppColors.tealAccent;
-        break;
-      case 'live':
-        label = '$count playing';
-        color = const Color(0xFF5AC8FA);
-        break;
-      case 'past':
-        label = '$count players';
-        color = Colors.white.withOpacity(0.6);
-        break;
-      default:
-        label = '$count';
-        color = Colors.white.withOpacity(0.6);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.people_outline,
-            size: 14,
-            color: color,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 13,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1092,18 +1027,16 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: PokerFriendColors.purple,
+      color: AppColors.tealAccent,
       child: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          // Active dealers section
           if (_dealers.isNotEmpty) ...[
             _buildSectionTitle('Active Dealers', _dealers.length),
             const SizedBox(height: 12),
             ..._dealers.map(_buildDealerCard),
             const SizedBox(height: 24),
           ],
-          // Pending invitations section
           if (_pendingInvitations.isNotEmpty) ...[
             _buildSectionTitle('Pending Invitations', _pendingInvitations.length),
             const SizedBox(height: 12),
@@ -1119,7 +1052,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 16,
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -1129,15 +1062,15 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: PokerFriendColors.dark5,
+            color: const Color(0xFF1B1E24),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
             '$count',
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
-              color: PokerFriendColors.dark11,
               fontWeight: FontWeight.w600,
+              color: const Color(0xFF8C8C8C),
             ),
           ),
         ),
@@ -1147,49 +1080,45 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
   Widget _buildDealerCard(ClubMember dealer) {
     final isActive = _dealerTableAssignments.containsKey(dealer.userId);
-    // tableId can be used later to show which table the dealer is at
-    // final tableId = _dealerTableAssignments[dealer.userId];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
+        color: const Color(0xFF101115),
         borderRadius: BorderRadius.circular(16),
         border: isActive
-            ? Border.all(color: PokerFriendColors.green.withValues(alpha: 0.5))
+            ? Border.all(color: const Color(0xFF54E98A).withValues(alpha: 0.5))
             : null,
       ),
       child: Row(
         children: [
-          // Avatar
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: PokerFriendColors.purple.withValues(alpha: 0.2),
+              color: const Color(0xFF89F1EC).withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 (dealer.displayName ?? 'D')[0].toUpperCase(),
-                style: TextStyle(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 20,
-                  color: PokerFriendColors.purple,
+                  color: const Color(0xFF89F1EC),
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
           const SizedBox(width: 14),
-          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   dealer.displayName ?? 'Unknown',
-                  style: const TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -1198,21 +1127,20 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                 const SizedBox(height: 2),
                 Text(
                   dealer.email ?? '',
-                  style: TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
-                    color: PokerFriendColors.dark9,
+                    color: const Color(0xFF8C8C8C),
                   ),
                 ),
               ],
             ),
           ),
-          // Status badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: isActive
-                  ? PokerFriendColors.green.withValues(alpha: 0.15)
-                  : PokerFriendColors.dark5,
+                  ? const Color(0xFF54E98A).withValues(alpha: 0.15)
+                  : const Color(0xFF1B1E24),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -1222,16 +1150,16 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                   width: 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: isActive ? PokerFriendColors.green : PokerFriendColors.dark9,
+                    color: isActive ? const Color(0xFF54E98A) : const Color(0xFF8C8C8C),
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   isActive ? 'Active' : 'Idle',
-                  style: TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
-                    color: isActive ? PokerFriendColors.green : PokerFriendColors.dark9,
+                    color: isActive ? const Color(0xFF54E98A) : const Color(0xFF8C8C8C),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1248,35 +1176,33 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
+        color: const Color(0xFF101115),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: PokerFriendColors.yellow.withValues(alpha: 0.3)),
+        border: Border.all(color: const Color(0xFFFFD60A).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          // Avatar placeholder
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: PokerFriendColors.yellow.withValues(alpha: 0.15),
+              color: const Color(0xFFFFD60A).withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.mail_outline,
-              color: PokerFriendColors.yellow,
+              color: Color(0xFFFFD60A),
               size: 24,
             ),
           ),
           const SizedBox(width: 14),
-          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   invitation.email,
-                  style: const TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
@@ -1285,31 +1211,29 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                 const SizedBox(height: 2),
                 Text(
                   'Invited ${_formatTimeAgo(invitation.createdAt)}',
-                  style: TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
-                    color: PokerFriendColors.dark9,
+                    color: const Color(0xFF8C8C8C),
                   ),
                 ),
               ],
             ),
           ),
-          // Status
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: PokerFriendColors.yellow.withValues(alpha: 0.15),
+              color: const Color(0xFFFFD60A).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               'Pending',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 12,
-                color: PokerFriendColors.yellow,
+                color: const Color(0xFFFFD60A),
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          // Cancel button
           const SizedBox(width: 8),
           GestureDetector(
             onTap: () => _cancelInvitation(invitation),
@@ -1317,12 +1241,12 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: PokerFriendColors.red.withValues(alpha: 0.15),
+                color: const Color(0xFFDA5B5E).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.close,
-                color: PokerFriendColors.red,
+                color: Color(0xFFDA5B5E),
                 size: 18,
               ),
             ),
@@ -1338,33 +1262,37 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 80,
-            height: 80,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
-              color: PokerFriendColors.dark3,
+              color: const Color(0xFF1B1E24),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(
-              Icons.person_outline,
-              size: 40,
-              color: PokerFriendColors.dark9,
+            child: const Center(
+              child: Icon(
+                Icons.person_outline,
+                size: 34,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'No dealers yet',
-            style: TextStyle(
-              fontSize: 18,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 22,
               color: Colors.white,
               fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Invite dealers to help manage your tables',
-            style: TextStyle(
-              fontSize: 14,
-              color: PokerFriendColors.dark9,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              color: const Color(0xFF8C8C8C),
+              fontWeight: FontWeight.w400,
             ),
           ),
         ],
@@ -1393,11 +1321,14 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
+        backgroundColor: const Color(0xFF101115),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
+        title: Text(
           'Invite Dealer',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1405,23 +1336,26 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           children: [
             Text(
               'Enter the email address of the dealer you want to invite.',
-              style: TextStyle(color: PokerFriendColors.dark9, fontSize: 14),
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(color: Colors.white),
+              style: GoogleFonts.ibmPlexSans(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'dealer@example.com',
-                hintStyle: TextStyle(color: PokerFriendColors.dark7),
+                hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
                 filled: true,
-                fillColor: PokerFriendColors.dark5,
+                fillColor: const Color(0xFF1B1E24),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: Icon(Icons.email_outlined, color: PokerFriendColors.dark9),
+                prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF8C8C8C)),
               ),
             ),
           ],
@@ -1431,7 +1365,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(color: PokerFriendColors.dark9),
+              style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             ),
           ),
           ElevatedButton(
@@ -1442,11 +1376,14 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: PokerFriendColors.purple,
-              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFF89F1EC),
+              foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Send Invitation'),
+            child: Text(
+              'Send Invitation',
+              style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -1469,18 +1406,18 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Invitation sent to $email'),
-            backgroundColor: PokerFriendColors.green,
+            backgroundColor: const Color(0xFF54E98A),
           ),
         );
       }
 
-      _loadData(); // Refresh to show new invitation
+      _loadData();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to send invitation: $e'),
-            backgroundColor: PokerFriendColors.red,
+            backgroundColor: const Color(0xFFDA5B5E),
           ),
         );
       }
@@ -1491,24 +1428,30 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
-        title: const Text(
+        backgroundColor: const Color(0xFF101115),
+        title: Text(
           'Cancel Invitation?',
-          style: TextStyle(color: Colors.white),
+          style: GoogleFonts.ibmPlexSans(color: Colors.white),
         ),
         content: Text(
           'Cancel the invitation to ${invitation.email}?',
-          style: TextStyle(color: PokerFriendColors.dark11),
+          style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep'),
+            child: Text(
+              'Keep',
+              style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: PokerFriendColors.red),
-            child: const Text('Cancel Invitation'),
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFDA5B5E)),
+            child: Text(
+              'Cancel Invitation',
+              style: GoogleFonts.ibmPlexSans(),
+            ),
           ),
         ],
       ),
@@ -1520,13 +1463,13 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           clubId: widget.club.id,
           invitationId: invitation.id,
         );
-        _loadData(); // Refresh
+        _loadData();
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Failed to cancel invitation: $e'),
-              backgroundColor: PokerFriendColors.red,
+              backgroundColor: const Color(0xFFDA5B5E),
             ),
           );
         }
