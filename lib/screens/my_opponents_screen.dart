@@ -436,26 +436,25 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
               if (searchQuery.isEmpty) ...[
                 const SizedBox(height: 24),
                 // Add Opponent button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _showAddOpponentDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF89F1EC),
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(110),
+                GestureDetector(
+                  onTap: _showAddOpponentDialog,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(110),
+                      border: Border.all(
+                        color: const Color(0xFF75A6CB),
+                        width: 1,
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
-                      elevation: 0,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildIcon(
-                          'icons/figma_icons/plus.svg',
-                          24,
-                          Colors.black,
+                        const Icon(
+                          Icons.add,
+                          color: Colors.white,
+                          size: 24,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -463,7 +462,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black,
+                            color: Colors.white,
                             letterSpacing: -0.5,
                             height: 24 / 17,
                           ),
@@ -487,26 +486,39 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
         // Last item is the Add Opponent button
         if (index == displayOpponents.length) {
           return Padding(
-            padding: EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(top: 8),
             child: GestureDetector(
               onTap: _showAddOpponentDialog,
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
                   borderRadius: BorderRadius.circular(110),
-                ),
-                child: Center(
-                  child: Text(
-                    'Add Opponent',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                      height: 1.45,
-                    ),
+                  border: Border.all(
+                    color: const Color(0xFF75A6CB),
+                    width: 1,
                   ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Add Opponent',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                        height: 24 / 17,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

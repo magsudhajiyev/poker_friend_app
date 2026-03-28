@@ -90,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> earningsChartData = [];
   double avgEarnings = 0.0;
   bool isLoadingData = true;
+  bool _isBankrollHidden = false;
 
   // Context menu state
   String? _selectedEventId;
@@ -1292,9 +1293,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   HomeHeader(
                     userName: userName,
                     subtitle: 'Welcome back',
-                    currentBankroll: currentBankroll,
-                    bankrollGoal: bankrollGoal,
-                    filterLabel: 'Bankroll',
                     onMenuPressed: () {
                       Navigator.push(
                         context,
@@ -1311,9 +1309,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     notificationCount: _unreadNotificationCount,
                   ),
 
-                  const SizedBox(height: 24),  // Gap between header and Recent Activity
+                  const SizedBox(height: 8),
 
-                  // Recent Activity (Stats)
+                  // Bankroll Card (standalone)
+                  _buildBankrollCard(),
+
+                  const SizedBox(height: 8),
+
+                  // Recent Activity (Stats Grid)
                   _buildStatsGrid(),
 
                   const SizedBox(height: 32),
@@ -1559,44 +1562,321 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Recent Activity headline (Figma: Card Header, h-40, px-16, py-8)
-        SectionHeadline(title: 'Recent Activity'),
-
-        // Table-list container (Figma node I393:6764;20:550: px-16, py-8)
+        // Section header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            'Recent Activity',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF8C8C8C),
+            ),
+          ),
+        ),
+        const SizedBox(height: 2),
+        // 2x2 grid of stat cards
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             children: [
-              // Stats rows with separators (Figma: gap-4 between items)
-              StatListRow(
-                label: 'Sessions',
-                value: '${playerStats['totalSessions'] ?? 0}',
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCell(
+                      'Sessions',
+                      '${playerStats['totalSessions'] ?? 0}',
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _buildStatCell(
+                      'Win Rate',
+                      '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              const ListSeparator(),
-              const SizedBox(height: 4),
-              StatListRow(
-                label: 'Win Rate',
-                value: '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
-              ),
-              const SizedBox(height: 4),
-              const ListSeparator(),
-              const SizedBox(height: 4),
-              StatListRow(
-                label: 'Hours',
-                value: '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(1)}',
-              ),
-              const SizedBox(height: 4),
-              const ListSeparator(),
-              const SizedBox(height: 4),
-              StatListRow(
-                label: 'Play Style',
-                value: _getPlayStyleName(),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCell(
+                      'Hours',
+                      '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(0)}',
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _buildStatCell(
+                      'Play Style',
+                      _getPlayStyleName(),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatCell(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF101115),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w400,
+              color: Colors.white,
+              height: 1.44,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 27,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF89F1EC),
+              letterSpacing: -0.5,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBankrollCard() {
+    final remaining = bankrollGoal - currentBankroll;
+    final progress = bankrollGoal > 0
+        ? (currentBankroll / bankrollGoal).clamp(0.0, 1.0)
+        : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Container(
+        height: 213,
+        decoration: BoxDecoration(
+          color: const Color(0xFF121F24),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: const Color(0xFF2A605D),
+            width: 1,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x40000000),
+              blurRadius: 4,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            // Top-right subtle elliptical glow
+            Positioned(
+              top: -36,
+              left: 227,
+              child: Container(
+                width: 212,
+                height: 140,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(106),
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFF2A605D).withValues(alpha: 0.35),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Bottom-left subtle elliptical glow
+            Positioned(
+              top: 170,
+              left: -15,
+              child: Container(
+                width: 180,
+                height: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(90),
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFF2A605D).withValues(alpha: 0.25),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Content with backdrop blur
+            ClipRRect(
+              borderRadius: BorderRadius.circular(23),
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 27, sigmaY: 27),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top row: Bankroll pill + trend icon
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            width: 70,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2A605D),
+                              borderRadius: BorderRadius.circular(140),
+                              border: Border.all(
+                                color: const Color(0xFFD3FFFD),
+                                width: 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'Bankroll',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                    height: 1.64,
+                                  ),
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _isBankrollHidden = !_isBankrollHidden;
+                              });
+                            },
+                            child: Icon(
+                              _isBankrollHidden
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      // Bankroll amount
+                      ImageFiltered(
+                        imageFilter: _isBankrollHidden
+                            ? ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10)
+                            : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+                        child: Text(
+                          '\$${currentBankroll.toInt()} of \$${bankrollGoal.toInt()}',
+                          style: GoogleFonts.familjenGrotesk(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            height: 1.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Remaining
+                      ImageFiltered(
+                        imageFilter: _isBankrollHidden
+                            ? ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10)
+                            : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+                        child: Text(
+                          '\$${remaining.toInt()} left',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFFD3FFFD),
+                            height: 1.44,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Progress bar with indicator dot
+                      SizedBox(
+                        height: 12,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final fillWidth = constraints.maxWidth * progress;
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              alignment: Alignment.centerLeft,
+                              children: [
+                                // Track
+                                Container(
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF02050B),
+                                    borderRadius: BorderRadius.circular(9999),
+                                  ),
+                                ),
+                                // Fill
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  width: fillWidth,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF89F1EC),
+                                    borderRadius: BorderRadius.circular(9999),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF54E98A).withValues(alpha: 0.4),
+                                        blurRadius: 10,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Indicator dot
+                                Positioned(
+                                  left: fillWidth - 6,
+                                  top: 0,
+                                  child: Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF89F1EC),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF54E98A).withValues(alpha: 0.4),
+                                          blurRadius: 10,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

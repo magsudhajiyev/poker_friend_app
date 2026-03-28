@@ -8,13 +8,9 @@ import '../../constants/typography.dart';
 class HomeHeader extends StatelessWidget {
   final String userName;
   final String subtitle;
-  final double currentBankroll;
-  final double bankrollGoal;
-  final String? filterLabel;
   final VoidCallback? onMenuPressed;
   final VoidCallback? onNotificationPressed;
   final VoidCallback? onSettingsPressed;
-  final VoidCallback? onFilterPressed;
   final bool showNotificationBadge;
   final int? notificationCount;
 
@@ -22,20 +18,15 @@ class HomeHeader extends StatelessWidget {
     Key? key,
     required this.userName,
     this.subtitle = 'Welcome back',
-    required this.currentBankroll,
-    required this.bankrollGoal,
-    this.filterLabel,
     this.onMenuPressed,
     this.onNotificationPressed,
     this.onSettingsPressed,
-    this.onFilterPressed,
     this.showNotificationBadge = false,
     this.notificationCount,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final remaining = bankrollGoal - currentBankroll;
     // Get the status bar height to add as top padding
     final topPadding = MediaQuery.of(context).padding.top;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -131,29 +122,26 @@ class HomeHeader extends StatelessWidget {
                     ),
                   ),
 
-                  // Right: Dark pill with icons (gradient + border + shadows)
+                  // Right: Dark pill with bell + hamburger menu
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        stops: [0.39, 0.77],
-                        colors: [
-                          AppColors.darkPillBg,
-                          AppColors.darkPillGradientEnd,
-                        ],
-                      ),
+                      color: const Color(0xFF1B1E24),
                       borderRadius: BorderRadius.circular(110),
                       border: Border.all(
-                        color: AppColors.darkPillBorder,
+                        color: const Color(0xFF6388A5),
                         width: 1,
                       ),
                       boxShadow: const [
                         BoxShadow(
-                          color: Colors.black,
-                          blurRadius: 6,
-                          offset: Offset(0, 1),
+                          color: Color(0x59000000),
+                          blurRadius: 10,
+                          offset: Offset(0, 0),
+                        ),
+                        BoxShadow(
+                          color: Color(0x73000000),
+                          blurRadius: 37,
+                          offset: Offset(0, 2),
                         ),
                       ],
                     ),
@@ -178,115 +166,12 @@ class HomeHeader extends StatelessWidget {
               ),
             ),
 
-            // Financial Snapshot section
-            Padding(
-              padding: const EdgeInsets.only(left: 8, right: 8, top: 24, bottom: 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Filter chip row with trend icon
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Filter chip (Figma node 393:6752 - Label/Outline)
-                      // Specs: border white 1px, rounded-140px, px-10, py-5, text centered
-                      if (filterLabel != null)
-                        GestureDetector(
-                          onTap: onFilterPressed,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(140),
-                            ),
-                            child: Center(
-                              child: Text(
-                                filterLabel!,
-                                style: AppTypography.labelChip(),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        ),
-                      // Trend icon
-                      const Icon(
-                        Icons.trending_up,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Bankroll amount
-                  Text(
-                    '\$${currentBankroll.toInt()} of \$${bankrollGoal.toInt()}',
-                    style: AppTypography.bankrollAmount(),
-                  ),
-                  const SizedBox(height: 18),
-
-                  // Remaining amount
-                  Text(
-                    '\$${remaining.toInt()} left',
-                    style: AppTypography.bankrollSubtext(),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Progress bar
-                  _buildProgressBar(),
-                ],
-              ),
-            ),
+            const SizedBox(height: 18),
               ],
             ),
           ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildProgressBar() {
-    final progress = bankrollGoal > 0
-        ? (currentBankroll / bankrollGoal).clamp(0.0, 1.0)
-        : 0.0;
-
-    return Container(
-      height: 8,
-      decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
-        borderRadius: BorderRadius.circular(9999),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Stack(
-            children: [
-              // Progress fill with solid color and glow (Figma design)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                width: constraints.maxWidth * progress,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: AppColors.accentGreenBright,
-                  borderRadius: BorderRadius.circular(9999),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.accentGreenBright.withOpacity(0.4),
-                      blurRadius: 10,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
       ),
     );
   }
@@ -455,28 +340,16 @@ class HomeHeader extends StatelessWidget {
                     ),
             ),
           ),
-          if (showBadge && badgeCount != null && badgeCount > 0)
+          if (showBadge)
             Positioned(
-              right: 2,
-              top: 2,
+              right: 8,
+              top: 8,
               child: Container(
-                padding: const EdgeInsets.all(4),
+                width: 5,
+                height: 5,
                 decoration: const BoxDecoration(
-                  color: Colors.red,
+                  color: Color(0xFFFF2D55),
                   shape: BoxShape.circle,
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: 18,
-                  minHeight: 18,
-                ),
-                child: Text(
-                  badgeCount > 99 ? '99+' : badgeCount.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
                 ),
               ),
             ),

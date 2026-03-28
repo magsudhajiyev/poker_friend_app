@@ -88,40 +88,10 @@ class InfoCard extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            // Mint button (Figma design)
+            // Outline button (Figma design)
             if (buttonText != null) ...[
               const SizedBox(height: 16),
-              GestureDetector(
-                onTap: onEmptyTap,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.buttonPrimary,
-                    borderRadius: BorderRadius.circular(110),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.add,
-                        color: Colors.black,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        buttonText!,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildOutlineButton(),
             ],
           ],
         ),
@@ -190,41 +160,49 @@ class InfoCard extends StatelessWidget {
                   ),
               ],
             ),
-            // Mint button (Figma design)
+            // Outline button (Figma design)
             if (buttonText != null) ...[
               const SizedBox(height: 16),
-              GestureDetector(
-                onTap: onEmptyTap,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.buttonPrimary,
-                    borderRadius: BorderRadius.circular(110),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.add,
-                        color: Colors.black,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        buttonText!,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildOutlineButton(),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Outlined pill button matching Figma design (node 543:7219)
+  Widget _buildOutlineButton() {
+    return GestureDetector(
+      onTap: onEmptyTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(110),
+          border: Border.all(
+            color: const Color(0xFF75A6CB),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              buttonText!,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: -0.5,
+                height: 24 / 17,
+              ),
+            ),
           ],
         ),
       ),
