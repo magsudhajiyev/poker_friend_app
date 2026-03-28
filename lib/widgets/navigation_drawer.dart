@@ -31,8 +31,22 @@ class AppNavigationDrawer extends StatefulWidget {
 
 class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   List<Club> _clubs = [];
+  Map<String, int> _clubMemberCounts = {};
+  Map<String, String> _clubUserRoles = {};
   bool _hasLoadedClubs = false;
   bool _isClubsExpanded = false;
+
+  // Avatar colors matching Figma examples
+  static const List<Color> _avatarColors = [
+    Color(0xFF7C3AED), // purple
+    Color(0xFFD97706), // amber
+    Color(0xFF06966A), // green
+    Color(0xFFDC2626), // red
+    Color(0xFF2563EB), // blue
+    Color(0xFFDB2777), // pink
+    Color(0xFF0891B2), // cyan
+    Color(0xFFCA8A04), // yellow
+  ];
 
   @override
   void initState() {
@@ -51,6 +65,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           _hasLoadedClubs = true;
         });
       }
+      // Load member counts and roles in background
+      _loadClubDetails(clubs);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -58,6 +74,36 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         });
       }
     }
+  }
+
+  Future<void> _loadClubDetails(List<Club> clubs) async {
+    final userId = AuthService.userId;
+    if (userId == null) return;
+
+    for (final club in clubs) {
+      try {
+        final count = await ClubService.getMemberCount(club.id);
+        final role = await ClubService.getMemberRole(club.id, userId);
+        if (mounted) {
+          setState(() {
+            _clubMemberCounts[club.id] = count;
+            if (role != null) {
+              _clubUserRoles[club.id] = role.name;
+            }
+          });
+        }
+      } catch (_) {}
+    }
+  }
+
+  String _getClubInitials(String name) {
+    final trimmed = name.trim();
+    if (trimmed.length < 2) return trimmed.toUpperCase();
+    return trimmed.substring(0, 2).toUpperCase();
+  }
+
+  Color _getAvatarColor(int index) {
+    return _avatarColors[index % _avatarColors.length];
   }
 
   @override
@@ -446,10 +492,10 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     ),
                     // Chevron (rotates when expanded)
                     AnimatedRotation(
-                      turns: _isClubsExpanded ? 0.25 : 0,
+                      turns: _isClubsExpanded ? 0.0 : -0.25,
                       duration: const Duration(milliseconds: 200),
                       child: Icon(
-                        Icons.chevron_right,
+                        Icons.keyboard_arrow_down,
                         color: Colors.white.withOpacity(0.5),
                         size: 24,
                       ),
@@ -477,7 +523,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   Widget _buildClubsList() {
     if (_clubs.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.only(left: 30, top: 12),
+        padding: const EdgeInsets.only(left: 22, top: 12),
         child: Text(
           'No clubs yet',
           style: GoogleFonts.ibmPlexSans(
@@ -493,12 +539,32 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Column(
-        children: _clubs.map((club) => _buildClubItem(club)).toList(),
+        children: _clubs.asMap().entries.map((entry) {
+          return _buildClubItem(entry.value, entry.key);
+        }).toList(),
       ),
     );
   }
 
-  Widget _buildClubItem(Club club) {
+  Widget _buildClubItem(Club club, int index) {
+    final memberCount = _clubMemberCounts[club.id];
+    final userRole = _clubUserRoles[club.id];
+    final initials = _getClubInitials(club.name);
+    final avatarColor = _getAvatarColor(index);
+
+    // Build subtitle
+    String subtitle = memberCount != null ? '$memberCount members' : '';
+
+    // Role badge
+    final isAdmin = userRole == 'owner' || userRole == 'admin';
+    final roleLabel = userRole == 'owner'
+        ? 'Admin'
+        : userRole == 'admin'
+            ? 'Admin'
+            : userRole == 'dealer'
+                ? 'Dealer'
+                : 'Member';
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -515,33 +581,90 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         splashColor: Colors.white.withOpacity(0.1),
         highlightColor: Colors.white.withOpacity(0.05),
         child: Padding(
-          padding: const EdgeInsets.only(left: 30, top: 10, bottom: 10),
-          child: Row(
-            children: [
-              // Green dot indicator
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF87ED81).withOpacity(0.6),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Club name
-              Expanded(
-                child: Text(
-                  club.name,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white.withOpacity(0.85),
+          padding: const EdgeInsets.only(left: 22, top: 8, bottom: 8),
+          child: SizedBox(
+            height: 54,
+            child: Row(
+              children: [
+                // Avatar (36px, rounded 10px)
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: avatarColor,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: Center(
+                    child: Text(
+                      initials,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                // Name + subtitle
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        club.name,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF808285),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // Role badge
+                if (userRole != null)
+                  Container(
+                    width: 56,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: isAdmin
+                          ? const Color(0xFF1B4341)
+                          : const Color(0xFF1B1E24),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Center(
+                      child: Text(
+                        roleLabel,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isAdmin
+                              ? const Color(0xFF89F1EC)
+                              : const Color(0xFF67696D),
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 2),
+              ],
+            ),
           ),
         ),
       ),
