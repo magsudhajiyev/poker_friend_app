@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/introduction_screen.dart';
 import '../screens/logging_mode_selection_screen.dart';
 import '../screens/session_history_screen.dart';
@@ -113,8 +114,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeOutCubic,
     ));
 
+    _loadBankrollVisibility();
     _loadData();
     _setupSeatListener();
+  }
+
+  void _loadBankrollVisibility() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isBankrollHidden = prefs.getBool('bankroll_hidden') ?? false;
+    });
   }
 
   /// Listen for seat assignments where the current user has been seated by a dealer
@@ -1763,10 +1772,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () {
+                            onTap: () async {
+                              final prefs = await SharedPreferences.getInstance();
                               setState(() {
                                 _isBankrollHidden = !_isBankrollHidden;
                               });
+                              await prefs.setBool('bankroll_hidden', _isBankrollHidden);
                             },
                             child: Icon(
                               _isBankrollHidden

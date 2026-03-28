@@ -21,93 +21,88 @@ class GlobalBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Color(0xFF02050B), // backgroundPaper
-        border: Border(
-          top: BorderSide(
-            color: Color(0xFF1B1E24), // neutrals/800
-            width: 1,
-          ),
-        ),
-      ),
-      // Figma: pb-18, pt-14, px-24
-      padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
+    // The FAB overflows 30px above the navbar. We include that space in the
+    // widget's own height so the Scaffold doesn't clip it.
+    return SizedBox(
+      height: 30 + 14 + 51 + 18, // fabOverflow + topPad + content + bottomPad
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Menu items row - uses spaceEvenly for responsive layout
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Home
-              _buildNavItem(
-                context: context,
-                iconPath: 'icons/figma_icons/navbar_home.svg',
-                label: 'Home',
-                isActive: currentScreen == 'home',
-                onTap: () => _navigateTo(context, 'home'),
-              ),
-
-              // Opponents
-              _buildNavItem(
-                context: context,
-                iconPath: 'icons/figma_icons/navbar_opponents.svg',
-                label: 'Opponents',
-                isActive: currentScreen == 'opponents',
-                onTap: () => _navigateTo(context, 'opponents'),
-              ),
-
-              // Center spacer for FAB - tappable area for the visible portion
-              GestureDetector(
-                onTap: () => _onFabTap(context),
-                behavior: HitTestBehavior.opaque,
-                child: const SizedBox(width: 62, height: 51),
-              ),
-
-              // Sessions
-              _buildNavItem(
-                context: context,
-                iconPath: 'icons/figma_icons/navbar_sessions.svg',
-                label: 'Sessions',
-                isActive: currentScreen == 'sessions',
-                onTap: () => _navigateTo(context, 'sessions'),
-              ),
-
-              // Profile
-              _buildNavItem(
-                context: context,
-                iconPath: 'icons/figma_icons/navbar_profile.svg',
-                label: 'Profile',
-                isActive: currentScreen == 'profile',
-                onTap: () => _navigateTo(context, 'profile'),
-              ),
-            ],
-          ),
-
-          // Center FAB button - positioned above the bar (Figma: top: -30px)
+          // Navbar background — positioned at the bottom, below the FAB overflow area
           Positioned(
             left: 0,
             right: 0,
-            top: -30,
+            bottom: 0,
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Color(0xFF02050B), // backgroundPaper
+                border: Border(
+                  top: BorderSide(
+                    color: Color(0xFF1B1E24), // neutrals/800
+                    width: 1,
+                  ),
+                ),
+              ),
+              // Figma: pb-18, pt-14, px-24
+              padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Home
+                  _buildNavItem(
+                    context: context,
+                    iconPath: 'icons/figma_icons/navbar_home.svg',
+                    label: 'Home',
+                    isActive: currentScreen == 'home',
+                    onTap: () => _navigateTo(context, 'home'),
+                  ),
+
+                  // Opponents
+                  _buildNavItem(
+                    context: context,
+                    iconPath: 'icons/figma_icons/navbar_opponents.svg',
+                    label: 'Opponents',
+                    isActive: currentScreen == 'opponents',
+                    onTap: () => _navigateTo(context, 'opponents'),
+                  ),
+
+                  // Center spacer
+                  const SizedBox(width: 62, height: 51),
+
+                  // Sessions
+                  _buildNavItem(
+                    context: context,
+                    iconPath: 'icons/figma_icons/navbar_sessions.svg',
+                    label: 'Sessions',
+                    isActive: currentScreen == 'sessions',
+                    onTap: () => _navigateTo(context, 'sessions'),
+                  ),
+
+                  // Profile
+                  _buildNavItem(
+                    context: context,
+                    iconPath: 'icons/figma_icons/navbar_profile.svg',
+                    label: 'Profile',
+                    isActive: currentScreen == 'profile',
+                    onTap: () => _navigateTo(context, 'profile'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Center FAB button — top of the SizedBox, centered horizontally
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
             child: Center(
               child: _buildCenterFab(context),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> _onFabTap(BuildContext context) async {
-    if (onNavigationAttempt != null) {
-      final shouldProceed = await onNavigationAttempt!();
-      if (!shouldProceed) return;
-    }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
     );
   }
 
@@ -151,7 +146,6 @@ class GlobalBottomNavBar extends StatelessWidget {
   }
 
   /// Nav item with icon and label
-  /// Figma: w-66px, flex-col, items-center
   Widget _buildNavItem({
     required BuildContext context,
     required String iconPath,
@@ -159,10 +153,9 @@ class GlobalBottomNavBar extends StatelessWidget {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    // Cyan when active, gray when inactive
     final color = isActive
-        ? const Color(0xFF89F1EC)  // mint/300 - cyan
-        : const Color(0xFF808285); // neutrals/400 - gray
+        ? const Color(0xFF89F1EC)
+        : const Color(0xFF808285);
 
     return GestureDetector(
       onTap: onTap,
@@ -172,7 +165,6 @@ class GlobalBottomNavBar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icon container (32x32, rounded)
             SizedBox(
               width: 32,
               height: 32,
@@ -185,7 +177,6 @@ class GlobalBottomNavBar extends StatelessWidget {
                 ),
               ),
             ),
-            // Label
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
@@ -207,7 +198,6 @@ class GlobalBottomNavBar extends StatelessWidget {
   }
 
   /// Center FAB button
-  /// Figma: outer 62x62 #1B1E24, inner ~49x49 #89F1EC
   Widget _buildCenterFab(BuildContext context) {
     return GestureDetector(
       onTap: () async {
@@ -224,7 +214,7 @@ class GlobalBottomNavBar extends StatelessWidget {
         width: 62,
         height: 62,
         decoration: const BoxDecoration(
-          color: Color(0xFF1B1E24), // neutrals/800
+          color: Color(0xFF1B1E24),
           shape: BoxShape.circle,
         ),
         child: Center(
@@ -232,7 +222,7 @@ class GlobalBottomNavBar extends StatelessWidget {
             width: 49,
             height: 49,
             decoration: const BoxDecoration(
-              color: Color(0xFF89F1EC), // mint/300
+              color: Color(0xFF89F1EC),
               shape: BoxShape.circle,
             ),
             child: Center(
