@@ -15,6 +15,35 @@ Flutter/Dart poker hand logging application with Firebase backend, club manageme
 
 ---
 
+## Development Environment
+
+### CRITICAL: Flutter Version Constraint
+- **Flutter 3.38.10** — DO NOT upgrade to 3.41.x (Firestore write performance regression)
+- **Dart**: 3.9.x (bundled with Flutter 3.38.10)
+- **Xcode**: 26.3
+- Monitor Flutter releases for the Firestore regression fix before upgrading
+- See `diary/2026-03-29-flutter-firestore-regression-fix.md` for full details
+
+### iOS Simulator
+- Use **iOS 18.5** runtime (Flutter 3.38 does not support iOS 26 simulators)
+- iPhone 16 Pro simulator with iOS 18.5 runtime
+- Download runtime via Xcode → Settings → Platforms → iOS → Get
+- iOS 18.5 and iOS 26.1 runtimes coexist fine
+
+### Android
+- Physical device via USB debug
+- Debug keystore SHA1: `9F:26:C7:87:7E:4E:AA:DE:7D:BF:03:37:96:BA:27:3D:52:9F:BA:60`
+- Original new laptop keystore backed up as `~/.android/debug.keystore.new-laptop-backup`
+- **Pending**: Register old keystore SHA-1 in Firebase Console for Google Sign-In
+
+### Dependency Version Policy
+- All dependencies pinned to Flutter 3.38-compatible versions (see pubspec.yaml)
+- When upgrading Flutter, ALL Firebase/plugin dependencies must be upgraded together
+- Key version constraints: cloud_firestore ^5.5.0, firebase_core ^3.8.0, purchases_flutter ^8.1.0
+- API differences exist between old and new versions (positional vs named params) — see diary entry
+
+---
+
 ## Architecture
 
 ### Tech Stack
@@ -522,6 +551,12 @@ user_notifications/{notificationId}/
 2. **FCM blocking**: ALL FCM operations must be fire-and-forget with 5s timeouts using `unawaited()`
 3. **Blind posting stale**: Always post blinds with CURRENT player list, not previous hand's
 
+### Environment Bugs
+1. **Firestore slow writes**: Flutter 3.41.x has Firestore write performance regression → use 3.38.10
+2. **iOS simulator mismatch**: Flutter 3.38 requires iOS 18.5 runtime, not iOS 26
+3. **Dependency version cascade**: Upgrading Flutter requires upgrading ALL Firebase/plugin deps together
+4. **Debug keystore mismatch**: Different keystore = INSTALL_FAILED_UPDATE_INCOMPATIBLE → uninstall app first
+
 ---
 
 ## Testing
@@ -586,6 +621,8 @@ flutter test test/services/stats_calculator_test.dart
 - No real-time sync between user devices
 - Play style detection requires 50+ hands
 - Session analytics endpoint not deployed on backend
+- Flutter 3.41.x Firestore regression — monitor releases before upgrading
+- Google Sign-In: old debug keystore SHA-1 needs registering in Firebase Console
 
 ---
 

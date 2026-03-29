@@ -533,7 +533,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                                 label = '${value.toInt() + 1}';
                             }
                             return SideTitleWidget(
-                              meta: meta,
+                              axisSide: meta.axisSide,
                               space: 8.0,
                               child: Text(
                                 label,
