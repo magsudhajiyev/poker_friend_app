@@ -8,7 +8,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
-import '../../design_system/poker_friend_theme.dart';
 import '../../design_system/constants/colors.dart';
 import '../../models/club.dart';
 import '../../models/club_member.dart';
@@ -390,17 +389,38 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section label
+        // Section label + add button
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text(
-            'Tables',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF8C8C8C),
-              height: 1.44,
-            ),
+          child: Row(
+            children: [
+              Text(
+                'Tables',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF8C8C8C),
+                  height: 1.44,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: _showAddTableDialog,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF89F1EC),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.black,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),
@@ -416,126 +436,42 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             ),
             child: Column(
               children: [
-                // Icon
                 Icon(
                   Icons.table_restaurant_outlined,
                   size: 24,
                   color: Colors.white,
                 ),
                 const SizedBox(height: 6),
-                // Title
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Text(
-                    'No tables yet',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
-                      height: 1.44,
-                    ),
+                Text(
+                  'No tables yet',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white,
+                    height: 1.44,
                   ),
                 ),
-                // Subtitle
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Text(
-                    'Add a table to get started',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFFD3FFFD),
-                      height: 1.44,
-                    ),
-                    textAlign: TextAlign.center,
+                const SizedBox(height: 4),
+                Text(
+                  'Add a table to get started',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white.withOpacity(0.5),
+                    height: 1.44,
                   ),
-                ),
-                const SizedBox(height: 24),
-                // Add New Table button (outline)
-                GestureDetector(
-                  onTap: _showAddTableDialog,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(110),
-                      border: Border.all(
-                        color: const Color(0xFF75A6CB),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset(
-                          'icons/figma_icons/plus.svg',
-                          width: 24,
-                          height: 24,
-                          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Add New Table',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                            height: 24 / 17,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
           )
-        else ...[
+        else
           ...List.generate(_tables.length, (index) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _buildTableCard(_tables[index]),
             );
           }),
-          // Add New Table button below existing tables
-          Center(
-            child: GestureDetector(
-              onTap: _showAddTableDialog,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(110),
-                  border: Border.all(
-                    color: const Color(0xFF75A6CB),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SvgPicture.asset(
-                      'icons/figma_icons/plus.svg',
-                      width: 24,
-                      height: 24,
-                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Add New Table',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        letterSpacing: -0.5,
-                        height: 24 / 17,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -650,17 +586,38 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section label
+        // Section label + add button
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text(
-            'Members (${_members.length})',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF8C8C8C),
-              height: 1.44,
-            ),
+          child: Row(
+            children: [
+              Text(
+                'Members (${_members.length})',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF8C8C8C),
+                  height: 1.44,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: _showInviteMemberDialog,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF89F1EC),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.black,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),

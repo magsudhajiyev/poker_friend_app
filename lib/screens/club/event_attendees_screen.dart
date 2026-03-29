@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../../design_system/poker_friend_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/event_attendance.dart';
@@ -72,45 +71,74 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading attendees: $e');
+      // print('Error loading attendees: $e');
       setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      backgroundColor: PokerFriendColors.dark1,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            _buildTabBar(),
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: PokerFriendColors.purple,
-                      ),
-                    )
-                  : TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildAttendeeList(_going, AttendanceStatus.going),
-                        _buildAttendeeList(_maybe, AttendanceStatus.maybe),
-                        _buildAttendeeList(_notGoing, AttendanceStatus.notGoing),
-                      ],
-                    ),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Teal radial gradient background
+          Positioned(
+            top: -screenWidth * 0.5,
+            right: -screenWidth * 0.2,
+            child: Container(
+              width: screenWidth * 1.2,
+              height: screenWidth * 1.2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF1A4A4A).withOpacity(0.6),
+                    const Color(0xFF133538).withOpacity(0.6),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.4, 1.0],
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+          // Content
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 8),
+                _buildTabBar(),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF89F1EC),
+                          ),
+                        )
+                      : TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildAttendeeList(_going, AttendanceStatus.going),
+                            _buildAttendeeList(_maybe, AttendanceStatus.maybe),
+                            _buildAttendeeList(_notGoing, AttendanceStatus.notGoing),
+                          ],
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
       child: Row(
         children: [
           GestureDetector(
@@ -118,36 +146,36 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
             child: Container(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(
-                color: PokerFriendColors.dark3,
-                borderRadius: BorderRadius.circular(14),
+              decoration: const BoxDecoration(
+                color: Color(0xFF101115),
+                shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.arrow_back,
                 color: Colors.white,
-                size: 20,
+                size: 22,
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Attendees',
-                  style: TextStyle(
-                    fontSize: 20,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 18,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   widget.event.name,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: PokerFriendColors.dark9,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 13,
+                    color: Colors.white.withOpacity(0.5),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -162,52 +190,60 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
 
   Widget _buildTabBar() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
+        color: const Color(0xFF131616),
         borderRadius: BorderRadius.circular(12),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: PokerFriendColors.purple,
+          color: const Color(0xFF89F1EC),
           borderRadius: BorderRadius.circular(10),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         indicatorPadding: const EdgeInsets.all(4),
-        labelColor: Colors.white,
-        unselectedLabelColor: PokerFriendColors.dark9,
-        labelStyle: const TextStyle(
+        labelColor: Colors.black,
+        unselectedLabelColor: Colors.white.withOpacity(0.5),
+        labelStyle: GoogleFonts.ibmPlexSans(
           fontWeight: FontWeight.w600,
-          fontSize: 14,
+          fontSize: 13,
         ),
+        unselectedLabelStyle: GoogleFonts.ibmPlexSans(
+          fontWeight: FontWeight.w500,
+          fontSize: 13,
+        ),
+        dividerHeight: 0,
         tabs: [
           Tab(
+            height: 38,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.check_circle, size: 16),
-                const SizedBox(width: 6),
+                const Icon(Icons.check_circle, size: 14),
+                const SizedBox(width: 5),
                 Text('Going (${_going.length})'),
               ],
             ),
           ),
           Tab(
+            height: 38,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.help_outline, size: 16),
-                const SizedBox(width: 6),
+                const Icon(Icons.help_outline, size: 14),
+                const SizedBox(width: 5),
                 Text('Maybe (${_maybe.length})'),
               ],
             ),
           ),
           Tab(
+            height: 38,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.cancel_outlined, size: 16),
-                const SizedBox(width: 6),
+                const Icon(Icons.cancel_outlined, size: 14),
+                const SizedBox(width: 5),
                 Text('No (${_notGoing.length})'),
               ],
             ),
@@ -224,9 +260,9 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: PokerFriendColors.purple,
+      color: const Color(0xFF89F1EC),
       child: ListView.builder(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: attendees.length,
         itemBuilder: (context, index) {
           return _buildAttendeeCard(attendees[index], status);
@@ -244,17 +280,17 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
       case AttendanceStatus.going:
         message = 'No one confirmed yet';
         icon = Icons.check_circle_outline;
-        color = PokerFriendColors.green;
+        color = const Color(0xFF89F1EC);
         break;
       case AttendanceStatus.maybe:
         message = 'No maybes';
         icon = Icons.help_outline;
-        color = PokerFriendColors.yellow;
+        color = Colors.amber;
         break;
       case AttendanceStatus.notGoing:
         message = 'No declines';
         icon = Icons.cancel_outlined;
-        color = PokerFriendColors.red;
+        color = const Color(0xFFFF4444);
         break;
     }
 
@@ -263,24 +299,24 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               icon,
-              size: 32,
+              size: 28,
               color: color,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
             message,
-            style: TextStyle(
-              fontSize: 16,
-              color: PokerFriendColors.dark9,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              color: Colors.white.withOpacity(0.4),
             ),
           ),
         ],
@@ -292,83 +328,68 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
     Color statusColor;
     switch (status) {
       case AttendanceStatus.going:
-        statusColor = PokerFriendColors.green;
+        statusColor = const Color(0xFF89F1EC);
         break;
       case AttendanceStatus.maybe:
-        statusColor = PokerFriendColors.yellow;
+        statusColor = Colors.amber;
         break;
       case AttendanceStatus.notGoing:
-        statusColor = PokerFriendColors.red;
+        statusColor = const Color(0xFFFF4444);
         break;
     }
 
-    final timeFormat = DateFormat('MMM d, h:mm a');
-
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
           // Avatar
           Container(
-            width: 48,
-            height: 48,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(14),
+              color: statusColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: Text(
                 _getInitials(attendee.displayName),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   color: statusColor,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 14),
-          // Name and time
+          const SizedBox(width: 12),
+          // Name
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  attendee.displayName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Responded ${timeFormat.format(attendee.respondedAt)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: PokerFriendColors.dark9,
-                  ),
-                ),
-              ],
+            child: Text(
+              attendee.displayName,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           // Calendar icon if added to calendar
           if (attendee.addedToCalendar)
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: PokerFriendColors.purple.withOpacity(0.15),
+                color: const Color(0xFF89F1EC).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.event_available,
                 size: 16,
-                color: PokerFriendColors.purple,
+                color: Color(0xFF89F1EC),
               ),
             ),
         ],

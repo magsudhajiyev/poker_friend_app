@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../design_system/poker_friend_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/club_event.dart';
 import '../../models/event_ranking.dart';
 import '../../services/event_service.dart';
 import '../../services/table_service.dart';
+import '../../services/dealer_service.dart';
 import '../../utils/number_formatter.dart';
 
 /// Screen for spectators to view live rankings during an event
@@ -27,15 +28,17 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
   bool _isLoading = true;
   String? _error;
   Timer? _refreshTimer;
-  Map<String, String> _tableNames = {}; // tableId -> tableName
+  Map<String, String> _tableNames = {};
+  int _bigBlind = 0;
 
   @override
   void initState() {
     super.initState();
     _loadTableNames();
+    _loadBigBlind();
     _loadRankings();
     // Auto-refresh every 10 seconds
-    _refreshTimer = Timer.periodic(Duration(seconds: 10), (_) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       _loadRankings(silent: true);
     });
   }
@@ -49,7 +52,27 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
         });
       }
     } catch (e) {
-      print('Error loading table names: $e');
+      // ignore
+    }
+  }
+
+  Future<void> _loadBigBlind() async {
+    try {
+      // Get BB from the first active dealer session for this event's tables
+      for (final tableId in widget.event.tableIds) {
+        final session = await DealerService.getActiveSessionForTable(
+          clubId: widget.event.clubId,
+          tableId: tableId,
+        );
+        if (session != null && session.bigBlind > 0) {
+          if (mounted) {
+            setState(() => _bigBlind = session.bigBlind);
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      // ignore — BB will show as 0 and we just won't display it
     }
   }
 
@@ -68,21 +91,11 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
     }
 
     try {
-      // Try backend API first
-      var data = widget.event.isPublic
-          ? await EventService.getPublicRankings(
-              widget.event.id,
-              accessCode: widget.accessCode,
-            )
-          : await EventService.getRankings(widget.event.id);
-
-      // Fallback to Firestore if backend returns empty
-      if (data == null || data.rankings.isEmpty) {
-        data = await EventService.getRankingsFromFirestore(
-          widget.event.clubId,
-          widget.event.id,
-        );
-      }
+      // Load rankings directly from Firestore (seat assignments)
+      final data = await EventService.getRankingsFromFirestore(
+        widget.event.clubId,
+        widget.event.id,
+      );
 
       if (mounted) {
         setState(() {
@@ -103,34 +116,61 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      backgroundColor: PokerFriendColors.dark1,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: _isLoading
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: PokerFriendColors.purple,
-                      ),
-                    )
-                  : _error != null
-                      ? _buildErrorState()
-                      : _rankingsData == null || _rankingsData!.rankings.isEmpty
-                          ? _buildEmptyState()
-                          : _buildRankingsList(),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Teal radial gradient background
+          Positioned(
+            top: -screenWidth * 0.5,
+            right: -screenWidth * 0.2,
+            child: Container(
+              width: screenWidth * 1.2,
+              height: screenWidth * 1.2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF1A4A4A).withOpacity(0.6),
+                    const Color(0xFF133538).withOpacity(0.6),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.4, 1.0],
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+          // Content
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF89F1EC),
+                          ),
+                        )
+                      : _error != null
+                          ? _buildErrorState()
+                          : _rankingsData == null || _rankingsData!.rankings.isEmpty
+                              ? _buildEmptyState()
+                              : _buildRankingsList(),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: EdgeInsets.fromLTRB(24, 16, 24, 16),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -141,35 +181,36 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                 child: Container(
                   width: 44,
                   height: 44,
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(14),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF101115),
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.arrow_back,
                     color: Colors.white,
-                    size: 20,
+                    size: 22,
                   ),
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Live Rankings',
-                      style: TextStyle(
-                        fontSize: 24,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 18,
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       widget.event.name,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: PokerFriendColors.purple,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 13,
+                        color: const Color(0xFF89F1EC),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -181,21 +222,21 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                 child: Container(
                   width: 44,
                   height: 44,
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(14),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF101115),
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.refresh,
                     color: Colors.white,
-                    size: 20,
+                    size: 22,
                   ),
                 ),
               ),
             ],
           ),
           if (_rankingsData != null) ...[
-            SizedBox(height: 16),
+            const SizedBox(height: 12),
             _buildStatsRow(),
           ],
         ],
@@ -208,10 +249,10 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
     final activePlayers = data.rankings.where((r) => !r.isEliminated).length;
 
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -219,28 +260,22 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           _buildStatItem(
             label: 'Players',
             value: '$activePlayers / ${data.totalPlayers}',
-            color: PokerFriendColors.purple,
+            color: const Color(0xFF89F1EC),
           ),
-          Container(
-            width: 1,
-            height: 40,
-            color: PokerFriendColors.dark5,
-          ),
+          Container(width: 1, height: 32, color: Colors.white.withOpacity(0.06)),
           _buildStatItem(
             label: 'Total Chips',
             value: formatCompactNumber(data.totalChips),
-            color: PokerFriendColors.green,
+            color: const Color(0xFF89F1EC),
           ),
-          Container(
-            width: 1,
-            height: 40,
-            color: PokerFriendColors.dark5,
-          ),
-          _buildStatItem(
-            label: 'Avg Stack',
-            value: formatCompactNumber(data.averageStack),
-            color: PokerFriendColors.yellow,
-          ),
+          if (_bigBlind > 0) ...[
+            Container(width: 1, height: 32, color: Colors.white.withOpacity(0.06)),
+            _buildStatItem(
+              label: 'Avg BBs',
+              value: '${data.averageStack ~/ _bigBlind}',
+              color: Colors.amber,
+            ),
+          ],
         ],
       ),
     );
@@ -255,18 +290,18 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       children: [
         Text(
           value,
-          style: TextStyle(
-            fontSize: 18,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 16,
             color: color,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: PokerFriendColors.dark9,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 11,
+            color: Colors.white.withOpacity(0.4),
           ),
         ),
       ],
@@ -277,95 +312,133 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
     final rankings = _rankingsData!.rankings;
     final averageStack = _rankingsData!.averageStack;
 
-    // Calculate finish positions for eliminated players who don't have one
-    final totalPlayers = rankings.length;
+    // Split into active and eliminated
+    final activePlayers = rankings.where((r) => !r.isEliminated).toList();
     final eliminatedPlayers = rankings.where((r) => r.isEliminated).toList();
 
-    // Create a map of calculated finish positions
-    // Eliminated players get positions from totalPlayers down
-    // (last eliminated = totalPlayers, second to last = totalPlayers-1, etc.)
+    // Calculate finish positions for eliminated players
+    final totalPlayers = rankings.length;
     final calculatedFinishPositions = <String, int>{};
     for (int i = 0; i < eliminatedPlayers.length; i++) {
       final player = eliminatedPlayers[i];
       if (player.finishPosition == null) {
-        // Assign finish position: total - index of elimination
-        // Since we don't know order of elimination, use total - i
         calculatedFinishPositions[player.playerId] = totalPlayers - i;
+      }
+    }
+
+    // Find where to insert the average line among active players
+    // It goes after the last player whose stack >= averageStack
+    int avgLineIndex = activePlayers.length; // default: after all
+    for (int i = 0; i < activePlayers.length; i++) {
+      if (activePlayers[i].currentStack < averageStack) {
+        avgLineIndex = i;
+        break;
+      }
+    }
+
+    // Build list items: active players + avg line + eliminated section
+    final List<Widget> items = [];
+
+    for (int i = 0; i < activePlayers.length; i++) {
+      if (i == avgLineIndex) {
+        items.add(_buildAverageStackDivider(averageStack));
+      }
+      items.add(_buildRankingCard(activePlayers[i], isChipLeader: i == 0));
+    }
+    // If avg line goes at the end (all players above average)
+    if (avgLineIndex == activePlayers.length && activePlayers.isNotEmpty) {
+      items.add(_buildAverageStackDivider(averageStack));
+    }
+
+    // Eliminated section
+    if (eliminatedPlayers.isNotEmpty) {
+      items.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 10),
+          child: Text(
+            'Eliminated players',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              color: Colors.white.withOpacity(0.5),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      );
+      for (final player in eliminatedPlayers) {
+        final finishPos = player.finishPosition ?? calculatedFinishPositions[player.playerId];
+        items.add(_buildEliminatedCard(player, finishPos));
       }
     }
 
     return RefreshIndicator(
       onRefresh: () => _loadRankings(),
-      color: PokerFriendColors.purple,
-      child: ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: 24),
-        itemCount: rankings.length,
-        itemBuilder: (context, index) {
-          final ranking = rankings[index];
-          final calculatedFinish = calculatedFinishPositions[ranking.playerId];
-          return _buildRankingCard(ranking, index, calculatedFinish, averageStack);
-        },
+      color: const Color(0xFF89F1EC),
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        children: items,
       ),
     );
   }
 
-  Widget _buildRankingCard(EventRanking ranking, int index, int? calculatedFinishPosition, int averageStack) {
-    final isChipLeader = index == 0 && !ranking.isEliminated;
-    final isEliminated = ranking.isEliminated;
-    // Use ranking's finishPosition if available, otherwise use calculated
-    final finishPosition = ranking.finishPosition ?? calculatedFinishPosition;
-    // Get color based on stack vs average
-    final stackColor = _getStackColor(ranking.currentStack, averageStack, isEliminated);
+  Widget _buildAverageStackDivider(int averageStack) {
+    final avgText = 'Average stack: ${formatCompactNumber(averageStack)}';
+    final bbText = _bigBlind > 0 ? ' ${averageStack ~/ _bigBlind} BBs' : '';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(height: 1, color: Colors.white.withOpacity(0.08)),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              '$avgText$bbText',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 12,
+                color: Colors.white.withOpacity(0.45),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(height: 1, color: Colors.white.withOpacity(0.08)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankingCard(EventRanking ranking, {required bool isChipLeader}) {
+    final bbCount = _bigBlind > 0 ? ranking.currentStack ~/ _bigBlind : 0;
 
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: isEliminated
-            ? PokerFriendColors.dark3.withOpacity(0.5)
-            : PokerFriendColors.dark3,
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(14),
         border: isChipLeader
-            ? Border.all(color: PokerFriendColors.yellow, width: 2)
+            ? Border.all(color: Colors.amber.withOpacity(0.4), width: 1.5)
             : null,
       ),
       child: Row(
         children: [
-          // Rank badge - shows finish position for eliminated, rank for active
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isChipLeader
-                  ? PokerFriendColors.yellow
-                  : isEliminated
-                      ? PokerFriendColors.dark5
-                      : PokerFriendColors.purple.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: isEliminated
-                  ? Text(
-                      '${finishPosition ?? "X"}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: PokerFriendColors.dark9,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : Text(
-                      '${ranking.rank}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: isChipLeader
-                            ? PokerFriendColors.dark1
-                            : PokerFriendColors.purple,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+          // Rank label (1st, 2nd, 3rd, 4th...)
+          SizedBox(
+            width: 32,
+            child: Text(
+              _ordinal(ranking.rank),
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                color: isChipLeader ? Colors.amber : Colors.white.withOpacity(0.5),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 8),
 
           // Player info
           Expanded(
@@ -374,47 +447,30 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      ranking.playerName,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: isEliminated
-                            ? PokerFriendColors.dark9
-                            : Colors.white,
-                        fontWeight: FontWeight.w600,
-                        // No strikethrough - just gray color for eliminated
+                    Flexible(
+                      child: Text(
+                        ranking.playerName,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (isChipLeader) ...[
-                      SizedBox(width: 8),
-                      Icon(
-                        Icons.emoji_events,
-                        color: PokerFriendColors.yellow,
-                        size: 16,
-                      ),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.emoji_events, color: Colors.amber, size: 15),
                     ],
                   ],
                 ),
-                // Only show table/seat for active (non-eliminated) players
-                if (!isEliminated && (ranking.tableId.isNotEmpty || ranking.seatNumber > 0)) ...[
-                  SizedBox(height: 2),
+                if (ranking.tableId.isNotEmpty || ranking.seatNumber > 0) ...[
+                  const SizedBox(height: 2),
                   Text(
                     '${_getTableDisplayName(ranking)} - Seat ${ranking.seatNumber}',
-                    style: TextStyle(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 12,
-                      color: PokerFriendColors.dark9,
-                    ),
-                  ),
-                ],
-                // Show "BUSTED" label for eliminated players
-                if (isEliminated) ...[
-                  SizedBox(height: 2),
-                  Text(
-                    'BUSTED',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: PokerFriendColors.red,
-                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withOpacity(0.35),
                     ),
                   ),
                 ],
@@ -422,32 +478,70 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             ),
           ),
 
-          // Stack and profit/loss
+          // Stack + BBs
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 formatCompactNumber(ranking.currentStack),
-                style: TextStyle(
-                  fontSize: 18,
-                  color: stackColor,
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              if (!isEliminated) ...[
-                SizedBox(height: 2),
+              if (_bigBlind > 0) ...[
+                const SizedBox(height: 2),
                 Text(
-                  '${ranking.profitLoss >= 0 ? '+' : ''}${formatCompactNumber(ranking.profitLoss)}',
-                  style: TextStyle(
+                  '$bbCount BBs',
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
-                    color: ranking.profitLoss >= 0
-                        ? PokerFriendColors.green
-                        : PokerFriendColors.red,
-                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withOpacity(0.4),
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEliminatedCard(EventRanking ranking, int? finishPosition) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          // Finish position
+          SizedBox(
+            width: 32,
+            child: Text(
+              finishPosition != null ? _ordinal(finishPosition) : '-',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                color: Colors.white.withOpacity(0.25),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Name
+          Expanded(
+            child: Text(
+              ranking.playerName,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                color: Colors.white.withOpacity(0.3),
+                fontWeight: FontWeight.w400,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -459,26 +553,34 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.leaderboard_outlined,
-            size: 64,
-            color: PokerFriendColors.dark5,
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              Icons.leaderboard_outlined,
+              size: 28,
+              color: Colors.white.withOpacity(0.3),
+            ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 14),
           Text(
             'No Rankings Yet',
-            style: TextStyle(
-              fontSize: 20,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             'Rankings will appear once players are seated',
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 14,
-              color: PokerFriendColors.dark9,
+              color: Colors.white.withOpacity(0.4),
             ),
           ),
         ],
@@ -491,44 +593,57 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: PokerFriendColors.red,
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF4444).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.error_outline,
+              size: 28,
+              color: Color(0xFFFF4444),
+            ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 14),
           Text(
             'Error Loading Rankings',
-            style: TextStyle(
-              fontSize: 20,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 6),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
               _error ?? 'Unknown error',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 14,
-                color: PokerFriendColors.dark9,
+                color: Colors.white.withOpacity(0.4),
               ),
             ),
           ),
-          SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _loadRankings,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: PokerFriendColors.purple,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: _loadRankings,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF89F1EC),
+                borderRadius: BorderRadius.circular(60),
               ),
-            ),
-            child: Text(
-              'Try Again',
-              style: TextStyle(color: Colors.white),
+              child: Text(
+                'Try Again',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
             ),
           ),
         ],
@@ -536,38 +651,26 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
     );
   }
 
-  /// Get color for stack based on comparison to average
-  /// Green: > avg + 10%, Orange: within ±10%, Red: < avg - 10%
-  Color _getStackColor(int stack, int averageStack, bool isEliminated) {
-    if (isEliminated) return PokerFriendColors.dark9;
-    if (averageStack == 0) return PokerFriendColors.yellow; // Edge case
-
-    final upperBound = averageStack * 1.10; // +10%
-    final lowerBound = averageStack * 0.90; // -10%
-
-    if (stack > upperBound) {
-      return PokerFriendColors.green; // Above average
-    } else if (stack < lowerBound) {
-      return PokerFriendColors.red; // Below average
-    } else {
-      return PokerFriendColors.yellow; // Within ±10% of average
+  String _ordinal(int n) {
+    if (n >= 11 && n <= 13) return '${n}th';
+    switch (n % 10) {
+      case 1: return '${n}st';
+      case 2: return '${n}nd';
+      case 3: return '${n}rd';
+      default: return '${n}th';
     }
   }
 
   String _getTableDisplayName(EventRanking ranking) {
-    // First check if ranking already has a table name
     if (ranking.tableName != null && ranking.tableName!.isNotEmpty) {
       return ranking.tableName!;
     }
-    // Look up from our local table names map
     if (_tableNames.containsKey(ranking.tableId)) {
       return _tableNames[ranking.tableId]!;
     }
-    // Fallback to a shortened version of the ID or generic name
     if (ranking.tableId.isEmpty) {
       return 'Table';
     }
-    // Show first 8 chars of ID as fallback
     return 'Table ${ranking.tableId.length > 8 ? ranking.tableId.substring(0, 8) : ranking.tableId}';
   }
 }

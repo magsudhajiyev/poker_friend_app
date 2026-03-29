@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../design_system/poker_friend_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/club.dart';
 import '../models/club_member.dart';
 import '../models/club_notification.dart';
@@ -64,7 +64,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('${existingUser['displayName']} is already a member of ${club.name}'),
-              backgroundColor: PokerFriendColors.yellow,
+              backgroundColor: Colors.amber,
             ),
           );
           return;
@@ -131,7 +131,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
-          backgroundColor: PokerFriendColors.red,
+          backgroundColor: const Color(0xFFFF4444),
         ),
       );
     }
@@ -163,42 +163,42 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
+        backgroundColor: const Color(0xFF131616),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                color: PokerFriendColors.green.withOpacity(0.1),
+                color: const Color(0xFF89F1EC).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.check_circle,
-                color: PokerFriendColors.green,
-                size: 32,
+                color: Color(0xFF89F1EC),
+                size: 28,
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 14),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
                 color: Colors.white,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 14,
-                color: PokerFriendColors.dark9,
+                color: Colors.white.withOpacity(0.5),
               ),
             ),
           ],
@@ -208,8 +208,8 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Done',
-              style: TextStyle(
-                color: PokerFriendColors.green,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF89F1EC),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -222,13 +222,13 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: PokerFriendColors.dark3,
+      backgroundColor: const Color(0xFF131616),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: _buildForm(),
         ),
       ),
@@ -246,80 +246,101 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: PokerFriendColors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFF89F1EC).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.person_add,
-                  color: PokerFriendColors.green,
+                  color: Color(0xFF89F1EC),
                   size: 20,
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Invite Member',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
                     ),
                     Text(
                       widget.club.name,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: PokerFriendColors.dark9,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 13,
+                        color: Colors.white.withOpacity(0.5),
                       ),
                     ),
                   ],
                 ),
               ),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Icon(
+                  Icons.close,
+                  color: Colors.white.withOpacity(0.4),
+                  size: 22,
+                ),
+              ),
             ],
           ),
 
-          SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // Email field
           Text(
-            'Email Address',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: PokerFriendColors.dark9,
+            'EMAIL ADDRESS',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withOpacity(0.5),
+              letterSpacing: 0.5,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            style: TextStyle(color: Colors.white),
+            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
             decoration: InputDecoration(
               hintText: 'Enter email address',
-              hintStyle: TextStyle(color: PokerFriendColors.dark7),
+              hintStyle: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withOpacity(0.25),
+                fontSize: 15,
+              ),
               filled: true,
-              fillColor: PokerFriendColors.dark1,
+              fillColor: Colors.white.withOpacity(0.05),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: PokerFriendColors.dark5),
+                borderSide: BorderSide.none,
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: PokerFriendColors.dark5),
+                borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: PokerFriendColors.green),
+                borderSide: const BorderSide(color: Color(0xFF89F1EC), width: 1),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: PokerFriendColors.red),
+                borderSide: const BorderSide(color: Color(0xFFFF4444), width: 1),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFFF4444), width: 1),
+              ),
+              errorStyle: GoogleFonts.ibmPlexSans(
+                fontSize: 12,
+                color: const Color(0xFFFF4444),
               ),
             ),
             validator: (value) {
@@ -333,18 +354,19 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
             },
           ),
 
-          SizedBox(height: 20),
+          const SizedBox(height: 18),
 
           // Role selector
           Text(
-            'Role',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: PokerFriendColors.dark9,
+            'ROLE',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withOpacity(0.5),
+              letterSpacing: 0.5,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -352,72 +374,76 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                   role: ClubRole.dealer,
                   icon: Icons.style,
                   label: 'Dealer',
-                  color: PokerFriendColors.purple,
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: _buildRoleOption(
                   role: ClubRole.admin,
                   icon: Icons.admin_panel_settings,
                   label: 'Admin',
-                  color: PokerFriendColors.yellow,
                 ),
               ),
             ],
           ),
 
-          SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           // Action buttons
           Row(
             children: [
               Expanded(
-                child: TextButton(
-                  onPressed: _isSubmitting ? null : () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: PokerFriendColors.dark5),
+                child: GestureDetector(
+                  onTap: _isSubmitting ? null : () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(60),
+                      color: Colors.white.withOpacity(0.05),
                     ),
-                  ),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(
-                      color: PokerFriendColors.dark9,
-                      fontWeight: FontWeight.w500,
+                    child: Center(
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.ibmPlexSans(
+                          color: Colors.white.withOpacity(0.5),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitInvitation,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: PokerFriendColors.green,
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                child: GestureDetector(
+                  onTap: _isSubmitting ? null : _submitInvitation,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(60),
+                      color: const Color(0xFF89F1EC),
+                    ),
+                    child: Center(
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.black,
+                              ),
+                            )
+                          : Text(
+                              'Send Invite',
+                              style: GoogleFonts.ibmPlexSans(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
                     ),
                   ),
-                  child: _isSubmitting
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          'Send Invite',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                 ),
               ),
             ],
@@ -431,9 +457,9 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
     required ClubRole role,
     required IconData icon,
     required String label,
-    required Color color,
   }) {
     final isSelected = _selectedRole == role;
+    const mint = Color(0xFF89F1EC);
 
     return GestureDetector(
       onTap: () {
@@ -442,29 +468,29 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
         });
       },
       child: Container(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : PokerFriendColors.dark1,
+          color: isSelected ? mint.withOpacity(0.1) : Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? color : PokerFriendColors.dark5,
-            width: isSelected ? 2 : 1,
+            color: isSelected ? mint : Colors.white.withOpacity(0.06),
+            width: isSelected ? 1.5 : 1,
           ),
         ),
         child: Column(
           children: [
             Icon(
               icon,
-              color: isSelected ? color : PokerFriendColors.dark9,
-              size: 24,
+              color: isSelected ? mint : Colors.white.withOpacity(0.4),
+              size: 22,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 14,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? color : PokerFriendColors.dark9,
+                color: isSelected ? mint : Colors.white.withOpacity(0.5),
               ),
             ),
           ],
