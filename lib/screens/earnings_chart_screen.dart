@@ -344,16 +344,16 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                color: Color(0xFF101115),
+                shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.arrow_back,
                 color: Colors.white,
-                size: 20,
+                size: 22,
               ),
             ),
           ),

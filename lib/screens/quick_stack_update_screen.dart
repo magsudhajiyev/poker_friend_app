@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../design_system/poker_friend_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../utils/poker_positions.dart';
 import '../services/opponent_service.dart';
 import '../services/auth_service.dart';
@@ -41,6 +41,9 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
   Map<int, bool> seatIsOpen = {}; // Player ID → true if seat is open/empty
   List<Opponent> opponents = []; // Available opponents
   bool _loadingOpponents = true;
+
+  static const _cardColor = Color(0xFF131616);
+  static const _mint = Color(0xFF89F1EC);
 
   @override
   void initState() {
@@ -102,7 +105,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
         _loadingOpponents = false;
       });
     } catch (e) {
-      print('Error loading opponents: $e');
+      // print('Error loading opponents: $e');
       setState(() {
         _loadingOpponents = false;
       });
@@ -141,6 +144,21 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
     });
   }
 
+  Future<void> _addNewOpponent(String name) async {
+    final now = DateTime.now();
+    final opponent = Opponent(
+      id: 'opp_${now.millisecondsSinceEpoch}',
+      name: name.trim(),
+      createdAt: now,
+      lastSeenAt: now,
+    );
+    await OpponentService.saveOpponent(opponent);
+    // Add to local list so it appears immediately
+    setState(() {
+      opponents.add(opponent);
+    });
+  }
+
   Future<void> _showOpponentSelectionDialog(int playerId) async {
     String searchQuery = '';
 
@@ -168,137 +186,279 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
           final showUserName = searchQuery.isEmpty ||
               userName.toLowerCase().contains(searchQuery.toLowerCase());
 
-          return AlertDialog(
-            backgroundColor: PokerFriendColors.dark3,
-            title: Text(
-              'Select Player',
-              style: TextStyle(color: Colors.white),
+          // Check if search query exactly matches an existing opponent or user name
+          final queryTrimmed = searchQuery.trim();
+          final hasExactMatch = queryTrimmed.isEmpty ||
+              userName.toLowerCase() == queryTrimmed.toLowerCase() ||
+              opponents.any((o) => o.name.toLowerCase() == queryTrimmed.toLowerCase());
+
+          return Dialog(
+            backgroundColor: _cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
             ),
-            content: Container(
-              width: double.maxFinite,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Option to clear name
-                  if (customPlayerNames.containsKey(playerId)) ...[
-                    ListTile(
-                      leading: Icon(Icons.clear, color: Colors.red),
-                      title: Text(
-                        'Clear Name',
-                        style: TextStyle(color: Colors.white),
+                  // Title row with clear option
+                  Row(
+                    children: [
+                      Text(
+                        'Select Player',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      onTap: () => Navigator.pop(context, '__CLEAR__'),
-                    ),
-                    Divider(color: PokerFriendColors.dark9),
-                  ],
+                      const Spacer(),
+                      if (customPlayerNames.containsKey(playerId))
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context, '__CLEAR__'),
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Clear',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 13,
+                                color: Colors.red,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
 
-                  // Search bar
-                  Container(
-                    margin: EdgeInsets.only(bottom: 16),
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.dark1,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextField(
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      decoration: InputDecoration(
-                        hintText: 'Search players...',
-                        hintStyle: TextStyle(color: PokerFriendColors.dark9),
-                        prefixIcon: Icon(
+                  // Search bar — plain TextField, no outer Container
+                  TextField(
+                    style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
+                    decoration: InputDecoration(
+                      hintText: 'Search or add player...',
+                      hintStyle: GoogleFonts.ibmPlexSans(
+                        color: Colors.white.withValues(alpha: 0.35),
+                        fontSize: 15,
+                      ),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.only(left: 12, right: 8),
+                        child: Icon(
                           Icons.search,
-                          color: PokerFriendColors.dark9,
+                          color: Colors.white.withValues(alpha: 0.35),
                           size: 20,
                         ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 14),
                       ),
-                      onChanged: (value) {
-                        setDialogState(() {
-                          searchQuery = value;
-                        });
-                      },
+                      prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: 0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
                     ),
+                    onChanged: (value) {
+                      setDialogState(() {
+                        searchQuery = value;
+                      });
+                    },
                   ),
+                  const SizedBox(height: 14),
 
                   // Players list
                   Flexible(
                     child: Container(
-                      constraints: BoxConstraints(maxHeight: 300),
+                      constraints: const BoxConstraints(maxHeight: 300),
                       child: ListView(
                         shrinkWrap: true,
+                        padding: EdgeInsets.zero,
                         children: [
+                          // "Add as new opponent" option when no exact match
+                          if (!hasExactMatch) ...[
+                            GestureDetector(
+                              onTap: () async {
+                                await _addNewOpponent(queryTrimmed);
+                                if (context.mounted) {
+                                  Navigator.pop(context, queryTrimmed);
+                                }
+                              },
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 34,
+                                      height: 34,
+                                      decoration: BoxDecoration(
+                                        color: _mint.withValues(alpha: 0.15),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.person_add, color: _mint, size: 17),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Add "$queryTrimmed"',
+                                            style: GoogleFonts.ibmPlexSans(
+                                              fontSize: 14,
+                                              color: _mint,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Save to opponent list',
+                                            style: GoogleFonts.ibmPlexSans(
+                                              fontSize: 12,
+                                              color: Colors.white.withValues(alpha: 0.4),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              height: 1,
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              color: Colors.white.withValues(alpha: 0.08),
+                            ),
+                          ],
+
                           // User's name at top
                           if (showUserName) ...[
-                            ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: PokerFriendColors.red,
-                                child: Icon(Icons.person, color: Colors.white, size: 20),
-                              ),
-                              title: Text(
-                                userName,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              subtitle: Text(
-                                'You',
-                                style: TextStyle(
-                                  color: PokerFriendColors.dark9,
-                                  fontSize: 12,
-                                ),
-                              ),
+                            GestureDetector(
                               onTap: () => Navigator.pop(context, userName),
+                              behavior: HitTestBehavior.opaque,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 17,
+                                      backgroundColor: _mint,
+                                      child: const Icon(Icons.person, color: Colors.black, size: 16),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            userName,
+                                            style: GoogleFonts.ibmPlexSans(
+                                              fontSize: 14,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Text(
+                                            'You',
+                                            style: GoogleFonts.ibmPlexSans(
+                                              fontSize: 11,
+                                              color: Colors.white.withValues(alpha: 0.4),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                             if (filteredOpponents.isNotEmpty)
-                              Divider(color: PokerFriendColors.dark9),
+                              Container(
+                                height: 1,
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                color: Colors.white.withValues(alpha: 0.08),
+                              ),
                           ],
 
                           // Opponents list
-                          if (filteredOpponents.isEmpty && !showUserName)
+                          if (filteredOpponents.isEmpty && !showUserName && hasExactMatch)
                             Padding(
-                              padding: EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(16),
                               child: Text(
-                                'No results found.\nTry a different search term.',
+                                'No players found.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: PokerFriendColors.dark9),
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                  fontSize: 14,
+                                ),
                               ),
                             )
                           else
                             ...filteredOpponents.map((opponent) {
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: _getOpponentColor(opponent.color),
-                                  child: Text(
-                                    opponent.name[0].toUpperCase(),
-                                    style: TextStyle(color: Colors.white),
+                              return GestureDetector(
+                                onTap: () => Navigator.pop(context, opponent.name),
+                                behavior: HitTestBehavior.opaque,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 17,
+                                        backgroundColor: _getOpponentColor(opponent.color),
+                                        child: Text(
+                                          opponent.name[0].toUpperCase(),
+                                          style: GoogleFonts.ibmPlexSans(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        opponent.name,
+                                        style: GoogleFonts.ibmPlexSans(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                title: Text(
-                                  opponent.name,
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                onTap: () => Navigator.pop(context, opponent.name),
                               );
-                            }).toList(),
+                            }),
                         ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+                  // Cancel button
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(color: PokerFriendColors.dark9),
-                ),
-              ),
-            ],
           );
         },
       ),
@@ -385,80 +545,114 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
 
     final result = await showDialog<double>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
-        title: Text(
-          'Edit Stack',
-          style: TextStyle(color: Colors.white),
+      builder: (context) => Dialog(
+        backgroundColor: _cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              style: TextStyle(color: Colors.white, fontSize: 18),
-              decoration: InputDecoration(
-                labelText: 'Stack in BB',
-                labelStyle: TextStyle(color: PokerFriendColors.dark9),
-                suffixText: 'BB',
-                suffixStyle: TextStyle(color: PokerFriendColors.dark9),
-                filled: true,
-                fillColor: PokerFriendColors.dark1,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Edit Stack',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-            ),
-            SizedBox(height: 12),
-            Text(
-              widget.gameType == GameType.cash
-                  ? 'Current: ${currentBB.toInt()} BB = \$${currentChips}'
-                  : 'Current: ${currentBB.toInt()} BB = $currentChips',
-              style: TextStyle(
-                color: PokerFriendColors.dark9,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: PokerFriendColors.dark9),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final value = double.tryParse(controller.text);
-              if (value != null && value >= 0 && value <= 1000) {
-                Navigator.pop(context, value);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Please enter a value between 0 and 1000 BB'),
-                    backgroundColor: Colors.red,
+              const SizedBox(height: 16),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  controller: controller,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17),
+                  decoration: InputDecoration(
+                    labelText: 'Stack in BB',
+                    labelStyle: GoogleFonts.ibmPlexSans(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                    suffixText: 'BB',
+                    suffixStyle: GoogleFonts.ibmPlexSans(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: PokerFriendColors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                ),
               ),
-            ),
-            child: Text(
-              'Save',
-              style: TextStyle(color: Colors.white),
-            ),
+              const SizedBox(height: 10),
+              Text(
+                widget.gameType == GameType.cash
+                    ? 'Current: ${currentBB.toInt()} BB = \$${currentChips}'
+                    : 'Current: ${currentBB.toInt()} BB = $currentChips',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      final value = double.tryParse(controller.text);
+                      if (value != null && value >= 0 && value <= 1000) {
+                        Navigator.pop(context, value);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Please enter a value between 0 and 1000 BB'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _mint,
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: Text(
+                        'Save',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
 
@@ -548,160 +742,172 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PokerFriendColors.dark1,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: EdgeInsets.fromLTRB(24, 32, 24, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Teal radial gradient at top
+          Positioned(
+            top: -MediaQuery.of(context).size.width * 0.5,
+            right: -MediaQuery.of(context).size.width * 0.2,
+            child: Container(
+              width: MediaQuery.of(context).size.width * 1.2,
+              height: MediaQuery.of(context).size.width * 1.2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF1A4A4A).withValues(alpha: 0.6),
+                    const Color(0xFF133538).withValues(alpha: 0.3),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.4, 1.0],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Update Stacks & Button',
-                              style: TextStyle(
-                                fontSize: 28,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.5,
+                      Row(
+                        children: [
+                          // Close button
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF3C3C43).withValues(alpha: 0.3),
+                                shape: BoxShape.circle,
                               ),
+                              child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              widget.gameType == GameType.cash
-                                  ? 'Blinds: \$${widget.smallBlind}/\$${widget.bigBlind}'
-                                  : 'Blinds: ${widget.smallBlind}/${widget.bigBlind}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: PokerFriendColors.dark9,
-                                fontWeight: FontWeight.w500,
+                          ),
+                          const SizedBox(width: 16),
+                          // Title + Blinds
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Update Stacks & Button',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 20,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  widget.gameType == GameType.cash
+                                      ? 'Blinds: \$${widget.smallBlind}/\$${widget.bigBlind}'
+                                      : 'Blinds: ${widget.smallBlind}/${widget.bigBlind}',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 14,
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Instruction text
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: _mint.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _mint.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: _mint,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Tap stack to edit  •  Slide to adjust  •  Tap D for button',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 13,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: PokerFriendColors.dark3,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(
-                            Icons.close_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
-                  SizedBox(height: 16),
-                  // Instruction text
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: PokerFriendColors.red.withOpacity(0.3),
-                        width: 1,
+                ),
+
+                // Player list with sliders
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: widget.numberOfPlayers,
+                    itemBuilder: (context, index) {
+                      final playerId = index + 1;
+                      return _buildPlayerRow(playerId);
+                    },
+                  ),
+                ),
+
+                // Continue button
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: GestureDetector(
+                    onTap: _continue,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: _mint,
+                        borderRadius: BorderRadius.circular(60),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: PokerFriendColors.red,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Tap stack to edit • Slide to adjust • Tap 🟡 for button',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            color: Colors.black,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'CONTINUE TO LOG HAND',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                              letterSpacing: 0.5,
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            // Player list with sliders
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 24),
-                itemCount: widget.numberOfPlayers,
-                itemBuilder: (context, index) {
-                  final playerId = index + 1;
-                  return _buildPlayerRow(playerId);
-                },
-              ),
-            ),
-
-            // Continue button
-            Padding(
-              padding: EdgeInsets.all(24),
-              child: Container(
-                width: double.infinity,
-                height: 60,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [PokerFriendColors.red, Color(0xFFb8442f)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: ElevatedButton(
-                  onPressed: _continue,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'CONTINUE TO LOG HAND',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -715,222 +921,226 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
     final isSeatOpen = seatIsOpen[playerId] ?? false;
     final isCashGame = widget.gameType == GameType.cash;
 
-    return Opacity(
-      opacity: isSeatOpen ? 0.4 : 1.0,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 16),
-        padding: EdgeInsets.all(16),
+    // Compact open seat row
+    if (isSeatOpen) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: PokerFriendColors.dark3,
-          borderRadius: BorderRadius.circular(20),
-          border: isButton && !isSeatOpen
-              ? Border.all(color: Colors.amber, width: 2)
-              : null,
+          color: _cardColor,
+          borderRadius: BorderRadius.circular(14),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Header row: Seat toggle + Button selector + Name + Position + Stack
-            Row(
-              children: [
-                // Seat open/closed toggle
-                GestureDetector(
-                  onTap: () => _toggleSeatOpen(playerId),
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: isSeatOpen ? PokerFriendColors.dark1 : PokerFriendColors.red,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: isSeatOpen ? PokerFriendColors.dark9 : PokerFriendColors.red,
-                        width: 2,
-                      ),
-                    ),
-                    child: isSeatOpen
-                        ? null
-                        : Icon(Icons.check, color: Colors.white, size: 16),
+            // Seat toggle
+            GestureDetector(
+              onTap: () => _toggleSeatOpen(playerId),
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(5),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    width: 1.5,
                   ),
                 ),
-                SizedBox(width: 8),
-
-                // Button selector (dealer chip icon)
-                GestureDetector(
-                  onTap: isSeatOpen ? null : () => _setButtonPosition(playerId),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: isButton && !isSeatOpen
-                          ? Colors.amber.withOpacity(0.2)
-                          : PokerFriendColors.dark1,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isButton && !isSeatOpen ? Colors.amber : PokerFriendColors.dark9,
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        isButton && !isSeatOpen ? '🟡' : '○',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-
-                // Position + Name (Clickable)
-                Expanded(
-                  child: GestureDetector(
-                    onTap: isSeatOpen ? null : () => _showOpponentSelectionDialog(playerId),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Position label
-                          Text(
-                            isSeatOpen ? 'OPEN' : positionLabel,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isSeatOpen
-                                  ? PokerFriendColors.dark9
-                                  : (isButton ? Colors.amber : PokerFriendColors.red),
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          // Player name with edit indicator
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  isSeatOpen ? 'Empty Seat' : playerName,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              if (!isSeatOpen)
-                                Icon(
-                                  Icons.edit,
-                                  size: 14,
-                                  color: PokerFriendColors.dark9,
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Stack display (BB + chips) - Clickable to edit
-                if (!isSeatOpen)
-                  GestureDetector(
-                    onTap: () => _showStackEditDialog(playerId),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: PokerFriendColors.dark1.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${bbValue.toInt()} BB',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(
-                                Icons.edit,
-                                size: 14,
-                                color: PokerFriendColors.dark9,
-                              ),
-                            ],
-                          ),
-                          Text(
-                            isCashGame ? '\$$chipAmount' : '$chipAmount',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: PokerFriendColors.dark9,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-
-            if (!isSeatOpen) ...[
-              SizedBox(height: 12),
-
-              // Slider
-              Builder(
-                builder: (context) {
-                  final sliderMax = _getSliderMaxBB();
-                  return Column(
-                    children: [
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: PokerFriendColors.red,
-                          inactiveTrackColor: PokerFriendColors.dark1,
-                          thumbColor: PokerFriendColors.red,
-                          overlayColor: PokerFriendColors.red.withOpacity(0.2),
-                          trackHeight: 4.0,
-                          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 8.0),
-                        ),
-                        child: Slider(
-                          min: 0.0,
-                          max: sliderMax,
-                          divisions: sliderMax.toInt(),
-                          value: bbValue > sliderMax ? sliderMax : bbValue,
-                          onChanged: (value) => _updateStack(playerId, value),
-                        ),
-                      ),
-                      // Slider labels (dynamic based on max)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildSliderLabel('0'),
-                          _buildSliderLabel('${(sliderMax * 0.25).toInt()}'),
-                          _buildSliderLabel('${(sliderMax * 0.5).toInt()}'),
-                          _buildSliderLabel('${(sliderMax * 0.75).toInt()}'),
-                          _buildSliderLabel('${sliderMax.toInt()}'),
-                        ],
-                      ),
-                    ],
-                  );
-                },
               ),
-            ],
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Seat $playerId',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.3),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              'Empty',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                color: Colors.white.withValues(alpha: 0.25),
+                fontWeight: FontWeight.w400,
+              ),
+            ),
           ],
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  Widget _buildSliderLabel(String label) {
-    return Text(
-      label,
-      style: TextStyle(
-        fontSize: 11,
-        color: PokerFriendColors.dark9,
-        fontWeight: FontWeight.w500,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: isButton
+            ? Border.all(color: _mint.withValues(alpha: 0.35), width: 1.5)
+            : null,
+      ),
+      child: Column(
+        children: [
+          // Top row: checkbox + D + position/name + stack
+          Row(
+            children: [
+              // Seat toggle
+              GestureDetector(
+                onTap: () => _toggleSeatOpen(playerId),
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: _mint,
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: _mint, width: 1.5),
+                  ),
+                  child: const Icon(Icons.check, color: Colors.black, size: 14),
+                ),
+              ),
+              const SizedBox(width: 6),
+
+              // Button selector
+              GestureDetector(
+                onTap: () => _setButtonPosition(playerId),
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: isButton
+                        ? _mint.withValues(alpha: 0.15)
+                        : Colors.white.withValues(alpha: 0.05),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isButton ? _mint : Colors.white.withValues(alpha: 0.15),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'D',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: isButton ? _mint : Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Position + Name inline
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _showOpponentSelectionDialog(playerId),
+                  behavior: HitTestBehavior.opaque,
+                  child: Row(
+                    children: [
+                      // Position pill
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isButton
+                              ? _mint.withValues(alpha: 0.12)
+                              : Colors.white.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          positionLabel,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 11,
+                            color: isButton ? _mint : Colors.white.withValues(alpha: 0.5),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          playerName,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(
+                        Icons.edit,
+                        size: 12,
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Stack display - tappable to edit
+              GestureDetector(
+                onTap: () => _showStackEditDialog(playerId),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${bbValue.toInt()} BB',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          isCashGame ? '\$$chipAmount' : '$chipAmount',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Slider row — slim, no labels
+          SizedBox(
+            height: 28,
+            child: Builder(
+              builder: (context) {
+                final sliderMax = _getSliderMaxBB();
+                return SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: _mint,
+                    inactiveTrackColor: Colors.white.withValues(alpha: 0.08),
+                    thumbColor: _mint,
+                    overlayColor: _mint.withValues(alpha: 0.1),
+                    trackHeight: 2.5,
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
+                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 14.0),
+                  ),
+                  child: Slider(
+                    min: 0.0,
+                    max: sliderMax,
+                    divisions: sliderMax.toInt(),
+                    value: bbValue > sliderMax ? sliderMax : bbValue,
+                    onChanged: (value) => _updateStack(playerId, value),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

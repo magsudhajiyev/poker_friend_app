@@ -220,7 +220,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         children: [
           // Teal radial gradient at top
           Positioned(
-            top: -screenWidth * 0.3,
+            top: -screenWidth * 0.5,
             right: -screenWidth * 0.2,
             child: Container(
               width: screenWidth * 1.2,
@@ -250,16 +250,16 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF3C3C43).withOpacity(0.3),
+                          width: 44,
+                          height: 44,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF101115),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
                             Icons.arrow_back,
                             color: Colors.white,
-                            size: 20,
+                            size: 22,
                           ),
                         ),
                       ),

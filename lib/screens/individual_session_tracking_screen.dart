@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../design_system/poker_friend_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
@@ -78,29 +78,23 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   // Display mode
   bool _showBBMode = false;
 
+  // Menu key
+  final GlobalKey _dotsKey = GlobalKey();
+
   // Quick stack update tracking
-  int _lastButtonPosition = 1; // Default button at player 1
-  Map<int, double> _lastPlayerStacks = {}; // Track last known stacks
-  Map<int, String> _lastPlayerNames = {}; // Track player names
+  int _lastButtonPosition = 1;
+  Map<int, double> _lastPlayerStacks = {};
+  Map<int, String> _lastPlayerNames = {};
 
   @override
   void initState() {
     super.initState();
     _currentStack = widget.currentStack ?? widget.startingStack;
-
-    // Always use startingStack as initial for P/L calculation
-    // This ensures we're comparing same units (chips for MTT, dollars for cash)
     _initialStack = widget.startingStack;
-
     _sessionId = widget.sessionId;
-
-    // Initialize rebuy tracking
-    _totalBuyIn = widget.buyInAmount; // Start with initial buy-in
-
-    // Initialize average growth tracking
+    _totalBuyIn = widget.buyInAmount;
     _previousStack = _currentStack;
 
-    // Add initial stack to history
     _stackHistory.add({
       'timestamp': DateTime.now().toIso8601String(),
       'stackSize': _currentStack,
@@ -108,7 +102,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       'changeAmount': widget.buyInAmount,
     });
 
-    // Initialize current blinds with widget values
     _currentSmallBlind = widget.smallBlind;
     _currentBigBlind = widget.bigBlind;
     _currentHasBBante = widget.hasBBante;
@@ -123,38 +116,33 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   }
 
   Future<void> _initializeSession() async {
-    // Create a new session in Firebase
     _sessionStartTime = DateTime.now();
 
     try {
-      // Create session in Firebase
       final sessionId = await FirebaseService.createSession(
         smallBlind: widget.smallBlind,
         bigBlind: widget.bigBlind,
-        playerCount: 9, // Support all 9 seats
+        playerCount: 9,
         gameType: widget.gameType,
         isIndividualSession: true,
         sessionName: widget.sessionName,
         startingStack: widget.startingStack,
         hasBBante: widget.hasBBante,
-        totalBuyIn: widget.buyInAmount, // Include initial buy-in
+        totalBuyIn: widget.buyInAmount,
       );
 
       setState(() {
         _sessionId = sessionId;
       });
-
     } catch (e) {
       print('Error creating individual session in Firebase: $e');
-      // Create session with timestamp ID but also save to local
       final localSessionId = DateTime.now().millisecondsSinceEpoch.toString();
 
-      // Save to local storage as backup
       await LocalStorageService.saveSession(
         sessionId: localSessionId,
         smallBlind: widget.smallBlind,
         bigBlind: widget.bigBlind,
-        playerCount: 9, // Support all 9 seats
+        playerCount: 9,
         startTime: DateTime.now().toIso8601String(),
         gameType: widget.gameType,
         buyInAmount: widget.buyInAmount,
@@ -164,10 +152,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         _sessionId = localSessionId;
       });
 
-      // Show warning to user
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Session created locally. Will sync to cloud when connection is available.'),
             backgroundColor: Colors.orange,
           ),
@@ -177,8 +164,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   }
 
   Future<void> _resumeSession() async {
-    // Resume existing session
-    // Load session data from Firebase or local storage
     if (_sessionId != null) {
       try {
         Map<String, dynamic>? sessionData;
@@ -190,40 +175,31 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         }
 
         if (sessionData != null) {
-
           setState(() {
-            // Load existing data from database
             _totalBuyIn = sessionData!['totalBuyIn']?.toDouble() ?? _totalBuyIn;
             _handsLogged = sessionData['handsLogged'] ?? 0;
             _biggestPot = sessionData['biggestPot']?.toDouble() ?? 0.0;
 
-            // Load blinds from database ONLY if NOT from active session
-            // When from active session, we want to keep the current blinds passed from poker_hand_screen
             if (!widget.isFromActiveSession) {
               _currentSmallBlind = sessionData['smallBlind'] ?? _currentSmallBlind;
               _currentBigBlind = sessionData['bigBlind'] ?? _currentBigBlind;
               _currentHasBBante = sessionData['hasBBante'] ?? _currentHasBBante;
             }
 
-            // Load average growth for tournaments
             if (widget.gameType == GameType.tournament) {
               _averageGrowth = sessionData['averageGrowth']?.toDouble() ?? 0.0;
             }
 
-            // Load rebuys if available
             if (sessionData['rebuys'] != null) {
               _rebuys = List<Map<String, dynamic>>.from(sessionData['rebuys']);
             }
 
-            // Load stack history if available
             if (sessionData['stackHistory'] != null) {
               _stackHistory = List<Map<String, dynamic>>.from(sessionData['stackHistory']);
             }
 
-            // Load session start time from stored data
             if (sessionData['startTime'] != null) {
               try {
-                // Handle both Timestamp (from Firebase) and String (from local storage)
                 if (sessionData['startTime'] is Timestamp) {
                   _sessionStartTime = (sessionData['startTime'] as Timestamp).toDate();
                 } else if (sessionData['startTime'] is String) {
@@ -233,21 +209,18 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 print('Error parsing session start time: $e');
               }
             }
-
           });
         }
-      } catch (e) {
-      }
+      } catch (e) {}
     }
 
-    // Only set to current time if we couldn't load it from stored data
     if (_sessionStartTime == null) {
       _sessionStartTime = DateTime.now();
     }
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (_sessionStartTime != null) {
           _sessionDuration = DateTime.now().difference(_sessionStartTime!);
@@ -262,25 +235,21 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     super.dispose();
   }
 
-  // Calculate stack growth percentage
   double get stackGrowthPercentage {
     if (_initialStack == 0) return 0;
     return ((_currentStack - _initialStack) / _initialStack) * 100;
   }
 
-
-  // Get color based on stack performance
   Color get stackColor {
     if (_currentStack == _initialStack) {
-      return PokerFriendColors.dark9; // Gray for initial/no change
+      return Colors.white;
     } else if (_currentStack > _initialStack) {
-      return Colors.green; // Green for profit
+      return const Color(0xFF89F1EC);
     } else {
-      return PokerFriendColors.red; // Red for loss
+      return Colors.red;
     }
   }
 
-  // Format duration
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final hours = twoDigits(duration.inHours);
@@ -289,7 +258,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     return "$hours:$minutes:$seconds";
   }
 
-  // Format stack value based on display mode
   String _formatStackValue(double value) {
     if (_showBBMode && _currentBigBlind > 0) {
       final bbValue = value / _currentBigBlind;
@@ -301,10 +269,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     }
   }
 
+  // ─── Dialogs ───
 
-
-
-  // Manual stack update dialog
   Future<void> _showUpdateStackDialog() async {
     final newStackController = TextEditingController(text: _currentStack.toString());
     final changeAmountController = TextEditingController();
@@ -312,19 +278,19 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     final newStack = await showDialog<double>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
+        backgroundColor: const Color(0xFF131616),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
         ),
         title: Text(
           'Update Current Stack',
-          style: TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        content: Container(
+        content: SizedBox(
           width: double.maxFinite,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -332,160 +298,137 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             children: [
               // Current Stack Display
               Container(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: PokerFriendColors.dark4,
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Current Stack:',
-                      style: TextStyle(
-                        color: PokerFriendColors.dark10,
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white.withOpacity(0.5),
                         fontSize: 14,
                       ),
                     ),
                     Text(
                       _formatStackValue(_currentStack),
-                      style: TextStyle(
-                        color: Colors.white,
+                      style: GoogleFonts.ibmPlexSans(
+                        color: const Color(0xFF89F1EC),
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-              // Method 1: Set New Total
               Text(
-                'Method 1: Set New Total',
-                style: TextStyle(
+                'Set New Total',
+                style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               TextField(
                 controller: newStackController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                 decoration: InputDecoration(
                   hintText: 'Enter new total stack',
-                  hintStyle: TextStyle(color: PokerFriendColors.dark9),
+                  hintStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.3)),
                   prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
-                  prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
+                  prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                   filled: true,
-                  fillColor: PokerFriendColors.dark1,
+                  fillColor: Colors.white.withOpacity(0.05),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
               ),
 
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-              // Method 2: Add/Subtract Amount
               Text(
-                'Method 2: Add/Subtract Amount',
-                style: TextStyle(
+                'Add/Subtract Amount',
+                style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Row(
                 children: [
-                  // Amount Input
                   Expanded(
                     flex: 3,
                     child: TextField(
                       controller: changeAmountController,
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
-                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                       decoration: InputDecoration(
                         hintText: 'Amount',
-                        hintStyle: TextStyle(color: PokerFriendColors.dark9),
+                        hintStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.3)),
                         prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
-                        prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
+                        prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                         filled: true,
-                        fillColor: PokerFriendColors.dark1,
+                        fillColor: Colors.white.withOpacity(0.05),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       ),
                     ),
                   ),
-
-                  SizedBox(width: 12),
-
+                  const SizedBox(width: 8),
                   // Plus Button
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final amount = double.tryParse(changeAmountController.text);
-                        if (amount != null && amount > 0) {
-                          final newTotal = _currentStack + amount;
+                  GestureDetector(
+                    onTap: () {
+                      final amount = double.tryParse(changeAmountController.text);
+                      if (amount != null && amount > 0) {
+                        final newTotal = _currentStack + amount;
+                        Navigator.pop(context, newTotal);
+                      }
+                    },
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF89F1EC),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.add, color: Colors.black, size: 22),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Minus Button
+                  GestureDetector(
+                    onTap: () {
+                      final amount = double.tryParse(changeAmountController.text);
+                      if (amount != null && amount > 0) {
+                        final newTotal = _currentStack - amount;
+                        if (newTotal >= 0) {
                           Navigator.pop(context, newTotal);
                         }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                      }
+                    },
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        '+',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 8),
-
-                  // Minus Button
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final amount = double.tryParse(changeAmountController.text);
-                        if (amount != null && amount > 0) {
-                          final newTotal = _currentStack - amount;
-                          if (newTotal >= 0) {
-                            Navigator.pop(context, newTotal);
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: PokerFriendColors.red,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: Text(
-                        '-',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: const Icon(Icons.remove, color: Colors.white, size: 22),
                     ),
                   ),
                 ],
@@ -498,7 +441,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(color: PokerFriendColors.dark9),
+              style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
             ),
           ),
           TextButton(
@@ -508,7 +451,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             },
             child: Text(
               'Set Total',
-              style: TextStyle(color: PokerFriendColors.red),
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF89F1EC),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -521,8 +467,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
       setState(() {
         _currentStack = newStack;
-
-        // Add stack history entry for manual update
         _stackHistory.add({
           'timestamp': DateTime.now().toIso8601String(),
           'stackSize': newStack,
@@ -531,21 +475,95 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         });
       });
 
-      // Debug logging for manual stack update
-
-      // Update session in Firebase with stack history
       if (_sessionId != null) {
         FirebaseService.updateIndividualSession(
           sessionId: _sessionId!,
           currentStack: _currentStack,
           stackHistory: _stackHistory,
-        ).catchError((e) {
-        });
+        ).catchError((e) {});
       }
     }
   }
 
-  // Update blinds dialog
+  void _showOptionsMenu() {
+    final RenderBox renderBox = _dotsKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+    final Size size = renderBox.size;
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      useSafeArea: false,
+      builder: (context) => Stack(
+        children: [
+          // Dismiss on tap outside
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          // Positioned popup menu — anchored to dots icon position
+          Positioned(
+            right: 16,
+            top: offset.dy + size.height + 4,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: 184,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF02050B),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.45),
+                      blurRadius: 34,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Rebuy row
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showRebuyDialog();
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.add_circle_outline, color: Color(0xFF89F1EC), size: 16),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                'Rebuy',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                  height: 1.44,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _showUpdateBlindsDialog() async {
     final smallBlindController = TextEditingController(text: _currentSmallBlind.toString());
     final bigBlindController = TextEditingController(text: _currentBigBlind.toString());
@@ -554,83 +572,86 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          'Update Blinds',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+          backgroundColor: const Color(0xFF131616),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: smallBlindController,
-              keyboardType: TextInputType.number,
-              style: TextStyle(color: Colors.white, fontSize: 18),
-              decoration: InputDecoration(
-                labelText: 'Small Blind',
-                labelStyle: TextStyle(color: PokerFriendColors.dark9),
-                hintStyle: TextStyle(color: PokerFriendColors.dark9),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: PokerFriendColors.red),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: PokerFriendColors.red, width: 2),
+          title: Text(
+            'Update Blinds',
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: smallBlindController,
+                keyboardType: TextInputType.number,
+                style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
+                decoration: InputDecoration(
+                  labelText: 'Small Blind',
+                  labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.05),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: bigBlindController,
-              keyboardType: TextInputType.number,
-              style: TextStyle(color: Colors.white, fontSize: 18),
-              decoration: InputDecoration(
-                labelText: 'Big Blind',
-                labelStyle: TextStyle(color: PokerFriendColors.dark9),
-                hintStyle: TextStyle(color: PokerFriendColors.dark9),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: PokerFriendColors.red),
+              const SizedBox(height: 16),
+              TextField(
+                controller: bigBlindController,
+                keyboardType: TextInputType.number,
+                style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
+                decoration: InputDecoration(
+                  labelText: 'Big Blind',
+                  labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.05),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: PokerFriendColors.red, width: 2),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final smallBlind = int.tryParse(smallBlindController.text);
+                final bigBlind = int.tryParse(bigBlindController.text);
+
+                if (smallBlind != null && bigBlind != null &&
+                    smallBlind > 0 && bigBlind > smallBlind) {
+                  Navigator.pop(context, {
+                    'smallBlind': smallBlind,
+                    'bigBlind': bigBlind,
+                  });
+                }
+              },
+              child: Text(
+                'Update',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF89F1EC),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: PokerFriendColors.dark9),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              final smallBlind = int.tryParse(smallBlindController.text);
-              final bigBlind = int.tryParse(bigBlindController.text);
-
-              if (smallBlind != null && bigBlind != null &&
-                  smallBlind > 0 && bigBlind > smallBlind) {
-                Navigator.pop(context, {
-                  'smallBlind': smallBlind,
-                  'bigBlind': bigBlind,
-                });
-              }
-            },
-            child: Text(
-              'Update',
-              style: TextStyle(color: PokerFriendColors.red),
-            ),
-          ),
-        ],
         ),
       ),
     );
@@ -639,11 +660,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       setState(() {
         _currentSmallBlind = result['smallBlind']!;
         _currentBigBlind = result['bigBlind']!;
-        // BB Ante remains unchanged - it's set once at session start
-        _blindsWereChanged = true; // Mark that blinds were explicitly changed
+        _blindsWereChanged = true;
       });
 
-      // Update session in Firebase with new blinds
       if (_sessionId != null) {
         FirebaseService.updateIndividualSession(
           sessionId: _sessionId!,
@@ -655,17 +674,13 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     }
   }
 
-  // Navigate to hand logging
   Future<void> _logHand() async {
     if (widget.isFromActiveSession) {
-      // If called from an active poker session, return with updated stack
-      // Only return blinds if they were explicitly changed by the user
       final Map<String, dynamic> result = {
         'updatedStack': _currentStack,
         'totalBuyIn': _totalBuyIn,
       };
 
-      // Only include blinds if they were explicitly changed
       if (_blindsWereChanged) {
         result['smallBlind'] = _currentSmallBlind;
         result['bigBlind'] = _currentBigBlind;
@@ -676,7 +691,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       return;
     }
 
-    // CRITICAL: Get user's name for tracking stack across position changes
     String userName = 'You';
     try {
       final user = AuthService.currentUser;
@@ -685,54 +699,44 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       }
     } catch (e) {}
 
-    // Step 1: Navigate to Quick Stack Update Screen
-    // Pass user's current stack and name so it auto-applies to whichever seat they select
     final stackResult = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
         builder: (context) => QuickStackUpdateScreen(
           smallBlind: _currentSmallBlind,
           bigBlind: _currentBigBlind,
-          numberOfPlayers: 9, // Support all 9 seats
+          numberOfPlayers: 9,
           gameType: widget.gameType,
           currentStacks: _lastPlayerStacks.isNotEmpty ? _lastPlayerStacks : null,
           currentButtonPosition: _lastButtonPosition,
           playerNames: _lastPlayerNames.isNotEmpty ? _lastPlayerNames : null,
-          userCurrentStack: _currentStack, // CRITICAL: Pass user's current stack
-          userName: userName, // CRITICAL: Pass user's name to detect when they seat themselves
+          userCurrentStack: _currentStack,
+          userName: userName,
         ),
       ),
     );
 
-    // User cancelled
     if (stackResult == null) return;
 
-    // Extract stacks, button position, and player names
     final Map<int, double> playerStacks = Map<int, double>.from(stackResult['playerStacks']);
     final int buttonPosition = stackResult['buttonPosition'];
     final Map<int, String>? playerNames = stackResult['playerNames'] != null
         ? Map<int, String>.from(stackResult['playerNames'])
         : null;
 
-    // Save for next time
     setState(() {
       _lastPlayerStacks = playerStacks;
       _lastButtonPosition = buttonPosition;
       if (playerNames != null) {
-        // Merge new names with existing names
         _lastPlayerNames.addAll(playerNames);
       }
     });
 
-    // Build complete player names map (merge previous names with new names)
     Map<int, String> completePlayerNames = Map<int, String>.from(_lastPlayerNames);
     if (playerNames != null) {
       completePlayerNames.addAll(playerNames);
     }
 
-    // CRITICAL: Update user's current stack from their selected seat
-    // The QuickStackUpdateScreen already auto-applied user's stack to their selected seat
-    // So we just need to read it back from wherever they seated themselves
     int? userSeat;
     for (var entry in completePlayerNames.entries) {
       if (entry.value == userName) {
@@ -741,26 +745,24 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       }
     }
 
-    // Update _currentStack from user's seat (already contains manual adjustments from Quick Stack Update)
     if (userSeat != null && playerStacks.containsKey(userSeat)) {
       _currentStack = playerStacks[userSeat]!;
     }
 
-    // Step 2: Navigate to PokerHandScreen with pre-configured stacks, button, and player names
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
         builder: (context) => PokerHandScreen(
           smallBlind: _currentSmallBlind,
           bigBlind: _currentBigBlind,
-          numberOfPlayers: 9, // Support all 9 seats
+          numberOfPlayers: 9,
           gameType: widget.gameType,
           hasBBante: _currentHasBBante,
           ante: _currentHasBBante ? _currentBigBlind : 0,
           isIndividualSession: true,
           individualCurrentStack: _currentStack,
           individualSessionId: _sessionId,
-          individualTotalBuyIn: _totalBuyIn, // Pass total buy-in for proper tracking
+          individualTotalBuyIn: _totalBuyIn,
           preConfiguredStacks: playerStacks,
           preConfiguredButtonPosition: buttonPosition,
           preConfiguredPlayerNames: completePlayerNames.isNotEmpty ? completePlayerNames : null,
@@ -770,32 +772,25 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     );
 
     if (result != null && result['completed'] == true) {
-      // Hand was completed, update our stack
       final newStack = result['finalStack'] as double?;
       final startingStack = result['startingStack'] as double?;
       if (newStack != null) {
-        // CRITICAL: Use actual starting stack (from Quick Stack Update) as baseline
-        // Not session-level _currentStack, which may differ from manual adjustments
         final actualStartingStack = startingStack ?? _currentStack;
         final stackChange = newStack - actualStartingStack;
 
-        // Calculate incremental average growth for tournaments
         if (widget.gameType == GameType.tournament && actualStartingStack > 0) {
           final handGrowth = ((newStack - actualStartingStack) / actualStartingStack) * 100;
-          // Update running average: newAvg = (oldAvg * n + newValue) / (n + 1)
           _averageGrowth = (_averageGrowth * _handsLogged + handGrowth) / (_handsLogged + 1);
         }
 
         setState(() {
           _currentStack = newStack;
           _handsLogged++;
-          // Update biggest pot if applicable
           final potSize = result['potSize'] as double?;
           if (potSize != null && potSize > _biggestPot) {
             _biggestPot = potSize;
           }
 
-          // Update blinds if they were changed during the hand
           if (result['smallBlind'] != null) {
             _currentSmallBlind = result['smallBlind'] as int;
           }
@@ -807,7 +802,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           }
         });
 
-        // Add stack history entry for this hand
         _stackHistory.add({
           'timestamp': DateTime.now().toIso8601String(),
           'stackSize': _currentStack,
@@ -816,15 +810,14 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           'handNumber': _handsLogged,
         });
 
-        // Update session in Firebase
         if (_sessionId != null) {
           FirebaseService.updateIndividualSession(
             sessionId: _sessionId!,
             currentStack: _currentStack,
             handsLogged: _handsLogged,
             biggestPot: _biggestPot,
-            stackHistory: _stackHistory, // Include stack history in update
-            smallBlind: _currentSmallBlind, // Update blinds in Firebase
+            stackHistory: _stackHistory,
+            smallBlind: _currentSmallBlind,
             bigBlind: _currentBigBlind,
             hasBBante: _currentHasBBante,
             averageGrowth: widget.gameType == GameType.tournament ? _averageGrowth : null,
@@ -834,27 +827,26 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     }
   }
 
-  // Stop session
   Future<void> _stopSession() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
+        backgroundColor: const Color(0xFF131616),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
         ),
         title: Text(
           'End Session?',
-          style: TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
           'Are you sure you want to end this session?',
-          style: TextStyle(
-            color: PokerFriendColors.dark10,
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white.withOpacity(0.5),
             fontSize: 16,
           ),
         ),
@@ -863,14 +855,17 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: TextStyle(color: PokerFriendColors.dark9),
+              style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
               'End Session',
-              style: TextStyle(color: PokerFriendColors.red),
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.red,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -878,51 +873,43 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     );
 
     if (confirm == true) {
-      // Save final session data
       if (_sessionId != null) {
         try {
-          // End the session in Firebase
           await FirebaseService.endSession(_sessionId!);
-
-          // Also update the session status to completed
           await FirebaseService.updateIndividualSession(
             sessionId: _sessionId!,
             sessionStatus: 'completed',
             currentStack: _currentStack,
             handsLogged: _handsLogged,
             biggestPot: _biggestPot,
-            stackHistory: _stackHistory, // Include complete stack history
-            totalBuyIn: _totalBuyIn, // Include total invested amount
+            stackHistory: _stackHistory,
+            totalBuyIn: _totalBuyIn,
           );
-
-        } catch (e) {
-        }
+        } catch (e) {}
       }
 
-      // Navigate back to home
       Navigator.popUntil(context, (route) => route.isFirst);
     }
   }
 
-  // Confirmation dialog for rebuy when user has existing stack
   Future<bool?> _showRebuyConfirmationDialog() async {
     return await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
+        backgroundColor: const Color(0xFF131616),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
         ),
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: PokerFriendColors.red, size: 24),
-            SizedBox(width: 12),
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
+            const SizedBox(width: 12),
             Text(
               'Confirm Rebuy',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -933,15 +920,15 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           children: [
             Text(
               'You currently have ${_formatStackValue(_currentStack)} remaining.',
-              style: TextStyle(
-                color: PokerFriendColors.dark10,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withOpacity(0.5),
                 fontSize: 16,
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               'Proceeding with a rebuy will replace your current stack. Are you sure you want to continue?',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -954,26 +941,24 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: TextStyle(
-                color: PokerFriendColors.dark10,
-                fontSize: 16,
-              ),
+              style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
             ),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: PokerFriendColors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          GestureDetector(
+            onTap: () => Navigator.pop(context, true),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(60),
               ),
-            ),
-            child: Text(
-              'Proceed with Rebuy',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              child: Text(
+                'Proceed with Rebuy',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -982,14 +967,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     );
   }
 
-  // Rebuy dialog - handles both Cash and MTT differently
   Future<void> _showRebuyDialog() async {
-    // Check if user has existing stack and confirm they want to lose it
     if (_currentStack > 0) {
       final confirmed = await _showRebuyConfirmationDialog();
-      if (confirmed != true) {
-        return; // User cancelled, don't proceed with rebuy
-      }
+      if (confirmed != true) return;
     }
     final rebuyAmountController = TextEditingController();
     final stackSizeController = TextEditingController();
@@ -997,25 +978,25 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
+        backgroundColor: const Color(0xFF131616),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
         ),
         title: Row(
           children: [
-            Icon(Icons.add_circle_outline, color: PokerFriendColors.red, size: 24),
-            SizedBox(width: 12),
+            const Icon(Icons.add_circle_outline, color: Color(0xFF89F1EC), size: 24),
+            const SizedBox(width: 12),
             Text(
               'Rebuy',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
-        content: Container(
+        content: SizedBox(
           width: double.maxFinite,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1024,90 +1005,87 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 widget.gameType == GameType.cash
                     ? 'Enter rebuy amount (stack will equal rebuy amount)'
                     : 'Enter rebuy amount and new stack size',
-                style: TextStyle(
-                  color: PokerFriendColors.dark10,
-                  fontSize: 16,
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 14,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-              // Rebuy Amount Input (always shown)
               TextField(
                 controller: rebuyAmountController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 autofocus: true,
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                 decoration: InputDecoration(
                   labelText: 'Rebuy Amount',
-                  labelStyle: TextStyle(color: PokerFriendColors.dark9),
+                  labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
                   prefixText: '\$ ',
-                  prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
+                  prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                   filled: true,
-                  fillColor: PokerFriendColors.dark1,
+                  fillColor: Colors.white.withOpacity(0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
 
-              // Stack Size Input (only for MTT)
               if (widget.gameType == GameType.tournament) ...[
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 TextField(
                   controller: stackSizeController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                   decoration: InputDecoration(
                     labelText: 'New Stack Size',
-                    labelStyle: TextStyle(color: PokerFriendColors.dark9),
+                    labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
                     hintText: 'Chip count after rebuy',
-                    hintStyle: TextStyle(color: PokerFriendColors.dark8),
+                    hintStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.3)),
                     filled: true,
-                    fillColor: PokerFriendColors.dark1,
+                    fillColor: Colors.white.withOpacity(0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
               ],
 
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               // Current session info
               Container(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: PokerFriendColors.dark4,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: PokerFriendColors.dark6, width: 1),
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Session Info',
-                      style: TextStyle(
+                      style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'Total Invested: \$${_totalBuyIn.toStringAsFixed(2)}',
-                      style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
+                      style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5), fontSize: 12),
                     ),
                     Text(
                       'Current Stack: ${_formatStackValue(_currentStack)}',
-                      style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
+                      style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5), fontSize: 12),
                     ),
                     Text(
                       'Rebuys: ${_rebuys.length}',
-                      style: TextStyle(color: PokerFriendColors.dark10, fontSize: 12),
+                      style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5), fontSize: 12),
                     ),
                   ],
                 ),
@@ -1120,20 +1098,16 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(
-                color: PokerFriendColors.dark10,
-                fontSize: 16,
-              ),
+              style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
+          GestureDetector(
+            onTap: () {
               final rebuyAmount = double.tryParse(rebuyAmountController.text);
 
-              // Validate inputs first
               if (rebuyAmount == null || rebuyAmount <= 0) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text('Please enter a valid rebuy amount'),
                     backgroundColor: Colors.red,
                   ),
@@ -1142,17 +1116,15 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               }
 
               if (widget.gameType == GameType.cash) {
-                // Cash game: rebuy amount = stack size
                 Navigator.pop(context, {
                   'rebuyAmount': rebuyAmount,
-                  'newStack': rebuyAmount, // For cash, stack equals rebuy amount
+                  'newStack': rebuyAmount,
                 });
               } else {
-                // MTT: need both rebuy amount and stack size
                 final stackSize = double.tryParse(stackSizeController.text);
                 if (stackSize == null || stackSize <= 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('Please enter a valid stack size'),
                       backgroundColor: Colors.red,
                     ),
@@ -1166,18 +1138,19 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 });
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: PokerFriendColors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF89F1EC),
+                borderRadius: BorderRadius.circular(60),
               ),
-            ),
-            child: Text(
-              'Add Rebuy',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              child: Text(
+                'Add Rebuy',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -1185,27 +1158,21 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       ),
     );
 
-    // Handle the rebuy result
     if (result != null) {
       final rebuyAmount = result['rebuyAmount'] as double;
       final newStack = result['newStack'] as double;
 
-      // Update local tracking data
       setState(() {
         _currentStack = newStack;
-        _initialStack = newStack; // Reset initial stack so it shows gray
+        _initialStack = newStack;
         _totalBuyIn += rebuyAmount;
 
-        // Debug logging for total invested update
-
-        // Add rebuy record
         _rebuys.add({
           'timestamp': DateTime.now().toIso8601String(),
           'amount': rebuyAmount,
           'stackSize': newStack,
         });
 
-        // Add stack history entry
         _stackHistory.add({
           'timestamp': DateTime.now().toIso8601String(),
           'stackSize': newStack,
@@ -1214,7 +1181,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         });
       });
 
-      // Update session in Firebase with rebuy data
       if (_sessionId != null) {
         try {
           await FirebaseService.addRebuyToSession(
@@ -1228,7 +1194,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         }
       }
 
-      // Show success feedback
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -1236,408 +1201,376 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 ? 'Rebuy added: \$${rebuyAmount.toStringAsFixed(2)}'
                 : 'Rebuy added: \$${rebuyAmount.toStringAsFixed(2)} (Stack: ${newStack.toStringAsFixed(0)})',
           ),
-          backgroundColor: PokerFriendColors.red,
+          backgroundColor: const Color(0xFF89F1EC),
         ),
       );
     }
   }
 
+  // ─── Build ───
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     final profitLoss = _currentStack - _initialStack;
-    final isInitial = _currentStack == _initialStack;
     final isProfit = _currentStack > _initialStack;
 
     return Scaffold(
-      backgroundColor: PokerFriendColors.dark1,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 375),
-            margin: EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Section
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 32, 0, 32),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.sessionName,
-                            style: TextStyle(
-                              fontSize: 28,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            _formatDuration(_sessionDuration),
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: PokerFriendColors.red,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.red,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: IconButton(
-                              onPressed: _stopSession,
-                              icon: Icon(
-                                Icons.stop_rounded,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.dark4,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: PopupMenuButton<String>(
-                              icon: Icon(
-                                Icons.settings,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              color: PokerFriendColors.dark3,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              onSelected: (value) {
-                                if (value == 'rebuy') {
-                                  _showRebuyDialog();
-                                }
-                                // Future settings options will be handled here
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'rebuy',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.add_circle_outline, color: PokerFriendColors.red, size: 18),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'Rebuy',
-                                        style: TextStyle(color: Colors.white, fontSize: 14),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Future menu items will be added here
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Teal radial gradient at top
+          Positioned(
+            top: -screenWidth * 0.5,
+            right: -screenWidth * 0.2,
+            child: Container(
+              width: screenWidth * 1.2,
+              height: screenWidth * 1.2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF1A4A4A).withOpacity(0.6),
+                    const Color(0xFF133538).withOpacity(0.3),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.4, 1.0],
                 ),
-
-                // BB Mode Toggle
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  margin: EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'BB Mode',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Switch(
-                        value: _showBBMode,
-                        onChanged: (value) => setState(() => _showBBMode = value),
-                        activeColor: PokerFriendColors.red,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Main Stack Card
-                Container(
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isInitial
-                        ? [PokerFriendColors.dark4, PokerFriendColors.dark3]
-                        : isProfit
-                          ? [Color(0xFF2E7D32), Color(0xFF1B5E20)]
-                          : [Color(0xFFB71C1C), Color(0xFF7F0000)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Current Stack',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: _showUpdateStackDialog,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.edit,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'Update',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        _formatStackValue(_currentStack),
-                        style: TextStyle(
-                          fontSize: 42,
-                          color: stackColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'P/L',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white.withOpacity(0.8),
-                                  ),
-                                ),
-                                Text(
-                                  '${profitLoss >= 0 ? '+' : ''}${widget.gameType == GameType.cash ? '\$' : ''}${profitLoss.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'Growth',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white.withOpacity(0.8),
-                                  ),
-                                ),
-                                Text(
-                                  '${stackGrowthPercentage >= 0 ? '+' : ''}${stackGrowthPercentage.toStringAsFixed(1)}%',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 24),
-
-                // Session Stats
-                Container(
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            child: Image.asset(
-                              'icons/stats.png',
-                              width: 40,
-                              height: 40,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Text(
-                            'Session Stats',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: PokerFriendColors.dark1,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          children: [
-                            _buildStatRow('Initial Buy-in', '\$${widget.buyInAmount.toStringAsFixed(2)}'),
-                            if (widget.gameType == GameType.tournament)
-                              _buildStatRow('Starting Stack', widget.startingStack.toStringAsFixed(0)),
-                            _buildStatRow('Total Invested', '\$${_totalBuyIn.toStringAsFixed(2)}'),
-                            _buildStatRow('Rebuys', '${_rebuys.length}'),
-                            _buildStatRow('Hands Logged', '$_handsLogged'),
-                            _buildStatRow('Biggest Pot', widget.gameType == GameType.cash
-                              ? '\$${_biggestPot.toStringAsFixed(2)}'
-                              : _biggestPot.toStringAsFixed(0)),
-                            _buildClickableStatRow('Blinds', '$_currentSmallBlind/$_currentBigBlind', _showUpdateBlindsDialog),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 32),
-
-                // Show different button based on access mode
-                Container(
-                  width: double.infinity,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: widget.isFromActiveSession
-                        ? [PokerFriendColors.dark6, PokerFriendColors.dark4] // Darker for Go Back
-                        : [PokerFriendColors.red, Color(0xFFb8442f)], // Red for Log a Hand
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: ElevatedButton(
-                    onPressed: _logHand, // Same method handles both cases
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16, bottom: 24),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (widget.isFromActiveSession)
-                          Icon(Icons.arrow_back, color: Colors.white, size: 22),
-                        if (widget.isFromActiveSession)
-                          SizedBox(width: 8),
-                        Text(
-                          widget.isFromActiveSession ? 'GO BACK TO HAND' : 'LOG A HAND',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        // Stop button - red circle
+                        GestureDetector(
+                          onTap: _stopSession,
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.stop_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Session name + timer
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.sessionName,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _formatDuration(_sessionDuration),
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 14,
+                                  color: const Color(0xFF89F1EC),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Settings gear
+                        GestureDetector(
+                          onTap: () => _showOptionsMenu(),
+                          child: Container(
+                            key: _dotsKey,
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3C3C43).withOpacity(0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
 
-                SizedBox(height: 100),
-              ],
+                  // BB Mode Toggle
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131616),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'BB Mode',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            color: Colors.white.withOpacity(0.8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Switch(
+                          value: _showBBMode,
+                          onChanged: (value) => setState(() => _showBBMode = value),
+                          activeColor: const Color(0xFF89F1EC),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Main Stack Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131616),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Current Stack',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 14,
+                                color: Colors.white.withOpacity(0.5),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: _showUpdateStackDialog,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF89F1EC).withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(60),
+                                  border: Border.all(
+                                    color: const Color(0xFF89F1EC).withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.edit, color: Color(0xFF89F1EC), size: 14),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Update',
+                                      style: GoogleFonts.ibmPlexSans(
+                                        color: const Color(0xFF89F1EC),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            _formatStackValue(_currentStack),
+                            style: GoogleFonts.familjenGrotesk(
+                              fontSize: 42,
+                              color: stackColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'P/L',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 12,
+                                      color: Colors.white.withOpacity(0.5),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${profitLoss >= 0 ? '+' : ''}${widget.gameType == GameType.cash ? '\$' : ''}${profitLoss.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 18,
+                                      color: isProfit ? const Color(0xFF89F1EC) : (profitLoss < 0 ? Colors.red : Colors.white),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Growth',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 12,
+                                      color: Colors.white.withOpacity(0.5),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${stackGrowthPercentage >= 0 ? '+' : ''}${stackGrowthPercentage.toStringAsFixed(1)}%',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 18,
+                                      color: isProfit ? const Color(0xFF89F1EC) : (profitLoss < 0 ? Colors.red : Colors.white),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Session Stats
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131616),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Session Stats',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildStatRow('Starting Stack', widget.gameType == GameType.cash
+                            ? '\$${widget.startingStack.toStringAsFixed(2)}'
+                            : widget.startingStack.toStringAsFixed(0)),
+                        _buildDivider(),
+                        _buildStatRow('Initial Buy-in', '\$${widget.buyInAmount.toStringAsFixed(2)}'),
+                        _buildDivider(),
+                        _buildStatRow('Rebuys', '${_rebuys.length}'),
+                        _buildDivider(),
+                        _buildStatRow('Total Invested', '\$${_totalBuyIn.toStringAsFixed(2)}'),
+                        _buildDivider(),
+                        _buildClickableStatRow('Blinds', '$_currentSmallBlind/$_currentBigBlind', _showUpdateBlindsDialog),
+                        _buildDivider(),
+                        _buildStatRow('Hands Logged', '$_handsLogged'),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Log Hand Button
+                  GestureDetector(
+                    onTap: _logHand,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: widget.isFromActiveSession
+                            ? const Color(0xFF131616)
+                            : const Color(0xFF89F1EC),
+                        borderRadius: BorderRadius.circular(60),
+                        border: widget.isFromActiveSession
+                            ? Border.all(color: Colors.white.withOpacity(0.1))
+                            : null,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (widget.isFromActiveSession)
+                            const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                          if (widget.isFromActiveSession)
+                            const SizedBox(width: 8),
+                          Text(
+                            widget.isFromActiveSession ? 'Go Back to Hand' : 'Log a Hand',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: widget.isFromActiveSession ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      height: 1,
+      color: Colors.white.withOpacity(0.1),
     );
   }
 
   Widget _buildStatRow(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              color: PokerFriendColors.dark9,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              color: Colors.white.withOpacity(0.5),
+              fontWeight: FontWeight.w400,
             ),
           ),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              color: const Color(0xFF89F1EC),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1650,32 +1583,33 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     return GestureDetector(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               label,
-              style: TextStyle(
-                fontSize: 14,
-                color: PokerFriendColors.dark9,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                color: Colors.white.withOpacity(0.5),
+                fontWeight: FontWeight.w400,
               ),
             ),
             Row(
               children: [
                 Text(
                   value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: const Color(0xFF89F1EC),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(width: 8),
-                Icon(
+                const SizedBox(width: 8),
+                const Icon(
                   Icons.edit,
-                  color: PokerFriendColors.red,
-                  size: 16,
+                  color: Color(0xFF89F1EC),
+                  size: 14,
                 ),
               ],
             ),

@@ -171,7 +171,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         children: [
           // Teal radial gradient at top
           Positioned(
-            top: -screenWidth * 0.3,
+            top: -screenWidth * 0.5,
             right: -screenWidth * 0.25,
             child: Transform.scale(
               scaleX: 1.0,
@@ -209,13 +209,11 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                         child: Container(
                           width: 44,
                           height: 44,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF3C3C43).withOpacity(0.3),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF101115),
                             shape: BoxShape.circle,
                           ),
-                          child: const Center(
-                            child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
-                          ),
+                          child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
                         ),
                       ),
                       const SizedBox(width: 12),

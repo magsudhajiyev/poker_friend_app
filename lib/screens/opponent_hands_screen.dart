@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../services/local_storage_service.dart';
 import '../services/firebase_service.dart';
-import '../widgets/loading_screen.dart';
 import '../utils/poker_positions.dart';
 import 'hand_actions_screen.dart';
-import '../widgets/global_top_header.dart';
-import '../design_system/design_system.dart';
 
 class OpponentHandsScreen extends StatefulWidget {
   final Opponent opponent;
@@ -25,7 +22,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
   bool isLoadingMore = false;
   bool hasMoreHands = true;
   String? error;
-  int? totalHandsCount; // Track total count without loading all
+  int? totalHandsCount;
 
   final ScrollController _scrollController = ScrollController();
   static const int _handsPerPage = 5;
@@ -33,6 +30,9 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
 
   // Cache sessions to avoid refetching
   List<Map<String, dynamic>>? _cachedSessions;
+
+  static const _cardColor = Color(0xFF131616);
+  static const _mint = Color(0xFF89F1EC);
 
   @override
   void initState() {
@@ -50,7 +50,6 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
 
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-      // Load more when user is 200 pixels from the bottom
       if (!isLoadingMore && hasMoreHands) {
         _loadMoreHands();
       }
@@ -65,22 +64,19 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
         _currentPage = 0;
       });
 
-      // Load first page of hands only
       final firstPageHands = await _getHandsWithOpponentPaginated(
         widget.opponent.name,
         page: 0,
-        pageSize: _handsPerPage
+        pageSize: _handsPerPage,
       );
 
       setState(() {
         hands = firstPageHands['hands'];
         totalHandsCount = firstPageHands['totalCount'];
         hasMoreHands = hands.length == _handsPerPage &&
-                       (totalHandsCount == null || hands.length < totalHandsCount!);
+            (totalHandsCount == null || hands.length < totalHandsCount!);
         isLoading = false;
       });
-
-      print('📱 Loaded ${hands.length} hands (estimated ${totalHandsCount ?? "unknown"} total)');
     } catch (e) {
       setState(() {
         error = 'Failed to load hands: $e';
@@ -102,7 +98,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
       final moreHandsData = await _getHandsWithOpponentPaginated(
         widget.opponent.name,
         page: nextPage,
-        pageSize: _handsPerPage
+        pageSize: _handsPerPage,
       );
 
       final moreHands = moreHandsData['hands'] as List<Map<String, dynamic>>;
@@ -112,16 +108,13 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
         _currentPage = nextPage;
         totalHandsCount = moreHandsData['totalCount'];
         hasMoreHands = moreHands.length == _handsPerPage &&
-                       (totalHandsCount == null || hands.length < totalHandsCount!);
+            (totalHandsCount == null || hands.length < totalHandsCount!);
         isLoadingMore = false;
       });
-
-      print('📱 Loaded ${moreHands.length} more hands (${hands.length}/${totalHandsCount ?? "unknown"} total)');
     } catch (e) {
       setState(() {
         isLoadingMore = false;
       });
-      print('❌ Error loading more hands: $e');
     }
   }
 
@@ -134,18 +127,13 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     int totalCount = 0;
 
     try {
-      print('🔍 Searching for hands with opponent: $opponentName (page $page, size $pageSize)');
-
       // Cache sessions on first load to avoid repeated fetching
       if (_cachedSessions == null) {
         try {
           _cachedSessions = await FirebaseService.getAllSessions();
-          print('📱 Cached ${_cachedSessions!.length} Firebase sessions');
         } catch (firebaseError) {
-          print('⚠️ Firebase error, falling back to local storage: $firebaseError');
           final db = await LocalStorageService.database;
           _cachedSessions = await db.query('sessions');
-          print('💾 Cached ${_cachedSessions!.length} local sessions');
         }
       }
 
@@ -154,7 +142,6 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
       final skipCount = page * pageSize;
       bool useFirebase = true;
 
-      // Check if we originally loaded from Firebase or local
       try {
         await FirebaseService.getAllSessions();
       } catch (_) {
@@ -164,7 +151,6 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
       for (final session in _cachedSessions!) {
         final sessionId = session['id'] as String;
 
-        // Get hands for this session
         List<Map<String, dynamic>> sessionHands;
         if (useFirebase) {
           try {
@@ -177,24 +163,20 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
         }
 
         for (final hand in sessionHands) {
-          // Check if opponent was involved in this hand
           bool opponentInvolved = _isOpponentInvolved(hand, opponentName);
 
           if (opponentInvolved) {
             totalCount++;
 
-            // Skip hands until we reach the requested page
             if (handsSkipped < skipCount) {
               handsSkipped++;
               continue;
             }
 
-            // Stop collecting once we have enough for this page
             if (handsFound >= pageSize) {
               break;
             }
 
-            // Add session info to hand
             final handWithSession = Map<String, dynamic>.from(hand);
             handWithSession['sessionName'] = session['sessionName'] ?? 'Session ${session['id']}';
             handWithSession['sessionDate'] = session['startTime'];
@@ -203,7 +185,6 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
           }
         }
 
-        // Early exit if we have enough hands for this page
         if (handsFound >= pageSize) {
           break;
         }
@@ -216,14 +197,11 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
         return bTime.compareTo(aTime);
       });
 
-      print('🎯 Page $page: Found ${opponentHands.length} hands for $opponentName (${totalCount} total seen)');
-
       return {
         'hands': opponentHands,
-        'totalCount': totalCount >= skipCount + handsFound ? null : totalCount, // null means we don't know the exact total yet
+        'totalCount': totalCount >= skipCount + handsFound ? null : totalCount,
       };
     } catch (e) {
-      print('❌ Error getting opponent hands: $e');
       return {
         'hands': <Map<String, dynamic>>[],
         'totalCount': 0,
@@ -232,42 +210,120 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
   }
 
   bool _isOpponentInvolved(Map<String, dynamic> hand, String opponentName) {
-    // Check if opponent name appears in player names
     final playerNamesData = hand['playerNames'];
     if (playerNamesData != null && playerNamesData is Map) {
       final involved = playerNamesData.values.any((name) =>
-        name.toString().toLowerCase().trim() == opponentName.toLowerCase().trim()
-      );
+          name.toString().toLowerCase().trim() == opponentName.toLowerCase().trim());
       if (involved) return true;
     }
 
-    // Also check actions for opponent name (fallback)
     final actions = List<Map<String, dynamic>>.from(hand['actions'] ?? []);
     return actions.any((action) =>
-      action['playerName']?.toString().toLowerCase().trim() == opponentName.toLowerCase().trim()
-    );
+        action['playerName']?.toString().toLowerCase().trim() ==
+        opponentName.toLowerCase().trim());
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          GradientBackground(),
+          // Teal radial gradient at top
+          Positioned(
+            top: -screenWidth * 0.5,
+            right: -screenWidth * 0.2,
+            child: Container(
+              width: screenWidth * 1.2,
+              height: screenWidth * 1.2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF1A4A4A).withValues(alpha: 0.6),
+                    const Color(0xFF133538).withValues(alpha: 0.3),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.4, 1.0],
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
               children: [
-                // Global Top Header
+                // Header
                 Padding(
-                  padding: EdgeInsets.fromLTRB(16, 20, 16, 24),
-                  child: GlobalTopHeader(currentScreen: 'opponent_hands'),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Row(
+                    children: [
+                      // Back button
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF101115),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      // Title
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.opponent.name,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 20,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Hand History',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 14,
+                                color: Colors.white.withValues(alpha: 0.5),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Hand count pill
+                      if (!isLoading && hands.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(40),
+                          ),
+                          child: Text(
+                            '${totalHandsCount ?? hands.length} hands',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
 
                 // Content
                 Expanded(
                   child: isLoading
-                      ? LoadingScreen(message: "Loading hand history...")
+                      ? _buildLoadingState()
                       : error != null
                           ? _buildErrorState()
                           : hands.isEmpty
@@ -282,75 +338,132 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     );
   }
 
-  Widget _buildErrorState() {
+  Widget _buildLoadingState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red,
-          ),
-          SizedBox(height: 16),
-          Text(
-            error!,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(
+              color: _mint,
+              strokeWidth: 2.5,
             ),
-            textAlign: TextAlign.center,
           ),
-          SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadOpponentHands,
-            child: Text('Retry'),
+          const SizedBox(height: 16),
+          Text(
+            'Loading hand history...',
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 14,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildErrorState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Color(0xFF1F1F23),
-              borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline, size: 28, color: Colors.red),
             ),
-            child: Center(
-              child: Image.asset(
-                'assets/images/logo.png',
-                width: 50,
-                height: 50,
-                color: Color(0xFF9A9A9A),
+            const SizedBox(height: 16),
+            Text(
+              'Something went wrong',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-          SizedBox(height: 24),
-          Text(
-            'No Hands Found',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 8),
+            Text(
+              error!,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'You haven\'t played any hands with ${widget.opponent.name} yet.',
-            style: TextStyle(
-              color: Color(0xFF9A9A9A),
-              fontSize: 14,
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: _loadOpponentHands,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  color: _mint,
+                  borderRadius: BorderRadius.circular(60),
+                ),
+                child: Text(
+                  'Retry',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: _cardColor,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Icon(
+                Icons.style_outlined,
+                size: 32,
+                color: Colors.white.withValues(alpha: 0.3),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'No Hands Found',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'You haven\'t played any hands\nwith ${widget.opponent.name} yet.',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withValues(alpha: 0.45),
+                fontSize: 14,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -358,39 +471,28 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
   Widget _buildHandsList() {
     return ListView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.all(24),
-      itemCount: hands.length + (hasMoreHands ? 1 : 0), // +1 for loading indicator
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      itemCount: hands.length + (hasMoreHands ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == hands.length) {
-          // Loading indicator at the bottom
           return _buildLoadingIndicator();
         }
-
-        final hand = hands[index];
-        return _buildHandCard(hand, index);
+        return _buildHandCard(hands[index], index);
       },
     );
   }
 
   Widget _buildLoadingIndicator() {
-    return Container(
-      padding: EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
       child: Center(
-        child: Column(
-          children: [
-            CircularProgressIndicator(
-              color: Color(0xFF5AC95A),
-              strokeWidth: 2,
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Loading more hands...',
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
-                fontSize: 14,
-              ),
-            ),
-          ],
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            color: _mint,
+            strokeWidth: 2,
+          ),
         ),
       ),
     );
@@ -405,29 +507,32 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     final heroPosition = hand['heroPosition'] ?? 1;
     final potAmount = hand['potAmount'] ?? 0;
     final winnerId = hand['winnerId'];
-    
+    final isCash = hand['gameType'] == 'cash';
+
     // Get hero position name
     final heroPositionName = PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount);
-    
-    // Check if opponent won
+
+    // Check if opponent won and get opponent position
     bool opponentWon = false;
     String? opponentPosition;
-    if (winnerId != null) {
-      final playerNamesData = hand['playerNames'];
-      if (playerNamesData != null && playerNamesData is Map) {
+    final playerNamesData = hand['playerNames'];
+    if (playerNamesData != null && playerNamesData is Map) {
+      // Find opponent position
+      playerNamesData.forEach((seat, name) {
+        if (name.toString().toLowerCase().trim() == widget.opponent.name.toLowerCase().trim()) {
+          final seatNum = int.tryParse(seat.toString()) ?? 1;
+          opponentPosition = PokerPositions.getPositionName(seatNum, buttonPosition, playerCount);
+        }
+      });
+
+      // Check winner
+      if (winnerId != null) {
         final winnerName = playerNamesData[winnerId.toString()];
-        opponentWon = winnerName?.toString().toLowerCase().trim() == widget.opponent.name.toLowerCase().trim();
-        
-        // Get opponent's position
-        playerNamesData.forEach((seat, name) {
-          if (name.toString().toLowerCase().trim() == widget.opponent.name.toLowerCase().trim()) {
-            final seatNum = int.tryParse(seat) ?? 1;
-            opponentPosition = PokerPositions.getPositionName(seatNum, buttonPosition, playerCount);
-          }
-        });
+        opponentWon = winnerName?.toString().toLowerCase().trim() ==
+            widget.opponent.name.toLowerCase().trim();
       }
     }
-    
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -438,158 +543,149 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
         );
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: 16),
-        padding: EdgeInsets.all(20),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Color(0xFF1F1F23),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Color(0xFF2A2A2E)),
+          color: _cardColor,
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row
+            // Top row: Hand # + session + date | opponent won badge
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Hand #$handNumber',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                // Hand number
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '#$handNumber',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 13,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-                if (opponentWon)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFFFD700).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Color(0xFFFFD700)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 14),
-                        SizedBox(width: 4),
-                        Text(
-                          'OPPONENT WON',
-                          style: TextStyle(
-                            color: Color(0xFFFFD700),
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            
-            SizedBox(height: 12),
-            
-            // Info row
-            Row(
-              children: [
-                // Session info
+                const SizedBox(width: 10),
+                // Session name + date
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         sessionName,
-                        style: TextStyle(
-                          color: Color(0xFF9A9A9A),
-                          fontSize: 12,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 4),
                       Text(
-                        DateFormat('MMM dd, HH:mm').format(startTime),
-                        style: TextStyle(
-                          color: Color(0xFF9A9A9A),
+                        DateFormat('MMM dd, yyyy  HH:mm').format(startTime),
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                       ),
                     ],
                   ),
                 ),
-                
-                // Positions
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'You: ',
-                          style: TextStyle(
-                            color: Color(0xFF9A9A9A),
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          heroPositionName,
-                          style: TextStyle(
-                            color: Color(0xFF5AC95A),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                // Opponent won badge
+                if (opponentWon)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    if (opponentPosition != null) ...[
-                      SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text(
-                            '${widget.opponent.name}: ',
-                            style: TextStyle(
-                              color: Color(0xFF9A9A9A),
-                              fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            opponentPosition!,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                    child: Text(
+                      'OPP WON',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 10,
+                        color: Colors.red,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
                       ),
-                    ],
-                  ],
-                ),
+                    ),
+                  ),
               ],
             ),
-            
-            SizedBox(height: 12),
-            
-            // Bottom row
+
+            const SizedBox(height: 12),
+            Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
+            const SizedBox(height: 12),
+
+            // Bottom row: positions + pot + chevron
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Your position
+                _buildPositionChip('You', heroPositionName, _mint),
+                const SizedBox(width: 8),
+                // Opponent position
+                if (opponentPosition != null)
+                  _buildPositionChip(
+                    widget.opponent.name.length > 8
+                        ? '${widget.opponent.name.substring(0, 8)}.'
+                        : widget.opponent.name,
+                    opponentPosition!,
+                    Colors.white.withValues(alpha: 0.6),
+                  ),
+                const Spacer(),
+                // Pot
                 Text(
-                  'Pot: ${hand['gameType'] == 'cash' ? '\$' : ''}${potAmount.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    color: Color(0xFF5AC95A),
+                  'Pot ${isCash ? '\$' : ''}${potAmount.toStringAsFixed(0)}',
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
+                    color: _mint,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Icon(
-                  Icons.arrow_forward_ios,
-                  color: Color(0xFF9A9A9A),
-                  size: 16,
+                  Icons.chevron_right,
+                  color: Colors.white.withValues(alpha: 0.3),
+                  size: 20,
                 ),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPositionChip(String label, String position, Color positionColor) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label ',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 12,
+            color: Colors.white.withValues(alpha: 0.4),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: positionColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            position,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 11,
+              color: positionColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

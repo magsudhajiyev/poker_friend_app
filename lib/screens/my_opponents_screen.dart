@@ -181,16 +181,14 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                         child: Container(
                           width: 44,
                           height: 44,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF3C3C43).withOpacity(0.3),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF101115),
                             shape: BoxShape.circle,
                           ),
-                          child: Center(
-                            child: _buildIcon(
-                              'icons/figma_icons/back.svg',
-                              24,
-                              Colors.white,
-                            ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 22,
                           ),
                         ),
                       ),
