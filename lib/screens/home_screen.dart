@@ -28,6 +28,10 @@ import '../screens/auth_screen.dart';
 import '../widgets/loading_screen.dart';
 import '../services/calendar_event_service.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_prefs.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/design_system.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/components.dart';
@@ -61,6 +65,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey _fabKey = GlobalKey(debugLabel: 'fab');
+  final GlobalKey _sessionsNavKey = GlobalKey(debugLabel: 'sessionsNav');
   int _currentIndex = 2;
   List<Map<String, dynamic>> upcomingEvents = [];
   Map<String, int> _eventGoingCounts = {};  // eventId -> going count
@@ -97,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? _selectedEventId;
   Offset? _popupPosition;
 
+
   @override
   void initState() {
     super.initState();
@@ -117,6 +124,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _loadBankrollVisibility();
     _loadData();
     _setupSeatListener();
+    _scheduleOnboardingTour();
+  }
+
+  void _scheduleOnboardingTour() async {
+    // Phase 5 — session result tour (user returned from a completed session)
+    if (OnboardingState.isOnboardingActive && OnboardingState.currentPhase == 5) {
+      // Wait for the Sessions nav key to attach
+      for (int i = 0; i < 20; i++) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return;
+        if (_sessionsNavKey.currentContext != null) break;
+      }
+      if (!mounted || _sessionsNavKey.currentContext == null) return;
+      SessionResultTour(
+        sessionsNavKey: _sessionsNavKey,
+        onComplete: () { if (mounted) setState(() {}); },
+      ).show(context);
+      return;
+    }
+
+    final seen = await OnboardingPrefs.hasSeenOnboarding();
+    if (seen || !mounted) return;
+
+    // Wait for the FAB key to be attached (nav bar may take a few frames)
+    for (int i = 0; i < 20; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      if (_fabKey.currentContext != null) break;
+    }
+
+    if (!mounted || _fabKey.currentContext == null) return;
+    OnboardingState.start();
+    setState(() {}); // refresh to show progress bar
+    HomeTour(fabKey: _fabKey).show(context);
   }
 
   void _loadBankrollVisibility() async {
@@ -1298,6 +1339,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const OnboardingProgressBar(),
                   // Gradient Header with greeting and bankroll
                   HomeHeader(
                     userName: userName,
@@ -1375,7 +1417,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
         ],
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home'),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home', fabKey: _fabKey, sessionsKey: _sessionsNavKey),
     );
   }
 

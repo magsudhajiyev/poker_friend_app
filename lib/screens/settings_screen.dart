@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../design_system/poker_friend_theme.dart';
@@ -6,6 +7,7 @@ import '../services/club_seeder_service.dart';
 import '../services/club_service.dart';
 import '../services/club_request_service.dart';
 import '../models/club_member.dart';
+import '../onboarding/onboarding_prefs.dart';
 import 'admin/club_requests_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -16,15 +18,19 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  static const _devUserId = 'FELwuk4XbvdibPCx9NesqP5dRIn1';
   bool autoAdvanceStreets = false;
   bool _isAppAdmin = false;
   int _pendingRequestCount = 0;
+  bool _onboardingEnabled = false;
+  bool _isDevUser = false;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
     _checkAppAdminStatus();
+    _checkDevUser();
   }
 
   Future<void> _loadSettings() async {
@@ -43,6 +49,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _pendingRequestCount = count;
       });
     }
+  }
+
+  Future<void> _checkDevUser() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == _devUserId) {
+      final seen = await OnboardingPrefs.hasSeenOnboarding();
+      setState(() {
+        _isDevUser = true;
+        _onboardingEnabled = !seen; // enabled = hasn't seen it yet
+      });
+    }
+  }
+
+  Future<void> _toggleOnboarding(bool enabled) async {
+    if (enabled) {
+      await OnboardingPrefs.resetOnboarding();
+    } else {
+      await OnboardingPrefs.markOnboardingSeen();
+    }
+    setState(() {
+      _onboardingEnabled = enabled;
+    });
   }
 
   Future<void> _saveAutoAdvanceStreets(bool value) async {
@@ -206,6 +234,66 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                 ),
+
+                // Onboarding Toggle - Dev only
+                if (_isDevUser) ...[
+                  SizedBox(height: 24),
+                  Container(
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: PokerFriendColors.dark3,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: PokerFriendColors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.school,
+                            color: PokerFriendColors.green,
+                            size: 20,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Onboarding Tour',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                _onboardingEnabled ? 'Will show on next Home visit' : 'Completed',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: PokerFriendColors.dark9,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: _onboardingEnabled,
+                          onChanged: _toggleOnboarding,
+                          activeColor: PokerFriendColors.green,
+                          inactiveThumbColor: Colors.white,
+                          inactiveTrackColor: PokerFriendColors.dark4,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 SizedBox(height: 24),
 

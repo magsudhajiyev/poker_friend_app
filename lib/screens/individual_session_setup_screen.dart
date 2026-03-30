@@ -6,6 +6,9 @@ import 'individual_session_tracking_screen.dart';
 import 'logging_mode_selection_screen.dart';
 import 'seat_setup_screen.dart';
 import '../models/hand_state_machine.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_progress_bar.dart';
 
 class IndividualSessionSetupScreen extends StatefulWidget {
   final LoggingMode? loggingMode;
@@ -51,6 +54,17 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
     // Initialize blind controllers with default values
     _smallBlindController.text = smallBlind.toString();
     _bigBlindController.text = bigBlind.toString();
+    _scheduleOnboardingTour();
+  }
+
+  void _scheduleOnboardingTour() {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 2) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      SessionSetupTour().show(context);
+    });
   }
 
   @override
@@ -119,6 +133,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
           SafeArea(
             child: Column(
               children: [
+                const OnboardingProgressBar(),
                 // Header with X, title, and checkmark
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),

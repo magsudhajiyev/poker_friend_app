@@ -11,6 +11,9 @@ import '../models/opponent_stats.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_progress_bar.dart';
 import 'poker_hand_screen.dart';
 import 'my_opponents_screen.dart';
 import 'dart:math' as math;
@@ -72,6 +75,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   Map<int, bool> showSaveOpponentTip = {};
   Offset? buttonDragPosition;
   bool isDraggingButton = false;
+  final GlobalKey _tableKey = GlobalKey(debugLabel: 'seatTable');
+  final GlobalKey _buttonTokenKey = GlobalKey(debugLabel: 'buttonToken');
 
   Widget _buildIcon(String path, double size, Color color) {
     if (path.endsWith('.svg')) {
@@ -145,6 +150,22 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     }
 
     _loadOpponents();
+    _scheduleOnboardingTour();
+  }
+
+  void _scheduleOnboardingTour() async {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 3) return;
+
+    // Wait for table key to attach
+    for (int i = 0; i < 20; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      if (_tableKey.currentContext != null) break;
+    }
+
+    if (!mounted || _tableKey.currentContext == null) return;
+    SeatSetupTour(tableKey: _tableKey).show(context);
   }
 
   String _getCurrentStackForSeat(int seatNumber) {
@@ -428,12 +449,35 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
       Navigator.pop(context, null);
     }
 
+    // Onboarding keys for the seat dialog tour
+    final seatToggleKey = GlobalKey(debugLabel: 'seatToggle');
+    final mySeatKey = GlobalKey(debugLabel: 'mySeat');
+    final playerNameKey = GlobalKey(debugLabel: 'playerName');
+    final saveOpponentKey = GlobalKey(debugLabel: 'saveOpponent');
+    bool _dialogTourShown = false;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
+          // Schedule onboarding tour for the dialog (once)
+          if (!_dialogTourShown &&
+              OnboardingState.isOnboardingActive &&
+              OnboardingState.seatDialogTourPending) {
+            _dialogTourShown = true;
+            // Wait for bottom sheet animation + keys to settle
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (!mounted) return;
+              SeatDialogTour(
+                seatToggleKey: seatToggleKey,
+                mySeatKey: mySeatKey,
+                playerNameKey: playerNameKey,
+                saveOpponentKey: saveOpponentKey,
+              ).show(context);
+            });
+          }
           return Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
@@ -511,6 +555,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                       children: [
                         // Seat info card with toggle
                         Container(
+                          key: seatToggleKey,
                           width: double.infinity,
                           padding: EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -629,6 +674,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                             });
                           },
                           child: Container(
+                            key: mySeatKey,
                             width: double.infinity,
                             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
@@ -668,6 +714,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
                         // Player Name and Buy-in fields in one card
                         Container(
+                          key: playerNameKey,
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Color(0xFF1C1C1E),
@@ -837,10 +884,11 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           ),
                         ),
 
-                        // Save opponent tip
-                        if (showSaveOpponentTip[seatNumber] == true) ...[
+                        // Save opponent tip (never show for user's own seat)
+                        if (showSaveOpponentTip[seatNumber] == true && !tempIsMySeat) ...[
                           SizedBox(height: 12),
                           InkWell(
+                            key: saveOpponentKey,
                             onTap: () async {
                               setState(() {
                                 showSaveOpponentTip[seatNumber] = false;
@@ -986,6 +1034,16 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         tempNameController.dispose();
         tempStackController.dispose();
       });
+
+      // Show button token tour after dialog closes
+      if (OnboardingState.isOnboardingActive &&
+          OnboardingState.buttonTokenTourPending) {
+        OnboardingState.buttonTokenTourPending = false;
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (!mounted) return;
+          ButtonTokenTour(buttonTokenKey: _buttonTokenKey).show(context);
+        });
+      }
     });
   }
 
@@ -1028,6 +1086,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
           SafeArea(
             child: Column(
               children: [
+                const OnboardingProgressBar(),
                 // Header
                 Padding(
                   padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -1092,6 +1151,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           // Table with teal border - vertical oval shape
                           Center(
                             child: Container(
+                              key: _tableKey,
                               width: constraints.maxWidth * 0.80,
                               height: constraints.maxHeight * 0.88,
                               decoration: BoxDecoration(
@@ -1129,16 +1189,18 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   Positioned(
                                     left: position.dx - 16 + buttonOffsetX,
                                     top: position.dy - 16 + buttonOffsetY,
-                                    child: _isButtonLocked()
-                                      ? Opacity(
-                                          opacity: 0.6,
-                                          child: Image.asset(
-                                            'icons/button.png',
-                                            width: 32,
-                                            height: 32,
-                                          ),
-                                        )
-                                      : Draggable<int>(
+                                    child: Container(
+                                      key: _buttonTokenKey,
+                                      child: _isButtonLocked()
+                                        ? Opacity(
+                                            opacity: 0.6,
+                                            child: Image.asset(
+                                              'icons/button.png',
+                                              width: 32,
+                                              height: 32,
+                                            ),
+                                          )
+                                        : Draggable<int>(
                                           data: seatNumber,
                                           feedback: Opacity(
                                             opacity: 0.7,
@@ -1203,6 +1265,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                             height: 32,
                                           ),
                                         ),
+                                    ),
                                   ),
                               ],
                             );

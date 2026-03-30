@@ -2,10 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_progress_bar.dart';
 import 'individual_session_setup_screen.dart';
 
-class LoggingModeSelectionScreen extends StatelessWidget {
+class LoggingModeSelectionScreen extends StatefulWidget {
   const LoggingModeSelectionScreen({super.key});
+
+  @override
+  State<LoggingModeSelectionScreen> createState() =>
+      _LoggingModeSelectionScreenState();
+}
+
+class _LoggingModeSelectionScreenState
+    extends State<LoggingModeSelectionScreen> {
+  final GlobalKey _fullModeCardKey = GlobalKey(debugLabel: 'fullModeCard');
+  final GlobalKey _individualModeCardKey =
+      GlobalKey(debugLabel: 'individualModeCard');
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleOnboardingTour();
+  }
+
+  void _scheduleOnboardingTour() async {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 1) return;
+
+    // Wait for keys to attach
+    for (int i = 0; i < 20; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      if (_fullModeCardKey.currentContext != null) break;
+    }
+
+    if (!mounted || _fullModeCardKey.currentContext == null) return;
+    LoggingModeTour(
+      fullModeCardKey: _fullModeCardKey,
+      individualModeCardKey: _individualModeCardKey,
+    ).show(context);
+  }
 
   Widget _buildIcon(String path, double size, Color color) {
     if (path.endsWith('.svg')) {
@@ -64,6 +102,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
+                const OnboardingProgressBar(),
                 // Header with title and close button
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -107,6 +146,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                         // Full Logging Mode Card
                         _buildModeCard(
                           context: context,
+                          key: _fullModeCardKey,
                           title: 'Full Logging Mode',
                           subtitle: 'Complete Session Tracking',
                           features: [
@@ -115,7 +155,8 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                             'Detailed hand history',
                             'Session analytics',
                           ],
-                          onTap: () => _navigateToMode(context, LoggingMode.full),
+                          onTap: () =>
+                              _navigateToMode(context, LoggingMode.full),
                         ),
 
                         SizedBox(height: 16),
@@ -123,6 +164,7 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                         // Individual Logging Mode Card
                         _buildModeCard(
                           context: context,
+                          key: _individualModeCardKey,
                           title: 'Individual Logging Mode',
                           subtitle: 'Single hand tracking',
                           features: [
@@ -131,7 +173,8 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                             'Hand analysis',
                             'Instant results',
                           ],
-                          onTap: () => _navigateToMode(context, LoggingMode.individual),
+                          onTap: () =>
+                              _navigateToMode(context, LoggingMode.individual),
                         ),
 
                         SizedBox(height: 120),
@@ -154,8 +197,10 @@ class LoggingModeSelectionScreen extends StatelessWidget {
     required String subtitle,
     required List<String> features,
     required VoidCallback onTap,
+    Key? key,
   }) {
     return Container(
+      key: key,
       width: double.infinity,
       decoration: BoxDecoration(
         color: Color(0xFF131616),
@@ -229,34 +274,36 @@ class LoggingModeSelectionScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 // Feature list
-                ...features.map((feature) => Padding(
-                  padding: EdgeInsets.only(bottom: 2),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '•  ',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          color: Colors.white.withOpacity(0.8),
-                          fontWeight: FontWeight.w400,
-                          height: 1.44,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          feature,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 17,
-                            color: Colors.white.withOpacity(0.8),
-                            fontWeight: FontWeight.w400,
-                            height: 1.44,
+                ...features
+                    .map((feature) => Padding(
+                          padding: EdgeInsets.only(bottom: 2),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '•  ',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 17,
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.44,
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  feature,
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 17,
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.44,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )).toList(),
+                        ))
+                    .toList(),
               ],
             ),
           ),

@@ -12,11 +12,15 @@ import '../screens/logging_mode_selection_screen.dart';
 class GlobalBottomNavBar extends StatelessWidget {
   final String currentScreen;
   final Future<bool> Function()? onNavigationAttempt;
+  final GlobalKey? fabKey;
+  final GlobalKey? sessionsKey;
 
   const GlobalBottomNavBar({
     Key? key,
     required this.currentScreen,
     this.onNavigationAttempt,
+    this.fabKey,
+    this.sessionsKey,
   }) : super(key: key);
 
   @override
@@ -77,6 +81,7 @@ class GlobalBottomNavBar extends StatelessWidget {
                     label: 'Sessions',
                     isActive: currentScreen == 'sessions',
                     onTap: () => _navigateTo(context, 'sessions'),
+                    itemKey: sessionsKey,
                   ),
 
                   // Profile
@@ -152,12 +157,14 @@ class GlobalBottomNavBar extends StatelessWidget {
     required String label,
     required bool isActive,
     required VoidCallback onTap,
+    GlobalKey? itemKey,
   }) {
     final color = isActive
         ? const Color(0xFF89F1EC)
         : const Color(0xFF808285);
 
     return GestureDetector(
+      key: itemKey,
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
@@ -211,6 +218,7 @@ class GlobalBottomNavBar extends StatelessWidget {
         );
       },
       child: Container(
+        key: fabKey,
         width: 62,
         height: 62,
         decoration: const BoxDecoration(

@@ -27,6 +27,11 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
 import '../services/logger_service.dart';
+import '../onboarding/onboarding_state.dart';
+import 'home_screen.dart';
+import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_progress_bar.dart';
+import '../onboarding/guided_hand_overlay.dart';
 import 'session_history_screen.dart';
 
 class PokerHandScreen extends StatefulWidget {
@@ -111,6 +116,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   bool _showMenuOverlay = false;
   final GlobalKey _menuButtonKey = GlobalKey();
 
+  // Onboarding keys
+  final GlobalKey _drawingAreaKey = GlobalKey(debugLabel: 'drawingArea');
+  final GlobalKey _potInfoKey = GlobalKey(debugLabel: 'potInfo');
+  final GlobalKey _statsRowKey = GlobalKey(debugLabel: 'statsRow');
+  final GlobalKey<GuidedHandOverlayState> _guidedOverlayKey = GlobalKey();
+  final GlobalKey _gestureInfoKey = GlobalKey(debugLabel: 'gestureInfo');
+
   @override
   void initState() {
     super.initState();
@@ -141,7 +153,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     
     // Load button mode setting
     _loadButtonModeSetting();
-    
+    _scheduleOnboardingTour();
+
     // Start session and first hand
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // If we have pre-configured stacks and button (from quick stack update), use those
@@ -163,10 +176,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     });
   }
 
+  void _scheduleOnboardingTour() {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 4) return;
+
+    // Guided hand overlay shows automatically via build() —
+    // just ensure the phase is initialized.
+    OnboardingState.guidedHandPhase = GuidedPhase.gestureInfo;
+  }
+
   Future<void> _loadButtonModeSetting() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      autoAdvanceStreets = prefs.getBool('auto_advance_streets') ?? false;
+      autoAdvanceStreets = prefs.getBool('auto_advance_streets') ?? true;
     });
   }
 
@@ -571,7 +593,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         if (!mounted) return;
 
         // Navigate back to main screen
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        if (OnboardingState.isOnboardingActive && OnboardingState.currentPhase == 5) {
+          // Push a fresh home screen so initState runs and detects phase 5
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => HomeScreen()),
+            (route) => false,
+          );
+        } else {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
       } catch (e) {
         // Check if widget is still mounted before showing snackbar
         if (!mounted) return;
@@ -1111,6 +1141,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           SafeArea(
             child: Column(
               children: [
+                const OnboardingProgressBar(),
                 // Header - Figma Design
                 Padding(
                   padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -1211,6 +1242,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
             // Game Info Header - Info Cards with teal accent
             Container(
+              key: _potInfoKey,
               margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: gameState.areAllPlayersAllIn()
                 ? // All-in situation: Show single unified card
@@ -1265,6 +1297,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
               // Main Gesture Area - Light background
               Expanded(
                 child: Container(
+                  key: _drawingAreaKey,
                   margin: EdgeInsets.fromLTRB(16, 0, 16, 8),
                   decoration: BoxDecoration(
                     color: Color(0xFFF0F0F0), // Light cream/gray background
@@ -1411,6 +1444,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
           // Stats Row - Three separate cards
           Container(
+            key: _statsRowKey,
             margin: EdgeInsets.symmetric(horizontal: 16, vertical: _canUndoLastAction() ? 4 : 8),
             child: Row(
               children: [
@@ -1461,6 +1495,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           SizedBox(height: _canUndoLastAction() ? 65 : 80),
             ],
           ),
+        ),
+        // Guided hand overlay (onboarding phase 4)
+        GuidedHandOverlay(
+          key: _guidedOverlayKey,
+          menuButtonKey: _menuButtonKey,
+          gestureInfoKey: _gestureInfoKey,
+          heroSeat: sessionManager.ourSeatNumber,
+          currentPlayerSeat: gameState.currentPlayer,
+          isValidAction: gameState.isValidAction,
+          currentRound: gameState.currentRound,
+          liveCurrentPlayer: () => gameState.currentPlayer,
+          onSkipOrFinish: () => setState(() {}),
         ),
         // Menu overlay backdrop (closes menu when tapping outside)
         if (_showMenuOverlay)
@@ -1868,6 +1914,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           children: [
             // Info icon button - black bg with teal icon
             GestureDetector(
+              key: _gestureInfoKey,
               onTap: () {
                 setStateLocal(() {
                   _showGestureTooltip = !_showGestureTooltip;
@@ -2899,7 +2946,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         // addAction removed
       }
     }
-    
+
+    // Notify guided hand overlay
+    _guidedOverlayKey.currentState?.onActionPerformed(action);
+
     // Check if hand ended automatically (only one player remaining)
     if (result.contains("Hand ends: Only one player remaining")) {
       // Use a post frame callback to avoid calling setState during build
@@ -3084,7 +3134,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         // addAction removed
       }
     }
-    
+
+    // Notify guided hand overlay
+    _guidedOverlayKey.currentState?.onActionPerformed(action);
+
     // Check if hand ended automatically (only one player remaining)
     if (result.contains("Hand ends: Only one player remaining")) {
       // Use a post frame callback to avoid calling setState during build
@@ -3259,6 +3312,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
     // First proceed to next street
     _proceedToNextStreet();
+
+    // Notify guided hand overlay about street advance
+    _guidedOverlayKey.currentState?.onStreetAdvance(gameState.currentRound);
 
     // Then show board cards dialog for the street we just entered
     if (gameState.currentRound == BettingRound.flop ||
@@ -3720,11 +3776,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       if (result is BoardCards) {
         // Save board cards to current hand
         sessionManager.currentHand?.setBoardCards(result);
-        
+
         // Add board cards info to actions
         _addBoardCardsAction(result, round);
       }
-      
+
+      // Notify guided hand overlay about board cards
+      _guidedOverlayKey.currentState?.onBoardCardsDealt(round);
+
       // Always proceed to next street after dialog
       _proceedToNextStreet();
     });
@@ -4462,6 +4521,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       // addAction removed
       // addAction removed
     });
+
+    // Notify guided hand overlay so it can roll back its state
+    _guidedOverlayKey.currentState?.onActionUndone();
   }
 
   /// Get the amount a player had bet BEFORE a specific action index
@@ -4623,6 +4685,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void _completeHandAutomatically() async {
     await LoggerService.info('🤖 _completeHandAutomatically() called - Auto-completing hand');
 
+    // Notify guided hand overlay
+    _guidedOverlayKey.currentState?.onHandComplete();
+
     // Save pot amount BEFORE distributing
     final potAmount = gameState.currentPot;
     await LoggerService.debug('  Pot amount: \$${potAmount.toStringAsFixed(2)}');
@@ -4647,6 +4712,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       // addAction removed
       await _showHoleCardsDialog();
 
+      // Notify guided overlay after all dialogs are done (no opponent dialog in this path)
+      _guidedOverlayKey.currentState?.onHoleCardsCompleted();
+
       // Now complete hand in session manager (hole cards are already saved to currentHand)
       final currentStack = gameState.getPlayerStack(sessionManager.ourSeatNumber ?? 1);
       sessionManager.completeCurrentHand(
@@ -4669,6 +4737,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           'bigBlind': sessionManager.bigBlind,
           'hasBBante': gameState.hasBBante,
         });
+        return;
+      }
+
+      // During onboarding, don't start the next hand — wait for user to end session
+      if (OnboardingState.isGuidedHandActive) {
+        setState(() {});
         return;
       }
 
@@ -4854,6 +4928,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         }
       }
 
+      // Notify guided hand overlay that hand is complete
+      _guidedOverlayKey.currentState?.onHandComplete();
+
       // Then show hole cards dialog
       await _showHoleCardsDialog();
 
@@ -4861,6 +4938,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       // Show opponent hole cards dialog for showdown situations
       await _showOpponentCardsDialog(activePlayers, allWinners.toList());
+
+      // Notify guided overlay after ALL dialogs are done
+      _guidedOverlayKey.currentState?.onHoleCardsCompleted();
 
       setState(() {
         // Distribute each pot to its winner(s)
@@ -4942,6 +5022,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       await LoggerService.debug('  Winner selection result: isChoppedPot=$isChoppedPot, winners=$winners');
 
+      // Notify guided hand overlay that hand is complete
+      _guidedOverlayKey.currentState?.onHandComplete();
+
       // Then show hole cards dialog
       await _showHoleCardsDialog();
 
@@ -4949,6 +5032,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       // Show opponent hole cards dialog for showdown situations
       await _showOpponentCardsDialog(activePlayers, winners);
+
+      // Notify guided overlay after ALL dialogs are done
+      _guidedOverlayKey.currentState?.onHoleCardsCompleted();
 
     setState(() {
       if (isChoppedPot) {
@@ -5022,6 +5108,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         'bigBlind': sessionManager.bigBlind,
         'hasBBante': gameState.hasBBante,
       });
+      return;
+    }
+
+    // During onboarding, don't start the next hand — wait for user to end session
+    if (OnboardingState.isGuidedHandActive) {
+      setState(() {});
       return;
     }
 
@@ -5315,6 +5407,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         // addAction removed
       }
     }
+
   }
 
   Future<void> _showOpponentCardsDialog(List<int> activePlayers, List<int> winners) async {
@@ -5516,8 +5609,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void _finalizeHand() async {
     // addAction removed
 
+    // Notify guided hand overlay that hand is complete
+    _guidedOverlayKey.currentState?.onHandComplete();
+
     // Show hole cards dialog for the completed hand
     await _showHoleCardsDialog();
+
+    // Notify guided overlay after all dialogs are done (no opponent dialog in this path)
+    _guidedOverlayKey.currentState?.onHoleCardsCompleted();
 
     // For individual sessions, return to the session tracking screen
     if (widget.isIndividualSession) {
@@ -5536,6 +5635,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         'bigBlind': sessionManager.bigBlind,
         'hasBBante': gameState.hasBBante,
       });
+      return;
+    }
+
+    // During onboarding, don't start the next hand — wait for user to end session
+    if (OnboardingState.isGuidedHandActive) {
+      setState(() {});
       return;
     }
 
