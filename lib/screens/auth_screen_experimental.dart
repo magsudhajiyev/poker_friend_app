@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart';
 
 class AuthScreenExperimental extends StatefulWidget {
   final bool initialIsSignUp;
@@ -57,10 +56,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       );
 
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
+        // Clear entire stack back to AuthWrapper, which will show HomeScreen
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
     } catch (e) {
       if (mounted) {
@@ -89,10 +86,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       );
 
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
+        // Clear entire stack back to AuthWrapper, which will show HomeScreen
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
     } catch (e) {
       if (mounted) {
@@ -113,10 +108,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     try {
       final credential = await AuthService.signInWithGoogle();
       if (credential != null && mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => HomeScreen()),
-        );
+        // Clear entire stack back to AuthWrapper, which will show HomeScreen
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
     } on GoogleSignInAccountLinkException catch (e) {
       if (mounted) _showAccountLinkDialog(e);
@@ -189,10 +182,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                         );
                         if (ctx.mounted) Navigator.pop(ctx);
                         if (mounted) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (_) => HomeScreen()),
-                          );
+                          // Clear entire stack back to AuthWrapper, which will show HomeScreen
+                          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
                         }
                       } catch (err) {
                         setDialogState(() => isLinking = false);
