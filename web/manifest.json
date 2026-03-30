@@ -1,6 +1,6 @@
 {
-    "name": "poker_logger",
-    "short_name": "poker_logger",
+    "name": "Final Table",
+    "short_name": "Final Table",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

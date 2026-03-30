@@ -55,7 +55,7 @@ class IntroScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Welcome to Poker Friend',
+                        'Welcome to Final Table',
                         style: AppTypography.pageSubtitle(),
                       ),
                     ],

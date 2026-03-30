@@ -41,7 +41,7 @@ class EmailService {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'from': 'Poker Friend <invites@pokerfriend.app>',
+          'from': 'Final Table <invites@finaltable.io>',
           'to': [toEmail],
           'subject': 'Dealer Invitation: $clubName',
           'html': emailBody,
@@ -92,7 +92,7 @@ class EmailService {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'from': 'Poker Friend <admin@pokerfriend.app>',
+          'from': 'Final Table <admin@finaltable.io>',
           'to': [toEmail],
           'subject': 'New Club Request: $clubName',
           'html': emailBody,
@@ -201,10 +201,10 @@ class EmailService {
           <tr>
             <td style="padding: 24px 32px 32px;">
               <p style="margin: 0; color: #6b7280; font-size: 12px; line-height: 1.6;">
-                Open the Poker Friend app to review this request.
+                Open the Final Table app to review this request.
               </p>
               <p style="margin: 16px 0 0; color: #4b5563; font-size: 11px;">
-                Sent by Poker Friend Admin System
+                Sent by Final Table Admin System
               </p>
             </td>
           </tr>
@@ -238,7 +238,7 @@ class EmailService {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'from': 'Poker Friend <clubs@pokerfriend.app>',
+          'from': 'Final Table <clubs@finaltable.io>',
           'to': [toEmail],
           'subject': 'Your Club Has Been Approved: $clubName',
           'html': emailBody,
@@ -304,7 +304,7 @@ class EmailService {
                 Great news! Your club <strong style="color: #22c55e;">$clubName</strong> has been approved and is now ready to use.
               </p>
               <p style="margin: 24px 0 0; color: #9ca3af; font-size: 16px; line-height: 1.6;">
-                You can now log in to Poker Friend and start managing your club, adding tables, inviting dealers, and hosting events.
+                You can now log in to Final Table and start managing your club, adding tables, inviting dealers, and hosting events.
               </p>
             </td>
           </tr>
@@ -320,10 +320,10 @@ class EmailService {
           <tr>
             <td style="padding: 24px 32px 32px;">
               <p style="margin: 0; color: #6b7280; font-size: 12px; line-height: 1.6;">
-                Open the Poker Friend app to get started with your new club.
+                Open the Final Table app to get started with your new club.
               </p>
               <p style="margin: 16px 0 0; color: #4b5563; font-size: 11px;">
-                Sent by Poker Friend
+                Sent by Final Table
               </p>
             </td>
           </tr>
@@ -365,7 +365,7 @@ class EmailService {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'from': 'Poker Friend <invites@pokerfriend.app>',
+          'from': 'Final Table <invites@finaltable.io>',
           'to': [toEmail],
           'subject': '$roleTitle Invitation: $clubName',
           'html': emailBody,
@@ -443,7 +443,7 @@ class EmailService {
                 You've been invited to join <strong style="color: $roleColor;">$clubName</strong> as $roleTitle.
               </p>
               <p style="margin: 16px 0 0; color: #9ca3af; font-size: 16px; line-height: 1.6;">
-                Open the Poker Friend app to accept this invitation and start ${role == 'admin' ? 'managing' : 'dealing at'} the club.
+                Open the Final Table app to accept this invitation and start ${role == 'admin' ? 'managing' : 'dealing at'} the club.
               </p>
             </td>
           </tr>
@@ -459,10 +459,10 @@ class EmailService {
           <tr>
             <td style="padding: 24px 32px 32px;">
               <p style="margin: 0; color: #6b7280; font-size: 12px; line-height: 1.6;">
-                If you don't have the app yet, download Poker Friend from the App Store or Google Play.
+                If you don't have the app yet, download Final Table from the App Store or Google Play.
               </p>
               <p style="margin: 16px 0 0; color: #4b5563; font-size: 11px;">
-                Sent by Poker Friend
+                Sent by Final Table
               </p>
             </td>
           </tr>
@@ -552,10 +552,10 @@ class EmailService {
           <tr>
             <td style="padding: 24px 32px 32px;">
               <p style="margin: 0; color: #6b7280; font-size: 12px; line-height: 1.6;">
-                If the button doesn't work, open the Poker Logger app and check your invitations in the menu.
+                If the button doesn't work, open the Final Table app and check your invitations in the menu.
               </p>
               <p style="margin: 16px 0 0; color: #4b5563; font-size: 11px;">
-                Sent by Poker Logger
+                Sent by Final Table
               </p>
             </td>
           </tr>
@@ -589,7 +589,7 @@ class EmailService {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'from': 'Poker Friend <noreply@pokerfriend.app>',
+          'from': 'Final Table <noreply@finaltable.io>',
           'to': [toEmail],
           'subject': 'Password Reset Code: $code',
           'html': emailBody,
@@ -689,7 +689,7 @@ class EmailService {
                 If you didn't request a password reset, you can safely ignore this email.
               </p>
               <p style="margin: 16px 0 0; color: #4b5563; font-size: 11px;">
-                Sent by Poker Friend
+                Sent by Final Table
               </p>
             </td>
           </tr>

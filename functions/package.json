@@ -1,6 +1,6 @@
 {
   "name": "poker-logger-functions",
-  "description": "Cloud Functions for Poker Logger FCM notifications",
+  "description": "Cloud Functions for Final Table FCM notifications",
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",

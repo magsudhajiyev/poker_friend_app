@@ -1,6 +1,6 @@
 name: poker_logger
 publish_to: "none"
-description: Poker Friend - Track your poker hands, stats, and bankroll
+description: Final Table - Track your poker hands, stats, and bankroll
 version: 0.1.0+3
 
 

@@ -126,7 +126,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                   ),
                   SizedBox(height: 24),
                   Text(
-                    'Welcome to Poker Friend',
+                    'Welcome to Final Table',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,

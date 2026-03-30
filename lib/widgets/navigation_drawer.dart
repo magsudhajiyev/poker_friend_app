@@ -993,7 +993,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Need help with Poker Logger?',
+              'Need help with Final Table?',
               style: GoogleFonts.inter(
                 color: Colors.white,
                 fontSize: 14,

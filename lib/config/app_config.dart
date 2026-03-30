@@ -1,6 +1,6 @@
 import 'env_config.dart';
 
-/// Application configuration for Poker Logger
+/// Application configuration for Final Table
 ///
 /// Provides access to environment-specific settings.
 /// All values are loaded from .env file via EnvConfig.

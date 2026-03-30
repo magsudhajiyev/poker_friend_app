@@ -119,7 +119,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
               ),
               SizedBox(height: 24),
               Text(
-                'Poker Logger',
+                'Final Table',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
