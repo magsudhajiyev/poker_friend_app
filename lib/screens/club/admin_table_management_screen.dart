@@ -194,7 +194,7 @@ class _AdminTableManagementScreenState
                 color: const Color(0xFF1F1F23),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
             ),
           ),
           const SizedBox(width: 16),

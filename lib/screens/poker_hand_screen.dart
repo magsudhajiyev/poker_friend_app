@@ -757,6 +757,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         currentSmallBlind: sessionManager.smallBlind,
         currentBigBlind: sessionManager.bigBlind,
         currentHasBBante: gameState.hasBBante,
+        currentAutoAdvance: autoAdvanceStreets,
         gameType: widget.gameType,
         onBlindsChanged: (smallBlind, bigBlind, hasBBante) async {
 
@@ -783,7 +784,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
               hasBBante: hasBBante,
             ).catchError((e) {});
           }
-          // Note: These changes will take effect immediately for new hands
+        },
+        onAutoAdvanceChanged: (value) async {
+          setState(() {
+            autoAdvanceStreets = value;
+          });
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('auto_advance_streets', value);
         },
       ),
     );
@@ -829,104 +836,73 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: GlassyCard(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+        return AlertDialog(
+          backgroundColor: const Color(0xFF161618),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Leave Session?',
+            style: AppTypography.pageTitle().copyWith(fontSize: 20),
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            'You have an active session with ${sessionManager.completedHands.length} hand(s) logged. What would you like to do?',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall(
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          actions: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Color(0xFFFFB84D),
-                  size: 48,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Leave Session?',
-                  style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
+                // Save & Exit (primary — cyan/mint text)
+                TextButton(
+                  onPressed: () => Navigator.pop(context, 'save'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    'Save & Exit',
+                    style: AppTypography.bodyLarge(
+                      color: AppColors.buttonPrimary,
+                    ).copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-                SizedBox(height: 12),
-                Text(
-                  'You have an active session with ${sessionManager.completedHands.length} hand(s) logged. What would you like to do?',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 14,
+                const SizedBox(height: 4),
+                // Discard & Exit (destructive — red text)
+                TextButton(
+                  onPressed: () => Navigator.pop(context, 'discard'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    'Discard & Exit',
+                    style: AppTypography.bodyLarge(
+                      color: const Color(0xFFFF4444),
+                    ).copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-                SizedBox(height: 24),
-                // Save & Exit button (primary action)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context, 'save'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF5CD9A4),
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Save & Exit',
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Color(0xFF1C1C1E),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                const SizedBox(height: 4),
+                // Cancel (secondary — subtle white)
+                TextButton(
+                  onPressed: () => Navigator.pop(context, null),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                ),
-                SizedBox(height: 12),
-                // Discard button (destructive)
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context, 'discard'),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: Color(0xFFFF6B6B).withOpacity(0.5)),
-                      ),
-                    ),
-                    child: Text(
-                      'Discard & Exit',
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Color(0xFFFF6B6B),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12),
-                // Cancel button
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context, null),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: Text(
-                      'Cancel',
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white.withOpacity(0.6),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  child: Text(
+                    'Cancel',
+                    style: AppTypography.bodyLarge(
+                      color: Colors.white.withOpacity(0.5),
                     ),
                   ),
                 ),
               ],
             ),
-          ),
+          ],
         );
       },
     );
@@ -1150,8 +1126,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                             color: Color(0xFF101115),
                             shape: BoxShape.circle,
                           ),
-                          child: Center(
-                            child: _buildIcon('icons/figma_icons/back.svg', 24, Colors.white),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 22,
                           ),
                         ),
                       ),
@@ -1199,7 +1177,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
-                                child: _buildIcon('icons/figma_icons/forward.svg', 24, Colors.white),
+                                child: _buildIcon('icons/figma_icons/forward.svg', 22, Colors.white),
                               ),
                             ),
                           ),
@@ -1218,7 +1196,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(
-                                    child: Icon(Icons.fast_forward, color: Colors.white, size: 24),
+                                    child: Icon(Icons.fast_forward, color: Colors.white, size: 22),
                                   ),
                                 ),
                               ),
@@ -1569,7 +1547,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: _buildIcon('icons/figma_icons/dots_vertical.svg', 24, Colors.white),
+          child: _buildIcon('icons/figma_icons/dots_vertical.svg', 22, Colors.white),
         ),
       ),
     );
@@ -5409,9 +5387,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Loop through each opponent and show HoleCardsDialog
     Map<int, HoleCards> opponentCards = {};
 
-    for (int opponentId in reorderedOpponents) {
+    for (int i = 0; i < reorderedOpponents.length; i++) {
+      final opponentId = reorderedOpponents[i];
       final opponentName = sessionManager.getPlayerNameWithPosition(opponentId);
       final isWinner = winners.contains(opponentId);
+      final remainingAfterThis = reorderedOpponents.length - i - 1;
 
       // Show dialog for this opponent
       final cards = await showDialog<HoleCards>(
@@ -5422,6 +5402,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           isWinner: isWinner,
           usedCards: usedCards,
           existingCards: existingCards?[opponentId],
+          showSkipAll: remainingAfterThis > 0,
         ),
       );
 
@@ -5429,6 +5410,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       if (cards == null) {
         await LoggerService.debug('  Skipped opponent $opponentId ($opponentName) - continuing to next opponent');
         continue;
+      }
+
+      // If user chose "Skip All", break out of the loop entirely
+      if (cards.card1 == 'SKIP_ALL') {
+        await LoggerService.debug('  Skip All selected at opponent $opponentId - skipping remaining opponents');
+        break;
       }
 
       // If cards were selected, add them to the collection and update usedCards
@@ -5953,16 +5940,20 @@ class _SettingsDialog extends StatefulWidget {
   final int currentSmallBlind;
   final int currentBigBlind;
   final bool currentHasBBante;
+  final bool currentAutoAdvance;
   final GameType gameType;
   final Function(int smallBlind, int bigBlind, bool hasBBante) onBlindsChanged;
+  final Function(bool) onAutoAdvanceChanged;
 
   const _SettingsDialog({
     Key? key,
     required this.currentSmallBlind,
     required this.currentBigBlind,
     required this.currentHasBBante,
+    required this.currentAutoAdvance,
     required this.gameType,
     required this.onBlindsChanged,
+    required this.onAutoAdvanceChanged,
   }) : super(key: key);
 
   @override
@@ -5970,11 +5961,10 @@ class _SettingsDialog extends StatefulWidget {
 }
 
 class _SettingsDialogState extends State<_SettingsDialog> {
-  static const int MIN_SMALL_BLIND = 1;
-
   late int smallBlind;
   late int bigBlind;
   late bool hasBBante;
+  late bool autoAdvance;
 
   @override
   void initState() {
@@ -5982,6 +5972,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     smallBlind = widget.currentSmallBlind;
     bigBlind = widget.currentBigBlind;
     hasBBante = widget.currentHasBBante;
+    autoAdvance = widget.currentAutoAdvance;
   }
 
   Future<void> _showBlindInputDialog(String title, int currentValue, Function(int) onValueChanged) async {
@@ -5989,121 +5980,66 @@ class _SettingsDialogState extends State<_SettingsDialog> {
 
     final result = await showDialog<int>(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-            child: Container(
-              constraints: BoxConstraints(maxWidth: 300),
-              decoration: BoxDecoration(
-                color: AppColors.glassyCardColor(),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppColors.whiteBorder(),
-                  width: 1,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF161618),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Enter $title',
+          style: AppTypography.pageTitle().copyWith(fontSize: 20),
+          textAlign: TextAlign.center,
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          style: AppTypography.bodyLarge(color: Colors.white).copyWith(fontSize: 18),
+          textAlign: TextAlign.center,
+          decoration: InputDecoration(
+            hintText: 'Enter value',
+            hintStyle: AppTypography.bodyLarge(color: Colors.white.withOpacity(0.3)),
+            filled: true,
+            fillColor: Colors.white.withOpacity(0.06),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          onSubmitted: (value) {
+            final intValue = int.tryParse(value);
+            if (intValue != null && intValue > 0) {
+              Navigator.pop(context, intValue);
+            }
+          },
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextButton(
+                onPressed: () {
+                  final intValue = int.tryParse(controller.text);
+                  if (intValue != null && intValue > 0) {
+                    Navigator.pop(context, intValue);
+                  }
+                },
+                child: Text(
+                  'OK',
+                  style: AppTypography.bodyLarge(color: AppColors.buttonPrimary).copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
-              padding: EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Enter $title',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.whiteBorder()),
-                    ),
-                    child: TextField(
-                      controller: controller,
-                      keyboardType: TextInputType.number,
-                      autofocus: true,
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                      decoration: InputDecoration(
-                        hintText: 'Enter value',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                      onSubmitted: (value) {
-                        final intValue = int.tryParse(value);
-                        if (intValue != null && intValue > 0) {
-                          Navigator.pop(context, intValue);
-                        }
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.whiteBorder()),
-                          ),
-                          child: TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(color: Colors.white.withOpacity(0.6)),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Container(
-                          height: 44,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final intValue = int.tryParse(controller.text);
-                              if (intValue != null && intValue > 0) {
-                                Navigator.pop(context, intValue);
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              'OK',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancel',
+                  style: AppTypography.bodyLarge(color: Colors.white.withOpacity(0.5)),
+                ),
               ),
-            ),
+            ],
           ),
-        ),
+        ],
       ),
     );
 
@@ -6112,90 +6048,40 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     }
   }
 
-  Widget _buildNumberAdjuster(String title, int value, VoidCallback onIncrement, VoidCallback onDecrement, VoidCallback onTap) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.whiteBorder()),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(
+  Widget _buildBlindRow(String title, int value, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
               title,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodyLarge(color: Colors.white),
             ),
-          ),
-          const SizedBox(width: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: onDecrement,
-                icon: Icon(Icons.remove, color: Colors.white, size: 20),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.black.withOpacity(0.3),
-                  minimumSize: Size(36, 36),
-                  padding: EdgeInsets.zero,
-                ),
-                tooltip: 'Decrease',
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: onTap,
-                child: Container(
-                  constraints: BoxConstraints(minWidth: 50),
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.accentGreen.withOpacity(0.3)),
-                  ),
-                  child: Text(
-                    value.toString(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.accentGreen,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value.toString(),
+                  style: AppTypography.bodyLarge(color: AppColors.buttonPrimary).copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: onIncrement,
-                icon: Icon(Icons.add, color: Colors.white, size: 20),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.black.withOpacity(0.3),
-                  minimumSize: Size(36, 36),
-                  padding: EdgeInsets.zero,
-                ),
-                tooltip: 'Increase',
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3), size: 20),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildToggle(String title, String subtitle, bool value, Function(bool) onChanged) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.whiteBorder()),
-      ),
+  Widget _buildToggleRow(String title, String subtitle, bool value, Function(bool) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Expanded(
@@ -6204,19 +6090,12 @@ class _SettingsDialogState extends State<_SettingsDialog> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: AppTypography.bodyLarge(color: Colors.white),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 12,
-                  ),
+                  style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.5)),
                 ),
               ],
             ),
@@ -6226,7 +6105,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
             onChanged: onChanged,
             activeThumbColor: AppColors.accentGreen,
             activeTrackColor: AppColors.accentGreen.withOpacity(0.5),
-            inactiveTrackColor: Colors.black.withOpacity(0.3),
+            inactiveTrackColor: Colors.white.withOpacity(0.1),
           ),
         ],
       ),
@@ -6235,213 +6114,100 @@ class _SettingsDialogState extends State<_SettingsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 360),
-            decoration: BoxDecoration(
-              color: AppColors.glassyCardColor(),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.whiteBorder(),
-                width: 1,
+    return AlertDialog(
+      backgroundColor: const Color(0xFF161618),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        'Game Settings',
+        style: AppTypography.pageTitle().copyWith(fontSize: 20),
+        textAlign: TextAlign.center,
+      ),
+      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Blind Levels section
+          Text(
+            'BLIND LEVELS',
+            style: AppTypography.sectionHeader(),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Tap to change. Takes effect next hand.',
+            style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.4)),
+          ),
+          const SizedBox(height: 4),
+          _buildBlindRow('Small Blind', smallBlind, () {
+            _showBlindInputDialog('Small Blind', smallBlind, (value) {
+              setState(() {
+                smallBlind = value;
+                if (bigBlind < smallBlind) {
+                  bigBlind = smallBlind;
+                }
+              });
+            });
+          }),
+          Divider(color: Colors.white.withOpacity(0.08), height: 1),
+          _buildBlindRow('Big Blind', bigBlind, () {
+            _showBlindInputDialog('Big Blind', bigBlind, (value) {
+              setState(() {
+                if (value >= smallBlind) {
+                  bigBlind = value;
+                } else {
+                  bigBlind = smallBlind;
+                }
+              });
+            });
+          }),
+          const SizedBox(height: 16),
+          // Toggles section
+          Text(
+            'OPTIONS',
+            style: AppTypography.sectionHeader(),
+          ),
+          _buildToggleRow(
+            'BB Ante',
+            'Big blind posts ante each hand',
+            hasBBante,
+            (val) => setState(() => hasBBante = val),
+          ),
+          Divider(color: Colors.white.withOpacity(0.08), height: 1),
+          _buildToggleRow(
+            'Auto Advance',
+            'Advance to next street automatically',
+            autoAdvance,
+            (val) => setState(() => autoAdvance = val),
+          ),
+        ],
+      ),
+      actionsAlignment: MainAxisAlignment.center,
+      actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+      actions: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextButton(
+              onPressed: () {
+                widget.onBlindsChanged(smallBlind, bigBlind, hasBBante);
+                widget.onAutoAdvanceChanged(autoAdvance);
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Apply',
+                style: AppTypography.bodyLarge(color: AppColors.buttonPrimary).copyWith(fontWeight: FontWeight.w600),
               ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: EdgeInsets.all(24),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppColors.accentGreen.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(Icons.settings, color: AppColors.accentGreen, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Game Settings',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Content
-                Padding(
-                  padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Blind adjustments section
-                        Text(
-                          'Blind Levels',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Changes take effect on the next hand',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
-                            fontSize: 11,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-            const SizedBox(height: 12),
-            _buildNumberAdjuster(
-              'Small Blind',
-              smallBlind,
-              () {
-                setState(() {
-                  smallBlind++;
-                  // Ensure big blind is at least equal to small blind
-                  if (bigBlind < smallBlind) {
-                    bigBlind = smallBlind;
-                  }
-                });
-              },
-              () {
-                if (smallBlind > MIN_SMALL_BLIND) {
-                  setState(() {
-                    smallBlind--;
-                    // Ensure big blind is at least equal to small blind
-                    if (bigBlind < smallBlind) {
-                      bigBlind = smallBlind;
-                    }
-                  });
-                }
-              },
-              () {
-                _showBlindInputDialog('Small Blind', smallBlind, (value) {
-                  setState(() {
-                    smallBlind = value;
-                    // Ensure big blind is at least equal to small blind
-                    if (bigBlind < smallBlind) {
-                      bigBlind = smallBlind;
-                    }
-                  });
-                });
-              },
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: AppTypography.bodyLarge(color: Colors.white.withOpacity(0.5)),
+              ),
             ),
-            const SizedBox(height: 12),
-            _buildNumberAdjuster(
-              'Big Blind',
-              bigBlind,
-              () {
-                setState(() {
-                  bigBlind++;
-                });
-              },
-              () {
-                // Big blind must be at least equal to small blind
-                if (bigBlind > smallBlind) {
-                  setState(() {
-                    bigBlind--;
-                  });
-                }
-              },
-              () {
-                _showBlindInputDialog('Big Blind', bigBlind, (value) {
-                  setState(() {
-                    // Ensure big blind is at least equal to small blind
-                    if (value >= smallBlind) {
-                      bigBlind = value;
-                    } else {
-                      bigBlind = smallBlind;
-                    }
-                  });
-                });
-              },
-                        ),
-                        SizedBox(height: 24),
-                        // Actions
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppColors.whiteBorder()),
-                                ),
-                                child: TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(
-                                    'Cancel',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.6),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Container(
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    widget.onBlindsChanged(smallBlind, bigBlind, hasBBante);
-                                    Navigator.pop(context);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Apply',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
-      ),
+      ],
     );
   }
 }

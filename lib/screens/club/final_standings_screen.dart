@@ -148,8 +148,8 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: PokerFriendColors.dark3,
                 borderRadius: BorderRadius.circular(12),
@@ -157,7 +157,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
               child: Icon(
                 Icons.arrow_back,
                 color: PokerFriendColors.dark9,
-                size: 20,
+                size: 22,
               ),
             ),
           ),

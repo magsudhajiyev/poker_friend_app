@@ -9,6 +9,7 @@ class HoleCardsDialog extends StatefulWidget {
   final String title; // Dialog title
   final String? playerName; // Optional player name to highlight
   final bool isWinner; // Whether this player is a winner (shows badge)
+  final bool showSkipAll; // Show "Skip All" button for remaining opponents
 
   const HoleCardsDialog({
     Key? key,
@@ -17,6 +18,7 @@ class HoleCardsDialog extends StatefulWidget {
     this.title = 'Your Hole Cards',
     this.playerName,
     this.isWinner = false,
+    this.showSkipAll = false,
   }) : super(key: key);
 
   @override
@@ -218,6 +220,33 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                           ),
                         ],
                       ),
+                      // Skip All button - skips remaining opponents
+                      if (widget.showSkipAll) ...[
+                        SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.whiteBorder()),
+                          ),
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(
+                              context,
+                              HoleCards(card1: 'SKIP_ALL', card2: 'SKIP_ALL'),
+                            ),
+                            child: Text(
+                              'Skip All',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.6),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

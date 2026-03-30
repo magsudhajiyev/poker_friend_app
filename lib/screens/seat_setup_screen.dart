@@ -1042,12 +1042,10 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                             color: Color(0xFF3C3C43).withOpacity(0.3),
                             shape: BoxShape.circle,
                           ),
-                          child: Center(
-                            child: _buildIcon(
-                              'icons/figma_icons/back.svg',
-                              24,
-                              Colors.white,
-                            ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 22,
                           ),
                         ),
                       ),

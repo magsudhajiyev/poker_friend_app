@@ -91,7 +91,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
               child: const Icon(
                 Icons.arrow_back,
                 color: Colors.white,
-                size: 20,
+                size: 22,
               ),
             ),
           ),
