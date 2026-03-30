@@ -69,9 +69,24 @@ class AuthService {
       return credential;
     } on FirebaseAuthException catch (e) {
       print('Sign in error: ${e.message}');
+
+      // If sign-in fails, check if this email uses Google-only sign-in
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        try {
+          final methods = await _auth.fetchSignInMethodsForEmail(email);
+          if (methods.contains('google.com') && !methods.contains('password')) {
+            throw 'This account uses Google Sign-In. Please sign in with Google, or use "Forgot Password" to set a password for email login.';
+          }
+        } catch (fetchError) {
+          if (fetchError is String) rethrow;
+          // If fetching methods fails, fall through to default error
+        }
+      }
+
       throw _getAuthException(e);
     } catch (e) {
       print('Unexpected error during sign in: $e');
+      if (e is String) rethrow; // Re-throw our custom message
       throw 'An unexpected error occurred. Please try again.';
     }
   }

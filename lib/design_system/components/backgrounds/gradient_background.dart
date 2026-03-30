@@ -43,8 +43,8 @@ class GradientBackground extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      AppColors.gradientGreenTop.withOpacity(0.6),
-                      AppColors.gradientGreenMid.withOpacity(0.6),
+                      const Color(0xFF62E3BC).withOpacity(0.45), // Teal accent
+                      AppColors.headerGradientTeal.withOpacity(0.6),
                       const Color(0xFF000000).withOpacity(0.6),
                     ],
                     stops: const [0.0, 0.32, 1.0],
@@ -74,11 +74,11 @@ class GradientBackground extends StatelessWidget {
                   center: Alignment.center,
                   radius: 0.5, // Color concentrated in center half
                   colors: [
-                    Color(0x4D84ff95), // 30% opacity at center
-                    Color(0x3384ff95), // 20% opacity
-                    Color(0x1A84ff95), // 10% opacity
-                    Color(0x0D84ff95), // 5% opacity
-                    Color(0x0084ff95), // Fully transparent at edges
+                    Color(0x4D4CDBFF), // 30% opacity cyan at center
+                    Color(0x334CDBFF), // 20% opacity
+                    Color(0x1A4CDBFF), // 10% opacity
+                    Color(0x0D4CDBFF), // 5% opacity
+                    Color(0x004CDBFF), // Fully transparent at edges
                   ],
                   stops: [0.0, 0.3, 0.5, 0.75, 1.0],
                 ),

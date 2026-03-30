@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../design_system/constants/colors.dart';
+import '../design_system/constants/decorations.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/components/backgrounds/gradient_background.dart';
+import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../services/auth_service.dart';
+import 'forgot_password_screen.dart';
 
 class AuthScreenExperimental extends StatefulWidget {
   final bool initialIsSignUp;
@@ -103,6 +108,17 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     }
   }
 
+  void _handleForgotPassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ForgotPasswordScreen(
+          initialEmail: _loginEmailController.text.trim(),
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
     try {
@@ -133,7 +149,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1E),
+          backgroundColor: AppColors.backgroundSurface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text('Link Google Account',
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
@@ -155,9 +171,9 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                   labelText: 'Password',
                   labelStyle: TextStyle(color: Colors.white54),
                   filled: true,
-                  fillColor: Colors.white10,
+                  fillColor: AppColors.whiteOverlay(opacity: 0.10),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -217,12 +233,12 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         const SizedBox(height: 20),
         Row(
           children: [
-            Expanded(child: Divider(color: Colors.white24)),
+            Expanded(child: Divider(color: AppColors.whiteOverlay(opacity: 0.24))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text('or', style: TextStyle(color: Colors.white54, fontSize: 14)),
+              child: Text('or', style: AppTypography.bodySmall(color: Colors.white54)),
             ),
-            Expanded(child: Divider(color: Colors.white24)),
+            Expanded(child: Divider(color: AppColors.whiteOverlay(opacity: 0.24))),
           ],
         ),
         const SizedBox(height: 20),
@@ -232,8 +248,10 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
           child: OutlinedButton(
             onPressed: _isLoading ? null : _handleGoogleSignIn,
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.white.withOpacity(0.30)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+              side: BorderSide(color: AppColors.whiteOverlay(opacity: 0.30)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -242,10 +260,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                 const SizedBox(width: 10),
                 Text(
                   'Continue with Google',
-                  style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white,
+                  style: AppTypography.buttonText(color: Colors.white).copyWith(
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -259,27 +275,27 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A3A2E), // Dark forest green
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-
-                // Header with back arrow, title, and subtitle
-                _buildHeader(),
-
-                const SizedBox(height: 40),
-
-                // Form
-                _isSignUp ? _buildSignUpForm() : _buildSignInForm(),
-              ],
+      backgroundColor: AppColors.backgroundPaper,
+      body: Stack(
+        children: [
+          const GradientBackground(),
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 20),
+                    _buildHeader(),
+                    const SizedBox(height: 40),
+                    _isSignUp ? _buildSignUpForm() : _buildSignInForm(),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -288,24 +304,12 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Back arrow - navigate back to intro screen
-        GestureDetector(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
+        // Back arrow
+        GlassyIconButton(
+          icon: Icons.arrow_back,
+          onPressed: () => Navigator.pop(context),
+          size: 40,
+          iconSize: 20,
         ),
 
         const SizedBox(height: 24),
@@ -313,11 +317,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         // Title
         Text(
           _isSignUp ? 'Sign up' : 'Log in to your account',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 32,
-            
-            fontWeight: FontWeight.w600,
+          style: AppTypography.pageTitleLarge().copyWith(
             letterSpacing: -1,
           ),
         ),
@@ -329,11 +329,9 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
           _isSignUp
             ? 'Create an account to continue'
             : 'Enter your email and password to log in',
-          style: TextStyle(
+          style: AppTypography.bodyMedium(
             color: Colors.white.withOpacity(0.70),
-            fontSize: 16,
-                        fontWeight: FontWeight.w400,
-          ),
+          ).copyWith(fontSize: 16),
         ),
       ],
     );
@@ -345,34 +343,26 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Name Input
           _buildInputField(
             controller: _registerNameController,
             label: 'Name',
             showIcon: false,
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your name';
-              }
-              if (value.length < 2) {
-                return 'Name must be at least 2 characters';
-              }
+              if (value == null || value.isEmpty) return 'Please enter your name';
+              if (value.length < 2) return 'Name must be at least 2 characters';
               return null;
             },
           ),
 
           const SizedBox(height: 16),
 
-          // Email Input
           _buildInputField(
             controller: _registerEmailController,
             label: 'Email',
             keyboardType: TextInputType.emailAddress,
             showIcon: false,
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
+              if (value == null || value.isEmpty) return 'Please enter your email';
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                 return 'Please enter a valid email';
               }
@@ -382,7 +372,6 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           const SizedBox(height: 16),
 
-          // Password Input
           _buildInputField(
             controller: _registerPasswordController,
             label: 'Password',
@@ -393,52 +382,35 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                 _obscureRegisterPassword ? Icons.visibility_off : Icons.visibility,
                 color: Colors.white.withOpacity(0.50),
               ),
-              onPressed: () {
-                setState(() {
-                  _obscureRegisterPassword = !_obscureRegisterPassword;
-                });
-              },
+              onPressed: () => setState(() => _obscureRegisterPassword = !_obscureRegisterPassword),
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a password';
-              }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
-              }
+              if (value == null || value.isEmpty) return 'Please enter a password';
+              if (value.length < 6) return 'Password must be at least 6 characters';
               return null;
             },
           ),
 
           const SizedBox(height: 24),
 
-          // Terms of Service Text (UI-check)
+          // Terms of Service
           Center(
             child: RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                style: TextStyle(
+                style: AppTypography.bodySmall(
                   color: Colors.white.withOpacity(0.60),
-                  fontSize: 13,
-                                    fontWeight: FontWeight.w400,
-                  height: 1.5,
-                ),
+                ).copyWith(fontSize: 13, height: 1.5),
                 children: [
                   TextSpan(text: 'By Signing up, you agree to the '),
                   TextSpan(
                     text: 'Terms of Service',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                   ),
                   TextSpan(text: '\nand '),
                   TextSpan(
                     text: 'Privacy Policy',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -447,40 +419,10 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           const SizedBox(height: 32),
 
-          // Create Account Button (ButtonFill)
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _register,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF1A3A2E),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                elevation: 0,
-                disabledBackgroundColor: Colors.white.withOpacity(0.50),
-              ),
-              child: _isLoading
-                  ? SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFF1A3A2E)),
-                      ),
-                    )
-                  : Text(
-                      'Create account',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 16,
-                        
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-            ),
+          // Create Account Button
+          _buildPrimaryButton(
+            label: 'Create account',
+            onPressed: _isLoading ? null : _register,
           ),
 
           const SizedBox(height: 20),
@@ -488,18 +430,10 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
           // Already have an account?
           Center(
             child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isSignUp = false;
-                });
-              },
+              onTap: () => setState(() => _isSignUp = false),
               child: RichText(
                 text: TextSpan(
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.70),
-                    fontSize: 14,
-                                        fontWeight: FontWeight.w400,
-                  ),
+                  style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
                   children: [
                     TextSpan(text: 'Already have an account? '),
                     TextSpan(
@@ -528,16 +462,13 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Email Input
           _buildInputField(
             controller: _loginEmailController,
             label: 'Email',
             keyboardType: TextInputType.emailAddress,
             showIcon: false,
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
+              if (value == null || value.isEmpty) return 'Please enter your email';
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                 return 'Please enter a valid email';
               }
@@ -547,7 +478,6 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           const SizedBox(height: 16),
 
-          // Password Input
           _buildInputField(
             controller: _loginPasswordController,
             label: 'Password',
@@ -558,56 +488,39 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                 _obscureLoginPassword ? Icons.visibility_off : Icons.visibility,
                 color: Colors.white.withOpacity(0.50),
               ),
-              onPressed: () {
-                setState(() {
-                  _obscureLoginPassword = !_obscureLoginPassword;
-                });
-              },
+              onPressed: () => setState(() => _obscureLoginPassword = !_obscureLoginPassword),
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password';
-              }
+              if (value == null || value.isEmpty) return 'Please enter your password';
               return null;
             },
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 12),
 
-          // Sign In Button (ButtonFill)
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _signIn,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF1A3A2E),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100),
+          // Forgot Password
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: _handleForgotPassword,
+              child: Text(
+                'Forgot password?',
+                style: AppTypography.bodySmall(
+                  color: Colors.white.withOpacity(0.70),
+                ).copyWith(
+                  fontWeight: FontWeight.w500,
+                  decoration: TextDecoration.underline,
                 ),
-                elevation: 0,
-                disabledBackgroundColor: Colors.white.withOpacity(0.50),
               ),
-              child: _isLoading
-                  ? SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFF1A3A2E)),
-                      ),
-                    )
-                  : Text(
-                      'Sign in',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 16,
-                        
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
             ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Sign In Button
+          _buildPrimaryButton(
+            label: 'Sign in',
+            onPressed: _isLoading ? null : _signIn,
           ),
 
           const SizedBox(height: 20),
@@ -615,18 +528,10 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
           // Don't have an account?
           Center(
             child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isSignUp = true;
-                });
-              },
+              onTap: () => setState(() => _isSignUp = true),
               child: RichText(
                 text: TextSpan(
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.70),
-                    fontSize: 14,
-                                        fontWeight: FontWeight.w400,
-                  ),
+                  style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
                   children: [
                     TextSpan(text: "Don't have an account? "),
                     TextSpan(
@@ -649,6 +554,42 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
     );
   }
 
+  Widget _buildPrimaryButton({
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: AppColors.backgroundPaper,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
+          ),
+          elevation: 0,
+          disabledBackgroundColor: Colors.white.withOpacity(0.50),
+        ),
+        child: _isLoading
+            ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.backgroundPaper),
+                ),
+              )
+            : Text(
+                label,
+                style: AppTypography.buttonText().copyWith(fontSize: 16),
+              ),
+      ),
+    );
+  }
+
   Widget _buildInputField({
     required TextEditingController controller,
     required String label,
@@ -662,52 +603,41 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
-      style: GoogleFonts.ibmPlexSans(
-        color: Colors.white,
-        fontSize: 16,
-        
-        fontWeight: FontWeight.w400,
-      ),
+      style: AppTypography.bodyMedium().copyWith(fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
           color: Colors.white.withOpacity(0.50),
           fontSize: 16,
-                    fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w400,
         ),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.10),
+        fillColor: AppColors.whiteOverlay(opacity: 0.10),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
           borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.20),
+            color: AppColors.whiteOverlay(opacity: 0.20),
             width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
           borderSide: BorderSide(
-            color: const Color(0xFFA5EC44),
+            color: AppColors.accentGreen,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Colors.red,
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Colors.red,
-            width: 2,
-          ),
+          borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
         suffixIcon: suffixIcon,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),

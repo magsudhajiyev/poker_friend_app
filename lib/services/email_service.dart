@@ -567,4 +567,138 @@ class EmailService {
 </html>
 ''';
   }
+
+  /// Send password reset verification code email
+  static Future<bool> sendPasswordResetCodeEmail({
+    required String toEmail,
+    required String code,
+  }) async {
+    final apiKey = EnvConfig.resendApiKey;
+    if (apiKey.isEmpty) {
+      print('EmailService: Resend API key not configured');
+      return false;
+    }
+
+    final emailBody = _buildPasswordResetCodeEmailHtml(code: code);
+
+    try {
+      final response = await http.post(
+        Uri.parse(_resendApiUrl),
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'from': 'Poker Friend <noreply@pokerfriend.app>',
+          'to': [toEmail],
+          'subject': 'Password Reset Code: $code',
+          'html': emailBody,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('EmailService: Password reset code sent to $toEmail');
+        return true;
+      } else {
+        print('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('EmailService: Error sending email - $e');
+      return false;
+    }
+  }
+
+  /// Build styled HTML email for password reset code
+  static String _buildPasswordResetCodeEmailHtml({required String code}) {
+    // Split code into individual digits for styled display
+    final digits = code.split('');
+    final digitCells = digits.map((d) =>
+      '<td style="width: 48px; height: 56px; background-color: #1e293b; border-radius: 12px; text-align: center; vertical-align: middle; border: 1px solid #374151;">'
+      '<span style="color: #62E3BC; font-size: 28px; font-weight: 700; font-family: monospace;">$d</span>'
+      '</td>'
+    ).join('<td style="width: 8px;"></td>');
+
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Reset Code</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f0f1a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0f0f1a;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" style="max-width: 500px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 32px 0;">
+              <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #62E3BC 0%, #89F1EC 100%); border-radius: 12px; display: inline-block; text-align: center; line-height: 50px;">
+                <span style="font-size: 24px; color: #0f0f1a;">&#9824;</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Title -->
+          <tr>
+            <td style="padding: 24px 32px 8px;">
+              <h1 style="margin: 0; color: #62E3BC; font-size: 28px; font-weight: 700;">Password Reset</h1>
+            </td>
+          </tr>
+
+          <!-- Message -->
+          <tr>
+            <td style="padding: 16px 32px 8px;">
+              <p style="margin: 0; color: #e2e8f0; font-size: 16px; line-height: 1.6;">
+                Use the following code to reset your password:
+              </p>
+            </td>
+          </tr>
+
+          <!-- Code Display -->
+          <tr>
+            <td style="padding: 24px 32px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
+                <tr>$digitCells</tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Expiry Note -->
+          <tr>
+            <td style="padding: 0 32px 32px;">
+              <p style="margin: 0; color: #9ca3af; font-size: 14px; text-align: center;">
+                This code expires in <strong style="color: #e2e8f0;">15 minutes</strong>.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 32px;">
+              <hr style="border: none; border-top: 1px solid #374151; margin: 0;">
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px 32px;">
+              <p style="margin: 0; color: #6b7280; font-size: 12px; line-height: 1.6;">
+                If you didn't request a password reset, you can safely ignore this email.
+              </p>
+              <p style="margin: 16px 0 0; color: #4b5563; font-size: 11px;">
+                Sent by Poker Friend
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+''';
+  }
 }
