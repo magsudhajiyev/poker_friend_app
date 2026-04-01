@@ -8,6 +8,7 @@ import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
 import 'poker_hand_screen.dart';
 import 'quick_stack_update_screen.dart';
+import '../design_system/components/drawer_dots.dart';
 
 class IndividualSessionTrackingScreen extends StatefulWidget {
   final String sessionName;
@@ -1294,19 +1295,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                             ],
                           ),
                         ),
-                        // Settings gear
-                        GestureDetector(
-                          onTap: () => _showOptionsMenu(),
-                          child: Container(
-                            key: _dotsKey,
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF3C3C43).withOpacity(0.3),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
-                          ),
+                        // Settings dots
+                        SizedBox(
+                          key: _dotsKey,
+                          child: DrawerDots(onTap: () => _showOptionsMenu()),
                         ),
                       ],
                     ),

@@ -212,10 +212,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                             decoration: BoxDecoration(
                               color: const Color(0xFF1B1E24), // neutrals/800
                               borderRadius: BorderRadius.circular(150),
-                              border: Border.all(
-                                color: const Color(0xFF35373C), // neutrals/700
-                                width: 1,
-                              ),
                             ),
                             child: Stack(
                               children: [
@@ -366,10 +362,11 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Color(0xFF131616),
-              borderRadius: BorderRadius.circular(8),
+              color: Color(0xFF101115),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.black),
             ),
-            padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+            padding: EdgeInsets.fromLTRB(24, 28, 24, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -381,7 +378,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                   24,
                   Colors.white,
                 ),
-                SizedBox(height: 14),
+                SizedBox(height: 6),
                 // Title
                 Text(
                   'No $gameType Sessions',
@@ -394,12 +391,12 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 4),
-                // Description - teal
+                // Description
                 Text(
                   'Play some $gameType Poker hands \nto see the results',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ibmPlexSans(
-                    color: Color(0xFF89F1EC),
+                    color: Color(0xFFB3B4B6),
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
                     height: 1.44,
@@ -414,7 +411,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
     return ListView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.symmetric(horizontal: 16),
       itemCount: sessionList.length,
       itemBuilder: (context, index) {
         final session = sessionList[index];
@@ -425,112 +422,164 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   Widget _buildSessionCard(Map<String, dynamic> session) {
     final startTime = DateTime.parse(session['startTime']);
-    final endTime = session['endTime'] != null
-        ? DateTime.parse(session['endTime'])
-        : null;
-
-    final duration = endTime != null
-        ? endTime.difference(startTime).inMinutes
-        : null;
-
     final isDealerSession = session['isDealerSession'] == true;
+    final totalHands = session['totalHands'] ?? session['handsLogged'] ?? 0;
+    final isTournament = (session['gameType'] ?? 'cash').toLowerCase() == 'tournament';
+    final secondPillText = isTournament
+        ? '\$${session['buyInAmount'] ?? session['totalBuyIn'] ?? 0} Buy-in'
+        : _formatBlinds(session);
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Color(0xFF1F1F23),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: _getGameTypeIcon(session['gameType']),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                session['sessionName'] != null && session['sessionName'].isNotEmpty
-                    ? session['sessionName']
-                    : 'Session ${session['id'].substring(0, 8)}...',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SessionAnalyticsScreen(
+              sessionData: session,
+              sessionId: session['id'],
             ),
-            if (isDealerSession) ...[
-              SizedBox(width: 8),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Color(0xFF4CAF50).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'Live',
-                  style: TextStyle(
-                    color: Color(0xFF4CAF50),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ],
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 16),
+        padding: EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Color(0xFF101115),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black),
         ),
-        subtitle: Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 4),
-            Text(
-              '${DateFormat('MMM dd, yyyy HH:mm').format(startTime)}',
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
-                fontSize: 14,
-              ),
-            ),
-            Text(
-              '${session['playerCount']} players • ${_formatBlinds(session)}',
-              style: TextStyle(
-                color: Color(0xFF9A9A9A),
-                fontSize: 14,
-              ),
-            ),
-            if (duration != null)
-              Text(
-                'Duration: ${_formatDuration(duration)}',
-                style: TextStyle(
-                  color: Color(0xFF9A9A9A),
-                  fontSize: 14,
+            // Row 1: Session name + chevron
+            Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          session['sessionName'] != null && session['sessionName'].isNotEmpty
+                              ? session['sessionName']
+                              : 'Session ${session['id'].substring(0, 8)}...',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w400,
+                            height: 1.44,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isDealerSession) ...[
+                        SizedBox(width: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF4CAF50).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Live',
+                            style: GoogleFonts.ibmPlexSans(
+                              color: Color(0xFF4CAF50),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
+                SizedBox(width: 8),
+                // Chevron in dark square
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Color(0xFF02050B),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Color(0xFF02050B)),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 6),
+
+            // Row 2: Pills (players + blinds)
+            Row(
+              children: [
+                // Players pill
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF1B1E24),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    '$totalHands Hands',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12,
+                      color: Color(0xFF89F1EC),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 4),
+                // Blinds pill
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF1B1E24),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    secondPillText,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12,
+                      color: Color(0xFF89F1EC),
+                      fontWeight: FontWeight.w500,
+                      height: 1.44,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 14),
+
+            // Row 3: Clock icon + date
+            Row(
+              children: [
+                Icon(
+                  Icons.access_time,
+                  size: 18,
+                  color: Color(0xFF4E5054),
+                ),
+                SizedBox(width: 4),
+                Text(
+                  DateFormat('MMM dd, h:mm a').format(startTime),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 13,
+                    color: Color(0xFF4E5054),
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          color: Color(0xFF9A9A9A),
-          size: 16,
-        ),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SessionAnalyticsScreen(
-                sessionData: session,
-                sessionId: session['id'],
-              ),
-            ),
-          );
-        },
       ),
     );
   }

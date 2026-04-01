@@ -9,6 +9,7 @@ import '../services/opponent_stats_service.dart';
 import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import 'opponent_detail_screen.dart';
+import '../design_system/components/drawer_dots.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
   // Static cache accessible from other screens
@@ -244,31 +245,30 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                   ),
                 ),
 
-                // Search bar (Figma node 423-2584)
+                // Search bar (Figma node 27-3112)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                   child: Container(
-                    height: 52, // padding 10px top + 10px bottom + 32px icon
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(80),
-                      border: Border.all(color: Color(0xFF2C2C2E)),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: const Color(0xFF1F272F)),
                     ),
                     child: Row(
                       children: [
-                        SizedBox(width: 14), // pl-14px from Figma
                         SizedBox(
-                          width: 32,
-                          height: 32,
+                          width: 20,
+                          height: 20,
                           child: Center(
                             child: _buildIcon(
                               'icons/figma_icons/search.svg',
-                              24,
-                              Colors.white,
+                              15,
+                              const Color(0xFFADF9F5),
                             ),
                           ),
                         ),
-                        SizedBox(width: 8), // gap-8px from Figma
+                        const SizedBox(width: 6),
                         Expanded(
                           child: TextField(
                             style: GoogleFonts.ibmPlexSans(
@@ -280,7 +280,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                             decoration: InputDecoration(
                               hintText: 'Search opponents...',
                               hintStyle: GoogleFonts.ibmPlexSans(
-                                color: Color(0xFFEBEBF5).withOpacity(0.7),
+                                color: const Color(0xFF8C8C8C),
                                 fontSize: 17,
                                 fontWeight: FontWeight.w400,
                                 height: 1.44,
@@ -300,7 +300,6 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                             },
                           ),
                         ),
-                        SizedBox(width: 8), // pr-8px from Figma
                       ],
                     ),
                   ),
@@ -425,7 +424,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
-                    color: const Color(0xFFD3FFFD),
+                    color: const Color(0xFFB3B4B6),
                     fontWeight: FontWeight.w400,
                     height: 1.44,
                   ),
@@ -437,8 +436,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                 GestureDetector(
                   onTap: _showAddOpponentDialog,
                   child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(110),
                       border: Border.all(
@@ -447,7 +445,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                       ),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
                           Icons.add,
@@ -478,54 +476,26 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.only(bottom: 100), // Extra padding for button and nav bar
-      itemCount: displayOpponents.length + 1, // +1 for the Add Opponent button
+      padding: EdgeInsets.only(bottom: 100), // Extra padding for nav bar
+      itemCount: displayOpponents.length,
       itemBuilder: (context, index) {
-        // Last item is the Add Opponent button
-        if (index == displayOpponents.length) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: GestureDetector(
-              onTap: _showAddOpponentDialog,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(110),
-                  border: Border.all(
-                    color: const Color(0xFF75A6CB),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.add,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Add Opponent',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        letterSpacing: -0.5,
-                        height: 24 / 17,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
         final opponent = displayOpponents[index];
         return _buildOpponentCard(opponent);
       },
     );
+  }
+
+  /// Get initials (first two letters of the name, or first letter of each word)
+  String _getInitials(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return '?';
+    final words = trimmed.split(RegExp(r'\s+'));
+    if (words.length >= 2) {
+      return '${words[0][0]}${words[1][0]}'.toUpperCase();
+    }
+    return trimmed.length >= 2
+        ? trimmed.substring(0, 2).toUpperCase()
+        : trimmed[0].toUpperCase();
   }
 
   Widget _buildOpponentCard(Opponent opponent) {
@@ -556,51 +526,85 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            padding: EdgeInsets.all(18),
             child: Column(
               children: [
-                // Top row: Profile circle + Name + dots menu
+                // Top row: Avatar + Name/LastSeen + dots menu
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Profile circle (32px)
+                    // Avatar: 50x50 rounded square with initials
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: 50,
+                      height: 50,
                       decoration: BoxDecoration(
                         color: cardColor,
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                    ),
-                    SizedBox(width: 8),
-                    // Player name
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 4),
+                      child: Center(
                         child: Text(
-                          opponent.name,
+                          _getInitials(opponent.name),
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
                             color: Colors.white,
-                            fontWeight: FontWeight.w400,
-                            height: 1.44,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ),
-                    // Dots menu icon (24px container)
-                    GestureDetector(
+                    SizedBox(width: 12),
+                    // Name + Last Seen
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Player name
+                          Padding(
+                            padding: EdgeInsets.only(top: 2),
+                            child: Text(
+                              opponent.name,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400,
+                                height: 1.44,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          // Last Seen row
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                size: 14,
+                                color: Color(0xFF4E5054),
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Last Seen: ${DateFormat('MMM dd, h:mm a').format(opponent.lastSeenAt)}',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 13,
+                                  color: Color(0xFF4E5054),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Dots menu icon
+                    SizedBox(
                       key: dotsKey,
-                      onTap: () => _showOpponentOptionsMenu(opponent, dotsKey),
-                      child: _buildIcon(
-                        'icons/figma_icons/dots.svg',
-                        24,
-                        Color(0xFF555555),
+                      child: DrawerDots(
+                        onTap: () => _showOpponentOptionsMenu(opponent, dotsKey),
                       ),
                     ),
                   ],
                 ),
 
-                SizedBox(height: 12),
+                SizedBox(height: 14),
 
                 // Separator line
                 Container(
@@ -610,78 +614,52 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
 
                 SizedBox(height: 14),
 
-                // Hands row: "Hands" label on left, count on right
+                // Hands row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        'Hands',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          color: Color(0xFFB3B4B6),
-                          fontWeight: FontWeight.w500,
-                          height: 1.44,
-                        ),
+                    Text(
+                      'Hands',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        color: Color(0xFFB3B4B6),
+                        fontWeight: FontWeight.w500,
+                        height: 1.44,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        '${opponentHandsCounts[opponent.id] ?? 0}',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          color: Color(0xFFD3FFFD),
-                          fontWeight: FontWeight.w500,
-                          height: 1.44,
-                        ),
+                    Text(
+                      '${opponentHandsCounts[opponent.id] ?? 0}',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        color: Color(0xFFD3FFFD),
+                        fontWeight: FontWeight.w500,
+                        height: 1.44,
                       ),
                     ),
                   ],
                 ),
 
-                SizedBox(height: 14),
+                SizedBox(height: 10),
 
-                // Last seen row: eye icon + "Last Seen:" + date on right
-                Padding(
-                  padding: EdgeInsets.only(top: 4),
-                  child: Row(
-                    children: [
-                      _buildIcon(
-                        'icons/figma_icons/eye.svg',
-                        22,
-                        Color(0xFF808285),
-                      ),
-                      SizedBox(width: 6),
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                            'Last Seen:',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 13,
-                              color: Color(0xFF808285),
-                              fontWeight: FontWeight.w500,
-                              height: 1.44,
-                            ),
-                          ),
+                // Notes row
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        opponent.notes?.isNotEmpty == true
+                            ? opponent.notes!
+                            : 'Notes (Optional)',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          color: Color(0xFF8C8C8C),
+                          fontWeight: FontWeight.w500,
+                          height: 1.44,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          DateFormat('MMM dd, h:mm a').format(opponent.lastSeenAt),
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 13,
-                            color: Color(0xFFE6E6E7),
-                            fontWeight: FontWeight.w500,
-                            height: 1.44,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -697,9 +675,15 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     final Offset offset = renderBox.localToGlobal(Offset.zero);
     final Size size = renderBox.size;
 
+    // Calculate menu position: top-right of menu aligns with center-right of dots icon
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dotsRight = screenWidth - (offset.dx + size.width);
+    final menuTop = offset.dy + size.height + 4; // Just below the dots icon
+
     showDialog(
       context: context,
       barrierColor: Colors.transparent,
+      useSafeArea: false,
       builder: (context) => Stack(
         children: [
           // Dismiss on tap outside
@@ -711,8 +695,8 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
           ),
           // Positioned popup menu (Figma node 622:5241)
           Positioned(
-            right: 16, // Align to right side with 16px margin
-            top: offset.dy + size.height + 8, // Below the dots icon with 8px gap
+            right: dotsRight, // Align right edge with dots icon right edge
+            top: menuTop, // Below center of dots icon
             child: Material(
               color: Colors.transparent,
               child: Container(

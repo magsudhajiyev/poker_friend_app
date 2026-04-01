@@ -37,6 +37,7 @@ import '../design_system/poker_friend_theme.dart';
 import '../design_system/components.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
+import '../design_system/components/drawer_dots.dart';
 import '../services/seat_service.dart';
 import '../services/table_service.dart';
 import '../services/club_notification_service.dart';
@@ -1330,65 +1331,72 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
       body: Stack(
         children: [
-          RefreshIndicator(
-            onRefresh: _loadData,
-            color: AppColors.tealAccent,
-            backgroundColor: const Color(0xFF1C2926),
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const OnboardingProgressBar(),
-                  // Gradient Header with greeting and bankroll
-                  HomeHeader(
-                    userName: userName,
-                    subtitle: 'Welcome back',
-                    onMenuPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const QRScanScreen()),
-                      );
-                    },
-                    onNotificationPressed: () {
-                      _showNotificationsDropdown(context);
-                    },
-                    onSettingsPressed: () {
-                      _scaffoldKey.currentState?.openDrawer();
-                    },
-                    showNotificationBadge: _unreadNotificationCount > 0,
-                    notificationCount: _unreadNotificationCount,
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Bankroll Card (standalone)
-                  _buildBankrollCard(),
-
-                  const SizedBox(height: 8),
-
-                  // Recent Activity (Stats Grid)
-                  _buildStatsGrid(),
-
-                  const SizedBox(height: 32),
-
-                  // Earnings Chart
-                  _buildEarningsCard(),
-
-                  const SizedBox(height: 32),
-
-                  // Recent Sessions
-                  _buildRecentSessionsCard(),
-
-                  const SizedBox(height: 32),
-
-                  // Upcoming Events
-                  _buildUpcomingEventsCard(),
-
-                  const SizedBox(height: 100),
-                ],
+          Column(
+            children: [
+              // Fixed header — stays at top during scroll
+              const OnboardingProgressBar(),
+              HomeHeader(
+                userName: userName,
+                subtitle: 'Welcome back',
+                onMenuPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const QRScanScreen()),
+                  );
+                },
+                onNotificationPressed: () {
+                  _showNotificationsDropdown(context);
+                },
+                onSettingsPressed: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+                showNotificationBadge: _unreadNotificationCount > 0,
+                notificationCount: _unreadNotificationCount,
               ),
-            ),
+
+              // Scrollable content below the header
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _loadData,
+                  color: AppColors.tealAccent,
+                  backgroundColor: const Color(0xFF1C2926),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 8),
+
+                        // Bankroll Card (standalone)
+                        _buildBankrollCard(),
+
+                        const SizedBox(height: 8),
+
+                        // Recent Activity (Stats Grid)
+                        _buildStatsGrid(),
+
+                        const SizedBox(height: 32),
+
+                        // Earnings Chart
+                        _buildEarningsCard(),
+
+                        const SizedBox(height: 32),
+
+                        // Recent Sessions
+                        _buildRecentSessionsCard(),
+
+                        const SizedBox(height: 32),
+
+                        // Upcoming Events
+                        _buildUpcomingEventsCard(),
+
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
 
           // Blur overlay when popup is visible
@@ -1688,7 +1696,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w400,
-              color: Colors.white,
+              color: const Color(0xFF9A9B9E),
               height: 1.44,
             ),
           ),
@@ -1696,11 +1704,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Text(
             value,
             style: GoogleFonts.ibmPlexSans(
-              fontSize: 27,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF89F1EC),
-              letterSpacing: -0.5,
-              height: 1.0,
+              fontSize: 24,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+              height: 0.75,
             ),
           ),
         ],
@@ -1718,7 +1725,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF121F24),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: const Color(0xFF2A605D),
@@ -1732,84 +1738,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ],
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            // Top-right subtle elliptical glow
-            Positioned(
-              top: -36,
-              right: -20,
-              child: Container(
-                width: 212,
-                height: 140,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(106),
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF2A605D).withValues(alpha: 0.35),
-                      Colors.transparent,
-                    ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(23),
+          child: Container(
+            color: const Color(0xFF121F24),
+            child: Stack(
+              children: [
+                // Background image
+                Positioned(
+                  top: -8,
+                  left: -8,
+                  right: -8,
+                  bottom: -8,
+                  child: Image.asset(
+                    'assets/bankroll_background.png',
+                    fit: BoxFit.fill,
                   ),
                 ),
-              ),
-            ),
-            // Bottom-left subtle elliptical glow
-            Positioned(
-              bottom: -30,
-              left: -15,
-              child: Container(
-                width: 180,
-                height: 120,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(90),
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF2A605D).withValues(alpha: 0.25),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Content with backdrop blur
-            ClipRRect(
-              borderRadius: BorderRadius.circular(23),
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 27, sigmaY: 27),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top row: Bankroll pill + trend icon
+                      // Top section: Bankroll label + eye icon
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            width: 70,
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A605D),
-                              borderRadius: BorderRadius.circular(140),
-                              border: Border.all(
-                                color: const Color(0xFFD3FFFD),
-                                width: 1,
-                              ),
-                            ),
-                            child: Center(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'Bankroll',
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white,
-                                    height: 1.64,
-                                  ),
-                                  maxLines: 1,
-                                ),
-                              ),
+                          Text(
+                            'Bankroll',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w300,
+                              color: Colors.white,
+                              height: 1.64,
                             ),
                           ),
                           GestureDetector(
@@ -1820,118 +1783,130 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               });
                               await prefs.setBool('bankroll_hidden', _isBankrollHidden);
                             },
-                            child: Icon(
-                              _isBankrollHidden
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: Colors.white,
-                              size: 24,
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Padding(
+                                padding: const EdgeInsets.all(3),
+                                child: FittedBox(
+                                  child: Icon(
+                                    _isBankrollHidden
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      // Bankroll amount
-                      ImageFiltered(
-                        imageFilter: _isBankrollHidden
-                            ? ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10)
-                            : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            '\$${currentBankroll.toInt()} of \$${bankrollGoal.toInt()}',
-                            style: GoogleFonts.familjenGrotesk(
-                              fontSize: 40,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              height: 1.0,
-                            ),
-                            maxLines: 1,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Remaining
-                      ImageFiltered(
-                        imageFilter: _isBankrollHidden
-                            ? ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10)
-                            : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                        child: Text(
-                          '\$${remaining.toInt()} left',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFFD3FFFD),
-                            height: 1.44,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Progress bar with indicator dot
-                      SizedBox(
-                        height: 12,
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final fillWidth = constraints.maxWidth * progress;
-                            return Stack(
-                              clipBehavior: Clip.none,
+                      const SizedBox(height: 28),
+                      // Amount + progress section
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Bankroll amount
+                          ImageFiltered(
+                            imageFilter: _isBankrollHidden
+                                ? ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10)
+                                : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
+                              child: Text(
+                                '\$${currentBankroll.toInt()} of \$${bankrollGoal.toInt()}',
+                                style: GoogleFonts.familjenGrotesk(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                  height: 1.0,
+                                ),
+                                maxLines: 1,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Progress card
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0x0AD3FFFD),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: const Color(0x0AD3FFFD),
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Track
-                                Container(
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF02050B),
-                                    borderRadius: BorderRadius.circular(9999),
-                                  ),
-                                ),
-                                // Fill
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  width: fillWidth,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF89F1EC),
-                                    borderRadius: BorderRadius.circular(9999),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF54E98A).withValues(alpha: 0.4),
-                                        blurRadius: 10,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Indicator dot
-                                Positioned(
-                                  left: fillWidth - 6,
-                                  top: 0,
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF89F1EC),
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFF54E98A).withValues(alpha: 0.4),
-                                          blurRadius: 10,
-                                        ),
-                                      ],
+                                ImageFiltered(
+                                  imageFilter: _isBankrollHidden
+                                      ? ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10)
+                                      : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+                                  child: Text(
+                                    '\$${remaining.toInt()} left',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                      height: 1.44,
                                     ),
                                   ),
                                 ),
+                                const SizedBox(height: 4),
+                                // Progress bar
+                                SizedBox(
+                                  height: 4,
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final fillWidth = constraints.maxWidth * progress;
+                                      return Stack(
+                                        clipBehavior: Clip.none,
+                                        alignment: Alignment.centerLeft,
+                                        children: [
+                                          // Track
+                                          Container(
+                                            height: 4,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black,
+                                              borderRadius: BorderRadius.circular(9999),
+                                            ),
+                                          ),
+                                          // Fill
+                                          AnimatedContainer(
+                                            duration: const Duration(milliseconds: 300),
+                                            width: fillWidth,
+                                            height: 4,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF89F1EC),
+                                              borderRadius: BorderRadius.circular(9999),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFF54E98A).withValues(alpha: 0.4),
+                                                  blurRadius: 10,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
                               ],
-                            );
-                          },
-                        ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -2020,19 +1995,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     );
                   },
                 )
-              : Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.infoCardBg,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      // Sessions list
-                      ..._buildSessionsList(),
-                    ],
-                  ),
+              : Column(
+                  children: recentSessions.take(3).map((session) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _buildSessionCard(session),
+                    );
+                  }).toList(),
                 ),
         ),
       ],
@@ -2075,58 +2044,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     _loadData();
                   },
                 )
-              : Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.infoCardBg,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: _buildEventsList(),
-                  ),
+              : Column(
+                  children: upcomingEvents.take(3).map((event) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _buildEventCard(event),
+                    );
+                  }).toList(),
                 ),
         ),
       ],
     );
   }
 
-  List<Widget> _buildSessionsList() {
-    List<Widget> widgets = [];
-    final sessions = recentSessions.take(3).toList();
-
-    for (int i = 0; i < sessions.length; i++) {
-      widgets.add(_buildSessionItem(sessions[i]));
-
-      // Add divider between sessions (not after the last one)
-      if (i < sessions.length - 1) {
-        widgets.add(
-          Container(
-            height: 1,
-            margin: EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.3),
-                  Colors.white.withOpacity(0.1),
-                ],
-                stops: [0.0, 0.5, 1.0],
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    return widgets;
-  }
-
-  Widget _buildSessionItem(Map<String, dynamic> session) {
+  Widget _buildSessionCard(Map<String, dynamic> session) {
     String sessionName = session['sessionName'] ?? '';
-
     if (sessionName.isEmpty) {
       final createdAt = _parseSessionDate(session);
       final gameType = session['gameType'] ?? 'Poker';
@@ -2135,7 +2067,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     final createdAt = _parseSessionDate(session);
-    final formattedDate = DateFormat('MMM dd, h:mma').format(createdAt).toLowerCase();
+    final formattedDate = DateFormat('MMM dd, h:mm a').format(createdAt);
+    final playerCount = session['playerCount'] ?? 0;
+    final smallBlind = session['smallBlind'] ?? 0;
+    final bigBlind = session['bigBlind'] ?? 0;
+    final blindsText = '\$$smallBlind/\$$bigBlind';
 
     return GestureDetector(
       onTap: () {
@@ -2146,46 +2082,92 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         );
       },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left side: Session info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFF101115),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black),
+        ),
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top row: players • blinds + 3-dot icon
+            Row(
               children: [
-                Text(
-                  sessionName,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 20,
-                    color: Color(0xFFF8FFF7),
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0,
-                    height: 1.2,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(
+                        '$playerCount players',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF89F1EC),
+                          height: 1.44,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Container(
+                          width: 4,
+                          height: 4,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF89F1EC),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        blindsText,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF89F1EC),
+                          height: 1.44,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 6),
+                Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.5), size: 20),
+              ],
+            ),
+            const SizedBox(height: 14),
+            // Separator
+            Container(height: 1, color: const Color(0xFF1C1F21)),
+            const SizedBox(height: 14),
+            // Session name
+            Text(
+              sessionName,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+                height: 1.44,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            // Date row with clock icon
+            Row(
+              children: [
+                Icon(Icons.access_time, color: const Color(0xFF4E5054), size: 18),
+                const SizedBox(width: 4),
                 Text(
                   formattedDate,
                   style: GoogleFonts.ibmPlexSans(
-                    fontSize: 12,
-                    color: Color(0xFFF8FFF7),
+                    fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    letterSpacing: 0,
-                    height: 1.2,
+                    color: const Color(0xFF4E5054),
+                    height: 1.44,
                   ),
                 ),
               ],
             ),
-          ),
-          // Right side: Arrow icon
-          Icon(
-            Icons.arrow_forward_ios,
-            color: Color(0xFF87ED81),
-            size: 18,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -2349,6 +2331,119 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   height: 1.0,
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventCard(Map<String, dynamic> event) {
+    String formattedDate = '';
+    try {
+      final dateTime = DateTime.parse(event['date']);
+      formattedDate = DateFormat('MMM dd, h:mm a').format(dateTime);
+    } catch (e) {
+      formattedDate = event['date'] ?? '';
+    }
+
+    String buyIn = '';
+    if (event['buyIn'] != null) {
+      final buyInValue = event['buyIn'];
+      if (buyInValue is num) {
+        buyIn = '\$${buyInValue.toStringAsFixed(0)}';
+      } else {
+        buyIn = buyInValue.toString();
+      }
+    }
+
+    // User-created events store display string in 'type' (e.g. 'Tournament', 'Cash Game')
+    // Club events store lowercase in 'gameType' (e.g. 'cash', 'tournament')
+    final eventType = event['type'] as String?;
+    final clubGameType = event['gameType'] as String?;
+    final gameType = eventType ?? switch (clubGameType) {
+      'tournament' => 'Tournament',
+      'private' => 'Private Game',
+      _ => 'Cash Game',
+    };
+
+    return GestureDetector(
+      onTap: () => _navigateToCalendarEventDetail(event),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFF101115),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black),
+        ),
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top row: game type + drawer dots
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    gameType,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF89F1EC),
+                      height: 1.44,
+                    ),
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.5), size: 20),
+              ],
+            ),
+            const SizedBox(height: 14),
+            // Separator
+            Container(height: 1, color: const Color(0xFF1C1F21)),
+            const SizedBox(height: 14),
+            // Event name + buy-in
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    event['title'] ?? 'Event',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                      height: 1.44,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (buyIn.isNotEmpty)
+                  Text(
+                    buyIn,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFFD3FFFD),
+                      height: 1.44,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            // Date row with clock icon
+            Row(
+              children: [
+                const Icon(Icons.access_time, color: Color(0xFF4E5054), size: 18),
+                const SizedBox(width: 4),
+                Text(
+                  formattedDate,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF4E5054),
+                    height: 1.44,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

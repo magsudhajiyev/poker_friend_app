@@ -29,11 +29,8 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     // Get the status bar height to add as top padding
     final topPadding = MediaQuery.of(context).padding.top;
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Calculate ellipse size based on screen width (not container height to avoid infinite constraints)
-    final ellipseWidth = screenWidth * 1.5;
-    final ellipseSize = screenWidth * 1.2; // Use width-based sizing for the circle
+    final isAndroid = Theme.of(context).platform == TargetPlatform.android;
+    final extraTopPadding = isAndroid ? 12.0 : 0.0;
 
     return ClipRRect(
       borderRadius: const BorderRadius.only(
@@ -41,61 +38,25 @@ class HomeHeader extends StatelessWidget {
         bottomRight: Radius.circular(34),
       ),
       child: Container(
-        decoration: const BoxDecoration(
-          // Base linear gradient (black to teal)
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            stops: [0.0, 0.5, 1.0],
-            colors: [
-              AppColors.headerGradientBlack,
-              Color(0xFF0A1A1C),  // Mid transition
-              AppColors.headerGradientTeal,
-            ],
-          ),
-        ),
+        height: topPadding + extraTopPadding + 100,
+        color: const Color(0xFF02050B),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Elliptical teal glow (Figma node 580-3127)
-            Positioned(
-              top: -ellipseSize * 0.35,  // Position above header
-              right: -screenWidth * 0.25, // -25.24%
-              child: Transform.scale(
-                scaleX: 1.0,
-                scaleY: 0.7,  // Elliptical shape (stretched horizontally)
-                child: Container(
-                  width: ellipseWidth,
-                  height: ellipseSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      center: Alignment.center,
-                      radius: 0.5,
-                      colors: [
-                        const Color(0xFF1A4A4A),  // Bright teal center
-                        const Color(0xFF133538).withOpacity(0.7),
-                        const Color(0xFF133538).withOpacity(0.3),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.3, 0.6, 1.0],
-                    ),
-                  ),
-                ),
+            // Background image
+            Positioned.fill(
+              child: Image.asset(
+                'assets/header_background.png',
+                fit: BoxFit.fill,
               ),
             ),
             // Content with safe area padding
-            Padding(
-              padding: EdgeInsets.only(top: topPadding, left: 16, right: 16),
-              child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top row with icons and greeting
-            Padding(
-              padding: const EdgeInsets.only(bottom: 18),
-              child: Row(
-                children: [
+            Positioned.fill(
+              child: Padding(
+                padding: EdgeInsets.only(top: topPadding + extraTopPadding, left: 16, right: 16, bottom: 18),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
                   // Left: Scanner button (white bg, dark icon from Figma)
                   _buildImageIconButton(
                     imagePath: 'icons/flat_icons/scanner.png',
@@ -108,6 +69,7 @@ class HomeHeader extends StatelessWidget {
                   // Center: Greeting text
                   Expanded(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -164,10 +126,6 @@ class HomeHeader extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-
-            const SizedBox(height: 18),
-              ],
             ),
           ),
           ],
@@ -342,13 +300,13 @@ class HomeHeader extends StatelessWidget {
           ),
           if (showBadge)
             Positioned(
-              right: 8,
-              top: 8,
+              left: 25,
+              top: 12,
               child: Container(
                 width: 5,
                 height: 5,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFF2D55),
+                  color: Color(0xFFFF00E1),
                   shape: BoxShape.circle,
                 ),
               ),

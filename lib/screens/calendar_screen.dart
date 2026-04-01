@@ -10,6 +10,7 @@ import '../services/event_service.dart';
 import '../models/club.dart';
 import '../models/club_event.dart';
 import '../design_system/design_system.dart';
+import '../design_system/components/drawer_dots.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/event_success_popup.dart';
 import 'club/event_detail_screen.dart' as club_detail;
@@ -488,7 +489,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _showEventTypePicker(BuildContext context, String currentType, Function(String) onSelect, GlobalKey key) {
-    final types = ['Tournament', 'Cash Game', 'Home Game', 'Online'];
+    final types = ['Tournament', 'Cash Game', 'Private Game', 'Online'];
 
     // Get the position of the Event Type row
     final RenderBox renderBox = key.currentContext!.findRenderObject() as RenderBox;
@@ -1284,17 +1285,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                     ),
                     Builder(
-                      builder: (ctx) => GestureDetector(
+                      builder: (ctx) => DrawerDots(
                         onTap: () {
                           final box = ctx.findRenderObject() as RenderBox;
                           final offset = box.localToGlobal(Offset.zero);
                           _showEventOptions(event, offset, box.size);
                         },
-                        child: const Icon(
-                          Icons.more_horiz,
-                          size: 24,
-                          color: Colors.white,
-                        ),
                       ),
                     ),
                   ],
@@ -2485,6 +2481,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       case 'Cash Game':
         return Color(0xFF5AC95A);
       case 'Home Game':
+      case 'Private Game':
         return Color(0xFFE67E22);
       case 'Online':
         return Color(0xFF8B5CF6);

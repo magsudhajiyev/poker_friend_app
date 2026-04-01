@@ -121,14 +121,21 @@ class _LoggingModeSelectionScreenState
                       ),
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: Container(
+                        child: SizedBox(
                           width: 32,
                           height: 32,
                           child: Center(
-                            child: _buildIcon(
-                              'icons/figma_icons/close.svg',
-                              24,
-                              Colors.white,
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.5),
+                                child: _buildIcon(
+                                  'icons/figma_icons/close.svg',
+                                  15,
+                                  Colors.white,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -203,7 +210,7 @@ class _LoggingModeSelectionScreenState
       key: key,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Color(0xFF131616),
+        color: Color(0xFF101115),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -219,10 +226,9 @@ class _LoggingModeSelectionScreenState
                   title,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
-                    color: Color(0xFF62E3BC),
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.43,
-                    height: 1.3,
+                    color: Color(0xFF89F1EC),
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
                   ),
                 ),
                 SizedBox(height: 4),
@@ -232,7 +238,7 @@ class _LoggingModeSelectionScreenState
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
-                    height: 1.44,
+                    height: 1.64,
                   ),
                 ),
               ],
@@ -240,10 +246,12 @@ class _LoggingModeSelectionScreenState
           ),
 
           // Separator line
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 8),
-            height: 0.5,
-            color: Color(0xFF545458),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Container(
+              height: 1,
+              color: Color(0xFF1C1F21),
+            ),
           ),
 
           // Features section
@@ -268,7 +276,7 @@ class _LoggingModeSelectionScreenState
                     _buildIcon(
                       'icons/figma_icons/info.svg',
                       24,
-                      Color(0xFF62E3BC),
+                      Color(0xFF89F1EC),
                     ),
                   ],
                 ),
@@ -284,7 +292,7 @@ class _LoggingModeSelectionScreenState
                                 '•  ',
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 17,
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Color(0xFF8C8C8C),
                                   fontWeight: FontWeight.w400,
                                   height: 1.44,
                                 ),
@@ -294,7 +302,7 @@ class _LoggingModeSelectionScreenState
                                   feature,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 17,
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Color(0xFF8C8C8C),
                                     fontWeight: FontWeight.w400,
                                     height: 1.44,
                                   ),
@@ -318,10 +326,10 @@ class _LoggingModeSelectionScreenState
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Color(0xFF62E3BC),
+                  color: Color(0xFF89F1EC),
                   borderRadius: BorderRadius.circular(110),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 14),
+                padding: EdgeInsets.symmetric(vertical: 12),
                 child: Center(
                   child: Text(
                     'Start',
@@ -329,8 +337,8 @@ class _LoggingModeSelectionScreenState
                       fontSize: 17,
                       color: Colors.black,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: -0.43,
-                      height: 1.3,
+                      letterSpacing: -0.5,
+                      height: 24 / 17,
                     ),
                   ),
                 ),

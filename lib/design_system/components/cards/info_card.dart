@@ -56,7 +56,7 @@ class InfoCard extends StatelessWidget {
       onTap: buttonText == null ? onEmptyTap : null,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.only(top: 28, bottom: 20, left: 44, right: 44),
+        padding: const EdgeInsets.only(top: 28, bottom: 20, left: 24, right: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -69,7 +69,7 @@ class InfoCard extends StatelessWidget {
                   ? _buildIcon(24)
                   : _buildPlaceholderIcon(),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 6),
             // Main text (centered)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -84,13 +84,15 @@ class InfoCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(
                 emptySubtitle,
-                style: AppTypography.infoCardAccent(),
+                style: AppTypography.infoCardAccent().copyWith(
+                  color: const Color(0xFFB3B4B6),
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
             // Outline button (Figma design)
             if (buttonText != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               _buildOutlineButton(),
             ],
           ],
@@ -143,7 +145,10 @@ class InfoCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           emptySubtitle,
-                          style: AppTypography.infoCardAccent().copyWith(fontSize: 14),
+                          style: AppTypography.infoCardAccent().copyWith(
+                            fontSize: 14,
+                            color: const Color(0xFFB3B4B6),
+                          ),
                         ),
                       ),
                     ],
@@ -176,7 +181,7 @@ class InfoCard extends StatelessWidget {
     return GestureDetector(
       onTap: onEmptyTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(110),
           border: Border.all(
@@ -185,7 +190,7 @@ class InfoCard extends StatelessWidget {
           ),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.add,

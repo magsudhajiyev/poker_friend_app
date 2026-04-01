@@ -12,6 +12,7 @@ Flutter/Dart poker hand logging application with Firebase backend, club manageme
 - Create diary entry after user confirms a fix
 - Never commit debug logging, unnecessary files, or unstabilized code
 - Wait for user confirmation before any git operations
+- **Responsive Design (CRITICAL)**: All UI sizing, spacing, padding, font sizes, and layout dimensions MUST be responsive across different device sizes. Do NOT hardcode pixel values that only work on one device (e.g., iPhone 16 Pro). Use `MediaQuery`, `LayoutBuilder`, `FractionallySizedBox`, `Flexible`, `FittedBox`, relative sizing, or screen-fraction-based calculations to ensure the app looks correct on iPhone 11, iPhone 13, iPhone 16 Pro, and various Android devices. When implementing Figma designs, treat pixel values as reference for proportions, not absolute values.
 
 ---
 

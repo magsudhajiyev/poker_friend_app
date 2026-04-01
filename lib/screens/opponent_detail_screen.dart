@@ -10,6 +10,7 @@ import '../services/firebase_service.dart';
 import '../services/opponent_stats_service.dart';
 import 'opponent_hands_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../design_system/components/drawer_dots.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
   final Opponent opponent;
@@ -622,14 +623,11 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     ),
                   ),
                 ),
-                // Dots menu icon (24px container)
-                GestureDetector(
+                // Dots menu icon
+                SizedBox(
                   key: dotsKey,
-                  onTap: () => _showOpponentOptionsMenu(dotsKey),
-                  child: _buildIcon(
-                    'icons/figma_icons/dots.svg',
-                    24,
-                    Color(0xFF555555),
+                  child: DrawerDots(
+                    onTap: () => _showOpponentOptionsMenu(dotsKey),
                   ),
                 ),
               ],
@@ -778,9 +776,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     final Offset offset = renderBox.localToGlobal(Offset.zero);
     final Size size = renderBox.size;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dotsRight = screenWidth - (offset.dx + size.width);
+    final menuTop = offset.dy + size.height + 4;
+
     showDialog(
       context: context,
       barrierColor: Colors.transparent,
+      useSafeArea: false,
       builder: (context) => Stack(
         children: [
           // Dismiss on tap outside
@@ -792,8 +795,8 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           ),
           // Positioned popup menu
           Positioned(
-            right: 16,
-            top: offset.dy + size.height + 8,
+            right: dotsRight,
+            top: menuTop,
             child: Material(
               color: Colors.transparent,
               child: Container(
