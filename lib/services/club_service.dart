@@ -151,6 +151,8 @@ class ClubService {
     String? address,
     String? phone,
     String? description,
+    String? appStoreQRUrl,
+    String? playStoreQRUrl,
   }) async {
     final updates = <String, dynamic>{};
     if (name != null) updates['name'] = name;
@@ -158,6 +160,8 @@ class ClubService {
     if (address != null) updates['address'] = address;
     if (phone != null) updates['phone'] = phone;
     if (description != null) updates['description'] = description;
+    if (appStoreQRUrl != null) updates['appStoreQRUrl'] = appStoreQRUrl;
+    if (playStoreQRUrl != null) updates['playStoreQRUrl'] = playStoreQRUrl;
 
     if (updates.isNotEmpty) {
       await _firestore.collection(_clubsCollection).doc(clubId).update(updates);

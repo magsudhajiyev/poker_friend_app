@@ -74,6 +74,29 @@ class OnboardingState {
     guidedHandPhase = GuidedPhase.done;
   }
 
+  /// Start onboarding from a specific phase (for Knowledge Base replay).
+  /// Does NOT mark onboarding as seen on completion.
+  static bool _isReplay = false;
+  static bool get isReplay => _isReplay;
+
+  static void startFromPhase(int phase) {
+    isOnboardingActive = true;
+    currentPhase = phase;
+    _isReplay = true;
+    seatDialogTourPending = false;
+    buttonTokenTourPending = false;
+    if (phase == 4) {
+      _resetGuidedHand();
+    }
+  }
+
+  static void completeReplay() {
+    isOnboardingActive = false;
+    currentPhase = 0;
+    _isReplay = false;
+    guidedHandPhase = GuidedPhase.done;
+  }
+
   static void _resetGuidedHand() {
     guidedHandPhase = GuidedPhase.gestureInfo;
     nextScriptedAction = null;

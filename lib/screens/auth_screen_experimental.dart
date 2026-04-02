@@ -6,6 +6,7 @@ import '../design_system/constants/typography.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/buttons/glassy_icon_button.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
 import 'forgot_password_screen.dart';
 
 class AuthScreenExperimental extends StatefulWidget {
@@ -89,6 +90,9 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         _registerPasswordController.text,
         _registerNameController.text.trim(),
       );
+
+      // Schedule onboarding reminder for 2 hours after registration
+      NotificationService.scheduleOnboardingReminder();
 
       if (mounted) {
         // Clear entire stack back to AuthWrapper, which will show HomeScreen

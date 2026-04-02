@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/notification_service.dart';
 
 class OnboardingPrefs {
   static const _field = 'hasSeenOnboarding';
@@ -28,6 +29,8 @@ class OnboardingPrefs {
           .collection('users')
           .doc(uid)
           .set({_field: true}, SetOptions(merge: true));
+      // Cancel the delayed onboarding notification since user completed it
+      NotificationService.cancelOnboardingReminder();
     } catch (_) {}
   }
 

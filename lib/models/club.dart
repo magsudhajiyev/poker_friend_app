@@ -11,6 +11,8 @@ class Club {
   final String? address;
   final String? phone;
   final String? description;
+  final String? appStoreQRUrl;
+  final String? playStoreQRUrl;
 
   Club({
     required this.id,
@@ -22,6 +24,8 @@ class Club {
     this.address,
     this.phone,
     this.description,
+    this.appStoreQRUrl,
+    this.playStoreQRUrl,
   });
 
   /// Factory constructor from Firestore document
@@ -37,6 +41,8 @@ class Club {
       address: data['address'] as String?,
       phone: data['phone'] as String?,
       description: data['description'] as String?,
+      appStoreQRUrl: data['appStoreQRUrl'] as String?,
+      playStoreQRUrl: data['playStoreQRUrl'] as String?,
     );
   }
 
@@ -52,6 +58,8 @@ class Club {
       address: map['address'] as String?,
       phone: map['phone'] as String?,
       description: map['description'] as String?,
+      appStoreQRUrl: map['appStoreQRUrl'] as String?,
+      playStoreQRUrl: map['playStoreQRUrl'] as String?,
     );
   }
 
@@ -66,6 +74,8 @@ class Club {
       if (address != null) 'address': address,
       if (phone != null) 'phone': phone,
       if (description != null) 'description': description,
+      if (appStoreQRUrl != null) 'appStoreQRUrl': appStoreQRUrl,
+      if (playStoreQRUrl != null) 'playStoreQRUrl': playStoreQRUrl,
     };
   }
 
@@ -81,6 +91,8 @@ class Club {
       'address': address,
       'phone': phone,
       'description': description,
+      'appStoreQRUrl': appStoreQRUrl,
+      'playStoreQRUrl': playStoreQRUrl,
     };
   }
 
@@ -92,6 +104,8 @@ class Club {
     String? address,
     String? phone,
     String? description,
+    String? appStoreQRUrl,
+    String? playStoreQRUrl,
   }) {
     return Club(
       id: id,
@@ -103,6 +117,8 @@ class Club {
       address: address ?? this.address,
       phone: phone ?? this.phone,
       description: description ?? this.description,
+      appStoreQRUrl: appStoreQRUrl ?? this.appStoreQRUrl,
+      playStoreQRUrl: playStoreQRUrl ?? this.playStoreQRUrl,
     );
   }
 }
