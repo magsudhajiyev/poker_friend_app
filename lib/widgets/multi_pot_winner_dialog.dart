@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../design_system/components/app_toggle.dart';
 import '../models/game_types.dart';
 import '../models/poker_game_state.dart';
 
@@ -19,6 +22,32 @@ class MultiPotWinnerDialog extends StatefulWidget {
     required this.playerCount,
     this.gameType = GameType.cash,
   });
+
+  /// Show as a bottom sheet and return the result
+  static Future<Map<String, dynamic>?> show({
+    required BuildContext context,
+    required List<SidePot> sidePots,
+    required List<String> playerNames,
+    required Map<int, String> playerIdToName,
+    required int buttonPosition,
+    required int playerCount,
+    GameType gameType = GameType.cash,
+  }) {
+    return showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.7),
+      builder: (context) => MultiPotWinnerDialog(
+        sidePots: sidePots,
+        playerNames: playerNames,
+        playerIdToName: playerIdToName,
+        buttonPosition: buttonPosition,
+        playerCount: playerCount,
+        gameType: gameType,
+      ),
+    );
+  }
 
   @override
   State<MultiPotWinnerDialog> createState() => _MultiPotWinnerDialogState();
@@ -53,8 +82,6 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
   }
 
   int _getPositionOrder(int playerId) {
-    // Calculate position order based on seat number relative to button
-    // Lower numbers = earlier in position (out of position gets extra chips)
     final buttonPos = widget.buttonPosition;
     final totalPlayers = widget.playerCount;
 
@@ -75,7 +102,6 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
     final baseShare = (potAmount / numWinners).floor().toDouble();
     final extraChips = (potAmount % numWinners).toInt();
 
-    // Sort winners by position (earliest/out-of-position first to get extra chips)
     final sortedWinners = winners.toList()..sort((a, b) {
       final positionA = _getPositionOrder(a);
       final positionB = _getPositionOrder(b);
@@ -92,10 +118,9 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
     return shares;
   }
 
-  // Check if the main pot winner is eligible for a specific side pot
   bool _isMainPotWinnerEligibleFor(int potIndex) {
     final mainPotWinner = isChoppedPot[0] == true
-        ? null  // If main pot is chopped, don't auto-award
+        ? null
         : singleWinners[0];
 
     if (mainPotWinner == null) return false;
@@ -103,274 +128,32 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
     return widget.sidePots[potIndex].eligiblePlayers.contains(mainPotWinner);
   }
 
-  // Called when any pot winner changes - cascade auto-awards through remaining pots
   void _updateAutoAwards() {
     autoAwardedPots.clear();
 
-    // Start with main pot winner (or null if chopped)
     int? currentWinner = isChoppedPot[0] == true ? null : singleWinners[0];
 
-    // Cascade through each side pot
     for (int i = 1; i < widget.sidePots.length; i++) {
-      // If we have a current winner from a previous pot, check if they're eligible
       if (currentWinner != null &&
           widget.sidePots[i].eligiblePlayers.contains(currentWinner)) {
-        // Auto-award this pot to the current winner
         autoAwardedPots.add(i);
         singleWinners[i] = currentWinner;
         isChoppedPot[i] = false;
         choppedWinners[i] = <int>{};
       } else {
-        // Current winner not eligible - check if this pot has a manual selection
         if (isChoppedPot[i] == true) {
-          // Chopped pot - no single winner to cascade
           currentWinner = null;
         } else if (singleWinners[i] != null) {
-          // Manual selection made - this becomes the new current winner
           currentWinner = singleWinners[i];
         } else {
-          // No selection yet - stop cascading
           currentWinner = null;
         }
       }
     }
   }
 
-  Widget _buildPotSection(int potIndex) {
-    final sidePot = widget.sidePots[potIndex];
-    final potName = potIndex == 0 ? 'Main Pot' : 'Side Pot $potIndex';
-    final isChopped = isChoppedPot[potIndex] ?? false;
-    final eligiblePlayers = sidePot.eligiblePlayers;
-    final isAutoAwarded = autoAwardedPots.contains(potIndex);
-
-    // If this side pot is auto-awarded, show simplified view
-    if (isAutoAwarded && potIndex > 0) {
-      final autoAwardWinner = singleWinners[potIndex]!;
-      final winnerName = widget.playerIdToName[autoAwardWinner] ?? 'Player $autoAwardWinner';
-
-      // Determine if this was awarded from main pot or a previous side pot
-      final isMainPotWinner = singleWinners[0] == autoAwardWinner;
-      final awardReason = isMainPotWinner
-          ? '(main pot winner)'
-          : '(eligible from previous pot)';
-
-      return Card(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        elevation: 2,
-        color: Colors.green.shade50,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    potName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    _formatCurrency(sidePot.amount),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Auto-awarded to $winnerName $awardReason',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.green.shade700,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Pot header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  potName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  _formatCurrency(sidePot.amount),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Chopped pot toggle
-            Row(
-              children: [
-                Switch(
-                  value: isChopped,
-                  onChanged: (value) {
-                    setState(() {
-                      isChoppedPot[potIndex] = value;
-                      // Clear selections when switching modes
-                      singleWinners[potIndex] = null;
-                      choppedWinners[potIndex] = <int>{};
-                      // Re-evaluate cascading auto-awards
-                      _updateAutoAwards();
-                    });
-                  },
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    isChopped ? 'Chopped Pot' : 'Single Winner',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Individual shares display for chopped pots
-            if (isChopped && (choppedWinners[potIndex]?.isNotEmpty ?? false)) ...[
-              const Text(
-                'Individual shares:',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 4),
-              ..._calculateIndividualShares(
-                potIndex,
-                sidePot.amount,
-                choppedWinners[potIndex]!,
-              ).entries.map((entry) {
-                final playerId = entry.key;
-                final amount = entry.value;
-                final playerName = widget.playerIdToName[playerId] ?? 'Player $playerId';
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 1),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          playerName,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _formatCurrency(amount),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-              const SizedBox(height: 8),
-            ],
-
-            // Winner selection
-            Text(
-              isChopped ? 'Select all winners:' : 'Select the winner:',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 4),
-
-            // List of eligible players
-            ...eligiblePlayers.map((playerId) {
-              final playerName = widget.playerIdToName[playerId] ?? 'Player $playerId';
-
-              if (isChopped) {
-                return CheckboxListTile(
-                  title: Text(playerName),
-                  value: choppedWinners[potIndex]?.contains(playerId) ?? false,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      if (value == true) {
-                        choppedWinners[potIndex]!.add(playerId);
-                      } else {
-                        choppedWinners[potIndex]!.remove(playerId);
-                      }
-                      // Re-evaluate cascading auto-awards
-                      _updateAutoAwards();
-                    });
-                  },
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                );
-              } else {
-                return RadioListTile<int>(
-                  title: Text(playerName),
-                  value: playerId,
-                  groupValue: singleWinners[potIndex],
-                  onChanged: (value) {
-                    setState(() {
-                      singleWinners[potIndex] = value;
-                      // Re-evaluate cascading auto-awards
-                      _updateAutoAwards();
-                    });
-                  },
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                );
-              }
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
   bool _isFormValid() {
-    // Check if all pots have a winner selected
     for (int i = 0; i < widget.sidePots.length; i++) {
-      // Skip auto-awarded pots - they're already filled
       if (autoAwardedPots.contains(i)) continue;
 
       final isChopped = isChoppedPot[i] ?? false;
@@ -388,7 +171,6 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
   }
 
   Map<String, dynamic> _buildResult() {
-    // Build result structure: map of pot index -> winner info
     Map<int, Map<String, dynamic>> potResults = {};
 
     for (int i = 0; i < widget.sidePots.length; i++) {
@@ -418,44 +200,510 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
     };
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Select Winners'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+  void _onSave() {
+    if (_isFormValid()) {
+      Navigator.pop(context, _buildResult());
+    }
+  }
+
+  Widget _buildPlayerRadio(int potIndex, int playerId, String playerName) {
+    final isSelected = singleWinners[potIndex] == playerId;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          singleWinners[potIndex] = playerId;
+          _updateAutoAwards();
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF101115) : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF73D4CF) : const Color(0xFF1B1E24),
+            width: 1,
+          ),
+        ),
+        child: Row(
           children: [
-            Text(
-              'Select the main pot winner first. Side pots will auto-award if the winner is eligible.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
+            // Radio dot
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF73D4CF) : const Color(0xFF555555),
+                  width: 1,
+                ),
               ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFF73D4CF),
+                          border: Border.all(color: const Color(0xFF73D4CF), width: 2),
+                        ),
+                      ),
+                    )
+                  : null,
             ),
-            const SizedBox(height: 12),
-            ...List.generate(
-              widget.sidePots.length,
-              (index) => _buildPotSection(index),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                playerName,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                  height: 1.44,
+                ),
+              ),
             ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+    );
+  }
+
+  Widget _buildPlayerCheckbox(int potIndex, int playerId, String playerName) {
+    final isSelected = choppedWinners[potIndex]?.contains(playerId) ?? false;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            choppedWinners[potIndex]!.remove(playerId);
+          } else {
+            choppedWinners[potIndex]!.add(playerId);
+          }
+          _updateAutoAwards();
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF101115) : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF73D4CF) : const Color(0xFF1B1E24),
+            width: 1,
+          ),
         ),
-        ElevatedButton(
-          onPressed: _isFormValid()
-              ? () {
-                  Navigator.pop(context, _buildResult());
-                }
-              : null,
-          child: const Text('Confirm Winners'),
+        child: Row(
+          children: [
+            // Checkbox
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                color: isSelected ? const Color(0xFF73D4CF) : Colors.transparent,
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF73D4CF) : const Color(0xFF555555),
+                  width: 1,
+                ),
+              ),
+              child: isSelected
+                  ? const Center(
+                      child: Icon(Icons.check, size: 14, color: Colors.black),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                playerName,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                  height: 1.44,
+                ),
+              ),
+            ),
+            if (isSelected) ...[
+              // Show share amount if chopped
+              if (choppedWinners[potIndex]!.length > 1)
+                Text(
+                  _formatCurrency(
+                    _calculateIndividualShares(
+                      potIndex,
+                      widget.sidePots[potIndex].amount,
+                      choppedWinners[potIndex]!,
+                    )[playerId] ?? 0,
+                  ),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    color: const Color(0xFF89F1EC),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+            ],
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildPotSection(int potIndex) {
+    final sidePot = widget.sidePots[potIndex];
+    final potName = potIndex == 0 ? 'Main Pot' : 'Side Pot $potIndex';
+    final isChopped = isChoppedPot[potIndex] ?? false;
+    final eligiblePlayers = sidePot.eligiblePlayers;
+    final isAutoAwarded = autoAwardedPots.contains(potIndex);
+
+    // Auto-awarded simplified view
+    if (isAutoAwarded && potIndex > 0) {
+      final autoAwardWinner = singleWinners[potIndex]!;
+      final winnerName = widget.playerIdToName[autoAwardWinner] ?? 'Player $autoAwardWinner';
+      final isMainPotWinner = singleWinners[0] == autoAwardWinner;
+      final awardReason = isMainPotWinner ? 'main pot winner' : 'eligible from previous pot';
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF101115),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  potName,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    height: 1.64,
+                  ),
+                ),
+                Text(
+                  _formatCurrency(sidePot.amount),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    height: 1.64,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Auto-awarded to $winnerName ($awardReason)',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                color: const Color(0xFF8C8C8C),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF101115),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Pot header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                potName,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  height: 1.64,
+                ),
+              ),
+              Text(
+                _formatCurrency(sidePot.amount),
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  height: 1.64,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Single Winner toggle
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF02050B),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFF1B1E24)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  isChopped ? 'Chopped Pot' : 'Single Winner',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
+                ),
+                AppToggle(
+                  value: !isChopped,
+                  onChanged: (value) {
+                    setState(() {
+                      isChoppedPot[potIndex] = !value;
+                      singleWinners[potIndex] = null;
+                      choppedWinners[potIndex] = <int>{};
+                      _updateAutoAwards();
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Winner selection label
+          Text(
+            isChopped ? 'Select all winners:' : 'Select the winner:',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              height: 1.64,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Player list
+          ...eligiblePlayers.map((playerId) {
+            final playerName = widget.playerIdToName[playerId] ?? 'Player $playerId';
+            if (isChopped) {
+              return _buildPlayerCheckbox(potIndex, playerId, playerName);
+            } else {
+              return _buildPlayerRadio(potIndex, playerId, playerName);
+            }
+          }),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
+        border: Border.all(color: const Color(0xFF262626)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFF2E5A59),
+            blurRadius: 64,
+            offset: Offset(0, -6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Close button
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF35373C),
+                      borderRadius: BorderRadius.circular(88),
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        'icons/figma_icons/close.svg',
+                        width: 15,
+                        height: 15,
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Title
+                Text(
+                  'Select Winners',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.43,
+                  ),
+                ),
+                // Save button
+                GestureDetector(
+                  onTap: _isFormValid() ? _onSave : null,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: _isFormValid()
+                          ? const Color(0xFF89F1EC)
+                          : const Color(0xFF35373C),
+                      borderRadius: BorderRadius.circular(88),
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        'icons/figma_icons/check.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: ColorFilter.mode(
+                          _isFormValid()
+                              ? const Color(0xFF1A4A4A)
+                              : const Color(0xFF8C8C8C),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Scrollable content
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 34, 16, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Description
+                    Text(
+                      'Multiple pots - select winner for each pot',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                        height: 1.44,
+                      ),
+                    ),
+                    const SizedBox(height: 34),
+
+                    // Pot sections
+                    ...List.generate(
+                      widget.sidePots.length,
+                      (index) => _buildPotSection(index),
+                    ),
+
+                    // Bottom buttons
+                    const SizedBox(height: 14),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          // Save button
+                          GestureDetector(
+                            onTap: _isFormValid() ? _onSave : null,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: _isFormValid()
+                                    ? const Color(0xFF89F1EC)
+                                    : const Color(0xFF35373C),
+                                borderRadius: BorderRadius.circular(110),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Save',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 17,
+                                    color: _isFormValid()
+                                        ? Colors.black
+                                        : const Color(0xFF8C8C8C),
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.5,
+                                    height: 24 / 17,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          // Cancel button
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(110),
+                                border: Border.all(
+                                  color: const Color(0xFFD3FFFD),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Cancel',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 17,
+                                    color: const Color(0xFFD3FFFD),
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.5,
+                                    height: 24 / 17,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

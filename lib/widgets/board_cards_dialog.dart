@@ -47,41 +47,44 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
     if (_river?.isNotEmpty == true) _currentlySelected.add(_river!);
   }
 
+  // All excluded cards: hero hole cards + already selected board cards
+  Set<String> get _allExcluded {
+    final excluded = <String>{};
+    excluded.addAll(widget.excludedCards);
+    excluded.addAll(widget.usedCards);
+    excluded.addAll(_currentlySelected);
+    return excluded;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      elevation: 0,
+      insetPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Container(
-        constraints: BoxConstraints(maxWidth: 361),
+        constraints: BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.white.withOpacity(0.15),
-              blurRadius: 64,
-              offset: Offset(0, 4),
-            ),
-          ],
+          color: Color(0xFF101115),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Color(0xFF1B1E24),
+            width: 1,
+          ),
         ),
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.all(24),
+            padding: EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 _buildHeader(),
                 SizedBox(height: 16),
-                // Selected Cards Section
                 _buildSelectedCardsSection(),
-                SizedBox(height: 8),
-                // Card Grid Section
+                SizedBox(height: 12),
                 _buildCardGridSection(),
                 SizedBox(height: 24),
-                // Action Buttons
                 _buildActionButtons(),
               ],
             ),
@@ -92,36 +95,30 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
   }
 
   Widget _buildHeader() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          // Cards icon
-          SvgPicture.asset(
-            'icons/figma_icons/Capa_1.svg',
-            width: 24,
-            height: 24,
-          ),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '${_getStreetName()} Cards',
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                letterSpacing: -0.43,
-                height: 22 / 17,
-              ),
+    return Row(
+      children: [
+        SvgPicture.asset(
+          'icons/figma_icons/Capa_1.svg',
+          width: 22,
+          height: 22,
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            '${_getStreetName()} ${widget.currentRound == BettingRound.flop ? 'Cards' : 'Card'}',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              letterSpacing: -0.43,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildSelectedCardsSection() {
-    int cardCount = widget.currentRound == BettingRound.flop ? 3 : 1;
     String label = widget.currentRound == BettingRound.flop
         ? 'Select 3 Flop Cards:'
         : widget.currentRound == BettingRound.turn
@@ -129,10 +126,11 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
             : 'Select River Card:';
 
     return Container(
-      padding: EdgeInsets.all(18),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFF131616),
-        borderRadius: BorderRadius.circular(8),
+        color: Color(0xFF02050B),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Color(0xFF1B1E24), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,8 +138,8 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
           Text(
             label,
             style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
               color: Colors.white,
             ),
           ),
@@ -156,12 +154,10 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
                 SizedBox(width: 8),
                 _buildCardSlot(2),
               ] else if (widget.currentRound == BettingRound.turn) ...[
-                // Show existing flop cards
                 ..._buildExistingFlopCards(),
                 SizedBox(width: 6),
                 _buildTurnSlot(),
               ] else if (widget.currentRound == BettingRound.river) ...[
-                // Show existing flop and turn cards (smaller to fit all 5)
                 ..._buildExistingFlopCards(),
                 SizedBox(width: 6),
                 _buildExistingTurnCard(),
@@ -176,26 +172,31 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
   }
 
   List<Widget> _buildExistingFlopCards() {
-    return _flop.where((c) => c.isNotEmpty && c.length > 1).map((card) {
-      return Container(
+    final cards = _flop.where((c) => c.isNotEmpty && c.length > 1).toList();
+    final widgets = <Widget>[];
+    for (int i = 0; i < cards.length; i++) {
+      if (i > 0) widgets.add(SizedBox(width: 6));
+      widgets.add(Container(
         width: 48,
-        height: 62,
+        height: 64,
         decoration: BoxDecoration(
-          color: Color(0xFF2B2B2B),
-          borderRadius: BorderRadius.circular(8),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.grey[400]!, width: 1),
         ),
         child: Center(
           child: Text(
-            card,
-            style: TextStyle(
+            cards[i],
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: _getCardColor(card),
+              color: _getCardColor(cards[i]),
             ),
           ),
         ),
-      );
-    }).toList();
+      ));
+    }
+    return widgets;
   }
 
   Widget _buildExistingTurnCard() {
@@ -204,15 +205,16 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
     }
     return Container(
       width: 48,
-      height: 62,
+      height: 64,
       decoration: BoxDecoration(
-        color: Color(0xFF2B2B2B),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey[400]!, width: 1),
       ),
       child: Center(
         child: Text(
           _turn!,
-          style: TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: _getCardColor(_turn!),
@@ -226,35 +228,64 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
     final card = _flop[index];
     final isEmpty = card.isEmpty;
     final isIncomplete = card.length == 1;
+    final isActive = _targetSlotIndex == index;
 
     return GestureDetector(
       onTap: !isEmpty ? () => _clearCard(index) : null,
       child: Container(
-        width: 48,
-        height: 62,
+        width: 52,
+        height: 72,
         decoration: BoxDecoration(
-          color: Color(0xFF2B2B2B),
-          borderRadius: BorderRadius.circular(8),
+          color: isEmpty ? Color(0xFF1B1E24) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isActive
+                ? Color(0xFF89F1EC)
+                : isEmpty
+                    ? Color(0xFF35373C)
+                    : Colors.grey[400]!,
+            width: isActive ? 2 : 1,
+          ),
         ),
-        child: Center(
-          child: isEmpty
-              ? Text(
+        child: isEmpty
+            ? Center(
+                child: Text(
                   '${index + 1}',
-                  style: TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                )
-              : Text(
-                  card,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isIncomplete ? Colors.white.withOpacity(0.5) : _getCardColor(card),
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF4E5054),
                   ),
                 ),
-        ),
+              )
+            : Stack(
+                children: [
+                  Center(
+                    child: Text(
+                      card,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isIncomplete ? Colors.grey : _getCardColor(card),
+                      ),
+                    ),
+                  ),
+                  if (!isIncomplete)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF35373C),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.close, color: Colors.white70, size: 10),
+                      ),
+                    ),
+                ],
+              ),
       ),
     );
   }
@@ -263,35 +294,64 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
     final card = _turn ?? '';
     final isEmpty = card.isEmpty;
     final isIncomplete = card.length == 1;
+    final isActive = _targetSlotIndex == 3;
 
     return GestureDetector(
       onTap: !isEmpty ? () => _clearTurn() : null,
       child: Container(
-        width: 48,
-        height: 62,
+        width: 52,
+        height: 72,
         decoration: BoxDecoration(
-          color: Color(0xFF2B2B2B),
-          borderRadius: BorderRadius.circular(8),
+          color: isEmpty ? Color(0xFF1B1E24) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isActive
+                ? Color(0xFF89F1EC)
+                : isEmpty
+                    ? Color(0xFF35373C)
+                    : Colors.grey[400]!,
+            width: isActive ? 2 : 1,
+          ),
         ),
-        child: Center(
-          child: isEmpty
-              ? Text(
+        child: isEmpty
+            ? Center(
+                child: Text(
                   '?',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                )
-              : Text(
-                  card,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isIncomplete ? Colors.white.withOpacity(0.5) : _getCardColor(card),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF4E5054),
                   ),
                 ),
-        ),
+              )
+            : Stack(
+                children: [
+                  Center(
+                    child: Text(
+                      card,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isIncomplete ? Colors.grey : _getCardColor(card),
+                      ),
+                    ),
+                  ),
+                  if (!isIncomplete)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF35373C),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.close, color: Colors.white70, size: 10),
+                      ),
+                    ),
+                ],
+              ),
       ),
     );
   }
@@ -300,69 +360,93 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
     final card = _river ?? '';
     final isEmpty = card.isEmpty;
     final isIncomplete = card.length == 1;
+    final isActive = _targetSlotIndex == 4;
 
     return GestureDetector(
       onTap: !isEmpty ? () => _clearRiver() : null,
       child: Container(
-        width: 48,
-        height: 62,
+        width: 52,
+        height: 72,
         decoration: BoxDecoration(
-          color: Color(0xFF2B2B2B),
-          borderRadius: BorderRadius.circular(8),
+          color: isEmpty ? Color(0xFF1B1E24) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isActive
+                ? Color(0xFF89F1EC)
+                : isEmpty
+                    ? Color(0xFF35373C)
+                    : Colors.grey[400]!,
+            width: isActive ? 2 : 1,
+          ),
         ),
-        child: Center(
-          child: isEmpty
-              ? Text(
+        child: isEmpty
+            ? Center(
+                child: Text(
                   '?',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                )
-              : Text(
-                  card,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isIncomplete ? Colors.white.withOpacity(0.5) : _getCardColor(card),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF4E5054),
                   ),
                 ),
-        ),
+              )
+            : Stack(
+                children: [
+                  Center(
+                    child: Text(
+                      card,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isIncomplete ? Colors.grey : _getCardColor(card),
+                      ),
+                    ),
+                  ),
+                  if (!isIncomplete)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF35373C),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.close, color: Colors.white70, size: 10),
+                      ),
+                    ),
+                ],
+              ),
       ),
     );
   }
 
   Widget _buildCardGridSection() {
     return Container(
-      padding: EdgeInsets.all(18),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFF131616),
-        borderRadius: BorderRadius.circular(8),
+        color: Color(0xFF02050B),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Color(0xFF1B1E24), width: 1),
       ),
       child: Column(
         children: [
-          // Row 1: A, K, Q, J, T
           _buildRankRow(_ranks.sublist(0, 5)),
-          // Suit selection after row 1
           if (_selectedRank != null && _selectedRankRow == 0) ...[
-            SizedBox(height: 8),
+            SizedBox(height: 6),
             _buildSuitSelectionRow(),
           ],
-          SizedBox(height: 8),
-          // Row 2: 9, 8, 7, 6, 5
+          SizedBox(height: 6),
           _buildRankRow(_ranks.sublist(5, 10)),
-          // Suit selection after row 2
           if (_selectedRank != null && _selectedRankRow == 1) ...[
-            SizedBox(height: 8),
+            SizedBox(height: 6),
             _buildSuitSelectionRow(),
           ],
-          SizedBox(height: 8),
-          // Row 3: 4, 3, 2 (centered with padding)
+          SizedBox(height: 6),
           _buildCenteredRankRow(_ranks.sublist(10, 13)),
-          // Suit selection after row 3
           if (_selectedRank != null && _selectedRankRow == 2) ...[
-            SizedBox(height: 8),
+            SizedBox(height: 6),
             _buildSuitSelectionRow(),
           ],
         ],
@@ -372,7 +456,6 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
 
   Widget _buildRankRow(List<String> ranks) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: ranks.map((rank) {
         return Expanded(
           child: Padding(
@@ -386,9 +469,8 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
 
   Widget _buildCenteredRankRow(List<String> ranks) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Spacer(),
+        Expanded(child: Container()),
         ...ranks.map((rank) {
           return Expanded(
             child: Padding(
@@ -397,27 +479,47 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
             ),
           );
         }).toList(),
-        Spacer(),
+        Expanded(child: Container()),
       ],
     );
   }
 
   Widget _buildRankCard(String rank) {
+    final excluded = _allExcluded;
+    bool isCompletelyExcluded = _suits.every((suit) => excluded.contains('$rank$suit'));
+    bool isSelected = _selectedRank == rank;
+
     return GestureDetector(
-      onTap: () => _selectRank(rank),
+      onTap: isCompletelyExcluded ? null : () => _selectRank(rank),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 14),
+        height: 44,
         decoration: BoxDecoration(
-          color: Color(0xFF2B2B2B),
-          borderRadius: BorderRadius.circular(4),
+          color: isSelected
+              ? Color(0xFF89F1EC).withValues(alpha: 0.15)
+              : isCompletelyExcluded
+                  ? Color(0xFF0A0A0E)
+                  : Color(0xFF1B1E24),
+          border: Border.all(
+            color: isSelected
+                ? Color(0xFF89F1EC)
+                : isCompletelyExcluded
+                    ? Color(0xFF1B1E24)
+                    : Color(0xFF35373C),
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
           child: Text(
             rank,
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              color: isSelected
+                  ? Color(0xFF89F1EC)
+                  : isCompletelyExcluded
+                      ? Color(0xFF35373C)
+                      : Colors.white,
             ),
           ),
         ),
@@ -426,54 +528,52 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
   }
 
   Widget _buildSuitSelectionRow() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: _suits.map((suit) {
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
-              child: _buildSuitCard(suit),
-            ),
-          );
-        }).toList(),
-      ),
+    return Row(
+      children: _suits.map((suit) {
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 2),
+            child: _buildSuitCard(suit),
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildSuitCard(String suit) {
     String card = '$_selectedRank$suit';
-    bool isExcluded = widget.excludedCards.contains(card) ||
-                     widget.usedCards.contains(card) ||
-                     _currentlySelected.contains(card);
-
+    bool isExcluded = _allExcluded.contains(card);
     Color suitColor = _getSuitColor(suit);
 
     return GestureDetector(
       onTap: isExcluded ? null : () => _selectSuit(suit),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 14),
+        height: 52,
         decoration: BoxDecoration(
-          color: Color(0xFF2B2B2B),
-          borderRadius: BorderRadius.circular(4),
+          color: isExcluded ? Color(0xFF0A0A0E) : Color(0xFF1B1E24),
+          border: Border.all(
+            color: isExcluded ? Color(0xFF1B1E24) : Color(0xFF35373C),
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               _selectedRank!,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isExcluded ? Colors.grey[600] : Colors.white,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isExcluded ? Color(0xFF35373C) : suitColor,
               ),
             ),
             Text(
               suit,
               style: TextStyle(
-                fontSize: 24,
-                color: isExcluded ? Colors.grey[600] : suitColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isExcluded ? Color(0xFF35373C) : suitColor,
               ),
             ),
           ],
@@ -483,61 +583,62 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
   }
 
   Widget _buildActionButtons() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          // Cancel Button
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white, width: 1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+    return Column(
+      children: [
+        // Save button — full width mint pill
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: TextButton(
+            onPressed: _isValid() ? () => _saveCards() : null,
+            style: TextButton.styleFrom(
+              backgroundColor: _isValid() ? Color(0xFF89F1EC) : Color(0xFF1B1E24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(40),
+              ),
+              padding: EdgeInsets.zero,
+            ),
+            child: Text(
+              'Save',
+              style: GoogleFonts.ibmPlexSans(
+                color: _isValid() ? Colors.black : Color(0xFF4E5054),
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
               ),
             ),
           ),
-          SizedBox(width: 14),
-          // Save Button
-          Expanded(
-            child: GestureDetector(
-              onTap: _isValid() ? () => _saveCards() : null,
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: _isValid() ? Color(0xFF62E3BC) : Colors.grey[700],
-                  borderRadius: BorderRadius.circular(10),
+        ),
+        SizedBox(height: 10),
+        // Cancel button — outline pill
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(40),
+                side: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  width: 1,
                 ),
-                child: Center(
-                  child: Text(
-                    'Save',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: _isValid() ? Colors.black : Colors.white.withOpacity(0.5),
-                    ),
-                  ),
-                ),
+              ),
+              padding: EdgeInsets.zero,
+            ),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -623,17 +724,27 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
     });
   }
 
+  // For cards on white background (filled slots)
   Color _getCardColor(String card) {
-    if (card.isEmpty || card.length == 1) return Colors.white;
+    if (card.isEmpty || card.length == 1) return Colors.grey;
     if (card.contains('♥') || card.contains('♦')) {
-      return Colors.red;
+      return Color(0xFFE85D5D);
+    }
+    return Color(0xFF2D2D2D);
+  }
+
+  // For cards on dark background (existing flop/turn display)
+  Color _getExistingCardColor(String card) {
+    if (card.isEmpty || card.length == 1) return Colors.grey;
+    if (card.contains('♥') || card.contains('♦')) {
+      return Color(0xFFE85D5D);
     }
     return Colors.white;
   }
 
   Color _getSuitColor(String suit) {
     if (suit == '♥' || suit == '♦') {
-      return Colors.red;
+      return Color(0xFFE85D5D);
     }
     return Colors.white;
   }

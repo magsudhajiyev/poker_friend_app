@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
+import 'package:google_fonts/google_fonts.dart';
 import '../models/hand_state_machine.dart';
-import '../design_system/design_system.dart';
 
 class HoleCardsDialog extends StatefulWidget {
   final HoleCards? existingCards;
@@ -52,202 +51,339 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 400),
-            decoration: BoxDecoration(
-              color: AppColors.glassyCardColor(),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.whiteBorder(),
-                width: 1,
+      elevation: 0,
+      insetPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: Color(0xFF101115),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Color(0xFF1B1E24),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            _buildHeader(),
+            // Content
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Card slots
+                  _buildCurrentSelections(),
+                  SizedBox(height: 14),
+                  // Rank and suit selection grid
+                  _buildRankAndSuitSelection(),
+                  SizedBox(height: 24),
+                  // Actions
+                  _buildActions(),
+                ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 16),
+      child: Row(
+        children: [
+          Expanded(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
-                Container(
-                  padding: EdgeInsets.all(20),
-                  child: Row(
+                if (widget.playerName != null) ...[
+                  Row(
                     children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppColors.accentGreen.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.style,
-                          color: AppColors.accentGreen,
-                          size: 20,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (widget.playerName != null) ...[
-                              // Highlighted player name
-                              Row(
-                                children: [
-                                  Text(
-                                    widget.playerName!,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Color(0xFFFFD700), // Gold/amber color
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  if (widget.isWinner) ...[
-                                    SizedBox(width: 8),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Color(0xFF5AC95A).withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(color: Color(0xFF5AC95A), width: 1),
-                                      ),
-                                      child: Text(
-                                        'WINNER',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Color(0xFF5AC95A),
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'Hole Cards',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white.withOpacity(0.6),
-                                ),
-                              ),
-                            ] else ...[
-                              // Default title without player name
-                              Text(
-                                widget.title,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Content
-                Padding(
-                  padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Enter your hole cards (optional)',
-                        style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
-                      ),
-                      SizedBox(height: 12),
-                      // Show current selections at the top
-                      _buildCurrentSelections(),
-                      SizedBox(height: 16),
-                      // Direct rank and suit selection
-                      _buildRankAndSuitSelection(),
-                      SizedBox(height: 20),
-                      // Actions
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: AppColors.whiteBorder()),
-                              ),
-                              child: TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text(
-                                  'Skip',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.6),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
+                      Flexible(
+                        child: Text(
+                          widget.playerName!,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            color: Color(0xFF89F1EC),
+                            fontWeight: FontWeight.w600,
                           ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Color(0xFFBAFF9A),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: TextButton(
-                                onPressed: () => _saveCards(),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Save',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      // Skip All button - skips remaining opponents
-                      if (widget.showSkipAll) ...[
-                        SizedBox(height: 8),
+                      if (widget.isWinner) ...[
+                        SizedBox(width: 8),
                         Container(
-                          width: double.infinity,
-                          height: 44,
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.whiteBorder()),
-                          ),
-                          child: TextButton(
-                            onPressed: () => Navigator.pop(
-                              context,
-                              HoleCards(card1: 'SKIP_ALL', card2: 'SKIP_ALL'),
+                            color: Color(0xFF54E98A).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(40),
+                            border: Border.all(
+                              color: Color(0xFF54E98A).withValues(alpha: 0.4),
+                              width: 1,
                             ),
-                            child: Text(
-                              'Skip All',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.6),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          ),
+                          child: Text(
+                            'WINNER',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 10,
+                              color: Color(0xFF54E98A),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ),
                       ],
                     ],
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Hole Cards',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 13,
+                      color: Color(0xFF8C8C8C),
+                    ),
+                  ),
+                ] else ...[
+                  Text(
+                    widget.title,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCurrentSelections() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildSelectedCardSlot(0),
+        SizedBox(width: 12),
+        _buildSelectedCardSlot(1),
+      ],
+    );
+  }
+
+  Widget _buildSelectedCardSlot(int index) {
+    final card = index == 0 ? (_card1 ?? '') : (_card2 ?? '');
+    final isEmpty = card.isEmpty;
+    final isIncomplete = card.length == 1;
+    final isActive = _targetSlotIndex == index;
+
+    return GestureDetector(
+      onTap: !isEmpty ? () => _clearCard(index) : null,
+      child: Container(
+        width: 52,
+        height: 72,
+        decoration: BoxDecoration(
+          color: isEmpty
+              ? Color(0xFF1B1E24)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isActive
+                ? Color(0xFF89F1EC)
+                : isEmpty
+                    ? Color(0xFF35373C)
+                    : Colors.grey[400]!,
+            width: isActive ? 2 : 1,
+          ),
+        ),
+        child: isEmpty
+            ? Center(
+                child: Text(
+                  '?',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Color(0xFF4E5054),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            : Stack(
+                children: [
+                  Center(
+                    child: Text(
+                      card,
+                      style: GoogleFonts.ibmPlexSans(
+                        color: isIncomplete ? Colors.grey : _getCardColor(card),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (!isIncomplete)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF35373C),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          color: Colors.white70,
+                          size: 10,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildRankAndSuitSelection() {
+    return Container(
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Color(0xFF02050B),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Color(0xFF1B1E24), width: 1),
+      ),
+      child: Column(
+        children: [
+          // Row 1: A, K, Q, J, T
+          Row(
+            children: _ranks.sublist(0, 5).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
+          ),
+          if (_selectedRank != null && _selectedRankRow == 0) ...[
+            SizedBox(height: 6),
+            _buildSuitSelection(),
+          ],
+          SizedBox(height: 6),
+          // Row 2: 9, 8, 7, 6, 5
+          Row(
+            children: _ranks.sublist(5, 10).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
+          ),
+          if (_selectedRank != null && _selectedRankRow == 1) ...[
+            SizedBox(height: 6),
+            _buildSuitSelection(),
+          ],
+          SizedBox(height: 6),
+          // Row 3: 4, 3, 2 (centered)
+          Row(
+            children: [
+              Expanded(child: Container()),
+              ..._ranks.sublist(10, 13).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
+              Expanded(child: Container()),
+            ],
+          ),
+          if (_selectedRank != null && _selectedRankRow == 2) ...[
+            SizedBox(height: 6),
+            _buildSuitSelection(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankCard(String rank) {
+    bool isCompletelyExcluded = _suits.every((suit) =>
+        widget.usedCards.contains('$rank$suit') ||
+        _currentlySelected.contains('$rank$suit'));
+    bool isSelected = _selectedRank == rank;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: GestureDetector(
+        onTap: isCompletelyExcluded ? null : () => _selectRank(rank),
+        child: Container(
+          height: 44,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Color(0xFF89F1EC).withValues(alpha: 0.15)
+                : isCompletelyExcluded
+                    ? Color(0xFF0A0A0E)
+                    : Color(0xFF1B1E24),
+            border: Border.all(
+              color: isSelected
+                  ? Color(0xFF89F1EC)
+                  : isCompletelyExcluded
+                      ? Color(0xFF1B1E24)
+                      : Color(0xFF35373C),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              rank,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isSelected
+                    ? Color(0xFF89F1EC)
+                    : isCompletelyExcluded
+                        ? Color(0xFF35373C)
+                        : Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuitSelection() {
+    return Row(
+      children: _suits.map((suit) => Expanded(child: _buildSuitCard(suit))).toList(),
+    );
+  }
+
+  Widget _buildSuitCard(String suit) {
+    String card = '$_selectedRank$suit';
+    bool isExcluded = widget.usedCards.contains(card) ||
+                     _currentlySelected.contains(card);
+    Color suitColor = _getSuitColor(suit);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: GestureDetector(
+        onTap: isExcluded ? null : () => _selectSuit(suit),
+        child: Container(
+          height: 52,
+          decoration: BoxDecoration(
+            color: isExcluded ? Color(0xFF0A0A0E) : Color(0xFF1B1E24),
+            border: Border.all(
+              color: isExcluded ? Color(0xFF1B1E24) : Color(0xFF35373C),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _selectedRank!,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isExcluded ? Color(0xFF35373C) : suitColor,
+                  ),
+                ),
+                Text(
+                  suit,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isExcluded ? Color(0xFF35373C) : suitColor,
                   ),
                 ),
               ],
@@ -258,240 +394,97 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
     );
   }
 
-  Widget _buildCurrentSelections() {
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.whiteBorder()),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Select 2 Hole Cards (or skip):', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
-          SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildSelectedCardSlot(0),
-              _buildSelectedCardSlot(1),
-            ],
+  Widget _buildActions() {
+    return Column(
+      children: [
+        // Save button — full width mint pill
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: TextButton(
+            onPressed: () => _saveCards(),
+            style: TextButton.styleFrom(
+              backgroundColor: Color(0xFF89F1EC),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(40),
+              ),
+              padding: EdgeInsets.zero,
+            ),
+            child: Text(
+              'Save',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.black,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 10),
+        // Skip button — outline pill
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(40),
+                side: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              padding: EdgeInsets.zero,
+            ),
+            child: Text(
+              'Skip',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ),
+        ),
+        // Skip All button - skips remaining opponents
+        if (widget.showSkipAll) ...[
+          SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: TextButton(
+              onPressed: () => Navigator.pop(
+                context,
+                HoleCards(card1: 'SKIP_ALL', card2: 'SKIP_ALL'),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(40),
+                  side: BorderSide(
+                    color: Color(0xFFD55A41).withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                padding: EdgeInsets.zero,
+              ),
+              child: Text(
+                'Skip All Remaining',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Color(0xFFD55A41),
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSelectedCardSlot(int index) {
-    final card = index == 0 ? (_card1 ?? '') : (_card2 ?? '');
-    final isEmpty = card.isEmpty;
-    final isIncomplete = card.length == 1; // Just a rank without suit
-
-    return GestureDetector(
-      onTap: !isEmpty ? () => _clearCard(index) : null,
-      child: Container(
-        width: 50,
-        height: 70,
-        decoration: BoxDecoration(
-          color: isEmpty ? Colors.black.withOpacity(0.3) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isEmpty ? AppColors.whiteBorder() : Colors.grey[300]!,
-            width: 2,
-          ),
-        ),
-        child: isEmpty
-            ? Center(
-                child: Text(
-                  '?',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
-                    fontSize: 20,
-                  ),
-                ),
-              )
-            : Center(
-                child: Text(
-                  card,
-                  style: TextStyle(
-                    color: isIncomplete ? Colors.grey : _getCardColor(card),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildRankAndSuitSelection() {
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.whiteBorder()),
-      ),
-      child: Column(
-        children: [
-          // Row 1: A, K, Q, J, T
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: _ranks.sublist(0, 5).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
-          ),
-          // Suit selection after row 1
-          if (_selectedRank != null && _selectedRankRow == 0) ...[
-            SizedBox(height: 8),
-            _buildSuitSelection(),
-          ],
-          SizedBox(height: 8),
-          // Row 2: 9, 8, 7, 6, 5
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: _ranks.sublist(5, 10).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
-          ),
-          // Suit selection after row 2
-          if (_selectedRank != null && _selectedRankRow == 1) ...[
-            SizedBox(height: 8),
-            _buildSuitSelection(),
-          ],
-          SizedBox(height: 8),
-          // Row 3: 4, 3, 2 (centered)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(child: Container()), // Spacer before
-              ..._ranks.sublist(10, 13).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
-              Expanded(child: Container()), // Spacer after
-            ],
-          ),
-          // Suit selection after row 3
-          if (_selectedRank != null && _selectedRankRow == 2) ...[
-            SizedBox(height: 8),
-            _buildSuitSelection(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRankCard(String rank) {
-    // Check if this rank is completely excluded (all suits used)
-    bool isCompletelyExcluded = _suits.every((suit) =>
-        widget.usedCards.contains('$rank$suit') ||
-        _currentlySelected.contains('$rank$suit'));
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: GestureDetector(
-        onTap: isCompletelyExcluded ? null : () => _selectRank(rank),
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-            color: isCompletelyExcluded ? Colors.black.withOpacity(0.1) : Colors.black.withOpacity(0.3),
-            border: Border.all(
-              color: isCompletelyExcluded ? Colors.grey[700]! : AppColors.whiteBorder(),
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Stack(
-            children: [
-              Center(
-                child: Text(
-                  rank,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: isCompletelyExcluded ? Colors.grey[600] : Colors.white,
-                  ),
-                ),
-              ),
-              if (isCompletelyExcluded)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Icon(
-                    Icons.close,
-                    color: Colors.red[400],
-                    size: 14,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSuitSelection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: _suits.map((suit) => Expanded(child: _buildSuitCard(suit))).toList(),
-    );
-  }
-
-  Widget _buildSuitCard(String suit) {
-    String card = '$_selectedRank$suit';
-    bool isExcluded = widget.usedCards.contains(card) ||
-                     _currentlySelected.contains(card);
-
-    Color suitColor = _getSuitColor(suit);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: GestureDetector(
-        onTap: isExcluded ? null : () => _selectSuit(suit),
-        child: Container(
-          height: 70,
-          decoration: BoxDecoration(
-            color: isExcluded ? Colors.black.withOpacity(0.1) : Colors.black.withOpacity(0.3),
-            border: Border.all(
-              color: isExcluded ? Colors.grey[700]! : AppColors.whiteBorder(),
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Stack(
-            children: [
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _selectedRank!,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isExcluded ? Colors.grey[600] : suitColor,
-                      ),
-                    ),
-                    Text(
-                      suit,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isExcluded ? Colors.grey[600] : suitColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isExcluded)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Icon(
-                    Icons.close,
-                    color: Colors.red[400],
-                    size: 14,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
+      ],
     );
   }
 
@@ -574,17 +567,16 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
   Color _getCardColor(String card) {
     if (card.isEmpty || card.length == 1) return Colors.grey;
     if (card.contains('♥') || card.contains('♦')) {
-      return Colors.red[300]!;
+      return Color(0xFFE85D5D);
     }
-    // Make spades and clubs more visible on dark background
-    return Color(0xFFE0E0E0); // Light gray instead of white for better visibility
+    return Color(0xFF2D2D2D);
   }
 
   Color _getSuitColor(String suit) {
     if (suit == '♥' || suit == '♦') {
-      return Colors.red[300]!;
+      return Color(0xFFE85D5D);
     }
-    return Color(0xFFE0E0E0);
+    return Colors.white;
   }
 
   void _saveCards() {

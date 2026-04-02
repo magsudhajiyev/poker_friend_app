@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
+import 'package:google_fonts/google_fonts.dart';
 import '../models/hand_state_machine.dart';
-import '../design_system/design_system.dart';
+
 
 class HandReviewDialog extends StatefulWidget {
   final HoleCards? existingCards;
@@ -74,50 +74,40 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 400, maxHeight: 750),
-            decoration: BoxDecoration(
-              color: AppColors.glassyCardColor(),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.whiteBorder(),
-                width: 1,
+      elevation: 0,
+      insetPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: Color(0xFF101115),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Color(0xFF1B1E24),
+            width: 1,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildHeader(),
+              Padding(
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHoleCardsSection(),
+                    SizedBox(height: 16),
+                    _buildTagsSection(),
+                    SizedBox(height: 16),
+                    _buildNotesSection(),
+                    SizedBox(height: 24),
+                    _buildActions(),
+                  ],
+                ),
               ),
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header with Star
-                  _buildHeader(),
-                  // Content
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Hole Cards Section
-                        _buildHoleCardsSection(),
-                        SizedBox(height: 16),
-                        // Tags Section
-                        _buildTagsSection(),
-                        SizedBox(height: 16),
-                        // Notes Section
-                        _buildNotesSection(),
-                        SizedBox(height: 20),
-                        // Actions
-                        _buildActions(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
         ),
       ),
@@ -126,45 +116,39 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.accentGreen.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.rate_review,
-              color: AppColors.accentGreen,
-              size: 20,
+          Expanded(
+            child: Text(
+              'Hand Review',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          SizedBox(width: 12),
-          Text(
-            'Hand Review',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Spacer(),
           // Star button
           GestureDetector(
             onTap: () => setState(() => _isStarred = !_isStarred),
             child: Container(
-              padding: EdgeInsets.all(8),
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: _isStarred ? Colors.amber.withOpacity(0.2) : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                color: _isStarred
+                    ? Colors.amber.withValues(alpha: 0.2)
+                    : Color(0xFF1B1E24),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _isStarred ? Colors.amber : Color(0xFF35373C),
+                  width: 1,
+                ),
               ),
               child: Icon(
                 _isStarred ? Icons.star : Icons.star_border,
-                color: _isStarred ? Colors.amber : Colors.white54,
-                size: 28,
+                color: _isStarred ? Colors.amber : Color(0xFF8C8C8C),
+                size: 20,
               ),
             ),
           ),
@@ -175,62 +159,46 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
 
   Widget _buildHoleCardsSection() {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.whiteBorder()),
+        color: Color(0xFF02050B),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Color(0xFF1B1E24), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.person,
-                color: Color(0xFFFFD700),
-                size: 18,
-              ),
-              SizedBox(width: 6),
               Text(
-                'YOUR',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFFFD700),
-                  fontSize: 14,
-                  letterSpacing: 1,
-                ),
-              ),
-              SizedBox(width: 6),
-              Text(
-                'Hole Cards',
-                style: TextStyle(
+                'Your Hole Cards',
+                style: GoogleFonts.ibmPlexSans(
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: 15,
                 ),
               ),
               SizedBox(width: 6),
               Text(
                 '(optional)',
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 12,
+                style: GoogleFonts.ibmPlexSans(
+                  color: Color(0xFF8C8C8C),
+                  fontSize: 13,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 12),
           // Card slots
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildSelectedCardSlot(0),
-              SizedBox(width: 16),
+              SizedBox(width: 12),
               _buildSelectedCardSlot(1),
             ],
           ),
-          SizedBox(height: 12),
+          SizedBox(height: 14),
           // Rank selection
           _buildRankAndSuitSelection(),
         ],
@@ -242,39 +210,69 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
     final card = index == 0 ? (_card1 ?? '') : (_card2 ?? '');
     final isEmpty = card.isEmpty;
     final isIncomplete = card.length == 1;
+    final isActive = _targetSlotIndex == index;
 
     return GestureDetector(
       onTap: !isEmpty ? () => _clearCard(index) : null,
       child: Container(
-        width: 50,
-        height: 70,
+        width: 52,
+        height: 72,
         decoration: BoxDecoration(
-          color: isEmpty ? Colors.black.withOpacity(0.3) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          color: isEmpty
+              ? Color(0xFF1B1E24)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isEmpty ? AppColors.whiteBorder() : Colors.grey[300]!,
-            width: 2,
+            color: isActive
+                ? Color(0xFF89F1EC)
+                : isEmpty
+                    ? Color(0xFF35373C)
+                    : Colors.grey[400]!,
+            width: isActive ? 2 : 1,
           ),
         ),
         child: isEmpty
             ? Center(
                 child: Text(
                   '?',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
-                    fontSize: 20,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Color(0xFF4E5054),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               )
-            : Center(
-                child: Text(
-                  card,
-                  style: TextStyle(
-                    color: isIncomplete ? Colors.grey : _getCardColor(card),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+            : Stack(
+                children: [
+                  Center(
+                    child: Text(
+                      card,
+                      style: GoogleFonts.ibmPlexSans(
+                        color: isIncomplete ? Colors.grey : _getCardColor(card),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                  if (!isIncomplete)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF35373C),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          color: Colors.white70,
+                          size: 10,
+                        ),
+                      ),
+                    ),
+                ],
               ),
       ),
     );
@@ -285,27 +283,24 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
       children: [
         // Row 1: A, K, Q, J, T
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: _ranks.sublist(0, 5).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
         ),
         if (_selectedRank != null && _selectedRankRow == 0) ...[
-          SizedBox(height: 8),
+          SizedBox(height: 6),
           _buildSuitSelection(),
         ],
-        SizedBox(height: 8),
+        SizedBox(height: 6),
         // Row 2: 9, 8, 7, 6, 5
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: _ranks.sublist(5, 10).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
         ),
         if (_selectedRank != null && _selectedRankRow == 1) ...[
-          SizedBox(height: 8),
+          SizedBox(height: 6),
           _buildSuitSelection(),
         ],
-        SizedBox(height: 8),
+        SizedBox(height: 6),
         // Row 3: 4, 3, 2 (centered)
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Expanded(child: Container()),
             ..._ranks.sublist(10, 13).map((rank) => Expanded(child: _buildRankCard(rank))).toList(),
@@ -313,7 +308,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
           ],
         ),
         if (_selectedRank != null && _selectedRankRow == 2) ...[
-          SizedBox(height: 8),
+          SizedBox(height: 6),
           _buildSuitSelection(),
         ],
       ],
@@ -324,6 +319,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
     bool isCompletelyExcluded = _suits.every((suit) =>
         widget.usedCards.contains('$rank$suit') ||
         _currentlySelected.contains('$rank$suit'));
+    bool isSelected = _selectedRank == rank;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -332,9 +328,17 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
         child: Container(
           height: 44,
           decoration: BoxDecoration(
-            color: isCompletelyExcluded ? Colors.black.withOpacity(0.1) : Colors.black.withOpacity(0.3),
+            color: isSelected
+                ? Color(0xFF89F1EC).withValues(alpha: 0.15)
+                : isCompletelyExcluded
+                    ? Color(0xFF0A0A0E)
+                    : Color(0xFF1B1E24),
             border: Border.all(
-              color: isCompletelyExcluded ? Colors.grey[700]! : AppColors.whiteBorder(),
+              color: isSelected
+                  ? Color(0xFF89F1EC)
+                  : isCompletelyExcluded
+                      ? Color(0xFF1B1E24)
+                      : Color(0xFF35373C),
               width: 1,
             ),
             borderRadius: BorderRadius.circular(8),
@@ -342,10 +346,14 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
           child: Center(
             child: Text(
               rank,
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isCompletelyExcluded ? Colors.grey[600] : Colors.white,
+                fontWeight: FontWeight.w600,
+                color: isSelected
+                    ? Color(0xFF89F1EC)
+                    : isCompletelyExcluded
+                        ? Color(0xFF35373C)
+                        : Colors.white,
               ),
             ),
           ),
@@ -356,7 +364,6 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
 
   Widget _buildSuitSelection() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: _suits.map((suit) => Expanded(child: _buildSuitCard(suit))).toList(),
     );
   }
@@ -371,11 +378,11 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
       child: GestureDetector(
         onTap: isExcluded ? null : () => _selectSuit(suit),
         child: Container(
-          height: 56,
+          height: 52,
           decoration: BoxDecoration(
-            color: isExcluded ? Colors.black.withOpacity(0.1) : Colors.black.withOpacity(0.3),
+            color: isExcluded ? Color(0xFF0A0A0E) : Color(0xFF1B1E24),
             border: Border.all(
-              color: isExcluded ? Colors.grey[700]! : AppColors.whiteBorder(),
+              color: isExcluded ? Color(0xFF1B1E24) : Color(0xFF35373C),
               width: 1,
             ),
             borderRadius: BorderRadius.circular(8),
@@ -386,10 +393,10 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
               children: [
                 Text(
                   _selectedRank!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: isExcluded ? Colors.grey[600] : suitColor,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isExcluded ? Color(0xFF35373C) : suitColor,
                   ),
                 ),
                 Text(
@@ -397,7 +404,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isExcluded ? Colors.grey[600] : suitColor,
+                    color: isExcluded ? Color(0xFF35373C) : suitColor,
                   ),
                 ),
               ],
@@ -414,13 +421,13 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
       children: [
         Text(
           'Quick Tags',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.ibmPlexSans(
+            fontWeight: FontWeight.w500,
             color: Colors.white,
-            fontSize: 13,
+            fontSize: 15,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: 10),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -445,10 +452,12 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Color(0xFFBAFF9A).withOpacity(0.2) : Colors.black.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected
+              ? Color(0xFF89F1EC).withValues(alpha: 0.15)
+              : Color(0xFF1B1E24),
+          borderRadius: BorderRadius.circular(40),
           border: Border.all(
-            color: isSelected ? Color(0xFFBAFF9A) : AppColors.whiteBorder(),
+            color: isSelected ? Color(0xFF89F1EC) : Color(0xFF35373C),
             width: 1,
           ),
         ),
@@ -457,16 +466,16 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
           children: [
             Icon(
               icon,
-              size: 16,
-              color: isSelected ? Color(0xFFBAFF9A) : Colors.white54,
+              size: 14,
+              color: isSelected ? Color(0xFF89F1EC) : Color(0xFF8C8C8C),
             ),
             SizedBox(width: 6),
             Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 13,
-                color: isSelected ? Color(0xFFBAFF9A) : Colors.white70,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected ? Color(0xFF89F1EC) : Colors.white70,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ],
@@ -480,29 +489,32 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Notes (optional)',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          'Notes',
+          style: GoogleFonts.ibmPlexSans(
+            fontWeight: FontWeight.w500,
             color: Colors.white,
-            fontSize: 13,
+            fontSize: 15,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.whiteBorder()),
+            color: Color(0xFF02050B),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Color(0xFF1B1E24)),
           ),
           child: TextField(
             controller: _notesController,
             maxLines: 2,
-            style: TextStyle(color: Colors.white, fontSize: 14),
+            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14),
             decoration: InputDecoration(
               hintText: 'Add a note about this hand...',
-              hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
+              hintStyle: GoogleFonts.ibmPlexSans(
+                color: Color(0xFF4E5054),
+                fontSize: 13,
+              ),
               border: InputBorder.none,
-              contentPadding: EdgeInsets.all(12),
+              contentPadding: EdgeInsets.all(14),
             ),
           ),
         ),
@@ -511,52 +523,57 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
   }
 
   Widget _buildActions() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: Container(
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.whiteBorder()),
+        // Save Hand button - full width mint pill
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: TextButton(
+            onPressed: () => _saveHand(),
+            style: TextButton.styleFrom(
+              backgroundColor: Color(0xFF89F1EC),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(40),
+              ),
+              padding: EdgeInsets.zero,
             ),
-            child: TextButton(
-              onPressed: () => _skip(),
-              child: Text(
-                'Skip',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+            child: Text(
+              'Save Hand',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.black,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
               ),
             ),
           ),
         ),
-        SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            height: 44,
-            decoration: BoxDecoration(
-              color: Color(0xFFBAFF9A),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: TextButton(
-              onPressed: () => _saveHand(),
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+        SizedBox(height: 10),
+        // Skip button - outline pill
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: TextButton(
+            onPressed: () => _skip(),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(40),
+                side: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  width: 1,
                 ),
               ),
-              child: Text(
-                'Save Hand',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
+              padding: EdgeInsets.zero,
+            ),
+            child: Text(
+              'Skip',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
               ),
             ),
           ),
@@ -637,16 +654,16 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
   Color _getCardColor(String card) {
     if (card.isEmpty || card.length == 1) return Colors.grey;
     if (card.contains('♥') || card.contains('♦')) {
-      return Colors.red[300]!;
+      return Color(0xFFE85D5D);
     }
-    return Color(0xFFE0E0E0);
+    return Color(0xFF2D2D2D);
   }
 
   Color _getSuitColor(String suit) {
     if (suit == '♥' || suit == '♦') {
-      return Colors.red[300]!;
+      return Color(0xFFE85D5D);
     }
-    return Color(0xFFE0E0E0);
+    return Colors.white;
   }
 
   bool _isCompleteCard(String? card) {

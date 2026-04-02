@@ -3457,17 +3457,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         playerIdToName[playerId] = sessionManager.getPlayerNameWithPosition(playerId);
       }
 
-      winnerResult = await showDialog<Map<String, dynamic>>(
+      winnerResult = await MultiPotWinnerDialog.show(
         context: context,
-        barrierDismissible: false,
-        builder: (context) => MultiPotWinnerDialog(
-          sidePots: sidePots,
-          playerNames: playerNames,
-          playerIdToName: playerIdToName,
-          gameType: widget.gameType,
-          buttonPosition: gameState.buttonPosition,
-          playerCount: gameState.numberOfPlayers,
-        ),
+        sidePots: sidePots,
+        playerNames: playerNames,
+        playerIdToName: playerIdToName,
+        gameType: widget.gameType,
+        buttonPosition: gameState.buttonPosition,
+        playerCount: gameState.numberOfPlayers,
       );
     } else {
       await LoggerService.debug('  Showing regular winner selection dialog (${sidePots.length} pot)');
@@ -4886,17 +4883,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         playerIdToName[playerId] = sessionManager.getPlayerNameWithPosition(playerId);
       }
 
-      winnerResult = await showDialog<Map<String, dynamic>>(
+      winnerResult = await MultiPotWinnerDialog.show(
         context: context,
-        barrierDismissible: false,
-        builder: (context) => MultiPotWinnerDialog(
-          sidePots: sidePots,
-          playerNames: playerNames,
-          playerIdToName: playerIdToName,
-          gameType: widget.gameType,
-          buttonPosition: gameState.buttonPosition,
-          playerCount: gameState.numberOfPlayers,
-        ),
+        sidePots: sidePots,
+        playerNames: playerNames,
+        playerIdToName: playerIdToName,
+        gameType: widget.gameType,
+        buttonPosition: gameState.buttonPosition,
+        playerCount: gameState.numberOfPlayers,
       );
     } else {
       await LoggerService.debug('  Showing regular winner selection dialog (${sidePots.length} pot)');
