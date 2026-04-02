@@ -2069,9 +2069,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final createdAt = _parseSessionDate(session);
     final formattedDate = DateFormat('MMM dd, h:mm a').format(createdAt);
     final playerCount = session['playerCount'] ?? 0;
-    final smallBlind = session['smallBlind'] ?? 0;
-    final bigBlind = session['bigBlind'] ?? 0;
-    final blindsText = '\$$smallBlind/\$$bigBlind';
+    final isTournament = (session['gameType'] ?? 'cash').toLowerCase() == 'tournament';
+    final blindsText = isTournament
+        ? '\$${session['buyInAmount'] ?? session['totalBuyIn'] ?? 0}'
+        : '\$${session['smallBlind'] ?? 0}/\$${session['bigBlind'] ?? 0}';
 
     return GestureDetector(
       onTap: () {

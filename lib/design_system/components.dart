@@ -39,6 +39,12 @@ export 'components/lists/stat_list_row.dart';
 // Cards (new)
 export 'components/cards/info_card.dart';
 
+// Drawers
+export 'components/form_drawer.dart';
+
+// Toggles
+export 'components/app_toggle.dart';
+
 // Calendar
 export 'components/calendar/calendar_picker.dart';
 export 'components/calendar/calendar_day_cell.dart';

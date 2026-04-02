@@ -496,74 +496,111 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          child: GlassyCard(
-            padding: EdgeInsets.all(24),
+          child: Container(
+            width: 309,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF101115),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF1B1E24)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black,
+                  blurRadius: 114,
+                  offset: Offset(20, 4),
+                ),
+              ],
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.stop_circle_outlined,
-                  color: Color(0xFFFF6B6B),
-                  size: 48,
+                // Stop icon - ring with filled square
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFD55A41),
+                      width: 0.857,
+                    ),
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 11.14,
+                      height: 11.14,
+                      color: const Color(0xFFD55A41),
+                    ),
+                  ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 8),
                 Text(
                   'Stop Session?',
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
                   ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
                   'Are you sure you want to stop this session? All hands will be saved.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 14,
+                    color: const Color(0xFF8C8C8C),
+                    fontSize: 15,
+                    height: 1.44,
                   ),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 Row(
                   children: [
                     Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(110),
+                            border: Border.all(color: Colors.white),
                           ),
-                        ),
-                        child: Text(
-                          'Cancel',
-                          style: GoogleFonts.ibmPlexSans(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                          child: Center(
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.ibmPlexSans(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                                height: 24 / 17,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 11),
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFFF6B6B),
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD55A41),
+                            borderRadius: BorderRadius.circular(110),
                           ),
-                        ),
-                        child: Text(
-                          'Stop',
-                          style: GoogleFonts.ibmPlexSans(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          child: Center(
+                            child: Text(
+                              'Stop',
+                              style: GoogleFonts.ibmPlexSans(
+                                color: Colors.black,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                                height: 24 / 17,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -1208,7 +1245,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
-                                child: _buildIcon('icons/figma_icons/forward.svg', 22, Colors.white),
+                                child: _buildIcon('icons/figma_icons/forward.svg', 18, Colors.white),
                               ),
                             ),
                           ),
@@ -1227,7 +1264,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(
-                                    child: Icon(Icons.fast_forward, color: Colors.white, size: 22),
+                                    child: Icon(Icons.fast_forward, color: Colors.white, size: 18),
                                   ),
                                 ),
                               ),
@@ -1243,7 +1280,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             // Game Info Header - Info Cards with teal accent
             Container(
               key: _potInfoKey,
-              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              margin: EdgeInsets.fromLTRB(16, 0, 16, 7),
               child: gameState.areAllPlayersAllIn()
                 ? // All-in situation: Show single unified card
                   Container(
@@ -1294,17 +1331,17 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             ),
 
           
-              // Main Gesture Area - Light background
+              // Main Gesture Area - Dark background
               Expanded(
                 child: Container(
                   key: _drawingAreaKey,
-                  margin: EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  margin: EdgeInsets.fromLTRB(16, 7, 16, 7),
                   decoration: BoxDecoration(
-                    color: Color(0xFFF0F0F0), // Light cream/gray background
-                    borderRadius: BorderRadius.circular(16),
+                    color: Color(0xFF35373C),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(8),
                     child: Stack(
                   children: [
                     // Drawing area for gesture input
@@ -1360,8 +1397,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
                     // Gesture Guide Icon
                     Positioned(
-                      top: 16,
-                      right: 16,
+                      top: 8,
+                      right: 8,
                       child: _buildGestureIcon(context),
                     ),
                     
@@ -1381,59 +1418,63 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           // End Street Button (when needed) - Teal design
           if (!gameState.bettingRoundComplete && gameState.getActivePlayers().length > 1)
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 16, vertical: _canUndoLastAction() ? 4 : 8),
+              margin: EdgeInsets.fromLTRB(16, 7, 16, 0),
               width: double.infinity,
               child: GestureDetector(
                 onTap: endStreetManually,
                 child: Container(
-                  padding: EdgeInsets.symmetric(vertical: _canUndoLastAction() ? 12 : 14),
+                  padding: EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: Color(0xFF62E3BC),
+                    color: Color(0xFF89F1EC),
                     borderRadius: BorderRadius.circular(110),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      _buildIcon('icons/figma_icons/forward.svg', 18, Colors.black),
+                      SizedBox(width: 8),
                       Text(
                         'End ${gameState.getCurrentStreetName()} Betting',
                         style: GoogleFonts.ibmPlexSans(
-                          fontSize: _canUndoLastAction() ? 15 : 17,
+                          fontSize: 17,
                           color: Colors.black,
                           fontWeight: FontWeight.w600,
+                          letterSpacing: -0.5,
+                          height: 24 / 17,
                         ),
                       ),
-                      SizedBox(width: 8),
-                      _buildIcon('icons/figma_icons/forward.svg', _canUndoLastAction() ? 18 : 20, Colors.black),
                     ],
                   ),
                 ),
               ),
             ),
 
-          // Undo Last Action Button - Teal design
+          // Undo Last Action Button - White pill
           if (_canUndoLastAction())
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              margin: EdgeInsets.fromLTRB(16, 14, 16, 0),
               width: double.infinity,
               child: GestureDetector(
                 onTap: _undoLastAction,
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: Color(0xFF62E3BC),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(110),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildIcon('icons/figma_icons/undo.svg', 18, Colors.black),
+                      _buildIcon('icons/figma_icons/undo.svg', 24, Colors.black),
                       SizedBox(width: 8),
                       Text(
                         'Undo Last Action',
                         style: GoogleFonts.ibmPlexSans(
-                          fontSize: 15,
+                          fontSize: 17,
                           color: Colors.black,
                           fontWeight: FontWeight.w600,
+                          letterSpacing: -0.5,
+                          height: 24 / 17,
                         ),
                       ),
                     ],
@@ -1445,7 +1486,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           // Stats Row - Three separate cards
           Container(
             key: _statsRowKey,
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: _canUndoLastAction() ? 4 : 8),
+            margin: EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: Row(
               children: [
                 Expanded(child: _buildStatCard(_formatPotAmount(gameState.currentPot), 'POT')),
@@ -1460,7 +1501,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           // Bottom Info Row (To Call / Odds)
           if (_shouldShowPotOdds())
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: const Color(0xFF101115),
@@ -1491,8 +1532,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
               ),
             ),
 
-          // Bottom padding for nav bar - less when undo button is visible
-          SizedBox(height: _canUndoLastAction() ? 65 : 80),
+          // Bottom padding for nav bar
+          SizedBox(height: _canUndoLastAction() ? 16 : 20),
             ],
           ),
         ),
@@ -1593,7 +1634,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: _buildIcon('icons/figma_icons/dots_vertical.svg', 22, Colors.white),
+          child: _buildIcon('icons/figma_icons/dots_vertical.svg', 18, Colors.white),
         ),
       ),
     );
@@ -1912,7 +1953,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Info icon button - black bg with teal icon
+            // Info icon button
             GestureDetector(
               key: _gestureInfoKey,
               onTap: () {
@@ -1921,17 +1962,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 });
               },
               child: Container(
-                padding: EdgeInsets.all(4),
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(15),
+                  color: Color(0xFF101115),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: Center(
-                    child: _buildIcon('icons/figma_icons/info.svg', 15, Color(0xFF62E3BC)),
-                  ),
+                child: Center(
+                  child: _buildIcon('icons/figma_icons/info.svg', 20, Color(0xFFADF9F5)),
                 ),
               ),
             ),
@@ -1948,9 +1986,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
   Widget _buildGestureTooltip(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(10),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Color(0xFF141414),
+        color: Color(0xFF101115),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -1963,32 +2001,29 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             style: TextStyle(
               fontFamily: 'Inter',
               fontWeight: FontWeight.w400,
-              color: Colors.white,
+              color: Color(0xFF9A9B9E),
               fontSize: 10,
               height: 1.5,
             ),
           ),
           SizedBox(height: 4),
-          Container(height: 0.5, width: 127, color: Color(0xFF555555)),
-          SizedBox(height: 4),
-          // Gesture rows - 127px width
+          Container(height: 0.5, width: 129, color: Color(0xFF555555)),
+          SizedBox(height: 6),
+          // Gesture rows
           SizedBox(
-            width: 127,
+            width: 129,
             child: Column(
               children: [
-                _buildGestureRowFigma('👆', 'Tap:', 'Bet'),
+                _buildGestureRowFigma('icons/figma_icons/gesture_tap.svg', 'Tap:', 'Bet or Raise'),
                 Container(height: 0.5, color: Color(0xFF555555)),
-                SizedBox(height: 4),
-                _buildGestureRowFigma('👆', 'Double Tap:', 'Check'),
+                SizedBox(height: 6),
+                _buildGestureRowFigma('icons/figma_icons/gesture_tap.svg', 'Double Tap:', 'Check'),
                 Container(height: 0.5, color: Color(0xFF555555)),
-                SizedBox(height: 4),
-                _buildGestureRowFigma('╱', 'Draw Line:', 'Fold'),
+                SizedBox(height: 6),
+                _buildGestureRowFigma('icons/figma_icons/gesture_line.svg', 'Draw Line:', 'Fold'),
                 Container(height: 0.5, color: Color(0xFF555555)),
-                SizedBox(height: 4),
-                _buildGestureRowFigma('○', 'Draw Circle:', 'Call'),
-                Container(height: 0.5, color: Color(0xFF555555)),
-                SizedBox(height: 4),
-                _buildGestureRowFigma('L', 'Draw L:', 'Raise'),
+                SizedBox(height: 6),
+                _buildGestureRowFigma('icons/figma_icons/gesture_circle.svg', 'Draw Circle:', 'Call'),
               ],
             ),
           ),
@@ -1997,35 +2032,39 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     );
   }
 
-  Widget _buildGestureRowFigma(String icon, String gesture, String action) {
+  Widget _buildGestureRowFigma(String svgPath, String gesture, String action) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 4),
+      padding: EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          // Icon 14x14
+          // SVG Icon 14x14
           SizedBox(
             width: 14,
             height: 14,
-            child: Center(
-              child: Text(
-                icon,
-                style: TextStyle(fontSize: 10, color: Colors.white),
+            child: SvgPicture.asset(
+              svgPath,
+              width: 14,
+              height: 14,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFFADF9F5),
+                BlendMode.srcIn,
               ),
             ),
           ),
           SizedBox(width: 6),
-          // Text - 12px Inter Regular
+          // Gesture label - 12px Inter Regular, grey
           Text(
             gesture,
             style: TextStyle(
               fontFamily: 'Inter',
               fontWeight: FontWeight.w400,
-              color: Colors.white,
+              color: Color(0xFF9A9B9E),
               fontSize: 12,
               height: 1.5,
             ),
           ),
-          SizedBox(width: 2),
+          SizedBox(width: 4),
+          // Action - 12px Inter Regular, white
           Text(
             action,
             style: TextStyle(
@@ -2376,212 +2415,192 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => Dialog(
           backgroundColor: Colors.transparent,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: 320),
-                decoration: BoxDecoration(
-                  color: AppColors.glassyCardColor(),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColors.whiteBorder(),
-                    width: 1,
+          elevation: 0,
+          insetPadding: EdgeInsets.symmetric(horizontal: 32),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 320),
+            decoration: BoxDecoration(
+              color: const Color(0xFF101115),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF1B1E24),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  child: Column(
+                    children: [
+                      Text(
+                        action == PlayerAction.raise ? 'Raise Amount' : 'Bet Amount',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Min: ${widget.gameType == GameType.cash ? '\$${effectiveMinBet.toStringAsFixed(2)}' : effectiveMinBet.toInt()} · Max: ${widget.gameType == GameType.cash ? '\$${maxBet.toStringAsFixed(2)}' : maxBet.toInt()}',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13,
+                          color: const Color(0xFF8C8C8C),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header
-                    Container(
-                      padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppColors.accentGreen.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.attach_money,
-                              color: AppColors.accentGreen,
-                              size: 18,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            action == PlayerAction.raise ? 'Raise Amount' : 'Bet Amount',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                SizedBox(height: 16),
+                // Input field
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFF4E5054)),
+                    ),
+                    child: TextField(
+                      controller: amountController,
+                      autofocus: true,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: widget.gameType == GameType.cash,
+                      ),
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      decoration: InputDecoration(
+                        prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
+                        prefixStyle: GoogleFonts.ibmPlexSans(
+                          color: const Color(0xFF8C8C8C),
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
-                    // Content
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Min: ${widget.gameType == GameType.cash ? '\$${effectiveMinBet.toStringAsFixed(2)}' : effectiveMinBet.toInt()} • Max: ${widget.gameType == GameType.cash ? '\$${maxBet.toStringAsFixed(2)}' : maxBet.toInt()}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.6),
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.whiteBorder()),
-                            ),
-                            child: TextField(
-                              controller: amountController,
-                              autofocus: true,
-                              keyboardType: TextInputType.numberWithOptions(
-                                decimal: widget.gameType == GameType.cash,
-                              ),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              decoration: InputDecoration(
-                                prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
-                                prefixStyle: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontSize: 24,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          // Multiplier buttons - dynamic based on context
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              ..._buildDynamicMultiplierButtons(
-                                isPreflop: isPreflop,
-                                hasVoluntaryBet: hasVoluntaryBet,
-                                currentPot: currentPot,
-                                bigBlind: bigBlind,
-                                minBet: effectiveMinBet,
-                                maxBet: maxBet,
-                                amountController: amountController,
-                                setState: setState,
-                              ),
-                              // All-In button
-                              _buildAllInButton(maxBet, amountController, setState),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Actions
-                    Container(
-                      padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.whiteBorder()),
-                              ),
-                              child: TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context, null);
-                                },
-                                child: Text(
-                                  'Cancel',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.6),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  final text = amountController.text.trim();
-                                  double? amount;
-                                  try {
-                                    amount = double.parse(text);
-                                    if (amount < effectiveMinBet || amount > maxBet) {
-                                      // Show error
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Amount must be between ${effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} and ${maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
-                                          ),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                      return;
-                                    }
-                                  } catch (e) {
-                                    // Show error
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Please enter a valid number'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  Navigator.pop(context, amount);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Confirm',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                SizedBox(height: 14),
+                // Multiplier buttons
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      ..._buildDynamicMultiplierButtons(
+                        isPreflop: isPreflop,
+                        hasVoluntaryBet: hasVoluntaryBet,
+                        currentPot: currentPot,
+                        bigBlind: bigBlind,
+                        minBet: effectiveMinBet,
+                        maxBet: maxBet,
+                        amountController: amountController,
+                        setState: setState,
+                      ),
+                      _buildAllInButton(maxBet, amountController, setState),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+                // Action buttons
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Column(
+                    children: [
+                      // Full-width Confirm button
+                      GestureDetector(
+                        onTap: () {
+                          final text = amountController.text.trim();
+                          double? amount;
+                          try {
+                            amount = double.parse(text);
+                            if (amount < effectiveMinBet || amount > maxBet) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Amount must be between ${effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} and ${maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Please enter a valid number'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          Navigator.pop(context, amount);
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF89F1EC),
+                            borderRadius: BorderRadius.circular(110),
+                          ),
+                          child: Center(
+                            child: Text(
+                              action == PlayerAction.raise ? 'Raise' : 'Bet',
+                              style: GoogleFonts.ibmPlexSans(
+                                color: Colors.black,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      // Cancel button
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context, null),
+                        child: Container(
+                          width: double.infinity,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(110),
+                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.ibmPlexSans(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -2662,14 +2681,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.whiteBorder()),
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(40),
+          border: Border.all(color: const Color(0xFF4E5054)),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: AppColors.accentGreen,
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF89F1EC),
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -2713,14 +2732,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.whiteBorder()),
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(40),
+          border: Border.all(color: const Color(0xFF4E5054)),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: AppColors.accentGreen,
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF89F1EC),
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -2745,20 +2764,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.gradientGreenEnd),
+          color: const Color(0xFFD55A41),
+          borderRadius: BorderRadius.circular(40),
         ),
         child: Text(
           'All-In',
-          style: TextStyle(
+          style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 13,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -5842,7 +5856,6 @@ class _BustedPlayerDialog extends StatefulWidget {
 
 class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
   final TextEditingController _amountController = TextEditingController(text: '100');
-  bool _isRebuy = true;
 
   @override
   void dispose() {
@@ -5854,187 +5867,178 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 340),
-            decoration: BoxDecoration(
-              color: AppColors.glassyCardColor(),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.whiteBorder(),
-                width: 1,
+      child: Container(
+        width: 309,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: const Color(0xFF101115),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF1B1E24)),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black,
+              blurRadius: 114,
+              offset: Offset(20, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Warning icon
+            SvgPicture.asset(
+              'icons/figma_icons/warning.svg',
+              width: 24,
+              height: 24,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${widget.playerName} is busted!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                height: 1.44,
               ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            const SizedBox(height: 8),
+            Text(
+              'Choose an option:',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontSize: 15,
+                height: 1.44,
+              ),
+            ),
+            const SizedBox(height: 32),
+            // Rebuy Chips input with floating label
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFF4E5054)),
+              ),
+              child: TextField(
+                controller: _amountController,
+                keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF8C8C8C),
+                  fontSize: 17,
+                  height: 1.44,
+                ),
+                decoration: InputDecoration(
+                  labelText: widget.isCashGame ? 'Rebuy Amount (\$)' : 'Rebuy Chips',
+                  labelStyle: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            // Rebuy and Leave buttons
+            Row(
               children: [
-                // Header
-                Container(
-                  padding: EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          Icons.warning,
-                          color: Colors.orange,
-                          size: 32,
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      double amount = double.tryParse(_amountController.text) ?? 100.0;
+                      Navigator.pop(context, {
+                        'action': 'rebuy',
+                        'amount': amount,
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(110),
+                        border: Border.all(color: Colors.white),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Rebuy',
+                          style: GoogleFonts.ibmPlexSans(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.5,
+                            height: 24 / 17,
+                          ),
                         ),
                       ),
-                      SizedBox(height: 16),
-                      Text(
-                        '${widget.playerName} is busted!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-                // Content
-                Padding(
-                  padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Choose an option:',
-                        style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context, {
+                        'action': 'leave',
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD55A41),
+                        borderRadius: BorderRadius.circular(110),
                       ),
-                      SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: _isRebuy ? AppColors.gradientGreenEnd : Colors.black.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _isRebuy ? AppColors.gradientGreenEnd : AppColors.whiteBorder(),
-                                ),
-                              ),
-                              child: TextButton(
-                                onPressed: () => setState(() => _isRebuy = true),
-                                child: Text(
-                                  'Rebuy',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: !_isRebuy ? Colors.red : Colors.black.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: !_isRebuy ? Colors.red : AppColors.whiteBorder(),
-                                ),
-                              ),
-                              child: TextButton(
-                                onPressed: () => setState(() => _isRebuy = false),
-                                child: Text(
-                                  'Leave',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_isRebuy) ...[
-                        const SizedBox(height: 20),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.whiteBorder()),
-                          ),
-                          child: TextField(
-                            controller: _amountController,
-                            keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
-                            style: TextStyle(color: Colors.white),
-                            decoration: InputDecoration(
-                              labelText: widget.isCashGame ? 'Rebuy Amount (\$)' : 'Rebuy Chips',
-                              labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                              prefixText: widget.isCashGame ? '\$' : '',
-                              prefixStyle: TextStyle(color: Colors.white),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            ),
-                          ),
-                        ),
-                      ],
-                      SizedBox(height: 24),
-                      // Confirm button
-                      Container(
-                        width: double.infinity,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: _isRebuy
-                              ? [AppColors.gradientGreenEnd, AppColors.gradientGreenStart]
-                              : [Colors.red.shade700, Colors.red.shade900],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (_isRebuy) {
-                              double amount = double.tryParse(_amountController.text) ?? 100.0;
-                              Navigator.pop(context, {
-                                'action': 'rebuy',
-                                'amount': amount,
-                              });
-                            } else {
-                              Navigator.pop(context, {
-                                'action': 'leave',
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Confirm',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      child: Center(
+                        child: Text(
+                          'Leave',
+                          style: GoogleFonts.ibmPlexSans(
+                            color: Colors.black,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.5,
+                            height: 24 / 17,
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 14),
+            // Confirm button
+            GestureDetector(
+              onTap: () {
+                double amount = double.tryParse(_amountController.text) ?? 100.0;
+                Navigator.pop(context, {
+                  'action': 'rebuy',
+                  'amount': amount,
+                });
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF89F1EC),
+                  borderRadius: BorderRadius.circular(110),
+                ),
+                child: Center(
+                  child: Text(
+                    'Confirm',
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.black,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.5,
+                      height: 24 / 17,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

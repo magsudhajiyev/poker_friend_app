@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../design_system/components.dart';
 import '../models/hand_state_machine.dart';
 import '../utils/poker_positions.dart';
 import '../services/auth_service.dart';
@@ -531,14 +532,18 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           width: 38,
                           height: 38,
                           decoration: const BoxDecoration(
-                            color: Color(0xFF54E98A),
+                            color: Color(0xFF89F1EC),
                             shape: BoxShape.circle,
                           ),
                           child: Center(
-                            child: _buildIcon(
+                            child: SvgPicture.asset(
                               'icons/figma_icons/check.svg',
-                              16,
-                              Colors.black,
+                              width: 24,
+                              height: 24,
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFF1A4A4A),
+                                BlendMode.srcIn,
+                              ),
                             ),
                           ),
                         ),
@@ -611,30 +616,8 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                     }
                                   });
                                 },
-                                child: Container(
-                                  width: 50,
-                                  height: 20,
-                                  decoration: BoxDecoration(
-                                    color: tempIsActive ? const Color(0xFF1B4341) : const Color(0xFF39393D),
-                                    borderRadius: BorderRadius.circular(74),
-                                    border: Border.all(
-                                      color: tempIsActive ? const Color(0xFF4B9A96) : const Color(0xFF555555),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.all(2),
-                                  child: AnimatedAlign(
-                                    duration: const Duration(milliseconds: 200),
-                                    alignment: tempIsActive ? Alignment.centerRight : Alignment.centerLeft,
-                                    child: Container(
-                                      width: 15,
-                                      height: 15,
-                                      decoration: BoxDecoration(
-                                        color: tempIsActive ? const Color(0xFF73D4CF) : const Color(0xFF8C8C8C),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ),
+                                child: AppToggle(
+                                  value: tempIsActive,
                                 ),
                               ),
                             ],
@@ -676,25 +659,43 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           child: Container(
                             key: mySeatKey,
                             width: double.infinity,
-                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                             decoration: BoxDecoration(
-                              color: Color(0xFF1C1C1E),
-                              borderRadius: BorderRadius.circular(12),
+                              color: tempIsMySeat ? const Color(0xFF101115) : const Color(0xFF1C1C1E),
+                              borderRadius: BorderRadius.circular(18),
+                              border: tempIsMySeat
+                                  ? Border.all(color: const Color(0xFF73D4CF), width: 1)
+                                  : null,
                             ),
                             child: Row(
                               children: [
-                                // Simple circle outline
+                                // Radio button style circle
                                 Container(
                                   width: 20,
                                   height: 20,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: tempIsMySeat ? Color(0xFF62E3BC) : Color(0xFF48484A),
-                                      width: 1.5,
+                                      color: tempIsMySeat ? const Color(0xFF73D4CF) : const Color(0xFF48484A),
+                                      width: 1,
                                     ),
-                                    color: tempIsMySeat ? Color(0xFF62E3BC) : Colors.transparent,
                                   ),
+                                  child: tempIsMySeat
+                                      ? Center(
+                                          child: Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: const Color(0xFF73D4CF),
+                                              border: Border.all(
+                                                color: const Color(0xFF73D4CF),
+                                                width: 2,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : null,
                                 ),
                                 SizedBox(width: 10),
                                 Text(

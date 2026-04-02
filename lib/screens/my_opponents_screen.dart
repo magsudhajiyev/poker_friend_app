@@ -10,6 +10,7 @@ import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import 'opponent_detail_screen.dart';
 import '../design_system/components/drawer_dots.dart';
+import '../design_system/components/form_drawer.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
   // Static cache accessible from other screens
@@ -1024,236 +1025,137 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
       }
     }
 
-    showModalBottomSheet(
+    FormDrawer.show(
       context: context,
-      isScrollControlled: true,
-      isDismissible: true,
-      enableDrag: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
+      title: isEditing ? 'Edit Opponent' : 'Add Opponent',
+      onSave: saveOpponent,
+      body: StatefulBuilder(
         builder: (context, setSheetState) {
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.9,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(32),
-                topRight: Radius.circular(32),
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xFF131616),
+                borderRadius: BorderRadius.circular(18),
               ),
-              border: Border.all(color: Color(0xFF262626)),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFF2E5A59),
-                  blurRadius: 64,
-                  offset: Offset(0, -6),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Header with X, title, checkmark (px-16 from Figma)
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: SizedBox(
-                    height: 68, // Match Figma header height
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Close button - 38px with icon centered (inset 18.75% = ~15px icon)
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF2C2C2E),
-                              borderRadius: BorderRadius.circular(58),
-                            ),
-                            child: Center(
-                              child: _buildIcon(
-                                'icons/figma_icons/close.svg',
-                                15,
-                                Colors.white,
-                              ),
-                            ),
-                          ),
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Column(
+                children: [
+                  // Opponent Name field
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(10, 10, 8, 10),
+                    child: TextField(
+                      controller: nameController,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                        height: 1.44,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Opponent Name',
+                        hintStyle: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w400,
+                          height: 1.44,
                         ),
-                        // Title
-                        Text(
-                          isEditing ? 'Edit Opponent' : 'Add Opponent',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            letterSpacing: -0.43,
-                            height: 22 / 17,
-                          ),
-                        ),
-                        // Save/Check button - 38px with green background, dark check
-                        GestureDetector(
-                          onTap: saveOpponent,
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF54E98A),
-                              borderRadius: BorderRadius.circular(58),
-                            ),
-                            child: Center(
-                              child: _buildIcon(
-                                'icons/figma_icons/check.svg',
-                                18,
-                                Color(0xFF1A4A4A),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
+                      ),
                     ),
                   ),
-                ),
-
-                SizedBox(height: 22),
-
-                // Form card (Figma node 325-3251)
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Color(0xFF131616),
-                      borderRadius: BorderRadius.circular(18),
+                  // Separator
+                  Container(
+                    height: 21,
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    alignment: Alignment.center,
+                    child: Container(height: 1, color: Color(0xFF3A3A3C)),
+                  ),
+                  // Notes field
+                  Padding(
+                    padding: EdgeInsets.all(10),
+                    child: TextField(
+                      controller: notesController,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                        height: 1.44,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Notes (Optional)',
+                        hintStyle: GoogleFonts.ibmPlexSans(
+                          fontSize: 17,
+                          color: Colors.white.withOpacity(0.5),
+                          fontWeight: FontWeight.w400,
+                          height: 1.44,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
+                      ),
+                      maxLines: 4,
+                      minLines: 4,
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: Column(
-                      children: [
-                        // Opponent Name field - pl-10 pr-8 py-10 from Figma
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(10, 10, 8, 10),
-                          child: TextField(
-                            controller: nameController,
+                  ),
+                  // Separator
+                  Container(
+                    height: 21,
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    alignment: Alignment.center,
+                    child: Container(height: 1, color: Color(0xFF3A3A3C)),
+                  ),
+                  // Pick a color row
+                  GestureDetector(
+                    key: colorPickerKey,
+                    onTap: () => showColorPicker(setSheetState),
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Pick a color',
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 17,
-                              color: Colors.white,
+                              color: Color(0xFFB9B9B9),
                               fontWeight: FontWeight.w400,
                               height: 1.44,
                             ),
-                            decoration: InputDecoration(
-                              hintText: 'Opponent Name',
-                              hintStyle: GoogleFonts.ibmPlexSans(
-                                fontSize: 17,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w400,
-                                height: 1.44,
-                              ),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              filled: false,
-                              contentPadding: EdgeInsets.zero,
-                              isDense: true,
-                            ),
                           ),
-                        ),
-
-                        // Separator - h-21px container with px-8 from Figma
-                        Container(
-                          height: 21,
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          alignment: Alignment.center,
-                          child: Container(
-                            height: 1,
-                            color: Color(0xFF3A3A3C),
-                          ),
-                        ),
-
-                        // Notes field - text area for more visibility
-                        Padding(
-                          padding: EdgeInsets.all(10),
-                          child: TextField(
-                            controller: notesController,
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 17,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w400,
-                              height: 1.44,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'Notes (Optional)',
-                              hintStyle: GoogleFonts.ibmPlexSans(
-                                fontSize: 17,
-                                color: Colors.white.withOpacity(0.5),
-                                fontWeight: FontWeight.w400,
-                                height: 1.44,
-                              ),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              filled: false,
-                              contentPadding: EdgeInsets.zero,
-                              isDense: true,
-                            ),
-                            maxLines: 4,
-                            minLines: 4,
-                          ),
-                        ),
-
-                        // Separator - h-21px container with px-8 from Figma
-                        Container(
-                          height: 21,
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          alignment: Alignment.center,
-                          child: Container(
-                            height: 1,
-                            color: Color(0xFF3A3A3C),
-                          ),
-                        ),
-
-                        // Pick a color row - p-10 from Figma
-                        GestureDetector(
-                          key: colorPickerKey,
-                          onTap: () => showColorPicker(setSheetState),
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Pick a color',
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 17,
-                                    color: Color(0xFFB9B9B9),
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.44,
-                                  ),
+                          Row(
+                            children: [
+                              Text(
+                                getColorName(selectedColor),
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 17,
+                                  color: Color(0xFFB9B9B9),
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.44,
                                 ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      getColorName(selectedColor),
-                                      style: GoogleFonts.ibmPlexSans(
-                                        fontSize: 17,
-                                        color: Color(0xFFB9B9B9),
-                                        fontWeight: FontWeight.w400,
-                                        height: 1.44,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    _buildIcon(
-                                      'icons/figma_icons/up_and_down.svg',
-                                      20,
-                                      Color(0xFFB9B9B9),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                              ),
+                              SizedBox(width: 10),
+                              _buildIcon(
+                                'icons/figma_icons/up_and_down.svg',
+                                20,
+                                Color(0xFFB9B9B9),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },

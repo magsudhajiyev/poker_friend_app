@@ -426,7 +426,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     final totalHands = session['totalHands'] ?? session['handsLogged'] ?? 0;
     final isTournament = (session['gameType'] ?? 'cash').toLowerCase() == 'tournament';
     final secondPillText = isTournament
-        ? '\$${session['buyInAmount'] ?? session['totalBuyIn'] ?? 0} Buy-in'
+        ? '\$${session['buyInAmount'] ?? session['totalBuyIn'] ?? 0}'
         : _formatBlinds(session);
 
     return GestureDetector(

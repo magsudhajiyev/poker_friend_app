@@ -10,7 +10,7 @@ class DrawingPainter extends CustomPainter {
     if (points.isEmpty) return;
     
     final paint = Paint()
-      ..color = Colors.black
+      ..color = const Color(0xFFADF9F5)
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round;
 

@@ -62,7 +62,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _showAddEventDialog() {
-    final outerContext = context; // Capture outer context for success popup
+    final outerContext = context;
     final titleController = TextEditingController();
     final locationController = TextEditingController();
     final buyInController = TextEditingController();
@@ -71,412 +71,349 @@ class _CalendarScreenState extends State<CalendarScreen> {
     String selectedType = 'Tournament';
     final eventTypeKey = GlobalKey();
 
-    showModalBottomSheet(
+    FormDrawer.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.9,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                border: Border.all(color: const Color(0xFF262626), width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2E5A59),
-                    blurRadius: 64,
-                    offset: const Offset(0, -6),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Header - Overlay Header style
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      title: 'New Event',
+      onSave: () async {
+        if (titleController.text.isEmpty && locationController.text.isEmpty) {
+          return;
+        }
+        final eventDate = DateTime(
+          dialogSelectedDate.year,
+          dialogSelectedDate.month,
+          dialogSelectedDate.day,
+          dialogSelectedTime.hour,
+          dialogSelectedTime.minute,
+        );
+
+        try {
+          final eventId = await CalendarEventService.createEvent(
+            title: titleController.text.isEmpty ? selectedType : titleController.text,
+            type: selectedType,
+            location: locationController.text,
+            date: eventDate,
+            buyIn: double.tryParse(buyInController.text) ?? 0.0,
+          );
+
+          final newEvent = PokerEvent(
+            id: eventId,
+            title: titleController.text.isEmpty ? selectedType : titleController.text,
+            type: selectedType,
+            location: locationController.text,
+            date: eventDate,
+            buyIn: double.tryParse(buyInController.text) ?? 0.0,
+          );
+
+          setState(() {
+            events.add(newEvent);
+          });
+
+          Navigator.pop(outerContext);
+
+          if (!mounted) return;
+          final action = await EventSuccessPopup.show(outerContext);
+
+          if (action == 'add_another' && mounted) {
+            _showAddEventDialog();
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(outerContext).showSnackBar(
+            SnackBar(content: Text('Failed to create event: $e')),
+          );
+        }
+      },
+      body: StatefulBuilder(
+        builder: (context, setSheetState) {
+          return _buildEventFormContent(
+            context: context,
+            setSheetState: setSheetState,
+            titleController: titleController,
+            locationController: locationController,
+            buyInController: buyInController,
+            dialogSelectedDate: dialogSelectedDate,
+            dialogSelectedTime: dialogSelectedTime,
+            selectedType: selectedType,
+            eventTypeKey: eventTypeKey,
+            onDateChanged: (date) {
+              setSheetState(() { dialogSelectedDate = date; });
+            },
+            onTimeChanged: (time) {
+              setSheetState(() { dialogSelectedTime = time; });
+            },
+            onTypeChanged: (type) {
+              setSheetState(() { selectedType = type; });
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEventFormContent({
+    required BuildContext context,
+    required StateSetter setSheetState,
+    required TextEditingController titleController,
+    required TextEditingController locationController,
+    required TextEditingController buyInController,
+    required DateTime dialogSelectedDate,
+    required TimeOfDay dialogSelectedTime,
+    required String selectedType,
+    required GlobalKey eventTypeKey,
+    required ValueChanged<DateTime> onDateChanged,
+    required ValueChanged<TimeOfDay> onTimeChanged,
+    required ValueChanged<String> onTypeChanged,
+  }) {
+    return Column(
+      children: [
+        // Form Card 1 - Input Fields
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF101115),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              children: [
+                // Event Type Row
+                GestureDetector(
+                  onTap: () {
+                    _showEventTypePicker(context, selectedType, (type) {
+                      onTypeChanged(type);
+                    }, eventTypeKey);
+                  },
+                  child: Container(
+                    key: eventTypeKey,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Event Type',
+                          style: GoogleFonts.ibmPlexSans(
+                            color: const Color(0xFFD3FFFD),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w500,
+                            height: 1.44,
+                          ),
+                        ),
+                        Row(
                           children: [
-                            // Close button
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF35373C),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Title
                             Text(
-                              'New Event',
+                              selectedType,
                               style: GoogleFonts.ibmPlexSans(
                                 color: Colors.white,
                                 fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.43,
+                                fontWeight: FontWeight.w500,
+                                height: 1.44,
                               ),
                             ),
-                            // Confirm button
-                            GestureDetector(
-                              onTap: () async {
-                                if (titleController.text.isEmpty && locationController.text.isEmpty) {
-                                  return;
-                                }
-                                final eventDate = DateTime(
-                                  dialogSelectedDate.year,
-                                  dialogSelectedDate.month,
-                                  dialogSelectedDate.day,
-                                  dialogSelectedTime.hour,
-                                  dialogSelectedTime.minute,
-                                );
-
-                                try {
-                                  // Save to Firebase
-                                  final eventId = await CalendarEventService.createEvent(
-                                    title: titleController.text.isEmpty ? selectedType : titleController.text,
-                                    type: selectedType,
-                                    location: locationController.text,
-                                    date: eventDate,
-                                    buyIn: double.tryParse(buyInController.text) ?? 0.0,
-                                  );
-
-                                  // Add to local list with Firebase ID
-                                  final newEvent = PokerEvent(
-                                    id: eventId,
-                                    title: titleController.text.isEmpty ? selectedType : titleController.text,
-                                    type: selectedType,
-                                    location: locationController.text,
-                                    date: eventDate,
-                                    buyIn: double.tryParse(buyInController.text) ?? 0.0,
-                                  );
-
-                                  setState(() {
-                                    events.add(newEvent);
-                                  });
-
-                                  Navigator.pop(context); // Close bottom sheet
-
-                                  // Show success popup
-                                  if (!mounted) return;
-                                  final action = await EventSuccessPopup.show(outerContext);
-
-                                  if (action == 'add_another' && mounted) {
-                                    _showAddEventDialog();
-                                  }
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Failed to create event: $e')),
-                                  );
-                                }
-                              },
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF54E98A),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.check,
-                                    color: Colors.black,
-                                    size: 16,
-                                  ),
-                                ),
-                              ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.unfold_more,
+                              color: Colors.white,
+                              size: 24,
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Form Card 1 - Input Fields
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF101115),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Column(
-                            children: [
-                              // Event Type Row
-                              GestureDetector(
-                                onTap: () {
-                                  _showEventTypePicker(context, selectedType, (type) {
-                                    setSheetState(() {
-                                      selectedType = type;
-                                    });
-                                  }, eventTypeKey);
-                                },
-                                child: Container(
-                                  key: eventTypeKey,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Event Type',
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: const Color(0xFFD3FFFD),
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w500,
-                                          height: 1.44,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            selectedType,
-                                            style: GoogleFonts.ibmPlexSans(
-                                              color: Colors.white,
-                                              fontSize: 17,
-                                              fontWeight: FontWeight.w500,
-                                              height: 1.44,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          const Icon(
-                                            Icons.unfold_more,
-                                            color: Colors.white,
-                                            size: 24,
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              _buildSeparator(),
-                              // Title Input
-                              TextField(
-                                controller: titleController,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.44,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Title',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: const Color(0xFF8C8C8C),
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.44,
-                                  ),
-                                  filled: false,
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                              _buildSeparator(),
-                              // Location Input
-                              TextField(
-                                controller: locationController,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.44,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Location',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: const Color(0xFF8C8C8C),
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.44,
-                                  ),
-                                  filled: false,
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                              _buildSeparator(),
-                              // Buy In Input
-                              TextField(
-                                controller: buyInController,
-                                keyboardType: TextInputType.number,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.44,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Buy-in amount',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: const Color(0xFF8C8C8C),
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.44,
-                                  ),
-                                  filled: false,
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      // Form Card 2 - Date/Time
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF101115),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Header
-                              Text(
-                                'Event Date and Time',
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.43,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                height: 0.5,
-                                color: const Color(0xFF545458),
-                              ),
-                              const SizedBox(height: 16),
-                              // Starts Row
-                              Row(
-                                children: [
-                                  Text(
-                                    'Starts',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.44,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  // Date Pill
-                                  GestureDetector(
-                                    onTap: () async {
-                                      final date = await _showCustomDatePicker(
-                                        context,
-                                        dialogSelectedDate,
-                                      );
-                                      if (date != null) {
-                                        setSheetState(() {
-                                          dialogSelectedDate = date;
-                                        });
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF1B1E24),
-                                        borderRadius: BorderRadius.circular(40),
-                                      ),
-                                      child: Text(
-                                        DateFormat('d MMM yyyy').format(dialogSelectedDate),
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  // Time Pill
-                                  GestureDetector(
-                                    onTap: () async {
-                                      final time = await showTimePicker(
-                                        context: context,
-                                        initialTime: dialogSelectedTime,
-                                        builder: (context, child) {
-                                          return Theme(
-                                            data: Theme.of(context).copyWith(
-                                              colorScheme: const ColorScheme.dark(
-                                                primary: Color(0xFF5CD9A4),
-                                                surface: Color(0xFF1B1E24),
-                                              ),
-                                            ),
-                                            child: child!,
-                                          );
-                                        },
-                                      );
-                                      if (time != null) {
-                                        setSheetState(() {
-                                          dialogSelectedTime = time;
-                                        });
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF1B1E24),
-                                        borderRadius: BorderRadius.circular(40),
-                                      ),
-                                      child: Text(
-                                        dialogSelectedTime.format(context),
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      // Safe area bottom padding
-                      SizedBox(height: MediaQuery.of(context).padding.bottom),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        );
-      },
+                _buildSeparator(),
+                // Title Input
+                TextField(
+                  controller: titleController,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Title',
+                    hintStyle: GoogleFonts.ibmPlexSans(
+                      color: const Color(0xFF8C8C8C),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      height: 1.44,
+                    ),
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+                _buildSeparator(),
+                // Location Input
+                TextField(
+                  controller: locationController,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Location',
+                    hintStyle: GoogleFonts.ibmPlexSans(
+                      color: const Color(0xFF8C8C8C),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      height: 1.44,
+                    ),
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+                _buildSeparator(),
+                // Buy In Input
+                TextField(
+                  controller: buyInController,
+                  keyboardType: TextInputType.number,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Buy-in amount',
+                    hintStyle: GoogleFonts.ibmPlexSans(
+                      color: const Color(0xFF8C8C8C),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      height: 1.44,
+                    ),
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        // Form Card 2 - Date/Time
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF101115),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Event Date and Time',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.43,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  height: 0.5,
+                  color: const Color(0xFF545458),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Text(
+                      'Starts',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w400,
+                        height: 1.44,
+                      ),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () async {
+                        final date = await _showCustomDatePicker(
+                          context,
+                          dialogSelectedDate,
+                        );
+                        if (date != null) {
+                          onDateChanged(date);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1B1E24),
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: Text(
+                          DateFormat('d MMM yyyy').format(dialogSelectedDate),
+                          style: GoogleFonts.ibmPlexSans(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () async {
+                        final time = await showTimePicker(
+                          context: context,
+                          initialTime: dialogSelectedTime,
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.dark(
+                                  primary: Color(0xFF5CD9A4),
+                                  surface: Color(0xFF1B1E24),
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (time != null) {
+                          onTimeChanged(time);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1B1E24),
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: Text(
+                          dialogSelectedTime.format(context),
+                          style: GoogleFonts.ibmPlexSans(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 32),
+        SizedBox(height: MediaQuery.of(context).padding.bottom),
+      ],
     );
   }
 
@@ -1549,383 +1486,60 @@ class _CalendarScreenState extends State<CalendarScreen> {
     String selectedType = event.type;
     final eventTypeKey = GlobalKey();
 
-    showModalBottomSheet(
+    FormDrawer.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.9,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                border: Border.all(color: const Color(0xFF262626), width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2E5A59),
-                    blurRadius: 64,
-                    offset: const Offset(0, -6),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Header
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Close button
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF35373C),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Title
-                            Text(
-                              'Edit Event',
-                              style: GoogleFonts.ibmPlexSans(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.43,
-                              ),
-                            ),
-                            // Confirm button
-                            GestureDetector(
-                              onTap: () async {
-                                final eventDate = DateTime(
-                                  dialogSelectedDate.year,
-                                  dialogSelectedDate.month,
-                                  dialogSelectedDate.day,
-                                  dialogSelectedTime.hour,
-                                  dialogSelectedTime.minute,
-                                );
-
-                                try {
-                                  await CalendarEventService.updateEvent(
-                                    eventId: event.id,
-                                    title: titleController.text.isEmpty ? selectedType : titleController.text,
-                                    type: selectedType,
-                                    location: locationController.text,
-                                    date: eventDate,
-                                    buyIn: double.tryParse(buyInController.text) ?? 0.0,
-                                  );
-
-                                  Navigator.pop(context);
-                                  _loadEvents(); // Reload to reflect changes
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Failed to update event: $e')),
-                                  );
-                                }
-                              },
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF54E98A),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.check,
-                                    color: Colors.black,
-                                    size: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Form Card 1 - Input Fields
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF101115),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Column(
-                            children: [
-                              // Event Type Row
-                              GestureDetector(
-                                onTap: () {
-                                  _showEventTypePicker(context, selectedType, (type) {
-                                    setSheetState(() {
-                                      selectedType = type;
-                                    });
-                                  }, eventTypeKey);
-                                },
-                                child: Container(
-                                  key: eventTypeKey,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Event Type',
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: const Color(0xFFD3FFFD),
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w500,
-                                          height: 1.44,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            selectedType,
-                                            style: GoogleFonts.ibmPlexSans(
-                                              color: Colors.white,
-                                              fontSize: 17,
-                                              fontWeight: FontWeight.w500,
-                                              height: 1.44,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          const Icon(
-                                            Icons.unfold_more,
-                                            color: Colors.white,
-                                            size: 24,
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              _buildSeparator(),
-                              // Title Input
-                              TextField(
-                                controller: titleController,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.44,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Title',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: const Color(0xFF8C8C8C),
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.44,
-                                  ),
-                                  filled: false,
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                              _buildSeparator(),
-                              // Location Input
-                              TextField(
-                                controller: locationController,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.44,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Location',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: const Color(0xFF8C8C8C),
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.44,
-                                  ),
-                                  filled: false,
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                              _buildSeparator(),
-                              // Buy In Input
-                              TextField(
-                                controller: buyInController,
-                                keyboardType: TextInputType.number,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.44,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Buy-in amount',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: const Color(0xFF8C8C8C),
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.44,
-                                  ),
-                                  filled: false,
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      // Form Card 2 - Date/Time
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF101115),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Event Date and Time',
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.43,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                height: 0.5,
-                                color: const Color(0xFF545458),
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Starts',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.44,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  GestureDetector(
-                                    onTap: () async {
-                                      final date = await _showCustomDatePicker(
-                                        context,
-                                        dialogSelectedDate,
-                                      );
-                                      if (date != null) {
-                                        setSheetState(() {
-                                          dialogSelectedDate = date;
-                                        });
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF1B1E24),
-                                        borderRadius: BorderRadius.circular(40),
-                                      ),
-                                      child: Text(
-                                        DateFormat('d MMM yyyy').format(dialogSelectedDate),
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  GestureDetector(
-                                    onTap: () async {
-                                      final time = await showTimePicker(
-                                        context: context,
-                                        initialTime: dialogSelectedTime,
-                                        builder: (context, child) {
-                                          return Theme(
-                                            data: Theme.of(context).copyWith(
-                                              colorScheme: const ColorScheme.dark(
-                                                primary: Color(0xFF5CD9A4),
-                                                surface: Color(0xFF1B1E24),
-                                              ),
-                                            ),
-                                            child: child!,
-                                          );
-                                        },
-                                      );
-                                      if (time != null) {
-                                        setSheetState(() {
-                                          dialogSelectedTime = time;
-                                        });
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF1B1E24),
-                                        borderRadius: BorderRadius.circular(40),
-                                      ),
-                                      child: Text(
-                                        dialogSelectedTime.format(context),
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      SizedBox(height: MediaQuery.of(context).padding.bottom),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+      title: 'Edit Event',
+      onSave: () async {
+        final eventDate = DateTime(
+          dialogSelectedDate.year,
+          dialogSelectedDate.month,
+          dialogSelectedDate.day,
+          dialogSelectedTime.hour,
+          dialogSelectedTime.minute,
         );
+
+        try {
+          await CalendarEventService.updateEvent(
+            eventId: event.id,
+            title: titleController.text.isEmpty ? selectedType : titleController.text,
+            type: selectedType,
+            location: locationController.text,
+            date: eventDate,
+            buyIn: double.tryParse(buyInController.text) ?? 0.0,
+          );
+
+          Navigator.pop(context);
+          _loadEvents();
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update event: $e')),
+          );
+        }
       },
+      body: StatefulBuilder(
+        builder: (context, setSheetState) {
+          return _buildEventFormContent(
+            context: context,
+            setSheetState: setSheetState,
+            titleController: titleController,
+            locationController: locationController,
+            buyInController: buyInController,
+            dialogSelectedDate: dialogSelectedDate,
+            dialogSelectedTime: dialogSelectedTime,
+            selectedType: selectedType,
+            eventTypeKey: eventTypeKey,
+            onDateChanged: (date) {
+              setSheetState(() { dialogSelectedDate = date; });
+            },
+            onTimeChanged: (time) {
+              setSheetState(() { dialogSelectedTime = time; });
+            },
+            onTypeChanged: (type) {
+              setSheetState(() { selectedType = type; });
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -1950,406 +1564,69 @@ class _CalendarScreenState extends State<CalendarScreen> {
     String selectedType = event.type;
     final eventTypeKey = GlobalKey();
 
-    showModalBottomSheet(
+    FormDrawer.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.9,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                border: Border.all(color: const Color(0xFF262626), width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2E5A59),
-                    blurRadius: 64,
-                    offset: const Offset(0, -6),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Header
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Close button
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF35373C),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Title
-                            Text(
-                              'Edit Event',
-                              style: GoogleFonts.ibmPlexSans(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.43,
-                              ),
-                            ),
-                            // Confirm button
-                            GestureDetector(
-                              onTap: () async {
-                                final eventDate = DateTime(
-                                  dialogSelectedDate.year,
-                                  dialogSelectedDate.month,
-                                  dialogSelectedDate.day,
-                                  dialogSelectedTime.hour,
-                                  dialogSelectedTime.minute,
-                                );
-                                final newTitle = titleController.text.isEmpty ? selectedType : titleController.text;
-                                final newBuyIn = double.tryParse(buyInController.text) ?? 0.0;
-
-                                try {
-                                  await CalendarEventService.updateEvent(
-                                    eventId: event.id,
-                                    title: newTitle,
-                                    type: selectedType,
-                                    location: locationController.text,
-                                    date: eventDate,
-                                    buyIn: newBuyIn,
-                                  );
-
-                                  Navigator.pop(context);
-                                  // Update the detail screen in-place
-                                  updateDetail(
-                                    title: newTitle,
-                                    type: selectedType,
-                                    location: locationController.text,
-                                    date: eventDate,
-                                    buyIn: newBuyIn,
-                                  );
-                                  // Also update local event list
-                                  _loadEvents();
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Failed to update event: $e')),
-                                  );
-                                }
-                              },
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF54E98A),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.check,
-                                    color: Colors.black,
-                                    size: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Form Card 1 - Input Fields
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF101115),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Column(
-                            children: [
-                              // Event Type Row
-                              GestureDetector(
-                                onTap: () {
-                                  _showEventTypePicker(context, selectedType, (type) {
-                                    setSheetState(() {
-                                      selectedType = type;
-                                    });
-                                  }, eventTypeKey);
-                                },
-                                child: Container(
-                                  key: eventTypeKey,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Event Type',
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: const Color(0xFFD3FFFD),
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w500,
-                                          height: 1.44,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            selectedType,
-                                            style: GoogleFonts.ibmPlexSans(
-                                              color: Colors.white,
-                                              fontSize: 17,
-                                              fontWeight: FontWeight.w500,
-                                              height: 1.44,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          const Icon(
-                                            Icons.unfold_more,
-                                            color: Colors.white,
-                                            size: 24,
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              _buildSeparator(),
-                              // Title Input
-                              TextField(
-                                controller: titleController,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.44,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Title',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: const Color(0xFF8C8C8C),
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.44,
-                                  ),
-                                  filled: false,
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                              _buildSeparator(),
-                              // Location Input
-                              TextField(
-                                controller: locationController,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.44,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Location',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: const Color(0xFF8C8C8C),
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.44,
-                                  ),
-                                  filled: false,
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                              _buildSeparator(),
-                              // Buy In Input
-                              TextField(
-                                controller: buyInController,
-                                keyboardType: TextInputType.number,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.44,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Buy-in amount',
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: const Color(0xFF8C8C8C),
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.44,
-                                  ),
-                                  filled: false,
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      // Form Card 2 - Date/Time
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF101115),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Event Date and Time',
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.43,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                height: 0.5,
-                                color: const Color(0xFF545458),
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Starts',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.44,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  GestureDetector(
-                                    onTap: () async {
-                                      final date = await _showCustomDatePicker(
-                                        context,
-                                        dialogSelectedDate,
-                                      );
-                                      if (date != null) {
-                                        setSheetState(() {
-                                          dialogSelectedDate = date;
-                                        });
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF1B1E24),
-                                        borderRadius: BorderRadius.circular(40),
-                                      ),
-                                      child: Text(
-                                        DateFormat('dd/MM/yyyy').format(dialogSelectedDate),
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  GestureDetector(
-                                    onTap: () async {
-                                      final time = await showTimePicker(
-                                        context: context,
-                                        initialTime: dialogSelectedTime,
-                                        builder: (context, child) {
-                                          return Theme(
-                                            data: Theme.of(context).copyWith(
-                                              timePickerTheme: TimePickerThemeData(
-                                                backgroundColor: const Color(0xFF101115),
-                                                hourMinuteTextColor: Colors.white,
-                                                dialHandColor: const Color(0xFF54E98A),
-                                                dialBackgroundColor: const Color(0xFF1B1E24),
-                                                dialTextColor: Colors.white,
-                                                entryModeIconColor: Colors.white,
-                                                helpTextStyle: GoogleFonts.ibmPlexSans(
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                              textButtonTheme: TextButtonThemeData(
-                                                style: TextButton.styleFrom(
-                                                  foregroundColor: const Color(0xFF54E98A),
-                                                ),
-                                              ),
-                                            ),
-                                            child: child!,
-                                          );
-                                        },
-                                      );
-                                      if (time != null) {
-                                        setSheetState(() {
-                                          dialogSelectedTime = time;
-                                        });
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF1B1E24),
-                                        borderRadius: BorderRadius.circular(40),
-                                      ),
-                                      child: Text(
-                                        dialogSelectedTime.format(context),
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      SizedBox(height: MediaQuery.of(context).padding.bottom),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+      title: 'Edit Event',
+      onSave: () async {
+        final eventDate = DateTime(
+          dialogSelectedDate.year,
+          dialogSelectedDate.month,
+          dialogSelectedDate.day,
+          dialogSelectedTime.hour,
+          dialogSelectedTime.minute,
         );
+        final newTitle = titleController.text.isEmpty ? selectedType : titleController.text;
+        final newBuyIn = double.tryParse(buyInController.text) ?? 0.0;
+
+        try {
+          await CalendarEventService.updateEvent(
+            eventId: event.id,
+            title: newTitle,
+            type: selectedType,
+            location: locationController.text,
+            date: eventDate,
+            buyIn: newBuyIn,
+          );
+
+          Navigator.pop(context);
+          updateDetail(
+            title: newTitle,
+            type: selectedType,
+            location: locationController.text,
+            date: eventDate,
+            buyIn: newBuyIn,
+          );
+          _loadEvents();
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update event: $e')),
+          );
+        }
       },
+      body: StatefulBuilder(
+        builder: (context, setSheetState) {
+          return _buildEventFormContent(
+            context: context,
+            setSheetState: setSheetState,
+            titleController: titleController,
+            locationController: locationController,
+            buyInController: buyInController,
+            dialogSelectedDate: dialogSelectedDate,
+            dialogSelectedTime: dialogSelectedTime,
+            selectedType: selectedType,
+            eventTypeKey: eventTypeKey,
+            onDateChanged: (date) {
+              setSheetState(() { dialogSelectedDate = date; });
+            },
+            onTimeChanged: (time) {
+              setSheetState(() { dialogSelectedTime = time; });
+            },
+            onTypeChanged: (type) {
+              setSheetState(() { selectedType = type; });
+            },
+          );
+        },
+      ),
     );
   }
 

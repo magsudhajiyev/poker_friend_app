@@ -831,46 +831,125 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   Future<void> _stopSession() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF131616),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
-        title: Text(
-          'End Session?',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to end this session?',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 16,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 309,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF101115),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF1B1E24)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black,
+                  blurRadius: 114,
+                  offset: Offset(20, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Stop icon - ring with filled square
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFD55A41),
+                      width: 0.857,
+                    ),
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 11.14,
+                      height: 11.14,
+                      color: const Color(0xFFD55A41),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Stop Session?',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Are you sure you want to stop this session? All hands will be saved.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF8C8C8C),
+                    fontSize: 15,
+                    height: 1.44,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(110),
+                            border: Border.all(color: Colors.white),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.ibmPlexSans(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                                height: 24 / 17,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD55A41),
+                            borderRadius: BorderRadius.circular(110),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Stop',
+                              style: GoogleFonts.ibmPlexSans(
+                                color: Colors.black,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                                height: 24 / 17,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'End Session',
-              style: GoogleFonts.ibmPlexSans(
-                color: Colors.red,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
 
     if (confirm == true) {
