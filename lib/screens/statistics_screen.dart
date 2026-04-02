@@ -9,6 +9,7 @@ import '../services/user_stats_service.dart';
 import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
+import '../design_system/components/cards/error_state_card.dart';
 
 class StatisticsScreen extends StatefulWidget {
   @override
@@ -251,11 +252,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             ),
           ),
           SafeArea(
-            child: LoadingWrapper(
-              isLoading: isLoading,
-              loadingMessage: loadingMessage,
-              child: _buildContent(),
-            ),
+            child: error != null
+                ? ErrorStateCard(onRetry: _loadStatistics)
+                : LoadingWrapper(
+                    isLoading: isLoading,
+                    loadingMessage: loadingMessage,
+                    child: _buildContent(),
+                  ),
           ),
         ],
       ),

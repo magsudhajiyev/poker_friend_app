@@ -38,6 +38,7 @@ export 'components/lists/stat_list_row.dart';
 
 // Cards (new)
 export 'components/cards/info_card.dart';
+export 'components/cards/error_state_card.dart';
 
 // Drawers
 export 'components/form_drawer.dart';

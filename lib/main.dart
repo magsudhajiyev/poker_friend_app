@@ -34,14 +34,13 @@ void main() async {
     print('Environment config load failed: $e');
   }
 
+  // Firebase must init before runApp (AuthWrapper depends on it)
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     print('Firebase initialized successfully');
 
-    // Enable Firestore offline persistence for resilience to network issues
-    // This queues writes locally and syncs when connection recovers
     FirebaseFirestore.instance.settings = const Settings(
       persistenceEnabled: true,
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
@@ -49,61 +48,61 @@ void main() async {
     print('Firestore offline persistence enabled');
   } catch (e) {
     print('Firebase initialization failed: $e');
-    // Continue without Firebase for now
   }
 
-  // Initialize local notification service
+  // Launch app FIRST, then init services in background.
+  // This prevents a black screen if any service hangs when offline.
+  runApp(const PokerTrackerApp());
+  print('📍 MAIN: runApp() called');
+
+  // Initialize remaining services in background (non-blocking)
+  unawaited(_initServicesInBackground());
+}
+
+/// Initialize non-critical services in background after app is already visible.
+/// Each service is wrapped in try/catch so failures don't affect the app.
+Future<void> _initServicesInBackground() async {
+  // Local notifications
   try {
     await NotificationService.initialize();
     await NotificationService.requestPermissions();
     print('Local notification service initialized successfully');
   } catch (e) {
     print('Local notification initialization failed: $e');
-    // Continue without local notifications for now
   }
 
-  // Initialize FCM push notification service
+  // FCM push notifications
   try {
-    // Set callbacks BEFORE initialize() to handle getInitialMessage() for terminated app state
-    FCMService.onForegroundMessage = (RemoteMessage message) {
-      // Don't show UI - the in-app notification system handles foreground notifications
-    };
-
+    FCMService.onForegroundMessage = (RemoteMessage message) {};
     FCMService.onNotificationTap = (Map<String, dynamic> data) {
       _handleNotificationNavigation(data);
     };
-
     await FCMService.initialize();
-
-    // If user is already logged in, ensure FCM token is stored and clubs subscribed
-    // Fire-and-forget - don't block app startup
     if (AuthService.isSignedIn) {
       unawaited(_setupFcmForLoggedInUser());
     }
   } catch (e) {
-    // Continue without FCM
+    print('FCM initialization failed: $e');
   }
 
-  // Initialize logger service for debugging
+  // Logger
   try {
     await LoggerService.initialize();
     await LoggerService.info('App started - Logger initialized');
     print('Logger service initialized successfully');
   } catch (e) {
     print('Logger initialization failed: $e');
-    // Continue without logger
   }
 
-  // Initialize RevenueCat subscription service
+  // RevenueCat subscriptions
   try {
     await SubscriptionService.initialize();
     print('Subscription service initialized successfully');
   } catch (e) {
     print('Subscription service initialization failed: $e');
-    // Continue without subscriptions
   }
 
-  // Initialize deep link service for email invitation handling
+  // Deep links
   try {
     await DeepLinkService.initialize(
       navigatorKey: navigatorKey,
@@ -114,15 +113,10 @@ void main() async {
     print('Deep link service initialized successfully');
   } catch (e) {
     print('Deep link initialization failed: $e');
-    // Continue without deep linking
   }
 
-  runApp(PokerTrackerApp());
-
-  // Process any pending notification that opened the app (from terminated state)
-  // This must happen after runApp() so the navigation context is available
+  // Process pending notification after services are ready
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    // Add a small delay to ensure the app is fully loaded and navigated to home
     Future.delayed(const Duration(seconds: 1), () {
       FCMService.processPendingInitialMessage();
     });

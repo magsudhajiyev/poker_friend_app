@@ -1,12 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../design_system/poker_friend_theme.dart';
-import '../services/club_seeder_service.dart';
-import '../services/club_service.dart';
+import '../design_system/constants/colors.dart';
+import '../design_system/components/app_toggle.dart';
 import '../services/club_request_service.dart';
-import '../models/club_member.dart';
 import '../onboarding/onboarding_prefs.dart';
 import 'admin/club_requests_screen.dart';
 
@@ -41,24 +39,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _checkAppAdminStatus() async {
-    final isAdmin = await ClubRequestService.isAppAdmin();
-    if (isAdmin) {
-      final count = await ClubRequestService.getPendingCount();
-      setState(() {
-        _isAppAdmin = true;
-        _pendingRequestCount = count;
-      });
-    }
+    try {
+      final isAdmin = await ClubRequestService.isAppAdmin();
+      if (isAdmin) {
+        final count = await ClubRequestService.getPendingCount();
+        if (mounted) {
+          setState(() {
+            _isAppAdmin = true;
+            _pendingRequestCount = count;
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _checkDevUser() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == _devUserId) {
       final seen = await OnboardingPrefs.hasSeenOnboarding();
-      setState(() {
-        _isDevUser = true;
-        _onboardingEnabled = !seen; // enabled = hasn't seen it yet
-      });
+      if (mounted) {
+        setState(() {
+          _isDevUser = true;
+          _onboardingEnabled = !seen;
+        });
+      }
     }
   }
 
@@ -84,524 +88,129 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PokerFriendColors.dark1,
+      backgroundColor: AppColors.backgroundPaper,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 375),
-            margin: EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Section - matching home screen style
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 32, 0, 32),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Settings',
-                            style: TextStyle(
-                              fontSize: 32,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Customize your experience',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: PokerFriendColors.dark9,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: PokerFriendColors.dark3,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(
-                            Icons.close_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Game Flow Card
-                Container(
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              autoAdvanceStreets ? Icons.fast_forward : Icons.pause,
-                              color: PokerFriendColors.red,
-                              size: 20,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Game Flow',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  autoAdvanceStreets ? 'Auto-Advance Mode' : 'Manual Mode',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: PokerFriendColors.dark9,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: autoAdvanceStreets,
-                            onChanged: _saveAutoAdvanceStreets,
-                            activeColor: PokerFriendColors.red,
-                            inactiveThumbColor: Colors.white,
-                            inactiveTrackColor: PokerFriendColors.dark4,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: PokerFriendColors.dark1,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              autoAdvanceStreets ? 'Auto-Advance Features:' : 'Manual Mode Features:',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            if (autoAdvanceStreets) ...[
-                              _buildFeatureText('• Game automatically moves from Preflop → Flop → Turn → River'),
-                              _buildFeatureText('• Saves time during rapid gameplay'),
-                              _buildFeatureText('• Perfect for experienced players'),
-                            ] else ...[
-                              _buildFeatureText('• Full control over game progression'),
-                              _buildFeatureText('• Take time to analyze each street'),
-                              _buildFeatureText('• Ideal for learning and review'),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Onboarding Toggle - Dev only
-                if (_isDevUser) ...[
-                  SizedBox(height: 24),
-                  Container(
-                    padding: EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.dark3,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: PokerFriendColors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.school,
-                            color: PokerFriendColors.green,
-                            size: 20,
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Onboarding Tour',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                _onboardingEnabled ? 'Will show on next Home visit' : 'Completed',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: PokerFriendColors.dark9,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Switch(
-                          value: _onboardingEnabled,
-                          onChanged: _toggleOnboarding,
-                          activeColor: PokerFriendColors.green,
-                          inactiveThumbColor: Colors.white,
-                          inactiveTrackColor: PokerFriendColors.dark4,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                SizedBox(height: 24),
-
-                // App Admin Section - Only visible for app admins
-                if (_isAppAdmin) ...[
-                  Container(
-                    padding: EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: PokerFriendColors.dark3,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: PokerFriendColors.yellow.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.admin_panel_settings,
-                                color: PokerFriendColors.yellow,
-                                size: 20,
-                              ),
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'App Admin',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'Manage club registration requests',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: PokerFriendColors.dark9,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 16),
-                        GestureDetector(
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ClubRequestsScreen(),
-                              ),
-                            );
-                            // Refresh pending count when returning
-                            _checkAppAdminStatus();
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.dark1,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: PokerFriendColors.dark5),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.business_center,
-                                  color: PokerFriendColors.yellow,
-                                  size: 20,
-                                ),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Club Requests',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                if (_pendingRequestCount > 0) ...[
-                                  Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: PokerFriendColors.red,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      '$_pendingRequestCount',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 8),
-                                ],
-                                Icon(
-                                  Icons.chevron_right,
-                                  color: PokerFriendColors.dark9,
-                                  size: 20,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 24),
-                ],
-
-                // Debug Section - Club Admin (for testing)
-                Container(
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.purple.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.admin_panel_settings,
-                              color: PokerFriendColors.purple,
-                              size: 20,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Debug: Club Admin',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'Test role promotion',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: PokerFriendColors.dark9,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      _buildAdminButton(
-                        label: 'Become Admin of Gringster Room',
-                        onTap: () => _promoteToAdmin('Gringster Room'),
-                      ),
-                      SizedBox(height: 8),
-                      _buildAdminButton(
-                        label: 'Become Admin of Poczekalia',
-                        onTap: () => _promoteToAdmin('Poczekalia'),
-                      ),
-                      SizedBox(height: 8),
-                      _buildAdminButton(
-                        label: 'Become Admin of House of Cards',
-                        onTap: () => _promoteToAdmin('House of Cards'),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 24),
-
-                // Debug Section - Test Dealer Invitation
-                Container(
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: PokerFriendColors.dark3,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: PokerFriendColors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.person_add,
-                              color: PokerFriendColors.green,
-                              size: 20,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Test Dealer Invitation',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'For testing deep link flow',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: PokerFriendColors.dark9,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      _buildAdminButton(
-                        label: 'Add jeyranisayevaa@gmail.com to Gringster Room',
-                        onTap: _addTestDealer,
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 100), // Space for bottom navigation
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureText(String text) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 4),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 13,
-          color: PokerFriendColors.dark9,
-          height: 1.4,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAdminButton({
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: BoxDecoration(
-          color: PokerFriendColors.dark1,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: PokerFriendColors.dark5),
-        ),
-        child: Row(
+        child: Column(
           children: [
-            Icon(
-              Icons.arrow_forward_ios,
-              color: PokerFriendColors.purple,
-              size: 14,
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'Settings',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(width: 12),
+
+            const SizedBox(height: 28),
+
+            // Content
             Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Game Flow section
+                    _buildSectionHeader('GAME FLOW'),
+                    const SizedBox(height: 12),
+                    _buildSettingsCard(
+                      children: [
+                        _buildToggleRow(
+                          icon: Icons.fast_forward_rounded,
+                          iconColor: const Color(0xFF89F1EC),
+                          title: 'Auto-Advance Streets',
+                          subtitle: autoAdvanceStreets
+                              ? 'Automatically moves to next street'
+                              : 'Manual control over game progression',
+                          value: autoAdvanceStreets,
+                          onChanged: _saveAutoAdvanceStreets,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildInfoBox(
+                          autoAdvanceStreets
+                              ? 'The game automatically moves from Preflop to Flop to Turn to River. Best for experienced players who want faster gameplay.'
+                              : 'You have full control over when to advance to the next street. Ideal for learning and careful hand review.',
+                        ),
+                      ],
+                    ),
+
+                    // Onboarding Tour - Dev only
+                    if (_isDevUser) ...[
+                      const SizedBox(height: 28),
+                      _buildSectionHeader('DEVELOPER'),
+                      const SizedBox(height: 12),
+                      _buildSettingsCard(
+                        children: [
+                          _buildToggleRow(
+                            icon: Icons.school_rounded,
+                            iconColor: const Color(0xFF87ED81),
+                            title: 'Onboarding Tour',
+                            subtitle: _onboardingEnabled
+                                ? 'Will show on next Home visit'
+                                : 'Completed',
+                            value: _onboardingEnabled,
+                            onChanged: _toggleOnboarding,
+                          ),
+                        ],
+                      ),
+                    ],
+
+                    // App Admin Section
+                    if (_isAppAdmin) ...[
+                      const SizedBox(height: 28),
+                      _buildSectionHeader('ADMIN'),
+                      const SizedBox(height: 12),
+                      _buildSettingsCard(
+                        children: [
+                          _buildNavigationRow(
+                            icon: Icons.business_center_rounded,
+                            iconColor: const Color(0xFFE8B55A),
+                            title: 'Club Requests',
+                            subtitle: 'Manage registration requests',
+                            badge: _pendingRequestCount > 0
+                                ? _pendingRequestCount
+                                : null,
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ClubRequestsScreen(),
+                                ),
+                              );
+                              _checkAppAdminStatus();
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -611,107 +220,178 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _addTestDealer() async {
-    const testEmail = 'jeyranisayevaa@gmail.com';
-    const clubName = 'Gringster Room';
-
-    // Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: CircularProgressIndicator(color: PokerFriendColors.green),
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.ibmPlexSans(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF87ED81),
+        letterSpacing: 1.0,
       ),
     );
-
-    try {
-      // Find the user by email
-      final userSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where('email', isEqualTo: testEmail)
-          .limit(1)
-          .get();
-
-      if (userSnapshot.docs.isEmpty) {
-        throw Exception('User with email $testEmail not found. Make sure they have signed up first.');
-      }
-
-      final userData = userSnapshot.docs.first;
-      final userId = userData.id;
-      final displayName = userData.data()['displayName'] ?? 'Jeku';
-
-      // Find the Gringster Room club
-      final clubs = await ClubService.getClubs();
-      final club = clubs.firstWhere(
-        (c) => c.name == clubName,
-        orElse: () => throw Exception('Club "$clubName" not found'),
-      );
-
-      // Add user directly as dealer
-      await ClubService.addMemberToClub(
-        clubId: club.id,
-        userId: userId,
-        displayName: displayName,
-        email: testEmail,
-        role: ClubRole.dealer,
-      );
-
-      Navigator.pop(context); // Close loading
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$displayName is now a dealer in $clubName!'),
-          backgroundColor: PokerFriendColors.green,
-        ),
-      );
-    } catch (e) {
-      Navigator.pop(context); // Close loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: PokerFriendColors.red,
-        ),
-      );
-    }
   }
 
-  Future<void> _promoteToAdmin(String clubName) async {
-    // Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: CircularProgressIndicator(color: PokerFriendColors.purple),
+  Widget _buildSettingsCard({required List<Widget> children}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF1C1F21),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
       ),
     );
+  }
 
-    try {
-      final success = await ClubSeederService.promoteCurrentUserToAdmin(clubName);
-      Navigator.pop(context); // Close loading
-
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('You are now admin of $clubName!'),
-            backgroundColor: PokerFriendColors.green,
+  Widget _buildToggleRow({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
           ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to promote. Make sure you are a member of $clubName.'),
-            backgroundColor: PokerFriendColors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      Navigator.pop(context); // Close loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: PokerFriendColors.red,
+          child: Icon(icon, color: iconColor, size: 20),
         ),
-      );
-    }
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  color: const Color(0xFF8C8C8C),
+                ),
+              ),
+            ],
+          ),
+        ),
+        AppToggle(
+          value: value,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNavigationRow({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    int? badge,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 13,
+                    color: const Color(0xFF8C8C8C),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (badge != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD55A41),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$badge',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: Color(0xFF8C8C8C),
+            size: 22,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoBox(String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.ibmPlexSans(
+          fontSize: 13,
+          color: const Color(0xFF8C8C8C),
+          height: 1.5,
+        ),
+      ),
+    );
   }
 }

@@ -18,6 +18,7 @@ import '../../services/event_attendance_service.dart';
 import '../../services/invitation_service.dart';
 import '../../services/dealer_service.dart';
 import '../../services/seat_service.dart';
+import '../../design_system/components/cards/error_state_card.dart';
 import '../../widgets/global_bottom_nav_bar.dart';
 import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
@@ -43,6 +44,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   TabController? _tabController;
   bool _isAdmin = false;
   bool _isLoading = true;
+  String? _loadError;
   int _memberCount = 0;
 
   List<ClubEvent> _upcomingEvents = [];
@@ -237,7 +239,10 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
   Future<void> _loadData() async {
     if (!mounted) return;
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
 
     try {
       final isAdmin = await ClubService.canManageEvents(widget.club.id);
@@ -286,7 +291,10 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       });
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _loadError = e.toString();
+        });
       }
     }
   }
@@ -365,7 +373,9 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                           color: AppColors.tealAccent,
                         ),
                       )
-                    : TabBarView(
+                    : _loadError != null
+                        ? ErrorStateCard(onRetry: _loadData)
+                        : TabBarView(
                         controller: _tabController!,
                         children: [
                           _buildEventList(_upcomingEvents, 'No upcoming events', 'scheduled'),

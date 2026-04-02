@@ -38,6 +38,7 @@ import '../design_system/components.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/components/drawer_dots.dart';
+import '../design_system/components/cards/error_state_card.dart';
 import '../services/seat_service.dart';
 import '../services/table_service.dart';
 import '../services/club_notification_service.dart';
@@ -98,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> earningsChartData = [];
   double avgEarnings = 0.0;
   bool isLoadingData = true;
+  String? _loadError;
   bool _isBankrollHidden = false;
 
   // Context menu state
@@ -1017,17 +1019,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     try {
       setState(() {
         isLoadingData = true;
+        _loadError = null;
       });
 
       StatsVerificationService.verifyAllStats();
 
-      final bankroll = await BankrollService.getCurrentBankroll();
-      final goal = await BankrollService.getBankrollGoal();
-      final progress = await BankrollService.getBankrollProgress();
-      final stats = await BankrollService.getPlayerStatistics();
-      final sessions = await _getRecentSessions();
-      final earningsData = await _getEarningsData();
-      final events = await _loadCalendarEvents();
+      final bankroll = await BankrollService.getCurrentBankroll()
+          .timeout(const Duration(seconds: 10), onTimeout: () => 0.0);
+      final goal = await BankrollService.getBankrollGoal()
+          .timeout(const Duration(seconds: 10), onTimeout: () => 0.0);
+      final progress = await BankrollService.getBankrollProgress()
+          .timeout(const Duration(seconds: 10), onTimeout: () => 0.0);
+      final stats = await BankrollService.getPlayerStatistics()
+          .timeout(const Duration(seconds: 10), onTimeout: () => {});
+      final sessions = await _getRecentSessions()
+          .timeout(const Duration(seconds: 10), onTimeout: () => []);
+      final earningsData = await _getEarningsData()
+          .timeout(const Duration(seconds: 10), onTimeout: () => {'chartData': null, 'avgEarnings': 0.0});
+      final events = await _loadCalendarEvents()
+          .timeout(const Duration(seconds: 10), onTimeout: () => []);
 
       final user = AuthService.currentUser;
       String displayName = 'User';
@@ -1063,6 +1073,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) {
         setState(() {
           isLoadingData = false;
+          _loadError = e.toString();
         });
       }
     }
@@ -1317,6 +1328,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     if (isLoadingData && currentBankroll == 0.0 && recentSessions.isEmpty) {
       return LoadingScreen(message: 'Loading your poker data...');
+    }
+
+    if (_loadError != null && currentBankroll == 0.0 && recentSessions.isEmpty) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF02050B),
+        body: ErrorStateCard(onRetry: _loadData),
+      );
     }
 
     return Scaffold(

@@ -271,9 +271,14 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       throw _getAuthException(e);
     } catch (e) {
-      if (e.toString().contains('sign_in_canceled') ||
-          e.toString().contains('network_error')) {
+      if (e.toString().contains('sign_in_canceled')) {
         return null;
+      }
+      if (e.toString().contains('network_error') ||
+          e.toString().contains('NetworkError') ||
+          e.toString().contains('unable to resolve host') ||
+          e.toString().contains('No address associated')) {
+        throw 'No internet connection. Please check your network and try again.';
       }
       throw 'Google sign-in failed. Please try again.';
     }

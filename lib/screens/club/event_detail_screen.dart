@@ -26,6 +26,7 @@ import '../dealer/dealer_qr_scan_screen.dart';
 import '../spectator/event_rankings_screen.dart';
 import '../player/player_session_screen.dart';
 import 'final_standings_screen.dart';
+import '../../design_system/components/cards/error_state_card.dart';
 
 /// Event detail screen with RSVP functionality
 class EventDetailScreen extends StatefulWidget {
@@ -46,6 +47,7 @@ class EventDetailScreen extends StatefulWidget {
 
 class _EventDetailScreenState extends State<EventDetailScreen> {
   bool _isLoading = true;
+  String? _loadError;
   EventAttendance? _userAttendance;
   Map<AttendanceStatus, int> _attendanceCounts = {};
   List<EventAttendance> _goingMembers = [];
@@ -204,7 +206,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
 
     try {
       final results = await Future.wait([
@@ -234,7 +239,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       });
     } catch (e) {
       // print('Error loading event data: $e');
-      setState(() => _isLoading = false);
+      setState(() {
+        _loadError = e.toString();
+        _isLoading = false;
+      });
     }
   }
 
@@ -514,7 +522,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               color: const Color(0xFF89F1EC),
                             ),
                           )
-                        : SingleChildScrollView(
+                        : _loadError != null
+                            ? ErrorStateCard(onRetry: _loadData)
+                            : SingleChildScrollView(
                             padding: const EdgeInsets.fromLTRB(16, 10, 16, 32),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

@@ -11,6 +11,7 @@ import '../../services/dealer_service.dart';
 import '../../services/seat_service.dart';
 import '../../config/app_config.dart';
 import '../public/public_leaderboard_screen.dart';
+import '../../design_system/components/cards/error_state_card.dart';
 
 /// Live event dashboard with real-time rankings
 class EventDashboardScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class EventDashboardScreen extends StatefulWidget {
 class _EventDashboardScreenState extends State<EventDashboardScreen> {
   EventRankingsData? _rankingsData;
   bool _isLoading = true;
+  String? _loadError;
   bool _isConnected = false;
   StreamSubscription? _rankingSubscription;
   Timer? _refreshTimer;
@@ -63,66 +65,76 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
   }
 
   Future<void> _connectAndLoadRankings() async {
-    setState(() => _isLoading = true);
-
-    debugPrint('EventDashboard: Loading rankings for event ${widget.event.id}');
-    debugPrint('EventDashboard: Club ID: ${widget.club.id}');
-    debugPrint('EventDashboard: Tables: ${widget.tables.map((t) => '${t.id}(${t.name})').join(', ')}');
-
-    // Sync players from tables FIRST (local data) - don't wait for WebSocket
-    await _syncPlayersFromTables();
-
-    // Connect to WebSocket if not already connected
-    final wsService = WebSocketService.instance;
-    if (!wsService.isConnected) {
-      debugPrint('EventDashboard: Connecting to WebSocket at ${AppConfig.serverUrl}');
-      wsService.connect(AppConfig.serverUrl);
-      await Future.delayed(const Duration(seconds: 1));
-    }
-
-    // Only try to join event room if WebSocket connected
-    if (wsService.isConnected) {
-      // Join event room - pass event data so backend can create if needed
-      final joinResult = await wsService.joinEvent(
-        widget.event.id,
-        clubId: widget.event.clubId,
-        name: widget.event.name,
-        tableIds: widget.event.tableIds,
-        isPublic: widget.event.isPublic,
-        accessCode: widget.event.accessCode,
-        createdBy: widget.event.createdBy,
-      );
-      if (joinResult != null && joinResult['success'] == true) {
-        setState(() => _isConnected = true);
-        debugPrint('EventDashboard: WebSocket connected and joined event');
-
-        // Initial rankings from join response
-        if (joinResult['rankings'] != null) {
-          setState(() {
-            _rankingsData = EventRankingsData.fromMap(
-              joinResult['rankings'] as Map<String, dynamic>,
-            );
-          });
-        }
-      } else {
-        debugPrint('EventDashboard: Failed to join event room: $joinResult');
-      }
-    } else {
-      debugPrint('EventDashboard: WebSocket not connected, using local data only');
-    }
-
-    // Subscribe to ranking updates
-    _rankingSubscription = wsService.onRankingUpdate.listen((data) {
-      final newRankings = EventRankingsData.fromMap(data);
-      setState(() {
-        _rankingsData = newRankings;
-      });
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
     });
 
-    // Start periodic refresh timer
-    _startRefreshTimer();
+    try {
+      debugPrint('EventDashboard: Loading rankings for event ${widget.event.id}');
+      debugPrint('EventDashboard: Club ID: ${widget.club.id}');
+      debugPrint('EventDashboard: Tables: ${widget.tables.map((t) => '${t.id}(${t.name})').join(', ')}');
 
-    setState(() => _isLoading = false);
+      // Sync players from tables FIRST (local data) - don't wait for WebSocket
+      await _syncPlayersFromTables();
+
+      // Connect to WebSocket if not already connected
+      final wsService = WebSocketService.instance;
+      if (!wsService.isConnected) {
+        debugPrint('EventDashboard: Connecting to WebSocket at ${AppConfig.serverUrl}');
+        wsService.connect(AppConfig.serverUrl);
+        await Future.delayed(const Duration(seconds: 1));
+      }
+
+      // Only try to join event room if WebSocket connected
+      if (wsService.isConnected) {
+        // Join event room - pass event data so backend can create if needed
+        final joinResult = await wsService.joinEvent(
+          widget.event.id,
+          clubId: widget.event.clubId,
+          name: widget.event.name,
+          tableIds: widget.event.tableIds,
+          isPublic: widget.event.isPublic,
+          accessCode: widget.event.accessCode,
+          createdBy: widget.event.createdBy,
+        );
+        if (joinResult != null && joinResult['success'] == true) {
+          setState(() => _isConnected = true);
+          debugPrint('EventDashboard: WebSocket connected and joined event');
+
+          // Initial rankings from join response
+          if (joinResult['rankings'] != null) {
+            setState(() {
+              _rankingsData = EventRankingsData.fromMap(
+                joinResult['rankings'] as Map<String, dynamic>,
+              );
+            });
+          }
+        } else {
+          debugPrint('EventDashboard: Failed to join event room: $joinResult');
+        }
+      } else {
+        debugPrint('EventDashboard: WebSocket not connected, using local data only');
+      }
+
+      // Subscribe to ranking updates
+      _rankingSubscription = wsService.onRankingUpdate.listen((data) {
+        final newRankings = EventRankingsData.fromMap(data);
+        setState(() {
+          _rankingsData = newRankings;
+        });
+      });
+
+      // Start periodic refresh timer
+      _startRefreshTimer();
+
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() {
+        _loadError = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   void _startRefreshTimer() {
@@ -325,7 +337,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
+          : _loadError != null
+              ? ErrorStateCard(onRetry: _connectAndLoadRankings)
+              : Column(
               children: [
                 _buildHeader(),
                 Expanded(child: _buildRankingsTable()),

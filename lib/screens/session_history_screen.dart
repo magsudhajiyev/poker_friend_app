@@ -7,6 +7,7 @@ import '../services/local_storage_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../design_system/components/cards/error_state_card.dart';
 import 'session_analytics_screen.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
@@ -315,43 +316,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     }
 
     if (error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, color: Colors.red, size: 64),
-            SizedBox(height: 16),
-            Text(
-              'Error',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              error!,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.red, fontSize: 16),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadSessions,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF5AC95A),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'Retry',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      );
+      return ErrorStateCard(onRetry: _loadSessions);
     }
 
     if (sessionList.isEmpty) {

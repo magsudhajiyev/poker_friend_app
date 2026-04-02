@@ -11,6 +11,7 @@ import '../widgets/global_bottom_nav_bar.dart';
 import 'opponent_detail_screen.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/form_drawer.dart';
+import '../design_system/components/cards/error_state_card.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
   // Static cache accessible from other screens
@@ -332,48 +333,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     }
 
     if (error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: Icon(Icons.error, color: Colors.red, size: 32),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Error',
-              style: TextStyle(
-                fontSize: 24,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              error!,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.red, fontSize: 14),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadOpponents,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFcb5242),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text('Retry', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      );
+      return ErrorStateCard(onRetry: () => _loadOpponents(useCache: false));
     }
 
     final displayOpponents = filteredOpponents;

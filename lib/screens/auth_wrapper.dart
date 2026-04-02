@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link_service.dart';
 import 'intro_screen.dart';
@@ -16,9 +18,43 @@ class _AuthWrapperState extends State<AuthWrapper> {
   bool _loggedUnexpectedLogout = false;
   bool _wasSignedIn = false;  // Track if user was ever signed in during this session
   bool _waitingForRecovery = false;  // Track if we're waiting for auth to recover
+  bool _authTimedOut = false;  // Track if auth stream took too long to resolve
+  Timer? _authTimeoutTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startAuthTimeout();
+  }
+
+  @override
+  void dispose() {
+    _authTimeoutTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startAuthTimeout() {
+    _authTimeoutTimer?.cancel();
+    _authTimedOut = false;
+    _authTimeoutTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _authTimedOut = true;
+        });
+      }
+    });
+  }
+
+  void _retryAuth() {
+    setState(() {
+      _authTimedOut = false;
+    });
+    _startAuthTimeout();
+  }
 
   @override
   Widget build(BuildContext context) {
+    print('📍 AUTH_WRAPPER: build() called');
     return StreamBuilder<User?>(
       stream: AuthService.authStateChanges,
       builder: (context, snapshot) {
@@ -26,9 +62,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         // Show loading spinner while checking auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
-          print('📍 AUTH: Connection waiting, showing loading');
+          print('📍 AUTH: Connection waiting, timedOut=$_authTimedOut');
+          if (_authTimedOut) {
+            return _buildConnectionErrorScreen(context);
+          }
           return _buildLoadingScreen(context);
         }
+
+        // Auth resolved — cancel timeout
+        _authTimeoutTimer?.cancel();
 
         // User is signed in
         if (snapshot.hasData && snapshot.data != null) {
@@ -129,6 +171,81 @@ class _AuthWrapperState extends State<AuthWrapper> {
               SizedBox(height: 40),
               CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConnectionErrorScreen(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF02050B),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.wifi_off_rounded,
+                  color: Color(0xFF8C8C8C),
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Connection Issue',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'We couldn\'t connect to our servers.\nPlease check your internet connection\nand try again.',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  color: const Color(0xFF8C8C8C),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              GestureDetector(
+                onTap: _retryAuth,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(40),
+                    border: Border.all(
+                      color: const Color(0xFF89F1EC).withValues(alpha: 0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    'Try Again',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF89F1EC),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

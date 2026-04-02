@@ -7,6 +7,7 @@ import '../services/session_result_service.dart';
 import '../screens/settings_screen.dart';
 import '../screens/paywall_screen.dart';
 import '../screens/intro_screen.dart';
+import '../widgets/global_bottom_nav_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -166,6 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
+      bottomNavigationBar: const GlobalBottomNavBar(currentScreen: 'profile'),
       body: Stack(
         children: [
           // Elliptical teal glow at top
