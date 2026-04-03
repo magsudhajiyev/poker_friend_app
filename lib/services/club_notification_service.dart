@@ -146,7 +146,7 @@ class ClubNotificationService {
       clubId: clubId,
       type: NotificationType.eventCreated,
       title: 'New Event: ${event.name}',
-      body: '$clubName has a new event on ${_formatDate(event.startTime)}',
+      body: '${_formatDate(event.startTime)}',
       eventId: event.id,
       data: {
         'action': 'view_event',

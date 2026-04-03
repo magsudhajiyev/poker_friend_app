@@ -7,6 +7,8 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/dealer_service.dart';
 import 'session_hands_screen.dart';
+import 'hand_actions_screen.dart';
+import 'stack_chart_screen.dart';
 
 class SessionAnalyticsScreen extends StatefulWidget {
   final Map<String, dynamic> sessionData;
@@ -30,6 +32,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   double _totalInvested = 0.0;
   double _finalStack = 0.0;
   double _profitLoss = 0.0;
+  int? _touchedSpotIndex;
 
   @override
   void initState() {
@@ -401,14 +404,32 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Stack Growth',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              height: 1.2,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Stack Growth',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+              if (_stackHistory.length >= 2)
+                GestureDetector(
+                  onTap: _openFullScreenChart,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.fullscreen_rounded,
+                      color: Colors.white.withValues(alpha: 0.4),
+                      size: 22,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 20),
           SizedBox(
@@ -416,6 +437,21 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             child: _stackHistory.length >= 2 ? _buildLineChart() : _buildNoDataChart(),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openFullScreenChart() {
+    setState(() => _touchedSpotIndex = null);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StackChartScreen(
+          stackHistory: _stackHistory,
+          hands: _hands,
+          sessionData: widget.sessionData,
+          profitLoss: _profitLoss,
+        ),
       ),
     );
   }
@@ -447,147 +483,231 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
     final lineColor = _profitLoss >= 0 ? const Color(0xFF89F1EC) : const Color(0xFFFF6B6B);
 
-    return Row(
-      children: [
-        // Fixed Y-axis
-        SizedBox(
-          width: 60,
-          child: LineChart(
-            LineChartData(
-              gridData: FlGridData(show: false),
-              titlesData: FlTitlesData(
-                show: true,
-                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: spots.isNotEmpty ? (spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) / 4) : 100,
-                    reservedSize: 60,
-                    getTitlesWidget: (double value, TitleMeta meta) {
-                      return Text(
-                        _formatCurrency(value),
-                        style: GoogleFonts.robotoMono(
+    final minY = spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.9 : 0.0;
+    final maxY = spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1 : 100.0;
+    final yInterval = maxY > minY ? (maxY - minY) / 4 : 100.0;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SizedBox(
+        width: chartAreaWidth,
+        child: LineChart(
+          LineChartData(
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              horizontalInterval: yInterval,
+              getDrawingHorizontalLine: (value) {
+                return FlLine(
+                  color: Colors.white.withOpacity(0.05),
+                  strokeWidth: 1,
+                );
+              },
+            ),
+            titlesData: FlTitlesData(
+              show: true,
+              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  interval: yInterval,
+                  reservedSize: 55,
+                  getTitlesWidget: (double value, TitleMeta meta) {
+                    return Text(
+                      _formatCurrency(value),
+                      style: GoogleFonts.robotoMono(
+                        color: Colors.white.withOpacity(0.3),
+                        fontSize: 10,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 30,
+                  interval: 1,
+                  getTitlesWidget: (double value, TitleMeta meta) {
+                    if (value != value.roundToDouble()) return const SizedBox.shrink();
+                    final idx = value.toInt();
+                    if (idx < 0 || idx >= _stackHistory.length) return const SizedBox.shrink();
+                    final entry = _stackHistory[idx];
+                    final changeType = entry['changeType'] ?? 'unknown';
+                    String label;
+                    switch (changeType) {
+                      case 'initial':
+                        label = 'Start';
+                        break;
+                      case 'rebuy':
+                        label = 'Rebuy';
+                        break;
+                      case 'final':
+                        label = 'End';
+                        break;
+                      default:
+                        label = '#${entry['handNumber'] ?? idx}';
+                    }
+                    return SideTitleWidget(
+                      axisSide: meta.axisSide,
+                      space: 8.0,
+                      child: Text(
+                        label,
+                        style: GoogleFonts.ibmPlexSans(
                           color: Colors.white.withOpacity(0.3),
                           fontSize: 10,
                         ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              borderData: FlBorderData(show: false),
-              minY: spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.9 : 0,
-              maxY: spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1 : 100,
-              lineBarsData: [],
-            ),
-          ),
-        ),
-        // Scrollable chart area
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            reverse: true,
-            child: SizedBox(
-              width: chartAreaWidth,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    horizontalInterval: spots.isNotEmpty ? (spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) / 5) : 100,
-                    getDrawingHorizontalLine: (value) {
-                      return FlLine(
-                        color: Colors.white.withOpacity(0.05),
-                        strokeWidth: 1,
-                      );
-                    },
-                  ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        interval: 1,
-                        getTitlesWidget: (double value, TitleMeta meta) {
-                          if (value.toInt() < _stackHistory.length) {
-                            final entry = _stackHistory[value.toInt()];
-                            final changeType = entry['changeType'] ?? 'unknown';
-                            String label = '';
-                            switch (changeType) {
-                              case 'initial':
-                                label = 'Start';
-                                break;
-                              case 'rebuy':
-                                label = 'Rebuy';
-                                break;
-                              case 'hand':
-                                label = 'Hand';
-                                break;
-                              default:
-                                label = '${value.toInt() + 1}';
-                            }
-                            return SideTitleWidget(
-                              axisSide: meta.axisSide,
-                              space: 8.0,
-                              child: Text(
-                                label,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white.withOpacity(0.3),
-                                  fontSize: 10,
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
                       ),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  minX: 0,
-                  maxX: (spots.length - 1).toDouble(),
-                  minY: spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.9 : 0,
-                  maxY: spots.isNotEmpty ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1 : 100,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      gradient: LinearGradient(
-                        colors: [lineColor.withOpacity(0.3), lineColor],
-                      ),
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                          radius: 4,
-                          color: Colors.white,
-                          strokeWidth: 2,
-                          strokeColor: lineColor,
-                        ),
-                      ),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          colors: [lineColor.withOpacity(0.1), Colors.transparent],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ),
+            borderData: FlBorderData(show: false),
+            minX: -0.3,
+            maxX: (spots.length - 1).toDouble() + 0.3,
+            minY: minY,
+            maxY: maxY,
+            lineTouchData: LineTouchData(
+              enabled: true,
+              handleBuiltInTouches: false,
+              touchSpotThreshold: 40,
+              touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
+                if (event is FlTapUpEvent) {
+                  if (_touchedSpotIndex != null) {
+                    // Tooltip is showing — any tap navigates to that hand
+                    final idx = _touchedSpotIndex!;
+                    setState(() => _touchedSpotIndex = null);
+                    _navigateToHandFromChart(idx);
+                    return;
+                  }
+                  if (response != null && response.lineBarSpots != null && response.lineBarSpots!.isNotEmpty) {
+                    final tappedIndex = response.lineBarSpots!.first.x.toInt();
+                    setState(() => _touchedSpotIndex = tappedIndex);
+                  }
+                }
+              },
+              touchTooltipData: LineTouchTooltipData(
+                getTooltipColor: (_) => const Color(0xFF1C2926),
+                tooltipRoundedRadius: 12,
+                tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                getTooltipItems: (touchedSpots) {
+                  return touchedSpots.map((spot) {
+                    final index = spot.x.toInt();
+                    final stackValue = _formatCurrency(spot.y);
+
+                    if (index >= 0 && index < _stackHistory.length) {
+                      final entry = _stackHistory[index];
+                      final handNumber = entry['handNumber'] as int?;
+                      final changeType = entry['changeType'] ?? '';
+
+                      if (changeType != 'initial' && changeType != 'rebuy' && changeType != 'final' && handNumber != null && handNumber > 0) {
+                        final hand = _findHandByNumber(handNumber);
+                        final position = hand?['heroPositionName'] as String?;
+                        final holeCards = hand?['ourHoleCards'] as Map<String, dynamic>?;
+                        final card1 = holeCards?['card1'] as String?;
+                        final card2 = holeCards?['card2'] as String?;
+                        final hasCards = card1 != null && card1.isNotEmpty && card2 != null && card2.isNotEmpty;
+
+                        String detail = stackValue;
+                        if (position != null && position.isNotEmpty) {
+                          detail += '  ·  $position';
+                        }
+                        if (hasCards) {
+                          detail += '\n$card1 $card2';
+                        }
+                        return LineTooltipItem(
+                          detail,
+                          GoogleFonts.ibmPlexSans(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      }
+                    }
+
+                    return LineTooltipItem(
+                      stackValue,
+                      GoogleFonts.ibmPlexSans(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    );
+                  }).toList();
+                },
+              ),
+            ),
+            showingTooltipIndicators: _touchedSpotIndex != null
+                ? [ShowingTooltipIndicators([
+                    LineBarSpot(
+                      LineChartBarData(spots: spots),
+                      0,
+                      spots[_touchedSpotIndex!],
+                    ),
+                  ])]
+                : [],
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                gradient: LinearGradient(
+                  colors: [lineColor.withOpacity(0.3), lineColor],
+                ),
+                barWidth: 3,
+                isStrokeCapRound: true,
+                dotData: FlDotData(
+                  show: true,
+                  getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                    radius: 4,
+                    color: Colors.white,
+                    strokeWidth: 2,
+                    strokeColor: lineColor,
+                  ),
+                ),
+                belowBarData: BarAreaData(
+                  show: true,
+                  gradient: LinearGradient(
+                    colors: [lineColor.withOpacity(0.1), Colors.transparent],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Map<String, dynamic>? _findHandByNumber(int handNumber) {
+    for (final hand in _hands) {
+      if (hand['handNumber'] == handNumber) return hand;
+    }
+    return null;
+  }
+
+  void _navigateToHandFromChart(int spotIndex) {
+    if (spotIndex < 0 || spotIndex >= _stackHistory.length) return;
+    final entry = _stackHistory[spotIndex];
+    final handNumber = entry['handNumber'] as int?;
+    final changeType = entry['changeType'] ?? '';
+    if (changeType == 'initial' || changeType == 'rebuy' || changeType == 'final') return;
+    if (handNumber == null || handNumber <= 0) return;
+
+    final hand = _findHandByNumber(handNumber);
+    if (hand == null) return;
+
+    setState(() => _touchedSpotIndex = null);
+    final ourSeat = widget.sessionData['ourSeatNumber'] as int?;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HandActionsScreen(hand: hand, ourSeat: ourSeat),
+      ),
     );
   }
 

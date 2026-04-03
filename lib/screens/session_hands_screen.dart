@@ -284,275 +284,211 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
     );
   }
 
+  static const _cardColor = Color(0xFF131616);
+  static const _mint = Color(0xFF89F1EC);
+
   Widget _buildHandCard(Map<String, dynamic> hand, int handNumber) {
     final actions = hand['actions'] as List<dynamic>? ?? [];
     final startTime = DateTime.parse(hand['startTime']);
     final isStarred = hand['isStarred'] == true;
     final tags = (hand['tags'] as List<dynamic>?)?.cast<String>() ?? [];
+    final potAmount = hand['potAmount'] ?? 0;
+    final isCash = hand['gameType'] == 'cash';
+    final heroPositionName = hand['heroPositionName'] ??
+        PokerPositions.getPositionName(
+          hand['heroPosition'] ?? 1,
+          hand['buttonPosition'],
+          hand['playerCount'],
+        );
+    final winnerId = hand['winnerId'];
+    final heroSeat = hand['heroSeatNumber'] ?? widget.session['ourSeatNumber'] ?? widget.session['ourSeat'];
+    final heroWon = winnerId != null && winnerId == heroSeat;
 
     return GestureDetector(
       onTap: () => _navigateToHandActions(hand),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF131616),
-          borderRadius: BorderRadius.circular(18),
+          color: _cardColor,
+          borderRadius: BorderRadius.circular(14),
           border: isStarred
-              ? Border.all(color: Colors.amber.withOpacity(0.5), width: 1.5)
+              ? Border.all(color: Colors.amber.withValues(alpha: 0.5), width: 1.5)
               : null,
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hand Header
+            // Top row: Hand # + time + star/won badge
             Row(
               children: [
-                // Hand number badge
-                Stack(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF89F1EC).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '#$handNumber',
-                          style: GoogleFonts.ibmPlexSans(
-                            color: const Color(0xFF89F1EC),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Star badge
-                    if (isStarred)
-                      Positioned(
-                        top: -3,
-                        right: -3,
-                        child: Container(
-                          width: 16,
-                          height: 16,
-                          decoration: const BoxDecoration(
-                            color: Colors.amber,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.star,
-                            color: Colors.white,
-                            size: 10,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                // Hand number pill
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Position: ${hand['heroPositionName'] ?? PokerPositions.getPositionName(hand['heroPosition'] ?? 1, hand['buttonPosition'], hand['playerCount'])}',
+                        '#$handNumber',
                         style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13,
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
-                          fontSize: 14,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${actions.length} actions  •  ${DateFormat('HH:mm:ss').format(startTime)}',
-                        style: GoogleFonts.ibmPlexSans(
-                          color: Colors.white.withOpacity(0.5),
-                          fontSize: 12,
-                        ),
-                      ),
+                      if (isStarred) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.star, color: Colors.amber, size: 12),
+                      ],
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  color: Colors.white.withOpacity(0.3),
-                  size: 20,
+                const SizedBox(width: 10),
+                // Time + actions count
+                Expanded(
+                  child: Text(
+                    '${DateFormat('HH:mm').format(startTime)}  ·  ${actions.length} actions  ·  ${hand['playerCount']}p',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                // Won badge
+                if (heroWon)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _mint.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'WON',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 10,
+                        color: _mint,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
               ],
             ),
 
             const SizedBox(height: 12),
+            Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
+            const SizedBox(height: 12),
 
-            // Hand Info Row
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildHandStat('Players', '${hand['playerCount']}'),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 24,
-                    color: Colors.white.withOpacity(0.1),
-                  ),
-                  Expanded(
-                    child: _buildHandStat('Actions', '${actions.length}'),
-                  ),
-                  // Show hero cards if available
-                  if (_hasHeroCards(hand)) ...[
-                    Container(
-                      width: 1,
-                      height: 24,
-                      color: Colors.white.withOpacity(0.1),
-                    ),
-                    Expanded(
-                      child: _buildHeroCardsColumn(hand),
-                    ),
-                  ],
+            // Bottom row: position + hero cards + pot + chevron
+            Row(
+              children: [
+                // Position chip
+                _buildPositionChip(heroPositionName),
+                const SizedBox(width: 8),
+                // Hero cards
+                if (_hasHeroCards(hand)) ...[
+                  _buildMiniCards(hand),
+                  const SizedBox(width: 8),
                 ],
-              ),
+                // Tags
+                if (tags.isNotEmpty) ...[
+                  ...tags.take(2).map((tag) => Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: _buildTagBadge(tag),
+                  )),
+                ],
+                const Spacer(),
+                // Pot
+                Text(
+                  'Pot ${isCash ? '\$' : ''}${potAmount is double ? potAmount.toStringAsFixed(0) : potAmount}',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    color: _mint,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right,
+                  color: Colors.white.withValues(alpha: 0.3),
+                  size: 20,
+                ),
+              ],
             ),
-
-            // Tags row (if any)
-            if (tags.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: tags.map((tag) => _buildTagBadge(tag)).toList(),
-              ),
-            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPositionChip(String position) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: _mint.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        position,
+        style: GoogleFonts.ibmPlexSans(
+          fontSize: 11,
+          color: _mint,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 
   Widget _buildTagBadge(String tag) {
-    IconData tagIcon;
-    switch (tag) {
-      case 'Bluff':
-        tagIcon = Icons.psychology;
-        break;
-      case 'Value':
-        tagIcon = Icons.attach_money;
-        break;
-      case 'Mistake':
-        tagIcon = Icons.error_outline;
-        break;
-      case 'Cooler':
-        tagIcon = Icons.ac_unit;
-        break;
-      case 'Hero Call':
-        tagIcon = Icons.shield;
-        break;
-      case 'Exploit':
-        tagIcon = Icons.gps_fixed;
-        break;
-      default:
-        tagIcon = Icons.label;
-    }
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFF89F1EC).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFF89F1EC).withOpacity(0.3),
-          width: 1,
+        color: _mint.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        tag,
+        style: GoogleFonts.ibmPlexSans(
+          fontSize: 10,
+          color: _mint.withValues(alpha: 0.7),
+          fontWeight: FontWeight.w500,
         ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            tagIcon,
-            size: 10,
-            color: const Color(0xFF89F1EC),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            tag,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 10,
-              color: const Color(0xFF89F1EC),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHandStat(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFF89F1EC),
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 10,
-          ),
-        ),
-      ],
     );
   }
 
   bool _hasHeroCards(Map<String, dynamic> hand) {
     final ourHoleCards = hand['ourHoleCards'] as Map<String, dynamic>?;
     if (ourHoleCards == null) return false;
-    return ourHoleCards['card1'] != null || ourHoleCards['card2'] != null;
+    final card1 = ourHoleCards['card1'] as String?;
+    final card2 = ourHoleCards['card2'] as String?;
+    return card1 != null && card1.isNotEmpty && card2 != null && card2.isNotEmpty;
   }
 
-  Widget _buildHeroCardsColumn(Map<String, dynamic> hand) {
+  Widget _buildMiniCards(Map<String, dynamic> hand) {
     final ourHoleCards = hand['ourHoleCards'] as Map<String, dynamic>?;
     final card1 = ourHoleCards?['card1'] as String?;
     final card2 = ourHoleCards?['card2'] as String?;
 
-    return Column(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (card1 != null) _buildMiniCard(card1),
-            if (card1 != null && card2 != null) const SizedBox(width: 3),
-            if (card2 != null) _buildMiniCard(card2),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(
-          'Hero Cards',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 10,
-          ),
-        ),
+        if (card1 != null) _buildMiniCard(card1),
+        const SizedBox(width: 2),
+        if (card2 != null) _buildMiniCard(card2),
       ],
     );
   }
 
-  Widget _buildMiniCard(String? card) {
-    if (card == null || card.isEmpty) return const SizedBox.shrink();
+  Widget _buildMiniCard(String card) {
+    if (card.isEmpty) return const SizedBox.shrink();
 
     final suit = card.length > 1 ? card.substring(1) : '';
     final rank = card.isNotEmpty ? card[0] : '';
-
     final isRedSuit = suit == '♥' || suit == '♦';
     final cardColor = isRedSuit ? Colors.red : Colors.black;
 
@@ -562,7 +498,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 0.5),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

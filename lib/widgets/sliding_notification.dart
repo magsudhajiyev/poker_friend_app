@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// A sliding in-app notification that appears from the top of the screen.
 /// Swipe up to dismiss, or tap to trigger an action.
@@ -154,104 +156,114 @@ class _SlidingNotificationState extends State<SlidingNotification>
   }
 
   Widget _buildNotificationCard() {
-    return Container(
-      decoration: BoxDecoration(
-        // Semi-transparent dark background to match app's glassy style
-        color: const Color(0xFF1A1A1E).withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 27, sigmaY: 27),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFDFE7FF).withValues(alpha: 0.22),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 44,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Icon container
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: widget.iconColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    widget.icon,
-                    color: widget.iconColor,
-                    size: 24,
-                  ),
+                // Header row: "NOTIFICATION" label + close button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'NOTIFICATION',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFFE6E6E7),
+                        height: 1.64,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _dismiss,
+                      child: Icon(
+                        Icons.close,
+                        color: const Color(0xFFE6E6E7),
+                        size: 20,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 14),
-                // Text content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.none,
-                        ),
+                const SizedBox(height: 12),
+                // Content row: icon + text
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A605D),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.subtitle,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontSize: 14,
-                          decoration: TextDecoration.none,
-                        ),
+                      child: Icon(
+                        widget.icon,
+                        color: Colors.white,
+                        size: 24,
                       ),
-                      if (widget.detail != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.detail!,
-                          style: TextStyle(
-                            color: widget.iconColor,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            decoration: TextDecoration.none,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white,
+                              height: 1.64,
+                              decoration: TextDecoration.none,
+                            ),
                           ),
-                        ),
-                      ],
-                    ],
-                  ),
+                          Text(
+                            widget.subtitle,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFFE6E6E7),
+                              height: 1.44,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                          if (widget.detail != null)
+                            Text(
+                              widget.detail!,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFFE6E6E7),
+                                height: 1.44,
+                                decoration: TextDecoration.none,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                // Tap indicator
-                if (widget.onTap != null)
-                  Icon(
-                    Icons.chevron_right,
-                    color: Colors.white.withValues(alpha: 0.3),
-                    size: 24,
-                  ),
               ],
             ),
           ),
-          // Swipe indicator
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

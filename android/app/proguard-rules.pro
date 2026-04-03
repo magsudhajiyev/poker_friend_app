@@ -7,7 +7,7 @@
 -keep class com.google.android.gms.** { *; }
 
 # Keep application classes
--keep class com.example.poker_logger.** { *; }
+-keep class com.pokerfriend.app.** { *; }
 
 # Keep Gson TypeTokens
 -keepattributes Signature
