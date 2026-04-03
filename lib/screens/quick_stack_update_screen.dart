@@ -5,6 +5,9 @@ import '../services/opponent_service.dart';
 import '../services/auth_service.dart';
 import '../models/opponent.dart';
 import '../models/game_types.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_progress_bar.dart';
 
 class QuickStackUpdateScreen extends StatefulWidget {
   final int smallBlind;
@@ -44,6 +47,12 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
 
   static const _cardColor = Color(0xFF131616);
   static const _mint = Color(0xFF89F1EC);
+
+  // Onboarding GlobalKeys
+  final GlobalKey _seatToggleKey = GlobalKey(debugLabel: 'seatToggle1');
+  final GlobalKey _buttonIndicatorKey = GlobalKey(debugLabel: 'buttonIndicator1');
+  final GlobalKey _playerNameAreaKey = GlobalKey(debugLabel: 'playerNameArea1');
+  final GlobalKey _stackSliderKey = GlobalKey(debugLabel: 'stackSlider2');
 
   @override
   void initState() {
@@ -95,6 +104,25 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
         playerStacksInBB[userSeat] = widget.userCurrentStack! / widget.bigBlind;
       }
     }
+
+    _scheduleQuickStackUpdateTour();
+  }
+
+  void _scheduleQuickStackUpdateTour() {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 3 ||
+        !OnboardingState.quickStackUpdateTourPending) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+      QuickStackUpdateTour(
+        seatToggleKey: _seatToggleKey,
+        buttonIndicatorKey: _buttonIndicatorKey,
+        playerNameAreaKey: _playerNameAreaKey,
+        stackSliderKey: _stackSliderKey,
+      ).show(context);
+    });
   }
 
   Future<void> _loadOpponents() async {
@@ -768,6 +796,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
           SafeArea(
             child: Column(
               children: [
+                const OnboardingProgressBar(),
                 // Header
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -990,6 +1019,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
               GestureDetector(
                 onTap: () => _toggleSeatOpen(playerId),
                 child: Container(
+                  key: playerId == 1 ? _seatToggleKey : null,
                   width: 22,
                   height: 22,
                   decoration: BoxDecoration(
@@ -1006,6 +1036,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
               GestureDetector(
                 onTap: () => _setButtonPosition(playerId),
                 child: Container(
+                  key: playerId == 1 ? _buttonIndicatorKey : null,
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(
@@ -1035,6 +1066,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
               // Position + Name inline
               Expanded(
                 child: GestureDetector(
+                  key: playerId == 1 ? _playerNameAreaKey : null,
                   onTap: () => _showOpponentSelectionDialog(playerId),
                   behavior: HitTestBehavior.opaque,
                   child: Row(
@@ -1115,6 +1147,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
 
           // Slider row — slim, no labels
           SizedBox(
+            key: playerId == 2 ? _stackSliderKey : null,
             height: 28,
             child: Builder(
               builder: (context) {

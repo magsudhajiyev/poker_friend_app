@@ -1,11 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/app_toggle.dart';
+import '../design_system/components/backgrounds/gradient_background.dart';
 import '../services/club_request_service.dart';
-import '../onboarding/onboarding_prefs.dart';
 import '../onboarding/onboarding_state.dart';
 import 'admin/club_requests_screen.dart';
 import 'knowledge_base_screen.dart';
@@ -19,19 +18,16 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const _devUserId = 'FELwuk4XbvdibPCx9NesqP5dRIn1';
   bool autoAdvanceStreets = false;
   bool _isAppAdmin = false;
   int _pendingRequestCount = 0;
-  bool _onboardingEnabled = false;
-  bool _isDevUser = false;
+  bool _isGuidedTourExpanded = false;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
     _checkAppAdminStatus();
-    _checkDevUser();
   }
 
   Future<void> _loadSettings() async {
@@ -56,30 +52,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {}
   }
 
-  Future<void> _checkDevUser() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == _devUserId) {
-      final seen = await OnboardingPrefs.hasSeenOnboarding();
-      if (mounted) {
-        setState(() {
-          _isDevUser = true;
-          _onboardingEnabled = !seen;
-        });
-      }
-    }
-  }
-
-  Future<void> _toggleOnboarding(bool enabled) async {
-    if (enabled) {
-      await OnboardingPrefs.resetOnboarding();
-    } else {
-      await OnboardingPrefs.markOnboardingSeen();
-    }
-    setState(() {
-      _onboardingEnabled = enabled;
-    });
-  }
-
   Future<void> _saveAutoAdvanceStreets(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('auto_advance_streets', value);
@@ -92,48 +64,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundPaper,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
+      body: Stack(
+        children: [
+          const GradientBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF101115),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new,
-                        color: Colors.white,
-                        size: 18,
+                      const SizedBox(width: 12),
+                      Text(
+                        'Settings',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Text(
-                    'Settings',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
 
-            const SizedBox(height: 28),
+                const SizedBox(height: 28),
 
-            // Content
-            Expanded(
+                // Content
+                Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
                 child: Column(
@@ -163,32 +138,116 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ],
                     ),
 
-                    // Learn the App section
+                    // Knowledge Base section
                     const SizedBox(height: 28),
-                    _buildSectionHeader('LEARN THE APP'),
+                    _buildSectionHeader('KNOWLEDGE BASE'),
                     const SizedBox(height: 12),
                     _buildSettingsCard(
                       children: [
-                        _buildNavigationRow(
-                          icon: Icons.style_rounded,
-                          iconColor: const Color(0xFF89F1EC),
-                          title: 'Logging a Hand',
-                          subtitle: 'Replay the hand logging tour',
-                          onTap: () {
-                            OnboardingState.startFromPhase(2);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoggingModeSelectionScreen(),
+                        // Collapsible Guided Tour header
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => setState(() => _isGuidedTourExpanded = !_isGuidedTourExpanded),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF87ED81).withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.school_rounded, color: Color(0xFF87ED81), size: 22),
                               ),
-                            ).then((_) {
-                              if (OnboardingState.isReplay) {
-                                OnboardingState.completeReplay();
-                              }
-                            });
-                          },
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Guided Tour',
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Replay onboarding tours',
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 13,
+                                        color: Colors.white.withOpacity(0.4),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              AnimatedRotation(
+                                turns: _isGuidedTourExpanded ? 0.0 : -0.25,
+                                duration: const Duration(milliseconds: 200),
+                                child: Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: Colors.white.withOpacity(0.4),
+                                  size: 24,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 12),
+                        AnimatedCrossFade(
+                          firstChild: const SizedBox.shrink(),
+                          secondChild: Padding(
+                            padding: const EdgeInsets.only(top: 12, left: 16),
+                            child: Column(
+                              children: [
+                                _buildNavigationRow(
+                                  icon: Icons.style_rounded,
+                                  iconColor: const Color(0xFF89F1EC),
+                                  title: 'Full Logging Tour',
+                                  subtitle: 'Complete session tracking flow',
+                                  onTap: () {
+                                    OnboardingState.startFromPhase(1, individualMode: false);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const LoggingModeSelectionScreen(),
+                                      ),
+                                    ).then((_) {
+                                      if (OnboardingState.isReplay) {
+                                        OnboardingState.completeReplay();
+                                      }
+                                    });
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                _buildNavigationRow(
+                                  icon: Icons.touch_app_rounded,
+                                  iconColor: const Color(0xFF89F1EC),
+                                  title: 'Individual Logging Tour',
+                                  subtitle: 'Single hand tracking flow',
+                                  onTap: () {
+                                    OnboardingState.startFromPhase(1, individualMode: true);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const LoggingModeSelectionScreen(),
+                                      ),
+                                    ).then((_) {
+                                      if (OnboardingState.isReplay) {
+                                        OnboardingState.completeReplay();
+                                      }
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          crossFadeState: _isGuidedTourExpanded
+                              ? CrossFadeState.showSecond
+                              : CrossFadeState.showFirst,
+                          duration: const Duration(milliseconds: 200),
+                        ),
+                        const SizedBox(height: 16),
                         _buildNavigationRow(
                           icon: Icons.insights_rounded,
                           iconColor: const Color(0xFF89F1EC),
@@ -225,27 +284,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ],
                     ),
 
-                    // Onboarding Tour - Dev only
-                    if (_isDevUser) ...[
-                      const SizedBox(height: 28),
-                      _buildSectionHeader('DEVELOPER'),
-                      const SizedBox(height: 12),
-                      _buildSettingsCard(
-                        children: [
-                          _buildToggleRow(
-                            icon: Icons.school_rounded,
-                            iconColor: const Color(0xFF87ED81),
-                            title: 'Onboarding Tour',
-                            subtitle: _onboardingEnabled
-                                ? 'Will show on next Home visit'
-                                : 'Completed',
-                            value: _onboardingEnabled,
-                            onChanged: _toggleOnboarding,
-                          ),
-                        ],
-                      ),
-                    ],
-
                     // App Admin Section
                     if (_isAppAdmin) ...[
                       const SizedBox(height: 28),
@@ -279,8 +317,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
+        ],
       ),
     );
   }

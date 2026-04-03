@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../models/poker_game_state.dart'; // PlayerAction
 
 /// Guided hand phases for phase 4 of onboarding.
@@ -10,7 +11,8 @@ enum GuidedPhase {
   boardCards,      // Waiting for board cards dialog
   holeCards,       // Hole cards dialog
   handComplete,    // "Hand Complete!"
-  endSession,      // Coach mark on 3-dot menu
+  menuSettings,    // Coach mark: open menu → highlight Settings (change blinds)
+  endSession,      // Coach mark on 3-dot menu → Stop Session
   done,
 }
 
@@ -21,6 +23,11 @@ enum GuidedPhase {
 class OnboardingState {
   static bool isOnboardingActive = false;
   static int currentPhase = 0;
+
+  /// Notifier that fires whenever onboarding active/phase changes.
+  /// Used by [OnboardingProgressBar] to self-rebuild.
+  static final ValueNotifier<int> notifier = ValueNotifier<int>(0);
+  static void _notify() => notifier.value++;
   // 0=home, 1=loggingMode, 2=sessionSetup, 3=seatSetup, 4=handLogging, 5=sessionResult
   static const int totalPhases = 6;
 
@@ -29,6 +36,18 @@ class OnboardingState {
 
   /// Whether the button token tour needs to run after the seat dialog closes.
   static bool buttonTokenTourPending = false;
+
+  /// Whether the user chose individual logging mode in phase 1.
+  static bool isIndividualMode = false;
+
+  /// Whether the IndividualSessionTrackingScreen sub-tour still needs to run.
+  static bool individualTrackingTourPending = false;
+
+  /// Whether the QuickStackUpdateScreen sub-tour still needs to run.
+  static bool quickStackUpdateTourPending = false;
+
+  /// Whether the individual mode stop-session tour is pending.
+  static bool individualStopSessionTourPending = false;
 
   // ---------------------------------------------------------------------------
   // Phase 4 — Guided hand state
@@ -51,27 +70,43 @@ class OnboardingState {
   static void start() {
     isOnboardingActive = true;
     currentPhase = 0;
+    isIndividualMode = false;
     seatDialogTourPending = false;
     buttonTokenTourPending = false;
+    individualTrackingTourPending = false;
+    quickStackUpdateTourPending = false;
+    individualStopSessionTourPending = false;
     _resetGuidedHand();
+    _notify();
   }
 
   static void advanceTo(int phase) {
     currentPhase = phase;
+    _notify();
   }
 
   static void complete() {
     isOnboardingActive = false;
     currentPhase = 0;
+    isIndividualMode = false;
+    individualTrackingTourPending = false;
+    quickStackUpdateTourPending = false;
+    individualStopSessionTourPending = false;
     guidedHandPhase = GuidedPhase.done;
+    _notify();
   }
 
   static void cancel() {
     isOnboardingActive = false;
     currentPhase = 0;
+    isIndividualMode = false;
     seatDialogTourPending = false;
     buttonTokenTourPending = false;
+    individualTrackingTourPending = false;
+    quickStackUpdateTourPending = false;
+    individualStopSessionTourPending = false;
     guidedHandPhase = GuidedPhase.done;
+    _notify();
   }
 
   /// Start onboarding from a specific phase (for Knowledge Base replay).
@@ -79,12 +114,16 @@ class OnboardingState {
   static bool _isReplay = false;
   static bool get isReplay => _isReplay;
 
-  static void startFromPhase(int phase) {
+  static void startFromPhase(int phase, {bool individualMode = false}) {
     isOnboardingActive = true;
     currentPhase = phase;
+    isIndividualMode = individualMode;
     _isReplay = true;
     seatDialogTourPending = false;
     buttonTokenTourPending = false;
+    individualTrackingTourPending = false;
+    quickStackUpdateTourPending = false;
+    individualStopSessionTourPending = false;
     if (phase == 4) {
       _resetGuidedHand();
     }
@@ -93,8 +132,13 @@ class OnboardingState {
   static void completeReplay() {
     isOnboardingActive = false;
     currentPhase = 0;
+    isIndividualMode = false;
     _isReplay = false;
+    individualTrackingTourPending = false;
+    quickStackUpdateTourPending = false;
+    individualStopSessionTourPending = false;
     guidedHandPhase = GuidedPhase.done;
+    _notify();
   }
 
   static void _resetGuidedHand() {

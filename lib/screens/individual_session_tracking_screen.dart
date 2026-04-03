@@ -9,6 +9,9 @@ import '../services/auth_service.dart';
 import 'poker_hand_screen.dart';
 import 'quick_stack_update_screen.dart';
 import '../design_system/components/drawer_dots.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_progress_bar.dart';
 
 class IndividualSessionTrackingScreen extends StatefulWidget {
   final String sessionName;
@@ -82,6 +85,11 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   // Menu key
   final GlobalKey _dotsKey = GlobalKey();
 
+  // Onboarding GlobalKeys
+  final GlobalKey _updateStackBtnKey = GlobalKey(debugLabel: 'updateStackBtn');
+  final GlobalKey _logHandBtnKey = GlobalKey(debugLabel: 'logHandBtn');
+  final GlobalKey _stopSessionBtnKey = GlobalKey(debugLabel: 'stopSessionBtn');
+
   // Quick stack update tracking
   int _lastButtonPosition = 1;
   Map<int, double> _lastPlayerStacks = {};
@@ -114,6 +122,22 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     }
 
     _startTimer();
+    _scheduleIndividualTrackingTour();
+  }
+
+  void _scheduleIndividualTrackingTour() {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 3 ||
+        !OnboardingState.individualTrackingTourPending) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+      IndividualTrackingTour(
+        updateStackButtonKey: _updateStackBtnKey,
+        logHandButtonKey: _logHandBtnKey,
+      ).show(context);
+    });
   }
 
   Future<void> _initializeSession() async {
@@ -824,6 +848,19 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             averageGrowth: widget.gameType == GameType.tournament ? _averageGrowth : null,
           ).catchError((e) {});
         }
+
+        // Onboarding: trigger stop-session tour after first hand in individual mode
+        if (OnboardingState.isOnboardingActive &&
+            OnboardingState.isIndividualMode) {
+          OnboardingState.individualStopSessionTourPending = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            await Future.delayed(const Duration(milliseconds: 400));
+            if (!mounted) return;
+            IndividualStopSessionTour(
+              stopSessionButtonKey: _stopSessionBtnKey,
+            ).show(context);
+          });
+        }
       }
     }
   }
@@ -1325,6 +1362,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const OnboardingProgressBar(),
                   // Header
                   Padding(
                     padding: const EdgeInsets.only(top: 16, bottom: 24),
@@ -1334,6 +1372,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                         GestureDetector(
                           onTap: _stopSession,
                           child: Container(
+                            key: _stopSessionBtnKey,
                             width: 44,
                             height: 44,
                             decoration: const BoxDecoration(
@@ -1434,6 +1473,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                             GestureDetector(
                               onTap: _showUpdateStackDialog,
                               child: Container(
+                                key: _updateStackBtnKey,
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF89F1EC).withOpacity(0.15),
@@ -1575,6 +1615,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   GestureDetector(
                     onTap: _logHand,
                     child: Container(
+                      key: _logHandBtnKey,
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(

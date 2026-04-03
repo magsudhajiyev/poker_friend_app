@@ -133,7 +133,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
           SafeArea(
             child: Column(
               children: [
-                const OnboardingProgressBar(),
+                OnboardingProgressBar(),
                 // Header with X, title, and checkmark
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),

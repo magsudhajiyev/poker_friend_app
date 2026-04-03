@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
@@ -9,7 +8,6 @@ import 'onboarding_state.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_tour.dart'; // buildTooltip
 
-const _devUserId = 'FELwuk4XbvdibPCx9NesqP5dRIn1';
 
 // ---------------------------------------------------------------------------
 // Gesture hint strings
@@ -46,6 +44,12 @@ String _actionLabel(PlayerAction a) {
 class GuidedHandOverlay extends StatefulWidget {
   final GlobalKey menuButtonKey;
   final GlobalKey gestureInfoKey;
+  final GlobalKey? skipButtonKey;
+  final GlobalKey? settingsMenuItemKey;
+  /// Callback to programmatically open the 3-dot menu overlay.
+  final VoidCallback? onOpenMenu;
+  /// Callback to programmatically close the 3-dot menu overlay.
+  final VoidCallback? onCloseMenu;
   final int? heroSeat;
   final int currentPlayerSeat;
   final bool Function(PlayerAction) isValidAction;
@@ -63,6 +67,10 @@ class GuidedHandOverlay extends StatefulWidget {
     super.key,
     required this.menuButtonKey,
     required this.gestureInfoKey,
+    this.skipButtonKey,
+    this.settingsMenuItemKey,
+    this.onOpenMenu,
+    this.onCloseMenu,
     this.heroSeat,
     this.currentPlayerSeat = 0,
     required this.isValidAction,
@@ -159,8 +167,8 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       _setPhase(GuidedPhase.handComplete);
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted && OnboardingState.guidedHandPhase == GuidedPhase.handComplete) {
-          _setPhase(GuidedPhase.endSession);
-          _showEndSessionCoachMark();
+          _setPhase(GuidedPhase.menuSettings);
+          _showMenuSettingsCoachMark();
         }
       });
     }
@@ -261,6 +269,59 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   // ---------------------------------------------------------------------------
 
   void _startGuidedHand() {
+    if (!mounted) return;
+    // Show skip button coach mark before starting the guided hand
+    _showSkipButtonCoachMark();
+  }
+
+  void _showSkipButtonCoachMark() {
+    if (!mounted) return;
+    final skipKey = widget.skipButtonKey;
+    if (skipKey == null || skipKey.currentContext == null) {
+      _beginScriptedHand();
+      return;
+    }
+
+    final targets = <TargetFocus>[
+      TargetFocus(
+        identify: 'skip_button',
+        keyTarget: skipKey,
+        shape: ShapeLightFocus.Circle,
+        paddingFocus: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: 'Skip Button',
+                body: 'If you skip a hand, this button moves the dealer button to the next player. Keep in mind that stacks will be out of sync — you can update them in Manage Players.',
+                onNext: () => controller.next(),
+                isLast: true,
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: true,
+      onFinish: () {
+        _beginScriptedHand();
+      },
+      onSkip: () {
+        _beginScriptedHand();
+        return true;
+      },
+    );
+    coach.show(context: context);
+  }
+
+  void _beginScriptedHand() {
     if (!mounted) return;
     // First action: UTG opens — scripted raise
     OnboardingState.nextScriptedAction = PlayerAction.raise;
@@ -390,10 +451,165 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   }
 
   // ---------------------------------------------------------------------------
+  // Menu Settings Coach Mark (two steps: highlight 3-dots, then Settings item)
+  // ---------------------------------------------------------------------------
+
+  void _showMenuSettingsCoachMark() {
+    // Individual mode: skip menu/settings step — not relevant
+    if (OnboardingState.isIndividualMode) {
+      _setPhase(GuidedPhase.endSession);
+      _showEndSessionCoachMark();
+      return;
+    }
+
+    _animController.reverse();
+
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      if (widget.menuButtonKey.currentContext == null) {
+        // Skip straight to end session if menu key not available
+        _setPhase(GuidedPhase.endSession);
+        _showEndSessionCoachMark();
+        return;
+      }
+
+      // Step 1: Highlight the 3-dot menu button
+      final targets = <TargetFocus>[
+        TargetFocus(
+          identify: 'menu_for_settings',
+          keyTarget: widget.menuButtonKey,
+          shape: ShapeLightFocus.Circle,
+          paddingFocus: 12,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: 'Game Menu',
+                  body: 'This menu has useful options. Let\'s take a look at one important setting.',
+                  onNext: () => controller.next(),
+                );
+              },
+            ),
+          ],
+        ),
+      ];
+
+      final coach = TutorialCoachMark(
+        targets: targets,
+        colorShadow: Colors.black,
+        opacityShadow: 0.85,
+        paddingFocus: 12,
+        hideSkip: false,
+        skipWidget: Padding(
+          padding: const EdgeInsets.only(right: 16, bottom: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(40),
+              border: Border.all(color: Colors.white54),
+            ),
+            child: Text('Skip', style: AppTypography.bodySmall(color: Colors.white70)),
+          ),
+        ),
+        onSkip: () {
+          _finishOnboarding();
+          return true;
+        },
+        onFinish: () {
+          // Open the menu overlay, then highlight the Settings item
+          _showSettingsItemCoachMark();
+        },
+      );
+      coach.show(context: context);
+    });
+  }
+
+  void _showSettingsItemCoachMark() {
+    // Programmatically open the menu
+    widget.onOpenMenu?.call();
+
+    // Wait for the menu overlay to render and the settings key to attach
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+
+      final settingsKey = widget.settingsMenuItemKey;
+      if (settingsKey == null || settingsKey.currentContext == null) {
+        // Settings key not available — skip to end session
+        widget.onCloseMenu?.call();
+        _setPhase(GuidedPhase.endSession);
+        _showEndSessionCoachMark();
+        return;
+      }
+
+      final targets = <TargetFocus>[
+        TargetFocus(
+          identify: 'settings_menu_item',
+          keyTarget: settingsKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 8,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: 'Game Settings',
+                  body: 'Here you can change blinds mid-session — useful for tournaments when levels go up.',
+                  onNext: () => controller.next(),
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      ];
+
+      final coach = TutorialCoachMark(
+        targets: targets,
+        colorShadow: Colors.black,
+        opacityShadow: 0.85,
+        paddingFocus: 12,
+        hideSkip: false,
+        skipWidget: Padding(
+          padding: const EdgeInsets.only(right: 16, bottom: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(40),
+              border: Border.all(color: Colors.white54),
+            ),
+            child: Text('Skip', style: AppTypography.bodySmall(color: Colors.white70)),
+          ),
+        ),
+        onSkip: () {
+          widget.onCloseMenu?.call();
+          _finishOnboarding();
+          return true;
+        },
+        onFinish: () {
+          // Close the menu and move to end session coach mark
+          widget.onCloseMenu?.call();
+          _setPhase(GuidedPhase.endSession);
+          _showEndSessionCoachMark();
+        },
+      );
+      coach.show(context: context);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // End Session Coach Mark
   // ---------------------------------------------------------------------------
 
   void _showEndSessionCoachMark() {
+    // Individual mode: skip end-session here — handled on tracking screen
+    if (OnboardingState.isIndividualMode) {
+      OnboardingState.guidedHandPhase = GuidedPhase.done;
+      widget.onSkipOrFinish?.call();
+      return;
+    }
+
     _animController.reverse();
 
     Future.delayed(const Duration(milliseconds: 400), () {
@@ -469,10 +685,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   void _finishOnboarding() {
     OnboardingState.guidedHandPhase = GuidedPhase.done;
     OnboardingState.complete();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != _devUserId) {
-      OnboardingPrefs.markOnboardingSeen();
-    }
+    OnboardingPrefs.markOnboardingSeen();
     // Notify parent so it can rebuild (e.g. hide progress bar).
     widget.onSkipOrFinish?.call();
   }
@@ -606,7 +819,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
     final phase = OnboardingState.guidedHandPhase;
     // These phases are handled via coach marks, not the floating overlay
-    if (phase == GuidedPhase.gestureInfo || phase == GuidedPhase.endSession) {
+    if (phase == GuidedPhase.gestureInfo || phase == GuidedPhase.menuSettings || phase == GuidedPhase.endSession) {
       return const SizedBox.shrink();
     }
 

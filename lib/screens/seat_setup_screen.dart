@@ -154,19 +154,15 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     _scheduleOnboardingTour();
   }
 
-  void _scheduleOnboardingTour() async {
+  void _scheduleOnboardingTour() {
     if (!OnboardingState.isOnboardingActive ||
         OnboardingState.currentPhase != 3) return;
 
-    // Wait for table key to attach
-    for (int i = 0; i < 20; i++) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (!mounted) return;
-      if (_tableKey.currentContext != null) break;
-    }
-
-    if (!mounted || _tableKey.currentContext == null) return;
-    SeatSetupTour(tableKey: _tableKey).show(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted || _tableKey.currentContext == null) return;
+      SeatSetupTour(tableKey: _tableKey).show(context);
+    });
   }
 
   String _getCurrentStackForSeat(int seatNumber) {
@@ -1054,7 +1050,6 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      extendBody: true,
       body: Stack(
         children: [
           // Teal gradient background
@@ -1087,7 +1082,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
           SafeArea(
             child: Column(
               children: [
-                const OnboardingProgressBar(),
+                OnboardingProgressBar(),
                 // Header
                 Padding(
                   padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -1145,6 +1140,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
                 // Visual Poker Table
                 Expanded(
+                  key: _tableKey,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       return Stack(
@@ -1152,7 +1148,6 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           // Table with teal border - vertical oval shape
                           Center(
                             child: Container(
-                              key: _tableKey,
                               width: constraints.maxWidth * 0.80,
                               height: constraints.maxHeight * 0.88,
                               decoration: BoxDecoration(

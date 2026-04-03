@@ -122,6 +122,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   final GlobalKey _statsRowKey = GlobalKey(debugLabel: 'statsRow');
   final GlobalKey<GuidedHandOverlayState> _guidedOverlayKey = GlobalKey();
   final GlobalKey _gestureInfoKey = GlobalKey(debugLabel: 'gestureInfo');
+  final GlobalKey _skipButtonKey = GlobalKey(debugLabel: 'skipButton');
+  final GlobalKey _settingsMenuItemKey = GlobalKey(debugLabel: 'settingsMenuItem');
 
   @override
   void initState() {
@@ -1178,7 +1180,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           SafeArea(
             child: Column(
               children: [
-                const OnboardingProgressBar(),
+                OnboardingProgressBar(),
                 // Header - Figma Design
                 Padding(
                   padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -1236,6 +1238,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         children: [
                           // Skip button
                           GestureDetector(
+                            key: _skipButtonKey,
                             onTap: _skipCurrentAction,
                             child: Container(
                               width: 44,
@@ -1542,6 +1545,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           key: _guidedOverlayKey,
           menuButtonKey: _menuButtonKey,
           gestureInfoKey: _gestureInfoKey,
+          skipButtonKey: _skipButtonKey,
+          settingsMenuItemKey: _settingsMenuItemKey,
+          onOpenMenu: () => setState(() => _showMenuOverlay = true),
+          onCloseMenu: () => setState(() => _showMenuOverlay = false),
           heroSeat: sessionManager.ourSeatNumber,
           currentPlayerSeat: gameState.currentPlayer,
           isValidAction: gameState.isValidAction,
@@ -1714,6 +1721,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                 _buildMenuSeparator(),
                 SizedBox(height: 12),
                 _buildMenuItem(
+                  key: _settingsMenuItemKey,
                   icon: 'icons/figma_icons/menu_settings.svg',
                   label: 'Settings',
                   onTap: () {
@@ -1742,6 +1750,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   Widget _buildMenuItem({
+    Key? key,
     required String icon,
     required String label,
     required VoidCallback onTap,
@@ -1749,6 +1758,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     Color? iconColor,
   }) {
     return GestureDetector(
+      key: key,
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(

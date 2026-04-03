@@ -101,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool isLoadingData = true;
   String? _loadError;
   bool _isBankrollHidden = false;
-  bool _showOnboardingNudge = false;
+
 
   // Context menu state
   String? _selectedEventId;
@@ -128,32 +128,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _loadBankrollVisibility();
     _loadData();
     _setupSeatListener();
-    _scheduleOnboardingTour();
-    _checkOnboardingNudge();
-  }
-
-  Future<void> _checkOnboardingNudge() async {
-    if (OnboardingState.isOnboardingActive) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final dismissed = prefs.getBool('onboarding_nudge_dismissed') ?? false;
-      if (dismissed) return;
-      final hasSeen = await OnboardingPrefs.hasSeenOnboarding();
-      if (!hasSeen && mounted) {
-        setState(() => _showOnboardingNudge = true);
-      }
-    } catch (_) {}
-  }
-
-  void _dismissOnboardingNudge() async {
-    setState(() => _showOnboardingNudge = false);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('onboarding_nudge_dismissed', true);
-  }
-
-  void _startOnboardingFromNudge() {
-    setState(() => _showOnboardingNudge = false);
-    OnboardingState.start();
     _scheduleOnboardingTour();
   }
 
@@ -1379,7 +1353,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Column(
             children: [
               // Fixed header — stays at top during scroll
-              const OnboardingProgressBar(),
+              OnboardingProgressBar(),
               HomeHeader(
                 userName: userName,
                 subtitle: 'Welcome back',
@@ -1411,9 +1385,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 8),
-
-                        // Onboarding nudge card
-                        if (_showOnboardingNudge) _buildOnboardingNudge(),
 
                         // Bankroll Card (standalone)
                         _buildBankrollCard(),
@@ -1759,91 +1730,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildOnboardingNudge() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF89F1EC).withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFF89F1EC).withValues(alpha: 0.2),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFF89F1EC).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.school_rounded,
-                color: Color(0xFF89F1EC),
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'New here? Take a quick tour',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Learn how to track your hands',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 13,
-                      color: const Color(0xFF8C8C8C),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: _dismissOnboardingNudge,
-              child: const Icon(
-                Icons.close_rounded,
-                color: Color(0xFF8C8C8C),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: _startOnboardingFromNudge,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF89F1EC),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Start',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

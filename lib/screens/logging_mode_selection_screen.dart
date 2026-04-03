@@ -27,22 +27,20 @@ class _LoggingModeSelectionScreenState
     _scheduleOnboardingTour();
   }
 
-  void _scheduleOnboardingTour() async {
+  void _scheduleOnboardingTour() {
     if (!OnboardingState.isOnboardingActive ||
         OnboardingState.currentPhase != 1) return;
 
-    // Wait for keys to attach
-    for (int i = 0; i < 20; i++) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (!mounted) return;
-      if (_fullModeCardKey.currentContext != null) break;
-    }
-
-    if (!mounted || _fullModeCardKey.currentContext == null) return;
-    LoggingModeTour(
-      fullModeCardKey: _fullModeCardKey,
-      individualModeCardKey: _individualModeCardKey,
-    ).show(context);
+    // Use post-frame callback to ensure layout is fully complete
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Extra frame to let ScrollView settle
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted || _fullModeCardKey.currentContext == null) return;
+      LoggingModeTour(
+        fullModeCardKey: _fullModeCardKey,
+        individualModeCardKey: _individualModeCardKey,
+      ).show(context);
+    });
   }
 
   Widget _buildIcon(String path, double size, Color color) {
@@ -69,7 +67,6 @@ class _LoggingModeSelectionScreenState
 
     return Scaffold(
       backgroundColor: Colors.black,
-      extendBody: true,
       body: Stack(
         children: [
           // Subtle teal gradient at top
@@ -102,7 +99,7 @@ class _LoggingModeSelectionScreenState
           SafeArea(
             child: Column(
               children: [
-                const OnboardingProgressBar(),
+                OnboardingProgressBar(),
                 // Header with title and close button
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -351,6 +348,10 @@ class _LoggingModeSelectionScreenState
   }
 
   void _navigateToMode(BuildContext context, LoggingMode mode) {
+    // Record mode choice for onboarding branching
+    if (OnboardingState.isOnboardingActive) {
+      OnboardingState.isIndividualMode = (mode == LoggingMode.individual);
+    }
     // Both modes now go to Session Setup first
     Navigator.push(
       context,

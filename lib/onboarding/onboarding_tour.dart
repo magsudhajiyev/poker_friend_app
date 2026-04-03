@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_state.dart';
-
-// Dev user ID — never auto-complete for this user
-const _devUserId = 'FELwuk4XbvdibPCx9NesqP5dRIn1';
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -41,10 +36,7 @@ TutorialCoachMark _createCoachMark({
     ),
     onSkip: () {
       OnboardingState.cancel();
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid != _devUserId) {
-        OnboardingPrefs.markOnboardingSeen();
-      }
+      OnboardingPrefs.markOnboardingSeen();
       onSkip?.call();
       return true;
     },
@@ -81,7 +73,8 @@ Widget buildWelcomeCard({required VoidCallback onNext}) {
         ),
         const SizedBox(height: 12),
         Text(
-          'Let\'s take a quick tour to get you started.',
+          'Let\'s take a quick tour to get you started.\n\n'
+          'You can always retake this tour from\nProfile → Settings → Knowledge Base.',
           style: AppTypography.bodySmall(
             color: Colors.white.withOpacity(0.7),
           ).copyWith(height: 1.4),
@@ -119,32 +112,21 @@ Widget buildTooltip({
   bool isLast = false,
 }) {
   return Container(
-    padding: const EdgeInsets.all(20),
-    margin: const EdgeInsets.symmetric(horizontal: 16),
+    padding: const EdgeInsets.all(24),
+    margin: const EdgeInsets.symmetric(horizontal: 24),
     decoration: BoxDecoration(
-      color: const Color(0xFF161618),
+      color: const Color(0xFF232326),
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: Colors.white.withOpacity(0.1),
-        width: 1,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.4),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
-        ),
-      ],
+      border: Border.all(color: const Color(0xFF3A3A3C)),
     ),
     child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
           style: AppTypography.bodyLarge(color: Colors.white).copyWith(
             fontWeight: FontWeight.w600,
-            fontSize: 18,
           ),
         ),
         const SizedBox(height: 8),
@@ -274,8 +256,14 @@ class LoggingModeTour {
         OnboardingState.currentPhase != 1) return;
 
     final targets = <TargetFocus>[];
+    final isReplay = OnboardingState.isReplay;
+    final isIndividual = OnboardingState.isIndividualMode;
 
-    if (fullModeCardKey.currentContext != null) {
+    // During replay, only highlight the relevant mode card
+    final showFull = !isReplay || !isIndividual;
+    final showIndividual = !isReplay || isIndividual;
+
+    if (showFull && fullModeCardKey.currentContext != null) {
       targets.add(
         TargetFocus(
           identify: 'full_mode',
@@ -292,6 +280,7 @@ class LoggingModeTour {
                   body:
                       'Track every action for every player across all streets. Perfect for serious analysis.',
                   onNext: () => controller.next(),
+                  isLast: isReplay && !isIndividual,
                 );
               },
             ),
@@ -300,7 +289,7 @@ class LoggingModeTour {
       );
     }
 
-    if (individualModeCardKey.currentContext != null) {
+    if (showIndividual && individualModeCardKey.currentContext != null) {
       targets.add(
         TargetFocus(
           identify: 'individual_mode',
@@ -388,6 +377,9 @@ class SessionSetupTour {
       targets: targets,
       onFinish: () {
         OnboardingState.advanceTo(3);
+        if (OnboardingState.isIndividualMode) {
+          OnboardingState.individualTrackingTourPending = true;
+        }
       },
     );
     coach.show(context: context);
@@ -415,8 +407,8 @@ class SeatSetupTour {
           identify: 'table',
           keyTarget: tableKey,
           shape: ShapeLightFocus.RRect,
-          radius: 200,
-          paddingFocus: 8,
+          radius: 24,
+          paddingFocus: 0,
           contents: [
             TargetContent(
               align: ContentAlign.bottom,
@@ -706,72 +698,83 @@ class SessionResultTour {
 
   void _finishAndShowCompletion(BuildContext context) {
     OnboardingState.complete();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != _devUserId) {
-      OnboardingPrefs.markOnboardingSeen();
-    }
+    OnboardingPrefs.markOnboardingSeen();
     onComplete?.call();
 
-    // Show completion dialog
     showDialog(
       context: context,
-      barrierDismissible: true,
-      builder: (ctx) => _OnboardingCompleteDialog(),
+      barrierDismissible: false,
+      builder: (ctx) => _OnboardingCompleteDialog(
+        onDone: () => Navigator.of(ctx).pop(),
+      ),
     );
   }
 }
 
+// ---------------------------------------------------------------------------
+// Completion Dialog
+// ---------------------------------------------------------------------------
+
 class _OnboardingCompleteDialog extends StatelessWidget {
+  final VoidCallback onDone;
+  const _OnboardingCompleteDialog({required this.onDone});
+
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: const Color(0xFF161618),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 32),
+        padding: const EdgeInsets.all(28),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161618),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppColors.buttonPrimary.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.buttonPrimary.withOpacity(0.1),
+              blurRadius: 24,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              '🎉',
-              style: TextStyle(fontSize: 40),
+            const Icon(Icons.celebration_rounded,
+                color: Color(0xFF89F1EC), size: 48),
+            const SizedBox(height: 16),
+            Text(
+              'You\'re All Set!',
+              style: AppTypography.pageTitle().copyWith(fontSize: 22, decoration: TextDecoration.none),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'You\'re All Set!',
-              style: GoogleFonts.ibmPlexSans(
-                color: AppColors.buttonPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'You are now familiar with hand logging. Enjoy the experience!',
+              'You\'re ready to start tracking your poker sessions.',
+              style: AppTypography.bodySmall(
+                color: Colors.white.withOpacity(0.7),
+              ).copyWith(height: 1.4, decoration: TextDecoration.none),
               textAlign: TextAlign.center,
-              style: GoogleFonts.ibmPlexSans(
-                color: Colors.white70,
-                fontSize: 14,
-                height: 1.5,
-              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
+              child: TextButton(
+                onPressed: onDone,
+                style: TextButton.styleFrom(
                   backgroundColor: AppColors.buttonPrimary,
-                  foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(60),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: Text(
-                  'Let\'s Go!',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 16,
+                  'Let\'s play',
+                  style:
+                      AppTypography.bodyLarge(color: Colors.black).copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -781,5 +784,291 @@ class _OnboardingCompleteDialog extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 (individual mode) — Individual Tracking Tour
+// ---------------------------------------------------------------------------
+
+class IndividualTrackingTour {
+  final GlobalKey updateStackButtonKey;
+  final GlobalKey logHandButtonKey;
+
+  IndividualTrackingTour({
+    required this.updateStackButtonKey,
+    required this.logHandButtonKey,
+  });
+
+  void show(BuildContext context) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 3 ||
+        !OnboardingState.individualTrackingTourPending) return;
+
+    final targets = <TargetFocus>[];
+
+    if (updateStackButtonKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'update_stack_btn',
+          keyTarget: updateStackButtonKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 60,
+          paddingFocus: 8,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: 'Update Stack',
+                  body:
+                      'Use this to manually update your chip count at any point without logging a full hand.',
+                  onNext: () => controller.next(),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (logHandButtonKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'log_hand_btn',
+          keyTarget: logHandButtonKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 60,
+          paddingFocus: 8,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: 'Log a Hand',
+                  body:
+                      'Tap here to set up the table and log a hand. Let\'s try it now!',
+                  onNext: () => controller.next(),
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      OnboardingState.individualTrackingTourPending = false;
+      OnboardingState.quickStackUpdateTourPending = true;
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
+      onFinish: () {
+        OnboardingState.individualTrackingTourPending = false;
+        OnboardingState.quickStackUpdateTourPending = true;
+      },
+    );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 (individual mode) — Quick Stack Update Tour
+// ---------------------------------------------------------------------------
+
+class QuickStackUpdateTour {
+  final GlobalKey seatToggleKey;
+  final GlobalKey buttonIndicatorKey;
+  final GlobalKey playerNameAreaKey;
+  final GlobalKey stackSliderKey;
+
+  QuickStackUpdateTour({
+    required this.seatToggleKey,
+    required this.buttonIndicatorKey,
+    required this.playerNameAreaKey,
+    required this.stackSliderKey,
+  });
+
+  void show(BuildContext context) {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 3 ||
+        !OnboardingState.quickStackUpdateTourPending) return;
+
+    final targets = <TargetFocus>[];
+
+    if (seatToggleKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'seat_toggle_qsu',
+          keyTarget: seatToggleKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 5,
+          paddingFocus: 8,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: 'Mark Seat Open',
+                  body:
+                      'Tap the checkmark to toggle a seat between occupied and empty. Empty seats are skipped in the hand.',
+                  onNext: () => controller.next(),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (buttonIndicatorKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'button_indicator_qsu',
+          keyTarget: buttonIndicatorKey,
+          shape: ShapeLightFocus.Circle,
+          paddingFocus: 8,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: 'Dealer Button',
+                  body:
+                      'Tap "D" to assign the dealer button to any seat. This controls blind positions and action order.',
+                  onNext: () => controller.next(),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (playerNameAreaKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'player_name_qsu',
+          keyTarget: playerNameAreaKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 8,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: 'Assign a Player',
+                  body:
+                      'Tap a player\'s name to seat yourself or a saved opponent. Your stack is auto-applied when you seat yourself.',
+                  onNext: () => controller.next(),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (stackSliderKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'stack_slider_qsu',
+          keyTarget: stackSliderKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 8,
+          paddingFocus: 8,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: 'Adjust Stack',
+                  body:
+                      'Drag the slider to set an opponent\'s stack in BBs. Tap the stack value to type an exact amount.',
+                  onNext: () => controller.next(),
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      OnboardingState.quickStackUpdateTourPending = false;
+      OnboardingState.advanceTo(4);
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
+      onFinish: () {
+        OnboardingState.quickStackUpdateTourPending = false;
+        OnboardingState.advanceTo(4);
+      },
+    );
+    coach.show(context: context);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 (individual mode) — Individual Stop Session Tour
+// ---------------------------------------------------------------------------
+
+class IndividualStopSessionTour {
+  final GlobalKey stopSessionButtonKey;
+
+  IndividualStopSessionTour({required this.stopSessionButtonKey});
+
+  void show(BuildContext context) {
+    if (!OnboardingState.isOnboardingActive ||
+        !OnboardingState.individualStopSessionTourPending) return;
+
+    final targets = <TargetFocus>[];
+
+    if (stopSessionButtonKey.currentContext != null) {
+      targets.add(
+        TargetFocus(
+          identify: 'stop_session_btn',
+          keyTarget: stopSessionButtonKey,
+          shape: ShapeLightFocus.Circle,
+          paddingFocus: 12,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: 'End Your Session',
+                  body:
+                      'Tap the red Stop button to save your session results and return to the home screen.',
+                  onNext: () => controller.next(),
+                  isLast: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (targets.isEmpty) {
+      OnboardingState.individualStopSessionTourPending = false;
+      OnboardingState.advanceTo(5);
+      return;
+    }
+
+    final coach = _createCoachMark(
+      targets: targets,
+      onFinish: () {
+        OnboardingState.individualStopSessionTourPending = false;
+        OnboardingState.advanceTo(5);
+      },
+    );
+    coach.show(context: context);
   }
 }
