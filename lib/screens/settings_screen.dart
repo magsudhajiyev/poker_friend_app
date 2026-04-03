@@ -6,7 +6,10 @@ import '../design_system/constants/colors.dart';
 import '../design_system/components/app_toggle.dart';
 import '../services/club_request_service.dart';
 import '../onboarding/onboarding_prefs.dart';
+import '../onboarding/onboarding_state.dart';
 import 'admin/club_requests_screen.dart';
+import 'knowledge_base_screen.dart';
+import 'logging_mode_selection_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -156,6 +159,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           autoAdvanceStreets
                               ? 'The game automatically moves from Preflop to Flop to Turn to River. Best for experienced players who want faster gameplay.'
                               : 'You have full control over when to advance to the next street. Ideal for learning and careful hand review.',
+                        ),
+                      ],
+                    ),
+
+                    // Learn the App section
+                    const SizedBox(height: 28),
+                    _buildSectionHeader('LEARN THE APP'),
+                    const SizedBox(height: 12),
+                    _buildSettingsCard(
+                      children: [
+                        _buildNavigationRow(
+                          icon: Icons.style_rounded,
+                          iconColor: const Color(0xFF89F1EC),
+                          title: 'Logging a Hand',
+                          subtitle: 'Replay the hand logging tour',
+                          onTap: () {
+                            OnboardingState.startFromPhase(2);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LoggingModeSelectionScreen(),
+                              ),
+                            ).then((_) {
+                              if (OnboardingState.isReplay) {
+                                OnboardingState.completeReplay();
+                              }
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        _buildNavigationRow(
+                          icon: Icons.insights_rounded,
+                          iconColor: const Color(0xFF89F1EC),
+                          title: 'Understanding Your Stats',
+                          subtitle: 'Learn what each metric means',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const KnowledgeBaseScreen(
+                                  section: KnowledgeBaseSection.stats,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        _buildNavigationRow(
+                          icon: Icons.groups_rounded,
+                          iconColor: const Color(0xFF89F1EC),
+                          title: 'Clubs & Events',
+                          subtitle: 'How club play works',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const KnowledgeBaseScreen(
+                                  section: KnowledgeBaseSection.clubs,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

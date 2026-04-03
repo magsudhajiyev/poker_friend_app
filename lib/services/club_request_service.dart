@@ -280,11 +280,14 @@ class ClubRequestService {
       ownerEmail: ownerEmail,
     );
 
-    // Update club with address and phone
+    // Update club with address, phone, and app download QR URLs
+    // TODO(pre-release): Replace placeholder App Store URL with real one
     await ClubService.updateClub(
       club.id,
       address: request.address,
       phone: request.phone,
+      appStoreQRUrl: 'https://apps.apple.com/app/final-table/PLACEHOLDER',
+      playStoreQRUrl: 'https://play.google.com/store/apps/details?id=com.pokerfriend.app',
     );
 
     // If adminEmail user is different from requester and was found,

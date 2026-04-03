@@ -189,6 +189,10 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                               _buildTablesSection(),
                               const SizedBox(height: 8),
                               _buildMembersSection(),
+                              if (_club.appStoreQRUrl != null || _club.playStoreQRUrl != null) ...[
+                                const SizedBox(height: 8),
+                                _buildAppQRSection(),
+                              ],
                               const SizedBox(height: 40),
                             ],
                           ),
@@ -1083,6 +1087,220 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         ],
       ),
     );
+  }
+
+  /// Build App Download QR Codes section
+  Widget _buildAppQRSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'APP DOWNLOAD',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF87ED81),
+            letterSpacing: 1.0,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundSurface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF1C1F21)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF89F1EC).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.qr_code_rounded, color: Color(0xFF89F1EC), size: 20),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'App QR Codes',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Share with players to download the app',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            color: const Color(0xFF8C8C8C),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _downloadAppQRCodePDF,
+                  icon: const Icon(Icons.download_rounded, size: 18),
+                  label: Text(
+                    'Download PDF',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(60),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Generate and download/share App Store QR codes as PDF
+  Future<void> _downloadAppQRCodePDF() async {
+    try {
+      final qrImages = <String, pw.MemoryImage>{};
+      final qrImageSize = 300.0;
+
+      for (final entry in {
+        'iOS': _club.appStoreQRUrl,
+        'Android': _club.playStoreQRUrl,
+      }.entries) {
+        if (entry.value == null) continue;
+
+        final qrPainter = QrPainter(
+          data: entry.value!,
+          version: QrVersions.auto,
+          errorCorrectionLevel: QrErrorCorrectLevel.M,
+        );
+
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, qrImageSize, qrImageSize),
+          Paint()..color = Colors.white,
+        );
+        qrPainter.paint(canvas, Size(qrImageSize, qrImageSize));
+
+        final picture = recorder.endRecording();
+        final img = await picture.toImage(qrImageSize.toInt(), qrImageSize.toInt());
+        final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+        qrImages[entry.key] = pw.MemoryImage(byteData!.buffer.asUint8List());
+      }
+
+      if (qrImages.isEmpty) return;
+
+      final pdf = pw.Document();
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return pw.Center(
+              child: pw.Column(
+                mainAxisAlignment: pw.MainAxisAlignment.center,
+                children: [
+                  pw.Text(
+                    _club.name,
+                    style: pw.TextStyle(
+                      fontSize: 32,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 12),
+                  pw.Text(
+                    'Download the Final Table App',
+                    style: const pw.TextStyle(fontSize: 18),
+                  ),
+                  pw.SizedBox(height: 40),
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    children: qrImages.entries.map((entry) {
+                      return pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 20),
+                        child: pw.Column(
+                          children: [
+                            pw.Container(
+                              padding: const pw.EdgeInsets.all(16),
+                              decoration: pw.BoxDecoration(
+                                border: pw.Border.all(width: 2),
+                                borderRadius: pw.BorderRadius.circular(12),
+                              ),
+                              child: pw.Image(entry.value, width: 200, height: 200),
+                            ),
+                            pw.SizedBox(height: 12),
+                            pw.Text(
+                              entry.key,
+                              style: pw.TextStyle(
+                                fontSize: 16,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  pw.SizedBox(height: 40),
+                  pw.Text(
+                    'Scan the QR code for your device to get started',
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      color: PdfColors.grey700,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      final pdfBytes = await pdf.save();
+      final tempDir = await getTemporaryDirectory();
+      final fileName = '${_club.name}_App_QR_Codes.pdf'.replaceAll(' ', '_');
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsBytes(pdfBytes);
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: '${_club.name} - App Download QR Codes',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error generating PDF: $e'),
+            backgroundColor: const Color(0xFFDA5B5E),
+          ),
+        );
+      }
+    }
   }
 
   /// Generate and download/share QR code as PDF

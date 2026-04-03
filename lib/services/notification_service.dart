@@ -229,6 +229,35 @@ class NotificationService {
     return eventId.hashCode + 1000000;
   }
 
+  static const int _onboardingReminderId = 888888;
+
+  /// Schedule an onboarding reminder 2 hours after registration
+  static Future<void> scheduleOnboardingReminder() async {
+    try {
+      if (!_initialized) await initialize();
+
+      final scheduledDate = DateTime.now().add(const Duration(hours: 2));
+      await _scheduleNotification(
+        id: _onboardingReminderId,
+        title: 'Welcome to Final Table!',
+        body: 'Ready to explore? Take a quick tour to learn how to track your hands.',
+        scheduledDate: scheduledDate,
+        payload: 'onboarding_reminder',
+      );
+    } catch (e) {
+      print('Error scheduling onboarding reminder: $e');
+    }
+  }
+
+  /// Cancel the onboarding reminder
+  static Future<void> cancelOnboardingReminder() async {
+    try {
+      await _notifications.cancel(_onboardingReminderId);
+    } catch (e) {
+      print('Error cancelling onboarding reminder: $e');
+    }
+  }
+
   /// Show a test notification immediately (for debugging)
   static Future<void> showTestNotification() async {
     try {
