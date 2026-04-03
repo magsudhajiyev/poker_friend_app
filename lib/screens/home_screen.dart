@@ -1828,7 +1828,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           // Bankroll amount
                           ImageFiltered(
                             imageFilter: _isBankrollHidden
-                                ? ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10)
+                                ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
                                 : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
@@ -1850,20 +1850,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
-                            decoration: BoxDecoration(
-                              color: const Color(0x0AD3FFFD),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color(0x0AD3FFFD),
-                                width: 1,
-                              ),
-                            ),
+                            decoration: _isBankrollHidden
+                                ? null
+                                : BoxDecoration(
+                                    color: const Color(0x0AD3FFFD),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: const Color(0x0AD3FFFD),
+                                      width: 1,
+                                    ),
+                                  ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 ImageFiltered(
                                   imageFilter: _isBankrollHidden
-                                      ? ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10)
+                                      ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
                                       : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
                                   child: Text(
                                     '\$${remaining.toInt()} left',
@@ -1877,7 +1879,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                                 const SizedBox(height: 4),
                                 // Progress bar
-                                SizedBox(
+                                ImageFiltered(
+                                  imageFilter: _isBankrollHidden
+                                      ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
+                                      : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+                                  child: SizedBox(
                                   height: 4,
                                   child: LayoutBuilder(
                                     builder: (context, constraints) {
@@ -1914,6 +1920,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       );
                                     },
                                   ),
+                                ),
                                 ),
                               ],
                             ),

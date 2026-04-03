@@ -12,6 +12,7 @@ import '../design_system/components/drawer_dots.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
+import '../design_system/components/app_toggle.dart';
 
 class IndividualSessionTrackingScreen extends StatefulWidget {
   final String sessionName;
@@ -1441,10 +1442,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        Switch(
+                        AppToggle(
                           value: _showBBMode,
                           onChanged: (value) => setState(() => _showBBMode = value),
-                          activeColor: const Color(0xFF89F1EC),
                         ),
                       ],
                     ),
