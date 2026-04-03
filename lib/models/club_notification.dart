@@ -15,6 +15,8 @@ enum NotificationType {
   invitationAccepted, // When invited user accepts the invitation
   invitationDeclined, // When invited user declines the invitation
   seatAvailable,    // When a seat becomes available for waitlist member
+  newSupportRequest, // When a user submits a support request (for app admins)
+  supportRequestUpdated, // When admin resolves/rejects a support request (for user)
 }
 
 extension NotificationTypeExtension on NotificationType {
@@ -46,6 +48,10 @@ extension NotificationTypeExtension on NotificationType {
         return 'Invitation Declined';
       case NotificationType.seatAvailable:
         return 'Seat Available';
+      case NotificationType.newSupportRequest:
+        return 'Support Request';
+      case NotificationType.supportRequestUpdated:
+        return 'Support Update';
     }
   }
 
@@ -77,6 +83,10 @@ extension NotificationTypeExtension on NotificationType {
         return 'invitation_declined';
       case NotificationType.seatAvailable:
         return 'seat_available';
+      case NotificationType.newSupportRequest:
+        return 'new_support_request';
+      case NotificationType.supportRequestUpdated:
+        return 'support_request_updated';
     }
   }
 
@@ -108,6 +118,10 @@ extension NotificationTypeExtension on NotificationType {
         return NotificationType.invitationDeclined;
       case 'seat_available':
         return NotificationType.seatAvailable;
+      case 'new_support_request':
+        return NotificationType.newSupportRequest;
+      case 'support_request_updated':
+        return NotificationType.supportRequestUpdated;
       default:
         return NotificationType.eventCreated;
     }

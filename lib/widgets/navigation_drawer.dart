@@ -9,6 +9,7 @@ import '../services/club_service.dart';
 import '../services/session_result_service.dart';
 import '../screens/statistics_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/help_support_screen.dart';
 import '../screens/intro_screen.dart';
 import '../screens/club/club_dashboard_screen.dart';
 import '../screens/paywall_screen.dart';
@@ -212,7 +213,12 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   label: 'Help & Support',
                                   onTap: () {
                                     Navigator.pop(context);
-                                    _showHelpDialog(context);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const HelpSupportScreen(),
+                                      ),
+                                    );
                                   },
                                 ),
                                 _MenuItemData(
@@ -970,58 +976,6 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           ],
         );
       },
-    );
-  }
-
-  void _showHelpDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1E),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          'Help & Support',
-          style: GoogleFonts.inter(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Need help with Final Table?',
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Contact us at:\nsupport@pokerlogger.app',
-              style: GoogleFonts.inter(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Close',
-              style: GoogleFonts.inter(
-                color: const Color(0xFF87ED81),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

@@ -15,6 +15,9 @@ import '../screens/my_opponents_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/admin/club_requests_screen.dart';
+import '../screens/admin/support_requests_screen.dart';
+import '../services/support_request_service.dart';
+import '../models/support_request.dart';
 import '../screens/calendar_screen.dart';
 import '../screens/earnings_chart_screen.dart';
 import '../services/auth_service.dart';
@@ -314,6 +317,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         icon = Icons.event_seat;
         iconColor = const Color(0xFF4CAF50);
         break;
+      case NotificationType.newSupportRequest:
+        icon = Icons.support_agent;
+        iconColor = const Color(0xFF89F1EC);
+        break;
+      case NotificationType.supportRequestUpdated:
+        icon = Icons.check_circle;
+        iconColor = const Color(0xFF87ED81);
+        break;
     }
 
     SlidingNotificationOverlay.show(
@@ -325,9 +336,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       iconColor: iconColor,
       displayDuration: const Duration(seconds: 6),
       onTap: () {
-        // TODO: Navigate to event detail screen when implemented
-        // For now, mark as read
         ClubNotificationService.markAsRead(notification.id);
+        _handleNotificationTap(notification);
       },
     );
   }
@@ -648,7 +658,121 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         // Navigate to the event to claim the seat
         _navigateToEventFromNotification(notification);
         break;
+      case NotificationType.newSupportRequest:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SupportRequestsScreen(),
+          ),
+        );
+        break;
+      case NotificationType.supportRequestUpdated:
+        _showSupportResponseDialog(notification);
+        break;
     }
+  }
+
+  void _showSupportResponseDialog(ClubNotification notification) async {
+    final requestId = notification.data['requestId'] as String?;
+    if (requestId == null) return;
+
+    final request = await SupportRequestService.getRequest(requestId);
+    if (!mounted || request == null) return;
+
+    final isResolved = request.isResolved;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF101115),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(
+              isResolved ? Icons.check_circle : Icons.cancel,
+              color: isResolved ? const Color(0xFF87ED81) : const Color(0xFFD55A41),
+              size: 22,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                isResolved ? 'Request Resolved' : 'Request Closed',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              request.subject,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              request.category,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontSize: 13,
+              ),
+            ),
+            if (request.adminResponse != null && request.adminResponse!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Response',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF8C8C8C),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isResolved
+                      ? const Color(0xFF87ED81).withValues(alpha: 0.1)
+                      : const Color(0xFFD55A41).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  request.adminResponse!,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'OK',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF89F1EC),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Handle member invitation notification tap - show accept/decline dialog

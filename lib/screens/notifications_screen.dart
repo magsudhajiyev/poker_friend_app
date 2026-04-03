@@ -13,6 +13,9 @@ import '../widgets/global_bottom_nav_bar.dart';
 import 'club/event_detail_screen.dart';
 import 'club/club_dashboard_screen.dart';
 import 'admin/club_requests_screen.dart';
+import 'admin/support_requests_screen.dart';
+import '../services/support_request_service.dart';
+import '../models/support_request.dart';
 
 /// Dedicated notifications screen matching Figma design (node 324:4769)
 class NotificationsScreen extends StatefulWidget {
@@ -119,6 +122,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return 'Invitations';
       case NotificationType.seatAvailable:
         return 'Seats';
+      case NotificationType.newSupportRequest:
+      case NotificationType.supportRequestUpdated:
+        return 'Support';
     }
   }
 
@@ -518,7 +524,121 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           await _navigateToClub(notification.clubId);
         }
         break;
+      case NotificationType.newSupportRequest:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SupportRequestsScreen(),
+          ),
+        );
+        break;
+      case NotificationType.supportRequestUpdated:
+        _showSupportResponseDialog(notification);
+        break;
     }
+  }
+
+  void _showSupportResponseDialog(ClubNotification notification) async {
+    final requestId = notification.data['requestId'] as String?;
+    if (requestId == null) return;
+
+    final request = await SupportRequestService.getRequest(requestId);
+    if (!mounted || request == null) return;
+
+    final isResolved = request.isResolved;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF101115),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(
+              isResolved ? Icons.check_circle : Icons.cancel,
+              color: isResolved ? const Color(0xFF87ED81) : const Color(0xFFD55A41),
+              size: 22,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                isResolved ? 'Request Resolved' : 'Request Closed',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              request.subject,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              request.category,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontSize: 13,
+              ),
+            ),
+            if (request.adminResponse != null && request.adminResponse!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Response',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF8C8C8C),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isResolved
+                      ? const Color(0xFF87ED81).withValues(alpha: 0.1)
+                      : const Color(0xFFD55A41).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  request.adminResponse!,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'OK',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF89F1EC),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Handle member invitation notification tap - show accept/decline dialog

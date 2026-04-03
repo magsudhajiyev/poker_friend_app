@@ -5,8 +5,10 @@ import '../design_system/constants/colors.dart';
 import '../design_system/components/app_toggle.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../services/club_request_service.dart';
+import '../services/support_request_service.dart';
 import '../onboarding/onboarding_state.dart';
 import 'admin/club_requests_screen.dart';
+import 'admin/support_requests_screen.dart';
 import 'knowledge_base_screen.dart';
 import 'logging_mode_selection_screen.dart';
 
@@ -21,6 +23,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool autoAdvanceStreets = false;
   bool _isAppAdmin = false;
   int _pendingRequestCount = 0;
+  int _pendingSupportCount = 0;
   bool _isGuidedTourExpanded = false;
 
   @override
@@ -42,10 +45,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final isAdmin = await ClubRequestService.isAppAdmin();
       if (isAdmin) {
         final count = await ClubRequestService.getPendingCount();
+        final supportCount = await SupportRequestService.getPendingCount();
         if (mounted) {
           setState(() {
             _isAppAdmin = true;
             _pendingRequestCount = count;
+            _pendingSupportCount = supportCount;
           });
         }
       }
@@ -305,6 +310,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 MaterialPageRoute(
                                   builder: (context) =>
                                       const ClubRequestsScreen(),
+                                ),
+                              );
+                              _checkAppAdminStatus();
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _buildNavigationRow(
+                            icon: Icons.support_agent_rounded,
+                            iconColor: const Color(0xFFE8B55A),
+                            title: 'Support Requests',
+                            subtitle: 'Manage user support tickets',
+                            badge: _pendingSupportCount > 0
+                                ? _pendingSupportCount
+                                : null,
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const SupportRequestsScreen(),
                                 ),
                               );
                               _checkAppAdminStatus();
