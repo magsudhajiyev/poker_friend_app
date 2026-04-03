@@ -9,6 +9,7 @@ import '../services/support_request_service.dart';
 import '../onboarding/onboarding_state.dart';
 import 'admin/club_requests_screen.dart';
 import 'admin/support_requests_screen.dart';
+import 'admin/notification_tester_screen.dart';
 import 'knowledge_base_screen.dart';
 import 'logging_mode_selection_screen.dart';
 
@@ -333,6 +334,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               );
                               _checkAppAdminStatus();
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _buildNavigationRow(
+                            icon: Icons.notifications_active_rounded,
+                            iconColor: const Color(0xFF89F1EC),
+                            title: 'Notification Tester',
+                            subtitle: 'Preview all notification designs',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const NotificationTesterScreen(),
+                                ),
+                              );
                             },
                           ),
                         ],

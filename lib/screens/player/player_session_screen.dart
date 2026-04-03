@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../design_system/constants/colors.dart';
+import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../models/dealer_session.dart';
 import '../../models/hand_state_machine.dart';
 import '../../services/seat_service.dart';
@@ -9,7 +12,9 @@ import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/number_formatter.dart';
 import '../../widgets/hole_cards_dialog.dart';
+import '../../models/club_event.dart';
 import '../hand_actions_screen.dart';
+import '../spectator/event_rankings_screen.dart';
 
 /// Player session screen for participating in dealer-assisted sessions.
 /// Shows real-time hand updates, allows player to input hole cards, notes, and tags.
@@ -48,6 +53,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
   // Event info
   String? _eventName;
+  ClubEvent? _event;
 
   // Player's seat info
   double _myStack = 0;
@@ -58,7 +64,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   List<Map<String, dynamic>> _actions = [];
   Map<String, dynamic>? _boardCards;
   bool _isHandActive = false;
-  bool _isShowingExitDialog = false;  // Prevent duplicate exit dialogs
+  bool _isShowingExitDialog = false;
 
   // Player input (persisted per hand)
   String? _myCard1;
@@ -97,7 +103,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
   Future<void> _initialize() async {
     try {
-      // Watch seat updates - also detect if player is removed by dealer
       _seatSubscription = SeatService.watchSeat(
         clubId: widget.clubId,
         tableId: widget.tableId,
@@ -106,18 +111,15 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         if (!mounted) return;
 
         if (seat == null || !seat.isOccupied || seat.playerId != AuthService.userId) {
-          // Player was removed from the seat by dealer
           _showRemovedFromTableDialog();
           return;
         }
 
-        // Update chip stack
         setState(() {
           _myStack = seat.chipStack ?? 0;
         });
       });
 
-      // Watch dealer session
       _sessionSubscription = DealerService.watchActiveSessionForTable(
         clubId: widget.clubId,
         tableId: widget.tableId,
@@ -138,7 +140,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     if (!mounted) return;
 
     if (session == null && _session != null) {
-      // Session ended
       _showSessionEndedDialog();
       return;
     }
@@ -154,10 +155,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         _sessionStatus = session.status;
       });
 
-      // On first load OR when session changes, fetch hands from the new session
       if (isFirstLoad || sessionChanged) {
         if (sessionChanged) {
-          // Clear old history when switching to a new session
           setState(() {
             _handHistory = [];
             _currentHand = null;
@@ -169,29 +168,24 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         _loadEventName(session);
       }
 
-      // If hand changed, watch the new hand
       if (newHandId != oldHandId) {
         _handSubscription?.cancel();
 
-        // If old hand was active, add to history (only if not first load)
         if (!isFirstLoad && oldHandId != null && _currentHand != null) {
           _addToHistory(_currentHand!);
         }
 
-        // Reset player input for new hand
         _resetPlayerInput();
 
         if (newHandId != null) {
           _watchCurrentHand(session.id, newHandId);
         } else {
-          // Hand completed, no active hand
           setState(() {
             _isHandActive = false;
           });
         }
       }
 
-      // Handle session status changes
       if (session.status == DealerSessionStatus.ended) {
         _showSessionEndedDialog();
       }
@@ -199,7 +193,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   }
 
   void _watchCurrentHand(String sessionId, String handId) {
-    // Load player's saved data for this hand
     _loadPlayerHandData(sessionId, handId);
 
     _handSubscription = DealerService.watchCurrentHand(sessionId, handId).listen((handData) {
@@ -210,7 +203,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       final handNumber = handData['handNumber'] as int? ?? 0;
       final boardCards = handData['boardCards'] as Map<String, dynamic>?;
 
-      // Calculate pot from actions
       double pot = _calculatePotFromActions(handData);
 
       setState(() {
@@ -222,7 +214,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         _isHandActive = status == 'active';
       });
 
-      // If hand completed, show result
       if (status == 'completed' && _isHandActive) {
         final winnerId = handData['winnerId'] as int?;
         if (winnerId != null) {
@@ -305,10 +296,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   }
 
   void _addToHistory(Map<String, dynamic> hand) {
-    // Add player's annotations
     final annotatedHand = Map<String, dynamic>.from(hand);
 
-    // Only add hole cards if they're valid
     if (_myCard1 != null && _myCard2 != null) {
       annotatedHand['playerHoleCards'] = {'card1': _myCard1, 'card2': _myCard2};
     }
@@ -321,19 +310,16 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
     setState(() {
       _handHistory.insert(0, annotatedHand);
-      // Keep last 20 hands
       if (_handHistory.length > 20) {
         _handHistory = _handHistory.sublist(0, 20);
       }
     });
   }
 
-  /// Load existing completed hands from Firestore
   Future<void> _loadExistingHands(String sessionId) async {
     try {
       final hands = await DealerService.getSessionHands(sessionId);
 
-      // Filter for completed hands only and sort by hand number descending
       final completedHands = hands
           .where((h) => h['status'] == 'completed')
           .toList()
@@ -346,15 +332,15 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         });
       }
     } catch (e) {
-      print('Error loading existing hands: $e');
+      debugPrint('Error loading existing hands: $e');
     }
   }
 
-  /// Load event name from session's event ID
   Future<void> _loadEventName(DealerSession session) async {
     if (session.eventId == null) {
       setState(() {
         _eventName = null;
+        _event = null;
       });
       return;
     }
@@ -364,10 +350,11 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       if (mounted && event != null) {
         setState(() {
           _eventName = event.name;
+          _event = event;
         });
       }
     } catch (e) {
-      // Silently fail - event name is optional
+      // Silently fail
     }
   }
 
@@ -379,14 +366,22 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text(
+        backgroundColor: AppColors.backgroundSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
           'Session Ended',
-          style: TextStyle(color: Colors.white),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        content: const Text(
+        content: Text(
           'The dealer has ended this session.',
-          style: TextStyle(color: Colors.white70),
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF8C8C8C),
+            fontSize: 15,
+          ),
         ),
         actions: [
           TextButton(
@@ -394,7 +389,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('OK'),
+            child: Text(
+              'OK',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF89F1EC),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -405,7 +406,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     if (_isShowingExitDialog) return;
     _isShowingExitDialog = true;
 
-    // Cancel subscriptions to prevent further updates
     _sessionSubscription?.cancel();
     _handSubscription?.cancel();
     _seatSubscription?.cancel();
@@ -414,14 +414,22 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text(
+        backgroundColor: AppColors.backgroundSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
           'Removed from Table',
-          style: TextStyle(color: Colors.white),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        content: const Text(
+        content: Text(
           'You have been removed from the table by the dealer.',
-          style: TextStyle(color: Colors.white70),
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF8C8C8C),
+            fontSize: 15,
+          ),
         ),
         actions: [
           TextButton(
@@ -429,7 +437,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('OK'),
+            child: Text(
+              'OK',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF89F1EC),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -444,8 +458,9 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           isWinner
               ? 'You won ${formatCompactCurrency(pot)}!'
               : 'Seat $winnerId wins ${formatCompactCurrency(pot)}',
+          style: GoogleFonts.ibmPlexSans(color: Colors.white),
         ),
-        backgroundColor: isWinner ? Colors.green.shade700 : Colors.grey.shade700,
+        backgroundColor: isWinner ? const Color(0xFF87ED81) : AppColors.backgroundSurface,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -454,7 +469,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   Future<void> _editHoleCards() async {
     final usedCards = <String>{};
 
-    // Add board cards to used set
     if (_boardCards != null) {
       final flop = _boardCards!['flop'] as List?;
       if (flop != null) usedCards.addAll(flop.cast<String>());
@@ -480,7 +494,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         _myCard1 = result.card1;
         _myCard2 = result.card2;
       });
-      // Save to Firestore for persistence
       await _savePlayerData();
     }
   }
@@ -516,7 +529,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         _handTags.add(tag);
       }
     });
-    // Save tags to Firestore
     _savePlayerData();
   }
 
@@ -524,24 +536,43 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text(
+        backgroundColor: AppColors.backgroundSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
           'Leave Table?',
-          style: TextStyle(color: Colors.white),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        content: const Text(
+        content: Text(
           'Are you sure you want to leave this table?',
-          style: TextStyle(color: Colors.white70),
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF8C8C8C),
+            fontSize: 15,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Leave'),
+            child: Text(
+              'Leave',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFFD55A41),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -561,8 +592,11 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to leave: ${e.toString()}'),
-              backgroundColor: Colors.red.shade700,
+              content: Text(
+                'Failed to leave: ${e.toString()}',
+                style: GoogleFonts.ibmPlexSans(color: Colors.white),
+              ),
+              backgroundColor: const Color(0xFFD55A41),
             ),
           );
         }
@@ -570,187 +604,289 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     }
   }
 
+  // ─── BUILD ───────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
-      appBar: _buildAppBar(),
-      body: _buildBody(),
+      backgroundColor: AppColors.backgroundPaper,
+      body: Stack(
+        children: [
+          const GradientBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 8),
+                Expanded(child: _buildBody()),
+              ],
+            ),
+          ),
+          if (_isPaused) _buildPauseOverlay(),
+        ],
+      ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  Widget _buildHeader() {
     final dealerName = _session?.dealerName ?? 'Unknown';
 
-    return AppBar(
-      backgroundColor: const Color(0xFF161B22),
-      elevation: 0,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Flexible(
-                child: Text(
+          // Back / leave button
+          GestureDetector(
+            onTap: _leaveTable,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                color: Color(0xFF101115),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.exit_to_app_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Title column
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   _eventName ?? 'Table Session',
-                  style: const TextStyle(fontSize: 18),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                const SizedBox(height: 3),
+                Row(
                   children: [
-                    Icon(
-                      Icons.person,
-                      size: 12,
-                      color: Colors.blue.shade300,
+                    Text(
+                      'Hand #$_handNumber',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 13,
+                        color: const Color(0xFF8C8C8C),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: _isHandActive
+                            ? const Color(0xFF87ED81)
+                            : const Color(0xFF8C8C8C),
+                        shape: BoxShape.circle,
+                      ),
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      dealerName,
-                      style: TextStyle(
+                      _isHandActive ? 'LIVE' : 'WAITING',
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 11,
-                        color: Colors.blue.shade300,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
+                        color: _isHandActive
+                            ? const Color(0xFF87ED81)
+                            : const Color(0xFF8C8C8C),
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          Row(
-            children: [
-              Text(
-                'Hand #$_handNumber',
-                style: const TextStyle(fontSize: 12, color: Colors.white54),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                width: 6,
-                height: 6,
+          // Live Rankings button (only for event sessions)
+          if (_event != null) ...[
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EventRankingsScreen(
+                      event: _event!,
+                      accessCode: _event!.accessCode,
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: _isHandActive ? Colors.green : Colors.grey,
+                  color: const Color(0xFFFFA726).withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                _isHandActive ? 'LIVE' : 'WAITING',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: _isHandActive ? Colors.green : Colors.grey,
-                  fontWeight: FontWeight.bold,
+                child: const Icon(
+                  Icons.leaderboard_rounded,
+                  color: Color(0xFFFFA726),
+                  size: 22,
                 ),
               ),
-            ],
+            ),
+            const SizedBox(width: 8),
+          ],
+          // Dealer badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFF89F1EC).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.person_rounded,
+                  size: 14,
+                  color: Color(0xFF89F1EC),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  dealerName,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF89F1EC),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.exit_to_app),
-          onPressed: _leaveTable,
-          tooltip: 'Leave Table',
-        ),
-      ],
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error != null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+            const CircularProgressIndicator(
+              color: Color(0xFF89F1EC),
+              strokeWidth: 2,
+            ),
             const SizedBox(height: 16),
             Text(
-              _error!,
-              style: const TextStyle(color: Colors.white70),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Go Back'),
+              'Connecting...',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontSize: 15,
+              ),
             ),
           ],
         ),
       );
     }
 
-    return Stack(
-      children: [
-        // Main content
-        SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Status bar
-              _buildStatusBar(),
-              const SizedBox(height: 16),
-
-              // Hole cards
-              _buildHoleCardsSection(),
-              const SizedBox(height: 16),
-
-              // Board cards
-              if (_boardCards != null) ...[
-                _buildBoardCardsSection(),
-                const SizedBox(height: 16),
-              ],
-
-              // Current hand actions
-              _buildActionsSection(),
-              const SizedBox(height: 16),
-
-              // Notes
-              _buildNotesSection(),
-              const SizedBox(height: 12),
-
-              // Tags
-              _buildTagsSection(),
-              const SizedBox(height: 16),
-
-              // Hand history
-              _buildHandHistorySection(),
-              const SizedBox(height: 80), // Bottom padding for safety
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD55A41).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.error_outline_rounded,
+                  size: 36,
+                  color: Color(0xFFD55A41),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                _error!,
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF8C8C8C),
+                  fontSize: 15,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(60),
+                  ),
+                  child: Text(
+                    'Go Back',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                      letterSpacing: -0.43,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
+      );
+    }
 
-        // Pause overlay
-        if (_isPaused) _buildPauseOverlay(),
-      ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStatusBar(),
+          const SizedBox(height: 16),
+          _buildHoleCardsSection(),
+          const SizedBox(height: 16),
+          if (_boardCards != null) ...[
+            _buildBoardCardsSection(),
+            const SizedBox(height: 16),
+          ],
+          _buildActionsSection(),
+          const SizedBox(height: 16),
+          _buildNotesSection(),
+          const SizedBox(height: 12),
+          _buildTagsSection(),
+          const SizedBox(height: 16),
+          _buildHandHistorySection(),
+        ],
+      ),
     );
   }
 
+  // ─── STATUS BAR ──────────────────────────────────────────────────
+
   Widget _buildStatusBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: AppColors.backgroundSurface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF1C1F21)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatusItem('SEAT', '#${widget.seatNumber}', Colors.blue),
-          _buildStatusItem('STACK', formatCompactCurrency(_myStack), Colors.green),
-          _buildStatusItem('POT', formatCompactCurrency(_potAmount), Colors.amber),
+          _buildStatusItem('SEAT', '#${widget.seatNumber}', const Color(0xFF89F1EC)),
+          _buildStatusItem('STACK', formatCompactCurrency(_myStack), const Color(0xFF87ED81)),
+          _buildStatusItem('POT', formatCompactCurrency(_potAmount), const Color(0xFFFFA726)),
         ],
       ),
     );
@@ -761,174 +897,161 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       children: [
         Text(
           value,
-          style: TextStyle(
+          style: GoogleFonts.robotoMono(
             color: color,
             fontSize: 18,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(
-            color: color.withValues(alpha: 0.7),
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF8C8C8C),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
         ),
       ],
     );
   }
 
+  // ─── HOLE CARDS ──────────────────────────────────────────────────
+
   Widget _buildHoleCardsSection() {
     final hasCards = _myCard1 != null && _myCard2 != null;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(12),
-        border: hasCards
-            ? Border.all(color: const Color(0xFF5AC95A).withValues(alpha: 0.3))
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.style,
-                    color: hasCards ? const Color(0xFF5AC95A) : Colors.white54,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'My Hole Cards',
-                    style: TextStyle(
-                      color: hasCards ? const Color(0xFF5AC95A) : Colors.white54,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+    return GestureDetector(
+      onTap: _editHoleCards,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasCards
+                ? const Color(0xFF89F1EC).withValues(alpha: 0.3)
+                : const Color(0xFF1C1F21),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.style_rounded,
+              color: hasCards ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Hole Cards',
+              style: GoogleFonts.ibmPlexSans(
+                color: hasCards ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
-              GestureDetector(
-                onTap: _editHoleCards,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF5AC95A).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    hasCards ? 'Edit' : 'Add',
-                    style: const TextStyle(
-                      color: Color(0xFF5AC95A),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+            ),
+            const Spacer(),
+            if (hasCards) ...[
+              _buildMiniCard(_myCard1!),
+              const SizedBox(width: 4),
+              _buildMiniCard(_myCard2!),
+              const SizedBox(width: 10),
+            ],
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF89F1EC).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Text(
+                hasCards ? 'Edit' : 'Add',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF89F1EC),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: hasCards
-                ? [
-                    _buildCard(_myCard1!),
-                    const SizedBox(width: 12),
-                    _buildCard(_myCard2!),
-                  ]
-                : [
-                    Text(
-                      'Tap "Add" to enter your hole cards',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  // ─── BOARD CARDS ─────────────────────────────────────────────────
 
   Widget _buildBoardCardsSection() {
     final flop = (_boardCards?['flop'] as List?)?.cast<String>() ?? [];
     final turn = _boardCards?['turn'] as String?;
     final river = _boardCards?['river'] as String?;
+    final hasCards = flop.isNotEmpty;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: AppColors.backgroundSurface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: hasCards
+              ? const Color(0xFFFFA726).withValues(alpha: 0.3)
+              : const Color(0xFF1C1F21),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          const Row(
-            children: [
-              Icon(Icons.dashboard, color: Colors.amber, size: 18),
-              SizedBox(width: 8),
-              Text(
-                'Board',
-                style: TextStyle(
-                  color: Colors.amber,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
+          const Icon(Icons.dashboard_rounded, color: Color(0xFFFFA726), size: 18),
+          const SizedBox(width: 8),
+          Text(
+            'Board',
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFFFFA726),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          if (hasCards) ...[
+            ...flop.map((card) => Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: _buildBoardCard(card),
+                )),
+            if (turn != null) ...[
+              const SizedBox(width: 4),
+              _buildBoardCard(turn),
+              const SizedBox(width: 4),
+            ],
+            if (river != null) ...[
+              _buildBoardCard(river),
+            ],
+          ] else
+            Text(
+              'No cards dealt',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontSize: 13,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Flop
-              ...flop.map((card) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: _buildCard(card),
-                  )),
-              // Turn
-              if (turn != null) ...[
-                const SizedBox(width: 8),
-                _buildCard(turn),
-              ],
-              // River
-              if (river != null) ...[
-                const SizedBox(width: 8),
-                _buildCard(river),
-              ],
-            ],
-          ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildCard(String card) {
+  Widget _buildBoardCard(String card) {
     final suit = card.length > 1 ? card.substring(1) : '';
     final isRed = suit == '♥' || suit == '♦';
 
     return Container(
-      width: 44,
-      height: 60,
+      width: 34,
+      height: 46,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 3,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -937,7 +1060,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           card,
           style: TextStyle(
             color: isRed ? Colors.red : Colors.black,
-            fontSize: 16,
+            fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -945,24 +1068,29 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     );
   }
 
+  // ─── ACTIONS ─────────────────────────────────────────────────────
+
   Widget _buildActionsSection() {
     if (_actions.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
+          color: AppColors.backgroundSurface,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF1C1F21)),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             'Waiting for action...',
-            style: TextStyle(color: Colors.white38),
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFF8C8C8C),
+              fontSize: 14,
+            ),
           ),
         ),
       );
     }
 
-    // Group actions by street
     final actionsByStreet = <String, List<Map<String, dynamic>>>{
       'preflop': [],
       'flop': [],
@@ -977,24 +1105,25 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: AppColors.backgroundSurface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF1C1F21)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(16),
+          Padding(
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Icon(Icons.history, color: Colors.white54, size: 18),
-                SizedBox(width: 8),
+                const Icon(Icons.history_rounded, color: Color(0xFF8C8C8C), size: 18),
+                const SizedBox(width: 8),
                 Text(
                   'Actions',
-                  style: TextStyle(
+                  style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -1014,13 +1143,13 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: const Color(0xFF0D1117),
+          color: AppColors.backgroundPaper,
           child: Text(
             street.toUpperCase(),
-            style: const TextStyle(
-              color: Color(0xFF5AC95A),
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFF87ED81),
               fontSize: 11,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               letterSpacing: 1,
             ),
           ),
@@ -1042,23 +1171,23 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     Color actionColor;
     switch (actionType.toLowerCase()) {
       case 'fold':
-        actionColor = Colors.red.shade300;
+        actionColor = const Color(0xFFD55A41);
         break;
       case 'check':
-        actionColor = Colors.grey.shade400;
+        actionColor = const Color(0xFF8C8C8C);
         break;
       case 'call':
-        actionColor = Colors.green.shade300;
+        actionColor = const Color(0xFF87ED81);
         break;
       case 'bet':
       case 'raise':
-        actionColor = Colors.amber.shade300;
+        actionColor = const Color(0xFFFFA726);
         break;
       case 'all-in':
-        actionColor = Colors.purple.shade300;
+        actionColor = const Color(0xFF89F1EC);
         break;
       default:
-        actionColor = Colors.white70;
+        actionColor = const Color(0xFF8C8C8C);
     }
 
     String actionText = '$displayName ${actionType.toUpperCase()}';
@@ -1072,30 +1201,30 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         children: [
           if (isMe)
             Container(
-              width: 4,
+              width: 3,
               height: 16,
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: const Color(0xFF89F1EC),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           Expanded(
             child: Text(
               actionText,
-              style: TextStyle(
-                color: isMe ? Colors.white : Colors.white70,
+              style: GoogleFonts.ibmPlexSans(
+                color: isMe ? Colors.white : const Color(0xFFB3B4B6),
                 fontSize: 13,
-                fontWeight: isMe ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: isMe ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ),
           Text(
             actionType.toUpperCase(),
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
               color: actionColor,
               fontSize: 11,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -1103,46 +1232,59 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     );
   }
 
+  // ─── NOTES ───────────────────────────────────────────────────────
+
   Widget _buildNotesSection() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: AppColors.backgroundSurface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF1C1F21)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
-            children: [
-              Icon(Icons.note, color: Colors.white54, size: 18),
-              SizedBox(width: 8),
-              Text(
-                'Hand Notes',
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          Text(
+            'HAND NOTES',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF87ED81),
+              letterSpacing: 1.0,
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
             onChanged: (value) => setState(() => _handNotes = value),
             onEditingComplete: () => _savePlayerData(),
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: Colors.white,
+              height: 1.44,
+            ),
             decoration: InputDecoration(
               hintText: 'Add notes about this hand...',
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-              filled: true,
-              fillColor: const Color(0xFF0D1117),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
+              hintStyle: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                color: const Color(0xFF8C8C8C),
               ),
-              contentPadding: const EdgeInsets.all(12),
+              filled: false,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF89F1EC), width: 1),
+              ),
             ),
-            style: const TextStyle(color: Colors.white, fontSize: 14),
             maxLines: 3,
             minLines: 1,
           ),
@@ -1151,29 +1293,27 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     );
   }
 
+  // ─── TAGS ────────────────────────────────────────────────────────
+
   Widget _buildTagsSection() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: AppColors.backgroundSurface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF1C1F21)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
-            children: [
-              Icon(Icons.label, color: Colors.white54, size: 18),
-              SizedBox(width: 8),
-              Text(
-                'Tags',
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          Text(
+            'TAGS',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF87ED81),
+              letterSpacing: 1.0,
+            ),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -1192,39 +1332,41 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     return GestureDetector(
       onTap: () => _toggleTag(tag),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFBAFF9A).withValues(alpha: 0.2)
-              : const Color(0xFF0D1117),
-          borderRadius: BorderRadius.circular(16),
+              ? const Color(0xFF89F1EC).withValues(alpha: 0.15)
+              : AppColors.backgroundPaper,
+          borderRadius: BorderRadius.circular(40),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFBAFF9A).withValues(alpha: 0.5)
-                : Colors.white.withValues(alpha: 0.1),
+                ? const Color(0xFF89F1EC)
+                : const Color(0xFF1C1F21),
           ),
         ),
         child: Text(
           tag,
-          style: TextStyle(
-            color: isSelected ? const Color(0xFFBAFF9A) : Colors.white54,
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          style: GoogleFonts.ibmPlexSans(
+            color: isSelected ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
       ),
     );
   }
 
+  // ─── HAND HISTORY ────────────────────────────────────────────────
+
   Widget _buildHandHistorySection() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: AppColors.backgroundSurface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF1C1F21)),
       ),
       child: Column(
         children: [
-          // Header
           GestureDetector(
             onTap: () => setState(() => _isHistoryExpanded = !_isHistoryExpanded),
             child: Container(
@@ -1234,14 +1376,14 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.history, color: Colors.white54, size: 18),
+                      const Icon(Icons.history_rounded, color: Color(0xFF8C8C8C), size: 18),
                       const SizedBox(width: 8),
-                      const Text(
+                      Text(
                         'Hand History',
-                        style: TextStyle(
-                          color: Colors.white54,
+                        style: GoogleFonts.ibmPlexSans(
+                          color: Colors.white,
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       if (_handHistory.isNotEmpty) ...[
@@ -1249,15 +1391,15 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.blue.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            color: const Color(0xFF89F1EC).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(40),
                           ),
                           child: Text(
                             '${_handHistory.length}',
-                            style: const TextStyle(
-                              color: Colors.blue,
+                            style: GoogleFonts.ibmPlexSans(
+                              color: const Color(0xFF89F1EC),
                               fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -1266,23 +1408,25 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                   ),
                   Icon(
                     _isHistoryExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.white54,
+                    color: const Color(0xFF8C8C8C),
                   ),
                 ],
               ),
             ),
           ),
-          // History items
           if (_isHistoryExpanded && _handHistory.isNotEmpty) ...[
-            const Divider(color: Color(0xFF0D1117), height: 1),
+            Container(height: 1, color: const Color(0xFF1C1F21)),
             ..._handHistory.map((hand) => _buildHistoryItem(hand)),
           ],
           if (_isHistoryExpanded && _handHistory.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(16),
+            Padding(
+              padding: const EdgeInsets.all(16),
               child: Text(
                 'No completed hands yet',
-                style: TextStyle(color: Colors.white38, fontSize: 13),
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF8C8C8C),
+                  fontSize: 13,
+                ),
               ),
             ),
         ],
@@ -1301,22 +1445,15 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         playerHoleCards['card1'] != null &&
         playerHoleCards['card2'] != null;
 
-    // Extract board cards
     final boardCardsData = hand['boardCards'] as Map<String, dynamic>?;
     final List<String> boardCards = [];
     if (boardCardsData != null) {
       final flop = boardCardsData['flop'] as List<dynamic>?;
-      if (flop != null) {
-        boardCards.addAll(flop.cast<String>());
-      }
+      if (flop != null) boardCards.addAll(flop.cast<String>());
       final turn = boardCardsData['turn'] as String?;
-      if (turn != null && turn.isNotEmpty) {
-        boardCards.add(turn);
-      }
+      if (turn != null && turn.isNotEmpty) boardCards.add(turn);
       final river = boardCardsData['river'] as String?;
-      if (river != null && river.isNotEmpty) {
-        boardCards.add(river);
-      }
+      if (river != null && river.isNotEmpty) boardCards.add(river);
     }
 
     return GestureDetector(
@@ -1326,7 +1463,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: const BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: Color(0xFF0D1117), width: 1),
+            bottom: BorderSide(color: Color(0xFF1C1F21), width: 1),
           ),
         ),
         child: Row(
@@ -1337,17 +1474,17 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               height: 32,
               decoration: BoxDecoration(
                 color: isWinner
-                    ? Colors.green.withValues(alpha: 0.2)
-                    : Colors.grey.withValues(alpha: 0.2),
+                    ? const Color(0xFF87ED81).withValues(alpha: 0.15)
+                    : AppColors.backgroundPaper,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
                 child: Text(
                   '#$handNumber',
-                  style: TextStyle(
-                    color: isWinner ? Colors.green : Colors.white54,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: isWinner ? const Color(0xFF87ED81) : const Color(0xFF8C8C8C),
                     fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -1360,8 +1497,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 children: [
                   Text(
                     isWinner ? 'Won ${formatCompactCurrency(pot)}' : 'Lost',
-                    style: TextStyle(
-                      color: isWinner ? Colors.green : Colors.white54,
+                    style: GoogleFonts.ibmPlexSans(
+                      color: isWinner ? const Color(0xFF87ED81) : const Color(0xFF8C8C8C),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1372,8 +1509,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                       children: playerTags
                           .map((tag) => Text(
                                 tag,
-                                style: const TextStyle(
-                                  color: Color(0xFFBAFF9A),
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: const Color(0xFF89F1EC),
                                   fontSize: 10,
                                 ),
                               ))
@@ -1392,15 +1529,15 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  hasHoleCards ? Icons.style : Icons.edit,
-                  color: hasHoleCards ? Colors.green : Colors.white38,
+                  hasHoleCards ? Icons.style_rounded : Icons.edit_rounded,
+                  color: hasHoleCards ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
                   size: 18,
                 ),
                 if (hasHoleCards)
                   Text(
-                    '${playerHoleCards!['card1']}${playerHoleCards['card2']}',
-                    style: const TextStyle(
-                      color: Colors.white54,
+                    '${playerHoleCards['card1']}${playerHoleCards['card2']}',
+                    style: GoogleFonts.ibmPlexSans(
+                      color: const Color(0xFF8C8C8C),
                       fontSize: 8,
                     ),
                   ),
@@ -1412,14 +1549,12 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     );
   }
 
-  /// Show dialog to edit hole cards, notes, and tags for a past hand
   Future<void> _showEditHandDialog(Map<String, dynamic> hand) async {
     final handNumber = hand['handNumber'] as int? ?? 0;
     final handId = hand['id'] as String?;
 
     if (handId == null || _session == null) return;
 
-    // Load existing player data
     String? card1;
     String? card2;
     String notes = '';
@@ -1433,7 +1568,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     notes = (hand['playerNotes'] as String?) ?? '';
     tags = (hand['playerTags'] as List?)?.cast<String>() ?? [];
 
-    // Also try to fetch from Firestore in case local cache is stale
     final odPlayerId = AuthService.userId;
     if (odPlayerId != null) {
       try {
@@ -1460,7 +1594,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       }
     }
 
-    // Get board cards for the hole cards dialog
     final usedCards = <String>{};
     final boardCardsData = hand['boardCards'] as Map<String, dynamic>?;
     if (boardCardsData != null) {
@@ -1489,7 +1622,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         usedCards: usedCards,
         availableTags: _availableTags,
         onSaved: () {
-          // Reload hand history to reflect changes
           _loadHandHistory();
         },
         onViewDetails: () {
@@ -1500,7 +1632,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     );
   }
 
-  /// Reload hand history from Firestore
   Future<void> _loadHandHistory() async {
     if (_session == null) return;
 
@@ -1528,7 +1659,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       children: cards.asMap().entries.map((entry) {
         final index = entry.key;
         final card = entry.value;
-        // Add small gap after flop (index 2) and turn (index 3)
         final hasGap = index == 3 || index == 4;
         return Row(
           mainAxisSize: MainAxisSize.min,
@@ -1550,7 +1680,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: Colors.grey.shade400, width: 0.5),
+        border: Border.all(color: const Color(0xFF8C8C8C), width: 0.5),
       ),
       child: Center(
         child: Text(
@@ -1566,23 +1696,18 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   }
 
   Future<void> _navigateToHandDetails(Map<String, dynamic> hand) async {
-    // Add player's hole cards to the hand data if they entered them
     final handWithPlayerData = Map<String, dynamic>.from(hand);
 
-    // Convert Firestore Timestamp objects to ISO 8601 strings
     _convertTimestamps(handWithPlayerData);
 
-    // Try to fetch player data from Firestore if not already in hand
     final playerHoleCards = hand['playerHoleCards'] as Map<String, dynamic>?;
     final handId = hand['id'] as String?;
 
-    // Check if we have valid hole cards (not just a map with null values)
     final hasValidHoleCards = playerHoleCards != null &&
         playerHoleCards['card1'] != null &&
         playerHoleCards['card2'] != null;
 
     if (!hasValidHoleCards && _session != null && handId != null) {
-      // Fetch from Firestore
       final odPlayerId = AuthService.userId;
       if (odPlayerId != null) {
         try {
@@ -1613,7 +1738,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       handWithPlayerData['ourHoleCards'] = playerHoleCards;
     }
 
-    // Add player's notes and tags from local cache if available
     if (hand['playerNotes'] != null && handWithPlayerData['notes'] == null) {
       handWithPlayerData['notes'] = hand['playerNotes'];
     }
@@ -1634,7 +1758,6 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     );
   }
 
-  /// Convert Firestore Timestamp objects to ISO 8601 strings for compatibility
   void _convertTimestamps(Map<String, dynamic> data) {
     for (final key in data.keys.toList()) {
       final value = data[key];
@@ -1654,42 +1777,45 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     }
   }
 
+  // ─── PAUSE OVERLAY ───────────────────────────────────────────────
+
   Widget _buildPauseOverlay() {
     return Container(
-      color: Colors.black.withValues(alpha: 0.8),
+      color: Colors.black.withValues(alpha: 0.85),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.swap_horiz,
-              size: 80,
-              color: Colors.amber.withValues(alpha: 0.8),
+              Icons.swap_horiz_rounded,
+              size: 72,
+              color: const Color(0xFFFFA726).withValues(alpha: 0.8),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Dealer Change',
-              style: TextStyle(
+              style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 24,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Waiting for new dealer to take over...',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 16,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFFD3FFFD),
+                fontSize: 15,
               ),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
+            const SizedBox(height: 20),
+            const SizedBox(
               width: 24,
               height: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Colors.amber.withValues(alpha: 0.7),
+                color: Color(0xFFFFA726),
               ),
             ),
           ],
@@ -1699,7 +1825,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   }
 }
 
-/// Bottom sheet for editing a past hand's hole cards, notes, and tags
+// ─── EDIT HAND BOTTOM SHEET ──────────────────────────────────────
+
 class _EditHandBottomSheet extends StatefulWidget {
   final int handNumber;
   final String handId;
@@ -1776,10 +1903,13 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
         Navigator.pop(context);
         widget.onSaved();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Hand #${0} updated'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(
+              'Hand #${widget.handNumber} updated',
+              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFF87ED81),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -1787,8 +1917,11 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving: $e'),
-            backgroundColor: Colors.red,
+            content: Text(
+              'Error saving: $e',
+              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFD55A41),
           ),
         );
       }
@@ -1832,9 +1965,9 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
     final hasCards = _card1 != null && _card2 != null;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF1A1A2E),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundSurface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -1852,31 +1985,42 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: const Color(0xFF8C8C8C),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Title
+              // Title row
               Row(
                 children: [
                   Text(
                     'Edit Hand #${widget.handNumber}',
-                    style: const TextStyle(
+                    style: GoogleFonts.ibmPlexSans(
                       color: Colors.white,
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   const Spacer(),
-                  TextButton.icon(
-                    onPressed: widget.onViewDetails,
-                    icon: const Icon(Icons.visibility, size: 16),
-                    label: const Text('View Details'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.white54,
+                  GestureDetector(
+                    onTap: widget.onViewDetails,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.visibility_rounded, size: 16, color: Color(0xFF89F1EC)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'View Details',
+                          style: GoogleFonts.ibmPlexSans(
+                            color: const Color(0xFF89F1EC),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -1884,12 +2028,13 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
               const SizedBox(height: 20),
 
               // Hole Cards
-              const Text(
-                'Hole Cards',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
+              Text(
+                'HOLE CARDS',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
+                  color: const Color(0xFF87ED81),
+                  letterSpacing: 1.0,
                 ),
               ),
               const SizedBox(height: 8),
@@ -1898,10 +2043,12 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2D2D44),
+                    color: AppColors.backgroundPaper,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: hasCards ? Colors.green.withValues(alpha: 0.5) : Colors.white12,
+                      color: hasCards
+                          ? const Color(0xFF89F1EC).withValues(alpha: 0.3)
+                          : const Color(0xFF1C1F21),
                     ),
                   ),
                   child: Row(
@@ -1912,11 +2059,14 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                         const SizedBox(width: 8),
                         _buildCardDisplay(_card2!),
                       ] else ...[
-                        const Icon(Icons.add, color: Colors.white38, size: 24),
+                        const Icon(Icons.add_rounded, color: Color(0xFF8C8C8C), size: 24),
                         const SizedBox(width: 8),
-                        const Text(
+                        Text(
                           'Tap to add hole cards',
-                          style: TextStyle(color: Colors.white38, fontSize: 14),
+                          style: GoogleFonts.ibmPlexSans(
+                            color: const Color(0xFF8C8C8C),
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ],
@@ -1926,39 +2076,56 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
               const SizedBox(height: 20),
 
               // Notes
-              const Text(
-                'Notes',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
+              Text(
+                'NOTES',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
+                  color: const Color(0xFF87ED81),
+                  letterSpacing: 1.0,
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _notesController,
                 maxLines: 3,
-                style: const TextStyle(color: Colors.white),
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  color: Colors.white,
+                  height: 1.44,
+                ),
                 decoration: InputDecoration(
                   hintText: 'Add notes about this hand...',
-                  hintStyle: const TextStyle(color: Colors.white38),
-                  filled: true,
-                  fillColor: const Color(0xFF2D2D44),
+                  hintStyle: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: const Color(0xFF8C8C8C),
+                  ),
+                  filled: false,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                    borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF4E5054), width: 1),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF89F1EC), width: 1),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
 
               // Tags
-              const Text(
-                'Tags',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
+              Text(
+                'TAGS',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
+                  color: const Color(0xFF87ED81),
+                  letterSpacing: 1.0,
                 ),
               ),
               const SizedBox(height: 8),
@@ -1970,29 +2137,26 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                   return GestureDetector(
                     onTap: () => _toggleTag(tag),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFFBAFF9A).withValues(alpha: 0.2)
-                            : const Color(0xFF2D2D44),
-                        borderRadius: BorderRadius.circular(16),
+                            ? const Color(0xFF89F1EC).withValues(alpha: 0.15)
+                            : AppColors.backgroundPaper,
+                        borderRadius: BorderRadius.circular(40),
                         border: Border.all(
                           color: isSelected
-                              ? const Color(0xFFBAFF9A)
-                              : Colors.white12,
+                              ? const Color(0xFF89F1EC)
+                              : const Color(0xFF1C1F21),
                         ),
                       ),
                       child: Text(
                         tag,
-                        style: TextStyle(
+                        style: GoogleFonts.ibmPlexSans(
                           color: isSelected
-                              ? const Color(0xFFBAFF9A)
-                              : Colors.white54,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                              ? const Color(0xFF89F1EC)
+                              : const Color(0xFF8C8C8C),
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                         ),
                       ),
                     ),
@@ -2002,34 +2166,37 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
               const SizedBox(height: 24),
 
               // Save button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : _saveChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFBAFF9A),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+              GestureDetector(
+                onTap: _isSaving ? null : _saveChanges,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: _isSaving
+                        ? Colors.white.withValues(alpha: 0.5)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(60),
                   ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.black,
+                  child: Center(
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.black,
+                            ),
+                          )
+                        : Text(
+                            'Save Changes',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                              letterSpacing: -0.43,
+                            ),
                           ),
-                        )
-                      : const Text(
-                          'Save Changes',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),

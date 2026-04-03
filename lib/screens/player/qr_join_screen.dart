@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../design_system/constants/colors.dart';
+import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../models/qr_seat_data.dart';
 import '../../models/poker_table.dart';
 import '../../models/club.dart';
@@ -51,22 +55,15 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
     });
 
     try {
-      // Load club info
       final club = await ClubService.getClub(widget.qrData.clubId);
-      if (club == null) {
-        throw 'Club not found';
-      }
+      if (club == null) throw 'Club not found';
 
-      // Load table info
       final table = await TableService.getTable(
         widget.qrData.clubId,
         widget.qrData.tableId,
       );
-      if (table == null) {
-        throw 'Table not found';
-      }
+      if (table == null) throw 'Table not found';
 
-      // Check if seat is occupied
       final seatAssignment = await SeatService.getSeatAssignment(
         clubId: widget.qrData.clubId,
         tableId: widget.qrData.tableId,
@@ -90,25 +87,20 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
   Future<void> _joinSeat() async {
     if (_club == null || _table == null) return;
 
-    setState(() {
-      _isJoining = true;
-    });
+    setState(() => _isJoining = true);
 
     try {
-      // Request to join (pending approval from dealer)
       await SeatService.requestJoinSeat(
         clubId: widget.qrData.clubId,
         tableId: widget.qrData.tableId,
         seatNumber: widget.qrData.seatNumber,
       );
 
-      // Now wait for dealer approval
       setState(() {
         _isJoining = false;
         _isWaitingForApproval = true;
       });
 
-      // Watch the seat for status changes
       _seatSubscription = SeatService.watchSeat(
         clubId: widget.qrData.clubId,
         tableId: widget.qrData.tableId,
@@ -117,18 +109,17 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
         if (!mounted) return;
 
         if (seat == null || seat.status == SeatStatus.left) {
-          // Join was rejected
-          setState(() {
-            _isWaitingForApproval = false;
-          });
+          setState(() => _isWaitingForApproval = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Your join request was declined'),
-              backgroundColor: Colors.red.shade700,
+              content: Text(
+                'Your join request was declined',
+                style: GoogleFonts.ibmPlexSans(color: Colors.white),
+              ),
+              backgroundColor: const Color(0xFFD55A41),
             ),
           );
         } else if (seat.status == SeatStatus.joined) {
-          // Approved! Navigate to player session (same screen as dealer-assisted)
           _seatSubscription?.cancel();
           Navigator.pushReplacement(
             context,
@@ -141,7 +132,6 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             ),
           );
         }
-        // If still pending, keep waiting
       });
     } catch (e) {
       if (mounted) {
@@ -151,8 +141,11 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to join seat: ${e.toString()}'),
-            backgroundColor: Colors.red.shade700,
+            content: Text(
+              'Failed to join seat: ${e.toString()}',
+              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFD55A41),
           ),
         );
       }
@@ -168,9 +161,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
       );
       _seatSubscription?.cancel();
       if (mounted) {
-        setState(() {
-          _isWaitingForApproval = false;
-        });
+        setState(() => _isWaitingForApproval = false);
       }
     } catch (e) {
       // Ignore errors on cancel
@@ -180,31 +171,84 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Join Table'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+      backgroundColor: AppColors.backgroundPaper,
+      body: Stack(
+        children: [
+          const GradientBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          if (_isWaitingForApproval) {
+                            _cancelJoinRequest();
+                          }
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF101115),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Join Table',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                // Body content
+                Expanded(
+                  child: _buildBody(),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
+            const CircularProgressIndicator(
+              color: Color(0xFF89F1EC),
+              strokeWidth: 2,
+            ),
+            const SizedBox(height: 16),
             Text(
               'Loading table info...',
-              style: TextStyle(color: Colors.white70),
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontSize: 15,
+              ),
             ),
           ],
         ),
@@ -216,136 +260,123 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
     }
 
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red.shade400,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Error',
-                style: TextStyle(
-                  color: Colors.red.shade400,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white12,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
-                  ),
-                ),
-                child: const Text('Go Back'),
-              ),
-            ],
-          ),
-        ),
-      );
+      return _buildErrorState();
     }
 
+    return _buildMainContent();
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD55A41).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                size: 36,
+                color: Color(0xFFD55A41),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Something went wrong',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontSize: 15,
+                height: 1.44,
+              ),
+            ),
+            const SizedBox(height: 28),
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(60),
+                ),
+                child: Text(
+                  'Go Back',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                    letterSpacing: -0.43,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainContent() {
+    final isActive = _table?.status == TableStatus.active;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Table illustration
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A5C1A),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF8B4513),
-                width: 8,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Seat ${widget.qrData.seatNumber}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black26,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      _table?.name ?? 'Table',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // Seat hero card
+          _buildSeatHeroCard(),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
 
-          // Club and table info
-          _buildInfoCard(),
+          // Info section
+          _buildSectionHeader('TABLE INFO'),
+          const SizedBox(height: 12),
+          _buildInfoCard(isActive),
 
-          const SizedBox(height: 24),
+          // Occupied warning
+          if (_isSeatOccupied) ...[
+            const SizedBox(height: 16),
+            _buildOccupiedWarning(),
+          ],
 
-          // Status indicator
-          if (_isSeatOccupied) _buildOccupiedWarning(),
-
-          const SizedBox(height: 24),
+          const SizedBox(height: 36),
 
           // Join button
           _buildJoinButton(),
 
           const SizedBox(height: 16),
 
-          // Cancel button
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 16,
+          // Cancel
+          Center(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF8C8C8C),
+                  ),
+                ),
               ),
             ),
           ),
@@ -354,43 +385,127 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
     );
   }
 
-  Widget _buildInfoCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+  Widget _buildSeatHeroCard() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          decoration: BoxDecoration(
+            color: const Color(0xFF546165).withValues(alpha: 0.74),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              // Seat icon
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF89F1EC).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.event_seat_rounded,
+                  color: Color(0xFF89F1EC),
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Seat ${widget.qrData.seatNumber}',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: Text(
+                  _table?.name ?? 'Table',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFFD3FFFD),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.ibmPlexSans(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF87ED81),
+        letterSpacing: 1.0,
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(bool isActive) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF1C1F21)),
       ),
       child: Column(
         children: [
           _buildInfoRow(
-            icon: Icons.business,
+            icon: Icons.business_rounded,
             label: 'Club',
             value: _club?.name ?? 'Unknown',
           ),
-          const Divider(color: Colors.white12),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: Divider(color: Color(0xFF1C1F21), height: 1),
+          ),
           _buildInfoRow(
-            icon: Icons.table_restaurant,
+            icon: Icons.table_restaurant_rounded,
             label: 'Table',
             value: _table?.name ?? 'Unknown',
           ),
-          const Divider(color: Colors.white12),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: Divider(color: Color(0xFF1C1F21), height: 1),
+          ),
           _buildInfoRow(
-            icon: Icons.event_seat,
+            icon: Icons.event_seat_rounded,
             label: 'Seat',
             value: 'Seat ${widget.qrData.seatNumber}',
           ),
-          const Divider(color: Colors.white12),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: Divider(color: Color(0xFF1C1F21), height: 1),
+          ),
           _buildInfoRow(
             icon: Icons.circle,
+            iconSize: 10,
             label: 'Status',
-            value: _table?.status == TableStatus.active ? 'Active Game' : 'Waiting',
-            valueColor: _table?.status == TableStatus.active
-                ? Colors.green
-                : Colors.orange,
+            value: isActive ? 'Active Game' : 'Waiting',
+            valueColor: isActive
+                ? const Color(0xFF87ED81)
+                : const Color(0xFFFFA726),
           ),
         ],
       ),
@@ -402,27 +517,29 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
     required String label,
     required String value,
     Color? valueColor,
+    double iconSize = 20,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white54, size: 24),
-          const SizedBox(width: 16),
+          Icon(icon, color: const Color(0xFF8C8C8C), size: iconSize),
+          const SizedBox(width: 12),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 16,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFF8C8C8C),
             ),
           ),
           const Spacer(),
           Text(
             value,
-            style: TextStyle(
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
               color: valueColor ?? Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -432,27 +549,29 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
 
   Widget _buildOccupiedWarning() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.orange.withValues(alpha: 0.2),
+        color: const Color(0xFFFFA726).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.orange.withValues(alpha: 0.5),
+          color: const Color(0xFFFFA726).withValues(alpha: 0.25),
         ),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.warning_amber,
-            color: Colors.orange.shade300,
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: Color(0xFFFFA726),
+            size: 22,
           ),
-          const SizedBox(width: 12),
-          const Expanded(
+          const SizedBox(width: 10),
+          Expanded(
             child: Text(
               'This seat may already be occupied. Joining will replace the current player.',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFFFFA726),
+                fontSize: 13,
+                height: 1.44,
               ),
             ),
           ),
@@ -464,106 +583,120 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
   Widget _buildWaitingForApproval() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Animated waiting indicator
+            // Pulsing indicator
             Container(
-              width: 120,
-              height: 120,
+              width: 96,
+              height: 96,
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.2),
+                color: const Color(0xFF89F1EC).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.orange, width: 3),
               ),
               child: const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.orange,
-                  strokeWidth: 3,
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF89F1EC),
+                    strokeWidth: 3,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 32),
-            const Text(
-              'Waiting for Dealer Approval',
-              style: TextStyle(
+            const SizedBox(height: 28),
+            Text(
+              'Waiting for Dealer',
+              style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               'Your request to join Seat ${widget.qrData.seatNumber} has been sent.',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFFD3FFFD),
+                fontSize: 15,
+                height: 1.44,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            const SizedBox(height: 6),
+            Text(
               'The dealer will set your chip stack and approve your join.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white54,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
                 fontSize: 14,
+                height: 1.44,
               ),
             ),
-            const SizedBox(height: 32),
-            // Table info
+            const SizedBox(height: 28),
+
+            // Table info pill
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: AppColors.backgroundSurface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                border: Border.all(color: const Color(0xFF1C1F21)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.table_restaurant, color: Colors.white54),
-                  const SizedBox(width: 12),
+                  const Icon(
+                    Icons.table_restaurant_rounded,
+                    color: Color(0xFF8C8C8C),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
                   Text(
                     _table?.name ?? 'Table',
-                    style: const TextStyle(
+                    style: GoogleFonts.ibmPlexSans(
                       color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      color: const Color(0xFF89F1EC).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(40),
                     ),
                     child: Text(
                       'Seat ${widget.qrData.seatNumber}',
-                      style: const TextStyle(
-                        color: Colors.orange,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.ibmPlexSans(
+                        color: const Color(0xFF89F1EC),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 48),
-            // Cancel button
-            TextButton(
-              onPressed: () async {
+
+            const SizedBox(height: 40),
+
+            // Cancel request
+            GestureDetector(
+              onTap: () async {
                 await _cancelJoinRequest();
                 if (mounted) Navigator.pop(context);
               },
-              child: const Text(
+              child: Text(
                 'Cancel Request',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 16,
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFFD55A41),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -574,39 +707,37 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
   }
 
   Widget _buildJoinButton() {
-    return ElevatedButton(
-      onPressed: _isJoining ? null : _joinSeat,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF2E7D32),
-        disabledBackgroundColor: Colors.grey,
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+    return GestureDetector(
+      onTap: _isJoining ? null : _joinSeat,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: _isJoining
+              ? Colors.white.withValues(alpha: 0.5)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(60),
         ),
-      ),
-      child: _isJoining
-          ? const SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
-          : const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.check_circle, size: 28),
-                SizedBox(width: 12),
-                Text(
+        child: Center(
+          child: _isJoining
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.black,
+                  ),
+                )
+              : Text(
                   'Request to Join',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                    letterSpacing: -0.43,
                   ),
                 ),
-              ],
-            ),
+        ),
+      ),
     );
   }
 }
