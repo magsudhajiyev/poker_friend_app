@@ -10,6 +10,7 @@ import '../../models/waitlist_entry.dart';
 import '../../services/table_service.dart';
 import '../../services/seat_service.dart';
 import '../../services/waitlist_service.dart';
+import '../../widgets/poker_table_widget.dart';
 
 /// Screen for members to view table availability and join waitlist
 /// Uses the same elliptic table design as admin table management
@@ -138,22 +139,6 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
 
   bool get _isInWaitlist => _userWaitlistEntry != null;
 
-  Offset _getSeatPosition(int seatNumber, Size tableSize) {
-    final double centerX = tableSize.width / 2;
-    final double centerY = tableSize.height / 2;
-    final double radiusX = (tableSize.width * 0.80) / 2;
-    final double radiusY = (tableSize.height * 0.70) / 2;
-
-    // Start at top-left (225°), go clockwise
-    final double startAngle = math.pi * 1.25;
-    final double angleStep = (2 * math.pi) / 9;
-    final double angle = startAngle + (angleStep * (seatNumber - 1));
-
-    final x = centerX + radiusX * math.cos(angle);
-    final y = centerY + radiusY * math.sin(angle);
-
-    return Offset(x, y);
-  }
 
   Future<void> _joinWaitlist() async {
     setState(() => _isJoiningWaitlist = true);
@@ -283,36 +268,43 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
 
                   // Table area
                   Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return Stack(
+                    child: PokerTableWidget(
+                      activeSeatMap: {
+                        for (int i = 1; i <= 9; i++)
+                          i: (_seats[i]?.isOccupied ?? false) || (_seats[i]?.isPending ?? false),
+                      },
+                      showDealerButton: false,
+                      tableWidthFraction: 0.80,
+                      tableHeightFraction: 0.70,
+                      seatBuilder: (seatNumber, isActive) => _buildSeat(seatNumber, _seats[seatNumber]),
+                      centerContent: Opacity(
+                        opacity: 0.15,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Table background with felt
-                            Center(
-                              child: _buildTableSurface(
-                                constraints.maxWidth * 0.80,
-                                constraints.maxHeight * 0.70,
+                            Text(
+                              widget.event.name,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 1.5,
                               ),
                             ),
-
-                            // Seats around the table
-                            ...List.generate(9, (index) {
-                              final seatNumber = index + 1;
-                              final assignment = _seats[seatNumber];
-                              final position = _getSeatPosition(
-                                seatNumber,
-                                Size(constraints.maxWidth, constraints.maxHeight),
-                              );
-
-                              return Positioned(
-                                left: position.dx - 40,
-                                top: position.dy - 45,
-                                child: _buildSeat(seatNumber, assignment),
-                              );
-                            }),
+                            if (widget.event.stakes != null)
+                              Text(
+                                widget.event.stakes!,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
                           ],
-                        );
-                      },
+                        ),
+                      ),
                     ),
                   ),
 
@@ -390,86 +382,6 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
     );
   }
 
-  Widget _buildTableSurface(double width, double height) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.5),
-            blurRadius: 30,
-            spreadRadius: 0,
-            offset: const Offset(0, 10),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 15,
-            spreadRadius: -5,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const RadialGradient(
-            center: Alignment.center,
-            radius: 0.8,
-            colors: [
-              Color(0xFF0F6B33),
-              Color(0xFF0D5D2D),
-              Color(0xFF0A4A24),
-            ],
-            stops: [0.0, 0.6, 1.0],
-          ),
-          borderRadius: BorderRadius.circular(200),
-          border: Border.all(
-            color: const Color(0xFF2A2A2E),
-            width: 6,
-          ),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(194),
-            border: Border.all(
-              color: const Color(0xFF1A1A1E).withOpacity(0.5),
-              width: 2,
-            ),
-          ),
-          child: Center(
-            child: Opacity(
-              opacity: 0.15,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    widget.event.name,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  if (widget.event.stakes != null)
-                    Text(
-                      widget.event.stakes!,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildSeat(int seatNumber, SeatAssignment? assignment) {
     final isOccupied = assignment?.isOccupied ?? false;
@@ -481,13 +393,13 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
     List<BoxShadow>? shadows;
 
     if (isOccupied) {
-      bgColor = const Color(0xFF2A2A2E);
-      borderColor = PokerFriendColors.green;
+      bgColor = Colors.black;
+      borderColor = const Color(0xFF89F1EC);
       shadows = [
         BoxShadow(
-          color: PokerFriendColors.green.withOpacity(0.4),
-          blurRadius: 10,
-          spreadRadius: 2,
+          color: const Color(0xFF89F1EC).withValues(alpha: 0.3),
+          blurRadius: 8,
+          spreadRadius: 1,
         ),
       ];
     } else if (isPending) {
@@ -495,14 +407,14 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
       borderColor = const Color(0xFFF59E0B);
       shadows = [
         BoxShadow(
-          color: const Color(0xFFF59E0B).withOpacity(0.3),
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
           blurRadius: 8,
           spreadRadius: 1,
         ),
       ];
     } else {
-      bgColor = const Color(0xFF0A0A0C);
-      borderColor = const Color(0xFF1A1A1E);
+      bgColor = const Color(0xFF2A2A2E);
+      borderColor = const Color(0xFF89F1EC).withValues(alpha: 0.3);
       shadows = null;
     }
 

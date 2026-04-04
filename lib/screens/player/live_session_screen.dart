@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import '../../widgets/poker_table_widget.dart';
 import '../../models/seat_assignment.dart';
 import '../../models/dealer_session.dart';
 import '../../services/seat_service.dart';
@@ -506,119 +507,22 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
   }
 
   Widget _buildTableView() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final centerX = constraints.maxWidth / 2;
-        final centerY = constraints.maxHeight / 2;
-        // Use consistent proportions with dealer screen (80% width, 70% height)
-        final tableWidth = constraints.maxWidth * 0.80;
-        final tableHeight = constraints.maxHeight * 0.70;
-        // Match the seat positioning radii (0.42 width, 0.38 height)
-        final radiusX = constraints.maxWidth * 0.42;
-        final radiusY = constraints.maxHeight * 0.38;
-
-        return Stack(
-          children: [
-            // Table - matching dealer screen design
-            Center(
-              child: Container(
-                width: tableWidth,
-                height: tableHeight,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(200),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 30,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 10),
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 15,
-                      spreadRadius: -5,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: const RadialGradient(
-                      center: Alignment.center,
-                      radius: 0.8,
-                      colors: [
-                        Color(0xFF0F6B33),
-                        Color(0xFF0D5D2D),
-                        Color(0xFF0A4A24),
-                      ],
-                      stops: [0.0, 0.6, 1.0],
-                    ),
-                    borderRadius: BorderRadius.circular(200),
-                    border: Border.all(
-                      color: const Color(0xFF2A2A2E),
-                      width: 6,
-                    ),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(194),
-                      border: Border.all(
-                        color: const Color(0xFF1A1A1E).withValues(alpha: 0.5),
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            formatCompactCurrency(_potAmount),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                            ),
-                          ),
-                          const Text('POT', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Seats positioned around the table
-            ..._buildSeatsAroundTable(centerX, centerY, radiusX, radiusY),
-          ],
-        );
+    return PokerTableWidget(
+      activeSeatMap: {
+        for (int i = 1; i <= 9; i++)
+          i: _seats[i]?.isOccupied ?? false,
       },
-    );
-  }
-
-  List<Widget> _buildSeatsAroundTable(double centerX, double centerY, double radiusX, double radiusY) {
-    // Use the same elliptical positioning as dealer screen
-    // 9 seats with 40 degree spacing, starting at 225 degrees (top-left)
-    final double startAngle = math.pi * 1.25; // 225 degrees
-    final double angleStep = (2 * math.pi) / 9; // 40 degrees per seat
-
-    return List.generate(9, (i) {
-      final seatNumber = i + 1;
-      final angle = startAngle + (angleStep * (seatNumber - 1));
-      final x = centerX + radiusX * math.cos(angle) - 32;
-      final y = centerY + radiusY * math.sin(angle) - 32;
-
-      final assignment = _seats[seatNumber];
-      final isOccupied = assignment?.isOccupied ?? false;
-      final isMySeat = seatNumber == widget.seatNumber;
-      final isCurrentPlayer = seatNumber == _currentPlayerSeat;
-      final isButton = seatNumber == _buttonPosition;
-      final chipStack = assignment?.chipStack ?? 0;
-
-      return Positioned(
-        left: x,
-        top: y,
-        child: _buildSeat(
+      showDealerButton: false,
+      tableWidthFraction: 0.80,
+      tableHeightFraction: 0.76,
+      seatBuilder: (seatNumber, isActive) {
+        final assignment = _seats[seatNumber];
+        final isOccupied = assignment?.isOccupied ?? false;
+        final isMySeat = seatNumber == widget.seatNumber;
+        final isCurrentPlayer = seatNumber == _currentPlayerSeat;
+        final isButton = seatNumber == _buttonPosition;
+        final chipStack = assignment?.chipStack ?? 0;
+        return _buildSeat(
           seatNumber: seatNumber,
           playerName: assignment?.playerName,
           isOccupied: isOccupied,
@@ -626,9 +530,25 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
           isCurrentPlayer: isCurrentPlayer,
           isButton: isButton,
           chipStack: chipStack,
-        ),
-      );
-    });
+        );
+      },
+      centerContent: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            formatCompactCurrency(_potAmount),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+            ),
+          ),
+          const Text('POT', style: TextStyle(color: Colors.white70, fontSize: 12)),
+        ],
+      ),
+    );
   }
 
   Widget _buildSeat({
@@ -644,17 +564,17 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
     Color borderColor;
 
     if (!isOccupied) {
-      bgColor = const Color(0xFF2A2A3A);
-      borderColor = const Color(0xFF3A3A4A);
+      bgColor = const Color(0xFF2A2A2E);
+      borderColor = const Color(0xFF89F1EC).withValues(alpha: 0.3);
     } else if (isMySeat) {
-      bgColor = const Color(0xFF1E3A8F);
+      bgColor = Colors.black;
       borderColor = Colors.blue;
     } else if (isCurrentPlayer) {
-      bgColor = const Color(0xFF4A3A00);
+      bgColor = Colors.black;
       borderColor = Colors.amber;
     } else {
-      bgColor = const Color(0xFF1E3A5F);
-      borderColor = const Color(0xFF2E5A8F);
+      bgColor = Colors.black;
+      borderColor = const Color(0xFF89F1EC);
     }
 
     return Stack(

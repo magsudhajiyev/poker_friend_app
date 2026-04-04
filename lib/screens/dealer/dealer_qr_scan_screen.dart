@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../design_system/components/app_toggle.dart';
 import '../../design_system/poker_friend_theme.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
@@ -160,269 +163,260 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
   }
 
   void _showSessionSettingsDialog(dynamic table) {
-    int smallBlind = 1;
-    int bigBlind = 2;
-    bool hasBBante = false;
-    String gameType = 'cash';
+    final isTournament = widget.event.gameType == 'tournament';
+    int smallBlind = isTournament ? 100 : 1;
+    int bigBlind = isTournament ? 200 : 2;
+    bool hasBBante = isTournament;
+    String gameType = widget.event.gameType;
     int buttonPosition = 1;
+    final sbController = TextEditingController(text: isTournament ? '100' : '1');
+    final bbController = TextEditingController(text: isTournament ? '200' : '2');
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: PokerFriendColors.dark3,
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: const Color(0xFF101115),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFF1B1E24)),
           ),
-          title: Text(
-            'Session Settings',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Table: ${table.name}',
-                  style: TextStyle(
-                    color: PokerFriendColors.dark11,
-                    fontSize: 14,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    'Session Settings',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      height: 1.44,
+                    ),
                   ),
-                ),
-                Text(
-                  'Event: ${widget.event.name}',
-                  style: TextStyle(
-                    color: PokerFriendColors.purple,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  const SizedBox(height: 13),
+                  // Info lines
+                  Text(
+                    'Table: ${table.name}',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 15,
+                      color: const Color(0xFF8C8C8C),
+                      height: 1.44,
+                    ),
                   ),
-                ),
-                SizedBox(height: 24),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Event: ${widget.event.name}',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 15,
+                      color: const Color(0xFF8C8C8C),
+                      height: 1.44,
+                    ),
+                  ),
 
-                // Blinds
-                Text(
-                  'Blinds',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildNumberField(
-                        label: 'Small',
-                        value: smallBlind,
-                        onChanged: (v) => setDialogState(() => smallBlind = v),
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: _buildNumberField(
-                        label: 'Big',
-                        value: bigBlind,
-                        onChanged: (v) => setDialogState(() => bigBlind = v),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
-                // BB Ante toggle
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'BB Ante',
-                      style: TextStyle(color: Colors.white),
+                  // Blinds section
+                  Text(
+                    'Blinds',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      height: 1.44,
                     ),
-                    Switch(
-                      value: hasBBante,
-                      onChanged: (v) => setDialogState(() => hasBBante = v),
-                      activeColor: PokerFriendColors.green,
+                  ),
+                  const SizedBox(height: 4),
+                  // Two blind cards side by side
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildBlindCard(
+                          label: 'Small Blind',
+                          controller: sbController,
+                          onChanged: (v) => setDialogState(() => smallBlind = v),
+                          showDollarSign: !isTournament,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildBlindCard(
+                          label: 'Big Blind',
+                          controller: bbController,
+                          onChanged: (v) => setDialogState(() => bigBlind = v),
+                          showDollarSign: !isTournament,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // BB Ante toggle
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF02050B),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFF1B1E24)),
                     ),
-                  ],
-                ),
-              ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'BB Ante',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            color: Colors.white,
+                            height: 1.44,
+                          ),
+                        ),
+                        AppToggle(
+                          value: hasBBante,
+                          onChanged: (v) => setDialogState(() => hasBBante = v),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Buttons row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 11),
+                      GestureDetector(
+                        onTap: () async {
+                          // Parse final values from controllers
+                          smallBlind = int.tryParse(sbController.text) ?? smallBlind;
+                          bigBlind = int.tryParse(bbController.text) ?? bigBlind;
+                          Navigator.pop(context);
+                          await _startSession(
+                            table: table,
+                            smallBlind: smallBlind,
+                            bigBlind: bigBlind,
+                            hasBBante: hasBBante,
+                            gameType: gameType,
+                            buttonPosition: buttonPosition,
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF89F1EC),
+                            borderRadius: BorderRadius.circular(110),
+                          ),
+                          child: Text(
+                            'Start Dealing',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: PokerFriendColors.dark9),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await _startSession(
-                  table: table,
-                  smallBlind: smallBlind,
-                  bigBlind: bigBlind,
-                  hasBBante: hasBBante,
-                  gameType: gameType,
-                  buttonPosition: buttonPosition,
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: PokerFriendColors.green,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'Start Dealing',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
         ),
       ),
     );
   }
 
-  Widget _buildNumberField({
+  Widget _buildBlindCard({
     required String label,
-    required int value,
+    required TextEditingController controller,
     required Function(int) onChanged,
-    int min = 1,
-    int max = 100000,
+    bool showDollarSign = true,
   }) {
-    return GestureDetector(
-      onTap: () => _showNumberInputDialog(
-        label: label,
-        currentValue: value,
-        min: min,
-        max: max,
-        onChanged: onChanged,
+    return Container(
+      height: 124,
+      decoration: BoxDecoration(
+        color: const Color(0xFF02050B),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF1B1E24)),
       ),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: PokerFriendColors.dark5,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: PokerFriendColors.dark7),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: PokerFriendColors.dark9,
-                fontSize: 12,
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF8C8C8C),
+              height: 1.44,
+            ),
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFF4E5054)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFF4E5054)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFF89F1EC)),
+              ),
+              prefixText: showDollarSign ? '\$' : null,
+              prefixStyle: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF8C8C8C),
+                height: 1.44,
               ),
             ),
-            SizedBox(height: 4),
-            Text(
-              '$value',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showNumberInputDialog({
-    required String label,
-    required int currentValue,
-    required int min,
-    required int max,
-    required Function(int) onChanged,
-  }) async {
-    final controller = TextEditingController(text: currentValue.toString());
-
-    final result = await showDialog<int>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          'Enter $label',
-          style: TextStyle(color: Colors.white, fontSize: 18),
-        ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: PokerFriendColors.dark5,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
-          onSubmitted: (value) {
-            final parsed = int.tryParse(value);
-            if (parsed != null && parsed >= min && parsed <= max) {
-              Navigator.pop(context, parsed);
-            }
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: PokerFriendColors.dark9),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final parsed = int.tryParse(controller.text);
-              if (parsed != null && parsed >= min && parsed <= max) {
-                Navigator.pop(context, parsed);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Please enter a valid number between $min and $max'),
-                    backgroundColor: PokerFriendColors.red,
-                  ),
-                );
-              }
+            onChanged: (v) {
+              final parsed = int.tryParse(v);
+              if (parsed != null) onChanged(parsed);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: PokerFriendColors.green,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text('OK', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
-
-    if (result != null) {
-      onChanged(result);
-    }
-
-    // Note: Don't dispose controller here - it can cause "used after disposed" error
-    // if the dialog is still animating. Controller will be garbage collected.
   }
 
   Future<void> _startSession({

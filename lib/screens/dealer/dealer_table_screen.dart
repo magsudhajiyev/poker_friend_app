@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../config/app_config.dart';
 import '../../design_system/poker_friend_theme.dart';
@@ -25,6 +26,7 @@ import '../../services/action_parser.dart';
 import '../../features/dealer_voice/cubit/dealer_voice_cubit.dart';
 import '../../features/dealer_voice/cubit/dealer_voice_state.dart';
 import '../../utils/poker_positions.dart';
+import '../../widgets/poker_table_widget.dart';
 import '../../utils/number_formatter.dart';
 import '../../widgets/board_cards_dialog.dart';
 import '../../widgets/all_in_board_cards_dialog.dart';
@@ -114,6 +116,13 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
   // Guard flag to prevent actions during hand completion transition
   bool _isCompletingHand = false;
+
+  /// Format amount with $ for cash games, without for tournaments
+  String _formatAmount(num amount) {
+    return _dealerSession.gameType == 'cash'
+        ? _formatAmount(amount)
+        : formatCompactNumber(amount);
+  }
 
   @override
   void initState() {
@@ -1001,8 +1010,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         // Step 6: Emit WebSocket event
         final winnerName = _sessionManager!.getPlayerName(primaryWinnerId);
         final summary = isMainPotChopped
-            ? 'Chop: ${mainPotWinners.map((id) => _sessionManager!.getPlayerName(id)).join(', ')} split ${formatCompactCurrency(totalDistributed)}'
-            : '$winnerName wins ${formatCompactCurrency(totalDistributed)}';
+            ? 'Chop: ${mainPotWinners.map((id) => _sessionManager!.getPlayerName(id)).join(', ')} split ${_formatAmount(totalDistributed)}'
+            : '$winnerName wins ${_formatAmount(totalDistributed)}';
         _wsService.emitHandCompleted(
           tableId: widget.table.id,
           sessionId: _dealerSession.id,
@@ -1073,10 +1082,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         handId: _dealerSession.currentHandId ?? '',
         winnerSeat: winnerId,
         potAmount: _gameState!.currentPot,
-        summary: '$winnerName wins ${formatCompactCurrency(_gameState!.currentPot)}',
+        summary: '$winnerName wins ${_formatAmount(_gameState!.currentPot)}',
       );
 
-      _showSuccess('$winnerName wins ${formatCompactCurrency(_gameState!.currentPot)}');
+      _showSuccess('$winnerName wins ${_formatAmount(_gameState!.currentPot)}');
 
       // Check for busted players BEFORE startNewHand() deactivates them
       // This allows the rebuy/remove dialog to appear while player is still marked active
@@ -1149,7 +1158,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         handId: _dealerSession.currentHandId ?? '',
         winnerSeat: winnerIds.first,
         potAmount: _gameState!.currentPot,
-        summary: 'Chop: $winnerNames split ${formatCompactCurrency(_gameState!.currentPot)}',
+        summary: 'Chop: $winnerNames split ${_formatAmount(_gameState!.currentPot)}',
       );
 
       _showSuccess('Pot chopped between $winnerNames');
@@ -1611,29 +1620,66 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     return showDialog<double>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
-        title: Text(title, style: const TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          style: const TextStyle(color: Colors.white),
-          autofocus: true,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.1),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            prefixText: '\$',
-            prefixStyle: const TextStyle(color: Colors.white),
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF101115),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF1B1E24)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
+                autofocus: true,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFF02050B),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4E5054))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4E5054))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF89F1EC))),
+                  prefixText: '\$',
+                  prefixStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 17),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        alignment: Alignment.center,
+                        child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context, double.tryParse(controller.text)),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF89F1EC),
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: Text('Confirm', style: GoogleFonts.ibmPlexSans(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, double.tryParse(controller.text)),
-            child: const Text('Confirm'),
-          ),
-        ],
       ),
     );
   }
@@ -1794,7 +1840,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           }
         }
 
-        _showSuccess('${pending.playerName} joined with ${formatCompactCurrency(chipStack)}');
+        _showSuccess('${pending.playerName} joined with ${_formatAmount(chipStack)}');
       } catch (e) {
         _showError('Failed to approve: ${e.toString()}');
       }
@@ -1891,7 +1937,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           _gameState!.setPlayerStack(seatNumber, newStack);
           _sessionManager!.setPlayerStack(seatNumber, newStack);
           setState(() {});
-          _showSuccess('Updated ${playerName ?? 'player'} stack to ${formatCompactCurrency(newStack)}');
+          _showSuccess('Updated ${playerName ?? 'player'} stack to ${_formatAmount(newStack)}');
         } catch (e) {
           _showError('Failed to update stack: ${e.toString()}');
         }
@@ -2256,22 +2302,22 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     // Show loading if game state not initialized
     if (!_isGameStateInitialized || _gameState == null || _sessionManager == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFF0D1117),
+        backgroundColor: const Color(0xFF02050B),
         appBar: AppBar(
-          backgroundColor: const Color(0xFF161B22),
-          title: Text(widget.table.name),
+          backgroundColor: const Color(0xFF101115),
+          title: Text(widget.table.name, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
         ),
         body: const Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(color: Color(0xFF89F1EC)),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF02050B),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF161B22),
-        title: Text(widget.table.name),
+        backgroundColor: const Color(0xFF101115),
+        title: Text(widget.table.name, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
         actions: [
           // Pending join requests badge
           if (_pendingJoins.isNotEmpty)
@@ -2332,37 +2378,39 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   Widget _buildGameInfo() {
+    const teal = Color(0xFF89F1EC);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      color: const Color(0xFF161B22),
+      color: const Color(0xFF101115),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildInfoItem('POT', formatCompactCurrency(_gameState!.currentPot), Colors.amber),
-          _buildInfoItem('STREET', _gameState!.currentRound.name.toUpperCase(), Colors.blue),
+          _buildInfoItem('POT', _formatAmount(_gameState!.currentPot)),
+          _buildInfoItem('STREET', _gameState!.currentRound.name.toUpperCase()),
           GestureDetector(
             onTap: _showChangeBlindsDialog,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildInfoItem('BLINDS', '$_smallBlind/$_bigBlind', Colors.green),
+                _buildInfoItem('BLINDS', '$_smallBlind/$_bigBlind'),
                 const SizedBox(width: 4),
-                Icon(Icons.edit, color: Colors.green.withOpacity(0.7), size: 14),
+                Icon(Icons.edit, color: teal.withValues(alpha: 0.5), size: 14),
               ],
             ),
           ),
-          _buildInfoItem('HAND', '#${_gameState!.handNumber}', Colors.purple),
+          _buildInfoItem('HAND', '#${_gameState!.handNumber}'),
         ],
       ),
     );
   }
 
-  Widget _buildInfoItem(String label, String value, Color color) {
+  Widget _buildInfoItem(String label, String value) {
+    const teal = Color(0xFF89F1EC);
     return Column(
       children: [
-        Text(label, style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 10, fontWeight: FontWeight.bold)),
+        Text(label, style: GoogleFonts.ibmPlexSans(color: teal.withValues(alpha: 0.5), fontSize: 10, fontWeight: FontWeight.bold)),
         const SizedBox(height: 2),
-        Text(value, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(value, style: GoogleFonts.ibmPlexSans(color: teal, fontSize: 16, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -2373,122 +2421,140 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     final result = await showDialog<Map<String, int>>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E2430),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Update Blinds',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF101115),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF1B1E24)),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Small Blind',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Update Blinds',
+                style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF02050B),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF1B1E24)),
                       ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: smallBlindController,
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(color: Colors.white, fontSize: 18),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: const Color(0xFF2A3142),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
+                      child: Column(
+                        children: [
+                          Text('Small Blind', style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: smallBlindController,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            decoration: InputDecoration(
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4E5054))),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4E5054))),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF89F1EC))),
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        ),
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Big Blind',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF02050B),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF1B1E24)),
                       ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: bigBlindController,
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(color: Colors.white, fontSize: 18),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: const Color(0xFF2A3142),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
+                      child: Column(
+                        children: [
+                          Text('Big Blind', style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: bigBlindController,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            decoration: InputDecoration(
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4E5054))),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4E5054))),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF89F1EC))),
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        ),
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'New blinds will apply from the next hand.',
-              style: TextStyle(color: Colors.grey[400], fontSize: 12, fontStyle: FontStyle.italic),
-            ),
-          ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'New blinds will apply from the next hand.',
+                style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        alignment: Alignment.center,
+                        child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  GestureDetector(
+                    onTap: () {
+                      final newSmallBlind = int.tryParse(smallBlindController.text) ?? _smallBlind;
+                      final newBigBlind = int.tryParse(bigBlindController.text) ?? _bigBlind;
+
+                      if (newSmallBlind >= newBigBlind) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Small blind must be less than big blind'), backgroundColor: Colors.red),
+                        );
+                        return;
+                      }
+                      if (newSmallBlind <= 0 || newBigBlind <= 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Blinds must be greater than 0'), backgroundColor: Colors.red),
+                        );
+                        return;
+                      }
+                      Navigator.pop(context, {'smallBlind': newSmallBlind, 'bigBlind': newBigBlind});
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF89F1EC),
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: Text('Update', style: GoogleFonts.ibmPlexSans(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newSmallBlind = int.tryParse(smallBlindController.text) ?? _smallBlind;
-              final newBigBlind = int.tryParse(bigBlindController.text) ?? _bigBlind;
-
-              // Validate: SB should be less than BB
-              if (newSmallBlind >= newBigBlind) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Small blind must be less than big blind'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-
-              if (newSmallBlind <= 0 || newBigBlind <= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Blinds must be greater than 0'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-
-              Navigator.pop(context, {'smallBlind': newSmallBlind, 'bigBlind': newBigBlind});
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Update', style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
 
@@ -2557,181 +2623,120 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   Widget _buildTableView() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final centerX = constraints.maxWidth / 2;
-        final centerY = constraints.maxHeight / 2;
-        final tableWidth = constraints.maxWidth * 0.80;
-        final tableHeight = constraints.maxHeight * 0.70;
-        final radiusX = constraints.maxWidth * 0.42;
-        final radiusY = constraints.maxHeight * 0.38;
-
-        return Stack(
-          children: [
-            // Table
-            Center(
+    return Stack(
+      children: [
+        PokerTableWidget(
+          activeSeatMap: _getActiveSeatMapForTable(),
+          showDealerButton: false, // Dealer button is managed inside custom seats
+          tableWidthFraction: 0.80,
+          tableHeightFraction: 0.76,
+          seatBuilder: (seatNumber, isActive) => _buildDealerSeatWidget(seatNumber),
+          centerContent: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _formatAmount(_gameState!.currentPot),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                ),
+              ),
+              const Text('POT', style: TextStyle(color: Colors.white70, fontSize: 12)),
+            ],
+          ),
+        ),
+        // Rollback/Undo button - bottom right with fade effect
+        Positioned(
+          bottom: 20,
+          right: 20,
+          child: AnimatedOpacity(
+            opacity: _canUndoLastAction() ? 0.85 : 0.3,
+            duration: const Duration(milliseconds: 300),
+            child: GestureDetector(
+              onTap: _canUndoLastAction() ? _undoLastAction : null,
               child: Container(
-                width: tableWidth,
-                height: tableHeight,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(200),
+                  color: Colors.black.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: _canUndoLastAction()
+                        ? Colors.orange.withValues(alpha: 0.6)
+                        : Colors.white24,
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 30,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 10),
-                    ),
-                    BoxShadow(
                       color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 15,
-                      spreadRadius: -5,
-                      offset: const Offset(0, 5),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: const RadialGradient(
-                      center: Alignment.center,
-                      radius: 0.8,
-                      colors: [
-                        Color(0xFF0F6B33),
-                        Color(0xFF0D5D2D),
-                        Color(0xFF0A4A24),
-                      ],
-                      stops: [0.0, 0.6, 1.0],
-                    ),
-                    borderRadius: BorderRadius.circular(200),
-                    border: Border.all(
-                      color: const Color(0xFF2A2A2E),
-                      width: 6,
-                    ),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(194),
-                      border: Border.all(
-                        color: const Color(0xFF1A1A1E).withValues(alpha: 0.5),
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            formatCompactCurrency(_gameState!.currentPot),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                            ),
-                          ),
-                          const Text('POT', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                  ),
+                child: Icon(
+                  Icons.undo_rounded,
+                  color: _canUndoLastAction()
+                      ? Colors.orange.shade300
+                      : Colors.white38,
+                  size: 24,
                 ),
               ),
             ),
-            // Seats
-            ..._buildSeatsAroundTable(centerX, centerY, radiusX, radiusY),
-            // Rollback/Undo button - bottom right with fade effect
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: AnimatedOpacity(
-                opacity: _canUndoLastAction() ? 0.85 : 0.3,
-                duration: const Duration(milliseconds: 300),
-                child: GestureDetector(
-                  onTap: _canUndoLastAction() ? _undoLastAction : null,
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _canUndoLastAction()
-                            ? Colors.orange.withValues(alpha: 0.6)
-                            : Colors.white24,
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.undo_rounded,
-                      color: _canUndoLastAction()
-                          ? Colors.orange.shade300
-                          : Colors.white38,
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 
-  List<Widget> _buildSeatsAroundTable(double centerX, double centerY, double radiusX, double radiusY) {
-    final double startAngle = math.pi * 1.25;
-    final double angleStep = (2 * math.pi) / 9;
-
-    return List.generate(9, (i) {
-      final seatNumber = i + 1;
-      final angle = startAngle + (angleStep * (seatNumber - 1));
-      final x = centerX + radiusX * math.cos(angle) - 35;
-      final y = centerY + radiusY * math.sin(angle) - 35;
-
-      final assignment = _seatAssignments[seatNumber];
+  Map<int, bool> _getActiveSeatMapForTable() {
+    final map = <int, bool>{};
+    for (int i = 1; i <= 9; i++) {
+      final assignment = _seatAssignments[i];
       final isOccupied = assignment?.isOccupied ?? false;
       final isPending = assignment?.isPending ?? false;
-      final playerState = _gameState!.players[seatNumber - 1];
-      final isFolded = playerState.hasFolded;
-      final isCurrentPlayer = seatNumber == _gameState!.currentPlayer && _isHandActive;
-      final isButton = seatNumber == _gameState!.buttonPosition;
-      final stack = playerState.currentStack;
-      final bet = playerState.betThisRound;
+      final playerState = _gameState!.players[i - 1];
+      map[i] = isOccupied || isPending || playerState.isActive;
+    }
+    return map;
+  }
 
-      return Positioned(
-        left: x,
-        top: y,
-        child: _buildSeat(
-          seatNumber: seatNumber,
-          playerName: assignment?.playerName ?? _sessionManager!.getPlayerName(seatNumber),
-          isOccupied: isOccupied || playerState.isActive,
-          isPending: isPending,
-          isFolded: isFolded,
-          isCurrentPlayer: isCurrentPlayer,
-          isButton: isButton,
-          stack: stack,
-          bet: bet,
-          onPendingTap: isPending && assignment != null
-              ? () => _showApproveJoinDialog(assignment)
-              : null,
-          onOccupiedTap: (isOccupied || playerState.isActive) && !_isHandActive && !isPending
-              ? () => _showPlayerOptionsDialog(seatNumber, assignment?.playerName, stack)
-              : null,
-          onEmptyTap: !isOccupied && !playerState.isActive && !isPending && !_isHandActive
-              ? () => _onEmptySeatTap(seatNumber)
-              : null,
-          canAcceptButtonDrop: !_isHandActive,
-          onButtonDropped: _onButtonDroppedOnSeat,
-        ),
-      );
-    });
+  Widget _buildDealerSeatWidget(int seatNumber) {
+    final assignment = _seatAssignments[seatNumber];
+    final isOccupied = assignment?.isOccupied ?? false;
+    final isPending = assignment?.isPending ?? false;
+    final playerState = _gameState!.players[seatNumber - 1];
+    final isFolded = playerState.hasFolded;
+    final isCurrentPlayer = seatNumber == _gameState!.currentPlayer && _isHandActive;
+    final isButton = seatNumber == _gameState!.buttonPosition;
+    final stack = playerState.currentStack;
+    final bet = playerState.betThisRound;
+
+    return _buildSeat(
+      seatNumber: seatNumber,
+      playerName: assignment?.playerName ?? _sessionManager!.getPlayerName(seatNumber),
+      isOccupied: isOccupied || playerState.isActive,
+      isPending: isPending,
+      isFolded: isFolded,
+      isCurrentPlayer: isCurrentPlayer,
+      isButton: isButton,
+      stack: stack,
+      bet: bet,
+      onPendingTap: isPending && assignment != null
+          ? () => _showApproveJoinDialog(assignment)
+          : null,
+      onOccupiedTap: (isOccupied || playerState.isActive) && !_isHandActive && !isPending
+          ? () => _showPlayerOptionsDialog(seatNumber, assignment?.playerName, stack)
+          : null,
+      onEmptyTap: !isOccupied && !playerState.isActive && !isPending && !_isHandActive
+          ? () => _onEmptySeatTap(seatNumber)
+          : null,
+      canAcceptButtonDrop: !_isHandActive,
+      onButtonDropped: _onButtonDroppedOnSeat,
+    );
   }
 
   /// Handle dealer button being dropped on a seat
@@ -2788,20 +2793,20 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     Color borderColor;
 
     if (isPending) {
-      bgColor = Colors.orange.withValues(alpha: 0.3);
-      borderColor = Colors.orange;
+      bgColor = const Color(0xFF2A2A2E);
+      borderColor = const Color(0xFFF59E0B);
     } else if (!isOccupied) {
-      bgColor = const Color(0xFF2A2A3A);
-      borderColor = const Color(0xFF3A3A4A);
+      bgColor = const Color(0xFF2A2A2E);
+      borderColor = const Color(0xFF89F1EC).withValues(alpha: 0.3);
     } else if (isFolded) {
-      bgColor = const Color(0xFF3A3A4A).withValues(alpha: 0.5);
-      borderColor = const Color(0xFF4A4A5A);
+      bgColor = const Color(0xFF2A2A2E).withValues(alpha: 0.5);
+      borderColor = const Color(0xFF89F1EC).withValues(alpha: 0.2);
     } else if (isCurrentPlayer) {
-      bgColor = const Color(0xFF4A3A00);
+      bgColor = Colors.black;
       borderColor = Colors.amber;
     } else {
-      bgColor = const Color(0xFF1E3A5F);
-      borderColor = const Color(0xFF2E5A8F);
+      bgColor = Colors.black;
+      borderColor = const Color(0xFF89F1EC);
     }
 
     // Dealer button widget (extracted for reuse in Draggable)
@@ -2845,9 +2850,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 width: isPending ? 3 : (isCurrentPlayer ? 3 : 2),
               ),
               boxShadow: isPending
-                  ? [BoxShadow(color: Colors.orange.withValues(alpha: 0.5), blurRadius: 15)]
+                  ? [BoxShadow(color: const Color(0xFFF59E0B).withValues(alpha: 0.4), blurRadius: 10)]
                   : (isCurrentPlayer
-                      ? [BoxShadow(color: Colors.amber.withValues(alpha: 0.5), blurRadius: 15)]
+                      ? [BoxShadow(color: Colors.amber.withValues(alpha: 0.4), blurRadius: 10)]
                       : null),
             ),
             child: Column(
@@ -2880,7 +2885,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      formatCompactCurrency(stack),
+                      _formatAmount(stack),
                       style: TextStyle(
                         color: isFolded ? Colors.white38 : Colors.greenAccent,
                         fontSize: 11,
@@ -2940,7 +2945,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  formatCompactCurrency(bet),
+                  _formatAmount(bet),
                   style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
@@ -3000,9 +3005,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+      decoration: const BoxDecoration(
+        color: Color(0xFF101115),
+        border: Border(top: BorderSide(color: Color(0xFF1C1F21))),
       ),
       child: SafeArea(
         child: Column(
@@ -3024,12 +3029,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.2),
+                color: const Color(0xFF89F1EC).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '$playerName to act (${formatCompactCurrency(playerStack)})',
-                style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+                '$playerName to act (${_formatAmount(playerStack)})',
+                style: GoogleFonts.ibmPlexSans(color: const Color(0xFF89F1EC), fontSize: 14, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -3037,32 +3042,32 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             // Action buttons - always visible
             Row(
               children: [
-                _buildActionButton('FOLD', Colors.red.shade700,
+                _buildActionButton('FOLD', const Color(0xFF3D1C1C), const Color(0xFFE55353),
                     () => _performAction(PlayerAction.fold)),
                 const SizedBox(width: 8),
                 if (canCheck)
-                  _buildActionButton('CHECK', Colors.grey.shade700,
+                  _buildActionButton('CHECK', const Color(0xFF1C2E3D), const Color(0xFF89F1EC),
                       () => _performAction(PlayerAction.check))
                 else if (canCall)
-                  _buildActionButton('CALL\n${formatCompactCurrency(callAmount)}', Colors.green.shade700,
+                  _buildActionButton('CALL\n${_formatAmount(callAmount)}', const Color(0xFF1C3D2A), const Color(0xFF54E98A),
                       () => _performAction(PlayerAction.call)),
                 const SizedBox(width: 8),
                 if (canBet)
-                  _buildActionButton('BET', Colors.blue.shade700, () async {
+                  _buildActionButton('BET', const Color(0xFF1B4341), const Color(0xFF89F1EC), () async {
                     final amount = await _showAmountDialog('Bet amount');
                     if (amount != null && amount > 0) {
                       await _performAction(PlayerAction.bet, amount: amount);
                     }
                   })
                 else if (canRaise)
-                  _buildActionButton('RAISE', Colors.blue.shade700, () async {
+                  _buildActionButton('RAISE', const Color(0xFF1B4341), const Color(0xFF89F1EC), () async {
                     final amount = await _showAmountDialog('Raise to');
                     if (amount != null && amount > 0) {
                       await _performAction(PlayerAction.raise, amount: amount);
                     }
                   }),
                 const SizedBox(width: 8),
-                _buildActionButton('ALL IN', Colors.purple.shade700, () async {
+                _buildActionButton('ALL IN', const Color(0xFF2D1C3D), const Color(0xFFB589F1), () async {
                   // All-in is either a bet or raise for the player's full stack
                   final stack = _gameState!.getPlayerStack(currentPlayer);
                   final action = canBet ? PlayerAction.bet : PlayerAction.raise;
@@ -3385,17 +3390,21 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     });
   }
 
-  Widget _buildActionButton(String label, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(String label, Color bgColor, Color borderColor, VoidCallback onTap) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: borderColor, width: 1),
+          ),
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -3409,34 +3418,52 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          Text('$occupiedSeats players seated', style: const TextStyle(color: Colors.white54)),
+          Text('$occupiedSeats players seated', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 15)),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: occupiedSeats >= 2 ? _startNewHand : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              disabledBackgroundColor: Colors.grey.shade800,
-              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          GestureDetector(
+            onTap: occupiedSeats >= 2 && !_isLoading ? _startNewHand : null,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+              decoration: BoxDecoration(
+                color: occupiedSeats >= 2 ? const Color(0xFF89F1EC) : const Color(0xFF2A2A2E),
+                borderRadius: BorderRadius.circular(60),
+              ),
+              child: _isLoading
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                  : Text(
+                      'START NEW HAND',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: occupiedSeats >= 2 ? Colors.black : const Color(0xFF4A4A4E),
+                        letterSpacing: -0.43,
+                      ),
+                    ),
             ),
-            child: _isLoading
-                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('START NEW HAND', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
           if (occupiedSeats < 2)
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
-              child: Text('Need at least 2 players to start', style: TextStyle(color: Colors.orange)),
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text('Need at least 2 players to start', style: GoogleFonts.ibmPlexSans(color: Colors.orange, fontSize: 13)),
             ),
           // Debug button to add random players for testing
           const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: _addRandomPlayersForTesting,
-            icon: const Icon(Icons.group_add, color: Colors.amber),
-            label: const Text('Add Test Players', style: TextStyle(color: Colors.amber)),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.amber),
+          GestureDetector(
+            onTap: _addRandomPlayersForTesting,
+            child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(60),
+                border: Border.all(color: const Color(0xFF89F1EC).withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.group_add, color: Color(0xFF89F1EC), size: 18),
+                  const SizedBox(width: 8),
+                  Text('Add Test Players', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF89F1EC), fontSize: 14, fontWeight: FontWeight.w500)),
+                ],
+              ),
             ),
           ),
         ],

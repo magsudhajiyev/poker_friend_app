@@ -500,10 +500,17 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
                   height: 50,
                   decoration: BoxDecoration(
                     gradient: const RadialGradient(
-                      colors: [Color(0xFF0F6B33), Color(0xFF0A4A24)],
+                      center: Alignment.center,
+                      radius: 0.9,
+                      colors: [
+                        Color(0xFF224747),
+                        Color(0xFF123631),
+                        Color(0xFF02261A),
+                      ],
+                      stops: [0.0, 0.5, 1.0],
                     ),
                     borderRadius: BorderRadius.circular(25),
-                    border: Border.all(color: const Color(0xFF2A2A2E), width: 2),
+                    border: Border.all(color: const Color(0xFF161A14), width: 3),
                   ),
                   child: Center(
                     child: Text(

@@ -12,12 +12,12 @@ import '../models/opponent_stats.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../widgets/poker_table_widget.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import 'poker_hand_screen.dart';
 import 'my_opponents_screen.dart';
-import 'dart:math' as math;
 
 class SeatSetupScreen extends StatefulWidget {
   final int? playerCount;
@@ -270,148 +270,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     return PokerPositions.getPositionNameForActivePlayers(seatNumber, buttonPos, activeSeats);
   }
 
-  Offset _getSeatPosition(int seatNumber, Size tableSize) {
-    final double centerX = tableSize.width / 2;
-    final double centerY = tableSize.height / 2;
-    // Match the table dimensions - vertical oval
-    final double radiusX = (tableSize.width * 0.80) / 2;
-    final double radiusY = (tableSize.height * 0.88) / 2;
 
-    final double startAngle = math.pi * 1.25;
-    final double angleStep = (2 * math.pi) / 9;
-    final double angle = startAngle + (angleStep * (seatNumber - 1));
-
-    final x = centerX + radiusX * math.cos(angle);
-    final y = centerY + radiusY * math.sin(angle);
-
-    return Offset(x, y);
-  }
-
-  /// Returns the layout variant for a seat number:
-  /// - 'top': seat 1 (label below)
-  /// - 'right': seats on the left side of table (label to the left of circle)
-  /// - 'left': seats on the right side of table (label to the right of circle)
-  String _getSeatLayoutVariant(int seatNumber) {
-    if (seatNumber == 1) return 'top';
-    // Left side of table: label goes to the right of circle (away from table)
-    if ([6, 7, 8, 9].contains(seatNumber)) return 'right';
-    // Right side of table: label goes to the left of circle (away from table)
-    return 'left';
-  }
-
-  Widget _buildSeatCircle(int seatNumber, bool isActive) {
-    return Container(
-      width: 38,
-      height: 38,
-      decoration: BoxDecoration(
-        color: isActive ? Colors.black : const Color(0xFF2A2A2E),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isActive
-              ? const Color(0xFF89F1EC)
-              : const Color(0xFF89F1EC).withOpacity(0.3),
-          width: 2,
-        ),
-      ),
-      child: Center(
-        child: Text(
-          '$seatNumber',
-          style: GoogleFonts.inter(
-            color: isActive ? Colors.white : Colors.white.withOpacity(0.4),
-            fontWeight: FontWeight.w700,
-            fontSize: 17,
-            height: 1.45,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSeatLabel(int seatNumber, bool isActive) {
-    // Check if name is a default "Player N" pattern — if so, just show "Player"
-    final name = nameControllers[seatNumber]?.text ?? '';
-    final isDefaultName = name.isEmpty || RegExp(r'^Player\s*\d*$').hasMatch(name);
-    final displayName = isDefaultName
-        ? 'Player'
-        : (name.length > 8 ? '${name.substring(0, 8)}...' : name);
-    return Text(
-      displayName,
-      style: GoogleFonts.ibmPlexSans(
-        color: isActive ? Colors.white : Colors.white.withOpacity(0.4),
-        fontSize: 10,
-        fontWeight: FontWeight.w500,
-        height: 1.44,
-      ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
-
-  /// Build positioned seat widgets (circle + label) anchored so the circle
-  /// center is always at [position].
-  List<Widget> _buildPositionedSeatWidgets(int seatNumber, bool isActive, Offset position) {
-    const double circleR = 19.0; // half of 38
-    final variant = _getSeatLayoutVariant(seatNumber);
-
-    // Circle always centered at position
-    final circleWidget = Positioned(
-      left: position.dx - circleR,
-      top: position.dy - circleR,
-      child: GestureDetector(
-        onTap: () => _showSeatDialog(seatNumber),
-        child: _buildSeatCircle(seatNumber, isActive),
-      ),
-    );
-
-    // Label positioned relative to circle based on variant
-    Widget labelWidget;
-    if (variant == 'top') {
-      // Label below circle, centered
-      labelWidget = Positioned(
-        left: position.dx - 30, // wide enough for label text
-        top: position.dy + circleR + 4,
-        child: SizedBox(
-          width: 60,
-          child: GestureDetector(
-            onTap: () => _showSeatDialog(seatNumber),
-            child: Center(child: _buildSeatLabel(seatNumber, isActive)),
-          ),
-        ),
-      );
-    } else if (variant == 'right') {
-      // Left-side seats (6,7,8,9): label to the right of circle
-      labelWidget = Positioned(
-        left: position.dx + circleR + 8,
-        top: position.dy - 7, // vertically center ~14px label
-        child: GestureDetector(
-          onTap: () => _showSeatDialog(seatNumber),
-          child: _buildSeatLabel(seatNumber, isActive),
-        ),
-      );
-    } else {
-      // Right-side seats (2,3,4,5): label to the left of circle
-      labelWidget = Positioned(
-        right: null,
-        left: position.dx - circleR - 8,
-        top: position.dy - 7,
-        child: GestureDetector(
-          onTap: () => _showSeatDialog(seatNumber),
-          child: Transform.translate(
-            offset: const Offset(0, 0),
-            child: DefaultTextStyle.merge(
-              textAlign: TextAlign.right,
-              child: FractionalTranslation(
-                translation: const Offset(-1.0, 0.0),
-                child: _buildSeatLabel(seatNumber, isActive),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return [circleWidget, labelWidget];
-  }
 
   void _showSeatDialog(int seatNumber) {
     // Store original values to restore on cancel
@@ -1138,188 +997,88 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                   ),
                 ),
 
-                // Visual Poker Table
+                // Table + buttons scroll together
                 Expanded(
-                  key: _tableKey,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Stack(
-                        children: [
-                          // Table with teal border - vertical oval shape
-                          Center(
-                            child: Container(
-                              width: constraints.maxWidth * 0.80,
-                              height: constraints.maxHeight * 0.88,
-                              decoration: BoxDecoration(
-                                color: Color(0xFF0A0A0C),
-                                borderRadius: BorderRadius.circular(200),
-                                border: Border.all(
-                                  color: Color(0xFF62E3BC),
-                                  width: 2,
-                                ),
-                              ),
-                            ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 16),
+
+                        // Visual Poker Table — fixed height based on screen
+                        SizedBox(
+                          key: _tableKey,
+                          height: MediaQuery.of(context).size.height * 0.55,
+                          child: PokerTableWidget(
+                            activeSeatMap: seatActive,
+                            seatLabels: {
+                              for (int i = 1; i <= 9; i++)
+                                i: nameControllers[i]?.text ?? '',
+                            },
+                            buttonPosition: selectedButtonPosition ?? widget.buttonPosition,
+                            onSeatTap: _showSeatDialog,
+                            showDealerButton: true,
+                            isDealerButtonDraggable: !_isButtonLocked(),
+                            onDealerButtonMoved: (newSeat) {
+                              setState(() {
+                                selectedButtonPosition = newSeat;
+                                isDraggingButton = false;
+                              });
+                            },
                           ),
+                        ),
 
-                          // Seats positioned around the table
-                          ...List.generate(9, (index) {
-                            final seatNumber = index + 1;
-                            final isActive = seatActive[seatNumber] ?? false;
-                            final isSelected = selectedSeat == seatNumber;
-                            final isButtonSeat = seatNumber == (selectedButtonPosition ?? widget.buttonPosition);
-                            final position = _getSeatPosition(seatNumber, Size(constraints.maxWidth, constraints.maxHeight));
-
-                            final double startAngle = math.pi * 1.25;
-                            final double angleStep = (2 * math.pi) / 9;
-                            final double seatAngle = startAngle + (angleStep * (seatNumber - 1));
-
-                            final buttonOffsetX = -50 * math.cos(seatAngle);
-                            final buttonOffsetY = -50 * math.sin(seatAngle);
-
-                            return Stack(
-                              children: [
-                                // Seat circle + label
-                                ..._buildPositionedSeatWidgets(seatNumber, isActive, position),
-                                // Button positioned towards center
-                                if (isButtonSeat)
-                                  Positioned(
-                                    left: position.dx - 16 + buttonOffsetX,
-                                    top: position.dy - 16 + buttonOffsetY,
-                                    child: Container(
-                                      key: _buttonTokenKey,
-                                      child: _isButtonLocked()
-                                        ? Opacity(
-                                            opacity: 0.6,
-                                            child: Image.asset(
-                                              'icons/button.png',
-                                              width: 32,
-                                              height: 32,
-                                            ),
-                                          )
-                                        : Draggable<int>(
-                                          data: seatNumber,
-                                          feedback: Opacity(
-                                            opacity: 0.7,
-                                            child: Image.asset(
-                                              'icons/button.png',
-                                              width: 40,
-                                              height: 40,
-                                            ),
-                                          ),
-                                          childWhenDragging: Opacity(
-                                            opacity: 0.3,
-                                            child: Image.asset(
-                                              'icons/button.png',
-                                              width: 32,
-                                              height: 32,
-                                            ),
-                                          ),
-                                          onDragStarted: () {
-                                            setState(() {
-                                              isDraggingButton = true;
-                                            });
-                                          },
-                                          onDragEnd: (details) {
-                                            int? closestSeat;
-                                            double minDistance = double.infinity;
-
-                                            final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-                                            if (renderBox != null) {
-                                              final localPosition = renderBox.globalToLocal(details.offset);
-
-                                              for (int i = 1; i <= 9; i++) {
-                                                if (seatActive[i] == true) {
-                                                  final seatPos = _getSeatPosition(i, Size(constraints.maxWidth, constraints.maxHeight));
-                                                  final distance = (seatPos - localPosition).distance;
-
-                                                  if (distance < minDistance) {
-                                                    minDistance = distance;
-                                                    closestSeat = i;
-                                                  }
-                                                }
-                                              }
-
-                                              if (closestSeat != null && minDistance < 150) {
-                                                setState(() {
-                                                  selectedButtonPosition = closestSeat;
-                                                  isDraggingButton = false;
-                                                });
-                                              } else {
-                                                setState(() {
-                                                  isDraggingButton = false;
-                                                });
-                                              }
-                                            } else {
-                                              setState(() {
-                                                isDraggingButton = false;
-                                              });
-                                            }
-                                          },
-                                          child: Image.asset(
-                                            'icons/button.png',
-                                            width: 32,
-                                            height: 32,
-                                          ),
-                                        ),
+                        // Bottom buttons
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                          child: Column(
+                            children: [
+                              // Start Session button
+                              GestureDetector(
+                                onTap: _saveChanges,
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF62E3BC),
+                                    borderRadius: BorderRadius.circular(110),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      widget.isInitialSetup ? 'Start Session' : 'Save Changes',
+                                      style: GoogleFonts.ibmPlexSans(
+                                        color: Colors.black,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: -0.43,
+                                      ),
                                     ),
                                   ),
-                              ],
-                            );
-                          }),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-
-                // Bottom buttons
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  child: Column(
-                    children: [
-                      // Start Session button
-                      GestureDetector(
-                        onTap: _saveChanges,
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Color(0xFF62E3BC),
-                            borderRadius: BorderRadius.circular(110),
-                          ),
-                          child: Center(
-                            child: Text(
-                              widget.isInitialSetup ? 'Start Session' : 'Save Changes',
-                              style: GoogleFonts.ibmPlexSans(
-                                color: Colors.black,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.43,
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 12),
+                              // Cancel button
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      color: Colors.white,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      SizedBox(height: 12),
-                      // Cancel button
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            'Cancel',
-                            style: GoogleFonts.ibmPlexSans(
-                              color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                        const SizedBox(height: 60), // Space for bottom nav
+                      ],
+                    ),
                   ),
                 ),
-                SizedBox(height: 60), // Space for bottom nav
               ],
             ),
           ),
