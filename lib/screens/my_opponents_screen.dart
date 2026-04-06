@@ -9,6 +9,7 @@ import '../services/opponent_stats_service.dart';
 import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import 'opponent_detail_screen.dart';
+import 'opponent_hands_screen.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/form_drawer.dart';
 import '../design_system/components/cards/error_state_card.dart';
@@ -494,19 +495,19 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Avatar: 50x50 rounded square with initials
+                    // Avatar: 40x40 rounded square with initials
                     Container(
-                      width: 50,
-                      height: 50,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: cardColor,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
                         child: Text(
                           _getInitials(opponent.name),
                           style: GoogleFonts.ibmPlexSans(
-                            fontSize: 17,
+                            fontSize: 15,
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                           ),
@@ -589,7 +590,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                       ),
                     ),
                     Text(
-                      '${opponentHandsCounts[opponent.id] ?? 0}',
+                      '${OpponentHandsScreen.filteredHandCounts[opponent.id] ?? opponentHandsCounts[opponent.id] ?? 0}',
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         color: Color(0xFFD3FFFD),

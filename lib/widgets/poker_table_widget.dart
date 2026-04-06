@@ -154,19 +154,20 @@ class PokerTableWidget extends StatelessWidget {
   }
 
   /// The table felt surface with Figma's green gradient + double border.
+  /// Matches Figma node 1015:7173-7174.
   Widget _buildTableSurface(double width, double height) {
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(190),
+        borderRadius: BorderRadius.circular(224),
         border: Border.all(
           color: const Color(0xFF161A14),
-          width: 14,
+          width: 16.5,
         ),
         gradient: const RadialGradient(
           center: Alignment.center,
-          radius: 0.9,
+          radius: 0.85,
           colors: [
             Color(0xFF224747),
             Color(0xFF123631),
@@ -185,25 +186,26 @@ class PokerTableWidget extends StatelessWidget {
       ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(176), // 190 - 14
+          borderRadius: BorderRadius.circular(207.5), // 224 - 16.5
           border: Border.all(
             color: const Color(0xFF12332D),
-            width: 5,
+            width: 5.9,
           ),
         ),
-        // Inset shadow overlay: a subtle bottom highlight
+        // Inset shadow overlay: bottom highlight per Figma
+        // (0px -1.178px 4.713px #375E6B inset)
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(171), // 176 - 5
+          borderRadius: BorderRadius.circular(201.6), // 207.5 - 5.9
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [
-                  Color(0x33375E6B), // subtle highlight at bottom
+                  Color(0x4D375E6B), // subtle highlight at bottom (30% alpha)
                   Colors.transparent,
                 ],
-                stops: [0.0, 0.15],
+                stops: [0.0, 0.08],
               ),
             ),
           ),
@@ -399,6 +401,8 @@ class PokerTableWidget extends StatelessWidget {
         context.findAncestorRenderObjectOfType<RenderStack>() as RenderBox?;
     if (renderBox == null) return;
 
+    // With pointerDragAnchorStrategy, details.offset is the pointer position
+    // (which is where the user wants to drop the button).
     final localPosition = renderBox.globalToLocal(details.offset);
 
     int? closestSeat;

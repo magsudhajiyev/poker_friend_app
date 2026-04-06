@@ -56,6 +56,22 @@ class AppColors {
   static const Color separatorColor = Color(0x4DEBEBF5);      // rgba(235,235,245,0.3)
   static const Color labelSecondary = Color(0xB3EBEBF5);      // rgba(235,235,245,0.7)
 
+  // Dealer Table Status Bar Colors (Figma node 1015:7172)
+  static const Color statusPotLabel = Color(0xFF7C8125);
+  static const Color statusPotValue = Color(0xFFF3FF15);
+  static const Color statusStreetLabel = Color(0xFF6388A5);
+  static const Color statusStreetValue = Color(0xFF97CBF3);
+  static const Color mint600 = Color(0xFF4B9A96);
+  static const Color mint500 = Color(0xFF5EB7B3);
+  static const Color mint900 = Color(0xFF1B4341);
+  static const Color neutral500 = Color(0xFF67696D);
+  static const Color neutral800 = Color(0xFF1B1E24);
+  static const Color neutral700 = Color(0xFF35373C);
+  static const Color secondary900 = Color(0xFF3C4D59);
+  static const Color betPill = Color(0xFF4C94FF);
+  static const Color warningText = Color(0xFFBD8F2D);
+  static const Color errorRed = Color(0xFFD55A41);
+
   // Calendar Screen Colors
   static const Color calendarAccentGreen = Color(0xFF62E3BC);
   static const Color calendarCardBg = Color(0xFF101115);       // #101115

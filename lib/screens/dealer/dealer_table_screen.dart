@@ -120,9 +120,12 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   /// Format amount with $ for cash games, without for tournaments
   String _formatAmount(num amount) {
     return _dealerSession.gameType == 'cash'
-        ? _formatAmount(amount)
+        ? formatCompactCurrency(amount)
         : formatCompactNumber(amount);
   }
+
+  /// Whether this session is a tournament (no $ prefix)
+  bool get _isTournament => _dealerSession.gameType != 'cash';
 
   @override
   void initState() {
@@ -1465,27 +1468,103 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   Future<void> _showDealerChangeDialog() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text('Dealer Change', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'Hand off this table to another dealer?\n\n'
-          'The session will be paused. Another dealer can scan '
-          'the table QR to continue where you left off.\n\n'
-          'Players, blinds, and all state will be preserved.',
-          style: TextStyle(color: Colors.white70),
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF101115),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF1B1E24)),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icon + title
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF1B1E24),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.swap_vert,
+                      color: Color(0xFFBD8F2D),
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Hand off to another dealer?',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'The session will be paused. Another dealer can scan the table QR to continue where you left off. Players, blinds, and all state will be preserved.',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFFD3FFFD),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context, false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.ibmPlexSans(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context, true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF89F1EC),
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: Text(
+                        'Hand Off',
+                        style: GoogleFonts.ibmPlexSans(
+                          color: Colors.black,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            child: const Text('Hand Off'),
-          ),
-        ],
+        ),
       ),
     );
 
@@ -1615,8 +1694,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   Future<double?> _showAmountDialog(String title) async {
-    double amount = _gameState!.bigBlind.toDouble();
-    final controller = TextEditingController(text: amount.toString());
+    final controller = TextEditingController();
 
     return showDialog<double>(
       context: context,
@@ -1645,8 +1723,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4E5054))),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4E5054))),
                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF89F1EC))),
-                  prefixText: '\$',
+                  prefixText: _isTournament ? null : '\$',
                   prefixStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 17),
+                  hintText: '0',
+                  hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF4E5054), fontSize: 17),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
@@ -1688,6 +1768,92 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
     );
+  }
+
+  /// Ask user to confirm leaving the dealer screen. Returns true if they confirm.
+  Future<bool> _confirmExit() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF101115),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF1B1E24)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Leave dealer table?',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _isHandActive
+                    ? 'A hand is currently in progress. Leaving now may disrupt logging.'
+                    : 'The session stays live. You can return any time.',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFFD3FFFD),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context, false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.ibmPlexSans(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context, true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF89F1EC),
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: Text(
+                        'Leave',
+                        style: GoogleFonts.ibmPlexSans(
+                          color: Colors.black,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return result ?? false;
   }
 
   /// Get ordinal suffix for a number (1st, 2nd, 3rd, 4th, etc.)
@@ -2313,58 +2479,125 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       );
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldExit = await _confirmExit();
+        if (shouldExit && mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
       backgroundColor: const Color(0xFF02050B),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF101115),
-        title: Text(widget.table.name, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
-        actions: [
-          // Pending join requests badge
-          if (_pendingJoins.isNotEmpty)
-            Stack(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(68),
+        child: SafeArea(
+          bottom: false,
+          child: Container(
+            color: const Color(0xFF101115),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.person_add),
-                  onPressed: _showPendingJoinsDialog,
-                  tooltip: 'Pending Join Requests',
+                // Back button
+                _buildHeaderPillButton(
+                  bgColor: const Color(0xFF101115),
+                  onTap: () async {
+                    final shouldExit = await _confirmExit();
+                    if (shouldExit && mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
                 ),
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.orange,
-                      shape: BoxShape.circle,
+                const SizedBox(width: 12),
+                // Title
+                Expanded(
+                  child: Text(
+                    widget.table.name,
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white,
+                      fontSize: 27,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.5,
+                      height: 1.0,
                     ),
-                    child: Text(
-                      _pendingJoins.length.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                // Pending joins badge
+                if (_pendingJoins.isNotEmpty) ...[
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      _buildHeaderPillButton(
+                        bgColor: const Color(0xFF1B1E24),
+                        onTap: _showPendingJoinsDialog,
+                        child: const Icon(Icons.person_add, color: Colors.white, size: 22),
+                      ),
+                      Positioned(
+                        right: -2,
+                        top: -2,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFF101115), width: 2),
+                          ),
+                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                          child: Text(
+                            _pendingJoins.length.toString(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                // QR button
+                _buildHeaderPillButton(
+                  bgColor: const Color(0xFF1B1E24),
+                  onTap: _showQRCodesDialog,
+                  child: const Icon(Icons.qr_code, color: Colors.white, size: 22),
+                ),
+                const SizedBox(width: 8),
+                // Dealer change button (swap arrows)
+                _buildHeaderPillButton(
+                  bgColor: const Color(0xFF1B1E24),
+                  onTap: _showDealerChangeDialog,
+                  child: const Icon(Icons.swap_vert, color: Color(0xFFBD8F2D), size: 24),
+                ),
+                const SizedBox(width: 8),
+                // End session button (red dot)
+                _buildHeaderPillButton(
+                  bgColor: const Color(0xFF1B1E24),
+                  onTap: _endSession,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFD55A41), width: 1.2),
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFD55A41),
+                          shape: BoxShape.rectangle,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ],
             ),
-          IconButton(
-            icon: const Icon(Icons.qr_code),
-            onPressed: _showQRCodesDialog,
-            tooltip: 'Show QR Codes',
           ),
-          IconButton(
-            icon: const Icon(Icons.swap_horiz, color: Colors.orange),
-            onPressed: _showDealerChangeDialog,
-            tooltip: 'Dealer Change',
-          ),
-          IconButton(
-            icon: const Icon(Icons.stop_circle_outlined),
-            onPressed: _endSession,
-            tooltip: 'End Session',
-          ),
-        ],
+        ),
       ),
       body: Column(
         children: [
@@ -2374,44 +2607,166 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           if (!_isHandActive) _buildStartHandSection(),
         ],
       ),
+    ),
+    );
+  }
+
+  Widget _buildHeaderPillButton({
+    required Color bgColor,
+    required VoidCallback onTap,
+    required Widget child,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: bgColor,
+          shape: BoxShape.circle,
+        ),
+        child: Center(child: child),
+      ),
     );
   }
 
   Widget _buildGameInfo() {
-    const teal = Color(0xFF89F1EC);
+    // For small amounts show decimal (e.g. $0.00), for larger use compact form (e.g. $1.2k)
+    final pot = _gameState!.currentPot;
+    final isCash = _dealerSession.gameType == 'cash';
+    final potDisplay = pot < 10000
+        ? (isCash ? '\$${pot.toStringAsFixed(2)}' : pot.toStringAsFixed(0))
+        : _formatAmount(pot);
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       color: const Color(0xFF101115),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildInfoItem('POT', _formatAmount(_gameState!.currentPot)),
-          _buildInfoItem('STREET', _gameState!.currentRound.name.toUpperCase()),
-          GestureDetector(
-            onTap: _showChangeBlindsDialog,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildInfoItem('BLINDS', '$_smallBlind/$_bigBlind'),
-                const SizedBox(width: 4),
-                Icon(Icons.edit, color: teal.withValues(alpha: 0.5), size: 14),
-              ],
+          Expanded(
+            child: _buildInfoItem(
+              label: 'POT',
+              value: potDisplay,
+              labelColor: const Color(0xFF7C8125),
+              valueColor: const Color(0xFFF3FF15),
             ),
           ),
-          _buildInfoItem('HAND', '#${_gameState!.handNumber}'),
+          _buildStatusDivider(),
+          Expanded(
+            child: _buildInfoItem(
+              label: 'STREET',
+              value: _gameState!.currentRound.name.toUpperCase(),
+              labelColor: const Color(0xFF6388A5),
+              valueColor: const Color(0xFF97CBF3),
+            ),
+          ),
+          _buildStatusDivider(),
+          Expanded(
+            child: GestureDetector(
+              onTap: _showChangeBlindsDialog,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'BLINDS',
+                          style: GoogleFonts.ibmPlexSans(
+                            color: const Color(0xFF4B9A96),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            height: 1.44,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF35373C),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: const Color(0xFF3C4D59), width: 0.5),
+                          ),
+                          child: const Icon(Icons.edit, color: Color(0xFF89F1EC), size: 9),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '$_smallBlind/$_bigBlind',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.ibmPlexSans(
+                        color: const Color(0xFF89F1EC),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        height: 1.64,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          _buildStatusDivider(),
+          Expanded(
+            child: _buildInfoItem(
+              label: 'HAND',
+              value: '#${_gameState!.handNumber}',
+              labelColor: const Color(0xFF8C8C8C),
+              valueColor: Colors.white,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoItem(String label, String value) {
-    const teal = Color(0xFF89F1EC);
-    return Column(
-      children: [
-        Text(label, style: GoogleFonts.ibmPlexSans(color: teal.withValues(alpha: 0.5), fontSize: 10, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 2),
-        Text(value, style: GoogleFonts.ibmPlexSans(color: teal, fontSize: 16, fontWeight: FontWeight.bold)),
-      ],
+  Widget _buildStatusDivider() {
+    return Container(
+      width: 1,
+      height: 38,
+      color: const Color(0xFF1B1E24),
+    );
+  }
+
+  Widget _buildInfoItem({
+    required String label,
+    required String value,
+    required Color labelColor,
+    required Color valueColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.ibmPlexSans(
+              color: labelColor,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              height: 1.44,
+            ),
+          ),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.ibmPlexSans(
+              color: valueColor,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              height: 1.64,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2628,8 +2983,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         PokerTableWidget(
           activeSeatMap: _getActiveSeatMapForTable(),
           showDealerButton: false, // Dealer button is managed inside custom seats
-          tableWidthFraction: 0.80,
-          tableHeightFraction: 0.76,
+          tableWidthFraction: 0.78,
+          tableHeightFraction: 0.78,
           seatBuilder: (seatNumber, isActive) => _buildDealerSeatWidget(seatNumber),
           centerContent: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -2637,14 +2992,23 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             children: [
               Text(
                 _formatAmount(_gameState!.currentPot),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFFD3FFFD),
                   fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.59,
+                  height: 1.0,
                 ),
               ),
-              const Text('POT', style: TextStyle(color: Colors.white70, fontSize: 12)),
+              Text(
+                'POT',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF5EB7B3),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                  height: 1.44,
+                ),
+              ),
             ],
           ),
         ),
@@ -2789,24 +3153,195 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     bool canAcceptButtonDrop = false,
     Function(int)? onButtonDropped,
   }) {
-    Color bgColor;
+    // Determine circle border color based on state
     Color borderColor;
-
     if (isPending) {
-      bgColor = const Color(0xFF2A2A2E);
       borderColor = const Color(0xFFF59E0B);
     } else if (!isOccupied) {
-      bgColor = const Color(0xFF2A2A2E);
-      borderColor = const Color(0xFF89F1EC).withValues(alpha: 0.3);
+      borderColor = const Color(0xFF1B4341);
     } else if (isFolded) {
-      bgColor = const Color(0xFF2A2A2E).withValues(alpha: 0.5);
-      borderColor = const Color(0xFF89F1EC).withValues(alpha: 0.2);
+      borderColor = const Color(0xFF89F1EC).withValues(alpha: 0.3);
     } else if (isCurrentPlayer) {
-      bgColor = Colors.black;
       borderColor = Colors.amber;
     } else {
-      bgColor = Colors.black;
       borderColor = const Color(0xFF89F1EC);
+    }
+
+    // Seat number pill (compact 38×33, black bg, colored border)
+    final seatCirclePill = Container(
+      width: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(42.6),
+        border: Border.all(color: borderColor, width: 1),
+        boxShadow: isCurrentPlayer
+            ? [BoxShadow(color: Colors.amber.withValues(alpha: 0.4), blurRadius: 10)]
+            : (isPending
+                ? [BoxShadow(color: const Color(0xFFF59E0B).withValues(alpha: 0.4), blurRadius: 10)]
+                : null),
+      ),
+      child: Text(
+        seatNumber.toString(),
+        textAlign: TextAlign.center,
+        style: GoogleFonts.ibmPlexMono(
+          color: isOccupied ? Colors.white : const Color(0xFF67696D),
+          fontSize: 17,
+          fontWeight: FontWeight.w500,
+          height: 1.0,
+        ),
+      ),
+    );
+
+    // Player name + balance label (shown when occupied OR for empty-preview)
+    final displayName = _truncateName(playerName ?? 'Player');
+    final labelColumn = Column(
+      crossAxisAlignment: _seatLabelIsRight(seatNumber) ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isPending) ...[
+          Text(
+            displayName,
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              height: 1.44,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            'PENDING',
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.orange,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              height: 1.44,
+            ),
+          ),
+        ] else if (isOccupied) ...[
+          Text(
+            displayName,
+            style: GoogleFonts.ibmPlexSans(
+              color: isFolded ? Colors.white38 : Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              height: 1.44,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            _formatAmount(stack),
+            style: GoogleFonts.ibmPlexSans(
+              color: isFolded ? Colors.white38 : const Color(0xFF89F1EC),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              height: 1.44,
+            ),
+          ),
+        ],
+        // Bet pill (blue #4C94FF) — hidden for folded players
+        if (bet > 0 && !isFolded) ...[
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+            decoration: BoxDecoration(
+              color: const Color(0xFF4C94FF),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Text(
+              _formatAmount(bet),
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                height: 1.44,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ],
+    );
+
+    // Choose layout: pill + label side-by-side (right or left) or stacked (top)
+    final layoutVariant = _seatLayoutVariant(seatNumber);
+    Widget seatContent;
+
+    if (isOccupied || isPending) {
+      if (layoutVariant == 'top') {
+        // Seat 1: pill on top, label below
+        seatContent = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            seatCirclePill,
+            const SizedBox(height: 2),
+            Align(
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (isPending) ...[
+                    Text(
+                      displayName,
+                      style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500, height: 1.44),
+                    ),
+                    Text('PENDING', style: GoogleFonts.ibmPlexSans(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.w600, height: 1.44)),
+                  ] else if (isOccupied) ...[
+                    Text(
+                      displayName,
+                      style: GoogleFonts.ibmPlexSans(color: isFolded ? Colors.white38 : Colors.white, fontSize: 11, fontWeight: FontWeight.w500, height: 1.44),
+                    ),
+                    Text(
+                      _formatAmount(stack),
+                      style: GoogleFonts.ibmPlexSans(color: isFolded ? Colors.white38 : const Color(0xFF89F1EC), fontSize: 12, fontWeight: FontWeight.w500, height: 1.44),
+                    ),
+                  ],
+                  if (bet > 0 && !isFolded) ...[
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                      decoration: BoxDecoration(color: const Color(0xFF4C94FF), borderRadius: BorderRadius.circular(30)),
+                      child: Text(
+                        _formatAmount(bet),
+                        style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500, height: 1.44),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      } else if (layoutVariant == 'right') {
+        // Label on the right of the pill (seats on left side of table: 6-9)
+        seatContent = Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            seatCirclePill,
+            const SizedBox(width: 4),
+            labelColumn,
+          ],
+        );
+      } else {
+        // Label on the left of the pill (seats on right side of table: 2-5)
+        seatContent = Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            labelColumn,
+            const SizedBox(width: 4),
+            seatCirclePill,
+          ],
+        );
+      }
+    } else {
+      // Empty seat: just the pill
+      seatContent = seatCirclePill;
     }
 
     // Dealer button widget (extracted for reuse in Draggable)
@@ -2827,6 +3362,58 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       ),
     );
 
+    // Stack for pending/button badges overlaid on the pill
+    final pillWithBadges = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        seatContent,
+        // Pending badge (on the pill)
+        if (isPending)
+          Positioned(
+            left: layoutVariant == 'left' ? null : -4,
+            right: layoutVariant == 'left' ? -4 : null,
+            top: -4,
+            child: Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                color: Colors.orange,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              child: const Center(child: Icon(Icons.person_add, size: 10, color: Colors.white)),
+            ),
+          ),
+        // Dealer button (on the pill)
+        if (isButton && !isPending)
+          Positioned(
+            left: layoutVariant == 'left' ? null : -10,
+            right: layoutVariant == 'left' ? -10 : null,
+            top: -10,
+            child: canAcceptButtonDrop
+                ? Draggable<int>(
+                    data: seatNumber,
+                    feedback: Material(
+                      color: Colors.transparent,
+                      child: dealerButtonBadge(),
+                    ),
+                    childWhenDragging: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: SizedBox(width: 22, height: 22),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: dealerButtonBadge(),
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: dealerButtonBadge(),
+                  ),
+          ),
+      ],
+    );
+
     final seatWidget = GestureDetector(
       onTap: isPending
           ? onPendingTap
@@ -2835,124 +3422,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               : (isOccupied && !_isHandActive
                   ? onOccupiedTap
                   : (!isOccupied ? onEmptyTap : null))),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Main seat
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: bgColor,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: borderColor,
-                width: isPending ? 3 : (isCurrentPlayer ? 3 : 2),
-              ),
-              boxShadow: isPending
-                  ? [BoxShadow(color: const Color(0xFFF59E0B).withValues(alpha: 0.4), blurRadius: 10)]
-                  : (isCurrentPlayer
-                      ? [BoxShadow(color: Colors.amber.withValues(alpha: 0.4), blurRadius: 10)]
-                      : null),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (isPending) ...[
-                  Text(
-                    _truncateName(playerName ?? 'Player'),
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'PENDING',
-                    style: TextStyle(color: Colors.orange, fontSize: 8, fontWeight: FontWeight.bold),
-                  ),
-                ] else ...[
-                  Text(
-                    seatNumber.toString(),
-                    style: TextStyle(
-                      color: isOccupied ? Colors.white : Colors.white38,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (isOccupied) ...[
-                    Text(
-                      _truncateName(playerName ?? ''),
-                      style: TextStyle(color: isFolded ? Colors.white38 : Colors.white70, fontSize: 9),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      _formatAmount(stack),
-                      style: TextStyle(
-                        color: isFolded ? Colors.white38 : Colors.greenAccent,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ],
-              ],
-            ),
-          ),
-          // Pending badge
-          if (isPending)
-            Positioned(
-              right: -4,
-              top: -4,
-              child: Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: Colors.orange,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: const Center(
-                  child: Icon(Icons.person_add, size: 12, color: Colors.white),
-                ),
-              ),
-            ),
-          // Dealer button - draggable when hand is not active
-          if (isButton && !isPending)
-            Positioned(
-              right: -4,
-              top: -4,
-              child: canAcceptButtonDrop
-                  ? Draggable<int>(
-                      data: seatNumber,
-                      feedback: Material(
-                        color: Colors.transparent,
-                        child: dealerButtonBadge(opacity: 0.9),
-                      ),
-                      childWhenDragging: dealerButtonBadge(opacity: 0.3),
-                      child: dealerButtonBadge(),
-                    )
-                  : dealerButtonBadge(),
-            ),
-          // Current bet
-          if (bet > 0)
-            Positioned(
-              bottom: -8,
-              left: 10,
-              right: 10,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade800,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _formatAmount(bet),
-                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-        ],
-      ),
+      behavior: HitTestBehavior.opaque,
+      child: pillWithBadges,
     );
 
     // Wrap with DragTarget to accept button drops
@@ -2962,12 +3433,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           onButtonDropped(seatNumber);
         },
         builder: (context, candidateData, rejectedData) {
-          // Highlight seat when button is dragged over it
           final isHovered = candidateData.isNotEmpty;
           if (isHovered) {
             return Container(
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(42.6),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.white.withValues(alpha: 0.5),
@@ -2986,6 +3456,18 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     return seatWidget;
   }
+
+  /// Get the layout variant for a seat (matches PokerTableWidget logic).
+  /// - 'top': seat 1 (label below pill)
+  /// - 'right': seats 6-9 (left side of table → label to right of pill)
+  /// - 'left': seats 2-5 (right side of table → label to left of pill)
+  String _seatLayoutVariant(int seatNumber) {
+    if (seatNumber == 1) return 'top';
+    if (seatNumber >= 6 && seatNumber <= 9) return 'right';
+    return 'left';
+  }
+
+  bool _seatLabelIsRight(int seatNumber) => _seatLayoutVariant(seatNumber) == 'right';
 
   String _truncateName(String name) {
     if (name.length <= 7) return name;
@@ -3413,59 +3895,100 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
   Widget _buildStartHandSection() {
     final occupiedSeats = _gameState!.getActivePlayers().length;
+    final canStart = occupiedSeats >= 2 && !_isLoading;
+    final hasDealtHand = _gameState!.handNumber > 1;
+    final buttonLabel = hasDealtHand ? 'Start New Hand' : 'Start Session';
 
-    return Container(
-      padding: const EdgeInsets.all(24),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text('$occupiedSeats players seated', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 15)),
-          const SizedBox(height: 16),
+          // Primary block: Start Session button + player count
           GestureDetector(
-            onTap: occupiedSeats >= 2 && !_isLoading ? _startNewHand : null,
+            onTap: canStart ? _startNewHand : null,
+            behavior: HitTestBehavior.opaque,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               decoration: BoxDecoration(
-                color: occupiedSeats >= 2 ? const Color(0xFF89F1EC) : const Color(0xFF2A2A2E),
-                borderRadius: BorderRadius.circular(60),
+                color: canStart ? const Color(0xFF89F1EC) : const Color(0xFF4B9A96),
+                borderRadius: BorderRadius.circular(110),
               ),
               child: _isLoading
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                  ? const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      ),
+                    )
                   : Text(
-                      'START NEW HAND',
+                      buttonLabel,
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: occupiedSeats >= 2 ? Colors.black : const Color(0xFF4A4A4E),
-                        letterSpacing: -0.43,
+                        color: Colors.black,
+                        letterSpacing: -0.5,
+                        height: 24 / 17,
                       ),
                     ),
             ),
           ),
-          if (occupiedSeats < 2)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text('Need at least 2 players to start', style: GoogleFonts.ibmPlexSans(color: Colors.orange, fontSize: 13)),
+          const SizedBox(height: 8),
+          Text(
+            '$occupiedSeats players selected',
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFF4B9A96),
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              height: 24 / 15,
             ),
-          // Debug button to add random players for testing
-          const SizedBox(height: 16),
+          ),
+          const SizedBox(height: 18),
+          // Secondary block: Add Test Players + warning
           GestureDetector(
             onTap: _addRandomPlayersForTesting,
+            behavior: HitTestBehavior.opaque,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(60),
-                border: Border.all(color: const Color(0xFF89F1EC).withValues(alpha: 0.5)),
+                borderRadius: BorderRadius.circular(110),
+                border: Border.all(color: const Color(0xFFD3FFFD), width: 1),
               ),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.group_add, color: Color(0xFF89F1EC), size: 18),
+                  const Icon(Icons.add, color: Color(0xFFD3FFFD), size: 24),
                   const SizedBox(width: 8),
-                  Text('Add Test Players', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF89F1EC), fontSize: 14, fontWeight: FontWeight.w500)),
+                  Text(
+                    'Add Test Players',
+                    style: GoogleFonts.ibmPlexSans(
+                      color: const Color(0xFFD3FFFD),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.5,
+                      height: 24 / 17,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
+          if (occupiedSeats < 2) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Need at least 2 players to start',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFFBD8F2D),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 24 / 14,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -3889,103 +4412,187 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
     final occupantName = _seatAssignments[_selectedSeat]?.playerName;
 
     return Dialog(
-      backgroundColor: const Color(0xFF1E1E2E),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: const Color(0xFF101115),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFF1B1E24)),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '${widget.tableName} - Seat $_selectedSeat',
-              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            if (isOccupied)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Occupied by ${occupantName ?? "Player"}',
-                  style: const TextStyle(color: Colors.orange, fontSize: 12),
-                ),
-              ),
-            const SizedBox(height: 20),
-            if (!isOccupied) ...[
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: QrImageView(
-                  data: qrData.encode(),
-                  version: QrVersions.auto,
-                  size: 200,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Scan to join this seat',
-                style: TextStyle(color: Colors.white54),
-              ),
-            ] else ...[
-              Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade800,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.person, size: 60, color: Colors.white38),
-                      SizedBox(height: 12),
-                      Text(
-                        'Seat Occupied',
-                        style: TextStyle(color: Colors.white54, fontSize: 16),
-                      ),
-                    ],
+            // Title + close
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${widget.tableName} · Seat $_selectedSeat',
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.3,
+                    ),
                   ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF1B1E24),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.close, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            ),
+            if (!isOccupied) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Scan to join this seat',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFFD3FFFD),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            // QR code / occupied state
+            Center(
+              child: !isOccupied
+                  ? Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: QrImageView(
+                        data: qrData.encode(),
+                        version: QrVersions.auto,
+                        size: 200,
+                      ),
+                    )
+                  : Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF02050B),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF1B1E24)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.person,
+                            size: 20,
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(width: 10),
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Occupied · ',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    color: const Color(0xFF8C8C8C),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: occupantName ?? 'Player',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+            const SizedBox(height: 20),
             // Seat selector
+            Text(
+              'SELECT SEAT',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(height: 10),
             _isLoading
-                ? const CircularProgressIndicator()
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(8),
+                      child: SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF89F1EC),
+                        ),
+                      ),
+                    ),
+                  )
                 : Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: List.generate(9, (i) {
                       final seat = i + 1;
-                      final seatIsOccupied = _seatAssignments[seat]?.isOccupied ?? false;
+                      final seatIsOccupied =
+                          _seatAssignments[seat]?.isOccupied ?? false;
                       final isSelected = seat == _selectedSeat;
+                      final Color bg;
+                      final Color borderColor;
+                      final Color textColor;
+                      if (isSelected) {
+                        bg = seatIsOccupied
+                            ? const Color(0xFFBD8F2D)
+                            : const Color(0xFF89F1EC);
+                        borderColor = bg;
+                        textColor = Colors.black;
+                      } else if (seatIsOccupied) {
+                        bg = const Color(0xFF02050B);
+                        borderColor =
+                            const Color(0xFFBD8F2D).withValues(alpha: 0.5);
+                        textColor = const Color(0xFFBD8F2D);
+                      } else {
+                        bg = const Color(0xFF02050B);
+                        borderColor = const Color(0xFF1B4341);
+                        textColor = Colors.white;
+                      }
                       return GestureDetector(
                         onTap: () => setState(() => _selectedSeat = seat),
                         child: Container(
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? (seatIsOccupied ? Colors.orange : Colors.green)
-                                : (seatIsOccupied ? Colors.orange.withValues(alpha: 0.3) : const Color(0xFF2A2A3A)),
-                            borderRadius: BorderRadius.circular(8),
-                            border: isSelected
-                                ? Border.all(color: Colors.white, width: 2)
-                                : null,
+                            color: bg,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: borderColor, width: 1),
                           ),
                           child: Center(
                             child: Text(
                               seat.toString(),
-                              style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.white70,
-                                fontWeight: FontWeight.bold,
+                              style: GoogleFonts.ibmPlexMono(
+                                color: textColor,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -3993,39 +4600,64 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                       );
                     }),
                   ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+            // Legend
             Row(
               children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A2A3A),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                _buildLegendDot(
+                  const Color(0xFF02050B),
+                  const Color(0xFF1B4341),
                 ),
                 const SizedBox(width: 6),
-                const Text('Empty', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                Text(
+                  'Empty',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF8C8C8C),
+                    fontSize: 12,
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                _buildLegendDot(
+                  const Color(0xFF02050B),
+                  const Color(0xFFBD8F2D).withValues(alpha: 0.5),
                 ),
                 const SizedBox(width: 6),
-                const Text('Occupied', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                Text(
+                  'Occupied',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF8C8C8C),
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                _buildLegendDot(
+                  const Color(0xFF89F1EC),
+                  const Color(0xFF89F1EC),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Selected',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF8C8C8C),
+                    fontSize: 12,
+                  ),
+                ),
               ],
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLegendDot(Color color, Color borderColor) {
+    return Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: borderColor),
       ),
     );
   }

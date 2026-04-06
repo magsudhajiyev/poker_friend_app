@@ -12,6 +12,10 @@ class OpponentHandsScreen extends StatefulWidget {
 
   const OpponentHandsScreen({Key? key, required this.opponent}) : super(key: key);
 
+  /// Cached filtered hand counts by opponent ID.
+  /// Updated after each hand history load so other screens can read it.
+  static final Map<String, int> filteredHandCounts = {};
+
   @override
   _OpponentHandsScreenState createState() => _OpponentHandsScreenState();
 }
@@ -25,11 +29,11 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
   int? totalHandsCount;
 
   final ScrollController _scrollController = ScrollController();
-  static const int _handsPerPage = 5;
+  static const int _handsPerPage = 10;
   int _currentPage = 0;
 
-  // Cache sessions to avoid refetching
-  List<Map<String, dynamic>>? _cachedSessions;
+  // Full filtered list built once, pages served from cache
+  List<Map<String, dynamic>>? _allFilteredHands;
 
   static const _cardColor = Color(0xFF131616);
   static const _mint = Color(0xFF89F1EC);
@@ -62,6 +66,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
         isLoading = true;
         error = null;
         _currentPage = 0;
+        _allFilteredHands = null; // Reset cache for fresh load
       });
 
       final firstPageHands = await _getHandsWithOpponentPaginated(
@@ -70,11 +75,11 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
         pageSize: _handsPerPage,
       );
 
+      final total = firstPageHands['totalCount'] as int;
       setState(() {
         hands = firstPageHands['hands'];
-        totalHandsCount = firstPageHands['totalCount'];
-        hasMoreHands = hands.length == _handsPerPage &&
-            (totalHandsCount == null || hands.length < totalHandsCount!);
+        totalHandsCount = total;
+        hasMoreHands = hands.length < total;
         isLoading = false;
       });
     } catch (e) {
@@ -103,12 +108,12 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
 
       final moreHands = moreHandsData['hands'] as List<Map<String, dynamic>>;
 
+      final total = moreHandsData['totalCount'] as int;
       setState(() {
         hands.addAll(moreHands);
         _currentPage = nextPage;
-        totalHandsCount = moreHandsData['totalCount'];
-        hasMoreHands = moreHands.length == _handsPerPage &&
-            (totalHandsCount == null || hands.length < totalHandsCount!);
+        totalHandsCount = total;
+        hasMoreHands = hands.length < total;
         isLoadingMore = false;
       });
     } catch (e) {
@@ -118,88 +123,28 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     }
   }
 
+  /// Build the full filtered hand list once, then return a page from it.
   Future<Map<String, dynamic>> _getHandsWithOpponentPaginated(
     String opponentName, {
     required int page,
     required int pageSize,
   }) async {
-    List<Map<String, dynamic>> opponentHands = [];
-    int totalCount = 0;
-
     try {
-      // Cache sessions on first load to avoid repeated fetching
-      if (_cachedSessions == null) {
-        try {
-          _cachedSessions = await FirebaseService.getAllSessions();
-        } catch (firebaseError) {
-          final db = await LocalStorageService.database;
-          _cachedSessions = await db.query('sessions');
-        }
+      // Build the full list only on first call
+      if (_allFilteredHands == null) {
+        await _buildFilteredHandsList(opponentName);
       }
 
-      int handsFound = 0;
-      int handsSkipped = 0;
-      final skipCount = page * pageSize;
-      bool useFirebase = true;
-
-      try {
-        await FirebaseService.getAllSessions();
-      } catch (_) {
-        useFirebase = false;
-      }
-
-      for (final session in _cachedSessions!) {
-        final sessionId = session['id'] as String;
-
-        List<Map<String, dynamic>> sessionHands;
-        if (useFirebase) {
-          try {
-            sessionHands = await FirebaseService.getSessionHands(sessionId);
-          } catch (_) {
-            sessionHands = await LocalStorageService.getSessionHands(sessionId);
-          }
-        } else {
-          sessionHands = await LocalStorageService.getSessionHands(sessionId);
-        }
-
-        for (final hand in sessionHands) {
-          bool opponentInvolved = _isOpponentInvolved(hand, opponentName);
-
-          if (opponentInvolved) {
-            totalCount++;
-
-            if (handsSkipped < skipCount) {
-              handsSkipped++;
-              continue;
-            }
-
-            if (handsFound >= pageSize) {
-              break;
-            }
-
-            final handWithSession = Map<String, dynamic>.from(hand);
-            handWithSession['sessionName'] = session['sessionName'] ?? 'Session ${session['id']}';
-            handWithSession['sessionDate'] = session['startTime'];
-            opponentHands.add(handWithSession);
-            handsFound++;
-          }
-        }
-
-        if (handsFound >= pageSize) {
-          break;
-        }
-      }
-
-      // Sort by date (most recent first)
-      opponentHands.sort((a, b) {
-        final aTime = DateTime.parse(a['startTime'] ?? '1970-01-01');
-        final bTime = DateTime.parse(b['startTime'] ?? '1970-01-01');
-        return bTime.compareTo(aTime);
-      });
+      final all = _allFilteredHands!;
+      final start = page * pageSize;
+      final end = (start + pageSize).clamp(0, all.length);
+      final pageHands = start < all.length
+          ? all.sublist(start, end)
+          : <Map<String, dynamic>>[];
 
       return {
-        'hands': opponentHands,
-        'totalCount': totalCount >= skipCount + handsFound ? null : totalCount,
+        'hands': pageHands,
+        'totalCount': all.length,
       };
     } catch (e) {
       return {
@@ -209,11 +154,64 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     }
   }
 
+  /// Fetch all sessions + hands once, filter, sort, and cache.
+  Future<void> _buildFilteredHandsList(String opponentName) async {
+    final List<Map<String, dynamic>> result = [];
+
+    List<Map<String, dynamic>> sessions;
+    bool useFirebase = true;
+    try {
+      sessions = await FirebaseService.getAllSessions();
+    } catch (_) {
+      useFirebase = false;
+      final db = await LocalStorageService.database;
+      sessions = await db.query('sessions');
+    }
+
+    for (final session in sessions) {
+      final sessionId = session['id'] as String;
+
+      List<Map<String, dynamic>> sessionHands;
+      if (useFirebase) {
+        try {
+          sessionHands = await FirebaseService.getSessionHands(sessionId);
+        } catch (_) {
+          sessionHands = await LocalStorageService.getSessionHands(sessionId);
+        }
+      } else {
+        sessionHands = await LocalStorageService.getSessionHands(sessionId);
+      }
+
+      for (final hand in sessionHands) {
+        if (!_isOpponentInvolved(hand, opponentName)) continue;
+        if (_isOpponentHandTrivial(hand, opponentName)) continue;
+
+        final handWithSession = Map<String, dynamic>.from(hand);
+        handWithSession['sessionName'] =
+            session['sessionName'] ?? 'Session ${session['id']}';
+        handWithSession['sessionDate'] = session['startTime'];
+        result.add(handWithSession);
+      }
+    }
+
+    // Sort by date (most recent first)
+    result.sort((a, b) {
+      final aTime = DateTime.parse(a['startTime'] ?? '1970-01-01');
+      final bTime = DateTime.parse(b['startTime'] ?? '1970-01-01');
+      return bTime.compareTo(aTime);
+    });
+
+    _allFilteredHands = result;
+    // Cache the count so the opponents list screen can read it
+    OpponentHandsScreen.filteredHandCounts[widget.opponent.id] = result.length;
+  }
+
   bool _isOpponentInvolved(Map<String, dynamic> hand, String opponentName) {
     final playerNamesData = hand['playerNames'];
     if (playerNamesData != null && playerNamesData is Map) {
       final involved = playerNamesData.values.any((name) =>
-          name.toString().toLowerCase().trim() == opponentName.toLowerCase().trim());
+          name.toString().toLowerCase().trim() ==
+          opponentName.toLowerCase().trim());
       if (involved) return true;
     }
 
@@ -221,6 +219,44 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     return actions.any((action) =>
         action['playerName']?.toString().toLowerCase().trim() ==
         opponentName.toLowerCase().trim());
+  }
+
+  /// Returns true if the opponent did nothing interesting — their only action
+  /// was a single fold with no prior voluntary action (no call, bet, or raise
+  /// before folding). Hands where opponent raised then folded to a 3-bet
+  /// are kept (they took a meaningful action before folding).
+  bool _isOpponentHandTrivial(
+      Map<String, dynamic> hand, String opponentName) {
+    final actions = List<Map<String, dynamic>>.from(hand['actions'] ?? []);
+    final nameLower = opponentName.toLowerCase().trim();
+
+    // Find opponent's seat number from playerNames
+    int? opponentSeat;
+    final playerNamesData = hand['playerNames'];
+    if (playerNamesData != null && playerNamesData is Map) {
+      for (final entry in playerNamesData.entries) {
+        if (entry.value.toString().toLowerCase().trim() == nameLower) {
+          opponentSeat = int.tryParse(entry.key.toString());
+          break;
+        }
+      }
+    }
+
+    // Get opponent's actions (match by seat number or name)
+    final opponentActions = actions.where((a) {
+      if (opponentSeat != null && a['player'] == opponentSeat) return true;
+      return a['playerName']?.toString().toLowerCase().trim() == nameLower;
+    }).toList();
+
+    if (opponentActions.isEmpty) return true; // no actions = trivial
+
+    // If opponent took ANY non-fold action, the hand is interesting
+    final hasNonFoldAction = opponentActions.any((a) =>
+        a['action'] != 'fold' && a['action'] != null);
+    if (hasNonFoldAction) return false;
+
+    // Opponent only folded — trivial hand
+    return true;
   }
 
   @override

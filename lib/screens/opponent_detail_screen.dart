@@ -663,7 +663,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 4),
                   child: Text(
-                    '${_statistics?['totalHands'] ?? 0}',
+                    '${OpponentHandsScreen.filteredHandCounts[_opponent.id] ?? _statistics?['totalHands'] ?? 0}',
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       color: Color(0xFFD3FFFD),
@@ -1049,7 +1049,8 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           child: ElevatedButton(
             onPressed: () {
               // Check if there are hands before navigating
-              final totalHands = _statistics?['totalHands'] ?? 0;
+              final totalHands = OpponentHandsScreen.filteredHandCounts[_opponent.id]
+                  ?? _statistics?['totalHands'] ?? 0;
               if (totalHands == 0) {
                 _showNoHandsFoundDialog();
               } else {
