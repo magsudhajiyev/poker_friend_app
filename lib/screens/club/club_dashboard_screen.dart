@@ -390,7 +390,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           // (Create Event button is now inline in empty state)
         ],
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home'),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'club'),
     );
   }
 

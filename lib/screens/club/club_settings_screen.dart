@@ -203,7 +203,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home'),
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'club'),
     );
   }
 

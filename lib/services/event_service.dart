@@ -325,6 +325,47 @@ class EventService {
       print('Error getting rankings for final standings: $e');
     }
 
+    // Merge poker_sessions records for all participants before ending sessions.
+    // Each player should have exactly ONE session for the entire event,
+    // even if they played across multiple tables (table breaks).
+    try {
+      final allDealerSessions = await _firestore
+          .collection('dealer_sessions')
+          .where('eventId', isEqualTo: eventId)
+          .get();
+
+      final endTime = DateTime.now();
+
+      // Collect all unique players across all dealer sessions
+      final playerInfo = <String, String>{}; // playerId -> displayName
+      for (final doc in allDealerSessions.docs) {
+        final session = DealerSession.fromFirestore(doc);
+        for (final player in session.players.values) {
+          if (player.playerId.isNotEmpty &&
+              !player.playerId.startsWith('manual_')) {
+            playerInfo[player.playerId] = player.displayName;
+          }
+        }
+      }
+
+      // For each unique player, merge all their sessions into one
+      for (final entry in playerInfo.entries) {
+        try {
+          await DealerService.mergePlayerEventSessions(
+            eventId: eventId,
+            playerId: entry.key,
+            playerName: entry.value,
+            allDealerSessionDocs: allDealerSessions.docs,
+            endTime: endTime,
+          );
+        } catch (e) {
+          print('Error merging sessions for ${entry.value}: $e');
+        }
+      }
+    } catch (e) {
+      print('Error merging player session records: $e');
+    }
+
     // End all active dealer sessions for this event
     await _endEventDealerSessions(eventId);
 
@@ -384,6 +425,58 @@ class EventService {
         }
       } catch (e) {
         print('Error getting seats for table $tableId: $e');
+      }
+    }
+
+    // Merge in players from ended dealer sessions (broken tables)
+    final seenIds = allRankings.map((r) => r.playerId).toSet();
+    try {
+      final allSessions = await DealerService.getAllSessionsForEvent(eventId);
+      for (final session in allSessions) {
+        if (session.status == DealerSessionStatus.ended) {
+          for (final player in session.players.values) {
+            if (player.playerId.isNotEmpty &&
+                !player.playerId.startsWith('manual_') &&
+                !seenIds.contains(player.playerId)) {
+              seenIds.add(player.playerId);
+              final stack = player.stack.toInt();
+              allRankings.add(EventRanking(
+                eventId: eventId,
+                playerId: player.playerId,
+                playerName: player.displayName,
+                currentStack: stack,
+                startingStack: event.startingStack?.toInt() ?? stack,
+                rank: 0,
+                tableId: session.tableId,
+                seatNumber: player.seatNumber,
+                lastUpdated: DateTime.now(),
+                status: stack <= 0 ? PlayerRankingStatus.busted : PlayerRankingStatus.active,
+              ));
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Deduplicate by playerId — if the same real user appears on multiple tables
+    // (stale seats from before table break), keep the one with the highest stack
+    final seenPlayerIds = <String, int>{};
+    for (int i = 0; i < allRankings.length; i++) {
+      final pid = allRankings[i].playerId;
+      if (seenPlayerIds.containsKey(pid)) {
+        final prevIdx = seenPlayerIds[pid]!;
+        if (allRankings[i].currentStack > allRankings[prevIdx].currentStack) {
+          // New entry has higher stack, remove old one
+          allRankings.removeAt(prevIdx);
+          // Adjust index after removal
+          seenPlayerIds[pid] = i - 1;
+        } else {
+          // Old entry has higher stack, remove new one
+          allRankings.removeAt(i);
+          i--;
+        }
+      } else {
+        seenPlayerIds[pid] = i;
       }
     }
 
@@ -891,6 +984,39 @@ class EventService {
           }
         }
       }
+
+      // Merge in players from ended dealer sessions (broken tables)
+      final seenPlayerIds = rankings.map((r) => r.playerId).toSet();
+      try {
+        final allSessions = await DealerService.getAllSessionsForEvent(eventId);
+        for (final session in allSessions) {
+          if (session.status == DealerSessionStatus.ended) {
+            for (final player in session.players.values) {
+              if (player.playerId.isNotEmpty &&
+                  !player.playerId.startsWith('manual_') &&
+                  !seenPlayerIds.contains(player.playerId)) {
+                seenPlayerIds.add(player.playerId);
+                final stack = player.stack.toInt();
+                totalChips += stack;
+                rankings.add(EventRanking(
+                  eventId: eventId,
+                  playerId: player.playerId,
+                  playerName: player.displayName,
+                  currentStack: stack,
+                  startingStack: event.startingStack?.toInt() ?? stack,
+                  rank: 0,
+                  tableId: session.tableId,
+                  seatNumber: player.seatNumber,
+                  lastUpdated: DateTime.now(),
+                  status: stack <= 0
+                      ? PlayerRankingStatus.busted
+                      : PlayerRankingStatus.onBreak,
+                ));
+              }
+            }
+          }
+        }
+      } catch (_) {}
 
       if (rankings.isEmpty) return null;
 

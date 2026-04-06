@@ -386,6 +386,8 @@ class PokerSessionManager {
   Set<int> activeSeats = {}; // seats that have players
   Map<int, double> playerStacks = {}; // seat number -> stack size
   Map<int, String> playerIds = {}; // seat number -> Firebase userId (for dealer mode)
+  String? dealerSessionId; // Links to dealer_sessions collection for live sessions
+  String? eventId; // Links to club events for tournament session grouping
   int? actualSBSeat; // Track who actually posted SB (may differ from calculated)
   int? actualBBSeat; // Track who actually posted BB (may differ from calculated)
 
@@ -450,6 +452,8 @@ class PokerSessionManager {
           startingStack: initialStack,
           totalBuyIn: totalBuyIn, // Pass total buy-in (money invested)
           isLive: isLive, // True for dealer/live sessions
+          dealerSessionId: dealerSessionId,
+          eventId: eventId,
         );
         sessionId = firebaseId;
       } catch (e) {

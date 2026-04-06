@@ -37,19 +37,60 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
       });
 
       // For dealer sessions, fetch from dealer_sessions collection
-      final isDealerSession = widget.session['isDealerSession'] == true;
+      // which also merges player-submitted hole cards
+      final dealerSessionIds = (widget.session['dealerSessionIds'] as List<dynamic>?)
+          ?.cast<String>();
       final dealerSessionId = widget.session['dealerSessionId'] as String?;
 
       List<Map<String, dynamic>> loadedHands;
-      if (isDealerSession && dealerSessionId != null) {
+      if (dealerSessionIds != null && dealerSessionIds.isNotEmpty) {
+        // Multi-table event: fetch and merge hands from ALL dealer sessions
+        // Apply hand number offsets for continuous numbering across tables
+        loadedHands = [];
+        int handOffset = 0;
+        for (final dsId in dealerSessionIds) {
+          final sessionHands = await DealerService.getSessionHands(dsId);
+          int maxHandNum = 0;
+          for (final hand in sessionHands) {
+            final origNum = hand['handNumber'] as int? ?? 0;
+            if (origNum > maxHandNum) maxHandNum = origNum;
+            hand['handNumber'] = origNum + handOffset;
+          }
+          loadedHands.addAll(sessionHands);
+          handOffset += maxHandNum;
+        }
+        // Sort by timestamp for chronological order across tables
+        loadedHands.sort((a, b) =>
+            (a['startTime'] ?? '').compareTo(b['startTime'] ?? ''));
+      } else if (dealerSessionId != null) {
+        // Single dealer session (legacy or non-event)
         loadedHands = await DealerService.getSessionHands(dealerSessionId);
       } else {
         loadedHands = await FirebaseService.getSessionHands(widget.session['id']);
       }
 
+      // For dealer session hands, inject heroSeatNumber from playerIds map
+      final currentUserId = AuthService.userId;
+      if (dealerSessionIds != null || dealerSessionId != null) {
+        if (currentUserId != null) {
+          for (final hand in loadedHands) {
+            if (hand['heroSeatNumber'] == null) {
+              final playerIds = hand['playerIds'] as Map<String, dynamic>?;
+              if (playerIds != null) {
+                for (final entry in playerIds.entries) {
+                  if (entry.value == currentUserId) {
+                    hand['heroSeatNumber'] = int.tryParse(entry.key);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
       // Filter hands by participation periods for live sessions
       final isLiveSession = widget.session['isLive'] == true;
-      final currentUserId = AuthService.userId;
 
       if (isLiveSession && currentUserId != null) {
         final participationPeriods = widget.session['participationPeriods'] as Map<String, dynamic>?;

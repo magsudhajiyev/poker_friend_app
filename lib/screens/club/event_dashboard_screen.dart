@@ -7,6 +7,7 @@ import '../../models/event_ranking.dart';
 import '../../models/poker_table.dart';
 import '../../services/event_service.dart';
 import '../../services/websocket_service.dart';
+import '../../models/dealer_session.dart';
 import '../../services/dealer_service.dart';
 import '../../services/seat_service.dart';
 import '../../config/app_config.dart';
@@ -165,8 +166,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
         if (session != null && session.activePlayers.isNotEmpty) {
           hasAnyActiveSession = true;
           final players = session.activePlayers.map((p) => {
-                // Use seat-based ID for consistency with dealer stack updates
                 'player_id': 'seat_${table.id}_${p.seatNumber}',
+                'real_player_id': p.playerId,
                 'player_name': p.displayName,
                 'current_stack': p.stack.toInt(),
                 'starting_stack': p.stack.toInt(),
@@ -188,8 +189,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
           final players = seatAssignments.entries
               .where((e) => e.value.isOccupied)
               .map((e) => {
-                    // Use seat-based ID for consistency with dealer stack updates
                     'player_id': 'seat_${table.id}_${e.key}',
+                    'real_player_id': e.value.playerId ?? '',
                     'player_name': e.value.playerName ?? 'Player ${e.key}',
                     'current_stack': (e.value.chipStack ?? 0).toInt(),
                     'starting_stack': (e.value.chipStack ?? 0).toInt(),
@@ -203,6 +204,39 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
             allPlayers.addAll(players);
           }
         }
+      }
+
+      // Merge in players from ended dealer sessions (broken tables)
+      // so they stay in rankings with their last known stack
+      final seenPlayerIds = <String>{};
+      for (final p in allPlayers) {
+        final realId = p['real_player_id'] as String?;
+        if (realId != null && realId.isNotEmpty) seenPlayerIds.add(realId);
+      }
+      try {
+        final allSessions = await DealerService.getAllSessionsForEvent(widget.event.id);
+        for (final session in allSessions) {
+          if (session.status == DealerSessionStatus.ended) {
+            for (final player in session.players.values) {
+              if (player.playerId.isNotEmpty &&
+                  !player.playerId.startsWith('manual_') &&
+                  !seenPlayerIds.contains(player.playerId)) {
+                seenPlayerIds.add(player.playerId);
+                allPlayers.add({
+                  'player_id': player.playerId,
+                  'real_player_id': player.playerId,
+                  'player_name': player.displayName,
+                  'current_stack': player.stack.toInt(),
+                  'starting_stack': player.stack.toInt(),
+                  'seat_number': player.seatNumber,
+                  'table_name': '(Reseating)',
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Error merging ended sessions: $e');
       }
 
       // Build local rankings as fallback (sorted by stack descending)

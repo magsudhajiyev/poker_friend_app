@@ -30,6 +30,8 @@ class FirebaseService {
     bool hasBBante = false,
     double? totalBuyIn,
     bool isLive = false,  // True for dealer/live sessions
+    String? dealerSessionId, // Links to dealer_sessions for hole card lookup
+    String? eventId, // Links to club event for tournament session grouping
   }) async {
     try {
       final userId = AuthService.userId;
@@ -58,6 +60,12 @@ class FirebaseService {
       if (isLive) {
         sessionData['participantIds'] = <String>[]; // Will be populated when players join
         sessionData['participationPeriods'] = <String, dynamic>{}; // Will track join/leave periods
+        if (dealerSessionId != null) {
+          sessionData['dealerSessionId'] = dealerSessionId;
+        }
+        if (eventId != null) {
+          sessionData['eventId'] = eventId;
+        }
       }
 
       // Add individual session specific fields

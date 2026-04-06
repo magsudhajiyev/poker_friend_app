@@ -472,52 +472,113 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
 
   /// Show dialog to resume a paused session (dealer change handoff)
   Future<bool> _showResumePausedSessionDialog(DealerSession session) async {
+    final activePlayers = session.players.values.where((p) => p.isActive).length;
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF101115),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF1B1E24)),
         ),
-        title: Row(
-          children: [
-            Icon(Icons.swap_horiz, color: Colors.orange),
-            SizedBox(width: 12),
-            Text(
-              'Resume Session',
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Taking over from ${session.dealerName ?? "previous dealer"}',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            _buildResumeInfoRow('Hands Played', '${session.currentHandNumber}'),
-            _buildResumeInfoRow('Blinds', '${session.smallBlind}/${session.bigBlind}'),
-            _buildResumeInfoRow('Players', '${session.players.values.where((p) => p.isActive).length}'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: PokerFriendColors.dark9)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icon + title
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF1B1E24),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.swap_vert,
+                      color: Color(0xFF89F1EC),
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Resume Session',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Taking over from ${session.dealerName ?? "previous dealer"}',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFFD3FFFD),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Stats rows
+              _buildResumeInfoRow('Hands Played', '${session.currentHandNumber}'),
+              const Divider(color: Color(0xFF1B1E24), height: 1),
+              _buildResumeInfoRow('Blinds', '${session.smallBlind}/${session.bigBlind}'),
+              const Divider(color: Color(0xFF1B1E24), height: 1),
+              _buildResumeInfoRow('Players', '$activePlayers'),
+              const SizedBox(height: 24),
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context, false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.ibmPlexSans(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context, true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF89F1EC),
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: Text(
+                        'Resume',
+                        style: GoogleFonts.ibmPlexSans(
+                          color: Colors.black,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text('Resume'),
-          ),
-        ],
+        ),
       ),
     );
     return result ?? false;
@@ -525,12 +586,12 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
 
   Widget _buildResumeInfoRow(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: PokerFriendColors.dark9)),
-          Text(value, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+          Text(label, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 14)),
+          Text(value, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
         ],
       ),
     );

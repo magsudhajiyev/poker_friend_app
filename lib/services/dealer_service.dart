@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/dealer_session.dart';
 import '../models/poker_table.dart';
+import 'app_data_cache.dart';
 import 'auth_service.dart';
 import 'table_service.dart';
 import 'seat_service.dart';
@@ -199,18 +200,67 @@ class DealerService {
         });
 
     // NOTE: Player session records are no longer created here to avoid duplicates.
-    // The main session (created by PokerSessionManager) now stores playerIds,
-    // allowing players to query sessions they participated in.
-    // The hands are only stored in the main session, not per-player sessions.
+    // They are created in EventService.completeEvent() for event sessions,
+    // or via PokerSessionManager for non-event sessions.
 
-    // Clear all seats at the table
+    // Always clear seats when session ends — for event sessions, stack carry-over
+    // is handled by getPlayerLastStack() which reads from the DealerSession document.
     await SeatService.clearAllSeats(
       clubId: session.clubId,
       tableId: session.tableId,
     );
 
-    // Clear table session info
-    await TableService.clearTableSession(session.clubId, session.tableId);
+    final isEventSession = session.eventId != null && session.eventId!.isNotEmpty;
+    if (!isEventSession) {
+      // Clear table session info (keep for event sessions so table stays linked)
+      await TableService.clearTableSession(session.clubId, session.tableId);
+    }
+  }
+
+  /// Look up a player's last chip stack from previous dealer sessions in the same event.
+  /// Used during table breaks to auto-populate the stack when reseating a player.
+  /// Returns null if the player was not found in any session for this event.
+  static Future<double?> getPlayerLastStack({
+    required String eventId,
+    required String playerId,
+  }) async {
+    try {
+      final sessions = await _firestore
+          .collection(_dealerSessionsCollection)
+          .where('eventId', isEqualTo: eventId)
+          .get();
+
+      double? lastStack;
+      DateTime? latestTime;
+
+      for (final doc in sessions.docs) {
+        final session = DealerSession.fromFirestore(doc);
+        for (final player in session.players.values) {
+          if (player.playerId == playerId) {
+            // Use the most recent session's stack
+            if (latestTime == null || session.startTime.isAfter(latestTime)) {
+              latestTime = session.startTime;
+              lastStack = player.stack;
+            }
+          }
+        }
+      }
+
+      return lastStack;
+    } catch (e) {
+      print('Error looking up player last stack: $e');
+      return null;
+    }
+  }
+
+  /// Get all dealer sessions (active + ended) for an event.
+  /// Used to include broken-table players in live rankings.
+  static Future<List<DealerSession>> getAllSessionsForEvent(String eventId) async {
+    final snapshot = await _firestore
+        .collection(_dealerSessionsCollection)
+        .where('eventId', isEqualTo: eventId)
+        .get();
+    return snapshot.docs.map((d) => DealerSession.fromFirestore(d)).toList();
   }
 
   /// End any existing active sessions on a table before starting a new one
@@ -242,9 +292,10 @@ class DealerService {
     }
   }
 
-  /// Create a poker_sessions record for a player who participated in a dealer session
-  /// This links the player's participation to their session history
-  static Future<void> _createPlayerSessionRecord({
+  /// Create a poker_sessions record for a player who participated in a dealer session.
+  /// This links the player's participation to their session history.
+  /// Called from EventService.completeEvent() to save sessions for all participants.
+  static Future<void> createPlayerSessionRecord({
     required DealerSession dealerSession,
     required String sessionId,
     required String playerId,
@@ -294,26 +345,36 @@ class DealerService {
       }
     }
 
-    final sessionData = {
-      'userId': playerId,
-      'sessionName': sessionName,
-      'smallBlind': dealerSession.smallBlind,
-      'bigBlind': dealerSession.bigBlind,
-      'hasBBante': dealerSession.hasBBante,
-      'playerCount': dealerSession.playerCount,
-      'ourSeatNumber': seatNumber,
-      'gameType': gameType,
-      'startTime': Timestamp.fromDate(dealerSession.startTime),
-      'endTime': Timestamp.fromDate(endTime),
-      'totalHands': dealerSession.currentHandNumber,
-      'isIndividualSession': false,
+    // Check if a poker_sessions record already exists for this player
+    // (created by PokerSessionManager on the dealer's device).
+    // If so, update it with analytics fields instead of creating a duplicate.
+    QuerySnapshot<Map<String, dynamic>>? existingQuery;
+    try {
+      existingQuery = await _firestore
+          .collection('poker_sessions')
+          .where('participantIds', arrayContains: playerId)
+          .where('isLive', isEqualTo: true)
+          .get();
+    } catch (e) {
+      print('Error checking existing sessions: $e');
+    }
+
+    // Find matching session by dealer session time overlap
+    DocumentSnapshot<Map<String, dynamic>>? existingDoc;
+    if (existingQuery != null) {
+      for (final doc in existingQuery.docs) {
+        final data = doc.data();
+        // Match by dealerSessionId if stored, otherwise by time proximity
+        if (data['dealerSessionId'] == sessionId) {
+          existingDoc = doc;
+          break;
+        }
+      }
+    }
+
+    final analyticsFields = {
       'isDealerSession': true,
       'dealerSessionId': sessionId,
-      'clubId': dealerSession.clubId,
-      'tableId': dealerSession.tableId,
-      if (dealerSession.eventId != null) 'eventId': dealerSession.eventId,
-
-      // Analytics fields
       'buyInAmount': eventBuyIn,
       'totalBuyIn': totalBuyIn,
       'startingStack': player.initialStack,
@@ -321,9 +382,263 @@ class DealerService {
       'stackHistory': player.stackHistory,
       'rebuyCount': player.rebuyCount,
       'rebuys': rebuys,
+      'clubId': dealerSession.clubId,
+      'tableId': dealerSession.tableId,
+      if (dealerSession.eventId != null) 'eventId': dealerSession.eventId,
     };
 
-    await _firestore.collection('poker_sessions').add(sessionData);
+    if (existingDoc != null) {
+      // Update existing session with analytics fields
+      await existingDoc.reference.update(analyticsFields);
+    } else {
+      // Create new session record (player wasn't tracked by PokerSessionManager)
+      final sessionData = {
+        'userId': playerId,
+        'sessionName': sessionName,
+        'smallBlind': dealerSession.smallBlind,
+        'bigBlind': dealerSession.bigBlind,
+        'hasBBante': dealerSession.hasBBante,
+        'playerCount': dealerSession.playerCount,
+        'ourSeatNumber': seatNumber,
+        'gameType': gameType,
+        'startTime': Timestamp.fromDate(dealerSession.startTime),
+        'endTime': Timestamp.fromDate(endTime),
+        'totalHands': dealerSession.currentHandNumber,
+        'isIndividualSession': false,
+        'isLive': true,
+        'participantIds': [playerId],
+        ...analyticsFields,
+      };
+
+      await _firestore.collection('poker_sessions').add(sessionData);
+    }
+  }
+
+  /// Merge all poker_sessions for a player in an event into one unified session.
+  /// Called from completeEvent() to ensure each player has exactly one session.
+  /// Handles: finding all sessions, merging poker_hands subcollections,
+  /// building merged stackHistory, updating analytics, deleting duplicates.
+  static Future<void> mergePlayerEventSessions({
+    required String eventId,
+    required String playerId,
+    required String playerName,
+    required List<DocumentSnapshot<Map<String, dynamic>>> allDealerSessionDocs,
+    required DateTime endTime,
+  }) async {
+    // Parse dealer sessions sorted by startTime ascending
+    final dealerSessions = allDealerSessionDocs
+        .map((doc) => MapEntry(doc.id, DealerSession.fromFirestore(doc)))
+        .toList()
+      ..sort((a, b) => a.value.startTime.compareTo(b.value.startTime));
+
+    // Collect all dealer session IDs for this event
+    final allDealerSessionIds = dealerSessions.map((e) => e.key).toList();
+
+    // Find ALL poker_sessions where this player participated
+    final existingQuery = await _firestore
+        .collection('poker_sessions')
+        .where('participantIds', arrayContains: playerId)
+        .where('isLive', isEqualTo: true)
+        .get();
+
+    // Filter to sessions belonging to this event (by eventId or dealerSessionId)
+    final matchingSessions = <DocumentSnapshot<Map<String, dynamic>>>[];
+    for (final doc in existingQuery.docs) {
+      final data = doc.data();
+      if (data['eventId'] == eventId) {
+        matchingSessions.add(doc);
+      } else if (allDealerSessionIds.contains(data['dealerSessionId'])) {
+        matchingSessions.add(doc);
+      }
+    }
+
+    if (matchingSessions.isEmpty) {
+      // No existing session — create one via the latest dealer session
+      final latestEntry = dealerSessions.last;
+      final latestSession = latestEntry.value;
+      final player = latestSession.players.values.firstWhere(
+        (p) => p.playerId == playerId,
+        orElse: () => latestSession.players.values.first,
+      );
+      await createPlayerSessionRecord(
+        dealerSession: latestSession,
+        sessionId: latestEntry.key,
+        playerId: playerId,
+        playerName: playerName,
+        seatNumber: player.seatNumber,
+        endTime: endTime,
+      );
+      // After creation, update with full dealerSessionIds list and eventId
+      final createdQuery = await _firestore
+          .collection('poker_sessions')
+          .where('participantIds', arrayContains: playerId)
+          .where('eventId', isEqualTo: eventId)
+          .limit(1)
+          .get();
+      if (createdQuery.docs.isNotEmpty) {
+        await createdQuery.docs.first.reference.update({
+          'dealerSessionIds': allDealerSessionIds,
+        });
+      }
+      return;
+    }
+
+    // Sort matching sessions by startTime ascending — earliest is primary
+    matchingSessions.sort((a, b) {
+      final aTime = (a.data()?['startTime'] as Timestamp?)?.toDate() ?? DateTime(2100);
+      final bTime = (b.data()?['startTime'] as Timestamp?)?.toDate() ?? DateTime(2100);
+      return aTime.compareTo(bTime);
+    });
+
+    final primaryDoc = matchingSessions.first;
+    final secondarySessions = matchingSessions.skip(1).toList();
+
+    // Determine hand number offset from primary session's existing hands
+    int handOffset = 0;
+    final primaryHandsSnapshot = await primaryDoc.reference
+        .collection('poker_hands')
+        .orderBy('handNumber', descending: true)
+        .limit(1)
+        .get();
+    if (primaryHandsSnapshot.docs.isNotEmpty) {
+      handOffset = (primaryHandsSnapshot.docs.first.data()['handNumber'] as int? ?? 0);
+    }
+
+    // Move hands from secondary sessions into primary, re-numbering
+    for (final secondaryDoc in secondarySessions) {
+      final secondaryHands = await secondaryDoc.reference
+          .collection('poker_hands')
+          .orderBy('handNumber')
+          .get();
+
+      for (final handDoc in secondaryHands.docs) {
+        final handData = Map<String, dynamic>.from(handDoc.data());
+        final originalHandNum = handData['handNumber'] as int? ?? 0;
+        handData['handNumber'] = originalHandNum + handOffset;
+        handData['_sourceSessionId'] = secondaryDoc.id; // track origin
+
+        await primaryDoc.reference.collection('poker_hands').add(handData);
+        await handDoc.reference.delete();
+      }
+
+      // Update offset for next secondary session
+      if (secondaryHands.docs.isNotEmpty) {
+        final lastHand = secondaryHands.docs.last.data();
+        handOffset += (lastHand['handNumber'] as int? ?? 0);
+      }
+
+      // Delete secondary poker_sessions doc
+      await secondaryDoc.reference.delete();
+    }
+
+    // Build merged stack history from all dealer sessions
+    final mergedStackHistory = <Map<String, dynamic>>[];
+    int stackHandOffset = 0;
+    for (final entry in dealerSessions) {
+      final session = entry.value;
+      // Find the player in this dealer session
+      final player = session.players.values.cast<SeatedPlayer?>().firstWhere(
+        (p) => p!.playerId == playerId,
+        orElse: () => null,
+      );
+      if (player == null) continue;
+
+      for (final histEntry in player.stackHistory) {
+        final adjusted = Map<String, dynamic>.from(histEntry);
+        final originalHand = histEntry['handNumber'] as int? ?? 0;
+        // Skip duplicate 'initial' entries after the first session —
+        // previous session's last entry already has this stack value
+        if (adjusted['changeType'] == 'initial' && mergedStackHistory.isNotEmpty) {
+          continue;
+        }
+        adjusted['handNumber'] = originalHand + stackHandOffset;
+        mergedStackHistory.add(adjusted);
+      }
+      stackHandOffset += session.currentHandNumber;
+    }
+
+    // Get event details for session name
+    String sessionName = 'Tournament Session';
+    double eventBuyIn = 0;
+    if (dealerSessions.isNotEmpty) {
+      final firstSession = dealerSessions.first.value;
+      if (firstSession.eventId != null) {
+        try {
+          final event = await EventService.getEvent(
+            firstSession.clubId,
+            firstSession.eventId!,
+          );
+          if (event != null) {
+            sessionName = event.name;
+            if (event.buyInAmount != null && event.buyInAmount! > 0) {
+              eventBuyIn = event.buyInAmount!;
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
+    // Get first and last player data for analytics
+    SeatedPlayer? firstPlayer;
+    SeatedPlayer? lastPlayer;
+    int totalRebuyCount = 0;
+    for (final entry in dealerSessions) {
+      final player = entry.value.players.values.cast<SeatedPlayer?>().firstWhere(
+        (p) => p!.playerId == playerId,
+        orElse: () => null,
+      );
+      if (player == null) continue;
+      firstPlayer ??= player;
+      lastPlayer = player;
+      totalRebuyCount += player.rebuyCount;
+    }
+
+    final totalBuyIn = eventBuyIn > 0
+        ? eventBuyIn * (1 + totalRebuyCount)
+        : (firstPlayer?.initialStack ?? 0) * (1 + totalRebuyCount);
+
+    // Count total hands across all dealer sessions for this player
+    int totalHands = 0;
+    for (final entry in dealerSessions) {
+      final session = entry.value;
+      if (session.players.values.any((p) => p.playerId == playerId)) {
+        totalHands += session.currentHandNumber;
+      }
+    }
+
+    // Build rebuys list from merged stack history
+    final rebuys = <Map<String, dynamic>>[];
+    for (final entry in mergedStackHistory) {
+      if (entry['changeType'] == 'rebuy') {
+        rebuys.add({
+          'timestamp': entry['timestamp'],
+          'amount': entry['rebuyAmount'] ?? eventBuyIn,
+        });
+      }
+    }
+
+    // Update primary session with merged data
+    await primaryDoc.reference.update({
+      'eventId': eventId,
+      'isDealerSession': true,
+      'dealerSessionId': dealerSessions.last.key, // latest for backward compat
+      'dealerSessionIds': allDealerSessionIds,
+      'sessionName': sessionName,
+      'stackHistory': mergedStackHistory,
+      'startingStack': firstPlayer?.initialStack ?? 0,
+      'currentStack': lastPlayer?.stack ?? 0,
+      'buyInAmount': eventBuyIn > 0 ? eventBuyIn : (firstPlayer?.buyInAmount ?? 0),
+      'totalBuyIn': totalBuyIn,
+      'rebuyCount': totalRebuyCount,
+      'rebuys': rebuys,
+      'totalHands': totalHands,
+      'endTime': Timestamp.fromDate(endTime),
+      'clubId': dealerSessions.first.value.clubId,
+    });
+
+    // Invalidate cache so session history and home screen show fresh data
+    AppDataCache.markSessionsDirty();
+    AppDataCache.markHomeDirty();
   }
 
   /// Get a dealer session by ID
@@ -730,6 +1045,28 @@ class DealerService {
         .orderBy('handNumber')
         .get();
 
+    // Build playerNames map from dealer session's players
+    Map<String, String> playerNamesMap = {};
+    Map<String, String> playerIdsMap = {};
+    try {
+      final sessionDoc = await _firestore
+          .collection(_dealerSessionsCollection)
+          .doc(sessionId)
+          .get();
+      if (sessionDoc.exists) {
+        final session = DealerSession.fromFirestore(sessionDoc);
+        for (final entry in session.players.entries) {
+          final seatStr = entry.key.toString();
+          playerNamesMap[seatStr] = entry.value.displayName;
+          if (entry.value.playerId.isNotEmpty) {
+            playerIdsMap[seatStr] = entry.value.playerId;
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore - hands still valid without player names
+    }
+
     final currentUserId = AuthService.userId;
     final hands = <Map<String, dynamic>>[];
 
@@ -752,6 +1089,14 @@ class DealerService {
         'startTime': parseTimestamp(data['startTime']) ?? DateTime.now().toIso8601String(),
         'endTime': parseTimestamp(data['endTime']),
       };
+
+      // Inject playerNames/playerIds from dealer session if not already present
+      if (hand['playerNames'] == null && playerNamesMap.isNotEmpty) {
+        hand['playerNames'] = playerNamesMap;
+      }
+      if (hand['playerIds'] == null && playerIdsMap.isNotEmpty) {
+        hand['playerIds'] = playerIdsMap;
+      }
 
       // Fetch player-specific data (hole cards, notes, tags) for current user
       if (currentUserId != null) {

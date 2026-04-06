@@ -213,6 +213,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       sessionName: 'Dealer Session - ${widget.table.name}',
       isLive: true,  // Mark as live/dealer session
     );
+    _sessionManager!.dealerSessionId = _dealerSession.id;
+    _sessionManager!.eventId = _dealerSession.eventId;
 
     _isGameStateInitialized = true;
   }
@@ -1379,47 +1381,106 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     final result = await showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber, color: Colors.orange, size: 28),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                '$playerName Busted!',
-                style: const TextStyle(color: Colors.white),
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF101115),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF1B1E24)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Warning icon
+              Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1B1E24),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Color(0xFFBD8F2D),
+                  size: 26,
+                ),
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Player $playerName (Seat $seatNumber) has no chips remaining.',
-              style: const TextStyle(color: Colors.white70),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Rebuy amount: ${_rebuyStack.toStringAsFixed(0)}',
-              style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'remove'),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Remove Player'),
+              const SizedBox(height: 16),
+              // Title
+              Text(
+                '$playerName Busted!',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Description
+              Text(
+                'Seat $seatNumber has no chips remaining.\nRebuy amount: ${_rebuyStack.toStringAsFixed(0)}',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFFD3FFFD),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Remove Player button (red, full width)
+              SizedBox(
+                width: double.infinity,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context, 'remove'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD55A41),
+                      borderRadius: BorderRadius.circular(110),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Remove Player',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Rebuy button (outline, full width)
+              SizedBox(
+                width: double.infinity,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context, 'rebuy'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(110),
+                      border: Border.all(color: const Color(0xFF4E5054)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Rebuy',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, 'rebuy'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Rebuy'),
-          ),
-        ],
+        ),
       ),
     );
 
@@ -1499,7 +1560,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Hand off to another dealer?',
+                      'Dealer Change',
                       style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 19,
@@ -1512,7 +1573,27 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'The session will be paused. Another dealer can scan the table QR to continue where you left off. Players, blinds, and all state will be preserved.',
+                'The session will be paused and another dealer can scan the table QR code to continue where you left off.',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFFD3FFFD),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'All players, blinds, and game state will be preserved.',
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFFD3FFFD),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'You can also resume this session yourself later.',
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFFD3FFFD),
                   fontSize: 14,
@@ -1547,7 +1628,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 32, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF89F1EC),
+                        color: const Color(0xFFBD8F2D),
                         borderRadius: BorderRadius.circular(60),
                       ),
                       child: Text(
@@ -1891,77 +1972,140 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
   Future<void> _showApproveJoinDialog(SeatAssignment pending) async {
     // Use event's starting stack if available, otherwise default to 100BB
-    final defaultStack = _rebuyStack > 0 ? _rebuyStack : (_dealerSession.bigBlind * 100.0);
+    double defaultStack = _rebuyStack > 0 ? _rebuyStack : (_dealerSession.bigBlind * 100.0);
+
+    // For event sessions, auto-restore the player's last stack from a previous table
+    // (table break scenario — player is reseating with their existing chips)
+    if (_dealerSession.eventId != null && pending.playerId != null) {
+      final lastStack = await DealerService.getPlayerLastStack(
+        eventId: _dealerSession.eventId!,
+        playerId: pending.playerId!,
+      );
+      if (lastStack != null && lastStack > 0) {
+        defaultStack = lastStack;
+      }
+    }
+
     final controller = TextEditingController(
       text: defaultStack.toInt().toString(),
     );
 
     final chipStack = await showDialog<double>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
-        title: Text(
-          'Approve ${pending.playerName ?? 'Player'}?',
-          style: const TextStyle(color: Colors.white),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: const Color(0xFF101115),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF1B1E24)),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Seat ${pending.seatNumber}',
-              style: const TextStyle(color: Colors.white54),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: 'Starting Chip Stack',
-                labelStyle: const TextStyle(color: Colors.white54),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.1),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                prefixText: '\$',
-                prefixStyle: const TextStyle(color: Colors.white),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Approve ${pending.playerName ?? 'Player'}?',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 32),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF8C8C8C),
+                  fontSize: 17,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Starting Chip Stack',
+                  labelStyle: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF4E5054)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF89F1EC)),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Approve button (full width, mint)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final stack = double.tryParse(controller.text);
+                    if (stack != null && stack > 0) {
+                      Navigator.pop(dialogContext, stack);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF89F1EC),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(110)),
+                  ),
+                  child: Text('Approve', style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
+                ),
+              ),
+              const SizedBox(height: 14),
+              // Cancel + Reject row
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(110)),
+                      ),
+                      child: Text('Cancel', style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          await SeatService.rejectJoin(
+                            clubId: widget.club.id,
+                            tableId: widget.table.id,
+                            seatNumber: pending.seatNumber,
+                          );
+                          if (dialogContext.mounted) Navigator.pop(dialogContext);
+                          _showSuccess('${pending.playerName} rejected');
+                        } catch (e) {
+                          _showError('Failed to reject: ${e.toString()}');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD55A41),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(110)),
+                      ),
+                      child: Text('Reject', style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              try {
-                await SeatService.rejectJoin(
-                  clubId: widget.club.id,
-                  tableId: widget.table.id,
-                  seatNumber: pending.seatNumber,
-                );
-                if (context.mounted) Navigator.pop(context);
-                _showSuccess('${pending.playerName} rejected');
-              } catch (e) {
-                _showError('Failed to reject: ${e.toString()}');
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Reject'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final stack = double.tryParse(controller.text);
-              if (stack != null && stack > 0) {
-                Navigator.pop(context, stack);
-              }
-            },
-            child: const Text('Approve'),
-          ),
-        ],
       ),
     );
 
@@ -2122,34 +2266,138 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     // Show choice dialog
     final choice = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: PokerFriendColors.dark3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Seat $seatNumber', style: const TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.person_add, color: PokerFriendColors.green),
-              title: const Text('Add Player', style: TextStyle(color: Colors.white)),
-              subtitle: const Text('Seat another player here', style: TextStyle(color: Colors.white54)),
-              onTap: () => Navigator.pop(context, 'add_player'),
-            ),
-            const Divider(color: Colors.white24),
-            ListTile(
-              leading: const Icon(Icons.casino, color: PokerFriendColors.purple),
-              title: const Text("Sit Here (I'm Playing)", style: TextStyle(color: Colors.white)),
-              subtitle: const Text('Join the game as dealer-player', style: TextStyle(color: Colors.white54)),
-              onTap: () => Navigator.pop(context, 'dealer_play'),
-            ),
-          ],
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF101115),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF1B1E24)),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title
+              Text(
+                'Seat $seatNumber',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Add Player option
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => Navigator.pop(context, 'add_player'),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF1B1E24),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.person_add, color: Color(0xFF89F1EC), size: 20),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Add Player',
+                            style: GoogleFonts.ibmPlexSans(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            'Seat another player here',
+                            style: GoogleFonts.ibmPlexSans(
+                              color: const Color(0xFF8C8C8C),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 14),
+                child: Divider(color: Color(0xFF1B1E24), height: 1),
+              ),
+              // Sit Here option
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => Navigator.pop(context, 'dealer_play'),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF1B1E24),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.casino, color: Color(0xFFBD8F2D), size: 20),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Sit Here',
+                            style: GoogleFonts.ibmPlexSans(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            'Join the game as dealer-player',
+                            style: GoogleFonts.ibmPlexSans(
+                              color: const Color(0xFF8C8C8C),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Cancel button
+              SizedBox(
+                width: double.infinity,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: const Color(0xFF8C8C8C),
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
 
@@ -2525,38 +2773,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Pending joins badge
-                if (_pendingJoins.isNotEmpty) ...[
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      _buildHeaderPillButton(
-                        bgColor: const Color(0xFF1B1E24),
-                        onTap: _showPendingJoinsDialog,
-                        child: const Icon(Icons.person_add, color: Colors.white, size: 22),
-                      ),
-                      Positioned(
-                        right: -2,
-                        top: -2,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFF101115), width: 2),
-                          ),
-                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                          child: Text(
-                            _pendingJoins.length.toString(),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 8),
-                ],
                 // QR button
                 _buildHeaderPillButton(
                   bgColor: const Color(0xFF1B1E24),

@@ -29,7 +29,7 @@ class SeatService {
     final seatRef = _firestore.collection(_seatAssignmentsCollection).doc(seatId);
 
     // Use a transaction to prevent race conditions
-    return await _firestore.runTransaction<SeatAssignment>((transaction) async {
+    final result = await _firestore.runTransaction<SeatAssignment>((transaction) async {
       final seatDoc = await transaction.get(seatRef);
 
       if (seatDoc.exists) {
@@ -62,6 +62,15 @@ class SeatService {
 
       return assignment;
     });
+
+    // Clear this player's seats on other tables (prevents duplicate rankings after table breaks)
+    await clearPlayerFromOtherTables(
+      clubId: clubId,
+      tableId: tableId,
+      playerId: userId,
+    );
+
+    return result;
   }
 
   /// Join a seat at a table (legacy method - for backwards compatibility)
@@ -198,6 +207,13 @@ class SeatService {
         clubId: clubId,
         userId: playerId,
         displayName: playerName,
+      );
+
+      // Clear this player's seats on other tables (prevents duplicate rankings after table breaks)
+      await clearPlayerFromOtherTables(
+        clubId: clubId,
+        tableId: tableId,
+        playerId: playerId,
       );
     }
 
@@ -442,6 +458,52 @@ class SeatService {
     }
 
     await batch.commit();
+  }
+
+  /// Clear a player's seats on all OTHER tables in the same club.
+  /// Called when a player reseats at a new table (e.g., after table break)
+  /// to prevent duplicate entries in rankings.
+  static Future<void> clearPlayerFromOtherTables({
+    required String clubId,
+    required String tableId,
+    required String playerId,
+  }) async {
+    try {
+      // Find all seat assignments for this player in this club
+      final query = await _firestore
+          .collection(_seatAssignmentsCollection)
+          .where('clubId', isEqualTo: clubId)
+          .where('playerId', isEqualTo: playerId)
+          .get();
+
+      final batch = _firestore.batch();
+      bool hasClearable = false;
+
+      for (final doc in query.docs) {
+        final data = doc.data();
+        final seatTableId = data['tableId'] as String?;
+        final status = data['status'] as String?;
+
+        // Clear seats on OTHER tables that are still occupied
+        if (seatTableId != null && seatTableId != tableId && status != 'left') {
+          batch.update(doc.reference, {
+            'playerId': null,
+            'playerName': null,
+            'status': 'left',
+            'chipStack': null,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          hasClearable = true;
+        }
+      }
+
+      if (hasClearable) {
+        await batch.commit();
+      }
+    } catch (e) {
+      // Non-critical — rankings will still work, just might show duplicates
+      print('Error clearing player from other tables: $e');
+    }
   }
 
   /// Update a player's chip stack (for dealers)

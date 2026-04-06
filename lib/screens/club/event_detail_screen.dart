@@ -14,6 +14,7 @@ import '../../services/club_notification_service.dart';
 import '../../services/club_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/seat_service.dart';
+import '../../services/dealer_service.dart';
 import '../../models/seat_assignment.dart';
 import 'event_attendees_screen.dart';
 import 'club_dashboard_screen.dart';
@@ -56,6 +57,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   String? _calendarEventId;
   bool _isDealer = false;
   bool _isSeatedPlayer = false;
+  bool _hasActiveSession = false;
   StreamSubscription<List<EventAttendance>>? _attendanceSubscription;
   StreamSubscription<ClubEvent?>? _eventSubscription;
   StreamSubscription<List<SeatAssignment>>? _seatSubscription;
@@ -91,10 +93,34 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           s.status == SeatStatus.joined
       ).firstOrNull;
 
+      final isSeated = seatInEvent != null;
+      final tableId = seatInEvent?.tableId;
+
       setState(() {
-        _isSeatedPlayer = seatInEvent != null;
+        _isSeatedPlayer = isSeated;
       });
+
+      // Check if there's an active dealer session at the player's table
+      if (isSeated && tableId != null) {
+        _checkActiveSession(tableId);
+      } else {
+        setState(() => _hasActiveSession = false);
+      }
     });
+  }
+
+  Future<void> _checkActiveSession(String tableId) async {
+    try {
+      final session = await DealerService.getActiveSessionForTable(
+        clubId: widget.club.id,
+        tableId: tableId,
+      );
+      if (mounted) {
+        setState(() => _hasActiveSession = session != null);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _hasActiveSession = false);
+    }
   }
 
   /// Setup real-time event listener for status changes
@@ -662,7 +688,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 ],
 
                                 // Return to my seat button (ONLY for tournaments, not cash games)
-                                if (_event.isLive && _isSeatedPlayer && _event.gameType == 'tournament') ...[
+                                if (_event.isLive && _isSeatedPlayer && _hasActiveSession && _event.gameType == 'tournament') ...[
                                   const SizedBox(height: 8),
                                   _buildReturnToSeatButton(),
                                 ],

@@ -37,6 +37,7 @@ class PlayerSessionScreen extends StatefulWidget {
 class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   // Subscriptions
   StreamSubscription? _sessionSubscription;
+  StreamSubscription? _sessionDocSubscription;
   StreamSubscription? _handSubscription;
   StreamSubscription? _seatSubscription;
 
@@ -96,6 +97,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   @override
   void dispose() {
     _sessionSubscription?.cancel();
+    _sessionDocSubscription?.cancel();
     _handSubscription?.cancel();
     _seatSubscription?.cancel();
     super.dispose();
@@ -166,6 +168,15 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         }
         _loadExistingHands(session.id);
         _loadEventName(session);
+
+        // Watch session doc directly for status changes (backup for session-end detection)
+        _sessionDocSubscription?.cancel();
+        _sessionDocSubscription = DealerService.watchSession(session.id).listen((s) {
+          if (!mounted) return;
+          if (s != null && s.status == DealerSessionStatus.ended) {
+            _showSessionEndedDialog();
+          }
+        });
       }
 
       if (newHandId != oldHandId) {
@@ -365,7 +376,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.backgroundSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
@@ -386,8 +397,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
+              if (mounted) Navigator.pop(context);
             },
             child: Text(
               'OK',
@@ -413,7 +424,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.backgroundSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
@@ -434,8 +445,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
+              if (mounted) Navigator.pop(context);
             },
             child: Text(
               'OK',
@@ -456,8 +467,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       SnackBar(
         content: Text(
           isWinner
-              ? 'You won ${formatCompactCurrency(pot)}!'
-              : 'Seat $winnerId wins ${formatCompactCurrency(pot)}',
+              ? 'You won ${_formatAmount(pot)}!'
+              : 'Seat $winnerId wins ${_formatAmount(pot)}',
           style: GoogleFonts.ibmPlexSans(color: Colors.white),
         ),
         backgroundColor: isWinner ? const Color(0xFF87ED81) : AppColors.backgroundSurface,
@@ -516,6 +527,25 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         notes: _handNotes.isNotEmpty ? _handNotes : null,
         tags: _handTags.isNotEmpty ? _handTags : null,
       );
+
+      // Update in-memory hand history so hole cards appear in the dropdown
+      if (_handHistory.isNotEmpty && mounted) {
+        final idx = _handHistory.indexWhere((h) => h['id'] == handId);
+        if (idx >= 0) {
+          setState(() {
+            if (_myCard1 != null && _myCard2 != null) {
+              _handHistory[idx]['playerHoleCards'] = {'card1': _myCard1, 'card2': _myCard2};
+              _handHistory[idx]['ourHoleCards'] = {'card1': _myCard1, 'card2': _myCard2};
+            }
+            if (_handNotes.isNotEmpty) {
+              _handHistory[idx]['playerNotes'] = _handNotes;
+            }
+            if (_handTags.isNotEmpty) {
+              _handHistory[idx]['playerTags'] = _handTags;
+            }
+          });
+        }
+      }
     } catch (e) {
       debugPrint('Error saving player data: $e');
     }
@@ -871,6 +901,10 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     );
   }
 
+  bool get _isTournament => _session?.gameType == 'tournament';
+  String _formatAmount(num amount) =>
+      _isTournament ? formatCompactNumber(amount) : formatCompactCurrency(amount);
+
   // ─── STATUS BAR ──────────────────────────────────────────────────
 
   Widget _buildStatusBar() {
@@ -885,8 +919,8 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildStatusItem('SEAT', '#${widget.seatNumber}', const Color(0xFF89F1EC)),
-          _buildStatusItem('STACK', formatCompactCurrency(_myStack), const Color(0xFF87ED81)),
-          _buildStatusItem('POT', formatCompactCurrency(_potAmount), const Color(0xFFFFA726)),
+          _buildStatusItem('STACK', _formatAmount(_myStack), const Color(0xFF87ED81)),
+          _buildStatusItem('POT', _formatAmount(_potAmount), const Color(0xFFFFA726)),
         ],
       ),
     );
@@ -1192,7 +1226,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
     String actionText = '$displayName ${actionType.toUpperCase()}';
     if (amount != null && amount > 0) {
-      actionText += ' ${formatCompactCurrency(amount)}';
+      actionText += ' ${_formatAmount(amount)}';
     }
 
     return Padding(
@@ -1496,7 +1530,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isWinner ? 'Won ${formatCompactCurrency(pot)}' : 'Lost',
+                    isWinner ? 'Won ${_formatAmount(pot)}' : 'Lost',
                     style: GoogleFonts.ibmPlexSans(
                       color: isWinner ? const Color(0xFF87ED81) : const Color(0xFF8C8C8C),
                       fontSize: 14,

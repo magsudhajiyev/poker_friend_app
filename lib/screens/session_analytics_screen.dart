@@ -51,11 +51,30 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       }
 
       List<Map<String, dynamic>> hands;
-      final isDealerSession = widget.sessionData['isDealerSession'] == true;
+      final dealerSessionIds = (widget.sessionData['dealerSessionIds'] as List<dynamic>?)
+          ?.cast<String>();
       final dealerSessionId = widget.sessionData['dealerSessionId'] as String?;
 
       try {
-        if (isDealerSession && dealerSessionId != null) {
+        if (dealerSessionIds != null && dealerSessionIds.isNotEmpty) {
+          // Multi-table event: fetch and merge hands from ALL dealer sessions
+          // Apply hand number offsets to match the merged stackHistory numbering
+          hands = [];
+          int handOffset = 0;
+          for (final dsId in dealerSessionIds) {
+            final sessionHands = await DealerService.getSessionHands(dsId);
+            int maxHandNum = 0;
+            for (final hand in sessionHands) {
+              final origNum = hand['handNumber'] as int? ?? 0;
+              if (origNum > maxHandNum) maxHandNum = origNum;
+              hand['handNumber'] = origNum + handOffset;
+            }
+            hands.addAll(sessionHands);
+            handOffset += maxHandNum;
+          }
+          hands.sort((a, b) =>
+              (a['startTime'] ?? '').compareTo(b['startTime'] ?? ''));
+        } else if (dealerSessionId != null) {
           hands = await DealerService.getSessionHands(dealerSessionId);
         } else {
           hands = await FirebaseService.getSessionHands(widget.sessionId);
