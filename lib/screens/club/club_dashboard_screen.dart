@@ -19,6 +19,7 @@ import '../../services/invitation_service.dart';
 import '../../services/dealer_service.dart';
 import '../../services/seat_service.dart';
 import '../../design_system/components/cards/error_state_card.dart';
+import '../../services/app_data_cache.dart';
 import '../../widgets/global_bottom_nav_bar.dart';
 import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
@@ -74,8 +75,17 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         setState(() {});
       }
     });
+    _restoreAdminStatus();
     _loadData();
     _setupEventsListener();
+  }
+
+  /// Restore admin status from SharedPreferences for instant UI (no flicker).
+  Future<void> _restoreAdminStatus() async {
+    final persisted = await AppDataCache.getPersistedAdminStatus(widget.club.id);
+    if (persisted != null && mounted) {
+      setState(() => _isAdmin = persisted);
+    }
   }
 
   /// Setup real-time listener for all events (upcoming, live, past)
@@ -239,6 +249,18 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
   Future<void> _loadData() async {
     if (!mounted) return;
+
+    // Serve from cache if clean and populated (instant, no network)
+    AppDataCache.setClubContext(widget.club.id);
+    if (!AppDataCache.isClubDirty && AppDataCache.hasClubCacheData) {
+      setState(() {
+        _isAdmin = AppDataCache.cachedIsAdmin!;
+        _memberCount = AppDataCache.cachedMemberCount!;
+        _isLoading = false;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _loadError = null;
@@ -289,6 +311,12 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         }
         _isLoading = false;
       });
+
+      // Write to cache (memory + disk)
+      AppDataCache.cachedIsAdmin = isAdmin;
+      AppDataCache.cachedMemberCount = results[0] as int;
+      AppDataCache.clearClubDirty();
+      AppDataCache.persistAdminStatus(widget.club.id, isAdmin);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -520,7 +548,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                   ),
                   child: Center(
                     child: SvgPicture.asset(
-                      'icons/figma_icons/gear.svg',
+                      _isAdmin ? 'icons/figma_icons/gear.svg' : 'icons/figma_icons/info.svg',
                       width: 24,
                       height: 24,
                       colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
@@ -536,13 +564,14 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   }
 
   void _navigateToSettingsOrInfo() {
+    if (_isLoading) return; // Don't navigate until admin status is resolved
     if (_isAdmin) {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ClubSettingsScreen(club: widget.club),
         ),
-      ).then((_) => _loadData());
+      ).then((_) { AppDataCache.markClubDirty(); _loadData(); });
     } else {
       Navigator.push(
         context,
@@ -661,7 +690,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
     final showButton = _isAdmin && type == 'scheduled';
     return RefreshIndicator(
-      onRefresh: _loadData,
+      onRefresh: () { AppDataCache.markClubDirty(); return _loadData(); },
       color: AppColors.tealAccent,
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
@@ -1036,7 +1065,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     }
 
     return RefreshIndicator(
-      onRefresh: _loadData,
+      onRefresh: () { AppDataCache.markClubDirty(); return _loadData(); },
       color: AppColors.tealAccent,
       child: ListView(
         padding: const EdgeInsets.all(24),

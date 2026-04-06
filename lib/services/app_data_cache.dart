@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 /// Lightweight static cache with dirty flags for app-wide data.
 ///
 /// Screens check dirty flags before loading: if cache exists and is clean,
@@ -12,6 +14,7 @@ class AppDataCache {
   static bool _opponentsDataDirty = true;
   static bool _opponentHandsDirty = true;
   static bool _sessionsDataDirty = true;
+  static bool _clubDataDirty = true;
 
   // ── Home screen cached data ──────────────────────────────────────
   static double? cachedBankroll;
@@ -26,17 +29,24 @@ class AppDataCache {
   // ── Session history cached data ─────────────────────────────────
   static List<Map<String, dynamic>>? cachedSessions;
 
+  // ── Club screen cached data ───────────────────────────────────
+  static String? _cachedClubId;
+  static bool? cachedIsAdmin;
+  static int? cachedMemberCount;
+
   // ── Dirty markers (called from write points) ─────────────────────
   static void markHomeDirty() => _homeDataDirty = true;
   static void markOpponentsDirty() => _opponentsDataDirty = true;
   static void markOpponentHandsDirty() => _opponentHandsDirty = true;
   static void markSessionsDirty() => _sessionsDataDirty = true;
+  static void markClubDirty() => _clubDataDirty = true;
 
   static void markAllDirty() {
     _homeDataDirty = true;
     _opponentsDataDirty = true;
     _opponentHandsDirty = true;
     _sessionsDataDirty = true;
+    _clubDataDirty = true;
   }
 
   // ── Check & clear ────────────────────────────────────────────────
@@ -44,14 +54,40 @@ class AppDataCache {
   static bool get isOpponentsDirty => _opponentsDataDirty;
   static bool get isOpponentHandsDirty => _opponentHandsDirty;
   static bool get isSessionsDirty => _sessionsDataDirty;
+  static bool get isClubDirty => _clubDataDirty;
 
   static bool get hasHomeCacheData =>
       cachedBankroll != null && cachedPlayerStats != null;
+
+  static bool get hasClubCacheData =>
+      _cachedClubId != null && cachedIsAdmin != null && cachedMemberCount != null;
 
   static void clearHomeDirty() => _homeDataDirty = false;
   static void clearOpponentsDirty() => _opponentsDataDirty = false;
   static void clearOpponentHandsDirty() => _opponentHandsDirty = false;
   static void clearSessionsDirty() => _sessionsDataDirty = false;
+  static void clearClubDirty() => _clubDataDirty = false;
+
+  /// Call when entering a club screen — invalidates cache if club changed.
+  static void setClubContext(String clubId) {
+    if (_cachedClubId != clubId) {
+      cachedIsAdmin = null;
+      cachedMemberCount = null;
+      _clubDataDirty = true;
+      _cachedClubId = clubId;
+    }
+  }
+
+  // ── SharedPreferences persistence (survives hot restart) ─────────
+  static Future<void> persistAdminStatus(String clubId, bool isAdmin) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('club_admin_$clubId', isAdmin);
+  }
+
+  static Future<bool?> getPersistedAdminStatus(String clubId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('club_admin_$clubId');
+  }
 
   // ── Full reset (logout, account switch) ──────────────────────────
   static void clearAll() {
@@ -59,6 +95,7 @@ class AppDataCache {
     _opponentsDataDirty = true;
     _opponentHandsDirty = true;
     _sessionsDataDirty = true;
+    _clubDataDirty = true;
 
     cachedBankroll = null;
     cachedBankrollGoal = null;
@@ -69,5 +106,8 @@ class AppDataCache {
     cachedUpcomingEvents = null;
     cachedUserName = null;
     cachedSessions = null;
+    _cachedClubId = null;
+    cachedIsAdmin = null;
+    cachedMemberCount = null;
   }
 }

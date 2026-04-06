@@ -14,6 +14,7 @@ import '../../models/club_member.dart';
 import '../../models/poker_table.dart';
 import '../../services/club_service.dart';
 import '../../services/table_service.dart';
+import '../../services/app_data_cache.dart';
 import '../../widgets/invite_member_dialog.dart';
 import '../../widgets/global_bottom_nav_bar.dart';
 
@@ -107,6 +108,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         phone: _phoneController.text.trim(),
         description: _descriptionController.text.trim(),
       );
+      AppDataCache.markClubDirty();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
