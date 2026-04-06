@@ -7,6 +7,7 @@ import '../services/auth_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import 'hand_actions_screen.dart';
+import '../widgets/global_bottom_nav_bar.dart';
 
 class SessionHandsScreen extends StatefulWidget {
   final Map<String, dynamic> session;
@@ -85,6 +86,8 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBody: true,
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'sessions'),
       body: Stack(
         children: [
           // Teal radial gradient at top

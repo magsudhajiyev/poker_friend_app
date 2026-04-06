@@ -6,6 +6,7 @@ import '../models/opponent.dart';
 import 'firebase_service.dart';
 import 'local_storage_service.dart';
 import 'opponent_stats_service.dart';
+import 'app_data_cache.dart';
 
 /// Service for managing opponent data in both Firebase and local storage
 class OpponentService {
@@ -34,6 +35,7 @@ class OpponentService {
     
     // Always save to local storage as backup
     await _saveOpponentToLocal(opponent);
+    AppDataCache.markOpponentsDirty();
     print('✅ Opponent saved locally: ${opponent.name}');
   }
 
@@ -65,6 +67,7 @@ class OpponentService {
     
     // Delete from local storage
     await _deleteOpponentFromLocal(opponentId);
+    AppDataCache.markOpponentsDirty();
     print('🗑️ Opponent deleted locally: $opponentId');
   }
 

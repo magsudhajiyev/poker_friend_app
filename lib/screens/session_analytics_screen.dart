@@ -9,6 +9,7 @@ import '../services/dealer_service.dart';
 import 'session_hands_screen.dart';
 import 'hand_actions_screen.dart';
 import 'stack_chart_screen.dart';
+import '../widgets/global_bottom_nav_bar.dart';
 
 class SessionAnalyticsScreen extends StatefulWidget {
   final Map<String, dynamic> sessionData;
@@ -170,6 +171,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBody: true,
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'sessions'),
       body: Stack(
         children: [
           // Teal radial gradient at top

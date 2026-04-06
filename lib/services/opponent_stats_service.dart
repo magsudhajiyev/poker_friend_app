@@ -7,6 +7,7 @@ import '../models/opponent_stats.dart';
 import 'firebase_service.dart';
 import 'local_storage_service.dart';
 import 'stats_migration_service.dart';
+import 'app_data_cache.dart';
 
 /// Optimized service for managing opponent statistics using incremental updates
 /// instead of recalculating from all hands every time
@@ -214,6 +215,8 @@ class OpponentStatsService {
         }
       });
 
+      AppDataCache.markOpponentsDirty();
+      AppDataCache.markOpponentHandsDirty();
       print('✅ Stats updated atomically for opponent: $opponentId');
     } catch (e) {
       print('⚠️ Atomic update failed, falling back to regular update: $e');

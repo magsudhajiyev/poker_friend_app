@@ -6,6 +6,8 @@ import '../services/local_storage_service.dart';
 import '../services/firebase_service.dart';
 import '../utils/poker_positions.dart';
 import 'hand_actions_screen.dart';
+import '../services/app_data_cache.dart';
+import '../widgets/global_bottom_nav_bar.dart';
 
 class OpponentHandsScreen extends StatefulWidget {
   final Opponent opponent;
@@ -15,6 +17,15 @@ class OpponentHandsScreen extends StatefulWidget {
   /// Cached filtered hand counts by opponent ID.
   /// Updated after each hand history load so other screens can read it.
   static final Map<String, int> filteredHandCounts = {};
+
+  /// Static cache of filtered hands per opponent, persists across screen instances.
+  static final Map<String, List<Map<String, dynamic>>> _cachedHandsByOpponent = {};
+
+  /// Clear all cached hand data (e.g., on logout).
+  static void clearCache() {
+    _cachedHandsByOpponent.clear();
+    filteredHandCounts.clear();
+  }
 
   @override
   _OpponentHandsScreenState createState() => _OpponentHandsScreenState();
@@ -62,11 +73,30 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
 
   Future<void> _loadOpponentHands() async {
     try {
+      // Serve from static cache if data hasn't changed
+      final opId = widget.opponent.id;
+      if (!AppDataCache.isOpponentHandsDirty &&
+          OpponentHandsScreen._cachedHandsByOpponent.containsKey(opId)) {
+        _allFilteredHands = OpponentHandsScreen._cachedHandsByOpponent[opId];
+        final all = _allFilteredHands!;
+        final firstPage = all.length > _handsPerPage
+            ? all.sublist(0, _handsPerPage)
+            : all;
+        setState(() {
+          hands = firstPage;
+          totalHandsCount = all.length;
+          hasMoreHands = firstPage.length < all.length;
+          _currentPage = 0;
+          isLoading = false;
+        });
+        return;
+      }
+
       setState(() {
         isLoading = true;
         error = null;
         _currentPage = 0;
-        _allFilteredHands = null; // Reset cache for fresh load
+        _allFilteredHands = null; // Reset instance cache for fresh load
       });
 
       final firstPageHands = await _getHandsWithOpponentPaginated(
@@ -202,8 +232,10 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     });
 
     _allFilteredHands = result;
-    // Cache the count so the opponents list screen can read it
+    // Store in static cache for cross-instance persistence
+    OpponentHandsScreen._cachedHandsByOpponent[widget.opponent.id] = result;
     OpponentHandsScreen.filteredHandCounts[widget.opponent.id] = result.length;
+    AppDataCache.clearOpponentHandsDirty();
   }
 
   bool _isOpponentInvolved(Map<String, dynamic> hand, String opponentName) {
@@ -264,6 +296,8 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBody: true,
+      bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'opponents'),
       body: Stack(
         children: [
           // Teal radial gradient at top

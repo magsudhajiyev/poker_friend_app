@@ -13,6 +13,7 @@ import 'opponent_hands_screen.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/form_drawer.dart';
 import '../design_system/components/cards/error_state_card.dart';
+import '../services/app_data_cache.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
   // Static cache accessible from other screens
@@ -42,8 +43,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
   @override
   void initState() {
     super.initState();
-    // Always load fresh data on screen init to catch any opponents added from other screens
-    _loadOpponents(useCache: false);
+    _loadOpponents(useCache: !AppDataCache.isOpponentsDirty);
   }
 
   Future<void> _loadOpponents({bool useCache = false}) async {
@@ -91,6 +91,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
       MyOpponentsScreen._cachedOpponents = loadedOpponents;
       MyOpponentsScreen._cachedHandsCounts = handsCounts;
       MyOpponentsScreen._cachedStats = statsMap;
+      AppDataCache.clearOpponentsDirty();
 
       setState(() {
         opponents = loadedOpponents;

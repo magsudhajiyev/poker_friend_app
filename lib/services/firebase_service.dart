@@ -8,6 +8,7 @@ import 'opponent_service.dart';
 import 'opponent_stats_service.dart';
 import 'stats_calculator.dart';
 import 'user_stats_service.dart';
+import 'app_data_cache.dart';
 
 class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -84,7 +85,8 @@ class FirebaseService {
       }
 
       final sessionRef = await _firestore.collection(_sessionsCollection).add(sessionData);
-      
+      AppDataCache.markHomeDirty();
+      AppDataCache.markSessionsDirty();
       return sessionRef.id;
     } catch (e) {
       print('Error creating session: $e');
@@ -313,6 +315,11 @@ class FirebaseService {
         actions: actions,
         playerNames: playerNames,
       );
+
+      AppDataCache.markHomeDirty();
+      AppDataCache.markSessionsDirty();
+      AppDataCache.markOpponentsDirty();
+      AppDataCache.markOpponentHandsDirty();
     } catch (e) {
       print('Error saving hand: $e');
       rethrow;
@@ -424,6 +431,8 @@ class FirebaseService {
         }
       }
 
+      AppDataCache.markHomeDirty();
+      AppDataCache.markSessionsDirty();
     } catch (e) {
       print('Error ending session: $e');
       rethrow;

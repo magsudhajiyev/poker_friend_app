@@ -61,6 +61,7 @@ import '../models/club_member.dart';
 import '../services/invitation_service.dart';
 import '../services/event_attendance_service.dart';
 import '../models/event_attendance.dart';
+import '../services/app_data_cache.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {
@@ -1142,6 +1143,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _loadData() async {
     try {
+      // Serve from cache if data hasn't changed since last fetch
+      if (!AppDataCache.isHomeDirty && AppDataCache.hasHomeCacheData) {
+        if (mounted) {
+          setState(() {
+            currentBankroll = AppDataCache.cachedBankroll!;
+            bankrollGoal = AppDataCache.cachedBankrollGoal!;
+            bankrollProgress = AppDataCache.cachedBankrollProgress!;
+            playerStats = AppDataCache.cachedPlayerStats!;
+            recentSessions = AppDataCache.cachedRecentSessions?.cast<Map<String, dynamic>>() ?? [];
+            earningsChartData = AppDataCache.cachedEarningsData?['chartData'];
+            avgEarnings = AppDataCache.cachedEarningsData?['avgEarnings'] ?? 0.0;
+            upcomingEvents = AppDataCache.cachedUpcomingEvents?.cast<Map<String, dynamic>>() ?? [];
+            userName = AppDataCache.cachedUserName ?? 'User';
+            isLoadingData = false;
+          });
+          _progressAnimationController.reset();
+          _progressAnimationController.forward();
+          _loadEventAttendanceCounts();
+          _checkPendingInvitations();
+        }
+        return;
+      }
+
       setState(() {
         isLoadingData = true;
         _loadError = null;
@@ -1183,6 +1207,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           userName = displayName;
           isLoadingData = false;
         });
+
+        // Store in cache
+        AppDataCache.cachedBankroll = bankroll;
+        AppDataCache.cachedBankrollGoal = goal;
+        AppDataCache.cachedBankrollProgress = progress;
+        AppDataCache.cachedPlayerStats = stats;
+        AppDataCache.cachedRecentSessions = sessions;
+        AppDataCache.cachedEarningsData = earningsData;
+        AppDataCache.cachedUpcomingEvents = events;
+        AppDataCache.cachedUserName = displayName;
+        AppDataCache.clearHomeDirty();
 
         _progressAnimationController.reset();
         _progressAnimationController.forward();
@@ -1500,7 +1535,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               // Scrollable content below the header
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: _loadData,
+                  onRefresh: () {
+                    AppDataCache.markHomeDirty();
+                    return _loadData();
+                  },
                   color: AppColors.tealAccent,
                   backgroundColor: const Color(0xFF1C2926),
                   child: SingleChildScrollView(

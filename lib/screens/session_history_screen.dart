@@ -8,6 +8,7 @@ import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/cards/error_state_card.dart';
+import '../services/app_data_cache.dart';
 import 'session_analytics_screen.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
@@ -48,6 +49,18 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   Future<void> _loadSessions() async {
     try {
+      // Serve from cache if data hasn't changed
+      if (!AppDataCache.isSessionsDirty && AppDataCache.cachedSessions != null) {
+        setState(() {
+          sessions = AppDataCache.cachedSessions!;
+          isLoading = false;
+        });
+        if (widget.targetSessionId != null) {
+          _scrollToSession(widget.targetSessionId!);
+        }
+        return;
+      }
+
       setState(() {
         isLoading = true;
         error = null;
@@ -61,12 +74,16 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         // Fallback to local storage
         loadedSessions = await LocalStorageService.getUserSessions();
       }
-      
+
+      // Store in cache
+      AppDataCache.cachedSessions = loadedSessions;
+      AppDataCache.clearSessionsDirty();
+
       setState(() {
         sessions = loadedSessions;
         isLoading = false;
       });
-      
+
       // Auto-scroll to the target session if specified
       if (widget.targetSessionId != null) {
         _scrollToSession(widget.targetSessionId!);

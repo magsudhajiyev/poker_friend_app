@@ -4,6 +4,7 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/user_stats_service.dart';
 import '../services/auth_service.dart';
+import 'app_data_cache.dart';
 
 class BankrollService {
   static const String _goalKey = 'bankroll_goal';
@@ -25,6 +26,7 @@ class BankrollService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_goalKey, goal);
+      AppDataCache.markHomeDirty();
     } catch (e) {
       print('Error setting bankroll goal: $e');
     }
@@ -46,6 +48,7 @@ class BankrollService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_currentBankrollKey, amount);
+      AppDataCache.markHomeDirty();
     } catch (e) {
       print('Error setting current bankroll: $e');
     }
