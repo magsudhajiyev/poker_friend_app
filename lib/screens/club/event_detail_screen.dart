@@ -335,6 +335,47 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Future<void> _startEvent() async {
+    // Block if no tables assigned
+    if (_event.tableIds.isEmpty) {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1B1E24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Text(
+            "Can't Start Event",
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Text(
+            'No tables are assigned to this event. Please edit the event and assign tables first.',
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF89F1EC),
+              ),
+              child: Text(
+                'OK',
+                style: GoogleFonts.ibmPlexSans(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     try {
       await EventService.startEvent(widget.club.id, _event.id);
       // Refresh event data

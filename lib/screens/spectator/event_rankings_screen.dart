@@ -101,7 +101,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
         setState(() {
           _rankingsData = data;
           _isLoading = false;
-          _error = data == null ? 'Unable to load rankings' : null;
+          _error = null;
         });
       }
     } catch (e) {
@@ -557,18 +557,18 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: const Color(0xFF89F1EC).withOpacity(0.08),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
-              Icons.leaderboard_outlined,
+              Icons.event_seat_outlined,
               size: 28,
-              color: Colors.white.withOpacity(0.3),
+              color: const Color(0xFF89F1EC).withOpacity(0.5),
             ),
           ),
           const SizedBox(height: 14),
           Text(
-            'No Rankings Yet',
+            'Waiting for Players',
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               color: Colors.white,
@@ -576,11 +576,15 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            'Rankings will appear once players are seated',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Rankings will appear once players get seated',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.4),
+              ),
             ),
           ),
         ],

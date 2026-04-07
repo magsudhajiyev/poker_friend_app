@@ -170,6 +170,57 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       return;
     }
 
+    // Warn if no tables assigned
+    if (_selectedTableIds.isEmpty) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1B1E24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Text(
+            'No Tables Assigned',
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Text(
+            'No tables assigned to this event. You can assign tables later but without them the event can\'t be started.',
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(
+                'Go Back',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white.withOpacity(0.5),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF89F1EC),
+              ),
+              child: Text(
+                'Continue',
+                style: GoogleFonts.ibmPlexSans(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      if (proceed != true) return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -304,6 +355,11 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                   const SizedBox(height: 14),
                   // Notify toggle
                   _buildNotifyCard(),
+                  // Delete button (edit mode only)
+                  if (_isEditMode) ...[
+                    const SizedBox(height: 24),
+                    _buildDeleteEventButton(),
+                  ],
                 ],
               ),
             ),
@@ -729,7 +785,8 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         child: _buildCardTextField(
           controller: _descriptionController,
           hint: 'Description',
-          maxLines: 3,
+          maxLines: null,
+          minLines: 3,
         ),
       ),
     );
@@ -797,10 +854,116 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
     );
   }
 
+  Widget _buildDeleteEventButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GestureDetector(
+      onTap: _deleteEvent,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF4444).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFFFF4444).withOpacity(0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.delete_outline,
+              color: Color(0xFFFF4444),
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Delete Event',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                color: const Color(0xFFFF4444),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+    );
+  }
+
+  Future<void> _deleteEvent() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1B1E24),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        title: Text(
+          'Delete Event?',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'This will permanently delete this event and notify all members. This action cannot be undone.',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white.withOpacity(0.7),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withOpacity(0.5),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFFF4444),
+            ),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.ibmPlexSans(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await EventService.deleteEvent(widget.club.id, widget.event!.id);
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete event: $e'),
+              backgroundColor: const Color(0xFFFF4444),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Widget _buildCardTextField({
     required TextEditingController controller,
     required String hint,
-    int maxLines = 1,
+    int? maxLines = 1,
+    int? minLines,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     bool showError = false,
@@ -816,6 +979,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       child: TextField(
         controller: controller,
         maxLines: maxLines,
+        minLines: minLines,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
         style: GoogleFonts.ibmPlexSans(
