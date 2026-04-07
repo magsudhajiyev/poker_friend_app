@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../services/club_service.dart';
 import '../services/session_result_service.dart';
 import '../screens/statistics_screen.dart';
+import '../screens/calendar_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/help_support_screen.dart';
 import '../screens/intro_screen.dart';
@@ -401,7 +402,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         children: [
           // Statistics
           _buildMenuItem(_MenuItemData(
-            iconPath: 'icons/figma_icons/stats.svg',
+            iconPath: 'icons/figma_icons/chart_regular.svg',
             fallbackIcon: Icons.bar_chart_rounded,
             label: 'Statistics',
             onTap: () {
@@ -417,6 +418,21 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           // Clubs (expandable)
           _buildExpandableClubsItem(),
 
+          const SizedBox(height: 24),
+
+          // Events
+          _buildMenuItem(_MenuItemData(
+            iconPath: 'icons/figma_icons/calendar.svg',
+            fallbackIcon: Icons.calendar_month_rounded,
+            label: 'Events',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CalendarScreen()),
+              );
+            },
+          )),
           const SizedBox(height: 24),
 
           // Bankroll

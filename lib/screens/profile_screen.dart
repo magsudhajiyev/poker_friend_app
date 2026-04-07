@@ -72,7 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Goal updated successfully!'),
-            backgroundColor: Color(0xFF62E3BC),
+            backgroundColor: Color(0xFF89F1EC),
           ),
         );
       }
@@ -97,7 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Bankroll updated successfully!'),
-            backgroundColor: Color(0xFF62E3BC),
+            backgroundColor: Color(0xFF89F1EC),
           ),
         );
       }
@@ -156,101 +156,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (isLoading) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Color(0xFF02050B),
         body: Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF62E3BC)),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF89F1EC)),
           ),
         ),
       );
     }
 
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Color(0xFF02050B),
       bottomNavigationBar: const GlobalBottomNavBar(currentScreen: 'profile'),
       body: Stack(
         children: [
-          // Elliptical teal glow at top
+          // Elliptical cyan/teal glow at top (background decoration)
           Positioned(
-            top: -162,
-            left: (screenWidth - 412) / 2,
+            top: -250 + topPadding,
+            left: -screenWidth * 0.25,
+            right: -screenWidth * 0.25,
             child: Container(
-              width: 412,
-              height: 217,
-              child: Transform.scale(
-                scaleX: 1.5,
-                scaleY: 0.7,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      center: Alignment.center,
-                      radius: 0.5,
-                      colors: [
-                        const Color(0xFF2E5A59).withOpacity(0.8),
-                        const Color(0xFF2E5A59).withOpacity(0.4),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
-                    ),
-                  ),
+              height: 500,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 0.5,
+                  colors: [
+                    const Color(0xFF1A4A48).withOpacity(0.9),
+                    const Color(0xFF1A4A48).withOpacity(0.5),
+                    const Color(0xFF0D2B2A).withOpacity(0.3),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.3, 0.6, 1.0],
                 ),
               ),
             ),
           ),
 
-          // Main content container
-          Positioned(
-            top: 68,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                border: Border.all(color: Color(0xFF262626), width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0xFF2E5A59),
-                    blurRadius: 64,
-                    offset: Offset(0, -6),
-                  ),
-                ],
-              ),
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(20, 21, 20, 100),
-                child: Column(
-                  children: [
-                    // Header row
-                    _buildHeaderRow(),
-                    SizedBox(height: 36),
+          // Main scrollable content — full screen, no overlay container
+          SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(20, topPadding + 16, 20, 100),
+            child: Column(
+              children: [
+                // Header row
+                _buildHeaderRow(),
+                SizedBox(height: 36),
 
-                    // Profile section
-                    _buildProfileSection(),
-                    SizedBox(height: 36),
+                // Profile section
+                _buildProfileSection(),
+                SizedBox(height: 36),
 
-                    // Cards
-                    _buildBankrollGoalCard(),
-                    SizedBox(height: 16),
+                // Cards
+                _buildBankrollGoalCard(),
+                SizedBox(height: 16),
 
-                    _buildCurrentBankrollCard(),
-                    SizedBox(height: 16),
+                _buildCurrentBankrollCard(),
+                SizedBox(height: 16),
 
-                    _buildSessionResultCard(),
-                    SizedBox(height: 16),
+                _buildSessionResultCard(),
+                SizedBox(height: 16),
 
-                    _buildSettingsCard(),
-                    SizedBox(height: 36),
-
-                    // Footer
-                    _buildFooter(),
-                  ],
-                ),
-              ),
+                _buildSettingsCard(),
+              ],
             ),
           ),
         ],
@@ -262,15 +232,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Close button
+        // Back button
         GestureDetector(
           onTap: () => Navigator.pop(context),
-          child: SizedBox(
-            width: 32,
-            height: 32,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Color(0xFF101115),
+              shape: BoxShape.circle,
+            ),
             child: Center(
               child: Icon(
-                Icons.close,
+                Icons.arrow_back,
                 color: Colors.white,
                 size: 24,
               ),
@@ -349,8 +323,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           AuthService.currentUser?.email ?? '',
           style: GoogleFonts.ibmPlexSans(
             fontSize: 15,
-            fontWeight: FontWeight.w400,
-            color: Colors.white.withOpacity(0.7),
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF8C8C8C),
+            height: 1.64,
           ),
           textAlign: TextAlign.center,
         ),
@@ -362,7 +337,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFF131616),
+        color: Color(0xFF101115),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(
@@ -372,15 +347,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Bankroll Goal',
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               color: Colors.white,
-              letterSpacing: -0.43,
             ),
           ),
           SizedBox(height: 14),
 
           // Input field
-          _buildInputField(_goalController, '\$ ${bankrollGoal.toStringAsFixed(0)}'),
+          _buildInputField(_goalController, '${bankrollGoal.toStringAsFixed(0)}'),
           SizedBox(height: 24),
 
           // Button
@@ -394,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFF131616),
+        color: Color(0xFF101115),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(
@@ -404,14 +378,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Current Bankroll',
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               color: Colors.white,
-              letterSpacing: -0.43,
             ),
           ),
           SizedBox(height: 14),
 
-          _buildInputField(_bankrollController, '\$ ${currentBankroll.toStringAsFixed(0)}'),
+          _buildInputField(_bankrollController, '${currentBankroll.toStringAsFixed(0)}'),
           SizedBox(height: 24),
 
           _buildActionButton('Update Bankroll', _updateBankroll),
@@ -424,7 +397,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFF131616),
+        color: Color(0xFF101115),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(
@@ -434,18 +407,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Add Session Result',
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               color: Colors.white,
-              letterSpacing: -0.43,
             ),
           ),
           SizedBox(height: 4),
           Text(
             'Enter positive for wins, negative for losses',
             style: GoogleFonts.ibmPlexSans(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w400,
-              color: Colors.white.withOpacity(0.5),
+              color: Color(0xFF8C8C8C),
             ),
           ),
           SizedBox(height: 14),
@@ -454,7 +426,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildGameTypeToggle(),
           SizedBox(height: 14),
 
-          _buildInputField(_sessionResultController, '\$ 0'),
+          _buildInputField(_sessionResultController, '0'),
           SizedBox(height: 24),
 
           _buildActionButton('Add Result', _addSessionResult),
@@ -465,11 +437,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildGameTypeToggle() {
     return Container(
-      height: 46,
+      height: 38,
       decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(80),
-        border: Border.all(color: Color(0xFF2C2C2E), width: 1),
+        color: Color(0xFF35373C),
+        borderRadius: BorderRadius.circular(19),
       ),
       child: Row(
         children: [
@@ -478,16 +449,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: GestureDetector(
               onTap: () => setState(() => _selectedGameType = 'cash'),
               child: Container(
-                margin: EdgeInsets.all(2),
+                height: 38,
                 decoration: BoxDecoration(
-                  gradient: _selectedGameType == 'cash'
-                      ? LinearGradient(
-                          colors: [Color(0xFF1E3B49), Color(0xFF4A887E)],
-                        )
-                      : null,
-                  borderRadius: BorderRadius.circular(60),
+                  color: _selectedGameType == 'cash' ? Color(0xFF02050B) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(19),
                   border: _selectedGameType == 'cash'
-                      ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
+                      ? Border.all(color: Color(0xFF73D4CF), width: 1)
                       : null,
                 ),
                 child: Center(
@@ -495,8 +462,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Cash',
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      color: _selectedGameType == 'cash' ? Colors.white : Color(0xFF8C8C8C),
                     ),
                   ),
                 ),
@@ -509,16 +476,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: GestureDetector(
               onTap: () => setState(() => _selectedGameType = 'tournament'),
               child: Container(
-                margin: EdgeInsets.all(2),
+                height: 38,
                 decoration: BoxDecoration(
-                  gradient: _selectedGameType == 'tournament'
-                      ? LinearGradient(
-                          colors: [Color(0xFF1E3B49), Color(0xFF4A887E)],
-                        )
-                      : null,
-                  borderRadius: BorderRadius.circular(60),
+                  color: _selectedGameType == 'tournament' ? Color(0xFF02050B) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(19),
                   border: _selectedGameType == 'tournament'
-                      ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
+                      ? Border.all(color: Color(0xFF73D4CF), width: 1)
                       : null,
                 ),
                 child: Center(
@@ -526,8 +489,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Tournament',
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      color: _selectedGameType == 'tournament' ? Colors.white : Color(0xFF8C8C8C),
                     ),
                   ),
                 ),
@@ -542,10 +505,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildInputField(TextEditingController controller, String hint) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF3C3C43).withOpacity(0.18),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: Color(0xFF89F1EC).withOpacity(0.2),
+          color: Color(0xFF4E5054),
           width: 1,
         ),
       ),
@@ -554,17 +516,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
         keyboardType: TextInputType.numberWithOptions(signed: true, decimal: true),
         style: GoogleFonts.ibmPlexSans(
           fontSize: 17,
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w500,
           color: Colors.white,
         ),
         decoration: InputDecoration(
+          prefixIcon: Padding(
+            padding: EdgeInsets.only(left: 16, right: 4),
+            child: Text(
+              '\$',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF8C8C8C),
+              ),
+            ),
+          ),
+          prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
           hintText: hint,
           hintStyle: GoogleFonts.ibmPlexSans(
             fontSize: 17,
-            fontWeight: FontWeight.w400,
-            color: Colors.white.withOpacity(0.5),
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF8C8C8C),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           border: InputBorder.none,
         ),
       ),
@@ -578,7 +552,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         decoration: BoxDecoration(
-          color: Color(0xFF62E3BC),
+          color: Color(0xFF89F1EC),
           borderRadius: BorderRadius.circular(110),
         ),
         child: Center(
@@ -588,7 +562,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: Colors.black,
-              letterSpacing: -0.43,
+              letterSpacing: -0.5,
             ),
           ),
         ),
@@ -600,7 +574,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
-        color: Color(0xFF131616),
+        color: Color(0xFF101115),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Success popup shown after successfully adding a calendar event.
@@ -20,16 +21,18 @@ class EventSuccessPopup extends StatelessWidget {
   /// 'add_another' if user taps "Add another event",
   /// or null if dismissed.
   static Future<String?> show(BuildContext context) {
-    return showModalBottomSheet<String>(
+    return showDialog<String>(
       context: context,
-      isScrollControlled: true,
-      isDismissible: true,
-      enableDrag: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => EventSuccessPopup(
-        onGoToCalendar: () => Navigator.pop(context, 'calendar'),
-        onAddAnotherEvent: () => Navigator.pop(context, 'add_another'),
-        onClose: () => Navigator.pop(context, null),
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+        child: EventSuccessPopup(
+          onGoToCalendar: () => Navigator.pop(context, 'calendar'),
+          onAddAnotherEvent: () => Navigator.pop(context, 'add_another'),
+          onClose: () => Navigator.pop(context, null),
+        ),
       ),
     );
   }
@@ -38,118 +41,150 @@ class EventSuccessPopup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF131613),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
+        color: const Color(0xFF1B1E24),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black,
+            blurRadius: 114,
+            offset: Offset(20, 4),
+          ),
+        ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Close button row
-            Align(
-              alignment: Alignment.topRight,
-              child: GestureDetector(
-                onTap: onClose,
-                child: Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 24,
-                ),
+            // Close button
+            GestureDetector(
+              onTap: onClose,
+              child: SvgPicture.asset(
+                'icons/figma_icons/close.svg',
+                width: 15,
+                height: 15,
+                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 24),
+
             // Content
-            Column(
-              children: [
-                // Success icon (confetti)
-                Image.asset(
-                  'icons/flat_icons/confetti.png',
-                  width: 44,
-                  height: 44,
-                  color: Color(0xFFBAFF99),
-                ),
-                SizedBox(height: 20),
-                // Title
-                Text(
-                  'Nice! Your event is now on\nthe calendar.',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    height: 1.5,
+            SizedBox(
+              width: double.infinity,
+              child: Column(
+                children: [
+                  // Success icon — checkmark in mint circle
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF89F1EC),
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: SvgPicture.asset(
+                      'icons/figma_icons/check.svg',
+                      width: 24,
+                      height: 24,
+                      colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                    ),
                   ),
-                ),
-                SizedBox(height: 12),
-                // Subtitle
-                Text(
-                  'You can edit or remove it anytime.',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.ibmPlexSans(
-                    color: Color(0xFFF8FFF7),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
+                  const SizedBox(height: 18),
+
+                  // Title
+                  Text(
+                    'Nice! Your event is now on calendar.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      height: 1.44,
+                    ),
                   ),
-                ),
-                SizedBox(height: 50),
-                // Buttons
-                Column(
-                  children: [
-                    // "Go to calendar" button (filled)
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: onGoToCalendar,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFBAFF99),
-                          foregroundColor: Colors.black,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                  const SizedBox(height: 7),
+
+                  // Subtitle
+                  Text(
+                    'You can edit or remove it anytime',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.ibmPlexSans(
+                      color: const Color(0xFFB3B4B6),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      height: 1.64,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Buttons
+                  Column(
+                    children: [
+                      // "Go to calendar" button (white filled, pill shape)
+                      GestureDetector(
+                        onTap: onGoToCalendar,
+                        child: Container(
+                          width: 218,
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(110),
                           ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          'Go to calendar',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          child: Text(
+                            'Go to calendar',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.ibmPlexSans(
+                              color: Colors.black,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              height: 24 / 17,
+                              letterSpacing: -0.5,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 11),
-                    // "Add another event" button (text only)
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: onAddAnotherEvent,
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      const SizedBox(height: 16),
+
+                      // "Add another event" button (white outline, pill shape)
+                      GestureDetector(
+                        onTap: onAddAnotherEvent,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(110),
+                            border: Border.all(color: Colors.white, width: 1),
                           ),
-                        ),
-                        child: Text(
-                          'Add another event',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SvgPicture.asset(
+                                'icons/figma_icons/plus.svg',
+                                width: 24,
+                                height: 24,
+                                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Add another event',
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  height: 24 / 17,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-            // Bottom padding for safe area
-            SizedBox(height: MediaQuery.of(context).padding.bottom),
+
           ],
         ),
       ),

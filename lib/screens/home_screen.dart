@@ -1507,46 +1507,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         username: userName,
         email: AuthService.currentUser?.email,
       ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              // Fixed header — stays at top during scroll
-              OnboardingProgressBar(),
-              HomeHeader(
-                userName: userName,
-                subtitle: 'Welcome back',
-                onMenuPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const QRScanScreen()),
-                  );
-                },
-                onNotificationPressed: () {
-                  _showNotificationsDropdown(context);
-                },
-                onSettingsPressed: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-                showNotificationBadge: _unreadNotificationCount > 0,
-                notificationCount: _unreadNotificationCount,
-              ),
+      body: Builder(
+        builder: (context) {
+          final topPadding = MediaQuery.of(context).padding.top;
+          final isAndroid = Theme.of(context).platform == TargetPlatform.android;
+          final extraTopPadding = isAndroid ? 12.0 : 0.0;
+          final headerHeight = topPadding + extraTopPadding + 100;
 
-              // Scrollable content below the header
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () {
-                    AppDataCache.markHomeDirty();
-                    return _loadData();
-                  },
-                  color: AppColors.tealAccent,
-                  backgroundColor: const Color(0xFF1C2926),
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 8),
+          return Stack(
+            children: [
+              // Full-screen scrollable content (behind header)
+              RefreshIndicator(
+                onRefresh: () {
+                  AppDataCache.markHomeDirty();
+                  return _loadData();
+                },
+                color: AppColors.tealAccent,
+                backgroundColor: const Color(0xFF1C2926),
+                edgeOffset: headerHeight,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Space for header so content starts below it
+                      SizedBox(height: headerHeight + 8),
 
                         // Bankroll Card (standalone)
                         _buildBankrollCard(),
@@ -1571,16 +1556,53 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         // Upcoming Events
                         _buildUpcomingEventsCard(),
 
-                        const SizedBox(height: 100),
-                      ],
-                    ),
+                      const SizedBox(height: 100),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
 
-          // Blur overlay when popup is visible
+              // Glassmorphic header overlay
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    OnboardingProgressBar(),
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(34),
+                        bottomRight: Radius.circular(34),
+                      ),
+                      child: BackdropFilter(
+                        filter: ui.ImageFilter.blur(sigmaX: 27, sigmaY: 27),
+                        child: HomeHeader(
+                          userName: userName,
+                          subtitle: 'Welcome back',
+                          onMenuPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const QRScanScreen()),
+                            );
+                          },
+                          onNotificationPressed: () {
+                            _showNotificationsDropdown(context);
+                          },
+                          onSettingsPressed: () {
+                            _scaffoldKey.currentState?.openDrawer();
+                          },
+                          showNotificationBadge: _unreadNotificationCount > 0,
+                          notificationCount: _unreadNotificationCount,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Blur overlay when popup is visible
           if (_selectedEventId != null)
             GestureDetector(
               onTap: () {
@@ -1604,7 +1626,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               top: _popupPosition!.dy,
               child: _buildEventContextMenu(),
             ),
-        ],
+          ],
+        );
+        },
       ),
       bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home', fabKey: _fabKey, sessionsKey: _sessionsNavKey),
     );

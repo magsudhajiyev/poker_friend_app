@@ -39,15 +39,18 @@ class HomeHeader extends StatelessWidget {
       ),
       child: Container(
         height: topPadding + extraTopPadding + 100,
-        color: const Color(0xFF02050B),
+        color: const Color(0xFF02050B).withValues(alpha: 0.35),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Background image
+            // Background image (low opacity for glassmorphism)
             Positioned.fill(
-              child: Image.asset(
-                'assets/header_background.png',
-                fit: BoxFit.fill,
+              child: Opacity(
+                opacity: 0.3,
+                child: Image.asset(
+                  'assets/header_background.png',
+                  fit: BoxFit.fill,
+                ),
               ),
             ),
             // Content with safe area padding
