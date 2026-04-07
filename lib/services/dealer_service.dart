@@ -781,6 +781,10 @@ class DealerService {
     bool? isChoppedPot,
     List<int>? choppedWinners,
     Map<int, double>? individualShares,
+    double? preflopPot,
+    double? flopPot,
+    double? turnPot,
+    double? riverPot,
   }) async {
     final sessionRef = _firestore
         .collection(_dealerSessionsCollection)
@@ -797,6 +801,10 @@ class DealerService {
     };
 
     if (potAmount != null) updates['potAmount'] = potAmount;
+    if (preflopPot != null && preflopPot > 0) updates['preflopPot'] = preflopPot;
+    if (flopPot != null && flopPot > 0) updates['flopPot'] = flopPot;
+    if (turnPot != null && turnPot > 0) updates['turnPot'] = turnPot;
+    if (riverPot != null && riverPot > 0) updates['riverPot'] = riverPot;
     if (isChoppedPot != null) updates['isChoppedPot'] = isChoppedPot;
     if (choppedWinners != null) updates['choppedWinners'] = choppedWinners;
     if (individualShares != null) {

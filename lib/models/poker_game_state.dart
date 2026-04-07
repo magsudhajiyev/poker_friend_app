@@ -105,6 +105,7 @@ class PokerGameState {
   int _currentPlayer = 1;
   double currentPot = 0.0;
   double currentBet = 0.0;
+  Map<BettingRound, double> streetPots = {};
   int _effectiveBBPosition = 1; // Track who actually posted BB
   int _effectiveSBPosition = 1; // Track who actually posted SB
   bool _isInitializing = true; // CRITICAL: Flag to prevent premature action order calculation
@@ -841,7 +842,10 @@ class PokerGameState {
         result = uncalledReturns;
       }
 
-      // Save pot amount for the completed street AFTER processing returns
+      // Auto-snapshot pot for the completed street
+      streetPots[currentRound] = currentPot;
+
+      // Callback for backward compatibility
       if (onStreetComplete != null) {
         onStreetComplete(currentRound, currentPot);
       }
@@ -959,6 +963,7 @@ class PokerGameState {
     hasBetThisRound = false;
     currentPot = 0.0;
     currentBet = 0.0;
+    streetPots = {};
 
     // NOTE: Do NOT call initializePot() here!
     // Blinds are posted in _startNewHand() AFTER any player additions/removals

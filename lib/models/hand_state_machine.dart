@@ -631,10 +631,40 @@ class PokerSessionManager {
     currentHand!.potAmount = potAmount;
   }
 
-  // Complete the current hand
-  void completeCurrentHand({double? potAmount, int? winnerId, double? currentStack}) {
+  /// Apply street-by-street pot data from game state to current hand.
+  /// Called automatically by completeCurrentHand/completeCurrentHandWithChop.
+  /// Does NOT touch currentHand.potAmount (that's set by the caller).
+  void _applyStreetPots(PokerGameState gameState) {
     if (currentHand == null) return;
+    final pots = gameState.streetPots;
+    currentHand!.preflopPot = pots[BettingRound.preflop] ?? 0;
+    currentHand!.flopPot = pots[BettingRound.flop] ?? 0;
+    currentHand!.turnPot = pots[BettingRound.turn] ?? 0;
+    currentHand!.riverPot = pots[BettingRound.river] ?? 0;
+    // If hand completes ON a street that wasn't snapshotted yet (river, or early fold),
+    // use currentPot for that street (set the field directly, don't call savePotForStreet
+    // which would overwrite potAmount)
+    if (!pots.containsKey(gameState.currentRound)) {
+      switch (gameState.currentRound) {
+        case BettingRound.preflop:
+          currentHand!.preflopPot = gameState.currentPot;
+          break;
+        case BettingRound.flop:
+          currentHand!.flopPot = gameState.currentPot;
+          break;
+        case BettingRound.turn:
+          currentHand!.turnPot = gameState.currentPot;
+          break;
+        case BettingRound.river:
+          currentHand!.riverPot = gameState.currentPot;
+          break;
+      }
+    }
+  }
 
+  // Complete the current hand
+  void completeCurrentHand({double? potAmount, int? winnerId, double? currentStack, PokerGameState? gameState}) {
+    if (currentHand == null) return;
 
     // Set pot amount and winner if provided
     if (potAmount != null) {
@@ -648,12 +678,16 @@ class PokerSessionManager {
       currentHand!.winnerId = winnerId;
     }
 
+    // Apply street-by-street pot data from game state (unified for manual + dealer)
+    if (gameState != null) {
+      _applyStreetPots(gameState);
+    }
+
     // Note: heroPositionName is already set at hand start, don't overwrite it
 
     // Track stack history if current stack is provided
     if (currentStack != null) {
       if (stackHistory.isEmpty) {
-        // If no initial entry exists, add it first with the current stack as starting point
         _addStackHistoryEntry(currentStack, 'initial', 0.0, 0);
       } else {
         final previousStack = stackHistory.last['stackSize'] as double;
@@ -661,9 +695,7 @@ class PokerSessionManager {
         final changeType = stackChange >= 0 ? 'win' : 'loss';
         _addStackHistoryEntry(currentStack, changeType, stackChange.abs(), currentHand!.handNumber);
       }
-    } else {
     }
-
 
     currentHand!.markCompleted();
     completedHands.add(currentHand!);
@@ -686,7 +718,8 @@ class PokerSessionManager {
     required List<int> winnerIds,
     Map<int, double>? individualShares,
     double? sharePerWinner,
-    double? currentStack
+    double? currentStack,
+    PokerGameState? gameState,
   }) {
     if (currentHand == null) return;
 
@@ -707,6 +740,11 @@ class PokerSessionManager {
     currentHand!.choppedWinners = winnerIds;
     currentHand!.individualShares = individualShares;
     currentHand!.sharePerWinner = sharePerWinner;
+
+    // Apply street-by-street pot data from game state (unified for manual + dealer)
+    if (gameState != null) {
+      _applyStreetPots(gameState);
+    }
 
     // Note: heroPositionName is already set at hand start, don't overwrite it
 

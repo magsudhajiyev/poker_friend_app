@@ -3004,8 +3004,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
         // River betting complete - trigger showdown/winner selection
         _schedulePostFrameAction(() {
-          // Save river pot before completing hand
-          sessionManager.savePotForStreet(BettingRound.river, gameState.currentPot);
           _handleHandComplete();
         });
       } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
@@ -3192,8 +3190,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
         // River betting complete - trigger showdown/winner selection
         _schedulePostFrameAction(() {
-          // Save river pot before completing hand
-          sessionManager.savePotForStreet(BettingRound.river, gameState.currentPot);
           _handleHandComplete();
         });
       } else if (gameState.areAllPlayersAllIn() && gameState.currentRound != BettingRound.river && !gameState.bettingRoundComplete) {
@@ -3321,8 +3317,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void nextStreet() {
     // Check if we're transitioning from River - might need showdown
     if (gameState.currentRound == BettingRound.river) {
-      // Save river pot before completing hand
-      sessionManager.savePotForStreet(BettingRound.river, gameState.currentPot);
       _handleHandComplete();
       return;
     }
@@ -3598,12 +3592,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
               winnerIds: winners,
               individualShares: individualShares,
               currentStack: currentStack,
+              gameState: gameState,
             );
           } else {
             sessionManager.completeCurrentHand(
               potAmount: totalDistributed,
               winnerId: firstPotResult['winner'] as int,
               currentStack: currentStack,
+              gameState: gameState,
             );
           }
         });
@@ -3693,6 +3689,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             individualShares: individualShares,
             sharePerWinner: sharePerWinner,
             currentStack: currentStack,
+            gameState: gameState,
           );
 
           // Update winners' stacks in game state to prevent them being marked as busted
@@ -3714,6 +3711,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
               potAmount: potAmount,
               winnerId: winnerId,
               currentStack: currentStack,
+              gameState: gameState,
             );
 
             // Update winner's stack in game state to prevent them being marked as busted
@@ -4345,12 +4343,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
   void _proceedToNextStreet() {
     setState(() {
-      String streetTransitionResult = gameState.startNewStreet(
-        onStreetComplete: (BettingRound completedStreet, double potAmount) {
-          // Save pot amount for the completed street
-          sessionManager.savePotForStreet(completedStreet, potAmount);
-        },
-      );
+      String streetTransitionResult = gameState.startNewStreet();
 
       // Show uncalled bet returns if any
       if (streetTransitionResult.isNotEmpty) {
@@ -4742,6 +4735,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         potAmount: potAmount,
         winnerId: winnerId,
         currentStack: currentStack,
+        gameState: gameState,
       );
 
       // For individual sessions, return to the session tracking screen
@@ -5018,12 +5012,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             winnerIds: winners,
             individualShares: individualShares,
             currentStack: currentStack,
+            gameState: gameState,
           );
         } else {
           sessionManager.completeCurrentHand(
             potAmount: totalDistributed,
             winnerId: firstPotResult['winner'] as int,
             currentStack: currentStack,
+            gameState: gameState,
           );
         }
       });
@@ -5066,6 +5062,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           winnerIds: winners,
           individualShares: individualShares,
           currentStack: currentStack,
+          gameState: gameState,
         );
 
         // Distribute pot to all winners with individual amounts
@@ -5098,6 +5095,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           potAmount: potAmount,
           winnerId: winners.first,
           currentStack: currentStack,
+          gameState: gameState,
         );
 
         // Distribute pot to single winner

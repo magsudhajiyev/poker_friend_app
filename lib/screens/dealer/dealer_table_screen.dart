@@ -647,9 +647,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     _isShowingBoardCardsDialog = true;
 
     try {
-      // Save pot for completed street
-      _sessionManager!.savePotForStreet(_gameState!.currentRound, _gameState!.currentPot);
-
       // Show board cards dialog based on next street
       final nextRound = _getNextRound(_gameState!.currentRound);
 
@@ -676,10 +673,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         );
       }
 
-      // Advance game state to next street
-      _gameState!.startNewStreet(onStreetComplete: (round, pot) {
-        _sessionManager!.savePotForStreet(round, pot);
-      });
+      // Advance game state to next street (streetPots auto-snapshotted)
+      _gameState!.startNewStreet();
 
       setState(() {});
     } finally {
@@ -727,9 +722,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     _isShowingBoardCardsDialog = true;
 
     try {
-      // Save pot for current street before showing dialog
-      _sessionManager!.savePotForStreet(_gameState!.currentRound, _gameState!.currentPot);
-
       // Check if all 5 board cards are already selected - skip dialog if complete
       final existingCards = _sessionManager!.currentHand?.boardCards;
       final hasCompleteBoard = existingCards != null &&
@@ -993,11 +985,13 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             potAmount: totalDistributed,
             winnerIds: mainPotWinners,
             individualShares: mainPotShares,
+            gameState: _gameState,
           );
         } else {
           _sessionManager!.completeCurrentHand(
             potAmount: totalDistributed,
             winnerId: primaryWinnerId,
+            gameState: _gameState,
           );
         }
 
@@ -1010,6 +1004,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           isChoppedPot: isMainPotChopped,
           choppedWinners: isMainPotChopped ? mainPotWinners : null,
           individualShares: mainPotShares,
+          preflopPot: _gameState!.streetPots[BettingRound.preflop],
+          flopPot: _gameState!.streetPots[BettingRound.flop],
+          turnPot: _gameState!.streetPots[BettingRound.turn],
+          riverPot: _gameState!.streetPots[BettingRound.river] ??
+              (_gameState!.currentRound == BettingRound.river ? _gameState!.currentPot : null),
         );
 
         // Step 6: Emit WebSocket event
@@ -1066,6 +1065,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         potAmount: _gameState!.currentPot,
         winnerId: winnerId,
         currentStack: winnerStack,
+        gameState: _gameState,
       );
 
       // Update winner's stack in game state
@@ -1077,6 +1077,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         handId: _dealerSession.currentHandId ?? '',
         winnerId: winnerId,
         potAmount: _gameState!.currentPot,
+        preflopPot: _gameState!.streetPots[BettingRound.preflop],
+        flopPot: _gameState!.streetPots[BettingRound.flop],
+        turnPot: _gameState!.streetPots[BettingRound.turn],
+        riverPot: _gameState!.streetPots[BettingRound.river] ??
+            (_gameState!.currentRound == BettingRound.river ? _gameState!.currentPot : null),
       );
 
       // Emit WebSocket event
@@ -1136,6 +1141,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         winnerIds: winnerIds,
         individualShares: shares,
         sharePerWinner: sharePerWinner,
+        gameState: _gameState,
       );
 
       // Update stacks for all winners
@@ -1153,6 +1159,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         isChoppedPot: true,
         choppedWinners: winnerIds,
         individualShares: shares,
+        preflopPot: _gameState!.streetPots[BettingRound.preflop],
+        flopPot: _gameState!.streetPots[BettingRound.flop],
+        turnPot: _gameState!.streetPots[BettingRound.turn],
+        riverPot: _gameState!.streetPots[BettingRound.river] ??
+            (_gameState!.currentRound == BettingRound.river ? _gameState!.currentPot : null),
       );
 
       // Emit WebSocket event
