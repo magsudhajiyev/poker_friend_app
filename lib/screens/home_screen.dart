@@ -54,6 +54,7 @@ import '../widgets/sliding_notification.dart';
 import '../widgets/navigation_drawer.dart';
 import 'player/qr_scan_screen.dart';
 import 'club/event_detail_screen.dart';
+import 'event_detail_screen.dart' as personal_detail;
 import 'club/club_dashboard_screen.dart';
 import 'invitations_screen.dart';
 import 'notifications_screen.dart';
@@ -2667,8 +2668,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final clubId = event['clubId'];
     final clubEventId = event['clubEventId'];
 
-    // Only navigate if this is a club event
+    // Personal event -> navigate to personal event detail
     if (clubId == null || clubEventId == null) {
+      final date = DateTime.tryParse(event['date'] ?? '') ?? DateTime.now();
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => personal_detail.EventDetailScreen(
+            title: event['title'] ?? 'Event',
+            type: event['type'] ?? '',
+            location: event['location'] ?? '',
+            date: date,
+            buyIn: (event['buyIn'] as num?)?.toDouble() ?? 0,
+          ),
+        ),
+      );
+      _loadData();
       return;
     }
 

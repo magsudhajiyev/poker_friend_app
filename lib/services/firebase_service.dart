@@ -95,6 +95,7 @@ class FirebaseService {
       final sessionRef = await _firestore.collection(_sessionsCollection).add(sessionData);
       AppDataCache.markHomeDirty();
       AppDataCache.markSessionsDirty();
+      AppDataCache.markStatsDirty();
       return sessionRef.id;
     } catch (e) {
       print('Error creating session: $e');
@@ -326,6 +327,7 @@ class FirebaseService {
 
       AppDataCache.markHomeDirty();
       AppDataCache.markSessionsDirty();
+      AppDataCache.markStatsDirty();
       AppDataCache.markOpponentsDirty();
       AppDataCache.markOpponentHandsDirty();
     } catch (e) {
@@ -441,6 +443,7 @@ class FirebaseService {
 
       AppDataCache.markHomeDirty();
       AppDataCache.markSessionsDirty();
+      AppDataCache.markStatsDirty();
     } catch (e) {
       print('Error ending session: $e');
       rethrow;

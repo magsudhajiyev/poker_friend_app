@@ -6,6 +6,7 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
 import '../services/user_stats_service.dart';
+import '../services/app_data_cache.dart';
 import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
@@ -53,7 +54,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     _loadStatistics();
   }
 
-  Future<void> _loadStatistics() async {
+  Future<void> _loadStatistics({bool forceRefresh = false}) async {
+    // Serve from cache if clean and not forced
+    if (!forceRefresh && !AppDataCache.isStatsDirty && AppDataCache.hasStatsCacheData) {
+      _restoreFromCache();
+      setState(() => isLoading = false);
+      return;
+    }
+
     try {
       setState(() {
         isLoading = true;
@@ -61,6 +69,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       });
 
       await _calculateFromDatabase();
+      _saveToCache();
+      AppDataCache.clearStatsDirty();
 
       setState(() {
         isLoading = false;
@@ -70,6 +80,75 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         error = 'Failed to load statistics: $e';
         isLoading = false;
       });
+    }
+  }
+
+  void _saveToCache() {
+    AppDataCache.cachedOverallStats = {
+      'totalHands': totalHands,
+      'handsPlayed': handsPlayed,
+      'vpip': vpip,
+      'pfr': pfr,
+      'threeBet': threeBet,
+      'fold3Bet': fold3Bet,
+      'cbet': cbet,
+      'steal': steal,
+      'checkRaise': checkRaise,
+      'winRate': winRate,
+      'totalSessions': totalSessions,
+      'totalPlayTime': totalPlayTime,
+      'threeBetOpportunity': threeBetOpportunity,
+      'facing3BetCount': facing3BetCount,
+      'cbetOpportunity': cbetOpportunity,
+      'stealOpportunity': stealOpportunity,
+      'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
+    };
+    // Store positional stats as serialized maps
+    AppDataCache.cachedPositionalStats = {
+      for (final entry in positionalStats.entries)
+        entry.key: {
+          'totalHands': entry.value.totalHands,
+          'playedHands': entry.value.playedHands,
+          'vpipHands': entry.value.vpipHands,
+          'pfrHands': entry.value.pfrHands,
+          'wonHands': entry.value.wonHands,
+        },
+    };
+  }
+
+  void _restoreFromCache() {
+    final overall = AppDataCache.cachedOverallStats!;
+    totalHands = overall['totalHands'] as int;
+    handsPlayed = overall['handsPlayed'] as int;
+    vpip = overall['vpip'] as double;
+    pfr = overall['pfr'] as double;
+    threeBet = overall['threeBet'] as double;
+    fold3Bet = overall['fold3Bet'] as double;
+    cbet = overall['cbet'] as double;
+    steal = overall['steal'] as double;
+    checkRaise = overall['checkRaise'] as double;
+    winRate = overall['winRate'] as double;
+    totalSessions = overall['totalSessions'] as int;
+    totalPlayTime = overall['totalPlayTime'] as int;
+    threeBetOpportunity = overall['threeBetOpportunity'] as int;
+    facing3BetCount = overall['facing3BetCount'] as int;
+    cbetOpportunity = overall['cbetOpportunity'] as int;
+    stealOpportunity = overall['stealOpportunity'] as int;
+    checkRaiseFlopOpportunity = overall['checkRaiseFlopOpportunity'] as int;
+
+    final cached = AppDataCache.cachedPositionalStats;
+    if (cached != null) {
+      positionalStats = {};
+      for (final entry in cached.entries) {
+        final data = entry.value as Map<String, dynamic>;
+        final stats = PositionalStats();
+        stats.totalHands = data['totalHands'] as int;
+        stats.playedHands = data['playedHands'] as int;
+        stats.vpipHands = data['vpipHands'] as int;
+        stats.pfrHands = data['pfrHands'] as int;
+        stats.wonHands = data['wonHands'] as int;
+        positionalStats[entry.key] = stats;
+      }
     }
   }
 
@@ -253,7 +332,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ),
           SafeArea(
             child: error != null
-                ? ErrorStateCard(onRetry: _loadStatistics)
+                ? ErrorStateCard(onRetry: () => _loadStatistics(forceRefresh: true))
                 : LoadingWrapper(
                     isLoading: isLoading,
                     loadingMessage: loadingMessage,
@@ -322,7 +401,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               ),
               // Refresh button (right side)
               GestureDetector(
-                onTap: _loadStatistics,
+                onTap: () => _loadStatistics(forceRefresh: true),
                 child: Container(
                   width: 44,
                   height: 44,

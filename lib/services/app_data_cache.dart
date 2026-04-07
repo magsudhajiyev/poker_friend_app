@@ -15,6 +15,7 @@ class AppDataCache {
   static bool _opponentHandsDirty = true;
   static bool _sessionsDataDirty = true;
   static bool _clubDataDirty = true;
+  static bool _statsDataDirty = true;
 
   // ── Home screen cached data ──────────────────────────────────────
   static double? cachedBankroll;
@@ -34,12 +35,17 @@ class AppDataCache {
   static bool? cachedIsAdmin;
   static int? cachedMemberCount;
 
+  // ── Statistics screen cached data ─────────────────────────────
+  static Map<String, dynamic>? cachedOverallStats;
+  static Map<String, dynamic>? cachedPositionalStats;
+
   // ── Dirty markers (called from write points) ─────────────────────
   static void markHomeDirty() => _homeDataDirty = true;
   static void markOpponentsDirty() => _opponentsDataDirty = true;
   static void markOpponentHandsDirty() => _opponentHandsDirty = true;
   static void markSessionsDirty() => _sessionsDataDirty = true;
   static void markClubDirty() => _clubDataDirty = true;
+  static void markStatsDirty() => _statsDataDirty = true;
 
   static void markAllDirty() {
     _homeDataDirty = true;
@@ -47,6 +53,7 @@ class AppDataCache {
     _opponentHandsDirty = true;
     _sessionsDataDirty = true;
     _clubDataDirty = true;
+    _statsDataDirty = true;
   }
 
   // ── Check & clear ────────────────────────────────────────────────
@@ -55,6 +62,8 @@ class AppDataCache {
   static bool get isOpponentHandsDirty => _opponentHandsDirty;
   static bool get isSessionsDirty => _sessionsDataDirty;
   static bool get isClubDirty => _clubDataDirty;
+  static bool get isStatsDirty => _statsDataDirty;
+  static bool get hasStatsCacheData => cachedOverallStats != null;
 
   static bool get hasHomeCacheData =>
       cachedBankroll != null && cachedPlayerStats != null;
@@ -67,6 +76,7 @@ class AppDataCache {
   static void clearOpponentHandsDirty() => _opponentHandsDirty = false;
   static void clearSessionsDirty() => _sessionsDataDirty = false;
   static void clearClubDirty() => _clubDataDirty = false;
+  static void clearStatsDirty() => _statsDataDirty = false;
 
   /// Call when entering a club screen — invalidates cache if club changed.
   static void setClubContext(String clubId) {
@@ -96,6 +106,7 @@ class AppDataCache {
     _opponentHandsDirty = true;
     _sessionsDataDirty = true;
     _clubDataDirty = true;
+    _statsDataDirty = true;
 
     cachedBankroll = null;
     cachedBankrollGoal = null;
@@ -109,5 +120,7 @@ class AppDataCache {
     _cachedClubId = null;
     cachedIsAdmin = null;
     cachedMemberCount = null;
+    cachedOverallStats = null;
+    cachedPositionalStats = null;
   }
 }
