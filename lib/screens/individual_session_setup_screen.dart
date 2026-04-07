@@ -40,9 +40,10 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                      double.tryParse(_buyInController.text) != null;
 
     if (gameType == GameType.tournament) {
+      final stack = double.tryParse(_startingStackController.text);
       return basicValid &&
-             _startingStackController.text.isNotEmpty &&
-             double.tryParse(_startingStackController.text) != null;
+             stack != null &&
+             stack >= bigBlind;
     }
 
     return basicValid;
@@ -436,74 +437,90 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                           // Starting Stack Card - only show for MTT
                           if (gameType == GameType.tournament) ...[
                             SizedBox(height: 16),
-                            Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.all(18),
-                              decoration: BoxDecoration(
-                                color: Color(0xFF131616),
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Starting Stack',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 17,
-                                      color: Color(0xFF62E3BC),
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: -0.43,
-                                      height: 1.3,
+                            Builder(builder: (context) {
+                              final stackValue = double.tryParse(_startingStackController.text);
+                              final hasStackError = stackValue != null && stackValue < bigBlind;
+                              final errorBorderColor = const Color(0xFFFF4444);
+
+                              return Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.all(18),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF131616),
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Starting Stack',
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 17,
+                                        color: Color(0xFF62E3BC),
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: -0.43,
+                                        height: 1.3,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(height: 12),
-                                  TextField(
-                                    controller: _startingStackController,
-                                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                    style: GoogleFonts.ibmPlexSans(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.44,
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter chip stack',
-                                      hintStyle: GoogleFonts.ibmPlexSans(
-                                        color: Colors.white.withOpacity(0.4),
+                                    SizedBox(height: 12),
+                                    TextField(
+                                      controller: _startingStackController,
+                                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                      style: GoogleFonts.ibmPlexSans(
+                                        color: Colors.white,
                                         fontSize: 17,
                                         fontWeight: FontWeight.w400,
                                         height: 1.44,
                                       ),
-                                      filled: true,
-                                      fillColor: Color(0xFF1C1C1E),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: Color(0xFF1B262D).withOpacity(0.6),
-                                          width: 1,
+                                      decoration: InputDecoration(
+                                        hintText: 'Enter chip stack',
+                                        hintStyle: GoogleFonts.ibmPlexSans(
+                                          color: Colors.white.withOpacity(0.4),
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w400,
+                                          height: 1.44,
                                         ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: Color(0xFF1B262D).withOpacity(0.6),
-                                          width: 1,
+                                        filled: true,
+                                        fillColor: Color(0xFF1C1C1E),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: hasStackError ? errorBorderColor : Color(0xFF1B262D).withOpacity(0.6),
+                                            width: 1,
+                                          ),
                                         ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: Color(0xFF89F1EC),
-                                          width: 1,
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: hasStackError ? errorBorderColor : Color(0xFF1B262D).withOpacity(0.6),
+                                            width: 1,
+                                          ),
                                         ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: hasStackError ? errorBorderColor : Color(0xFF89F1EC),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                       ),
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                      onChanged: (value) => setState(() {}),
                                     ),
-                                    onChanged: (value) => setState(() {}),
-                                  ),
-                                ],
-                              ),
-                            ),
+                                    if (hasStackError) ...[
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'Starting stack must be at least equal to the Big Blind ($bigBlind)',
+                                        style: GoogleFonts.ibmPlexSans(
+                                          fontSize: 12,
+                                          color: errorBorderColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              );
+                            }),
                           ],
 
                           SizedBox(height: 16),

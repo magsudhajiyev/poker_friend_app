@@ -3020,7 +3020,58 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     setState(() {});
   }
 
-  void _skipCurrentAction() {
+  Future<void> _skipCurrentAction() async {
+    // If actions have been taken in this hand, confirm before discarding
+    final hasActions = sessionManager.currentHand?.actions.isNotEmpty == true;
+    if (hasActions) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1B1E24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Text(
+            'Hand in Progress',
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Text(
+            'There\'s a hand in progress. Moving to the next hand will discard all actions and restore player stacks.',
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white.withOpacity(0.5),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF89F1EC),
+              ),
+              child: Text(
+                'Move to Next Hand',
+                style: GoogleFonts.ibmPlexSans(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
     // Skip the entire hand - move button and start fresh without incrementing hand number
     setState(() {
       // Move button to next active player
@@ -3044,7 +3095,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           if (totalContribution > 0) {
             // Refund the contribution back to stack
             player.currentStack += totalContribution;
-            // addAction removed
           }
         }
       }
@@ -3069,8 +3119,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       sessionManager.actualBBSeat = gameState.effectiveBBPosition;
       sessionManager.buttonPosition = gameState.buttonPosition;
 
-      // CRITICAL: Restart the hand in session manager to recalculate positions
-      // This is necessary if players were added/removed since the hand originally started
+      // Discard current hand to prevent saving incomplete hand
+      sessionManager.currentHand = null;
+
+      // Restart the hand in session manager to recalculate positions
       sessionManager.startHand(
         gameState.handNumber,
         gameState.buttonPosition,
@@ -3108,8 +3160,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       } else if (activePlayers.isNotEmpty) {
         gameState.currentPlayer = activePlayers[0];
       }
-
-      // Clear actions and add skip message
     });
   }
 
