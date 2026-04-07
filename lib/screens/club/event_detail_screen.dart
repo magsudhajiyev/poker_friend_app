@@ -58,6 +58,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   bool _isDealer = false;
   bool _isSeatedPlayer = false;
   bool _hasActiveSession = false;
+  SeatAssignment? _currentSeat;
   StreamSubscription<List<EventAttendance>>? _attendanceSubscription;
   StreamSubscription<ClubEvent?>? _eventSubscription;
   StreamSubscription<List<SeatAssignment>>? _seatSubscription;
@@ -98,6 +99,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
       setState(() {
         _isSeatedPlayer = isSeated;
+        _currentSeat = seatInEvent;
       });
 
       // Check if there's an active dealer session at the player's table
@@ -365,7 +367,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF131616),
+        backgroundColor: const Color(0xFF101115),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
@@ -513,7 +515,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFF02050B),
         body: Stack(
           children: [
             // Teal radial gradient background
@@ -571,32 +573,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 ),
                                 const SizedBox(height: 16),
 
-                                // Date and time card
-                                _buildInfoCard(
-                                  icon: Icons.calendar_today_outlined,
-                                  title: 'Date & Time',
-                                  content: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        dateFormat.format(_event.startTime),
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        timeFormat.format(_event.startTime),
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white.withOpacity(0.5),
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                // Combined notification + date/time card (for seated live events)
+                                // or standalone date/time card
+                                _buildEventInfoCard(dateFormat, timeFormat),
 
                                 // Location card
                                 if (_event.location != null && _event.location!.isNotEmpty) ...[
@@ -626,6 +605,40 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                         color: const Color(0xFF89F1EC),
                                         fontSize: 20,
                                         fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+
+                                // Stakes card (cash games)
+                                if (_event.gameType == 'cash' && _event.stakes != null && _event.stakes!.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  _buildInfoCard(
+                                    icon: Icons.casino_outlined,
+                                    title: 'Stakes',
+                                    content: Text(
+                                      _event.stakes!,
+                                      style: GoogleFonts.ibmPlexSans(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+
+                                // Starting stack card (tournaments)
+                                if (_event.gameType == 'tournament' && _event.startingStack != null && _event.startingStack! > 0) ...[
+                                  const SizedBox(height: 8),
+                                  _buildInfoCard(
+                                    icon: Icons.layers_outlined,
+                                    title: 'Starting Stack',
+                                    content: Text(
+                                      '${_event.startingStack!.toStringAsFixed(0)}',
+                                      style: GoogleFonts.ibmPlexSans(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ),
@@ -756,9 +769,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             child: Text(
               widget.club.name,
               style: GoogleFonts.ibmPlexSans(
-                fontSize: 18,
+                fontSize: 27,
                 color: Colors.white,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -803,13 +817,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     Color bgColor;
     Color textColor;
     String text;
-    bool hasGlow = false;
 
     if (_event.isLive) {
-      bgColor = const Color(0xFFFF4444);
+      bgColor = const Color(0xFFEE3E1A);
       textColor = Colors.white;
       text = 'LIVE NOW';
-      hasGlow = true;
     } else if (_event.status == EventStatus.cancelled) {
       bgColor = Colors.white.withOpacity(0.1);
       textColor = Colors.white.withOpacity(0.5);
@@ -825,41 +837,31 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: hasGlow
-            ? [
-                BoxShadow(
-                  color: const Color(0xFFFF4444).withOpacity(0.4),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
+        borderRadius: BorderRadius.circular(140),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (_event.isLive) ...[
             Container(
-              width: 6,
-              height: 6,
+              width: 3,
+              height: 3,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 2),
           ],
           Text(
             text,
             style: GoogleFonts.ibmPlexSans(
-              fontSize: 12,
+              fontSize: 10,
               color: textColor,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -875,8 +877,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
-        borderRadius: BorderRadius.circular(14),
+        color: const Color(0xFF101115),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
@@ -914,6 +916,131 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildEventInfoCard(DateFormat dateFormat, DateFormat timeFormat) {
+    final showSeatedNotification = _isSeatedPlayer && _event.isLive;
+    final endTimeText = _event.endTime != null
+        ? ' - ${timeFormat.format(_event.endTime!)}'
+        : '';
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 27, sigmaY: 27),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+          decoration: BoxDecoration(
+            color: const Color(0xFF292F33),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x40000000),
+                blurRadius: 44,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Seated notification (if applicable)
+              if (showSeatedNotification) ...[
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A605D),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.event_seat,
+                        color: Color(0xFF89F1EC),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "You're seated, good luck!",
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w400,
+                            height: 1.64,
+                          ),
+                        ),
+                        Text(
+                          _getSeatedTableInfo(),
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            color: const Color(0xFFE6E6E7),
+                            fontWeight: FontWeight.w500,
+                            height: 1.44,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(color: Color(0xFF1B1E24), height: 1),
+                const SizedBox(height: 16),
+              ],
+
+              // Date & Time section
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Date & Time',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 13,
+                      color: const Color(0xFFB3B4B6),
+                      fontWeight: FontWeight.w400,
+                      height: 24 / 13,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    dateFormat.format(_event.startTime),
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      height: 24 / 17,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  Text(
+                    '${timeFormat.format(_event.startTime)}$endTimeText',
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getSeatedTableInfo() {
+    if (_currentSeat != null) {
+      final tableIndex = _event.tableIds.indexOf(_currentSeat!.tableId);
+      final tableNum = tableIndex >= 0 ? tableIndex + 1 : 1;
+      return 'Table $tableNum, Seat #${_currentSeat!.seatNumber}';
+    }
+    return 'Seated';
   }
 
   Widget _buildRSVPSection() {
@@ -978,7 +1105,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.15) : const Color(0xFF131616),
+          color: isSelected ? color.withOpacity(0.15) : const Color(0xFF101115),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? color : Colors.white.withOpacity(0.06),
@@ -1052,170 +1179,90 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final maybeCount = _attendanceCounts[AttendanceStatus.maybe] ?? 0;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF131616),
-        borderRadius: BorderRadius.circular(14),
+        color: const Color(0xFF101115),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header row
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Who\'s Coming',
+                "Who's Coming",
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
+                  height: 24 / 17,
+                  letterSpacing: -0.5,
                 ),
               ),
-              const Spacer(),
               GestureDetector(
                 onTap: _navigateToAttendees,
                 child: Text(
                   'See all',
                   style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    color: const Color(0xFF89F1EC),
-                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                    color: const Color(0xFFD3FFFD),
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildAttendanceCount(
-                count: goingCount,
-                label: 'Going',
-                color: const Color(0xFF89F1EC),
-              ),
-              const SizedBox(width: 24),
-              _buildAttendanceCount(
-                count: maybeCount,
-                label: 'Maybe',
-                color: Colors.amber,
-              ),
-            ],
+          const SizedBox(height: 10),
+          const Divider(color: Color(0xFF1C1F21), height: 1),
+          const SizedBox(height: 10),
+
+          // Going row
+          _buildAttendanceRow(
+            label: 'Going',
+            count: goingCount,
+            countColor: const Color(0xFF89F1EC),
           ),
-          if (_goingMembers.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Divider(color: Colors.white.withOpacity(0.06), height: 1),
-            const SizedBox(height: 10),
-            _buildGoingNamesList(),
-          ],
+          const SizedBox(height: 20),
+
+          // Maybe row
+          _buildAttendanceRow(
+            label: 'Maybe',
+            count: maybeCount,
+            countColor: const Color(0xFFE3FF68),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildGoingNamesList() {
-    // Build inline comma-separated names that fit in one line with "..." overflow
-    final names = _goingMembers.map((m) => m.displayName).toList();
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final textStyle = GoogleFonts.ibmPlexSans(
-          fontSize: 13,
-          color: Colors.white.withOpacity(0.7),
-          fontWeight: FontWeight.w400,
-        );
-        final ellipsisStyle = GoogleFonts.ibmPlexSans(
-          fontSize: 13,
-          color: Colors.white.withOpacity(0.4),
-          fontWeight: FontWeight.w400,
-        );
-
-        final maxWidth = constraints.maxWidth;
-        final ellipsisText = '...';
-        final ellipsisWidth = _measureTextWidth(ellipsisText, ellipsisStyle) + 2;
-
-        String result = '';
-        bool truncated = false;
-
-        for (int i = 0; i < names.length; i++) {
-          final separator = i == 0 ? '' : ', ';
-          final candidate = result + separator + names[i];
-          final candidateWidth = _measureTextWidth(candidate, textStyle);
-
-          // Check if adding this name (+ potential ellipsis) would overflow
-          if (i > 0 && candidateWidth + ellipsisWidth > maxWidth) {
-            truncated = true;
-            break;
-          }
-
-          // Even the first name might be too long
-          if (candidateWidth > maxWidth && i == 0) {
-            result = names[i];
-            if (names.length > 1) truncated = true;
-            break;
-          }
-
-          result = candidate;
-        }
-
-        return Row(
-          children: [
-            Flexible(
-              child: Text(
-                result,
-                style: textStyle,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
-            if (truncated)
-              Text(
-                '...',
-                style: ellipsisStyle,
-              ),
-          ],
-        );
-      },
-    );
-  }
-
-  double _measureTextWidth(String text, TextStyle style) {
-    final textPainter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      maxLines: 1,
-      textDirection: ui.TextDirection.ltr,
-    )..layout();
-    return textPainter.width;
-  }
-
-  Widget _buildAttendanceCount({
-    required int count,
+  Widget _buildAttendanceRow({
     required String label,
-    required Color color,
+    required int count,
+    required Color countColor,
   }) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          '$count',
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 18,
-            color: color,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(width: 6),
         Text(
           label,
           style: GoogleFonts.ibmPlexSans(
-            fontSize: 14,
-            color: Colors.white.withOpacity(0.5),
+            fontSize: 17,
+            color: const Color(0xFF9A9B9E),
+            fontWeight: FontWeight.w500,
+            height: 24 / 17,
+            letterSpacing: -0.5,
+          ),
+        ),
+        Text(
+          '$count',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 17,
+            color: countColor,
+            fontWeight: FontWeight.w500,
+            height: 1.44,
           ),
         ),
       ],
@@ -1282,7 +1329,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF131616),
+          color: const Color(0xFF101115),
           borderRadius: BorderRadius.circular(60),
           border: Border.all(
             color: const Color(0xFF89F1EC).withOpacity(0.3),
@@ -1379,7 +1426,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF131616),
+          color: const Color(0xFF101115),
           borderRadius: BorderRadius.circular(60),
           border: Border.all(
             color: const Color(0xFF89F1EC).withOpacity(0.3),
@@ -1425,7 +1472,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF131616),
+          color: const Color(0xFF101115),
           borderRadius: BorderRadius.circular(60),
           border: Border.all(
             color: Colors.amber.withOpacity(0.3),
@@ -1494,7 +1541,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF131616),
+          color: const Color(0xFF101115),
           borderRadius: BorderRadius.circular(60),
           border: Border.all(
             color: const Color(0xFF89F1EC).withOpacity(0.3),
