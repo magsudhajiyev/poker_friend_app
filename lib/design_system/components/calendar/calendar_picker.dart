@@ -239,8 +239,20 @@ class CalendarPicker extends StatelessWidget {
       );
     }
 
-    return Column(
-      children: weeks,
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        if (details.primaryVelocity == null) return;
+        if (details.primaryVelocity! < -100) {
+          // Swipe left → next month
+          onNextMonth?.call();
+        } else if (details.primaryVelocity! > 100) {
+          // Swipe right → previous month
+          onPreviousMonth?.call();
+        }
+      },
+      child: Column(
+        children: weeks,
+      ),
     );
   }
 

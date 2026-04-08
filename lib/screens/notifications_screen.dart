@@ -1016,26 +1016,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left side (Figma node 350:4953): flex, gap:8
-          // Green checkmark circle (Figma node 350:4948): 24x24, #54E98A, rounded 52.5px
+          // Notification type icon
           Container(
-            width: 24,
-            height: 24,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
-              color: AppColors.accentGreenBright, // #54E98A
-              borderRadius: BorderRadius.circular(52.5),
+              color: _getNotificationIconColor(notification.type).withOpacity(0.15),
+              shape: BoxShape.circle,
             ),
-            child: const Center(
+            child: Center(
               child: Icon(
-                Icons.check,
-                color: Colors.black,
-                size: 12,
+                _getNotificationIcon(notification.type),
+                color: _getNotificationIconColor(notification.type),
+                size: 14,
               ),
             ),
           ),
-
-          const SizedBox(width: 8),
-
+          const SizedBox(width: 10),
           // Text container (Figma node 350:4952): flex-1, flex-col, gap:3
           Expanded(
             child: Column(
@@ -1101,5 +1098,64 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
       ),
     );
+  }
+
+  IconData _getNotificationIcon(NotificationType type) {
+    switch (type) {
+      case NotificationType.eventCreated:
+      case NotificationType.eventUpdated:
+        return Icons.event_outlined;
+      case NotificationType.eventCancelled:
+        return Icons.event_busy_outlined;
+      case NotificationType.eventStarting:
+      case NotificationType.eventStarted:
+        return Icons.play_circle_outline;
+      case NotificationType.memberRSVP:
+        return Icons.how_to_reg_outlined;
+      case NotificationType.newClubRequest:
+        return Icons.person_add_outlined;
+      case NotificationType.clubApproved:
+        return Icons.check_circle_outline;
+      case NotificationType.clubRejected:
+        return Icons.cancel_outlined;
+      case NotificationType.memberInvited:
+        return Icons.mail_outline;
+      case NotificationType.invitationAccepted:
+        return Icons.handshake_outlined;
+      case NotificationType.invitationDeclined:
+        return Icons.person_off_outlined;
+      case NotificationType.seatAvailable:
+        return Icons.event_seat_outlined;
+      case NotificationType.newSupportRequest:
+      case NotificationType.supportRequestUpdated:
+        return Icons.support_agent_outlined;
+    }
+  }
+
+  Color _getNotificationIconColor(NotificationType type) {
+    switch (type) {
+      case NotificationType.eventCreated:
+      case NotificationType.eventUpdated:
+        return const Color(0xFF89F1EC);
+      case NotificationType.eventStarting:
+      case NotificationType.eventStarted:
+        return const Color(0xFF87ED81);
+      case NotificationType.eventCancelled:
+      case NotificationType.clubRejected:
+      case NotificationType.invitationDeclined:
+        return const Color(0xFFFF4444);
+      case NotificationType.memberRSVP:
+      case NotificationType.clubApproved:
+      case NotificationType.invitationAccepted:
+        return const Color(0xFF87ED81);
+      case NotificationType.newClubRequest:
+      case NotificationType.memberInvited:
+        return const Color(0xFFFFD13F);
+      case NotificationType.seatAvailable:
+        return const Color(0xFF4A87F2);
+      case NotificationType.newSupportRequest:
+      case NotificationType.supportRequestUpdated:
+        return const Color(0xFFD3FFFD);
+    }
   }
 }
