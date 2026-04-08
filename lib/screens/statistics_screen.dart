@@ -467,8 +467,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildStatListItem('Total Hands', totalHands.toString()),
-          _buildDivider(),
           _buildStatListItem('Hands Played', handsPlayed.toString()),
           _buildDivider(),
           _buildStatListItem('VPIP', totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : 'N/A'),
