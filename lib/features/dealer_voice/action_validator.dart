@@ -198,20 +198,19 @@ class ActionValidator {
   /// Attempt to auto-correct an invalid action.
   ///
   /// Auto-correction rules:
-  /// - check when there's a bet → call
   /// - call when there's no bet → check
   /// - bet when there's already a bet → raise
   /// - raise when there's no bet → bet
+  ///
+  /// NOT auto-corrected (rejected instead):
+  /// - check when there's a bet → NOT converted to call (dealer must explicitly say "call")
   PlayerAction? _attemptAutoCorrection(
     PlayerAction action,
     PokerGameState gameState,
   ) {
     switch (action) {
       case PlayerAction.check:
-        // check when there's a bet → call
-        if (gameState.isValidAction(PlayerAction.call)) {
-          return PlayerAction.call;
-        }
+        // check when there's a bet → reject (do NOT auto-correct to call)
         break;
       case PlayerAction.call:
         // call when there's no bet → check
