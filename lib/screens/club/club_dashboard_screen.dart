@@ -406,8 +406,8 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         : TabBarView(
                         controller: _tabController!,
                         children: [
-                          _buildEventList(_upcomingEvents, 'No upcoming events', 'scheduled'),
                           _buildEventList(_liveEvents, 'No live events', 'live'),
+                          _buildEventList(_upcomingEvents, 'No upcoming events', 'scheduled'),
                           _buildEventList(_pastEvents, 'No past events', 'past'),
                         ],
                       ),
@@ -585,7 +585,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   /// Segmented control matching Figma (node 416:4363)
   /// Uses AnimatedBuilder to smoothly slide the indicator during swipe
   Widget _buildSegmentedControl() {
-    final tabs = ['Upcoming', 'Live', 'Past'];
+    final tabs = ['Live', 'Upcoming', 'Past'];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -631,7 +631,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         final distance = (animValue - index).abs();
                         final selected = (1.0 - distance).clamp(0.0, 1.0);
 
-                        final hasLiveIndicator = index == 1 && _liveEvents.isNotEmpty;
+                        final hasLiveIndicator = index == 0 && _liveEvents.isNotEmpty;
                         return Expanded(
                           child: GestureDetector(
                             onTap: () => _tabController!.animateTo(index),

@@ -38,7 +38,9 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
   @override
   void initState() {
     super.initState();
-    _flop = widget.existingCards?.flop.toList() ?? ['', '', ''];
+    final existingFlop = widget.existingCards?.flop ?? [];
+    // Ensure _flop always has exactly 3 elements for card slots
+    _flop = List.generate(3, (i) => i < existingFlop.length ? existingFlop[i] : '');
     _turn = widget.existingCards?.turn;
     _river = widget.existingCards?.river;
 

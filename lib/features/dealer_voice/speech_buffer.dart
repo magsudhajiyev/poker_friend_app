@@ -1,49 +1,55 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 /// Accumulates final transcripts until silence gap, then flushes.
-/// Replaces _TranscriptDebouncer with a simpler time-based approach.
 ///
-/// Key differences from old debouncer:
-/// - NO _lastTranscript comparison
-/// - NO _lastParsedActions tracking
-/// - NO _findStartEndOverlap() logic
-/// - NO suffix checking
-/// - Simple time-based buffering + cooldown
+/// Uses smart silence gaps:
+/// - Quick flush (400ms) for recognized simple actions (fold, check, call, all-in)
+/// - Standard gap (1000ms) for amount-bearing actions (bet, raise)
+/// - Extended gap (1800ms) when buffer ends with an incomplete number
+///
+/// No cooldown — echo detection is handled by DealerVoiceCubit._stripEchoedPrefix().
 class SpeechBuffer {
   final Duration silenceGap;
   final Duration extendedSilenceGap;
-  final Duration cooldownDuration;
+  final Duration quickSilenceGap;
   final void Function(String utterance) onCompleteUtterance;
   final void Function(String partial) onPartialTranscript;
 
   Timer? _silenceTimer;
-  Timer? _cooldownTimer;
   final StringBuffer _buffer = StringBuffer();
-  bool _inCooldown = false;
   bool _isStreaming = false;
 
   /// Pattern to detect buffer ending with potential incomplete number.
   /// Matches when buffer ends with digit or comma (e.g., "reraise 2" or "reraise 2,").
   static final RegExp _incompleteNumberPattern = RegExp(r'[\d,]$');
 
+  /// Amount-bearing action keywords that need to wait for a number.
+  static final RegExp _amountActionPattern = RegExp(
+    r'\b(?:bet|betting|raise|re-raise|reraise|raising)\b',
+    caseSensitive: false,
+  );
+
+  /// Any recognized poker action keyword.
+  static final RegExp _anyActionPattern = RegExp(
+    r'\b(?:fold|pass|muck|check|checking|call|calling|all[- ]?in|shove|jam|bet|betting|raise|re-raise|reraise|raising)\b',
+    caseSensitive: false,
+  );
+
   SpeechBuffer({
     this.silenceGap = const Duration(milliseconds: 1000),
     this.extendedSilenceGap = const Duration(milliseconds: 1800),
-    this.cooldownDuration = const Duration(milliseconds: 2000),
+    this.quickSilenceGap = const Duration(milliseconds: 400),
     required this.onCompleteUtterance,
     required this.onPartialTranscript,
   });
-
-  /// Whether currently in cooldown mode (ignoring new transcripts)
-  bool get inCooldown => _inCooldown;
 
   /// Whether streaming is active
   bool get isStreaming => _isStreaming;
 
   /// Call when a FINAL transcript arrives from Soniox
   void onFinalTranscript(String text) {
-    // Ignore if in cooldown or not streaming
-    if (_inCooldown || !_isStreaming) return;
+    if (!_isStreaming) return;
 
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
@@ -55,11 +61,28 @@ class SpeechBuffer {
     if (_buffer.isNotEmpty) _buffer.write(' ');
     _buffer.write(trimmed);
 
-    // Detect if buffer ends with potentially incomplete number (e.g., "reraise 2" or "reraise 2,")
-    // When Soniox splits "reraise 2,000" across two finals, we need to wait longer
+    // Determine appropriate silence gap based on buffer content
     final currentText = _buffer.toString().trim();
+    final hasAmountAction = _amountActionPattern.hasMatch(currentText);
     final endsWithIncompleteNumber = _incompleteNumberPattern.hasMatch(currentText);
-    final timeout = endsWithIncompleteNumber ? extendedSilenceGap : silenceGap;
+
+    Duration timeout;
+    String gapReason;
+    if (hasAmountAction || endsWithIncompleteNumber) {
+      // "raise" or "bet" detected, or ends with digit — wait for potential number
+      timeout = endsWithIncompleteNumber ? extendedSilenceGap : silenceGap;
+      gapReason = endsWithIncompleteNumber ? 'extended (incomplete number)' : 'standard (amount action)';
+    } else if (_anyActionPattern.hasMatch(currentText)) {
+      // Simple action like "fold", "check", "call" — flush quickly
+      timeout = quickSilenceGap;
+      gapReason = 'quick (simple action)';
+    } else {
+      // No recognized action yet — use standard gap
+      timeout = silenceGap;
+      gapReason = 'standard (no action detected)';
+    }
+
+    debugPrint('[STT:BUFFER] Final token: "$trimmed" | Buffer: "$currentText" | Gap: ${timeout.inMilliseconds}ms ($gapReason)');
 
     // Start silence timer - will flush after timeout of no new input
     _silenceTimer = Timer(timeout, _flush);
@@ -70,21 +93,16 @@ class SpeechBuffer {
     onPartialTranscript(text);
   }
 
-  /// Flush accumulated buffer and enter cooldown
+  /// Flush accumulated buffer
   void _flush() {
     if (_buffer.isEmpty) return;
 
     final utterance = _buffer.toString().trim();
     _buffer.clear();
 
-    // Enter cooldown - ignore new finals for cooldownDuration
-    _inCooldown = true;
-    _cooldownTimer?.cancel();
-    _cooldownTimer = Timer(cooldownDuration, () {
-      _inCooldown = false;
-    });
+    debugPrint('[STT:BUFFER] FLUSH → "$utterance"');
 
-    // Emit complete utterance
+    // No cooldown — echo detection is handled by DealerVoiceCubit._stripEchoedPrefix()
     onCompleteUtterance(utterance);
   }
 
@@ -98,22 +116,17 @@ class SpeechBuffer {
   void stopStreaming() {
     _isStreaming = false;
     _silenceTimer?.cancel();
-    _cooldownTimer?.cancel();
     _buffer.clear();
-    _inCooldown = false;
   }
 
   /// Call on new hand start to clear any accumulated state
   void reset() {
     _silenceTimer?.cancel();
-    _cooldownTimer?.cancel();
     _buffer.clear();
-    _inCooldown = false;
   }
 
   /// Dispose timers
   void dispose() {
     _silenceTimer?.cancel();
-    _cooldownTimer?.cancel();
   }
 }

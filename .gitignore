@@ -1,3 +1,6 @@
+# Brand
+brand/
+
 # Signing
 android/key.properties
 *.jks

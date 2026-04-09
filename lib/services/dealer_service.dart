@@ -746,6 +746,48 @@ class DealerService {
     });
   }
 
+  /// Overwrite the entire actions array in Firestore (used after undo/rollback).
+  /// This replaces the array atomically so player screens see the corrected state.
+  static Future<void> syncActions({
+    required String sessionId,
+    required String handId,
+    required List<Map<String, dynamic>> actions,
+  }) async {
+    final handRef = _firestore
+        .collection(_dealerSessionsCollection)
+        .doc(sessionId)
+        .collection(_handsSubcollection)
+        .doc(handId);
+
+    await handRef.update({
+      'actions': actions,
+    });
+  }
+
+  /// Overwrite board cards in Firestore, including clearing removed cards.
+  /// Unlike setBoardCards, this always writes all fields (even empty/null).
+  static Future<void> clearBoardCards({
+    required String sessionId,
+    required String handId,
+    required List<String> flop,
+    String? turn,
+    String? river,
+  }) async {
+    final handRef = _firestore
+        .collection(_dealerSessionsCollection)
+        .doc(sessionId)
+        .collection(_handsSubcollection)
+        .doc(handId);
+
+    await handRef.update({
+      'boardCards': {
+        'flop': flop,
+        'turn': turn,
+        'river': river,
+      },
+    });
+  }
+
   /// Set board cards for the current hand
   static Future<void> setBoardCards({
     required String sessionId,

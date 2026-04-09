@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:poker_logger/services/soniox_service.dart';
 import 'package:poker_logger/services/action_parser.dart';
@@ -41,15 +42,26 @@ class DealerVoiceCubit extends Cubit<DealerVoiceState> {
   bool _isProcessing = false;
   final List<List<ParsedAction>> _pendingBatches = [];
 
+  /// Pending amount-action: holds a raise/bet with no amount, waiting for Soniox
+  /// to deliver the amount in the next utterance. Auto-executes after timeout.
+  ParsedAction? _pendingAmountAction;
+  Timer? _pendingAmountTimer;
+
+
   /// Callback to execute validated actions.
   /// The callback should:
   /// 1. Execute the action (updates game state)
   /// 2. Call updateGameState() with fresh state after execution
   final Future<void> Function(ParsedAction action)? onExecuteAction;
 
+  /// Callback when spoken seat doesn't match current player.
+  /// Used for haptic feedback warning.
+  final void Function(int spokenSeat, int expectedSeat)? onSeatMismatch;
+
   DealerVoiceCubit({
     SonioxService? sonioxService,
     this.onExecuteAction,
+    this.onSeatMismatch,
   })  : _sonioxService = sonioxService ?? SonioxService.instance,
         super(const DealerVoiceState()) {
     _speechBuffer = SpeechBuffer(
@@ -114,6 +126,8 @@ class DealerVoiceCubit extends Cubit<DealerVoiceState> {
     // Parse actions from utterance
     final actions = ActionParser.parse(utterance);
 
+    debugPrint('[STT:PARSE] "$utterance" → ${actions.isEmpty ? "NO ACTIONS" : actions.map((a) => "S${a.seatNumber}:${a.action}(${a.amount})").join(", ")}');
+
     if (actions.isEmpty) {
       if (state.status != VoiceStatus.disabled) {
         emit(state.copyWith(status: VoiceStatus.listening));
@@ -151,12 +165,83 @@ class DealerVoiceCubit extends Cubit<DealerVoiceState> {
     }
   }
 
+  /// Check if an action is an amount-bearing type (raise/bet) that should wait for amount.
+  bool _isAmountAction(String action) {
+    return action == 'raise' || action == 'bet';
+  }
+
+  /// Try to resolve a pending amount-action with a newly arriving action.
+  /// Returns true if the incoming action was consumed (merged into pending).
+  bool _tryResolvePendingAmount(ParsedAction incoming) {
+    if (_pendingAmountAction == null) return false;
+
+    final pending = _pendingAmountAction!;
+
+    // Match: same seat, same action type (raise/bet), and incoming HAS an amount
+    if (incoming.seatNumber == pending.seatNumber &&
+        incoming.action == pending.action &&
+        incoming.amount != null) {
+      debugPrint('[STT:AMOUNT] Resolved pending ${pending.action} for seat ${pending.seatNumber} with amount ${incoming.amount}');
+      _pendingAmountTimer?.cancel();
+      _pendingAmountAction = null;
+
+      // Execute the merged action
+      final merged = ParsedAction(
+        action: pending.action,
+        amount: incoming.amount,
+        seatNumber: pending.seatNumber,
+        confidence: pending.confidence,
+      );
+      _executePendingAction(merged);
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Execute a pending amount-action (either resolved with amount or timed out).
+  Future<void> _executePendingAction(ParsedAction action) async {
+    if (_gameState == null || state.status == VoiceStatus.disabled) return;
+
+    final result = _validator.validate(
+      action,
+      _gameState!,
+      isHandActive: _isHandActive,
+    );
+
+    if (result.isValid) {
+      final currentPlayer = _gameState!.currentPlayer;
+      if (result.corrections.isNotEmpty) {
+        debugPrint('[STT:VALIDATE] Seat $currentPlayer: "${action.action}" corrected → ${result.corrections.join(", ")}');
+      }
+      _recentBatches.add(_ExecutedBatch(
+        actionSignatures: ['${action.action}:${action.amount}'],
+        time: DateTime.now(),
+      ));
+      if (onExecuteAction != null) {
+        await onExecuteAction!(result.correctedAction);
+      }
+    } else {
+      debugPrint('[STT:VALIDATE] REJECTED pending seat ${action.seatNumber ?? '?'}: "${action.action}" — ${result.rejectionReason}');
+      if (result.isSeatMismatch && action.seatNumber != null && _gameState != null) {
+        onSeatMismatch?.call(action.seatNumber!, _gameState!.currentPlayer);
+      }
+    }
+  }
+
   /// Process parsed actions one by one, validating each against current game state.
   Future<void> _processActionsSequentially(List<ParsedAction> actions) async {
     // Strip any echoed prefix from this batch
     final cleanActions = _stripEchoedPrefix(actions);
 
-    if (cleanActions.isEmpty) return;
+    if (cleanActions.isEmpty) {
+      debugPrint('[STT:ECHO] All actions stripped as echo');
+      return;
+    }
+
+    if (cleanActions.length != actions.length) {
+      debugPrint('[STT:ECHO] Stripped ${actions.length - cleanActions.length} echoed actions, remaining: ${cleanActions.map((a) => "${a.action}(${a.amount})").join(", ")}');
+    }
 
     final allCorrections = <String>[];
     final rawSignatures = <String>[];
@@ -164,12 +249,27 @@ class DealerVoiceCubit extends Cubit<DealerVoiceState> {
     for (final parsed in cleanActions) {
       // Guard: check if voice was stopped mid-processing
       if (state.status == VoiceStatus.disabled || _gameState == null) {
+        debugPrint('[STT:VALIDATE] Aborted - voice disabled or no game state');
         break;
       }
 
-      // Record RAW signature BEFORE validation/correction
-      rawSignatures.add('${parsed.action}:${parsed.amount}');
+      // Check if this action resolves a pending amount-action
+      if (_tryResolvePendingAmount(parsed)) {
+        continue; // Consumed by pending action
+      }
 
+      // If there's a pending raise/bet without amount and a new action arrived
+      // for a DIFFERENT seat, discard the pending action (dealer moved on)
+      if (_pendingAmountAction != null) {
+        if (parsed.seatNumber != _pendingAmountAction!.seatNumber) {
+          debugPrint('[STT:AMOUNT] Discarding pending ${_pendingAmountAction!.action} for seat ${_pendingAmountAction!.seatNumber} — new seat ${parsed.seatNumber} action arrived');
+          _pendingAmountTimer?.cancel();
+          _pendingAmountAction = null;
+        }
+        // If same seat but _tryResolvePendingAmount didn't match, keep waiting
+      }
+
+      final currentPlayer = _gameState!.currentPlayer;
       final result = _validator.validate(
         parsed,
         _gameState!,
@@ -177,13 +277,34 @@ class DealerVoiceCubit extends Cubit<DealerVoiceState> {
       );
 
       if (result.isValid) {
+        // If this is a raise/bet without amount, hold it indefinitely
+        // until an amount arrives or a different seat's action discards it
+        if (_isAmountAction(parsed.action) && parsed.amount == null) {
+          debugPrint('[STT:AMOUNT] Holding ${parsed.action} for seat ${parsed.seatNumber} — waiting for amount indefinitely');
+          _pendingAmountAction = parsed;
+          _pendingAmountTimer?.cancel();
+          _pendingAmountTimer = null; // No timeout — wait for amount
+          continue; // Don't execute yet
+        }
+
+        // Only record signature for EXECUTED actions (not rejected ones).
+        rawSignatures.add('${parsed.action}:${parsed.amount}');
+
         allCorrections.addAll(result.corrections);
+        if (result.corrections.isNotEmpty) {
+          debugPrint('[STT:VALIDATE] Seat $currentPlayer: "${parsed.action}" corrected → ${result.corrections.join(", ")}');
+        }
 
         // Execute the action (this should advance currentPlayer)
         if (onExecuteAction != null) {
           await onExecuteAction!(result.correctedAction);
           // Note: onExecuteAction callback should call updateGameState()
           // to ensure next action validates against fresh state
+        }
+      } else {
+        debugPrint('[STT:VALIDATE] REJECTED seat ${parsed.seatNumber ?? '?'} (current=$currentPlayer): "${parsed.action}" — ${result.rejectionReason}');
+        if (result.isSeatMismatch && parsed.seatNumber != null && _gameState != null) {
+          onSeatMismatch?.call(parsed.seatNumber!, _gameState!.currentPlayer);
         }
       }
     }
@@ -299,6 +420,8 @@ class DealerVoiceCubit extends Cubit<DealerVoiceState> {
     _recentBatches.clear();
     _pendingBatches.clear();
     _isProcessing = false;
+    _pendingAmountTimer?.cancel();
+    _pendingAmountAction = null;
     emit(state.copyWith(
       lastCorrections: [],
       partialText: null,
@@ -330,6 +453,7 @@ class DealerVoiceCubit extends Cubit<DealerVoiceState> {
     _finalSub?.cancel();
     _partialSub?.cancel();
     _statusSub?.cancel();
+    _pendingAmountTimer?.cancel();
     return super.close();
   }
 }

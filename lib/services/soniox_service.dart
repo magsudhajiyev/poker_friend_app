@@ -59,6 +59,12 @@ class SonioxService {
   bool _isConnected = false;
   bool _isStreaming = false;
 
+  // Keep-alive: send silent audio packets to prevent Soniox WebSocket timeout
+  Timer? _keepAliveTimer;
+  DateTime? _lastAudioSent;
+  static const int keepAliveIntervalMs = 10000; // 10 seconds
+  static const int keepAliveSilenceThresholdMs = 8000; // Send silence if no audio for 8s
+
   // State machine
   VoiceSessionState _state = VoiceSessionState.uninitialized;
   String? _dealerSpeakerId;
@@ -142,10 +148,16 @@ class SonioxService {
             {'key': 'topic', 'value': 'Live poker dealer commands'},
           ],
           'text':
-              'Dealer announces table and name, then player actions. Common actions include fold, check, call, bet, raise, reraise, and all-in.',
+              'Dealer announces actions with seat numbers. '
+              'Format: "seat [number] [action]" or "[number] [action]". '
+              'Examples: "seat 4 call", "5 fold", "seat 3 raise 2000". '
+              'Seat numbers range from 1 to 9.',
           'terms': [
             'table',
             'dealer',
+            'seat',
+            'seat 1', 'seat 2', 'seat 3', 'seat 4', 'seat 5',
+            'seat 6', 'seat 7', 'seat 8', 'seat 9',
             'fold',
             'check',
             'call',
@@ -213,10 +225,14 @@ class SonioxService {
         (data) {
           if (_channel != null && _isConnected) {
             _channel!.sink.add(Uint8List.fromList(data));
+            _lastAudioSent = DateTime.now();
           }
         },
         onError: (e) => debugPrint('SonioxService: Audio error: $e'),
       );
+
+      // Start keep-alive timer to prevent WebSocket timeout during pauses
+      _startKeepAlive();
 
       _isStreaming = true;
       _statusController.add('streaming');
@@ -229,8 +245,49 @@ class SonioxService {
     }
   }
 
+  /// Start periodic keep-alive to prevent Soniox WebSocket timeout.
+  /// Sends 160 bytes of silent PCM audio (10ms at 16kHz) if no real audio
+  /// has been sent recently. This keeps the connection alive during holds/pauses.
+  void _startKeepAlive() {
+    _stopKeepAlive();
+    _lastAudioSent = DateTime.now();
+    _keepAliveTimer = Timer.periodic(
+      const Duration(milliseconds: keepAliveIntervalMs),
+      (_) {
+        if (_channel != null && _isConnected) {
+          final elapsed = _lastAudioSent != null
+              ? DateTime.now().difference(_lastAudioSent!).inMilliseconds
+              : keepAliveSilenceThresholdMs + 1;
+          if (elapsed >= keepAliveSilenceThresholdMs) {
+            // Send 10ms of silence (160 samples × 2 bytes = 320 bytes)
+            _channel!.sink.add(Uint8List(320));
+            _lastAudioSent = DateTime.now();
+            debugPrint('[STT:KEEPALIVE] Sent silent packet (no audio for ${elapsed}ms)');
+          }
+        }
+      },
+    );
+  }
+
+  void _stopKeepAlive() {
+    _keepAliveTimer?.cancel();
+    _keepAliveTimer = null;
+  }
+
   /// Handle connection loss with grace period
   void _handleConnectionLoss() {
+    _isConnected = false;
+    _isStreaming = false; // Allow startStreaming() to reconnect
+    _stopKeepAlive();
+
+    // Clean up dead audio recorder
+    _audioSubscription?.cancel();
+    _audioSubscription = null;
+    if (_recorder != null) {
+      try { _recorder!.stop(); } catch (_) {}
+      _recorder = null;
+    }
+
     if (_state == VoiceSessionState.dealerLocked) {
       _state = VoiceSessionState.connectionLost;
       _connectionLostTime = DateTime.now();
@@ -239,7 +296,6 @@ class SonioxService {
     } else {
       _statusController.add('disconnected');
     }
-    _isConnected = false;
   }
 
   /// Start grace period timer for connection recovery
@@ -551,6 +607,7 @@ class SonioxService {
 
     _isStreaming = false;
     _gracePeriodTimer?.cancel();
+    _stopKeepAlive();
 
     // 1. Stop audio recording (mic off)
     await _audioSubscription?.cancel();
@@ -611,6 +668,7 @@ class SonioxService {
   void dispose() {
     stopStreaming();
     _gracePeriodTimer?.cancel();
+    _stopKeepAlive();
     _finalTranscriptController.close();
     _partialController.close();
     _statusController.close();

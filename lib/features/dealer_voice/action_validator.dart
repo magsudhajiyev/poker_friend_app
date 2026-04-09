@@ -7,12 +7,14 @@ class ActionValidationResult {
   final ParsedAction correctedAction;
   final List<String> corrections;
   final String? rejectionReason;
+  final bool isSeatMismatch;
 
   const ActionValidationResult({
     required this.isValid,
     required this.correctedAction,
     this.corrections = const [],
     this.rejectionReason,
+    this.isSeatMismatch = false,
   });
 
   factory ActionValidationResult.valid(
@@ -33,6 +35,15 @@ class ActionValidationResult {
       rejectionReason: reason,
     );
   }
+
+  factory ActionValidationResult.seatMismatch(ParsedAction action, String reason) {
+    return ActionValidationResult(
+      isValid: false,
+      correctedAction: action,
+      rejectionReason: reason,
+      isSeatMismatch: true,
+    );
+  }
 }
 
 /// Validates parsed actions against game state.
@@ -51,12 +62,25 @@ class ActionValidator {
     final corrections = <String>[];
     final currentPlayer = gameState.currentPlayer;
 
-    // Check 1: Is hand active?
+    // Check 0: Seat number required
+    if (parsed.seatNumber == null) {
+      return ActionValidationResult.invalid(parsed, 'No seat number specified');
+    }
+
+    // Check 1: Seat matches current player
+    if (parsed.seatNumber != currentPlayer) {
+      return ActionValidationResult.seatMismatch(
+        parsed,
+        'Seat ${parsed.seatNumber} not current (expected seat $currentPlayer)',
+      );
+    }
+
+    // Check 2: Is hand active?
     if (!isHandActive) {
       return ActionValidationResult.invalid(parsed, 'No active hand');
     }
 
-    // Check 2: Is there a current player who can act?
+    // Check 3: Is there a current player who can act?
     if (!gameState.canPlayerAct(currentPlayer)) {
       return ActionValidationResult.invalid(
         parsed,
@@ -108,19 +132,14 @@ class ActionValidator {
         (playerAction == PlayerAction.bet ||
             playerAction == PlayerAction.raise)) {
       final stack = gameState.getPlayerStack(currentPlayer);
-      final currentBet = gameState.getCurrentBet();
       final playerBet = gameState.players[currentPlayer - 1].betThisRound;
-      final minRaise = currentBet * 2 - playerBet; // Simplified min raise
       final maxBet = stack + playerBet;
 
       if (amount > maxBet) {
         corrections.add('Amount ${amount.toInt()} → all-in ${maxBet.toInt()}');
         amount = maxBet;
-      } else if (amount < minRaise && playerAction == PlayerAction.raise) {
-        // Only snap up for raises, not bets
-        corrections.add('Amount ${amount.toInt()} → min ${minRaise.toInt()}');
-        amount = minRaise;
       }
+      // Note: no min-raise enforcement — trust the dealer's spoken amount
     }
 
     // Return corrected action
@@ -129,6 +148,7 @@ class ActionValidator {
         action: _playerActionToString(playerAction),
         amount: amount,
         confidence: parsed.confidence,
+        seatNumber: parsed.seatNumber,
       ),
       corrections,
     );

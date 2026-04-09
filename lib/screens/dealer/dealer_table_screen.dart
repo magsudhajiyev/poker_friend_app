@@ -142,22 +142,27 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     _voiceCubit = DealerVoiceCubit(
       sonioxService: _realtimeSpeechService,
       onExecuteAction: _onVoiceActionValidated,
+      onSeatMismatch: _onSeatMismatch,
     );
+  }
+
+  void _onSeatMismatch(int spokenSeat, int expectedSeat) {
+    HapticFeedback.heavyImpact();
+    debugPrint('[STT:MISMATCH] Spoke seat $spokenSeat, expected seat $expectedSeat');
   }
 
   /// Called by voice cubit when an action is validated and ready to execute
   Future<void> _onVoiceActionValidated(ParsedAction action) async {
-    debugPrint('[DealerTableScreen] _onVoiceActionValidated: ${action.action} (amount=${action.amount})');
-
     // Map to PlayerAction and execute
     final playerAction = _mapParsedActionToPlayerAction(action);
     if (playerAction == null) {
-      debugPrint('[DealerTableScreen] Could not map action to PlayerAction');
+      debugPrint('[STT:EXEC] REJECTED - Could not map "${action.action}" to PlayerAction');
       return;
     }
 
     final currentSeat = _gameState?.currentPlayer;
-    debugPrint('[DealerTableScreen] Executing $playerAction for seat $currentSeat');
+    final pName = currentSeat != null ? _sessionManager?.getPlayerName(currentSeat) ?? '?' : '?';
+    debugPrint('[STT:EXEC] Seat $currentSeat ($pName) → $playerAction (amount=${action.amount})');
 
     await _performAction(
       playerAction,
@@ -166,7 +171,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       confidence: action.confidence,
     );
 
-    debugPrint('[DealerTableScreen] Action executed. New currentPlayer: ${_gameState?.currentPlayer}');
+    final nextSeat = _gameState?.currentPlayer;
+    final nextName = nextSeat != null ? _sessionManager?.getPlayerName(nextSeat) ?? '?' : '?';
+    debugPrint('[STT:EXEC] Done. Next player: seat $nextSeat ($nextName)');
+
 
     // CRITICAL: Update cubit with fresh game state after execution
     // PokerGameState is mutated in place by _performAction, so currentPlayer
@@ -531,64 +539,73 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       if (recordAmount > player.currentStack) {
         recordAmount = player.currentStack;
       }
+      // Call with 0 additional chips is really a check (e.g. BB option)
+      if (recordAmount == 0) {
+        action = PlayerAction.check;
+        recordAmount = null;
+      }
     }
 
-    // Record action in session manager (for Firebase/stats)
-    _sessionManager!.recordAction(
-      currentSeat,
-      action,
-      _gameState!.currentRound,
-      _gameState!.buttonPosition,
-      playerStack: playerStack,
-      amount: recordAmount,
-    );
+    // Capture street/button BEFORE game state action (it may advance currentPlayer/round)
+    final recordStreet = _gameState!.currentRound;
+    final recordButton = _gameState!.buttonPosition;
 
-    // Perform action in game state (handles progression, pot, etc.)
+    // Perform action in game state FIRST (handles progression, pot, clamping)
     if (amount != null && (action == PlayerAction.bet || action == PlayerAction.raise)) {
       _gameState!.performActionWithAmount(action, amount);
+      // Read back actual clamped betThisRound — game state clamps to [minBet, maxStack]
+      // This ensures undo subtracts the exact amount that was added to pot
+      recordAmount = _gameState!.players[currentSeat - 1].betThisRound;
     } else if (action == PlayerAction.call) {
       _gameState!.performActionWithAmount(action, 0); // Call calculates internally
     } else {
       _gameState!.performAction(action);
     }
 
-    // Log action to Firebase for real-time player sync
+    // Record action in session manager with clamped amount (for Firebase/stats/undo)
+    _sessionManager!.recordAction(
+      currentSeat,
+      action,
+      recordStreet,
+      recordButton,
+      playerStack: playerStack,
+      amount: recordAmount,
+    );
+
+    // Log action to Firebase for real-time player sync (fire-and-forget)
     final handId = _dealerSession.currentHandId;
     if (handId != null && handId.isNotEmpty) {
-      try {
-        // Get current street from game state
-        final streetName = _gameState!.currentRound.name; // 'preflop', 'flop', 'turn', 'river'
+      // Use pre-action street name for recording
+      final streetName = recordStreet.name; // 'preflop', 'flop', 'turn', 'river'
 
-        // Calculate position using active seats (not folded players still count for position)
-        final activeSeats = <int>[];
-        for (int i = 1; i <= 9; i++) {
-          if (_gameState!.players[i - 1].isActive) {
-            activeSeats.add(i);
-          }
+      // Calculate position using active seats (not folded players still count for position)
+      final activeSeats = <int>[];
+      for (int i = 1; i <= 9; i++) {
+        if (_gameState!.players[i - 1].isActive) {
+          activeSeats.add(i);
         }
-        final playerPosition = PokerPositions.getPositionNameForActivePlayers(
-          currentSeat,
-          _gameState!.buttonPosition,
-          activeSeats,
-        );
-
-        await DealerService.logAction(
-          sessionId: _dealerSession.id,
-          handId: handId,
-          seatNumber: currentSeat,
-          action: action.name,
-          street: streetName,
-          amount: amount,
-          playerName: playerName,
-          playerStack: playerStack,
-          playerPosition: playerPosition,
-          transcript: transcript,
-          confidence: confidence,
-        );
-      } catch (e) {
-        // Log error but don't block the UI
-        debugPrint('Error logging action to Firebase: $e');
       }
+      final playerPosition = PokerPositions.getPositionNameForActivePlayers(
+        currentSeat,
+        recordButton,
+        activeSeats,
+      );
+
+      unawaited(DealerService.logAction(
+        sessionId: _dealerSession.id,
+        handId: handId,
+        seatNumber: currentSeat,
+        action: action.name,
+        street: streetName,
+        amount: recordAmount,
+        playerName: playerName,
+        playerStack: playerStack,
+        playerPosition: playerPosition,
+        transcript: transcript,
+        confidence: confidence,
+      ).catchError((e) {
+        debugPrint('Error logging action to Firebase: $e');
+      }));
     }
 
     // Emit WebSocket event for real-time updates
@@ -676,6 +693,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       // Advance game state to next street (streetPots auto-snapshotted)
       _gameState!.startNewStreet();
 
+      // CRITICAL: Update voice cubit with fresh game state after street advance.
+      // This triggers replay of any deferred actions from the previous street.
+      _voiceCubit?.updateGameState(_gameState, _isHandActive);
+
       setState(() {});
     } finally {
       _isShowingBoardCardsDialog = false;
@@ -692,6 +713,19 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         return BettingRound.river;
       case BettingRound.river:
         return BettingRound.river;
+    }
+  }
+
+  BettingRound _getPreviousRound(BettingRound current) {
+    switch (current) {
+      case BettingRound.flop:
+        return BettingRound.preflop;
+      case BettingRound.turn:
+        return BettingRound.flop;
+      case BettingRound.river:
+        return BettingRound.turn;
+      case BettingRound.preflop:
+        return BettingRound.preflop;
     }
   }
 
@@ -1708,7 +1742,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       try {
         await _sessionManager!.endSession();
       } catch (e) {
-        print('Error ending session during event end: $e');
+        // print('Error ending session during event end: $e');
       }
       _sessionStarted = false;
     }
@@ -2784,6 +2818,15 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                // Board cards button (re-open dialog when betting round complete)
+                if (_isHandActive && _gameState != null && _gameState!.bettingRoundComplete) ...[
+                  _buildHeaderPillButton(
+                    bgColor: const Color(0xFF1B1E24),
+                    onTap: _handleBettingRoundComplete,
+                    child: const Icon(Icons.style, color: Color(0xFF4C94FF), size: 22),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 // QR button
                 _buildHeaderPillButton(
                   bgColor: const Color(0xFF1B1E24),
@@ -3217,6 +3260,29 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Board cards display
+              if (_sessionManager?.currentHand?.boardCards != null)
+                _buildBoardCardsRow(_sessionManager!.currentHand!.boardCards!),
+              // Ante pill (shown when BB ante is active, preflop only)
+              if (_dealerSession.hasBBante && _isHandActive && _gameState!.currentRound == BettingRound.preflop) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                  margin: const EdgeInsets.only(bottom: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4C94FF),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Text(
+                    'ANTE ${_formatAmount(_bigBlind)}',
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      height: 1.44,
+                    ),
+                  ),
+                ),
+              ],
               Text(
                 _formatAmount(_gameState!.currentPot),
                 style: GoogleFonts.ibmPlexSans(
@@ -3304,7 +3370,20 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     final isCurrentPlayer = seatNumber == _gameState!.currentPlayer && _isHandActive;
     final isButton = seatNumber == _gameState!.buttonPosition;
     final stack = playerState.currentStack;
-    final bet = playerState.betThisRound;
+    var displayBet = playerState.betThisRound;
+
+    // When BB ante is active, BB's betThisRound includes both BB + ante.
+    // Show only the BB portion in the seat pill (ante shown in table center).
+    if (_dealerSession.hasBBante &&
+        seatNumber == _gameState!.effectiveBBPosition &&
+        _gameState!.currentRound == BettingRound.preflop &&
+        displayBet > 0 &&
+        playerState.lastAction == PlayerAction.none) {
+      displayBet = displayBet / 2; // BB portion only (ante = same as BB)
+    }
+
+    final hasChecked = playerState.lastAction == PlayerAction.check && displayBet == 0 && !isFolded;
+    final isAllIn = playerState.isAllIn;
 
     return _buildSeat(
       seatNumber: seatNumber,
@@ -3315,7 +3394,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       isCurrentPlayer: isCurrentPlayer,
       isButton: isButton,
       stack: stack,
-      bet: bet,
+      bet: displayBet,
+      hasChecked: hasChecked,
+      isAllIn: isAllIn,
       onPendingTap: isPending && assignment != null
           ? () => _showApproveJoinDialog(assignment)
           : null,
@@ -3374,6 +3455,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     required bool isButton,
     required double stack,
     required double bet,
+    bool hasChecked = false,
+    bool isAllIn = false,
     VoidCallback? onPendingTap,
     VoidCallback? onOccupiedTap,
     VoidCallback? onEmptyTap,
@@ -3467,21 +3550,42 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             ),
           ),
         ],
-        // Bet pill (blue #4C94FF) — hidden for folded players
+        // Bet pill — blue normally, red for all-in
         if (bet > 0 && !isFolded) ...[
           const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
             decoration: BoxDecoration(
-              color: const Color(0xFF4C94FF),
+              color: isAllIn ? const Color(0xFFE53935) : const Color(0xFF4C94FF),
               borderRadius: BorderRadius.circular(30),
             ),
             child: Text(
-              _formatAmount(bet),
+              isAllIn ? 'ALL-IN' : _formatAmount(bet),
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
+                height: 1.44,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+        // Check pill (green) — shown when player has checked this round
+        if (hasChecked) ...[
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3BA55D),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Text(
+              'CHECK',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
                 height: 1.44,
               ),
               textAlign: TextAlign.center,
@@ -3530,10 +3634,22 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-                      decoration: BoxDecoration(color: const Color(0xFF4C94FF), borderRadius: BorderRadius.circular(30)),
+                      decoration: BoxDecoration(color: isAllIn ? const Color(0xFFE53935) : const Color(0xFF4C94FF), borderRadius: BorderRadius.circular(30)),
                       child: Text(
-                        _formatAmount(bet),
+                        isAllIn ? 'ALL-IN' : _formatAmount(bet),
                         style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500, height: 1.44),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                  if (hasChecked) ...[
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                      decoration: BoxDecoration(color: const Color(0xFF3BA55D), borderRadius: BorderRadius.circular(30)),
+                      child: Text(
+                        'CHECK',
+                        style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600, height: 1.44),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -3730,9 +3846,13 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               _buildCalibrationUI(),
             if (_isVoiceMode && _voiceState == VoiceSessionState.connectionLost)
               _buildConnectionLostUI(),
-            if (_isVoiceMode && (_voiceState == VoiceSessionState.dealerLocked ||
+            // Restart voice button (shown when voice is off but hand is active)
+            if (!_isVoiceMode && _isHandActive)
+              _buildVoiceRestartBar(),
+            if ((_isVoiceMode && (_voiceState == VoiceSessionState.dealerLocked ||
                 _voiceState == VoiceSessionState.calibrating ||
-                _voiceState == VoiceSessionState.connectionLost))
+                _voiceState == VoiceSessionState.connectionLost)) ||
+                (!_isVoiceMode && _isHandActive))
               const SizedBox(height: 12),
             // Player info row
             Container(
@@ -3869,6 +3989,89 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             constraints: const BoxConstraints(),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Build board cards row displayed in the table center after card selection.
+  Widget _buildBoardCardsRow(BoardCards boardCards) {
+    final cards = <String>[
+      ...boardCards.flop,
+      if (boardCards.turn != null) boardCards.turn!,
+      if (boardCards.river != null) boardCards.river!,
+    ];
+    if (cards.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: cards.map((card) {
+          final isRed = card.contains('♥') || card.contains('♦');
+          return Container(
+            width: 32,
+            height: 44,
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                card,
+                style: GoogleFonts.ibmPlexMono(
+                  color: isRed ? Colors.red : Colors.black,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  height: 1.0,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  /// Build restart voice bar - shown when voice was stopped and dealer can re-enable it
+  Widget _buildVoiceRestartBar() {
+    return GestureDetector(
+      onTap: () {
+        setState(() => _isVoiceMode = true);
+        _startContinuousListening();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A2A3A),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white24, width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.mic_off, color: Colors.white54, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Voice off',
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            Icon(Icons.play_arrow, color: Colors.white, size: 24),
+          ],
+        ),
       ),
     );
   }
@@ -4090,6 +4293,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     _statusSubscription = null;
 
     setState(() {
+      _isVoiceMode = false;
       _isListening = false;
       _partialTranscript = '';
       _connectionStatus = 'stopped';
@@ -4282,7 +4486,6 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     if (_gameState == null || _sessionManager == null) return false;
     if (_sessionManager!.currentHand == null) return false;
     if (_sessionManager!.currentHand!.actions.isEmpty) return false;
-    if (_gameState!.bettingRoundComplete) return false;
     if (!_isHandActive) return false;
 
     // Find last non-blind action
@@ -4313,6 +4516,31 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
     if (lastActionIndex == -1) return;
 
+    // Cross-street undo: if no non-blind actions on current street,
+    // roll back to previous street (removes board cards, restores pot)
+    final currentStreet = _gameState!.currentRound;
+    if (currentStreet != BettingRound.preflop) {
+      bool hasActionsOnCurrentStreet = false;
+      for (final a in actions) {
+        if (a.street == currentStreet && a.action != PlayerAction.none) {
+          hasActionsOnCurrentStreet = true;
+          break;
+        }
+      }
+      if (!hasActionsOnCurrentStreet) {
+        _rollbackToPreviousStreet();
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Rolled back to ${_gameState!.currentRound.name}'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+    }
+
     final lastAction = actions[lastActionIndex];
     final seatNumber = lastAction.player;
     final player = _gameState!.players[seatNumber - 1];
@@ -4334,15 +4562,15 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         break;
 
       case PlayerAction.call:
-        final callAmount = lastAction.amount ?? 0;
-        final previousCallBet = _getPreviousBetThisRound(seatNumber, lastActionIndex);
-        final callAdditional = callAmount - previousCallBet;
+        // Call action records the DELTA (additional chips put in), not total
+        final callDelta = lastAction.amount ?? 0;
+        final previousBet = _getPreviousBetThisRound(seatNumber, lastActionIndex);
 
-        if (callAdditional > 0) {
-          player.currentStack += callAdditional;
+        if (callDelta > 0) {
+          player.currentStack += callDelta;
           player.isAllIn = false;
-          player.betThisRound = previousCallBet;
-          _gameState!.currentPot -= callAdditional;
+          player.betThisRound = previousBet;
+          _gameState!.currentPot -= callDelta;
           if (_gameState!.currentPot < 0) _gameState!.currentPot = 0;
         }
 
@@ -4381,6 +4609,14 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     // Remove action from history
     actions.removeAt(lastActionIndex);
 
+    // Sync updated actions to Firestore for player screens
+    _syncActionsToFirestore();
+
+    // If bettingRoundComplete was true, undoing the completing action resets it
+    if (_gameState!.bettingRoundComplete) {
+      _gameState!.bettingRoundComplete = false;
+    }
+
     // Check if all actions have been undone (only blinds remain)
     bool onlyBlindsRemain = true;
     for (final action in actions) {
@@ -4409,23 +4645,176 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     setState(() {});
   }
 
-  /// Get the total bet a player had made before a specific action index
+  /// Sync the current in-memory actions list to Firestore (fire-and-forget).
+  /// Called after undo/rollback to update player screens.
+  void _syncActionsToFirestore() {
+    final handId = _dealerSession.currentHandId;
+    if (handId == null || handId.isEmpty) return;
+    if (_sessionManager?.currentHand == null) return;
+
+    final actions = _sessionManager!.currentHand!.actions;
+    final firestoreActions = actions.map((a) => {
+      'player': a.player,
+      'action': a.action.name,
+      'street': a.street.name,
+      'amount': a.amount,
+      'playerName': a.playerName,
+      'playerStack': a.playerStack,
+      'playerPosition': a.playerPosition,
+      'timestamp': a.timestamp.toIso8601String(),
+    }).toList();
+
+    unawaited(DealerService.syncActions(
+      sessionId: _dealerSession.id,
+      handId: handId,
+      actions: firestoreActions,
+    ).catchError((e) {
+      debugPrint('Error syncing actions after undo: $e');
+    }));
+  }
+
+  /// Roll back to the previous street — reverses startNewStreet().
+  /// Called when all actions on the current street have been undone.
+  void _rollbackToPreviousStreet() {
+    final prevRound = _getPreviousRound(_gameState!.currentRound);
+
+    // Restore pot from streetPots snapshot
+    if (_gameState!.streetPots.containsKey(prevRound)) {
+      _gameState!.currentPot = _gameState!.streetPots[prevRound]!;
+      _gameState!.streetPots.remove(prevRound);
+    }
+
+    // Revert currentRound
+    _gameState!.currentRound = prevRound;
+
+    // Remove board cards for the street we're leaving
+    if (_sessionManager!.currentHand?.boardCards != null) {
+      final bc = _sessionManager!.currentHand!.boardCards!;
+      switch (prevRound) {
+        case BettingRound.preflop:
+          bc.flop = [];
+          bc.turn = null;
+          bc.river = null;
+          break;
+        case BettingRound.flop:
+          bc.turn = null;
+          bc.river = null;
+          break;
+        case BettingRound.turn:
+          bc.river = null;
+          break;
+        case BettingRound.river:
+          break;
+      }
+    }
+
+    // Rebuild player state for the previous street from action history.
+    // Reverse resetForNewStreet(): totalContribution += betThisRound, betThisRound = 0
+    final actions = _sessionManager!.currentHand!.actions;
+    for (var player in _gameState!.players) {
+      if (!player.hasFolded) {
+        // Reconstruct betThisRound from actions on the previous street.
+        // Call amounts are DELTAS (add), bet/raise amounts are TOTALS (replace).
+        double streetBet = 0;
+        if (prevRound == BettingRound.preflop) {
+          streetBet = _getBlindAmountForSeat(player.playerId);
+        }
+        for (final action in actions) {
+          if (action.player == player.playerId && action.street == prevRound) {
+            if (action.action == PlayerAction.call) {
+              streetBet += (action.amount ?? 0); // Call = delta, ADD
+            } else if (action.action == PlayerAction.bet ||
+                       action.action == PlayerAction.raise) {
+              streetBet = action.amount ?? streetBet; // Bet/Raise = total, REPLACE
+            }
+          }
+        }
+        // Undo the totalContribution accumulation from resetForNewStreet()
+        player.totalContribution -= streetBet;
+        if (player.totalContribution < 0) player.totalContribution = 0;
+        player.betThisRound = streetBet;
+        // Restore acted/called status — the round was complete so all active players had acted
+        player.hasActed = true;
+        player.hasCalledCurrentBet = true;
+      }
+    }
+
+    // The previous street was complete
+    _gameState!.bettingRoundComplete = true;
+
+    // Recalculate betting state from action history
+    _recalculateCurrentBet(actions.length);
+    _recalculateHasBetThisRound(actions.length);
+    _recalculateAllPlayersCallStatus(actions.length);
+
+    // Set currentPlayer to the last player who acted on the previous street
+    final prevStreetActions = actions
+        .where((a) => a.street == prevRound && a.action != PlayerAction.none)
+        .toList();
+    if (prevStreetActions.isNotEmpty) {
+      _gameState!.currentPlayer = prevStreetActions.last.player;
+    }
+
+    // Sync board cards to Firestore — must write even when clearing cards
+    final handId = _dealerSession.currentHandId;
+    if (handId != null && handId.isNotEmpty) {
+      final bc = _sessionManager!.currentHand?.boardCards;
+      DealerService.clearBoardCards(
+        sessionId: _dealerSession.id,
+        handId: handId,
+        flop: bc?.flop ?? [],
+        turn: bc?.turn,
+        river: bc?.river,
+      ).catchError((e) => debugPrint('Error syncing board cards after rollback: $e'));
+    }
+
+    debugPrint('[UNDO] Rolled back to ${prevRound.name} — pot: ${_gameState!.currentPot}');
+  }
+
+  /// Get the player's betThisRound value before a specific action index.
+  /// Starts with blind amount on preflop, then accumulates:
+  /// - Call amounts are DELTAS (added to running total)
+  /// - Bet/Raise amounts are TOTALS (replace running total)
   double _getPreviousBetThisRound(int seatNumber, int beforeIndex) {
     double totalBet = 0;
     final currentStreet = _gameState!.currentRound;
     final actions = _sessionManager!.currentHand!.actions;
 
+    // On preflop, include blind posts as the base bet
+    if (currentStreet == BettingRound.preflop) {
+      totalBet = _getBlindAmountForSeat(seatNumber);
+    }
+
     for (int i = 0; i < beforeIndex; i++) {
       final action = actions[i];
-      if (action.player == seatNumber &&
-          action.street == currentStreet &&
-          (action.action == PlayerAction.bet ||
-           action.action == PlayerAction.raise ||
-           action.action == PlayerAction.call)) {
-        totalBet = action.amount ?? totalBet;
+      if (action.player == seatNumber && action.street == currentStreet) {
+        if (action.action == PlayerAction.call) {
+          // Call records a DELTA — add to running total
+          totalBet += (action.amount ?? 0);
+        } else if (action.action == PlayerAction.bet ||
+                   action.action == PlayerAction.raise) {
+          // Bet/Raise records a TOTAL — replaces running total
+          totalBet = action.amount ?? totalBet;
+        }
       }
     }
     return totalBet;
+  }
+
+  /// Get the blind amount posted by a specific seat (SB, BB, or 0 for others).
+  double _getBlindAmountForSeat(int seatNumber) {
+    if (_gameState == null) return 0;
+
+    if (seatNumber == _gameState!.effectiveSBPosition) {
+      return _dealerSession.smallBlind.toDouble();
+    } else if (seatNumber == _gameState!.effectiveBBPosition) {
+      double bbAmount = _dealerSession.bigBlind.toDouble();
+      if (_dealerSession.hasBBante) {
+        bbAmount += _dealerSession.bigBlind.toDouble(); // BB + ante
+      }
+      return bbAmount;
+    }
+    return 0;
   }
 
   /// Recalculate the current bet after undoing an action

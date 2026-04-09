@@ -3,20 +3,24 @@ class ParsedAction {
   final String action;
   final double? amount;
   final double confidence;
+  final int? seatNumber;
 
-  ParsedAction({
+  const ParsedAction({
     required this.action,
     this.amount,
     this.confidence = 1.0,
+    this.seatNumber,
   });
 
   @override
-  String toString() => 'ParsedAction($action${amount != null ? ', $amount' : ''})';
+  String toString() =>
+      'ParsedAction(seat=$seatNumber, $action${amount != null ? ', $amount' : ''})';
 }
 
-/// Local action parser for poker speech.
+/// Local action parser for seat-anchored poker speech.
 ///
-/// Parses transcriptions into poker actions.
+/// Parses transcriptions into poker actions with required seat numbers.
+/// Expected format: "seat 4 call", "s4 call", "4 call", "seat 3 raise 2000"
 /// Expects English input (Soniox translates all languages to English).
 class ActionParser {
   // English and Polish number words to digits
@@ -41,45 +45,30 @@ class ActionParser {
     'sto': '100', 'tysiąc': '1000',
   };
 
-  // Patterns with their action types and amount group index
-  static final List<_ActionPattern> _patterns = [
-    // Fold
-    _ActionPattern(RegExp(r'\b(fold|pass|muck)\b', caseSensitive: false), 'fold'),
+  /// Single unified pattern for seat-anchored commands.
+  /// Matches: "seat 4 call", "s4 call", "4 call", "seat 3 raise 2000"
+  ///
+  /// Groups: (1)=seat number, (2)=action keyword, (3)=optional amount
+  ///
+  /// NOTE: "all-in" uses \b anchor to prevent "call" from matching as c-"all in".
+  /// Actions are listed longest-first to prevent partial matches.
+  static final RegExp _seatActionPattern = RegExp(
+    r'(?:seat\s+|s)(\d)[,.\s]+'       // "seat 4 " or "s4, " with seat in group(1)
+    r'(all[\s-]?in|re-?raise|reraise|raising|checking|calling|betting|'
+    r'fold|pass|muck|check|call|bet|raise|shove|jam)'  // action in group(2)
+    r'(?:[.,\s]+([\d,]+\.?\d*k?))?',   // optional amount in group(3)
+    caseSensitive: false,
+  );
 
-    // Check
-    _ActionPattern(RegExp(r'\b(check|checking)\b', caseSensitive: false), 'check'),
-
-    // Call
-    _ActionPattern(RegExp(r'\b(call|calling)\b', caseSensitive: false), 'call'),
-
-    // Bet with amount (supports commas, decimals, and "k" suffix: 2,000 or 9.5k)
-    // Allows punctuation between action and amount (e.g., "bet. 500" or "bet 500")
-    _ActionPattern(
-      RegExp(r'\b(?:bet|betting)[.,\s]+([\d,]+\.?\d*k?)', caseSensitive: false),
-      'bet',
-      amountGroup: 1,
-    ),
-
-    // Raise with amount (supports commas, decimals, and "k" suffix: 2,000 or 9.5k)
-    // Allows punctuation between action and amount (e.g., "raise. 3,000" or "raise 3000")
-    _ActionPattern(
-      RegExp(r'\b(?:raise|re-raise|reraise|raising)[.,\s]+([\d,]+\.?\d*k?)', caseSensitive: false),
-      'raise',
-      amountGroup: 1,
-    ),
-
-    // Raise without amount (only matches if NOT followed by punctuation+number)
-    _ActionPattern(
-      RegExp(r'\b(raise|re-raise|reraise)\b(?![.,\s]+[\d,])', caseSensitive: false),
-      'raise',
-    ),
-
-    // All-in
-    _ActionPattern(
-      RegExp(r'\b(all-in|all in|allin|shove|jam)\b', caseSensitive: false),
-      'all-in',
-    ),
-  ];
+  /// Bare digit prefix: "4 call", "5 fold"
+  /// Only matches digits 1-9 preceded by start-of-string or separator.
+  static final RegExp _bareSeatPattern = RegExp(
+    r'(?:^|[.\s,])([1-9])[,.\s]+'     // seat digit in group(1)
+    r'(all[\s-]?in|re-?raise|reraise|raising|checking|calling|betting|'
+    r'fold|pass|muck|check|call|bet|raise|shove|jam)'  // action in group(2)
+    r'(?:[.,\s]+([\d,]+\.?\d*k?))?',   // optional amount in group(3)
+    caseSensitive: false,
+  );
 
   /// Convert number words to digits (e.g., "five" → "5").
   /// Sorts by word length descending so "sixty" is replaced before "six".
@@ -117,69 +106,102 @@ class ActionParser {
     return double.tryParse(cleaned);
   }
 
-  /// Parse a transcript into a list of poker actions.
+  /// Normalize action keywords to canonical form.
+  static String _normalizeAction(String raw) {
+    final lower = raw.toLowerCase().trim();
+    if (lower == 'pass' || lower == 'muck') return 'fold';
+    if (lower == 'checking') return 'check';
+    if (lower == 'calling') return 'call';
+    if (lower == 'betting') return 'bet';
+    if (lower.startsWith('re') || lower == 'raising') return 'raise';
+    if (lower.startsWith('all') || lower == 'shove' || lower == 'jam') {
+      return 'all-in';
+    }
+    return lower;
+  }
+
+  /// Parse a transcript into a list of seat-anchored poker actions.
   ///
   /// Returns actions in the order they appear in the transcript.
+  /// Actions without a seat prefix are returned with seatNumber=null
+  /// so the validator can reject them with a clear message.
   static List<ParsedAction> parse(String transcript) {
-    final actions = <ParsedAction>[];
     final text = _normalizeNumbers(transcript.toLowerCase());
-
-    // Track matches with their positions to sort by order of appearance
     final matches = <_MatchedAction>[];
 
-    for (final pattern in _patterns) {
-      for (final match in pattern.regex.allMatches(text)) {
-        double? amount;
+    // Track consumed character ranges to prevent duplicate matches
+    final consumed = <int>{};
 
-        // Extract amount if pattern has an amount group
-        if (pattern.amountGroup != null && match.groupCount >= pattern.amountGroup!) {
-          final amountStr = match.group(pattern.amountGroup!);
-          amount = _parseAmount(amountStr);
-        }
+    // 1. Match "seat N action" and "sN action" patterns (higher priority)
+    for (final match in _seatActionPattern.allMatches(text)) {
+      final seat = int.tryParse(match.group(1)!);
+      if (seat == null || seat < 1 || seat > 9) continue;
 
-        matches.add(_MatchedAction(
-          position: match.start,
-          action: pattern.action,
-          amount: amount,
-        ));
+      final action = _normalizeAction(match.group(2)!);
+      final amount = _parseAmount(match.group(3));
+
+      matches.add(_MatchedAction(
+        position: match.start,
+        action: action,
+        amount: amount,
+        seatNumber: seat,
+      ));
+
+      // Mark range as consumed
+      for (int i = match.start; i < match.end; i++) {
+        consumed.add(i);
       }
     }
 
-    // Sort by position to maintain order of actions
+    // 2. Match bare "N action" patterns — skip if already consumed
+    for (final match in _bareSeatPattern.allMatches(text)) {
+      // Skip if any character in this match was already consumed
+      bool overlaps = false;
+      for (int i = match.start; i < match.end; i++) {
+        if (consumed.contains(i)) {
+          overlaps = true;
+          break;
+        }
+      }
+      if (overlaps) continue;
+
+      final seat = int.tryParse(match.group(1)!);
+      if (seat == null) continue;
+
+      final action = _normalizeAction(match.group(2)!);
+      final amount = _parseAmount(match.group(3));
+
+      matches.add(_MatchedAction(
+        position: match.start,
+        action: action,
+        amount: amount,
+        seatNumber: seat,
+      ));
+    }
+
+    // 3. Sort by position to maintain order
     matches.sort((a, b) => a.position.compareTo(b.position));
 
-    // Remove duplicates at same position (e.g., "raise" matching both with and without amount)
-    final seen = <int>{};
-    for (final match in matches) {
-      if (!seen.contains(match.position)) {
-        seen.add(match.position);
-        actions.add(ParsedAction(
-          action: match.action,
-          amount: match.amount,
-        ));
-      }
-    }
-
-    return actions;
+    return matches
+        .map((m) => ParsedAction(
+              action: m.action,
+              amount: m.amount,
+              seatNumber: m.seatNumber,
+            ))
+        .toList();
   }
-}
-
-class _ActionPattern {
-  final RegExp regex;
-  final String action;
-  final int? amountGroup;
-
-  _ActionPattern(this.regex, this.action, {this.amountGroup});
 }
 
 class _MatchedAction {
   final int position;
   final String action;
   final double? amount;
+  final int? seatNumber;
 
   _MatchedAction({
     required this.position,
     required this.action,
     this.amount,
+    this.seatNumber,
   });
 }

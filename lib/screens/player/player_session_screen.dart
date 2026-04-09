@@ -754,12 +754,12 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFA726).withValues(alpha: 0.12),
+                  color: const Color(0xFF62E3BC).withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.leaderboard_rounded,
-                  color: Color(0xFFFFA726),
+                  color: Color(0xFF62E3BC),
                   size: 22,
                 ),
               ),
@@ -768,7 +768,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           ],
           // Dealer badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
             decoration: BoxDecoration(
               color: const Color(0xFF89F1EC).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(40),
@@ -778,14 +778,14 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               children: [
                 const Icon(
                   Icons.person_rounded,
-                  size: 14,
+                  size: 11,
                   color: Color(0xFF89F1EC),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 3),
                 Text(
                   dealerName,
                   style: GoogleFonts.ibmPlexSans(
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w500,
                     color: const Color(0xFF89F1EC),
                   ),
@@ -1104,6 +1104,9 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
   // ─── ACTIONS ─────────────────────────────────────────────────────
 
+  /// Tracks which streets are expanded in the actions section.
+  final Set<String> _expandedStreets = {};
+
   Widget _buildActionsSection() {
     if (_actions.isEmpty) {
       return Container(
@@ -1137,6 +1140,23 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       actionsByStreet[street]?.add(action);
     }
 
+    // Find the latest street with actions — keep it expanded by default
+    final nonEmptyStreets = actionsByStreet.entries
+        .where((e) => e.value.isNotEmpty)
+        .map((e) => e.key)
+        .toList();
+    if (nonEmptyStreets.isNotEmpty) {
+      final latestStreet = nonEmptyStreets.last;
+      // Auto-expand the latest street, collapse completed ones
+      if (!_expandedStreets.contains(latestStreet)) {
+        _expandedStreets.add(latestStreet);
+        // Collapse previous streets when a new one starts
+        for (final s in nonEmptyStreets) {
+          if (s != latestStreet) _expandedStreets.remove(s);
+        }
+      }
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.backgroundSurface,
@@ -1166,29 +1186,63 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           ...actionsByStreet.entries
               .where((e) => e.value.isNotEmpty)
               .map((e) => _buildStreetActions(e.key, e.value)),
+          const SizedBox(height: 8),
         ],
       ),
     );
   }
 
   Widget _buildStreetActions(String street, List<Map<String, dynamic>> actions) {
+    final isExpanded = _expandedStreets.contains(street);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: AppColors.backgroundPaper,
-          child: Text(
-            street.toUpperCase(),
-            style: GoogleFonts.ibmPlexSans(
-              color: const Color(0xFF87ED81),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1,
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              if (isExpanded) {
+                _expandedStreets.remove(street);
+              } else {
+                _expandedStreets.add(street);
+              }
+            });
+          },
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: AppColors.backgroundPaper,
+            child: Row(
+              children: [
+                Text(
+                  street.toUpperCase(),
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF87ED81),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '(${actions.length})',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF8C8C8C),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  color: const Color(0xFF8C8C8C),
+                  size: 16,
+                ),
+              ],
             ),
           ),
         ),
-        ...actions.map((action) => _buildActionItem(action)),
+        if (isExpanded)
+          ...actions.map((action) => _buildActionItem(action)),
       ],
     );
   }
