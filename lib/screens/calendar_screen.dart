@@ -531,6 +531,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
+  /// Custom date picker matching Figma design (node 1199:7011).
+  ///
+  /// Centered modal overlay with: "Select Date:" header, Clear + Today pills,
+  /// Month/Year row with mint nav arrows, SUN-first 7-column day grid using
+  /// the reusable [CalendarDayCell] component, and Cancel + Done footer
+  /// buttons. All sizing is derived from [MediaQuery] so the picker stays
+  /// readable on small phones and scales on tablets — no hardcoded pixels
+  /// tuned to one device.
   Future<DateTime?> _showCustomDatePicker(BuildContext context, DateTime initialDate) async {
     DateTime displayMonth = DateTime(initialDate.year, initialDate.month);
     DateTime? selectedDate = initialDate;
@@ -538,381 +546,270 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return await showGeneralDialog<DateTime>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.transparent,
-      transitionDuration: Duration(milliseconds: 200),
-      pageBuilder: (context, animation, secondaryAnimation) {
+      barrierLabel: 'Date picker',
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
         return StatefulBuilder(
           builder: (context, setPickerState) {
-            // Calculate calendar data
-            final daysInMonth = DateTime(displayMonth.year, displayMonth.month + 1, 0).day;
-            final firstDayOfMonth = DateTime(displayMonth.year, displayMonth.month, 1);
-            final startingWeekday = firstDayOfMonth.weekday % 7; // 0 = Sunday
+            // Responsive sizing — everything scales from screen width so the
+            // picker looks right on iPhone SE, iPhone 16 Pro, and tablets.
+            final mediaQuery = MediaQuery.of(context);
+            final screenWidth = mediaQuery.size.width;
+
+            // Card width: 92% of screen, clamped to a sane range. Figma
+            // reference is ~370 on iPhone 16 Pro (430pt wide).
+            final cardWidth = (screenWidth * 0.92).clamp(320.0, 420.0);
+
+            // Internal horizontal padding of the card.
+            final cardHorizontalPadding = AppSpacing.md; // 16
+
+            // The card has a 1px border that consumes 2px of content width
+            // (1px each side). Subtract it so the 7-column grid never
+            // overflows by sub-pixel rounding.
+            const cardBorderWidth = 1.0;
+
+            // Usable width for the 7-column day grid. Floor the cell size
+            // to guarantee `7 * cellSize <= gridWidth` regardless of device
+            // pixel ratio or floating-point accumulation.
+            final gridWidth =
+                cardWidth - (cardHorizontalPadding * 2) - (cardBorderWidth * 2);
+            final cellSize =
+                (gridWidth / 7).floorToDouble().clamp(36.0, 48.0);
+
+            // Font scaling — stay within readable bounds.
+            final monthFontSize = (screenWidth * 0.042).clamp(15.0, 18.0);
+            final dayHeaderFontSize = (cellSize * 0.3).clamp(11.0, 13.0);
 
             return Stack(
               children: [
-                // Blurred backdrop
+                // Blurred backdrop — tap anywhere to dismiss.
                 Positioned.fill(
                   child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.pop(dialogContext),
                     child: BackdropFilter(
                       filter: ui.ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                      child: Container(
-                        color: Colors.black.withOpacity(0.0),
-                      ),
+                      child: Container(color: Colors.transparent),
                     ),
                   ),
                 ),
-                // Date picker content
+
+                // Date picker card — centered.
                 Center(
                   child: Material(
                     color: Colors.transparent,
-                    child: Container(
-                      width: 312,
-                      margin: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: Color(0xFF000300),
-                        border: Border.all(color: Color(0x4CFFFFFF)),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: EdgeInsets.all(8),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Header
-                          Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Row(
+                    child: GestureDetector(
+                      // Swallow taps on the card so the backdrop dismiss
+                      // doesn't fire when interacting with the picker.
+                      onTap: () {},
+                      // Horizontal swipes anywhere on the card navigate
+                      // months — attached here (not the grid) so the
+                      // gesture arena doesn't contend with per-cell taps.
+                      onHorizontalDragEnd: (details) {
+                        final velocity = details.primaryVelocity;
+                        if (velocity == null) return;
+                        if (velocity < -100) {
+                          setPickerState(() {
+                            displayMonth = DateTime(
+                              displayMonth.year,
+                              displayMonth.month + 1,
+                            );
+                          });
+                        } else if (velocity > 100) {
+                          setPickerState(() {
+                            displayMonth = DateTime(
+                              displayMonth.year,
+                              displayMonth.month - 1,
+                            );
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: cardWidth,
+                        decoration: BoxDecoration(
+                          color: AppColors.calendarCardBg,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.whiteBorder(opacity: 0.10),
+                            width: 1,
+                          ),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: cardHorizontalPadding,
+                          vertical: AppSpacing.xl,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // ── Title row: "Select Date:" + Reset + Today
+                            Row(
                               children: [
                                 Text(
-                                  'Select date:',
-                                  style: GoogleFonts.ibmPlexSans(
-                                    color: Color(0xFFBDBDBD),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
+                                  'Select Date:',
+                                  style: AppTypography.subtitle(
+                                    color: Colors.white.withOpacity(0.7),
                                   ),
                                 ),
-                                Spacer(),
-                                // Clear button
-                                GestureDetector(
+                                const Spacer(),
+                                // "Reset" (red) — reverts to the date the
+                                // picker opened with. Named Reset not Clear
+                                // because Done always returns a non-null date.
+                                _pickerPillButton(
+                                  icon: Icons.close,
+                                  label: 'Reset',
+                                  color: AppColors.errorRed,
+                                  bordered: false,
                                   onTap: () {
                                     setPickerState(() {
-                                      selectedDate = DateTime.now();
-                                      displayMonth = DateTime(selectedDate!.year, selectedDate!.month);
+                                      selectedDate = initialDate;
+                                      displayMonth = DateTime(
+                                        initialDate.year,
+                                        initialDate.month,
+                                      );
                                     });
                                   },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.close, color: Color(0xFFD55A41), size: 12),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Clear',
-                                          style: GoogleFonts.ibmPlexSans(
-                                            color: Color(0xFFD55A41),
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
                                 ),
-                                SizedBox(width: 8),
-                                // Today button
-                                GestureDetector(
+                                SizedBox(width: AppSpacing.xs),
+                                // "Today" — jumps to today's date.
+                                _pickerPillButton(
+                                  icon: Icons.today,
+                                  label: 'Today',
+                                  color: Colors.white,
+                                  bordered: true,
                                   onTap: () {
                                     final today = DateTime.now();
                                     setPickerState(() {
-                                      selectedDate = DateTime(today.year, today.month, today.day);
-                                      displayMonth = DateTime(today.year, today.month);
+                                      selectedDate = DateTime(
+                                        today.year,
+                                        today.month,
+                                        today.day,
+                                      );
+                                      displayMonth = DateTime(
+                                        today.year,
+                                        today.month,
+                                      );
                                     });
                                   },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Color(0xFFFFFFFF).withOpacity(0.3)),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.today, color: Color(0xFFFAFAFA), size: 12),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Today',
-                                          style: GoogleFonts.ibmPlexSans(
-                                            color: Color(0xFFFAFAFA),
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                // Close button
-                                GestureDetector(
-                                  onTap: () => Navigator.pop(context),
-                                  child: Icon(Icons.close, color: Color(0xFFFAFAFA), size: 16),
                                 ),
                               ],
                             ),
-                          ),
 
-                          SizedBox(height: 4),
+                            SizedBox(height: AppSpacing.xl),
 
-                          // Calendar body
-                          Container(
-                            width: 296,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF171C19),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: EdgeInsets.all(8),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
+                            // ── Month/Year row with mint nav arrows
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                // Year/Month selector
-                                SizedBox(
-                                  width: 280,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                    // Year button
-                                    Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            '${displayMonth.year}',
-                                            style: GoogleFonts.ibmPlexSans(
-                                              color: Color(0xFFFAFAFA),
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          SizedBox(width: 4),
-                                          Icon(Icons.keyboard_arrow_down, color: Color(0xFFFAFAFA), size: 16),
-                                        ],
-                                      ),
-                                    ),
-                                    // Month navigation
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(Icons.chevron_left, color: Color(0xFFFAFAFA), size: 16),
-                                          onPressed: () {
-                                            setPickerState(() {
-                                              displayMonth = DateTime(displayMonth.year, displayMonth.month - 1);
-                                            });
-                                          },
-                                          padding: EdgeInsets.all(8),
-                                          constraints: BoxConstraints(),
-                                        ),
-                                        Text(
-                                          DateFormat('MMMM').format(displayMonth),
-                                          style: GoogleFonts.ibmPlexSans(
-                                            color: Color(0xFFFAFAFA),
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: Icon(Icons.chevron_right, color: Color(0xFFFAFAFA), size: 16),
-                                          onPressed: () {
-                                            setPickerState(() {
-                                              displayMonth = DateTime(displayMonth.year, displayMonth.month + 1);
-                                            });
-                                          },
-                                          padding: EdgeInsets.all(8),
-                                          constraints: BoxConstraints(),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                Text(
+                                  DateFormat('MMMM yyyy').format(displayMonth),
+                                  style: GoogleFonts.ibmPlexSans(
+                                    color: Colors.white,
+                                    fontSize: monthFontSize,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.43,
                                   ),
                                 ),
-
-                                SizedBox(height: 2),
-
-                                // Week day labels
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFF191F1B),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-                                          .map((day) => Expanded(
-                                                child: Container(
-                                                  height: 24,
-                                                  decoration: BoxDecoration(
-                                                    color: Color(0x0DFFFFFF),
-                                                  ),
-                                                  child: Center(
-                                                    child: Text(
-                                                      day,
-                                                      style: GoogleFonts.ibmPlexSans(
-                                                        color: Color(0xFFBDBDBD),
-                                                        fontSize: 10,
-                                                        fontWeight: FontWeight.w400,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ))
-                                          .toList(),
-                                    ),
-                                  ),
-                                ),
-
-                                SizedBox(height: 2),
-
-                                // Calendar grid
-                                GridView.builder(
-                                  shrinkWrap: true,
-                                  physics: NeverScrollableScrollPhysics(),
-                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 7,
-                                    childAspectRatio: 1.0,
-                                    crossAxisSpacing: 0,
-                                    mainAxisSpacing: 0,
-                                  ),
-                                  itemCount: 42,
-                                  itemBuilder: (context, index) {
-                                    // Show previous month days
-                                    if (index < startingWeekday) {
-                                      final prevMonth = DateTime(displayMonth.year, displayMonth.month - 1);
-                                      final daysInPrevMonth = DateTime(prevMonth.year, prevMonth.month + 1, 0).day;
-                                      final prevMonthDay = daysInPrevMonth - (startingWeekday - index - 1);
-
-                                      return Container(
-                                        child: Center(
-                                          child: Text(
-                                            prevMonthDay.toString(),
-                                            style: GoogleFonts.ibmPlexSans(
-                                              color: Color(0x66FAFAFA), // Grayed out
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }
-
-                                    final dayNumber = index - startingWeekday + 1;
-                                    if (dayNumber > daysInMonth) {
-                                      return Container(); // Empty cell
-                                    }
-
-                                    final date = DateTime(displayMonth.year, displayMonth.month, dayNumber);
-                                    final isSelected = selectedDate != null &&
-                                        selectedDate!.year == date.year &&
-                                        selectedDate!.month == date.month &&
-                                        selectedDate!.day == date.day;
-                                    final isToday = DateTime.now().year == date.year &&
-                                        DateTime.now().month == date.month &&
-                                        DateTime.now().day == date.day;
-
-                                    return GestureDetector(
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _pickerNavArrow(
+                                      char: '‹',
                                       onTap: () {
                                         setPickerState(() {
-                                          selectedDate = date;
+                                          displayMonth = DateTime(
+                                            displayMonth.year,
+                                            displayMonth.month - 1,
+                                          );
                                         });
                                       },
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? Color(0xFF5AC95A)
-                                              : (isToday ? Color(0xFF2A2A2E) : Colors.transparent),
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: isToday && !isSelected
-                                              ? Border.all(color: Color(0xFF5AC95A), width: 1)
-                                              : null,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            dayNumber.toString(),
-                                            style: GoogleFonts.ibmPlexSans(
-                                              color: isSelected ? Colors.black : Color(0xFFFAFAFA),
-                                              fontSize: 12,
-                                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                    ),
+                                    SizedBox(width: AppSpacing.lg),
+                                    _pickerNavArrow(
+                                      char: '›',
+                                      onTap: () {
+                                        setPickerState(() {
+                                          displayMonth = DateTime(
+                                            displayMonth.year,
+                                            displayMonth.month + 1,
+                                          );
+                                        });
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ),
 
-                          SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.md),
 
-                          // Footer buttons
-                          Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Row(
+                            // ── Day-of-week header row (SUN-first)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: const ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+                                  .map((day) {
+                                return SizedBox(
+                                  width: cellSize,
+                                  child: Center(
+                                    child: Text(
+                                      day,
+                                      style: GoogleFonts.ibmPlexSans(
+                                        color: AppColors.labelTertiary,
+                                        fontSize: dayHeaderFontSize,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+
+                            SizedBox(height: AppSpacing.xs),
+
+                            // ── Day grid (6 rows × 7 cols = 42 cells)
+                            // Horizontal swipe handling lives on the card
+                            // GestureDetector above so it doesn't compete
+                            // with per-cell tap handlers in the arena.
+                            _buildPickerDayGrid(
+                              displayMonth: displayMonth,
+                              selectedDate: selectedDate,
+                              cellSize: cellSize,
+                              onDayTap: (date) {
+                                setPickerState(() {
+                                  selectedDate = date;
+                                });
+                              },
+                            ),
+
+                            SizedBox(height: AppSpacing.xl),
+
+                            // ── Footer buttons: Cancel + Done
+                            Row(
                               children: [
-                                // Cancel button
-                                GestureDetector(
-                                  onTap: () => Navigator.pop(context),
-                                  child: Container(
-                                    width: 88,
-                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Color(0xFFFFFFFF).withOpacity(0.3)),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Cancel',
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Color(0xFFFAFAFA),
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
+                                Expanded(
+                                  child: _pickerFooterButton(
+                                    label: 'Cancel',
+                                    filled: false,
+                                    onTap: () => Navigator.pop(dialogContext),
                                   ),
                                 ),
-                                SizedBox(width: 8),
-                                // Done button
+                                SizedBox(width: AppSpacing.md),
                                 Expanded(
-                                  child: GestureDetector(
-                                    onTap: () => Navigator.pop(context, selectedDate),
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: Color(0xFFBAFF9A),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          'Done',
-                                          style: GoogleFonts.ibmPlexSans(
-                                            color: Colors.black,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
+                                  child: _pickerFooterButton(
+                                    label: 'Done',
+                                    filled: true,
+                                    onTap: () => Navigator.pop(
+                                      dialogContext,
+                                      selectedDate,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -922,6 +819,198 @@ class _CalendarScreenState extends State<CalendarScreen> {
           },
         );
       },
+    );
+  }
+
+  /// Icon + label pill used in the date picker header (Reset / Today).
+  ///
+  /// Unified helper — the only variation between the two header buttons is
+  /// the icon, label, text/icon color, and whether there's an outlined
+  /// border. Keeping a single widget means the two pills stay visually
+  /// consistent if the design changes.
+  Widget _pickerPillButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool bordered,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: bordered ? AppSpacing.xs : AppSpacing.xxs,
+          vertical: AppSpacing.xxxs,
+        ),
+        decoration: bordered
+            ? BoxDecoration(
+                border: Border.all(
+                  color: AppColors.whiteBorder(opacity: 0.3),
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(60),
+              )
+            : null,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 14),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: GoogleFonts.ibmPlexSans(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Mint chevron nav arrow used in the month/year row of the date picker.
+  Widget _pickerNavArrow({required String char, required VoidCallback onTap}) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: 28,
+        height: 28,
+        alignment: Alignment.center,
+        child: Text(
+          char,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 28,
+            fontWeight: FontWeight.w500,
+            color: AppColors.calendarAccentGreen,
+            height: 1.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Cancel (outlined) / Done (filled mint) footer button for the date picker.
+  Widget _pickerFooterButton({
+    required String label,
+    required bool filled,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: filled ? AppColors.buttonPrimary : Colors.transparent,
+          borderRadius: BorderRadius.circular(60),
+          border: filled
+              ? null
+              : Border.all(color: AppColors.buttonPrimary, width: 1),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.ibmPlexSans(
+            color: filled ? Colors.black : AppColors.buttonPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.43,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 6×7 day grid for the custom date picker. Uses the reusable
+  /// [CalendarDayCell] from the design system, sized directly via its
+  /// [CalendarDayCell.size] parameter so the day numbers render at their
+  /// native resolution on any device. Always renders 6 rows to keep the
+  /// picker's height stable as the user navigates between months.
+  Widget _buildPickerDayGrid({
+    required DateTime displayMonth,
+    required DateTime? selectedDate,
+    required double cellSize,
+    required ValueChanged<DateTime> onDayTap,
+  }) {
+    final firstDayOfMonth = DateTime(displayMonth.year, displayMonth.month, 1);
+    // SUN=0, MON=1, …, SAT=6. DateTime.weekday is MON=1..SUN=7.
+    final startingWeekday = firstDayOfMonth.weekday % 7;
+    final daysInMonth = DateTime(displayMonth.year, displayMonth.month + 1, 0).day;
+
+    final prevMonth = DateTime(displayMonth.year, displayMonth.month - 1, 1);
+    final daysInPrevMonth = DateTime(prevMonth.year, prevMonth.month + 1, 0).day;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    bool sameDay(DateTime a, DateTime b) =>
+        a.year == b.year && a.month == b.month && a.day == b.day;
+
+    final weeks = <Widget>[];
+    int dayCounter = 1;
+    int nextMonthDay = 1;
+
+    // Always 6 rows — keeps the picker's overall height constant across
+    // months so it doesn't visibly resize when the user navigates.
+    for (int week = 0; week < 6; week++) {
+      final cells = <Widget>[];
+
+      for (int col = 0; col < 7; col++) {
+        final cellIndex = week * 7 + col;
+
+        Widget cell;
+        if (cellIndex < startingWeekday) {
+          // Trailing days from the previous month.
+          final prevDay = daysInPrevMonth - startingWeekday + cellIndex + 1;
+          cell = CalendarDayCell(
+            day: prevDay,
+            isDisabled: true,
+            size: cellSize,
+          );
+        } else if (dayCounter <= daysInMonth) {
+          // Current-month day.
+          final dayNum = dayCounter;
+          final date = DateTime(displayMonth.year, displayMonth.month, dayNum);
+          final isSelected = selectedDate != null && sameDay(date, selectedDate);
+          final isToday = sameDay(date, today);
+          cell = CalendarDayCell(
+            day: dayNum,
+            isSelected: isSelected,
+            isToday: isToday,
+            size: cellSize,
+            onTap: () => onDayTap(date),
+          );
+          dayCounter++;
+        } else {
+          // Leading days into the next month.
+          cell = CalendarDayCell(
+            day: nextMonthDay,
+            isDisabled: true,
+            size: cellSize,
+          );
+          nextMonthDay++;
+        }
+
+        cells.add(cell);
+      }
+
+      weeks.add(Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxs / 2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: cells,
+        ),
+      ));
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: weeks,
     );
   }
 
