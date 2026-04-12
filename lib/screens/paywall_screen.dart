@@ -1,22 +1,36 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
+import '../design_system/constants/colors.dart';
+import '../design_system/constants/decorations.dart';
+import '../design_system/constants/spacing.dart';
+import '../design_system/constants/typography.dart';
+import '../design_system/components/backgrounds/gradient_background.dart';
 import '../services/subscription_service.dart';
 
-/// Paywall screen for displaying subscription options
+/// Paywall screen for displaying subscription options.
+///
+/// V1 launch version: shows a two-tier layout (Pro + Club) with static
+/// pricing. Both tiers currently map to the single `premium` entitlement
+/// in RevenueCat — proper entitlement split will come with dashboard
+/// configuration work. CTA taps show a "Coming soon" snackbar until
+/// RevenueCat products are published.
 class PaywallScreen extends StatefulWidget {
-  /// Optional feature name that triggered the paywall
+  /// Optional feature name that triggered the paywall.
+  /// Shown in the subtitle (e.g. "AI Hand Analysis is a premium feature").
   final String? featureName;
 
   const PaywallScreen({super.key, this.featureName});
 
-  /// Show the paywall as a modal bottom sheet
+  /// Show the paywall as a full-screen route.
+  ///
+  /// Returns `true` if the user successfully upgraded (reserved for future
+  /// use — currently always returns `null` until purchase flow is wired).
   static Future<bool?> show(BuildContext context, {String? featureName}) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => PaywallScreen(featureName: featureName),
+    return Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => PaywallScreen(featureName: featureName),
+      ),
     );
   }
 
@@ -25,600 +39,496 @@ class PaywallScreen extends StatefulWidget {
 }
 
 class _PaywallScreenState extends State<PaywallScreen> {
-  bool _isLoading = false;
   bool _isRestoring = false;
-  String? _error;
-  List<Package> _packages = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _loadOfferings();
-  }
+  Future<void> _restorePurchases() async {
+    setState(() => _isRestoring = true);
+    final success = await SubscriptionService.restorePurchases();
+    if (!mounted) return;
+    setState(() => _isRestoring = false);
 
-  Future<void> _loadOfferings() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      await SubscriptionService.fetchOfferings();
-      setState(() {
-        _packages = SubscriptionService.availablePackages;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Failed to load subscription options';
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _purchasePackage(Package package) async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    final success = await SubscriptionService.purchasePackage(package);
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (success && mounted) {
+    if (success) {
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Welcome to Premium!'),
-          backgroundColor: Color(0xFF5AC95A),
+          content: const Text('Purchases restored'),
+          backgroundColor: AppColors.limeGreen.withOpacity(0.2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No previous purchases found'),
         ),
       );
     }
   }
 
-  Future<void> _restorePurchases() async {
-    setState(() {
-      _isRestoring = true;
-      _error = null;
-    });
-
-    final success = await SubscriptionService.restorePurchases();
-
-    setState(() {
-      _isRestoring = false;
-    });
-
-    if (mounted) {
-      if (success) {
-        Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Purchases restored successfully!'),
-            backgroundColor: Color(0xFF5AC95A),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('No previous purchases found'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    }
+  void _showComingSoon(String tierLabel) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$tierLabel subscriptions coming soon'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFF1A2925),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(24, 16, 24, 24),
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Scale horizontal padding based on screen width so small phones
+    // don't feel cramped and larger phones don't look stretched.
+    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 28.0);
+
+    return Scaffold(
+      backgroundColor: AppColors.backgroundPaper,
+      body: Stack(
+        children: [
+          const GradientBackground(),
+          SafeArea(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                // Drag handle
-                Container(
-                  width: 80,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-
-                SizedBox(height: 24),
-
-                // Premium badge
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                _buildTopBar(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      AppSpacing.md,
+                      horizontalPadding,
+                      AppSpacing.bottomPadding,
                     ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.star, color: Colors.black, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'PREMIUM',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 24),
-
-                // Title
-                Text(
-                  'Unlock Premium Features',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                if (widget.featureName != null) ...[
-                  SizedBox(height: 8),
-                  Text(
-                    '${widget.featureName} is a premium feature',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.7),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(),
+                        SizedBox(height: AppSpacing.xxxl),
+                        _buildProTierCard(),
+                        SizedBox(height: AppSpacing.md),
+                        _buildClubTierCard(),
+                        SizedBox(height: AppSpacing.xl),
+                        _buildLegalFooter(),
+                      ],
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                ],
-
-                SizedBox(height: 32),
-
-                // Features list
-                _buildFeaturesList(),
-
-                SizedBox(height: 32),
-
-                // Subscription options
-                if (_isLoading)
-                  Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFBAFF9A)),
-                    ),
-                  )
-                else if (_error != null)
-                  _buildErrorState()
-                else if (_packages.isEmpty)
-                  _buildNoPackagesState()
-                else
-                  _buildPackagesList(),
-
-                SizedBox(height: 16),
-
-                // Restore purchases button
-                TextButton(
-                  onPressed: _isRestoring ? null : _restorePurchases,
-                  child: _isRestoring
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
-                          ),
-                        )
-                      : Text(
-                          'Restore Purchases',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                ),
-
-                SizedBox(height: 8),
-
-                // Terms and privacy
-                Text(
-                  'Subscriptions auto-renew. Cancel anytime.',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.5),
-                  ),
-                  textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildFeaturesList() {
-    final features = [
-      {'icon': Icons.psychology, 'text': 'AI Hand Analysis with GTO insights'},
-      {'icon': Icons.analytics, 'text': 'Advanced session statistics'},
-      {'icon': Icons.people, 'text': 'Detailed opponent profiling'},
-      {'icon': Icons.cloud_sync, 'text': 'Cloud sync across devices'},
-    ];
-
-    return Column(
-      children: features.map((feature) {
-        return Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Color(0xFFBAFF9A).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  feature['icon'] as IconData,
-                  color: Color(0xFFBAFF9A),
-                  size: 20,
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  feature['text'] as String,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildPackagesList() {
-    // Sort packages: annual first (best value), then monthly
-    final sortedPackages = List<Package>.from(_packages)
-      ..sort((a, b) {
-        if (a.packageType == PackageType.annual) return -1;
-        if (b.packageType == PackageType.annual) return 1;
-        return 0;
-      });
-
-    return Column(
-      children: sortedPackages.map((package) {
-        final isAnnual = package.packageType == PackageType.annual;
-        return Padding(
-          padding: EdgeInsets.only(bottom: 12),
-          child: _buildPackageCard(package, isBestValue: isAnnual),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildPackageCard(Package package, {bool isBestValue = false}) {
-    final price = SubscriptionService.formatPrice(package);
-    final period = SubscriptionService.getPeriodDescription(package);
-
-    return GestureDetector(
-      onTap: _isLoading ? null : () => _purchasePackage(package),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isBestValue ? Color(0xFFBAFF9A).withOpacity(0.1) : Color(0xFF0D1512),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isBestValue ? Color(0xFFBAFF9A) : Colors.white.withOpacity(0.1),
-            width: isBestValue ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        _getPackageTitle(package),
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      if (isBestValue) ...[
-                        SizedBox(width: 8),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFBAFF9A),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'BEST VALUE',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '$price $period',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: isBestValue ? Color(0xFFBAFF9A) : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                'Subscribe',
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-          ],
-        ),
+  Widget _buildTopBar() {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xxs,
       ),
-    );
-  }
-
-  String _getPackageTitle(Package package) {
-    switch (package.packageType) {
-      case PackageType.annual:
-        return 'Annual';
-      case PackageType.monthly:
-        return 'Monthly';
-      case PackageType.weekly:
-        return 'Weekly';
-      case PackageType.lifetime:
-        return 'Lifetime';
-      default:
-        return package.identifier;
-    }
-  }
-
-  Widget _buildErrorState() {
-    return Column(
-      children: [
-        Icon(Icons.error_outline, color: Colors.red, size: 48),
-        SizedBox(height: 16),
-        Text(
-          _error!,
-          style: TextStyle(color: Colors.red),
-          textAlign: TextAlign.center,
-        ),
-        SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: _loadOfferings,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFBAFF9A),
-            foregroundColor: Colors.black,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _TopBarIconButton(
+            icon: Icons.close,
+            onTap: () => Navigator.of(context).pop(),
           ),
-          child: Text('Retry'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNoPackagesState() {
-    // Show demo packages for testing UI
-    return _buildDemoPackages();
-  }
-
-  Widget _buildDemoPackages() {
-    return Column(
-      children: [
-        // Demo banner
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          margin: EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.orange.withOpacity(0.5)),
-          ),
-          child: Text(
-            'Demo Mode - Sandbox Testing',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 12,
-              color: Colors.orange,
-            ),
-          ),
-        ),
-
-        // Annual package (demo)
-        _buildDemoPackageCard(
-          title: 'Annual',
-          price: '\$39.99',
-          period: 'per year',
-          isBestValue: true,
-          productId: 'premium_annual',
-        ),
-
-        SizedBox(height: 12),
-
-        // Monthly package (demo)
-        _buildDemoPackageCard(
-          title: 'Monthly',
-          price: '\$4.99',
-          period: 'per month',
-          isBestValue: false,
-          productId: 'premium_monthly',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDemoPackageCard({
-    required String title,
-    required String price,
-    required String period,
-    required bool isBestValue,
-    required String productId,
-  }) {
-    return GestureDetector(
-      onTap: () => _handleDemoPurchase(productId, title),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isBestValue ? Color(0xFFBAFF9A).withOpacity(0.1) : Color(0xFF0D1512),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isBestValue ? Color(0xFFBAFF9A) : Colors.white.withOpacity(0.1),
-            width: isBestValue ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      if (isBestValue) ...[
-                        SizedBox(width: 8),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFBAFF9A),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'BEST VALUE',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '$price $period',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: isBestValue ? Color(0xFFBAFF9A) : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                'Subscribe',
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleDemoPurchase(String productId, String title) async {
-    // Show demo purchase dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFF1A2925),
-        title: Text(
-          'Demo Purchase',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          'This is a demo purchase for "$title".\n\nIn production, this would connect to the App Store for real payment processing.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFBAFF9A),
-              foregroundColor: Colors.black,
-            ),
-            child: Text('Simulate Purchase'),
+            onPressed: _isRestoring ? null : _restorePurchases,
+            child: _isRestoring
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                    ),
+                  )
+                : Text(
+                    'Restore',
+                    style: AppTypography.bodyMedium(
+                      color: AppColors.textSecondary,
+                    ).copyWith(fontWeight: FontWeight.w500),
+                  ),
           ),
         ],
       ),
     );
+  }
 
-    if (confirmed == true && mounted) {
-      // Simulate successful purchase
-      Navigator.of(context).pop(true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Demo: Premium activated! (Not a real purchase)'),
-          backgroundColor: Color(0xFF5AC95A),
+  Widget _buildHeader() {
+    final title = widget.featureName != null
+        ? 'Unlock ${widget.featureName}'
+        : 'Go Premium';
+    final subtitle = widget.featureName != null
+        ? 'This feature is part of Final Table Premium. Pick a plan that fits how you play.'
+        : 'Unlock everything Final Table has to offer. Track more hands, analyze your game, run your club.';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'FINAL TABLE PREMIUM',
+          style: AppTypography.sectionHeader(),
         ),
-      );
-    }
+        SizedBox(height: AppSpacing.xs),
+        Text(
+          title,
+          style: AppTypography.pageTitleLarge(),
+        ),
+        SizedBox(height: AppSpacing.xs),
+        Text(
+          subtitle,
+          style: AppTypography.bodyMedium(
+            color: Colors.white.withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProTierCard() {
+    return _TierCard(
+      tierLabel: 'PRO',
+      accentColor: AppColors.buttonPrimary, // mint
+      trialBadge: '7-day free trial',
+      tagline: 'Everything you need to master your game.',
+      features: const [
+        'Unlimited hand logging',
+        'Full session history',
+        'AI hand analysis',
+        'Export hands to CSV',
+      ],
+      monthlyPrice: '\$29.99/mo',
+      annualPrice: '\$249.99/yr',
+      ctaLabel: 'Start 7-Day Free Trial',
+      ctaBackgroundColor: Colors.white,
+      ctaTextColor: Colors.black,
+      isHighlighted: true,
+      onTap: () => _showComingSoon('Pro'),
+    );
+  }
+
+  Widget _buildClubTierCard() {
+    return _TierCard(
+      tierLabel: 'CLUB',
+      accentColor: AppColors.limeGreen,
+      trialBadge: null,
+      tagline: 'For home games, clubs, and live venues.',
+      features: const [
+        'Everything in Pro',
+        'Club management & member roles',
+        'Live dealer voice logging',
+        'Multi-table events with rankings',
+      ],
+      monthlyPrice: '\$39.99/mo',
+      annualPrice: '\$299.99/yr',
+      ctaLabel: 'Get Club',
+      ctaBackgroundColor: AppColors.limeGreen,
+      ctaTextColor: Colors.black,
+      isHighlighted: false,
+      onTap: () => _showComingSoon('Club'),
+    );
+  }
+
+  Widget _buildLegalFooter() {
+    return Column(
+      children: [
+        Text(
+          'Subscriptions auto-renew. Cancel anytime from your account settings.',
+          style: AppTypography.bodySmall(
+            color: Colors.white.withOpacity(0.5),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: AppSpacing.xs),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _FooterLink(
+              label: 'Terms',
+              onTap: () {
+                // TODO: link to ToS page (Week 2 task)
+              },
+            ),
+            Text(
+              '  ·  ',
+              style: AppTypography.bodySmall(
+                color: Colors.white.withOpacity(0.3),
+              ),
+            ),
+            _FooterLink(
+              label: 'Privacy',
+              onTap: () {
+                // TODO: link to privacy policy page (Week 2 task)
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Top bar icon button — small circular glass button matching the rest
+/// of the app's close/back affordances.
+class _TopBarIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _TopBarIconButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: AppColors.iconButtonBg,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: AppColors.whiteBorder(),
+            width: AppDecorations.borderThin,
+          ),
+        ),
+        child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
+}
+
+/// Footer text link (Terms / Privacy).
+class _FooterLink extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _FooterLink({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Text(
+        label,
+        style: AppTypography.bodySmall(
+          color: AppColors.textSecondary,
+        ).copyWith(
+          decoration: TextDecoration.underline,
+          decorationColor: AppColors.textSecondary.withOpacity(0.5),
+        ),
+      ),
+    );
+  }
+}
+
+/// A single tier card (Pro or Club).
+///
+/// Uses the app's glassmorphism style (BackdropFilter blur + white border)
+/// with optional highlight variant for the recommended tier.
+class _TierCard extends StatelessWidget {
+  final String tierLabel;
+  final Color accentColor;
+  final String? trialBadge;
+  final String tagline;
+  final List<String> features;
+  final String monthlyPrice;
+  final String annualPrice;
+  final String ctaLabel;
+  final Color ctaBackgroundColor;
+  final Color ctaTextColor;
+  final bool isHighlighted;
+  final VoidCallback onTap;
+
+  const _TierCard({
+    required this.tierLabel,
+    required this.accentColor,
+    required this.trialBadge,
+    required this.tagline,
+    required this.features,
+    required this.monthlyPrice,
+    required this.annualPrice,
+    required this.ctaLabel,
+    required this.ctaBackgroundColor,
+    required this.ctaTextColor,
+    required this.isHighlighted,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = isHighlighted
+        ? accentColor.withOpacity(0.6)
+        : AppColors.whiteBorder(opacity: 0.12);
+    final borderWidth = isHighlighted ? 1.5 : 1.0;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppDecorations.modeCardRadius),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(
+          sigmaX: AppDecorations.blurLight,
+          sigmaY: AppDecorations.blurLight,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.backgroundSurface.withOpacity(0.82),
+            borderRadius: BorderRadius.circular(AppDecorations.modeCardRadius),
+            border: Border.all(color: borderColor, width: borderWidth),
+            boxShadow: isHighlighted
+                ? [
+                    BoxShadow(
+                      color: accentColor.withOpacity(0.15),
+                      blurRadius: 24,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          padding: EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildTierHeader(),
+              SizedBox(height: AppSpacing.xs),
+              Text(
+                tagline,
+                style: AppTypography.bodyMedium(
+                  color: Colors.white.withOpacity(0.7),
+                ),
+              ),
+              SizedBox(height: AppSpacing.lg),
+              ...features.map(_buildFeatureRow),
+              SizedBox(height: AppSpacing.lg),
+              _buildPricing(),
+              SizedBox(height: AppSpacing.md),
+              _buildCta(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTierHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          tierLabel,
+          style: AppTypography.sectionHeader(color: accentColor).copyWith(
+            fontSize: 14,
+            letterSpacing: 1.5,
+          ),
+        ),
+        const Spacer(),
+        if (trialBadge != null)
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: AppSpacing.xxxs + 1,
+            ),
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
+              border: Border.all(
+                color: accentColor.withOpacity(0.4),
+                width: AppDecorations.borderThin,
+              ),
+            ),
+            child: Text(
+              trialBadge!,
+              style: AppTypography.bodySmall(color: accentColor).copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureRow(String feature) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: AppSpacing.xxs + 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 18,
+            color: accentColor,
+          ),
+          SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(
+              feature,
+              style: AppTypography.bodyMedium(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPricing() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text(
+          monthlyPrice,
+          style: AppTypography.bodyLarge(color: Colors.white).copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(width: AppSpacing.xs),
+        Text(
+          '·',
+          style: AppTypography.bodyLarge(
+            color: Colors.white.withOpacity(0.4),
+          ),
+        ),
+        SizedBox(width: AppSpacing.xs),
+        Text(
+          annualPrice,
+          style: AppTypography.bodyLarge(
+            color: Colors.white.withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCta() {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: ctaBackgroundColor,
+          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
+        ),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.xxxl,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              ctaLabel,
+              style: AppTypography.buttonText(color: ctaTextColor),
+            ),
+            Icon(
+              Icons.arrow_forward,
+              color: ctaTextColor,
+              size: 22,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

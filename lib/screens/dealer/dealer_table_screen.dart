@@ -23,6 +23,7 @@ import '../../services/auth_service.dart';
 import '../../services/qr_service.dart';
 import '../../services/soniox_service.dart';
 import '../../services/action_parser.dart';
+import '../../services/free_tier_limits.dart';
 import '../../features/dealer_voice/cubit/dealer_voice_cubit.dart';
 import '../../features/dealer_voice/cubit/dealer_voice_state.dart';
 import '../../utils/poker_positions.dart';
@@ -404,6 +405,27 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
   Future<void> _startNewHand() async {
     if (_isLoading) return;
+
+    // Free-tier gate: block starting another hand once the session cap
+    // has been reached. Premium users bypass. Check before any loading
+    // state or async work to keep the UX snappy.
+    if (_sessionManager != null &&
+        !FreeTierLimits.canLogAnotherHand(
+          _sessionManager!.completedHands.length,
+        )) {
+      final upgradeTapped = await FreeTierLimits.showHandsLimitDialog(
+        context,
+        dismissLabel: 'End session',
+      );
+      if (!mounted) return;
+      // Only end the session on dismiss. If the user tapped Upgrade,
+      // keep the session alive so they can return to the table after
+      // backing out of the paywall.
+      if (upgradeTapped != true) {
+        await _endSession();
+      }
+      return;
+    }
 
     setState(() => _isLoading = true);
 

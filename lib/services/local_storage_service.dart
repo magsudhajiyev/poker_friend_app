@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
+import '../services/subscription_service.dart';
 import '../models/game_types.dart';
 
 class LocalStorageService {
@@ -310,14 +311,32 @@ class LocalStorageService {
     try {
       final db = await database;
       final userId = AuthService.userId ?? 'anonymous';
-      
-      final sessions = await db.query(
+
+      var sessions = await db.query(
         'sessions',
         where: 'userId = ?',
         whereArgs: [userId],
         orderBy: 'startTime DESC',
       );
-      
+
+      // Apply 30-day filtering for free-tier users (matching Firebase behavior)
+      if (!SubscriptionService.isPremium) {
+        final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+        sessions = sessions.where((session) {
+          final startTimeStr = session['startTime'] as String?;
+          if (startTimeStr == null) return false;
+
+          try {
+            final startTime = DateTime.parse(startTimeStr);
+            return startTime.isAfter(thirtyDaysAgo);
+          } catch (e) {
+            // If startTime parsing fails, exclude the session
+            print('Error parsing session startTime "$startTimeStr": $e');
+            return false;
+          }
+        }).toList();
+      }
+
       return sessions;
     } catch (e) {
       print('Error getting user sessions: $e');

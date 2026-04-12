@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/poker_positions.dart';
+import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
 import '../services/auth_service.dart';
 import '../models/opponent.dart';
@@ -173,6 +174,12 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
   }
 
   Future<void> _addNewOpponent(String name) async {
+    // Free-tier gate: enforce the opponent profile cap.
+    if (!FreeTierLimits.canCreateAnotherOpponent(opponents.length)) {
+      await FreeTierLimits.showOpponentLimitDialog(context);
+      return;
+    }
+
     final now = DateTime.now();
     final opponent = Opponent(
       id: 'opp_${now.millisecondsSinceEpoch}',

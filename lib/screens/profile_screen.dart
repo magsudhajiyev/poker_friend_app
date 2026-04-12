@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
 import '../services/session_result_service.dart';
+import '../services/subscription_service.dart';
 import '../screens/settings_screen.dart';
 import '../screens/paywall_screen.dart';
 import '../screens/intro_screen.dart';
@@ -218,6 +219,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 _buildSessionResultCard(),
                 SizedBox(height: 16),
+
+                // Dev tools — only visible to super admin
+                if (_isDevUser) ...[
+                  _buildDevToolsCard(),
+                  SizedBox(height: 16),
+                ],
 
                 _buildSettingsCard(),
               ],
@@ -566,6 +573,107 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // TODO: TEMPORARY — remove before release
+  static const _devUserIds = <String>{
+    // Add your Firebase UID here (check AuthService.userId at runtime)
+  };
+
+  bool get _isDevUser {
+    final uid = AuthService.userId;
+    // Show dev tools if UID is in the allowlist, OR if the list is empty (dev convenience)
+    return uid != null && (_devUserIds.isEmpty || _devUserIds.contains(uid));
+  }
+
+  Widget _buildDevToolsCard() {
+    final override = SubscriptionService.debugPremiumOverride;
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Color(0xFF101115),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Color(0xFFFF6B6B).withAlpha(80), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bug_report, color: Color(0xFFFF6B6B), size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Dev Tools',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFFF6B6B),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Premium Override',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    override == null
+                        ? 'Using real status: ${SubscriptionService.isPremium ? "Premium" : "Free"}'
+                        : 'Overridden: ${override ? "Premium" : "Free"}',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF8C8C8C),
+                    ),
+                  ),
+                ],
+              ),
+              Switch(
+                value: SubscriptionService.isPremium,
+                onChanged: (value) async {
+                  await SubscriptionService.setDebugPremiumOverride(value);
+                  setState(() {});
+                },
+                activeColor: Color(0xFF62E3BC),
+                inactiveThumbColor: Color(0xFF8C8C8C),
+                inactiveTrackColor: Color(0xFF35373C),
+              ),
+            ],
+          ),
+          if (override != null) ...[
+            SizedBox(height: 8),
+            GestureDetector(
+              onTap: () async {
+                await SubscriptionService.setDebugPremiumOverride(null);
+                setState(() {});
+              },
+              child: Text(
+                'Reset to real status',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF89F1EC),
+                  decoration: TextDecoration.underline,
+                  decorationColor: Color(0xFF89F1EC),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

@@ -27,6 +27,8 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
 import '../services/logger_service.dart';
+import '../services/free_tier_limits.dart';
+import '../services/subscription_service.dart';
 import '../onboarding/onboarding_state.dart';
 import 'home_screen.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -98,6 +100,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   late PokerSessionManager sessionManager;
   bool autoAdvanceStreets = false;
   bool _allInHandCompleted = false;
+  // Set to true once the free-tier hand gate has fired for this session.
+  // Once locked, the user cannot log further actions or advance to new
+  // hands — they must either end the session or become premium.
+  bool _freeTierLocked = false;
 
   // Track user's starting stack for accurate win/loss calculation
   double? _userStartingStack;
@@ -1220,14 +1226,29 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Text(
-                              '${gameState.currentRound.name.toUpperCase()} • ${gameState.getActivePlayers().length} players',
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 13,
-                                color: const Color(0xFFD3FFFD),
-                                fontWeight: FontWeight.w400,
-                                height: 1.47,
-                              ),
+                            Builder(
+                              builder: (context) {
+                                final baseSubtitle =
+                                    '${gameState.currentRound.name.toUpperCase()} • ${gameState.getActivePlayers().length} players';
+                                // Show "N/5 free" counter for users on the free tier,
+                                // hidden for premium so paying users get a clean header.
+                                final showFreeCounter =
+                                    !SubscriptionService.isPremium;
+                                final handsUsed = sessionManager
+                                    .completedHands.length;
+                                final subtitle = showFreeCounter
+                                    ? '$baseSubtitle • $handsUsed/${FreeTierLimits.maxHandsPerSession} free'
+                                    : baseSubtitle;
+                                return Text(
+                                  subtitle,
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 13,
+                                    color: const Color(0xFFD3FFFD),
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.47,
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -1500,40 +1521,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
               ],
             ),
           ),
-
-          // Bottom Info Row (To Call / Odds)
-          if (_shouldShowPotOdds())
-            Container(
-              margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF101115),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'To Call: ${_formatPotAmount(gameState.getToCall(sessionManager.ourSeatNumber ?? 1))}',
-                    style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      height: 1.46,
-                    ),
-                  ),
-                  Text(
-                    'Odds: ${gameState.getPotOdds(sessionManager.ourSeatNumber ?? 1)?.toStringAsFixed(1) ?? "0"}%',
-                    style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      height: 1.46,
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
           // Bottom padding for nav bar
           SizedBox(height: _canUndoLastAction() ? 16 : 20),
@@ -1895,12 +1882,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         ),
       ],
     );
-  }
-
-  bool _shouldShowPotOdds() {
-    if (sessionManager.ourSeatNumber == null) return false;
-    final toCall = gameState.getToCall(sessionManager.ourSeatNumber!);
-    return toCall > 0;
   }
 
   String _formatPotAmount(double amount) {
@@ -2935,6 +2916,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   void _performPokerActionWithAmount(PlayerAction action, double amount) {
+    if (_freeTierLocked) {
+      _showFreeTierGate();
+      return;
+    }
     if (gameState.bettingRoundComplete) {
       // addAction removed
       _triggerInvalidActionVibration();
@@ -3164,6 +3149,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   void _performPokerAction(PlayerAction action) {
+    if (_freeTierLocked) {
+      _showFreeTierGate();
+      return;
+    }
     if (gameState.bettingRoundComplete) {
       // addAction removed
       _triggerInvalidActionVibration();
@@ -3656,24 +3645,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
         // Check for busted players and start next hand
         await _checkForBustedPlayers();
-
-        setState(() {
-          // Reset all-in completion flag for new hand
-          _allInHandCompleted = false;
-
-          // Start new hand in game state
-          gameState.startNewHand();
-          gameState.initializePot();
-
-          // Start new hand in session manager
-          sessionManager.startHand(
-            gameState.handNumber,
-            gameState.buttonPosition,
-            sbSeat: gameState.effectiveSBPosition,
-            bbSeat: gameState.effectiveBBPosition,
-          );
-
-        });
+        _advanceToNextHand();
       });
     } else {
       // Handle single-pot scenario (existing logic)
@@ -3772,24 +3744,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
         // Check for busted players and start next hand
         await _checkForBustedPlayers();
-
-        setState(() {
-          // Reset all-in completion flag for new hand
-          _allInHandCompleted = false;
-
-          // Start new hand in game state
-          gameState.startNewHand();
-          gameState.initializePot();
-
-          // Start new hand in session manager
-          sessionManager.startHand(
-            gameState.handNumber,
-            gameState.buttonPosition,
-            sbSeat: gameState.effectiveSBPosition,
-            bbSeat: gameState.effectiveBBPosition,
-          );
-
-        });
+        _advanceToNextHand();
       });
     }
   }
@@ -4813,23 +4768,91 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       // For full sessions, start next hand
       await _checkForBustedPlayers();
-
-      setState(() {
-        _allInHandCompleted = false;
-        gameState.startNewHand();
-        gameState.initializePot();
-        sessionManager.startHand(
-          gameState.handNumber,
-          gameState.buttonPosition,
-          sbSeat: gameState.effectiveSBPosition,
-          bbSeat: gameState.effectiveBBPosition,
-        );
-
-      });
+      _advanceToNextHand();
     } else {
       // Multiple players remain, show winner selection dialog
       await LoggerService.info('  ↪️ Multiple players path - calling _showWinnerSelectionAndComplete()');
       _showWinnerSelectionAndComplete();
+    }
+  }
+
+  /// Advance to the next hand. Checks the free-tier hand limit first; if
+  /// the user is on the free tier and has reached the cap, shows the
+  /// upgrade dialog and does NOT start a new hand.
+  ///
+  /// Returns true if a new hand was started, false if blocked by the gate.
+  bool _advanceToNextHand() {
+    if (_freeTierLocked ||
+        !FreeTierLimits.canLogAnotherHand(
+          sessionManager.completedHands.length,
+        )) {
+      setState(() {
+        _allInHandCompleted = false;
+        _freeTierLocked = true;
+      });
+      _showFreeTierGate();
+      return false;
+    }
+
+    setState(() {
+      _allInHandCompleted = false;
+      gameState.startNewHand();
+      gameState.initializePot();
+      sessionManager.startHand(
+        gameState.handNumber,
+        gameState.buttonPosition,
+        sbSeat: gameState.effectiveSBPosition,
+        bbSeat: gameState.effectiveBBPosition,
+      );
+    });
+    return true;
+  }
+
+  /// Shows the free-tier gate dialog. On dismiss ("End session") the
+  /// session is saved and the user is routed home. On "Upgrade" the
+  /// paywall opens; if the user comes back without becoming premium,
+  /// the gate stays active so they cannot keep logging.
+  Future<void> _showFreeTierGate() async {
+    final upgradeTapped = await FreeTierLimits.showHandsLimitDialog(
+      context,
+      dismissLabel: 'End session',
+    );
+    if (!mounted) return;
+    if (upgradeTapped == true) {
+      // Paywall was shown and closed. If the user is now premium,
+      // unlock the gate; otherwise re-show the gate dialog.
+      if (SubscriptionService.isPremium) {
+        setState(() => _freeTierLocked = false);
+      } else {
+        _showFreeTierGate();
+      }
+      return;
+    }
+    _endSessionFromGate();
+  }
+
+  /// Saves and closes the session when the free-tier hand gate is hit.
+  /// Mirrors the "save" branch of [_handleNavigationAttempt].
+  Future<void> _endSessionFromGate() async {
+    try {
+      final ourSeat = sessionManager.ourSeatNumber;
+      if (ourSeat != null &&
+          ourSeat >= 1 &&
+          ourSeat <= gameState.players.length) {
+        final finalStack = gameState.players[ourSeat - 1].currentStack;
+        sessionManager.addFinalStackEntry(finalStack);
+      }
+      await sessionManager.endSession();
+      if (!mounted) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save session: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -4860,24 +4883,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // For full sessions, start next hand
     // Check for busted players before starting new hand
     await _checkForBustedPlayers();
-
-    setState(() {
-      // Reset all-in completion flag for new hand
-      _allInHandCompleted = false;
-
-      // Start new hand in game state
-      gameState.startNewHand();
-      gameState.initializePot();
-
-      // Start new hand in session manager
-      sessionManager.startHand(
-        gameState.handNumber,
-        gameState.buttonPosition,
-        sbSeat: gameState.effectiveSBPosition,
-        bbSeat: gameState.effectiveBBPosition,
-      );
-
-    });
+    _advanceToNextHand();
   }
 
   /// Internal function to show winner selection dialog and complete the hand.
@@ -5186,25 +5192,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // For full sessions, continue with normal flow
     // Check for busted players before starting new hand
     await _checkForBustedPlayers();
-
-    setState(() {
-      // Reset all-in completion flag for new hand
-      _allInHandCompleted = false;
-
-      // Start new hand in game state
-      gameState.startNewHand();
-      gameState.initializePot();
-
-      // Start new hand in session manager
-      sessionManager.startHand(
-        gameState.handNumber,
-        gameState.buttonPosition,
-        sbSeat: gameState.effectiveSBPosition,
-        bbSeat: gameState.effectiveBBPosition,
-      );
-
-      // Clear actions for new hand but keep the winner announcement
-    });
+    _advanceToNextHand();
   }
 
   String _getToActMessage() {
@@ -5713,24 +5701,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // For full sessions, continue with normal flow
     // Check for busted players before starting new hand
     await _checkForBustedPlayers();
-
-    setState(() {
-      // Reset all-in completion flag for new hand
-      _allInHandCompleted = false;
-
-      // Start new hand in game state
-      gameState.startNewHand();
-      gameState.initializePot();
-
-      // Start new hand in session manager
-      sessionManager.startHand(
-        gameState.handNumber,
-        gameState.buttonPosition,
-        sbSeat: gameState.effectiveSBPosition,
-        bbSeat: gameState.effectiveBBPosition,
-      );
-
-    });
+    _advanceToNextHand();
   }
 
   void _triggerInvalidActionVibration() {

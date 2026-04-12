@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/env_config.dart';
 import 'logger_service.dart';
 
@@ -24,6 +25,10 @@ class SubscriptionService {
   static Offerings? _offerings;
   static bool _isInitialized = false;
 
+  // Debug override for testing premium features (temporary)
+  static bool? _debugPremiumOverride;
+  static const _debugOverrideKey = 'debug_premium_override';
+
   // Stream controller for subscription status changes
   static final _premiumStatusController = StreamController<bool>.broadcast();
 
@@ -31,7 +36,33 @@ class SubscriptionService {
   static Stream<bool> get premiumStatusStream => _premiumStatusController.stream;
 
   /// Whether the user has an active premium subscription
-  static bool get isPremium => _isPremium;
+  static bool get isPremium => _debugPremiumOverride ?? _isPremium;
+
+  /// Debug: temporarily override premium status for testing.
+  /// Persists to SharedPreferences so it survives hot restart.
+  static Future<void> setDebugPremiumOverride(bool? value) async {
+    _debugPremiumOverride = value;
+    _premiumStatusController.add(isPremium);
+    // Persist
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null) {
+      await prefs.remove(_debugOverrideKey);
+    } else {
+      await prefs.setBool(_debugOverrideKey, value);
+    }
+  }
+
+  /// Load persisted debug override (call during init)
+  static Future<void> _loadDebugOverride() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey(_debugOverrideKey)) {
+      _debugPremiumOverride = prefs.getBool(_debugOverrideKey);
+      print('DEBUG: Loaded persisted premium override: $_debugPremiumOverride');
+    }
+  }
+
+  /// Debug: current override state (null = no override)
+  static bool? get debugPremiumOverride => _debugPremiumOverride;
 
   /// Whether the service has been initialized
   static bool get isInitialized => _isInitialized;
@@ -46,6 +77,9 @@ class SubscriptionService {
   /// Call this in main.dart after Firebase initialization
   static Future<void> initialize() async {
     if (_isInitialized) return;
+
+    // Load any persisted debug override first
+    await _loadDebugOverride();
 
     try {
       // Configure RevenueCat

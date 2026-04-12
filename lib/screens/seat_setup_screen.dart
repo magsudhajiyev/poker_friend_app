@@ -5,6 +5,7 @@ import '../design_system/components.dart';
 import '../models/hand_state_machine.dart';
 import '../utils/poker_positions.dart';
 import '../services/auth_service.dart';
+import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
 import '../models/opponent.dart';
@@ -746,6 +747,15 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                           InkWell(
                             key: saveOpponentKey,
                             onTap: () async {
+                              // Free-tier gate: enforce opponent profile cap.
+                              if (!FreeTierLimits.canCreateAnotherOpponent(
+                                allOpponents.length,
+                              )) {
+                                await FreeTierLimits.showOpponentLimitDialog(
+                                  context,
+                                );
+                                return;
+                              }
                               setState(() {
                                 showSaveOpponentTip[seatNumber] = false;
                               });

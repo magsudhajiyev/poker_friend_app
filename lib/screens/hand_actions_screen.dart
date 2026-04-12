@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/poker_positions.dart';
 import '../utils/number_formatter.dart';
+import '../utils/csv_export_utils.dart';
 import '../models/game_types.dart';
 import '../services/ai_analyzer_service.dart';
 import '../services/firebase_service.dart';
@@ -70,6 +71,53 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to update star status'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleExportButtonTap() async {
+    final isPremium = SubscriptionService.isPremium;
+
+    if (isPremium) {
+      await _exportHandData();
+    } else {
+      final purchased = await PaywallScreen.show(context, featureName: 'CSV Hand Export');
+      if (purchased == true && mounted) {
+        setState(() {});
+        await _exportHandData();
+      }
+    }
+  }
+
+  Future<void> _exportHandData() async {
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Generating CSV export...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Generate and share CSV
+      await CsvExportUtils.exportAndShareHand(widget.hand);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hand #${widget.hand['handNumber'] ?? 'N/A'} exported successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to export hand: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -289,6 +337,24 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           ],
                         ),
                       ),
+                      // Export button
+                      GestureDetector(
+                        onTap: _handleExportButtonTap,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.download,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
                       // Star button
                       GestureDetector(
                         onTap: _toggleStar,

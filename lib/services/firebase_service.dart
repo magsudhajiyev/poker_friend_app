@@ -9,6 +9,7 @@ import 'opponent_stats_service.dart';
 import 'stats_calculator.dart';
 import 'user_stats_service.dart';
 import 'app_data_cache.dart';
+import 'subscription_service.dart';
 
 class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -645,7 +646,8 @@ class FirebaseService {
         return bTime.compareTo(aTime); // Descending order
       });
 
-      return docs.map((doc) {
+      // Convert documents to session data
+      var sessions = docs.map((doc) {
         final data = doc.data();
         return {
           'id': doc.id,
@@ -654,13 +656,41 @@ class FirebaseService {
           'endTime': _parseTimestamp(data['endTime']),
         };
       }).toList();
+
+      // Apply 30-day filtering for free-tier users
+      if (!SubscriptionService.isPremium) {
+        final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+        sessions = sessions.where((session) {
+          final startTimeStr = session['startTime'] as String?;
+          if (startTimeStr == null) return false;
+
+          final startTime = DateTime.tryParse(startTimeStr);
+          return startTime != null && startTime.isAfter(thirtyDaysAgo);
+        }).toList();
+      }
+
+      return sessions;
     } catch (e) {
       print('Error getting user sessions from Firebase: $e');
       print('Falling back to local storage...');
 
       // Fallback to local storage
       try {
-        return await LocalStorageService.getUserSessions();
+        var localSessions = await LocalStorageService.getUserSessions();
+
+        // Apply 30-day filtering to local storage fallback for free-tier users
+        if (!SubscriptionService.isPremium) {
+          final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+          localSessions = localSessions.where((session) {
+            final startTimeStr = session['startTime'] as String?;
+            if (startTimeStr == null) return false;
+
+            final startTime = DateTime.tryParse(startTimeStr);
+            return startTime != null && startTime.isAfter(thirtyDaysAgo);
+          }).toList();
+        }
+
+        return localSessions;
       } catch (localError) {
         print('Error getting sessions from local storage: $localError');
         return _getMockOfflineData();

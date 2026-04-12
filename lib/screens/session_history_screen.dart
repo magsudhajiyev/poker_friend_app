@@ -4,11 +4,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/subscription_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/cards/error_state_card.dart';
+import '../design_system/constants/colors.dart';
+import '../design_system/constants/typography.dart';
 import '../services/app_data_cache.dart';
+import '../screens/paywall_screen.dart';
 import 'session_analytics_screen.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
@@ -27,11 +31,33 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   final ScrollController _scrollController = ScrollController();
   late TabController _tabController;
 
-  List<Map<String, dynamic>> get cashSessions =>
-      sessions.where((session) => session['gameType'] == 'cash').toList();
+  List<Map<String, dynamic>> get cashSessions => _filterSessionsForTier(
+      sessions.where((session) => session['gameType'] == 'cash').toList());
 
-  List<Map<String, dynamic>> get tournamentSessions =>
-      sessions.where((session) => session['gameType'] == 'tournament').toList();
+  List<Map<String, dynamic>> get tournamentSessions => _filterSessionsForTier(
+      sessions.where((session) => session['gameType'] == 'tournament').toList());
+
+  /// Filter sessions based on user's subscription tier
+  /// Free users: last 30 days only
+  /// Premium users: all sessions
+  List<Map<String, dynamic>> _filterSessionsForTier(List<Map<String, dynamic>> sessionList) {
+    if (SubscriptionService.isPremium) {
+      return sessionList;
+    }
+
+    // Free users get sessions from the last 30 days only
+    final thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
+
+    return sessionList.where((session) {
+      try {
+        final startTime = DateTime.parse(session['startTime']);
+        return startTime.isAfter(thirtyDaysAgo);
+      } catch (e) {
+        // If parsing fails, include the session (graceful fallback)
+        return true;
+      }
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -136,6 +162,60 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     }
   }
 
+  Widget _buildFreeTierStatusIndicator() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: GestureDetector(
+        onTap: () async {
+          await PaywallScreen.show(
+            context,
+            featureName: 'Full session history',
+          );
+          if (mounted) {
+            setState(() {});
+          }
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundSurface.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: AppColors.buttonPrimary.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 16,
+                color: AppColors.buttonPrimary,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Last 30 days • ',
+                style: AppTypography.bodySmall(
+                  color: AppColors.textSecondary,
+                ).copyWith(fontSize: 13),
+              ),
+              Text(
+                'Upgrade for full history',
+                style: AppTypography.bodySmall(
+                  color: AppColors.buttonPrimary,
+                ).copyWith(
+                  fontSize: 13,
+                  decoration: TextDecoration.underline,
+                  decorationColor: AppColors.buttonPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -213,6 +293,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                     ],
                   ),
                 ),
+                // Free-tier status indicator
+                if (!SubscriptionService.isPremium)
+                  _buildFreeTierStatusIndicator(),
                 // Tab Bar - Unified container with both tabs (Figma node 136:1342)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),

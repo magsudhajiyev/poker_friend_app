@@ -15,6 +15,7 @@ import 'services/deep_link_service.dart';
 import 'services/club_service.dart';
 import 'services/event_service.dart';
 import 'services/subscription_service.dart';
+import 'services/app_data_cache.dart';
 import 'config/env_config.dart';
 import 'design_system/poker_friend_theme.dart';
 import 'screens/club/event_detail_screen.dart';
@@ -23,6 +24,9 @@ import 'screens/admin/club_requests_screen.dart';
 
 /// Global navigator key for deep linking
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+/// Global subscription for handling subscription status changes
+StreamSubscription<bool>? _subscriptionStatusListener;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -98,6 +102,9 @@ Future<void> _initServicesInBackground() async {
   try {
     await SubscriptionService.initialize();
     print('Subscription service initialized successfully');
+
+    // Setup subscription status change listener for cache invalidation
+    _setupSubscriptionStatusListener();
   } catch (e) {
     print('Subscription service initialization failed: $e');
   }
@@ -150,6 +157,27 @@ Future<void> _setupFcmForLoggedInUser() async {
     await FCMService.subscribeToUserClubs();
   } catch (e) {
     // Silent failure - FCM is non-critical for app functionality
+  }
+}
+
+/// Setup subscription status change listener to invalidate relevant caches
+/// when user upgrades from free to premium or downgrades
+void _setupSubscriptionStatusListener() {
+  try {
+    _subscriptionStatusListener = SubscriptionService.premiumStatusStream.listen((isPremium) {
+      // Invalidate caches that depend on subscription status
+      // Sessions cache needs refresh because premium users see all sessions
+      // while free users only see last 30 days
+      AppDataCache.markSessionsDirty();
+
+      // Mark home dirty to refresh recent sessions display
+      AppDataCache.markHomeDirty();
+
+      print('Subscription status changed to ${isPremium ? 'Premium' : 'Free'} - cache invalidated');
+    });
+    print('Subscription status listener setup successfully');
+  } catch (e) {
+    print('Failed to setup subscription status listener: $e');
   }
 }
 

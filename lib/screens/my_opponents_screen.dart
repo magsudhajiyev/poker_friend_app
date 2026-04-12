@@ -4,8 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/opponent.dart';
 import '../models/opponent_stats.dart';
+import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
+import '../services/subscription_service.dart';
 import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import 'opponent_detail_screen.dart';
@@ -214,14 +216,25 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                               ),
                             ),
                             SizedBox(height: 2),
-                            Text(
-                              '${opponents.length} tracked players',
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 15,
-                                color: Color(0xFFEBEBF5).withOpacity(0.6),
-                                fontWeight: FontWeight.w400,
-                                height: 1.2,
-                              ),
+                            Builder(
+                              builder: (context) {
+                                // Free users see "N/10 free" so they know their cap.
+                                // Premium users see the clean count only.
+                                final showFreeCounter =
+                                    !SubscriptionService.isPremium;
+                                final subtitle = showFreeCounter
+                                    ? '${opponents.length}/${FreeTierLimits.maxOpponentProfiles} free'
+                                    : '${opponents.length} tracked players';
+                                return Text(
+                                  subtitle,
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 15,
+                                    color: Color(0xFFEBEBF5).withOpacity(0.6),
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.2,
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -799,7 +812,11 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     }
   }
 
-  void _showAddOpponentDialog() {
+  void _showAddOpponentDialog() async {
+    if (!FreeTierLimits.canCreateAnotherOpponent(opponents.length)) {
+      await FreeTierLimits.showOpponentLimitDialog(context);
+      return;
+    }
     _showOpponentDialog();
   }
 
@@ -946,6 +963,8 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     Future<void> saveOpponent() async {
       final name = nameController.text.trim();
       if (name.isEmpty) return;
+
+
 
       try {
         final newOpponent = isEditing

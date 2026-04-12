@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/hand_state_machine.dart';
 import '../utils/poker_positions.dart';
 import '../services/auth_service.dart';
+import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
 import '../models/opponent.dart';
 
@@ -242,6 +243,16 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                         ),
                         child: ElevatedButton(
                           onPressed: () async {
+                            // Free-tier gate: enforce opponent profile cap.
+                            if (!FreeTierLimits.canCreateAnotherOpponent(
+                              allOpponents.length,
+                            )) {
+                              Navigator.pop(context);
+                              await FreeTierLimits.showOpponentLimitDialog(
+                                context,
+                              );
+                              return;
+                            }
                             try {
                               final opponent = OpponentService.createNewOpponent(name: name);
                               await OpponentService.saveOpponent(opponent);
