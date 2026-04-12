@@ -8,6 +8,7 @@ import '../../models/poker_table.dart';
 import '../../services/event_service.dart';
 import '../../services/table_service.dart';
 import '../../services/club_notification_service.dart';
+import '../../design_system/components/calendar/custom_date_picker.dart';
 
 /// Shows the Create/Edit Event drawer as a modal bottom sheet.
 /// Returns true if event was created/updated, null otherwise.
@@ -338,11 +339,11 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               ),
               child: Column(
                 children: [
-                  // Form Card 1 - Basic fields
-                  _buildBasicFieldsCard(),
-                  const SizedBox(height: 14),
-                  // Form Card 2 - Game Type
+                  // Form Card 1 - Game Type (chosen first, changes field labels below)
                   _buildGameTypeCard(),
+                  const SizedBox(height: 14),
+                  // Form Card 2 - Basic fields
+                  _buildBasicFieldsCard(),
                   const SizedBox(height: 14),
                   // Form Card 3 - Date/Time
                   _buildDateTimeCard(),
@@ -1015,22 +1016,17 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
   }
 
   Future<void> _selectDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF5CD9A4),
-              surface: Color(0xFF1B1E24),
-            ),
-          ),
-          child: child!,
-        );
-      },
+    // Use the shared custom date picker (same one used by the calendar
+    // screen for adding a calendar event) instead of Flutter's default.
+    final now = DateTime.now();
+    final initial = _selectedDate.isBefore(DateTime(now.year, now.month, now.day))
+        ? now
+        : _selectedDate;
+    final picked = await showCustomDatePicker(
+      context,
+      initialDate: initial,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
     );
     if (picked != null) setState(() => _selectedDate = picked);
   }

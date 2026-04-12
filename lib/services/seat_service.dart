@@ -422,6 +422,21 @@ class SeatService {
         });
   }
 
+  /// Watch every currently-joined seat assignment in a club (across all tables).
+  /// Used to prevent admins from seating a member who's already seated somewhere
+  /// else in the same club.
+  static Stream<List<SeatAssignment>> watchClubSeatedAssignments({
+    required String clubId,
+  }) {
+    return _firestore
+        .collection(_seatAssignmentsCollection)
+        .where('clubId', isEqualTo: clubId)
+        .where('status', isEqualTo: 'joined')
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map(SeatAssignment.fromFirestore).toList());
+  }
+
   /// Watch a specific seat for real-time updates
   static Stream<SeatAssignment?> watchSeat({
     required String clubId,

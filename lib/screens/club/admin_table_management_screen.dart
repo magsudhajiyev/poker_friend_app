@@ -8,6 +8,7 @@ import '../../models/club_member.dart';
 import '../../models/poker_table.dart';
 import '../../models/seat_assignment.dart';
 import '../../models/waitlist_entry.dart';
+import '../../services/auth_service.dart';
 import '../../services/table_service.dart';
 import '../../services/seat_service.dart';
 import '../../services/club_service.dart';
@@ -40,10 +41,17 @@ class _AdminTableManagementScreenState
   Map<int, SeatAssignment> _seats = {};
   List<WaitlistEntry> _waitlist = [];
   List<ClubMember> _members = [];
+  // All tables in this club — used to label "Table N" in the member search
+  // sheet when a member is already seated somewhere else.
+  List<PokerTable> _clubTables = [];
+  // Every currently-joined seat assignment in this club (across all tables).
+  // Used to disable already-seated members in the Select Member list.
+  List<SeatAssignment> _clubSeatedAssignments = [];
   bool _isLoading = true;
 
   StreamSubscription? _seatSubscription;
   StreamSubscription? _waitlistSubscription;
+  StreamSubscription? _clubSeatsSubscription;
 
   @override
   void initState() {
@@ -56,6 +64,7 @@ class _AdminTableManagementScreenState
   void dispose() {
     _seatSubscription?.cancel();
     _waitlistSubscription?.cancel();
+    _clubSeatsSubscription?.cancel();
     super.dispose();
   }
 
@@ -65,12 +74,14 @@ class _AdminTableManagementScreenState
       final results = await Future.wait([
         TableService.getTable(widget.club.id, widget.tableId),
         ClubService.getMembers(widget.club.id),
+        TableService.getTables(widget.club.id),
       ]);
 
       if (mounted) {
         setState(() {
           _table = results[0] as PokerTable?;
           _members = results[1] as List<ClubMember>;
+          _clubTables = results[2] as List<PokerTable>;
           _isLoading = false;
         });
       }
@@ -100,6 +111,39 @@ class _AdminTableManagementScreenState
         setState(() => _waitlist = waitlist);
       }
     });
+
+    _clubSeatsSubscription = SeatService.watchClubSeatedAssignments(
+      clubId: widget.club.id,
+    ).listen((assignments) {
+      if (mounted) {
+        setState(() => _clubSeatedAssignments = assignments);
+      }
+    });
+  }
+
+  /// Map of userId → human-readable "Table N · Seat M" for every member who is
+  /// currently seated somewhere in this club (including this table). The admin
+  /// should not be able to double-book a player at any seat — even another
+  /// seat on the same table — because it would create duplicate rankings and
+  /// confuse stack tracking.
+  Map<String, String> _buildSeatedInfoByUserId() {
+    final byTableId = {
+      for (final t in _clubTables) t.id: t,
+    };
+    // Fall back to the table we already have loaded so the label is still
+    // accurate even if the club tables fetch is still in flight.
+    if (_table != null && !byTableId.containsKey(_table!.id)) {
+      byTableId[_table!.id] = _table!;
+    }
+    final result = <String, String>{};
+    for (final a in _clubSeatedAssignments) {
+      final playerId = a.playerId;
+      if (playerId == null) continue;
+      final table = byTableId[a.tableId];
+      final tableLabel = table != null ? 'Table ${table.tableNumber}' : 'Another table';
+      result[playerId] = '$tableLabel · Seat ${a.seatNumber}';
+    }
+    return result;
   }
 
 
@@ -321,11 +365,30 @@ class _AdminTableManagementScreenState
     final isPending = assignment?.isPending ?? false;
     final playerName = assignment?.playerName ?? '';
 
+    // Golden highlight when the seat belongs to the current user (admins can
+    // be seated as players too). Makes the admin's own seat instantly visible.
+    final currentUserId = AuthService.userId;
+    final isMine = currentUserId != null &&
+        assignment?.playerId != null &&
+        assignment!.playerId == currentUserId;
+
     Color bgColor;
     Color borderColor;
+    double borderWidth = 2;
     List<BoxShadow>? shadows;
 
-    if (isOccupied) {
+    if (isMine) {
+      bgColor = Colors.black;
+      borderColor = const Color(0xFFFFC857); // gold
+      borderWidth = 3;
+      shadows = [
+        BoxShadow(
+          color: const Color(0xFFFFC857).withValues(alpha: 0.55),
+          blurRadius: 12,
+          spreadRadius: 2,
+        ),
+      ];
+    } else if (isOccupied) {
       bgColor = Colors.black;
       borderColor = const Color(0xFF89F1EC);
       shadows = [
@@ -366,7 +429,7 @@ class _AdminTableManagementScreenState
               decoration: BoxDecoration(
                 color: bgColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: borderColor, width: 2),
+                border: Border.all(color: borderColor, width: borderWidth),
                 boxShadow: shadows,
               ),
               child: Center(
@@ -511,6 +574,7 @@ class _AdminTableManagementScreenState
         seatNumber: seatNumber,
         waitlist: _waitlist,
         members: _members,
+        seatedInfoByUserId: _buildSeatedInfoByUserId(),
         onSeatFromWaitlist: (entry) => _seatFromWaitlist(entry, seatNumber),
         onSeatMember: (member) => _seatMember(member, seatNumber),
         onAddWalkUp: (name) => _addWalkUpPlayer(name, seatNumber),
@@ -712,6 +776,26 @@ class _AdminTableManagementScreenState
 
   // === Action Methods ===
 
+  /// Clean up the stakes-scoped waitlist after a player is seated at this
+  /// table. No-op for tournaments or events without stakes. Safe to call
+  /// even when the player was never on the stakes waitlist.
+  Future<void> _removeFromStakesWaitlist(String playerId) async {
+    final stakes = widget.event.stakes?.trim();
+    if (widget.event.gameType != 'cash' || stakes == null || stakes.isEmpty) {
+      return;
+    }
+    if (playerId.startsWith('manual_')) return; // walk-ups can't be on waitlist
+    try {
+      await WaitlistService.removeUserFromStakesWaitlist(
+        clubId: widget.club.id,
+        stakesKey: stakesKeyFor(stakes),
+        userId: playerId,
+      );
+    } catch (_) {
+      // Cleanup is best-effort; a failure here shouldn't block the seat action.
+    }
+  }
+
   Future<void> _seatFromWaitlist(WaitlistEntry entry, int seatNumber) async {
     try {
       await SeatService.seatUserDirectly(
@@ -729,6 +813,9 @@ class _AdminTableManagementScreenState
         tableId: widget.tableId,
         seatNumber: seatNumber,
       );
+
+      // Also clear this user from any stakes-scoped waitlist for these stakes.
+      await _removeFromStakesWaitlist(entry.userId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -751,6 +838,21 @@ class _AdminTableManagementScreenState
     try {
       final memberName = member.displayName ?? 'Player';
 
+      // Defensive guard: if the stream was stale and the disabled-row UI slipped,
+      // still block double-booking at the write path.
+      final existingSeat = _buildSeatedInfoByUserId()[member.userId];
+      if (existingSeat != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$memberName is already seated at $existingSeat'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
       await SeatService.seatUserDirectly(
         clubId: widget.club.id,
         tableId: widget.tableId,
@@ -758,6 +860,8 @@ class _AdminTableManagementScreenState
         playerId: member.userId,
         playerName: memberName,
       );
+
+      await _removeFromStakesWaitlist(member.userId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -806,6 +910,10 @@ class _AdminTableManagementScreenState
         tableId: widget.tableId,
         seatNumber: seatNumber,
       );
+
+      if (assignment.playerId != null) {
+        await _removeFromStakesWaitlist(assignment.playerId!);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -876,6 +984,10 @@ class _SeatPlayerSheet extends StatelessWidget {
   final int seatNumber;
   final List<WaitlistEntry> waitlist;
   final List<ClubMember> members;
+  /// userId → "Table N · Seat M" for every member already seated elsewhere in
+  /// this club. Passed down to the member search sheet so the admin can see
+  /// (and can't pick) members who would double-book.
+  final Map<String, String> seatedInfoByUserId;
   final Function(WaitlistEntry) onSeatFromWaitlist;
   final Function(ClubMember) onSeatMember;
   final Function(String) onAddWalkUp;
@@ -884,6 +996,7 @@ class _SeatPlayerSheet extends StatelessWidget {
     required this.seatNumber,
     required this.waitlist,
     required this.members,
+    required this.seatedInfoByUserId,
     required this.onSeatFromWaitlist,
     required this.onSeatMember,
     required this.onAddWalkUp,
@@ -1025,6 +1138,7 @@ class _SeatPlayerSheet extends StatelessWidget {
         expand: false,
         builder: (context, scrollController) => _MemberSearchSheet(
           members: members,
+          seatedInfoByUserId: seatedInfoByUserId,
           onMemberSelected: (member) {
             Navigator.pop(context);
             onSeatMember(member);
@@ -1081,10 +1195,12 @@ class _SeatPlayerSheet extends StatelessWidget {
 
 class _MemberSearchSheet extends StatefulWidget {
   final List<ClubMember> members;
+  final Map<String, String> seatedInfoByUserId;
   final Function(ClubMember) onMemberSelected;
 
   const _MemberSearchSheet({
     required this.members,
+    required this.seatedInfoByUserId,
     required this.onMemberSelected,
   });
 
@@ -1101,6 +1217,15 @@ class _MemberSearchSheetState extends State<_MemberSearchSheet> {
       final name = m.displayName ?? '';
       return name.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
+
+    // Push already-seated members to the bottom so free members are easy to
+    // pick.
+    filtered.sort((a, b) {
+      final aSeated = widget.seatedInfoByUserId.containsKey(a.userId);
+      final bSeated = widget.seatedInfoByUserId.containsKey(b.userId);
+      if (aSeated == bSeated) return 0;
+      return aSeated ? 1 : -1;
+    });
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -1134,17 +1259,35 @@ class _MemberSearchSheetState extends State<_MemberSearchSheet> {
               itemBuilder: (context, index) {
                 final member = filtered[index];
                 final name = member.displayName ?? 'Player';
-                return ListTile(
-                  onTap: () => widget.onMemberSelected(member),
-                  leading: CircleAvatar(
-                    backgroundColor: const Color(0xFF2A2A2E),
-                    child: Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : '?',
-                      style: const TextStyle(color: Colors.white),
+                final seatedAt = widget.seatedInfoByUserId[member.userId];
+                final isSeated = seatedAt != null;
+                return Opacity(
+                  opacity: isSeated ? 0.45 : 1.0,
+                  child: ListTile(
+                    onTap: isSeated ? null : () => widget.onMemberSelected(member),
+                    enabled: !isSeated,
+                    leading: CircleAvatar(
+                      backgroundColor: const Color(0xFF2A2A2E),
+                      child: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
+                    title: Text(name, style: const TextStyle(color: Colors.white)),
+                    subtitle: isSeated
+                        ? Text(
+                            seatedAt,
+                            style: const TextStyle(
+                              color: Color(0xFF89F1EC),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          )
+                        : null,
+                    trailing: isSeated
+                        ? const Icon(Icons.event_seat, color: Color(0xFF89F1EC), size: 18)
+                        : const Icon(Icons.chevron_right, color: Color(0xFF4A4A4E)),
                   ),
-                  title: Text(name, style: const TextStyle(color: Colors.white)),
-                  trailing: const Icon(Icons.chevron_right, color: Color(0xFF4A4A4E)),
                 );
               },
             ),

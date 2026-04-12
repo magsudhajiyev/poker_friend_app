@@ -61,8 +61,10 @@ class AppColors {
   static const Color statusPotValue = Color(0xFFF3FF15);
   static const Color statusStreetLabel = Color(0xFF6388A5);
   static const Color statusStreetValue = Color(0xFF97CBF3);
-  static const Color mint600 = Color(0xFF4B9A96);
   static const Color mint500 = Color(0xFF5EB7B3);
+  static const Color mint600 = Color(0xFF4B9A96);
+  static const Color mint700 = Color(0xFF3A7D7A);
+  static const Color mint800 = Color(0xFF2A605D); // Figma mint/800 - seated pill bg
   static const Color mint900 = Color(0xFF1B4341);
   static const Color neutral500 = Color(0xFF67696D);
   static const Color neutral800 = Color(0xFF1B1E24);

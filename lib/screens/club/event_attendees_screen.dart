@@ -64,8 +64,14 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
         ),
       ]);
 
+      // "Going" list is ordered by RSVP time ascending so the first person
+      // who said yes is #1. Admin and players can read their position in
+      // line directly off the list.
+      final going = List<EventAttendance>.from(results[0])
+        ..sort((a, b) => a.respondedAt.compareTo(b.respondedAt));
+
       setState(() {
-        _going = results[0];
+        _going = going;
         _maybe = results[1];
         _notGoing = results[2];
         _isLoading = false;
@@ -265,7 +271,10 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: attendees.length,
         itemBuilder: (context, index) {
-          return _buildAttendeeCard(attendees[index], status);
+          // Only the Going tab surfaces a position number — it's the one
+          // list where "who was first" is meaningful to players/admins.
+          final position = status == AttendanceStatus.going ? index + 1 : null;
+          return _buildAttendeeCard(attendees[index], status, position: position);
         },
       ),
     );
@@ -324,7 +333,11 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
     );
   }
 
-  Widget _buildAttendeeCard(EventAttendance attendee, AttendanceStatus status) {
+  Widget _buildAttendeeCard(
+    EventAttendance attendee,
+    AttendanceStatus status, {
+    int? position,
+  }) {
     Color statusColor;
     switch (status) {
       case AttendanceStatus.going:
@@ -347,6 +360,21 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
       ),
       child: Row(
         children: [
+          // Position number (Going tab only) — "#1", "#2", …
+          if (position != null) ...[
+            SizedBox(
+              width: 28,
+              child: Text(
+                '#$position',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF9A9B9E),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+          ],
           // Avatar
           Container(
             width: 40,

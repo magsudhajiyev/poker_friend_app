@@ -2194,14 +2194,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: recentSessions.isEmpty
-              ? InfoCard(
-                  isEmpty: true,
-                  emptyTitle: 'No recent sessions',
-                  emptySubtitle: 'Start your first poker session!',
-                  iconPath: 'icons/flat_icons/people.png',
-                  iconColor: const Color(0xFF89F1EC),
-                  buttonText: 'Add New Session',
-                  onEmptyTap: () {
+              ? _buildEmptyInfoCard(
+                  title: 'No recent sessions',
+                  subtitle: 'Start your first poker session!',
+                  onAddTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
@@ -2218,6 +2214,86 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
         ),
       ],
+    );
+  }
+
+  /// Empty-state card matching Figma 1241:7989 (sessions) / 1241:8014 (events).
+  /// Title + subtitle on the left, cyan-tinted "Add New +" pill on the right.
+  Widget _buildEmptyInfoCard({
+    required String title,
+    required String subtitle,
+    required VoidCallback onAddTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF101115),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFFB3B4B6),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          GestureDetector(
+            onTap: onAddTap,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF62D5B6).withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Add New',
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.add,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2242,14 +2318,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: upcomingEvents.isEmpty
-              ? InfoCard(
-                  isEmpty: true,
-                  emptyTitle: 'No recent events',
-                  emptySubtitle: 'Add your first poker event!',
-                  iconPath: 'icons/flat_icons/calendar.png',
-                  iconColor: const Color(0xFF89F1EC),
-                  buttonText: 'Add New Event',
-                  onEmptyTap: () async {
+              ? _buildEmptyInfoCard(
+                  title: 'No recent events',
+                  subtitle: 'Add your first poker event!',
+                  onAddTap: () async {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => CalendarScreen()),

@@ -25,6 +25,7 @@ import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
 import 'club_settings_screen.dart';
 import 'club_info_screen.dart';
+import 'grouped_cash_game_screen.dart';
 
 /// Club dashboard showing events with segmented tabs for Upcoming, Live, Past, Dealers
 /// Matches Figma node 357:3862
@@ -51,6 +52,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   List<ClubEvent> _upcomingEvents = [];
   List<ClubEvent> _liveEvents = [];
   List<ClubEvent> _pastEvents = [];
+
+  /// Cached grouped lane items for the Live tab. Recomputed only when
+  /// `_liveEvents` changes (not on every player count update) so the Live tab
+  /// doesn't re-sort/re-partition on every seat stream event.
+  List<_LiveLaneItem> _liveLaneItems = const [];
 
   // Dealers tab data
   List<ClubMember> _dealers = [];
@@ -113,6 +119,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         _upcomingEvents = upcoming;
         _liveEvents = live;
         _pastEvents = past;
+        _liveLaneItems = _groupLiveCashEventsByStakes(live);
       });
 
       _loadPlayerCounts(allEvents);
@@ -301,6 +308,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         _upcomingEvents = results[1] as List<ClubEvent>;
         _liveEvents = results[2] as List<ClubEvent>;
         _pastEvents = results[3] as List<ClubEvent>;
+        _liveLaneItems = _groupLiveCashEventsByStakes(_liveEvents);
         if (isAdmin) {
           final members = results[4] as List<ClubMember>;
           _dealers = members.where((m) => m.role == ClubRole.dealer).toList();
@@ -415,7 +423,16 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             ],
           ),
 
-          // (Create Event button is now inline in empty state)
+          // Floating "Create Event" FAB — admin only, pinned to the same
+          // bottom-right position across all 3 tabs (Live / Upcoming / Past)
+          // so the admin never has to switch tabs to create an event. Matches
+          // the Join Waitlist pill from grouped_cash_game_screen.dart.
+          if (_isAdmin && !_isLoading && _loadError == null)
+            Positioned(
+              right: 20,
+              bottom: MediaQuery.of(context).padding.bottom - 4,
+              child: _buildCreateEventButton(),
+            ),
         ],
       ),
       bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'club'),
@@ -688,22 +705,253 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       return _buildEmptyState(emptyMessage, type);
     }
 
-    final showButton = _isAdmin && type == 'scheduled';
+    // Live tab: collapse multiple live cash events sharing the same stakes
+    // into a single grouped card. Tournaments and solo cash events render
+    // as regular event cards. Uses cached `_liveLaneItems` populated when
+    // `_liveEvents` changes so we don't re-sort/re-partition on every seat
+    // stream update.
+    if (type == 'live') {
+      final items = _liveLaneItems;
+      return RefreshIndicator(
+        onRefresh: () { AppDataCache.markClubDirty(); return _loadData(); },
+        color: AppColors.tealAccent,
+        child: ListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return switch (item) {
+              _SoloEventItem(:final event) => _buildEventCard(event, type),
+              _StakesGroupItem() => _buildGroupedCashCard(item),
+            };
+          },
+        ),
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: () { AppDataCache.markClubDirty(); return _loadData(); },
       color: AppColors.tealAccent,
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-        itemCount: events.length + (showButton ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == events.length && showButton) {
-            return Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 16),
-              child: Center(child: _buildCreateEventButton()),
-            );
-          }
-          return _buildEventCard(events[index], type);
-        },
+        itemCount: events.length,
+        itemBuilder: (context, index) => _buildEventCard(events[index], type),
+      ),
+    );
+  }
+
+  /// Partitions live events into a mix of solo event cards and stakes-group
+  /// cards. ALL live cash events with stakes are routed through the grouped
+  /// screen (even a single event) so the UX is consistent — players always
+  /// see the same table-grid + waitlist flow for cash games. Tournaments and
+  /// cash events with no stakes render as solo event cards.
+  List<_LiveLaneItem> _groupLiveCashEventsByStakes(List<ClubEvent> live) {
+    final groups = <String, List<ClubEvent>>{};
+    final solo = <ClubEvent>[];
+
+    for (final e in live) {
+      final stakes = e.stakes?.trim();
+      if (e.gameType == 'cash' && stakes != null && stakes.isNotEmpty) {
+        groups.putIfAbsent(stakes.toLowerCase(), () => []).add(e);
+      } else {
+        solo.add(e);
+      }
+    }
+
+    final items = <_LiveLaneItem>[];
+    for (final entry in groups.entries) {
+      // Preserve the first event's original casing for display.
+      items.add(_StakesGroupItem(entry.value.first.stakes!.trim(), entry.value));
+    }
+    items.addAll(solo.map(_SoloEventItem.new));
+
+    // Sort by freshest startTime first.
+    items.sort((a, b) {
+      final aTime = a is _SoloEventItem
+          ? a.event.startTime
+          : (a as _StakesGroupItem).events.first.startTime;
+      final bTime = b is _SoloEventItem
+          ? b.event.startTime
+          : (b as _StakesGroupItem).events.first.startTime;
+      return bTime.compareTo(aTime);
+    });
+    return items;
+  }
+
+  /// Collapsed "Cash Game $stakes" card shown on the Live tab when 2+ live
+  /// cash events share the same stakes. Style matches `_buildEventCard` live
+  /// variant but aggregates table/player counts across all events in the group.
+  Widget _buildGroupedCashCard(_StakesGroupItem item) {
+    final stakes = item.stakes;
+    final events = item.events;
+    final totalTables = events.fold<int>(0, (sum, e) => sum + e.tableIds.length);
+    final totalPlaying = events.fold<int>(
+      0,
+      (sum, e) => sum + (_eventPlayerCounts[e.id] ?? 0),
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF101115),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFFF4444).withValues(alpha: 0.5),
+          width: 1.5,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToGroupedCashGame(stakes, events),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                children: [
+                  // Top row: live dot + title + Cash pill
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF4444),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF4444).withValues(alpha: 0.5),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            'Cash Game $stakes',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              height: 1.44,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1B4341),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'Cash',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 11,
+                            color: const Color(0xFF89F1EC),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+                  Container(height: 1, color: const Color(0xFF1C1F21)),
+                  const SizedBox(height: 14),
+
+                  // Tables row
+                  _buildGroupedCashInfoRow(
+                    'Tables',
+                    '$totalTables table${totalTables == 1 ? '' : 's'}',
+                  ),
+                  const SizedBox(height: 6),
+                  _buildGroupedCashInfoRow('Stakes', stakes),
+
+                  const SizedBox(height: 14),
+
+                  // Bottom row: player count
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 18,
+                          color: const Color(0xFF808285),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              '$totalPlaying playing',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 13,
+                                color: const Color(0xFF808285),
+                                fontWeight: FontWeight.w500,
+                                height: 1.44,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+  }
+
+  Widget _buildGroupedCashInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text(
+            label,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              color: const Color(0xFFB3B4B6),
+              fontWeight: FontWeight.w500,
+              height: 1.44,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text(
+            value,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              color: const Color(0xFFD3FFFD),
+              fontWeight: FontWeight.w500,
+              height: 1.44,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _navigateToGroupedCashGame(String stakes, List<ClubEvent> events) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GroupedCashGameScreen(
+          club: widget.club,
+          stakes: stakes,
+          events: events,
+          isAdmin: _isAdmin,
+        ),
       ),
     );
   }
@@ -773,49 +1021,51 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             height: 1.47,
           ),
         ),
-        // Create Event button (admin only, upcoming tab only)
-        if (_isAdmin && type == 'scheduled') ...[
-          const Spacer(flex: 3),
-          _buildCreateEventButton(),
-        ],
-        // Gap between button and navbar
-        const Spacer(flex: 1),
+        // Create Event button lives as a floating FAB in the outer Stack —
+        // no longer inline in the empty state.
+        const Spacer(flex: 4),
       ],
     );
   }
 
-  /// Create Event button matching Figma (node 416:4374)
-  /// Auto-width, centered, pinned near bottom
+  /// Floating "Create Event" pill — visually matches the Join Waitlist FAB
+  /// in grouped_cash_game_screen.dart (blurred dark surface, 1px white
+  /// border, 58px radius, plus icon + white 14px w600 label).
   Widget _buildCreateEventButton() {
-    return GestureDetector(
-      onTap: _navigateToCreateEvent,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF89F1EC),
-          borderRadius: BorderRadius.circular(110),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              'icons/figma_icons/plus.svg',
-              width: 24,
-              height: 24,
-              colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Create Event',
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-                letterSpacing: -0.5,
-                height: 24 / 17,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(58),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 37, sigmaY: 37),
+        child: Material(
+          color: AppColors.backgroundSurface.withValues(alpha: 0.85),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(58),
+            side: const BorderSide(color: Colors.white, width: 1),
+          ),
+          child: InkWell(
+            onTap: _navigateToCreateEvent,
+            borderRadius: BorderRadius.circular(58),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.add, size: 18, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Create Event',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                      height: 1.0,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1515,4 +1765,21 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       }
     }
   }
+}
+
+/// A render item in the Live tab: either a single event or a group of live
+/// cash events sharing the same stakes.
+sealed class _LiveLaneItem {
+  const _LiveLaneItem();
+}
+
+class _SoloEventItem extends _LiveLaneItem {
+  final ClubEvent event;
+  const _SoloEventItem(this.event);
+}
+
+class _StakesGroupItem extends _LiveLaneItem {
+  final String stakes;
+  final List<ClubEvent> events;
+  const _StakesGroupItem(this.stakes, this.events);
 }
