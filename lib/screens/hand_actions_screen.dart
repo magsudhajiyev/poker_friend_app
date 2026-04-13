@@ -3,11 +3,11 @@ import 'dart:math' as math;
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/poker_positions.dart';
 import '../utils/number_formatter.dart';
-import '../utils/csv_export_utils.dart';
 import '../models/game_types.dart';
 import '../services/ai_analyzer_service.dart';
 import '../services/firebase_service.dart';
 import '../services/subscription_service.dart';
+import '../services/pokerstars_export_service.dart';
 import 'paywall_screen.dart';
 
 class HandActionsScreen extends StatefulWidget {
@@ -81,29 +81,35 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   Future<void> _handleExportButtonTap() async {
     final isPremium = SubscriptionService.isPremium;
 
-    if (isPremium) {
-      await _exportHandData();
-    } else {
-      final purchased = await PaywallScreen.show(context, featureName: 'CSV Hand Export');
-      if (purchased == true && mounted) {
-        setState(() {});
-        await _exportHandData();
-      }
+    if (!isPremium) {
+      final purchased = await PaywallScreen.show(context, featureName: 'Hand Export');
+      if (purchased != true || !mounted) return;
+      setState(() {});
     }
+
+    if (!mounted) return;
+    _exportPokerStarsFormat();
   }
 
-  Future<void> _exportHandData() async {
+  Future<void> _exportPokerStarsFormat() async {
     try {
-      // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Generating CSV export...'),
+          content: Text('Generating PokerStars export...'),
           duration: Duration(seconds: 2),
         ),
       );
 
-      // Generate and share CSV
-      await CsvExportUtils.exportAndShareHand(widget.hand);
+      final sessionId = widget.hand['sessionId'] as String?;
+      Map<String, dynamic> sessionData = {};
+      if (sessionId != null) {
+        final session = await FirebaseService.getSession(sessionId);
+        if (session != null) {
+          sessionData = session;
+        }
+      }
+
+      await PokerStarsExportService.exportAndShare(widget.hand, sessionData);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
