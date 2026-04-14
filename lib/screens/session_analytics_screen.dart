@@ -10,6 +10,10 @@ import 'session_hands_screen.dart';
 import 'hand_actions_screen.dart';
 import 'stack_chart_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../services/session_export_service.dart';
+import '../services/subscription_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'paywall_screen.dart';
 
 class SessionAnalyticsScreen extends StatefulWidget {
   final Map<String, dynamic> sessionData;
@@ -35,10 +39,113 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   double _profitLoss = 0.0;
   int? _touchedSpotIndex;
 
+  bool _isExporting = false;
+
   @override
   void initState() {
     super.initState();
     _loadSessionAnalytics();
+  }
+
+  Future<void> _handleSessionExport() async {
+    if (_isExporting || _hands.isEmpty) return;
+
+    final isPremium = SubscriptionService.isPremium;
+    if (!isPremium) {
+      final purchased =
+          await PaywallScreen.show(context, featureName: 'Session Export');
+      if (purchased != true || !mounted) return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email;
+
+    if (email == null || email.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No email address found. Please sign in with an email account.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Show confirmation dialog
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Export Session',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'Export ${_hands.length} hands to $email?',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white.withValues(alpha: 0.8),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.ibmPlexSans(color: Colors.white54),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'Export',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF89F1EC),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isExporting = true);
+
+    try {
+      await SessionExportService.exportSession(
+        userId: user!.uid,
+        userEmail: email,
+        session: widget.sessionData,
+        hands: _hands,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export sent to $email'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
   }
 
   Future<void> _loadSessionAnalytics() async {
@@ -267,6 +374,30 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: _isExporting ? null : _handleSessionExport,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF101115),
+                            shape: BoxShape.circle,
+                          ),
+                          child: _isExporting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color(0xFF89F1EC)),
+                                  ),
+                                )
+                              : const Icon(Icons.ios_share,
+                                  color: Colors.white, size: 20),
                         ),
                       ),
                     ],
