@@ -4,8 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link_service.dart';
+import '../services/username_service.dart';
 import 'intro_screen.dart';
 import 'home_screen.dart';
+import 'username_setup_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -14,22 +16,29 @@ class AuthWrapper extends StatefulWidget {
   State<AuthWrapper> createState() => _AuthWrapperState();
 }
 
-class _AuthWrapperState extends State<AuthWrapper> {
+class _AuthWrapperState extends State<AuthWrapper> with SingleTickerProviderStateMixin {
   bool _loggedUnexpectedLogout = false;
   bool _wasSignedIn = false;  // Track if user was ever signed in during this session
   bool _waitingForRecovery = false;  // Track if we're waiting for auth to recover
   bool _authTimedOut = false;  // Track if auth stream took too long to resolve
+  Future<bool>? _usernameSetupFuture;  // Stored future to prevent re-creation on stream rebuilds
   Timer? _authTimeoutTimer;
+  late AnimationController _spinController;
 
   @override
   void initState() {
     super.initState();
+    _spinController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
     _startAuthTimeout();
   }
 
   @override
   void dispose() {
     _authTimeoutTimer?.cancel();
+    _spinController.dispose();
     super.dispose();
   }
 
@@ -43,6 +52,31 @@ class _AuthWrapperState extends State<AuthWrapper> {
         });
       }
     });
+  }
+
+  /// Returns true if username setup is done (or was auto-claimed from web reservation).
+  Future<bool> _checkUsernameSetup() async {
+    // Ensure user document exists BEFORE checking username setup
+    // (avoids race where doc doesn't exist yet → grandfathering returns true)
+    await AuthService.ensureUserDocument();
+
+    final completed = await UsernameService.hasCompletedUsernameSetup();
+    print('📍 AUTH: hasCompletedUsernameSetup=$completed');
+    if (completed) return true;
+
+    // Look up web reservation by email — auto-claim and skip setup screen
+    final email = AuthService.currentUser?.email;
+    print('📍 AUTH: Checking web reservation for email=$email');
+    if (email != null) {
+      final reservedUsername = await UsernameService.getPendingClaimForEmail(email);
+      print('📍 AUTH: Reserved username=$reservedUsername');
+      if (reservedUsername != null) {
+        final claimed = await UsernameService.claimUsername(reservedUsername);
+        print('📍 AUTH: Auto-claim result=$claimed');
+        if (claimed) return true;
+      }
+    }
+    return false;
   }
 
   void _retryAuth() {
@@ -80,14 +114,26 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _waitingForRecovery = false;
           AuthService.clearExplicitLogoutFlag();
 
-          // Ensure user document exists (safety net for all users)
-          AuthService.ensureUserDocument();
-
           // Process any pending deep link invitations
           WidgetsBinding.instance.addPostFrameCallback((_) {
             DeepLinkService.processPendingInvitation();
           });
-          return HomeScreen();
+
+          // Reuse the same future across stream rebuilds to avoid re-running the check
+          _usernameSetupFuture ??= _checkUsernameSetup();
+
+          return FutureBuilder<bool>(
+            future: _usernameSetupFuture,
+            builder: (context, usernameSnapshot) {
+              if (usernameSnapshot.connectionState == ConnectionState.waiting) {
+                return _buildLoadingScreen(context);
+              }
+              if (usernameSnapshot.data == true) {
+                return HomeScreen();
+              }
+              return const UsernameSetupScreen();
+            },
+          );
         }
 
         // User appears signed out - verify this is intentional
@@ -128,8 +174,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
 
         print('📍 AUTH: User not signed in, showing IntroScreen, isExplicitLogout=${AuthService.isExplicitLogout}');
-        // Reset _wasSignedIn when showing intro screen
+        // Reset state when showing intro screen
         _wasSignedIn = false;
+        _usernameSetupFuture = null;
 
         // User is not signed in
         return IntroScreen();
@@ -139,40 +186,27 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   Widget _buildLoadingScreen(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.primaryContainer,
-            ],
-          ),
-        ),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.workspace_premium,
-                size: 80,
-                color: Colors.white,
-              ),
-              SizedBox(height: 24),
-              Text(
-                'Final Table',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 40),
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            ],
+      backgroundColor: const Color(0xFF02050B),
+      body: Center(
+        child: AnimatedBuilder(
+          animation: _spinController,
+          builder: (context, child) {
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateY(_spinController.value * 6.28318),
+              child: child,
+            );
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Image.asset(
+              'logo.png',
+              width: 100,
+              height: 100,
+              fit: BoxFit.contain,
+            ),
           ),
         ),
       ),

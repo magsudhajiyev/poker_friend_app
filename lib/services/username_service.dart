@@ -1,0 +1,295 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class UsernameService {
+  static final _firestore = FirebaseFirestore.instance;
+
+  // Cache to avoid repeated Firestore reads
+  static bool? _cachedHasSetUsername;
+  static String? _cachedForUserId;
+
+  /// Validate username format (client-side, pure function).
+  /// Accepts mixed case input; validation checks lowercase form.
+  /// Returns null if valid, error message if invalid.
+  static String? validateUsername(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return 'Username is required';
+    if (trimmed.length < 3) return 'Must be at least 3 characters';
+    if (trimmed.length > 20) return 'Must be 20 characters or less';
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(trimmed)) {
+      return 'Only letters, numbers, and underscores';
+    }
+    if (trimmed.startsWith('_') || trimmed.endsWith('_')) {
+      return 'Cannot start or end with underscore';
+    }
+    return null;
+  }
+
+  /// Check if a username is available.
+  /// Checks both `usernames` collection (live users) AND
+  /// `nickname_claims` collection (web reservations).
+  /// Claims belonging to [currentUserEmail] are ignored (user's own reservation).
+  static Future<bool> isUsernameAvailable(String username, {String? currentUserEmail}) async {
+    final normalized = username.toLowerCase().trim();
+
+    // Check live usernames
+    final doc = await _firestore.collection('usernames').doc(normalized).get();
+    if (doc.exists) return false;
+
+    // Check web reservations
+    final claims = await _firestore
+        .collection('nickname_claims')
+        .where('nickname', isEqualTo: normalized)
+        .where('status', isEqualTo: 'pending')
+        .limit(5)
+        .get();
+
+    if (claims.docs.isEmpty) return true;
+
+    // If all matching claims belong to the current user's email, it's available
+    if (currentUserEmail != null) {
+      final normalizedEmail = currentUserEmail.toLowerCase().trim();
+      final otherClaims = claims.docs.where(
+        (d) => (d.data()['email'] as String?)?.toLowerCase().trim() != normalizedEmail,
+      );
+      return otherClaims.isEmpty;
+    }
+
+    return false;
+  }
+
+  /// Claim a username atomically using a Firestore transaction.
+  /// Stores the original casing for display; uses lowercase for uniqueness index.
+  /// Returns true on success, false if taken.
+  static Future<bool> claimUsername(String username) async {
+    final displayName = username.trim();
+    final normalized = displayName.toLowerCase();
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return false;
+
+    try {
+      final success = await _firestore.runTransaction<bool>((transaction) async {
+        final usernameRef = _firestore.collection('usernames').doc(normalized);
+        final snapshot = await transaction.get(usernameRef);
+
+        if (snapshot.exists) return false;
+
+        // Write to usernames index (lowercase key)
+        transaction.set(usernameRef, {
+          'userId': userId,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        // Update user document — store original casing for display
+        transaction.update(_firestore.collection('users').doc(userId), {
+          'username': displayName,
+          'usernameLower': normalized,
+          'hasSetUsername': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        return true;
+      });
+
+      // Update cache and mark any matching web claim as claimed
+      if (success) {
+        _cachedHasSetUsername = true;
+        _cachedForUserId = userId;
+        markClaimAsClaimed(normalized);
+      }
+      return success;
+    } catch (e) {
+      print('Error claiming username: $e');
+      return false;
+    }
+  }
+
+  /// Release old username and claim a new one atomically.
+  /// Returns true on success, false if new name is taken.
+  static Future<bool> releaseAndClaimNew(
+      String oldUsername, String newUsername) async {
+    final oldNormalized = oldUsername.toLowerCase().trim();
+    final newDisplayName = newUsername.trim();
+    final newNormalized = newDisplayName.toLowerCase();
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return false;
+
+    try {
+      return await _firestore.runTransaction<bool>((transaction) async {
+        final newRef = _firestore.collection('usernames').doc(newNormalized);
+        final newSnapshot = await transaction.get(newRef);
+
+        if (newSnapshot.exists) return false;
+
+        // Delete old username doc
+        final oldRef = _firestore.collection('usernames').doc(oldNormalized);
+        transaction.delete(oldRef);
+
+        // Create new username doc
+        transaction.set(newRef, {
+          'userId': userId,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        // Update user document — store original casing for display
+        transaction.update(_firestore.collection('users').doc(userId), {
+          'username': newDisplayName,
+          'usernameLower': newNormalized,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        return true;
+      });
+    } catch (e) {
+      print('Error changing username: $e');
+      return false;
+    }
+  }
+
+  /// Mark username setup as skipped (user chose not to set one now).
+  static Future<void> skipUsername() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'hasSetUsername': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      _cachedHasSetUsername = true;
+      _cachedForUserId = userId;
+    } catch (e) {
+      print('Error skipping username: $e');
+    }
+  }
+
+  /// Check if user has been through username setup (set or skipped).
+  /// Returns true for existing users who don't have the field (grandfathered).
+  static Future<bool> hasCompletedUsernameSetup() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return true;
+
+    // Use cache if available for same user
+    if (_cachedForUserId == userId && _cachedHasSetUsername != null) {
+      return _cachedHasSetUsername!;
+    }
+
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      final data = doc.data();
+      if (data == null) return true; // No user doc = skip
+
+      // If field doesn't exist, user is grandfathered in
+      if (!data.containsKey('hasSetUsername')) {
+        _cachedHasSetUsername = true;
+        _cachedForUserId = userId;
+        return true;
+      }
+
+      final result = data['hasSetUsername'] as bool? ?? true;
+      _cachedHasSetUsername = result;
+      _cachedForUserId = userId;
+      return result;
+    } catch (e) {
+      print('Error checking username setup: $e');
+      return true; // On error, don't block the user
+    }
+  }
+
+  /// Look up a pending nickname claim by email (from web reservation).
+  /// Returns the reserved nickname or null if none found.
+  static Future<String?> getPendingClaimForEmail(String email) async {
+    final normalizedEmail = email.toLowerCase().trim();
+    try {
+      // Query by email only (no composite index needed), filter status client-side
+      final claims = await _firestore
+          .collection('nickname_claims')
+          .where('email', isEqualTo: normalizedEmail)
+          .get();
+      if (claims.docs.isEmpty) {
+        print('📍 USERNAME: No nickname claims found for email: $normalizedEmail');
+        return null;
+      }
+      // Find the first pending claim
+      for (final doc in claims.docs) {
+        final data = doc.data();
+        if (data['status'] == 'pending') {
+          final nickname = data['nickname'] as String?;
+          print('📍 USERNAME: Found pending claim "$nickname" for $normalizedEmail');
+          return nickname;
+        }
+      }
+      print('📍 USERNAME: Claims found but none pending for $normalizedEmail');
+      return null;
+    } catch (e) {
+      print('❌ USERNAME: Error looking up nickname claim: $e');
+      return null;
+    }
+  }
+
+  /// Mark a web nickname claim as claimed (after user claims it in-app).
+  static Future<void> markClaimAsClaimed(String nickname) async {
+    try {
+      final normalized = nickname.toLowerCase().trim();
+      final claims = await _firestore
+          .collection('nickname_claims')
+          .where('nickname', isEqualTo: normalized)
+          .where('status', isEqualTo: 'pending')
+          .get();
+      for (final doc in claims.docs) {
+        await doc.reference.update({'status': 'claimed'});
+      }
+    } catch (e) {
+      print('Error marking claim as claimed: $e');
+    }
+  }
+
+  /// Get current user's username from Firestore.
+  static Future<String?> getUsername() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return null;
+
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      return doc.data()?['username'] as String?;
+    } catch (e) {
+      print('Error getting username: $e');
+      return null;
+    }
+  }
+
+  /// Get user's preference for using nickname in game.
+  static Future<bool> getUseNicknameInGame() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return false;
+
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      return doc.data()?['useNicknameInGame'] as bool? ?? false;
+    } catch (e) {
+      print('Error getting useNicknameInGame: $e');
+      return false;
+    }
+  }
+
+  /// Toggle the useNicknameInGame preference.
+  static Future<void> setUseNicknameInGame(bool value) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'useNicknameInGame': value,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error setting useNicknameInGame: $e');
+    }
+  }
+
+  /// Clear cached state (call on sign out).
+  static void clearCache() {
+    _cachedHasSetUsername = null;
+    _cachedForUserId = null;
+  }
+}

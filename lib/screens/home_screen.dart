@@ -63,6 +63,7 @@ import '../services/invitation_service.dart';
 import '../services/event_attendance_service.dart';
 import '../models/event_attendance.dart';
 import '../services/app_data_cache.dart';
+import '../services/display_identity_service.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {
@@ -1189,11 +1190,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final events = await _loadCalendarEvents()
           .timeout(const Duration(seconds: 10), onTimeout: () => []);
 
-      final user = AuthService.currentUser;
-      String displayName = 'User';
-      if (user != null) {
-        displayName = user.displayName ?? user.email?.split('@')[0] ?? 'User';
-      }
+      // Pre-load display identity cache (respects useNicknameInGame toggle)
+      await DisplayIdentityService.getDisplayIdentity();
+      final displayName = DisplayIdentityService.cachedDisplayIdentity;
 
       if (mounted) {
         setState(() {

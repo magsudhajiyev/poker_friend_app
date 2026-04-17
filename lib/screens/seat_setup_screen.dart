@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../design_system/components.dart';
 import '../models/hand_state_machine.dart';
 import '../utils/poker_positions.dart';
-import '../services/auth_service.dart';
+import '../services/display_identity_service.dart';
 import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
 import '../services/opponent_stats_service.dart';
@@ -490,7 +490,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                 tempIsMySeat = true;
                                 tempIsActive = true;
                                 // Auto-insert username
-                                final userName = AuthService.userDisplayName;
+                                final userName = DisplayIdentityService.cachedDisplayIdentity;
                                 if (userName.isNotEmpty) {
                                   tempName = userName;
                                   tempNameController.text = userName;
@@ -1101,7 +1101,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   void _restoreDefaultsForPreviousSeat(int? previousSeat) {
     if (previousSeat == null) return;
 
-    final userName = AuthService.userDisplayName;
+    final userName = DisplayIdentityService.cachedDisplayIdentity;
     final nameController = nameControllers[previousSeat];
     final stackController = stackControllers[previousSeat];
 
@@ -1128,7 +1128,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
   }
 
   void _autoInsertUsernameForSeat(int seatNumber) {
-    final userName = AuthService.userDisplayName;
+    final userName = DisplayIdentityService.cachedDisplayIdentity;
     final controller = nameControllers[seatNumber];
 
     if (controller != null && userName.isNotEmpty) {

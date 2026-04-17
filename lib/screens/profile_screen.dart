@@ -3,11 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
+import '../services/display_identity_service.dart';
 import '../services/session_result_service.dart';
 import '../services/subscription_service.dart';
+import '../services/username_service.dart';
 import '../screens/settings_screen.dart';
 import '../screens/paywall_screen.dart';
 import '../screens/intro_screen.dart';
+import '../screens/username_setup_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -24,6 +27,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double bankrollGoal = 0.0;
   bool isLoading = true;
   String _selectedGameType = 'tournament'; // Default to tournament as shown in Figma
+  String? _username;
+  bool _useNicknameInGame = false;
 
   @override
   void initState() {
@@ -43,6 +48,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final bankroll = await BankrollService.getCurrentBankroll();
       final goal = await BankrollService.getBankrollGoal();
+      final username = await UsernameService.getUsername();
+      final useNickname = await UsernameService.getUseNicknameInGame();
 
       if (mounted) {
         setState(() {
@@ -50,6 +57,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           bankrollGoal = goal;
           _goalController.text = goal.toStringAsFixed(0);
           _bankrollController.text = bankroll.toStringAsFixed(0);
+          _username = username;
+          _useNicknameInGame = useNickname;
           isLoading = false;
         });
       }
@@ -208,6 +217,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 // Profile section
                 _buildProfileSection(),
+                SizedBox(height: 24),
+
+                // Username card
+                _buildUsernameCard(),
                 SizedBox(height: 36),
 
                 // Cards
@@ -307,15 +320,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileSection() {
+    final showNickname = _useNicknameInGame && _username != null;
     return Column(
       children: [
         // Avatar — Google photo or initials fallback
         _buildAvatar(56),
         SizedBox(height: 12),
 
-        // Name
+        // Primary name (nickname or real name)
         Text(
-          AuthService.userDisplayName,
+          showNickname ? '@$_username' : AuthService.userDisplayName,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 24,
             fontWeight: FontWeight.w600,
@@ -323,6 +337,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           textAlign: TextAlign.center,
         ),
+
+        // Secondary name (real name when showing nickname)
+        if (showNickname) ...[
+          SizedBox(height: 4),
+          Text(
+            AuthService.userDisplayName,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF8C8C8C),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
         SizedBox(height: 8),
 
         // Email
@@ -337,6 +365,144 @@ class _ProfileScreenState extends State<ProfileScreen> {
           textAlign: TextAlign.center,
         ),
       ],
+    );
+  }
+
+  Widget _buildUsernameCard() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Color(0xFF101115),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Text(
+            'Username',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 14),
+
+          // Current username display + action button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Username or "Not set" label
+              Expanded(
+                child: Text(
+                  _username != null ? '@$_username' : 'Not set',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: _username != null
+                        ? Color(0xFF89F1EC)
+                        : Color(0xFF8C8C8C),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              SizedBox(width: 12),
+              // Set / Change button
+              GestureDetector(
+                onTap: () async {
+                  final result = await Navigator.push<String>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UsernameSetupScreen(
+                        isChanging: _username != null,
+                        currentUsername: _username,
+                      ),
+                    ),
+                  );
+                  if (result != null && mounted) {
+                    setState(() {
+                      _username = result;
+                    });
+                    DisplayIdentityService.clearCache();
+                  }
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(40),
+                    border: Border.all(
+                      color: Color(0xFF89F1EC).withValues(alpha: 0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    _username != null ? 'Change' : 'Set username',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF89F1EC),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Use nickname toggle (only show if username is set)
+          if (_username != null) ...[
+            SizedBox(height: 20),
+            Container(
+              height: 1,
+              color: Color(0xFF1C1F21),
+            ),
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Use nickname in games',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Show @$_username instead of your name in events and hand logging',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF8C8C8C),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 12),
+                Switch(
+                  value: _useNicknameInGame,
+                  onChanged: (value) async {
+                    setState(() {
+                      _useNicknameInGame = value;
+                    });
+                    await UsernameService.setUseNicknameInGame(value);
+                    DisplayIdentityService.clearCache();
+                  },
+                  activeColor: Color(0xFF62E3BC),
+                  inactiveThumbColor: Color(0xFF8C8C8C),
+                  inactiveTrackColor: Color(0xFF35373C),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 

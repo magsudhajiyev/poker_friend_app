@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/account_type.dart';
 import 'fcm_service.dart';
+import 'username_service.dart';
+import 'display_identity_service.dart';
 
 /// Thrown when Google sign-in detects an existing email/password account.
 /// The UI should catch this and show a password dialog to link accounts.
@@ -133,6 +135,7 @@ class AuthService {
         'displayName': displayName,
         'displayNameLower': displayName.toLowerCase(), // For case-insensitive search
         'email': email,
+        'hasSetUsername': false,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -211,6 +214,8 @@ class AuthService {
       unawaited(_cleanupFcmInBackground());
 
       clearAccountTypeCache();  // Clear cached account type
+      UsernameService.clearCache();
+      DisplayIdentityService.clearCache();
       await _auth.signOut();
       // Sign out of Google so account picker appears next time
       try { await _googleSignIn.signOut(); } catch (_) {}

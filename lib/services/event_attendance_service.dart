@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/event_attendance.dart';
 import 'auth_service.dart';
+import 'display_identity_service.dart';
 
 /// Service for managing event attendance/RSVP
 class EventAttendanceService {
@@ -16,7 +17,7 @@ class EventAttendanceService {
     required AttendanceStatus status,
   }) async {
     final userId = AuthService.userId;
-    final displayName = AuthService.userDisplayName;
+    final displayName = DisplayIdentityService.cachedDisplayIdentity;
     print('📝 updateAttendance: userId=$userId, displayName=$displayName, status=${status.value}');
     print('📝 updateAttendance: clubId=$clubId, eventId=$eventId');
     if (userId == null) throw 'User not authenticated';
@@ -240,7 +241,7 @@ class EventAttendanceService {
         id: userId,
         eventId: eventId,
         userId: userId,
-        displayName: AuthService.userDisplayName,
+        displayName: DisplayIdentityService.cachedDisplayIdentity,
         status: AttendanceStatus.maybe,
         respondedAt: DateTime.now(),
         addedToCalendar: true,

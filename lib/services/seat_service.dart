@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/seat_assignment.dart';
 import '../models/qr_seat_data.dart';
 import 'auth_service.dart';
+import 'display_identity_service.dart';
 import 'club_service.dart';
 import 'waitlist_service.dart';
 
@@ -51,7 +52,7 @@ class SeatService {
         tableId: tableId,
         seatNumber: seatNumber,
         playerId: userId,
-        playerName: AuthService.userDisplayName,
+        playerName: DisplayIdentityService.cachedDisplayIdentity,
         status: SeatStatus.pending,  // Wait for dealer approval
         chipStack: null,  // Will be set by dealer
         assignedAt: now,

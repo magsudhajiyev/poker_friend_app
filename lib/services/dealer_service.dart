@@ -3,6 +3,7 @@ import '../models/dealer_session.dart';
 import '../models/poker_table.dart';
 import 'app_data_cache.dart';
 import 'auth_service.dart';
+import 'display_identity_service.dart';
 import 'table_service.dart';
 import 'seat_service.dart';
 import 'event_service.dart';
@@ -76,7 +77,7 @@ class DealerService {
       clubId: clubId,
       tableId: tableId,
       dealerId: dealerId,
-      dealerName: AuthService.userDisplayName,
+      dealerName: DisplayIdentityService.cachedDisplayIdentity,
       eventId: eventId,
       status: DealerSessionStatus.active,
       players: players,
@@ -110,7 +111,7 @@ class DealerService {
       clubId: clubId,
       tableId: tableId,
       dealerId: dealerId,
-      dealerName: AuthService.userDisplayName,
+      dealerName: DisplayIdentityService.cachedDisplayIdentity,
       eventId: eventId,
       status: DealerSessionStatus.active,
       players: players,

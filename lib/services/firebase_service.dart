@@ -3,6 +3,7 @@ import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
 import '../utils/poker_positions.dart';
 import 'auth_service.dart';
+import 'display_identity_service.dart';
 import 'local_storage_service.dart';
 import 'opponent_service.dart';
 import 'opponent_stats_service.dart';
@@ -41,7 +42,7 @@ class FirebaseService {
       final sessionData = {
         'userId': userId,
         'userEmail': AuthService.currentUser?.email,
-        'userName': AuthService.userDisplayName,
+        'userName': DisplayIdentityService.cachedDisplayIdentity,
         'smallBlind': smallBlind,
         'bigBlind': bigBlind,
         'hasBBante': hasBBante,
