@@ -15,6 +15,7 @@ import '../services/subscription_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'paywall_screen.dart';
 
+
 class SessionAnalyticsScreen extends StatefulWidget {
   final Map<String, dynamic> sessionData;
   final String sessionId;

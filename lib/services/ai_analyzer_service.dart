@@ -5,75 +5,202 @@ import 'auth_service.dart';
 import 'logger_service.dart';
 
 class AIAnalyzerService {
-  static const String baseUrl = 'https://poker-friend-engine.onrender.com/api/v1';
   static const String _apiKey = 'oCx_2Be-_wkxXGa_cacuG4Dm0--sglzSSddJD46bibI';
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Analyze a poker hand using the backend AI service
-  /// IMPORTANT: Only sends PREFLOP data for GTO analysis
+  /// Analyze a poker hand using the backend AI service.
+  /// Redirects to analyzeHandFull for full Claude analysis.
   static Future<Map<String, dynamic>> analyzeHand({
     required String handId,
     required Map<String, dynamic> handData,
+  }) async {
+    return analyzeHandFull(handId: handId, handData: handData);
+  }
+
+  static const String _baseUrl = 'https://poker-friend-engine.onrender.com/api/v1';
+
+  /// Full AI analysis: Claude street-by-street breakdown
+  static Future<Map<String, dynamic>> analyzeHandFull({
+    required String handId,
+    required Map<String, dynamic> handData,
+    Map<String, dynamic>? opponentContext,
   }) async {
     try {
       final requestBody = {
         'handId': handId,
         'handData': handData,
+        if (opponentContext != null && opponentContext.isNotEmpty)
+          'opponentContext': opponentContext,
       };
 
-      // DEBUG: Log the request body being sent to poker engine
-      await LoggerService.info('🎲 ===== AI ANALYZER REQUEST (PREFLOP ONLY) =====');
-      await LoggerService.info('🎲 Endpoint: $baseUrl/analyze-hand');
-      await LoggerService.info('🎲 Request Body:');
-
-      // Pretty-print JSON for readability
-      const encoder = JsonEncoder.withIndent('  ');
-      final prettyJson = encoder.convert(requestBody);
-
-      // Split into lines and log each one (to avoid truncation)
-      for (final line in prettyJson.split('\n')) {
-        await LoggerService.debug('  $line');
-      }
-
-      await LoggerService.info('🎲 ================================');
+      await LoggerService.info('🎲 ===== FULL AI ANALYSIS REQUEST =====');
 
       final response = await http.post(
-        Uri.parse('$baseUrl/analyze-hand'),
+        Uri.parse('$_baseUrl/analyze-hand-full'),
         headers: {
           'Content-Type': 'application/json',
           'X-API-Key': _apiKey,
         },
         body: jsonEncode(requestBody),
-      ).timeout(Duration(seconds: 30));
-
-      // DEBUG: Log the response
-      await LoggerService.info('🎲 ===== AI ANALYZER RESPONSE =====');
-      await LoggerService.info('🎲 Status Code: ${response.statusCode}');
+      ).timeout(const Duration(seconds: 90));
 
       if (response.statusCode == 200) {
-        await LoggerService.info('🎲 Response Body:');
-
-        // Pretty-print response JSON
-        const encoder = JsonEncoder.withIndent('  ');
-        final responseJson = jsonDecode(response.body);
-        final prettyResponse = encoder.convert(responseJson);
-
-        // Split into lines and log each one
-        for (final line in prettyResponse.split('\n')) {
-          await LoggerService.debug('  $line');
-        }
-
-        await LoggerService.info('🎲 ==================================');
-        return responseJson as Map<String, dynamic>;
+        final responseJson = jsonDecode(response.body) as Map<String, dynamic>;
+        await LoggerService.info('🎲 Full analysis complete');
+        return responseJson;
       } else {
-        await LoggerService.error('🎲 Error Response: ${response.body}');
-        await LoggerService.info('🎲 ==================================');
-        throw Exception('Failed to analyze hand: ${response.statusCode}');
+        await LoggerService.error('🎲 Full analysis error: ${response.body}');
+        throw Exception('Full analysis failed: ${response.statusCode}');
       }
     } catch (e) {
-      await LoggerService.error('🎲 AI Analyzer Exception: $e');
-      throw Exception('Failed to analyze hand: $e');
+      await LoggerService.error('🎲 Full AI Analysis Exception: $e');
+      throw Exception('Full analysis failed: $e');
     }
+  }
+
+  /// Prepare FULL hand data (all streets) for Claude analysis
+  static Map<String, dynamic> prepareFullHandData(Map<String, dynamic> hand) {
+    // Extract hero cards
+    final ourHoleCards = hand['ourHoleCards'] as Map<String, dynamic>?;
+    List<String> heroCards = [];
+    if (ourHoleCards != null) {
+      final card1 = ourHoleCards['card1'] as String?;
+      final card2 = ourHoleCards['card2'] as String?;
+      if (card1 != null) heroCards.add(_convertCardFormat(card1));
+      if (card2 != null) heroCards.add(_convertCardFormat(card2));
+    }
+
+    final smallBlind = (hand['smallBlind'] ?? 1) as int;
+    final bigBlind = (hand['bigBlind'] ?? 2) as int;
+    final heroSeatNumber = hand['heroSeatNumber'] as int?;
+    final heroPosition = hand['heroPositionName'] as String? ?? 'UNK';
+    final buttonPosition = hand['buttonPosition'] ?? 1;
+    final actions = hand['actions'] as List<dynamic>? ?? [];
+    final playerNames = hand['playerNames'] as Map<String, dynamic>? ?? {};
+
+    // Get hero stack from first action or initialStacks
+    double heroStack = 200.0;
+    final initialStacks = hand['initialStacks'] as Map<String, dynamic>?;
+    if (initialStacks != null && heroSeatNumber != null) {
+      heroStack = (initialStacks[heroSeatNumber.toString()] as num?)?.toDouble() ?? 200.0;
+    } else {
+      for (final action in actions) {
+        final a = action as Map<String, dynamic>;
+        final seat = a['player'] ?? a['playerSeat'];
+        if (seat == heroSeatNumber) {
+          final stack = a['playerStack'] ?? a['stack'];
+          if (stack != null) {
+            heroStack = (stack as num).toDouble();
+            break;
+          }
+        }
+      }
+    }
+
+    final heroStackBB = heroStack / bigBlind;
+    final gameTypeField = hand['gameType'] as String?;
+    final isCashGame = hand['isCashGame'] as bool?
+        ?? (gameTypeField != 'tournament' && gameTypeField != 'mtt' && gameTypeField != 'sng');
+
+    // Build active players from actions
+    Set<int> activeSeats = {};
+    for (final action in actions) {
+      final a = action as Map<String, dynamic>;
+      final seat = a['player'] ?? a['playerSeat'];
+      if (seat != null) activeSeats.add(seat as int);
+    }
+
+    List<Map<String, dynamic>> activePlayers = [];
+    Map<int, double> playerStacks = {};
+    Map<int, bool> stackFound = {};
+
+    for (final action in actions) {
+      final a = action as Map<String, dynamic>;
+      final seat = a['player'] ?? a['playerSeat'];
+      final stack = a['playerStack'] ?? a['stack'];
+      if (seat != null && stack != null && !(stackFound[seat as int] ?? false)) {
+        playerStacks[seat] = (stack as num).toDouble();
+        stackFound[seat] = true;
+      }
+    }
+
+    for (final seat in activeSeats) {
+      String? position;
+      for (final action in actions) {
+        final a = action as Map<String, dynamic>;
+        if ((a['player'] ?? a['playerSeat']) == seat) {
+          position = a['playerPosition'] as String?;
+          if (position != null) break;
+        }
+      }
+      position ??= _calculatePosition(seat, buttonPosition, activeSeats.toList());
+
+      activePlayers.add({
+        'seat': seat,
+        'position': position,
+        'stackBB': double.parse(((playerStacks[seat] ?? 200.0) / bigBlind).toStringAsFixed(2)),
+      });
+    }
+    activePlayers.sort((a, b) => (a['seat'] as int).compareTo(b['seat'] as int));
+
+    // Build preflop actions
+    List<Map<String, dynamic>> preflopActions = [];
+    for (final action in actions) {
+      final a = action as Map<String, dynamic>;
+      final street = a['street'] as String? ?? 'preflop';
+      if (street != 'preflop') continue;
+      final actionType = _convertActionFormat(a['action'] as String? ?? '');
+      if (actionType == 'post_sb' || actionType == 'post_bb') continue;
+
+      final actionData = <String, dynamic>{
+        'seat': a['player'] ?? a['playerSeat'],
+        'position': a['playerPosition'],
+        'action': actionType,
+      };
+      if (actionType == 'raise' && a['amount'] != null) {
+        actionData['sizeBB'] = double.parse(
+          ((a['amount'] as num).toDouble() / bigBlind).toStringAsFixed(2));
+      }
+      preflopActions.add(actionData);
+    }
+
+    // Convert board cards
+    final boardCards = hand['boardCards'] as Map<String, dynamic>?;
+    Map<String, dynamic>? convertedBoard;
+    if (boardCards != null) {
+      convertedBoard = {};
+      final flop = boardCards['flop'];
+      if (flop != null && flop is List) {
+        convertedBoard['flop'] = (flop).map((c) => _convertCardFormat(c.toString())).toList();
+      }
+      final turn = boardCards['turn'];
+      if (turn != null) convertedBoard['turn'] = _convertCardFormat(turn.toString());
+      final river = boardCards['river'];
+      if (river != null) convertedBoard['river'] = _convertCardFormat(river.toString());
+    }
+
+    return {
+      'handId': hand['id'] ?? hand['handNumber']?.toString() ?? 'unknown',
+      'gameType': isCashGame ? 'cash' : 'tournament',
+      'hero': {
+        'seat': heroSeatNumber,
+        'position': heroPosition,
+        'cards': heroCards,
+        'stackBB': double.parse(heroStackBB.toStringAsFixed(2)),
+      },
+      'activePlayers': activePlayers,
+      'preflopActions': preflopActions,
+      // Full hand data for Claude
+      'actions': actions,
+      'boardCards': convertedBoard,
+      'potAmount': hand['potAmount'],
+      'playerCount': hand['playerCount'],
+      'playerNames': playerNames,
+      'smallBlind': smallBlind,
+      'bigBlind': bigBlind,
+      'winnerId': hand['winnerId'],
+      'showdownData': hand['showdownData'],
+    };
   }
 
   /// Save AI analysis to Firebase
@@ -98,8 +225,9 @@ class AIAnalyzerService {
           'analysisId': analysis['analysisId'],
           'correct': analysis['correct'],
           'severity': analysis['severity'],
-          'gtoAnalysis': analysis['gtoAnalysis'],
           'aiAnalysis': analysis['aiAnalysis'],
+          'streetBreakdown': analysis['streetBreakdown'],
+          'exploitativeTip': analysis['exploitativeTip'],
           'processingTimeMs': analysis['processingTimeMs'],
           'analyzedAt': FieldValue.serverTimestamp(),
         },
@@ -308,7 +436,9 @@ class AIAnalyzerService {
     }
 
     // Determine game type
-    final isCashGame = hand['isCashGame'] as bool? ?? true;
+    final gameTypeField = hand['gameType'] as String?;
+    final isCashGame = hand['isCashGame'] as bool?
+        ?? (gameTypeField != 'tournament' && gameTypeField != 'mtt' && gameTypeField != 'sng');
     final gameType = isCashGame ? 'cash' : 'tournament';
 
     // Build the simplified request body

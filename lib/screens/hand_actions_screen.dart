@@ -8,6 +8,8 @@ import '../services/ai_analyzer_service.dart';
 import '../services/firebase_service.dart';
 import '../services/subscription_service.dart';
 import '../services/pokerstars_export_service.dart';
+import '../services/opponent_service.dart';
+import '../services/opponent_stats_service.dart';
 import 'paywall_screen.dart';
 
 class HandActionsScreen extends StatefulWidget {
@@ -214,11 +216,16 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     });
 
     try {
-      final handData = AIAnalyzerService.prepareHandDataForAnalysis(widget.hand);
+      // Gather opponent stats for Claude analysis
+      final opponentContext = await _buildOpponentContext();
 
-      final analysis = await AIAnalyzerService.analyzeHand(
+      // Use full analysis (GTO + Claude street-by-street)
+      final handData = AIAnalyzerService.prepareFullHandData(widget.hand);
+
+      final analysis = await AIAnalyzerService.analyzeHandFull(
         handId: handData['handId'] as String,
         handData: handData,
+        opponentContext: opponentContext,
       );
 
       final sessionId = widget.hand['sessionId'] as String?;
@@ -256,6 +263,51 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         });
       }
     }
+  }
+
+  /// Build opponent context map from hand actions for Claude analysis
+  Future<Map<String, dynamic>> _buildOpponentContext() async {
+    final Map<String, dynamic> context = {};
+    final Set<String> processed = {};
+    final actions = widget.hand['actions'] as List<dynamic>? ?? [];
+
+    for (final action in actions) {
+      final a = action as Map<String, dynamic>;
+      final playerName = a['playerName'] as String?;
+      final isHero = a['isCurrentUser'] == true;
+
+      if (playerName == null || isHero || playerName == 'Hero') continue;
+      if (playerName.startsWith('Player ')) continue;
+      if (processed.contains(playerName)) continue;
+      processed.add(playerName);
+
+      try {
+        final opponent = await OpponentService.findOpponentByName(playerName);
+        if (opponent != null) {
+          final stats = await OpponentStatsService.getOpponentStats(opponent.id);
+          if (stats != null && stats.handsPlayed >= 10) {
+            context[playerName] = {
+              'style': _playStyleCode(stats.playingStyle),
+              'vpip': stats.vpipPercentage,
+              'pfr': stats.pfrPercentage,
+              'threeBet': stats.threeBetPercentage,
+              'hands': stats.handsPlayed,
+            };
+          }
+        }
+      } catch (_) {}
+    }
+    return context;
+  }
+
+  String _playStyleCode(String fullStyle) {
+    if (fullStyle.contains('TAG') || fullStyle.contains('Tight-Aggressive')) return 'TAG';
+    if (fullStyle.contains('LAG') || fullStyle.contains('Loose-Aggressive')) return 'LAG';
+    if (fullStyle.contains('Maniac')) return 'MANIAC';
+    if (fullStyle.contains('Calling Station')) return 'FISH';
+    if (fullStyle.contains('Fish') || fullStyle.contains('Loose-Passive')) return 'FISH';
+    if (fullStyle.contains('Rock') || fullStyle.contains('Tight-Passive') || fullStyle.contains('NIT')) return 'NIT';
+    return 'UNKNOWN';
   }
 
   @override
@@ -1364,15 +1416,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       buttonColor = const Color(0xFF89F1EC);
       textColor = Colors.black;
     } else if (_aiAnalysis != null) {
-      buttonColor = const Color(0xFF8B5CF6);
-      textColor = Colors.white;
+      buttonColor = Colors.white.withOpacity(0.1);
+      textColor = Colors.white.withOpacity(0.4);
     } else {
       buttonColor = const Color(0xFF89F1EC);
       textColor = Colors.black;
     }
 
     return GestureDetector(
-      onTap: (_isAnalyzing || !hasHeroCards) ? null : () => _handleAnalyzeButtonTap(isPremium),
+      onTap: (_isAnalyzing || !hasHeroCards || _aiAnalysis != null) ? null : () => _handleAnalyzeButtonTap(isPremium),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1425,12 +1477,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               ),
             ] else ...[
               Icon(
-                _aiAnalysis != null ? Icons.refresh : Icons.psychology,
+                _aiAnalysis != null ? Icons.check_circle_outline : Icons.psychology,
                 color: textColor,
               ),
               const SizedBox(width: 12),
               Text(
-                _aiAnalysis != null ? 'Re-analyze Hand' : 'AI Analyzer',
+                _aiAnalysis != null ? 'Analysis Complete' : 'AI Analyzer (beta)',
                 style: GoogleFonts.ibmPlexSans(
                   color: textColor,
                   fontSize: 16,
@@ -1501,9 +1553,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
     final correct = _aiAnalysis!['correct'] as bool? ?? false;
     final severity = _aiAnalysis!['severity'] as String? ?? 'unknown';
-    final scenarioCovered = _aiAnalysis!['scenarioCovered'] as bool? ?? true;
-    final gtoAnalysis = _aiAnalysis!['gtoAnalysis'] as Map<String, dynamic>?;
     final aiAnalysis = _aiAnalysis!['aiAnalysis'] as Map<String, dynamic>?;
+    final streetBreakdown = _aiAnalysis!['streetBreakdown'] as Map<String, dynamic>?;
+    final exploitativeTip = _aiAnalysis!['exploitativeTip'] as String?;
+    final hasStreetBreakdown = streetBreakdown != null && streetBreakdown.isNotEmpty;
     final processingTime = _aiAnalysis!['processingTimeMs'] as int? ?? 0;
 
     Color severityColor;
@@ -1543,52 +1596,26 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Overall Result
+        // Verdict pill
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF131616),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: severityColor.withOpacity(0.4)),
+            color: severityColor.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(40),
+            border: Border.all(color: severityColor.withOpacity(0.3)),
           ),
-          child: Column(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: severityColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(severityIcon, color: severityColor, size: 28),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          correct ? 'Correct Play' : 'Mistake Detected',
-                          style: GoogleFonts.ibmPlexSans(
-                            color: severityColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Severity: ${severity.toUpperCase()}',
-                          style: GoogleFonts.ibmPlexSans(
-                            color: Colors.white.withOpacity(0.5),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Icon(severityIcon, color: severityColor, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                correct ? 'Correct Play' : 'Mistake — ${severity.toUpperCase()}',
+                style: GoogleFonts.ibmPlexSans(
+                  color: severityColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -1610,34 +1637,14 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   children: [
                     const Icon(Icons.psychology, color: Color(0xFF89F1EC), size: 20),
                     const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'AI Insights (Preflop Only)',
-                        style: GoogleFonts.ibmPlexSans(
-                          color: const Color(0xFF89F1EC),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    Text(
+                      'AI Insights',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: const Color(0xFF89F1EC),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (scenarioCovered && gtoAnalysis != null && gtoAnalysis['rangePercentile'] != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF8B5CF6).withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.3)),
-                        ),
-                        child: Text(
-                          'Range: ${gtoAnalysis['rangePercentile']}%',
-                          style: GoogleFonts.ibmPlexSans(
-                            color: const Color(0xFF8B5CF6),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -1652,15 +1659,13 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                if (aiAnalysis['optimalAction'] != null) ...[
+                if (aiAnalysis['optimalAction'] != null &&
+                    aiAnalysis['optimalAction'] != 'unknown') ...[
                   _buildHighlightedText('Optimal Play', aiAnalysis['optimalAction']),
                   const SizedBox(height: 12),
                 ],
-                if (aiAnalysis['exploitativeAdjustment'] != null) ...[
-                  _buildHighlightedText('Exploitative Adjustment', aiAnalysis['exploitativeAdjustment']),
-                  const SizedBox(height: 12),
-                ],
-                if (aiAnalysis['learningPoint'] != null) ...[
+                if (aiAnalysis['learningPoint'] != null &&
+                    (aiAnalysis['learningPoint'] as String).isNotEmpty) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -1692,6 +1697,75 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           ),
         ],
 
+        // Street-by-street breakdown (from Claude)
+        if (hasStreetBreakdown) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF131616),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.school_rounded, color: Color(0xFF87ED81), size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Street-by-Street Breakdown',
+                      style: GoogleFonts.ibmPlexSans(
+                        color: const Color(0xFF87ED81),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ...['preflop', 'flop', 'turn', 'river']
+                    .where((s) => streetBreakdown!.containsKey(s))
+                    .map((streetName) {
+                  final street = streetBreakdown![streetName] as Map<String, dynamic>? ?? {};
+                  final analysis = street['analysis'] as String? ?? '';
+                  final grade = street['grade'] as String? ?? 'C';
+                  return _buildStreetGradeRow(streetName, analysis, grade);
+                }),
+                // Exploitative tip
+                if (exploitativeTip != null && exploitativeTip!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFD700).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.person_search,
+                            color: Color(0xFFFFD700), size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            exploitativeTip!,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              color: const Color(0xFFFFD700),
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+
         // Processing Time
         const SizedBox(height: 12),
         Center(
@@ -1706,6 +1780,71 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildStreetGradeRow(String streetName, String analysis, String grade) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: _gradeColor(grade).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(
+                grade,
+                style: GoogleFonts.robotoMono(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: _gradeColor(grade),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  streetName[0].toUpperCase() + streetName.substring(1),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withOpacity(0.5),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  analysis,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 13,
+                    color: Colors.white.withOpacity(0.8),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _gradeColor(String grade) {
+    switch (grade.toUpperCase()) {
+      case 'A': return const Color(0xFF54E98A);
+      case 'B': return const Color(0xFF89F1EC);
+      case 'C': return const Color(0xFFFFD700);
+      case 'D': return Colors.orange;
+      case 'F': return Colors.red;
+      default: return Colors.white.withOpacity(0.5);
+    }
   }
 
   Widget _buildHighlightedText(String title, String content) {
