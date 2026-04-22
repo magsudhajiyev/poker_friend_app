@@ -72,3 +72,10 @@ table_1_qr.html
 
 # Device logs
 Mi9T - log
+
+# Planning & docs (local only)
+daily-progress/
+release-plan/
+legal/
+landing-page-features.md
+session_*.json
