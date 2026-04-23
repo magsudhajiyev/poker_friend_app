@@ -96,7 +96,7 @@ class PokerHandScreen extends StatefulWidget {
   State<PokerHandScreen> createState() => _PokerHandScreenState();
 }
 
-class _PokerHandScreenState extends State<PokerHandScreen> {
+class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderStateMixin {
   late PokerGameState gameState;
   late PokerSessionManager sessionManager;
   bool _allInHandCompleted = false;
@@ -115,7 +115,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   PlayerAction? _raiseSnapAction;
   // Action flash state
   String? _actionFlashText;
+  Color _actionFlashColor = Colors.white;
+  Color _actionFlashBgColor = Colors.black;
   Timer? _actionFlashTimer;
+  AnimationController? _actionFlashController;
+  Animation<double>? _actionFlashSlide;
+  Animation<double>? _actionFlashOpacity;
+  // Fold swipe animation state
+  double _foldSwipeDx = 0.0; // horizontal displacement during swipe
+  bool _isFoldSwiping = false;
+  // Tap flash animation state (check/call ripple)
+  AnimationController? _tapFlashController;
+  Animation<double>? _tapFlashOpacity;
+  Color _tapFlashColor = Colors.transparent;
   // Set to true once the free-tier hand gate has fired for this session.
   bool _freeTierLocked = false;
 
@@ -1030,6 +1042,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   void dispose() {
     _actionFlashTimer?.cancel();
     _actionFlashTimer = null;
+    _actionFlashController?.dispose();
+    _tapFlashController?.dispose();
 
     // End session when leaving, but only if there's actual data to save
     if (sessionManager.sessionState == SessionState.active) {
@@ -1543,6 +1557,58 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                         ),
                       ),
 
+                    // Fold swipe visual feedback — directional "FOLD" indicator
+                    if (_isFoldSwiping)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final progress = (_foldSwipeDx.abs() / (constraints.maxWidth * 0.4)).clamp(0.0, 1.0);
+                              final direction = _foldSwipeDx >= 0 ? 1.0 : -1.0;
+                              return Stack(
+                                children: [
+                                  // Directional gradient overlay
+                                  Positioned.fill(
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: direction > 0 ? Alignment.centerLeft : Alignment.centerRight,
+                                          end: direction > 0 ? Alignment.centerRight : Alignment.centerLeft,
+                                          colors: [
+                                            Colors.transparent,
+                                            Color(0xFFE85D5D).withValues(alpha: 0.12 * progress),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // "FOLD" text that slides with swipe
+                                  Center(
+                                    child: Transform.translate(
+                                      offset: Offset(_foldSwipeDx * 0.3, 0),
+                                      child: Opacity(
+                                        opacity: progress * 0.7,
+                                        child: Transform.rotate(
+                                          angle: direction * -0.08 * progress,
+                                          child: Text(
+                                            'FOLD',
+                                            style: GoogleFonts.ibmPlexSans(
+                                              fontSize: 32,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFFE85D5D),
+                                              letterSpacing: 6,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ),
 
                     // (Folded to me + Next Hand buttons moved below canvas)
 
@@ -1602,27 +1668,49 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                       ),
                     ),
 
-                    // Action flash overlay (top of drawing board)
+                    // Tap flash — brief color wash on drawing board for check/call/bet/raise
+                    if (_tapFlashController != null && _tapFlashController!.isAnimating)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: _tapFlashColor.withValues(alpha: 0.08 * (_tapFlashOpacity?.value ?? 0.0)),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Action flash overlay (top of drawing board) — animated slide + fade
                     if (_actionFlashText != null)
                       Positioned(
                         top: 12,
                         left: 16,
                         right: 16,
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.7),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              _actionFlashText!,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                        child: Opacity(
+                          opacity: _actionFlashOpacity?.value ?? 1.0,
+                          child: Transform.translate(
+                            offset: Offset(0, _actionFlashSlide?.value ?? 0.0),
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: _actionFlashBgColor.withValues(alpha: 0.85),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: _actionFlashColor.withValues(alpha: 0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  _actionFlashText!,
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 14,
+                                    color: _actionFlashColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ),
                         ),
@@ -2468,6 +2556,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     if (start == null) return;
     if (gameState.bettingRoundComplete) return;
 
+    final dx = details.localPosition.dx - start.dx;
     final dy = details.localPosition.dy - start.dy;
 
     // If already in raise snap mode, update the snap position
@@ -2476,8 +2565,28 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       return;
     }
 
+    // Track horizontal displacement for fold swipe visual feedback
+    if (dx.abs() > 15 && dy.abs() < dx.abs() && gameState.isValidAction(PlayerAction.fold)) {
+      if (!_isFoldSwiping) {
+        setState(() => _isFoldSwiping = true);
+      }
+      setState(() => _foldSwipeDx = dx);
+    } else if (_isFoldSwiping && dy < -30) {
+      // User changed direction to vertical — cancel fold visual
+      setState(() {
+        _isFoldSwiping = false;
+        _foldSwipeDx = 0.0;
+      });
+    }
+
     // Enter raise snap mode when dragging up past threshold (40px)
     if (dy < -40) {
+      if (_isFoldSwiping) {
+        setState(() {
+          _isFoldSwiping = false;
+          _foldSwipeDx = 0.0;
+        });
+      }
       PlayerAction? action;
       if (gameState.isValidAction(PlayerAction.bet)) {
         action = PlayerAction.bet;
@@ -2492,6 +2601,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     // Swipe down past threshold → open numpad for manual bet entry
     if (dy > 60) {
       _swipePanStart = null; // prevent further processing
+      setState(() {
+        _isFoldSwiping = false;
+        _foldSwipeDx = 0.0;
+      });
       PlayerAction? action;
       if (gameState.isValidAction(PlayerAction.bet)) {
         action = PlayerAction.bet;
@@ -2643,6 +2756,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       }
       return;
     }
+
+    // Reset fold swipe visual state
+    setState(() {
+      _isFoldSwiping = false;
+      _foldSwipeDx = 0.0;
+    });
 
     final start = _swipePanStart;
     _swipePanStart = null;
@@ -3083,7 +3202,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     );
 
     // Flash the action on screen
-    _showActionFlash(_actionFlashLabel(action, amount));
+    _showActionFlash(_actionFlashLabel(action, amount), action: action);
 
     // Perform action with specified amount
     String result = gameState.performActionWithAmount(action, amount);
@@ -3283,13 +3402,81 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     });
   }
 
-  void _showActionFlash(String text) {
+  /// Action-specific flash colors.
+  static const _actionColors = {
+    PlayerAction.fold: (text: Color(0xFFE85D5D), bg: Color(0xFF2A1010)),       // red
+    PlayerAction.check: (text: Color(0xFF89F1EC), bg: Color(0xFF0A1A1A)),      // teal/cyan
+    PlayerAction.call: (text: Color(0xFF89F1EC), bg: Color(0xFF0A1A1A)),       // teal/cyan
+    PlayerAction.bet: (text: Color(0xFFFFC857), bg: Color(0xFF2A2210)),        // gold
+    PlayerAction.raise: (text: Color(0xFFFFC857), bg: Color(0xFF2A2210)),      // gold
+  };
+
+  void _showActionFlash(String text, {PlayerAction? action}) {
     _actionFlashTimer?.cancel();
+    _actionFlashController?.dispose();
+
+    // Set action-specific colors
+    final colors = action != null ? _actionColors[action] : null;
+    _actionFlashColor = colors?.text ?? Colors.white;
+    _actionFlashBgColor = colors?.bg ?? Colors.black;
+
+    final controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _actionFlashController = controller;
+
+    // Slide in from slight offset + fade in, then fade out at end
+    _actionFlashSlide = Tween<double>(begin: -12.0, end: 0.0).animate(
+      CurvedAnimation(parent: controller, curve: const Interval(0.0, 0.3, curve: Curves.easeOut)),
+    );
+    _actionFlashOpacity = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 20),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 30),
+    ]).animate(controller);
+
     setState(() => _actionFlashText = text);
     HapticFeedback.mediumImpact();
-    _actionFlashTimer = Timer(const Duration(milliseconds: 600), () {
-      if (mounted) setState(() => _actionFlashText = null);
+
+    controller.addListener(() {
+      if (mounted) setState(() {});
     });
+    controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        setState(() => _actionFlashText = null);
+      }
+    });
+    controller.forward();
+
+    // Trigger tap flash for check/call (brief color wash on drawing board)
+    if (action == PlayerAction.check || action == PlayerAction.call) {
+      _triggerTapFlash(const Color(0xFF89F1EC));
+    } else if (action == PlayerAction.bet || action == PlayerAction.raise) {
+      _triggerTapFlash(const Color(0xFFFFC857));
+    }
+  }
+
+  /// Brief color wash on the drawing board for tap-based actions.
+  void _triggerTapFlash(Color color) {
+    _tapFlashController?.dispose();
+    _tapFlashColor = color;
+
+    final controller = AnimationController(
+      duration: const Duration(milliseconds: 350),
+      vsync: this,
+    );
+    _tapFlashController = controller;
+
+    _tapFlashOpacity = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 20),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 80),
+    ]).animate(CurvedAnimation(parent: controller, curve: Curves.easeOut));
+
+    controller.addListener(() {
+      if (mounted) setState(() {});
+    });
+    controller.forward();
   }
 
   String _actionFlashLabel(PlayerAction action, [double? amount]) {
@@ -3350,7 +3537,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     );
 
     // Flash the action on screen
-    _showActionFlash(_actionFlashLabel(action, actionAmount));
+    _showActionFlash(_actionFlashLabel(action, actionAmount), action: action);
 
     String result = gameState.performAction(action);
 

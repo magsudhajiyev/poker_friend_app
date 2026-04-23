@@ -43,8 +43,7 @@ class _CardKeyboardState extends State<CardKeyboard> {
   static const List<String> _ranks = [
     'A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'
   ];
-  static const List<String> _suits = ['♠', '♥', '♦', '♣'];
-  static const List<String> _suitArrows = ['↑', '→', '↓', '←'];
+  static const List<String> _suits = ['♥', '♠', '♦', '♣'];
 
   // Gesture state
   String? _armedRank;     // Path B/C: rank tapped, awaiting swipe or suit tap
@@ -414,7 +413,6 @@ class _CardKeyboardState extends State<CardKeyboard> {
       key: _suitRowKey,
       children: List.generate(4, (i) {
         final suit = _suits[i];
-        final arrow = _suitArrows[i];
         final isHovered = _hoveredSuit == suit;
         final isExcluded = activeRank != null && _isCardExcluded(activeRank, suit);
         final suitColor = _getSuitColor(suit);
@@ -446,31 +444,17 @@ class _CardKeyboardState extends State<CardKeyboard> {
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      suit,
-                      style: TextStyle(
-                        fontSize: isHovered ? 24 : 20,
-                        fontWeight: FontWeight.bold,
-                        color: isExcluded
-                            ? const Color(0xFF35373C)
-                            : suitColor,
-                      ),
+                child: Center(
+                  child: Text(
+                    suit,
+                    style: TextStyle(
+                      fontSize: isHovered ? 24 : 20,
+                      fontWeight: FontWeight.bold,
+                      color: isExcluded
+                          ? const Color(0xFF35373C)
+                          : suitColor,
                     ),
-                    const SizedBox(height: 1),
-                    Text(
-                      arrow,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 9,
-                        color: isHovered
-                            ? const Color(0xFF89F1EC)
-                            : Colors.white.withValues(alpha: 0.3),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
