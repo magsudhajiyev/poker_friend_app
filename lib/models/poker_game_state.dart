@@ -1,5 +1,6 @@
 import 'dart:math';
 import '../utils/poker_positions.dart';
+import 'stack_bucket.dart';
 
 enum PlayerAction {
   none,
@@ -30,6 +31,10 @@ class PlayerState {
   double betThisRound;
   double totalContribution; // Total amount contributed to pot across all betting rounds
 
+  // Stack confidence tracking for opponent display
+  StackConfidence stackConfidence;
+  int handsSinceLastObservation;
+
   PlayerState({
     required this.playerId,
     this.isActive = true,
@@ -42,6 +47,8 @@ class PlayerState {
     this.currentStack = 0.0,
     this.betThisRound = 0.0,
     this.totalContribution = 0.0,
+    this.stackConfidence = StackConfidence.high,
+    this.handsSinceLastObservation = 0,
   });
 
   void reset() {
@@ -55,6 +62,14 @@ class PlayerState {
       betThisRound = 0.0;
       totalContribution = 0.0;
       // Keep currentStack and startingStack unchanged for new hand
+
+      // Decay stack confidence over time
+      handsSinceLastObservation++;
+      if (handsSinceLastObservation >= 10 && stackConfidence != StackConfidence.low) {
+        stackConfidence = StackConfidence.low;
+      } else if (handsSinceLastObservation >= 5 && stackConfidence == StackConfidence.high) {
+        stackConfidence = StackConfidence.medium;
+      }
     }
   }
 
@@ -105,6 +120,7 @@ class PokerGameState {
   int _currentPlayer = 1;
   double currentPot = 0.0;
   double currentBet = 0.0;
+  double _lastRaiseSize = 0.0; // The increment of the most recent bet/raise
   Map<BettingRound, double> streetPots = {};
   int _effectiveBBPosition = 1; // Track who actually posted BB
   int _effectiveSBPosition = 1; // Track who actually posted SB
@@ -161,6 +177,7 @@ class PokerGameState {
        bettingRoundComplete = false,
        currentPot = 0.0,
        currentBet = 0.0,
+       _lastRaiseSize = 0.0,
        positionActivity = {} {
 
     // Initialize players with default stacks but mark as inactive initially
@@ -186,9 +203,11 @@ class PokerGameState {
   void _setInitialActionOrder() {
 
     List<int> activePlayers = getActivePlayers();
+    print('[ACTION_ORDER] _setInitialActionOrder called: hand#=$handNumber, activePlayers=$activePlayers (${activePlayers.length}), btn=$buttonPosition');
 
     if (activePlayers.length < 2) {
       currentPlayer = activePlayers.isNotEmpty ? activePlayers[0] : 1;
+      print('[ACTION_ORDER] <2 players, currentPlayer=$currentPlayer');
       return;
     }
 
@@ -200,16 +219,18 @@ class PokerGameState {
         // Find first active player
         currentPlayer = activePlayers[0];
       }
+      print('[ACTION_ORDER] Heads-up: btn=$buttonPosition, currentPlayer=$currentPlayer');
     } else {
       // Multi-way: UTG (Under The Gun) acts first
       // Find effective SB and BB positions among active players using proper calculation
       _effectiveSBPosition = _findSBSeatFromActivePlayers(activePlayers);
       _effectiveBBPosition = _findBBSeatFromActivePlayers(activePlayers);
 
-
       // UTG is the first active player after BB
       int utgPosition = _findNextActivePlayerAfter(_effectiveBBPosition);
 
+      print('[ACTION_ORDER] Multi-way: btn=$buttonPosition, SB=$_effectiveSBPosition, BB=$_effectiveBBPosition, UTG=$utgPosition');
+      // In 3-handed: UTG == BTN (correct poker rules)
       currentPlayer = utgPosition;
     }
 
@@ -554,17 +575,27 @@ class PokerGameState {
     }
 
     player.hasActed = true;
-    
+
+    // Infer stack confidence from observed actions
+    if (action == PlayerAction.call || action == PlayerAction.bet || action == PlayerAction.raise) {
+      if (player.isAllIn) {
+        player.stackConfidence = StackConfidence.high;
+      } else if (player.stackConfidence == StackConfidence.low) {
+        player.stackConfidence = StackConfidence.medium;
+      }
+      player.handsSinceLastObservation = 0;
+    }
+
     // Track position activity
     trackPositionActivity(currentPlayer, action);
-    
+
     // Check if only one player remains (automatic hand end)
     List<PlayerState> activePlayers = players.where((p) => p.isActive && !p.hasFolded).toList();
     if (activePlayers.length <= 1) {
       bettingRoundComplete = true;
       return "$actionText\n--- Hand ends: Only one player remaining ---";
     }
-    
+
     // Check if betting round is complete
     if (_isBettingRoundComplete()) {
       bettingRoundComplete = true;
@@ -640,8 +671,9 @@ class PokerGameState {
         
         // Update pot and current bet (only add the additional amount)
         currentPot += additionalAmount;
+        _lastRaiseSize = betAmount - currentBet; // First bet: increment over 0 (or previous bet)
         currentBet = betAmount;
-        
+
         hasBetThisRound = true;
         player.lastAction = PlayerAction.bet;
         player.hasCalledCurrentBet = true;
@@ -674,6 +706,7 @@ class PokerGameState {
         
         // Update pot and current bet (only add the additional amount)
         currentPot += additionalAmount;
+        _lastRaiseSize = raiseAmount - currentBet; // Raise increment over previous bet
         currentBet = raiseAmount;
         hasBetThisRound = true;
         
@@ -689,17 +722,27 @@ class PokerGameState {
     }
 
     player.hasActed = true;
-    
+
+    // Infer stack confidence from observed actions
+    if (action == PlayerAction.call || action == PlayerAction.bet || action == PlayerAction.raise) {
+      if (player.isAllIn) {
+        player.stackConfidence = StackConfidence.high;
+      } else if (player.stackConfidence == StackConfidence.low) {
+        player.stackConfidence = StackConfidence.medium;
+      }
+      player.handsSinceLastObservation = 0;
+    }
+
     // Track position activity
     trackPositionActivity(currentPlayer, action);
-    
+
     // Check if only one player remains (automatic hand end)
     List<PlayerState> activePlayers = players.where((p) => p.isActive && !p.hasFolded).toList();
     if (activePlayers.length <= 1) {
       bettingRoundComplete = true;
       return "$actionText\n--- Hand ends: Only one player remaining ---";
     }
-    
+
     // Check if betting round is complete
     if (_isBettingRoundComplete()) {
       bettingRoundComplete = true;
@@ -854,6 +897,7 @@ class PokerGameState {
       bettingRoundComplete = false;
       hasBetThisRound = false;
       currentBet = 0.0;  // Reset current bet for new street
+      _lastRaiseSize = 0.0;
 
       // Reset all players for new street
       for (PlayerState player in players) {
@@ -963,6 +1007,7 @@ class PokerGameState {
     hasBetThisRound = false;
     currentPot = 0.0;
     currentBet = 0.0;
+    _lastRaiseSize = 0.0;
     streetPots = {};
 
     // NOTE: Do NOT call initializePot() here!
@@ -1057,6 +1102,7 @@ class PokerGameState {
       bettingRoundComplete = false;
       hasBetThisRound = false;
       currentBet = 0.0;
+      _lastRaiseSize = 0.0;
 
       // Reset player states for new street, but handle all-in scenarios carefully
       List<int> activePlayers = getActivePlayers();
@@ -1131,6 +1177,8 @@ class PokerGameState {
   void setPlayerStack(int playerId, double stackSize) {
     PlayerState player = _getPlayer(playerId);
     player.setStack(stackSize);
+    player.stackConfidence = StackConfidence.high;
+    player.handsSinceLastObservation = 0;
   }
 
   void setPlayerActive(int playerId, bool isActive) {
@@ -1165,18 +1213,27 @@ class PokerGameState {
   }
 
   double getMinimumRaise() {
-    // For raising, minimum is the current bet amount or the last raise size, whichever is larger
-    // If no bet has been made, minimum raise is 2x big blind
+    // Minimum raise = currentBet + lastRaiseSize
+    // Preflop: BB=100, first raise min = 100 + 100 = 200 (2x BB)
+    // If someone raises to 300 (increment=200), next min = 300 + 200 = 500
+    // Postflop: bet 20, raise min = 20 + 20 = 40. Next min = 40 + 20 = 60.
     if (currentBet == 0) {
-      return bigBlind.toDouble() * 2;
+      return bigBlind.toDouble();
     }
-    return currentBet.clamp(bigBlind.toDouble() * 2, double.infinity);
+    final raiseSize = _lastRaiseSize > 0 ? _lastRaiseSize : bigBlind.toDouble();
+    return currentBet + raiseSize;
   }
 
   double getPlayerStack(int playerId) {
     PlayerState player = _getPlayer(playerId);
     return player.currentStack;
   }
+
+  StackConfidence getPlayerStackConfidence(int playerId) {
+    PlayerState player = _getPlayer(playerId);
+    return player.stackConfidence;
+  }
+
 
   String formatCurrency(double amount) {
     if (isCashGame) {
@@ -1200,6 +1257,7 @@ class PokerGameState {
 
     currentPot = 0.0;
     currentBet = bigBlind.toDouble();
+    _lastRaiseSize = bigBlind.toDouble(); // BB is the initial raise size
     _effectiveBBPosition = _determineEffectiveBBPosition(); // Set before posting
 
     // Post blinds
@@ -1267,9 +1325,11 @@ class PokerGameState {
             anteAmount = 0.0;
           }
           currentBet = bbAmount; // Adjust current bet if BB is all-in for less
+          _lastRaiseSize = bbAmount;
         } else {
           // Normal case: BB has enough chips
           currentBet = bbAmount; // Current bet is just the BB portion (not including ante)
+          _lastRaiseSize = bbAmount;
         }
 
         bbPlayer.betThisRound = totalBBPost; // Track full amount (BB + ante) for side pot calculation
@@ -1305,9 +1365,11 @@ class PokerGameState {
               anteAmount = 0.0;
             }
             currentBet = bbAmount; // Adjust current bet if BB is all-in for less
+          _lastRaiseSize = bbAmount;
           } else {
             // Normal case: BB has enough chips
             currentBet = bbAmount; // Current bet is just the BB portion (not including ante)
+          _lastRaiseSize = bbAmount;
           }
 
           nextBBPlayer.betThisRound = totalBBPost; // Track full amount (BB + ante) for side pot calculation
@@ -1320,9 +1382,11 @@ class PokerGameState {
           if (sbPlayer.isActive && sbPlayer.currentStack > 0) {
             // Only SB posted, so minimum bet should be SB amount
             currentBet = smallBlind.toDouble();
+            _lastRaiseSize = smallBlind.toDouble();
           } else {
             // Both SB and BB empty - no mandatory betting
             currentBet = 0.0;
+            _lastRaiseSize = 0.0;
           }
         }
       }
@@ -1371,9 +1435,11 @@ class PokerGameState {
             anteAmount = 0.0;
           }
           currentBet = bbAmount; // Adjust current bet if BB is all-in for less
+          _lastRaiseSize = bbAmount;
         } else {
           // Normal case: BB has enough chips
           currentBet = bbAmount; // Current bet is just the BB portion (not including ante)
+          _lastRaiseSize = bbAmount;
         }
 
         bbPlayer.betThisRound = totalBBPost; // Track full amount (BB + ante) for side pot calculation
@@ -1422,6 +1488,7 @@ class PokerGameState {
 
         // Update current bet only if this is the new highest bet
         if (targetBetAmount > currentBet) {
+          _lastRaiseSize = targetBetAmount - currentBet;
           currentBet = targetBetAmount;
         }
         hasBetThisRound = true;
@@ -1485,6 +1552,7 @@ class PokerGameState {
 
   void resetPotForNewStreet() {
     currentBet = 0.0;
+    _lastRaiseSize = 0.0;
     hasBetThisRound = false;
     for (PlayerState player in players) {
       player.betThisRound = 0.0;

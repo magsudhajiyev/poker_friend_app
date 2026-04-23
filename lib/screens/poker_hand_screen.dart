@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/design_system.dart';
@@ -18,11 +18,15 @@ import 'individual_session_tracking_screen.dart';
 import '../widgets/showdown_dialog.dart';
 import 'seat_setup_screen.dart';
 import '../widgets/action_button_grid.dart';
+import '../widgets/table_management_sheet.dart';
+import '../widgets/raise_snap_overlay.dart';
 import '../widgets/winner_selection_dialog.dart';
 import '../widgets/multi_pot_winner_dialog.dart';
 import '../models/poker_game_state.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
+import '../models/stack_bucket.dart';
+import '../widgets/stack_range_circle.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
@@ -93,27 +97,30 @@ class PokerHandScreen extends StatefulWidget {
 }
 
 class _PokerHandScreenState extends State<PokerHandScreen> {
-  List<Offset> points = [];
-  Timer? _tapTimer;
-  int _tapCount = 0;
   late PokerGameState gameState;
   late PokerSessionManager sessionManager;
-  bool autoAdvanceStreets = false;
   bool _allInHandCompleted = false;
+  bool _showStreetCompleteIndicator = false;
+  bool _isSettlingBetweenHands = false; // Brief pause after hand completes
+  String? _settlingWinnerName; // Winner name for settling overlay
+  double? _settlingPotAmount; // Pot amount for settling overlay
+  // Swipe gesture state
+  Offset? _swipePanStart;
+  // Raise snap overlay state
+  bool _isRaiseSnapping = false;
+  List<SnapPoint> _raiseSnapPoints = [];
+  int _activeSnapIndex = 0;
+  double _raiseSnapProgress = 0.0;
+  double _raiseSnapAmount = 0.0;
+  PlayerAction? _raiseSnapAction;
+  // Action flash state
+  String? _actionFlashText;
+  Timer? _actionFlashTimer;
   // Set to true once the free-tier hand gate has fired for this session.
-  // Once locked, the user cannot log further actions or advance to new
-  // hands — they must either end the session or become premium.
   bool _freeTierLocked = false;
 
   // Track user's starting stack for accurate win/loss calculation
   double? _userStartingStack;
-
-  // Drag betting state
-  bool _isDragBetting = false;
-  PlayerAction? _pendingAction;
-  double _dragBetAmount = 0.0;
-  Offset? _dragStartPosition;
-  double _dragBarPosition = 0.0; // Y position for the drag bar (0-1 normalized)
   
   // Race condition prevention
   bool _isProcessingPostFrameAction = false;
@@ -129,7 +136,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   final GlobalKey<GuidedHandOverlayState> _guidedOverlayKey = GlobalKey();
   final GlobalKey _gestureInfoKey = GlobalKey(debugLabel: 'gestureInfo');
   final GlobalKey _skipButtonKey = GlobalKey(debugLabel: 'skipButton');
-  final GlobalKey _settingsMenuItemKey = GlobalKey(debugLabel: 'settingsMenuItem');
 
   @override
   void initState() {
@@ -194,10 +200,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   Future<void> _loadButtonModeSetting() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      autoAdvanceStreets = prefs.getBool('auto_advance_streets') ?? true;
-    });
+    // Quick swipe is now the only gesture mode — no loading needed
   }
 
   Future<void> _initializeWithSeatInfo(int seat, int buttonPosition) async {
@@ -496,6 +499,73 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleTableChange() async {
+    // Get hero's current stack to carry over
+    final heroSeat = sessionManager.ourSeatNumber;
+    final heroStack = heroSeat != null ? gameState.getPlayerStack(heroSeat) : 0.0;
+    final heroName = heroSeat != null ? sessionManager.playerNames[heroSeat] : null;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1E),
+        title: Text(
+          'Change Table',
+          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'Moving to Table ${sessionManager.currentTableNumber + 1}. Your stack (${gameState.formatCurrency(heroStack)}) will carry over. Other players will be cleared.',
+          style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Change Table', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      // Increment table number
+      sessionManager.currentTableNumber++;
+
+      // Clear all seats except hero
+      final allSeats = Set<int>.from(sessionManager.activeSeats);
+      for (final seat in allSeats) {
+        if (seat != heroSeat) {
+          sessionManager.activeSeats.remove(seat);
+          sessionManager.playerNames.remove(seat);
+          sessionManager.playerStacks.remove(seat);
+          sessionManager.playerIds.remove(seat);
+          gameState.setPlayerActive(seat, false);
+        }
+      }
+
+      // Reset hero confidence to high (known stack at table change)
+      if (heroSeat != null) {
+        gameState.setPlayerStack(heroSeat, heroStack);
+      }
+    });
+
+    // Open table management sheet so user can add new opponents
+    if (mounted) {
+      TableManagementSheet.show(
+        context: context,
+        gameState: gameState,
+        sessionManager: sessionManager,
+        heroSeat: sessionManager.ourSeatNumber ?? 1,
+        onChanged: () => setState(() {}),
+      );
+    }
   }
 
   Future<void> _stopSession() async {
@@ -822,59 +892,144 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     });
   }
 
-  Future<void> _showSettingsDialog() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> _showBlindsEditDialog() async {
+    final sbController = TextEditingController(text: gameState.smallBlind.toString());
+    final bbController = TextEditingController(text: gameState.bigBlind.toString());
 
-    await showDialog<void>(
+    final result = await showDialog<Map<String, int>>(
       context: context,
       barrierDismissible: true,
-      builder: (context) => _SettingsDialog(
-        currentSmallBlind: sessionManager.smallBlind,
-        currentBigBlind: sessionManager.bigBlind,
-        currentHasBBante: gameState.hasBBante,
-        currentAutoAdvance: autoAdvanceStreets,
-        gameType: widget.gameType,
-        onBlindsChanged: (smallBlind, bigBlind, hasBBante) async {
-
-          setState(() {
-            // Update both sessionManager and gameState blinds
-            sessionManager.smallBlind = smallBlind;
-            sessionManager.bigBlind = bigBlind;
-            gameState.smallBlind = smallBlind;
-            gameState.bigBlind = bigBlind;
-            gameState.hasBBante = hasBBante;
-          });
-
-          // Save blinds to preferences for persistence
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setInt('small_blind', smallBlind);
-          await prefs.setInt('big_blind', bigBlind);
-
-          // For individual sessions, also update Firebase so session details screen shows correct values
-          if (widget.isIndividualSession && sessionManager.sessionId != null) {
-            await FirebaseService.updateIndividualSession(
-              sessionId: sessionManager.sessionId!,
-              smallBlind: smallBlind,
-              bigBlind: bigBlind,
-              hasBBante: hasBBante,
-            ).catchError((e) {});
-          }
-        },
-        onAutoAdvanceChanged: (value) async {
-          setState(() {
-            autoAdvanceStreets = value;
-          });
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('auto_advance_streets', value);
-        },
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF161618),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Blinds',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Takes effect next hand',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.4),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('SB', style: GoogleFonts.ibmPlexSans(fontSize: 12, color: Colors.white.withValues(alpha: 0.5), fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: sbController,
+                        keyboardType: TextInputType.number,
+                        autofocus: true,
+                        style: GoogleFonts.robotoMono(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w600),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFF1B1E24),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('/', style: GoogleFonts.robotoMono(fontSize: 24, color: Colors.white.withValues(alpha: 0.3))),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('BB', style: GoogleFonts.ibmPlexSans(fontSize: 12, color: Colors.white.withValues(alpha: 0.5), fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: bbController,
+                        keyboardType: TextInputType.number,
+                        style: GoogleFonts.robotoMono(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w600),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFF1B1E24),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {
+                final sb = int.tryParse(sbController.text) ?? gameState.smallBlind;
+                final bb = int.tryParse(bbController.text) ?? gameState.bigBlind;
+                Navigator.pop(context, {'sb': sb, 'bb': bb >= sb ? bb : sb});
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFF89F1EC),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text(
+                'Apply',
+                style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.black),
+              ),
+            ),
+          ),
+        ],
       ),
     );
+
+    if (result != null) {
+      final sb = result['sb']!;
+      final bb = result['bb']!;
+
+      setState(() {
+        sessionManager.smallBlind = sb;
+        sessionManager.bigBlind = bb;
+        gameState.smallBlind = sb;
+        gameState.bigBlind = bb;
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('small_blind', sb);
+      await prefs.setInt('big_blind', bb);
+
+      if (widget.isIndividualSession && sessionManager.sessionId != null) {
+        await FirebaseService.updateIndividualSession(
+          sessionId: sessionManager.sessionId!,
+          smallBlind: sb,
+          bigBlind: bb,
+          hasBBante: gameState.hasBBante,
+        ).catchError((e) {});
+      }
+    }
   }
+
 
   @override
   void dispose() {
-    _tapTimer?.cancel();
-    _tapTimer = null;
+    _actionFlashTimer?.cancel();
+    _actionFlashTimer = null;
 
     // End session when leaving, but only if there's actual data to save
     if (sessionManager.sessionState == SessionState.active) {
@@ -1050,10 +1205,81 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         return gameState.formatCurrency(0.0);
       }
       final stack = gameState.getPlayerStack(gameState.currentPlayer);
-      return gameState.formatCurrency(stack);
+      final isHero = gameState.currentPlayer == sessionManager.ourSeatNumber;
+      return StackBucketHelper.displayForPlayer(
+        stack: stack,
+        bigBlind: sessionManager.bigBlind,
+        isHero: isHero,
+        formatCurrency: gameState.formatCurrency,
+      );
     } catch (e) {
       return gameState.formatCurrency(0.0);
     }
+  }
+
+  StackConfidence _getCurrentPlayerStackConfidence() {
+    try {
+      if (gameState.currentPlayer < 1 || gameState.currentPlayer > gameState.numberOfPlayers) {
+        return StackConfidence.high;
+      }
+      if (gameState.currentPlayer == sessionManager.ourSeatNumber) {
+        return StackConfidence.high; // Hero stack is always known
+      }
+      return gameState.getPlayerStackConfidence(gameState.currentPlayer);
+    } catch (e) {
+      return StackConfidence.high;
+    }
+  }
+
+  void _showAdjustStackDialog() {
+    final player = gameState.currentPlayer;
+    final currentStack = gameState.getPlayerStack(player);
+    final controller = TextEditingController(text: currentStack.toStringAsFixed(0));
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1E),
+        title: Text(
+          'Adjust Stack',
+          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
+          decoration: InputDecoration(
+            hintText: 'Enter stack amount',
+            hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
+            enabledBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF62E3BC)),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF62E3BC), width: 2),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+          ),
+          TextButton(
+            onPressed: () {
+              final newStack = double.tryParse(controller.text);
+              if (newStack != null && newStack >= 0) {
+                setState(() {
+                  gameState.setPlayerStack(player, newStack);
+                });
+              }
+              Navigator.pop(ctx);
+            },
+            child: Text('Update', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
+          ),
+        ],
+      ),
+    );
   }
 
   String _getCurrentPlayerNameSafely() {
@@ -1257,23 +1483,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Skip button
-                          GestureDetector(
-                            key: _skipButtonKey,
-                            onTap: _skipCurrentAction,
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF101115),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: _buildIcon('icons/figma_icons/forward.svg', 18, Colors.white),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
+                          // Skip button moved to menu overlay
                           // Next street button (when betting complete)
                           if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river)
                             Padding(
@@ -1293,6 +1503,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                                 ),
                               ),
                             ),
+                          // Gesture guide icon
+                          _buildGestureIcon(context),
+                          SizedBox(width: 8),
                           // Menu button
                           _buildMenuButton(context),
                         ],
@@ -1301,65 +1514,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                   ),
                 ),
 
-            // Game Info Header - Info Cards with teal accent
-            Container(
-              key: _potInfoKey,
-              margin: EdgeInsets.fromLTRB(16, 0, 16, 7),
-              child: gameState.areAllPlayersAllIn()
-                ? // All-in situation: Show single unified card
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Color(0xFF62E3BC).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Color(0xFF62E3BC), width: 2),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.casino, color: Color(0xFF62E3BC), size: 24),
-                          SizedBox(width: 12),
-                          Text(
-                            'ALL IN HAND',
-                            style: GoogleFonts.ibmPlexSans(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            '• POT: ${gameState.formatCurrency(gameState.currentPot)}',
-                            style: GoogleFonts.ibmPlexSans(
-                              color: Color(0xFF62E3BC),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : // Normal situation: Show three info cards with teal left border
-                  Row(
-                    children: [
-                      Expanded(child: _buildInfoCard('Pot', gameState.formatCurrency(gameState.currentPot))),
-                      SizedBox(width: 8),
-                      Expanded(child: _buildInfoCard('To Act', _getCurrentPlayerNameSafely())),
-                      SizedBox(width: 8),
-                      Expanded(child: _buildInfoCard('Stack', _getCurrentPlayerStackSafely())),
-                    ],
-                  ),
-            ),
-
-          
               // Main Gesture Area - Dark background
               Expanded(
                 child: Container(
                   key: _drawingAreaKey,
-                  margin: EdgeInsets.fromLTRB(16, 7, 16, 7),
+                  margin: EdgeInsets.fromLTRB(16, 4, 16, 7),
                   decoration: BoxDecoration(
                     color: Color(0xFF35373C),
                     borderRadius: BorderRadius.circular(8),
@@ -1368,70 +1527,203 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                     borderRadius: BorderRadius.circular(8),
                     child: Stack(
                   children: [
-                    // Drawing area for gesture input
+                    // Gesture input area — tap=check/call, swipe out=fold, swipe up=raise
                     GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTapUp: (details) => _isDragBetting ? _completeDragBetting() : handleTap(),
+                        onTapUp: (details) => _isRaiseSnapping ? _cancelRaiseSnap() : _handleQuickSwipeTap(),
                         onPanStart: (details) {
-                          _cancelTapTimer();
-                          if (_isDragBetting) {
-                            _dragStartPosition = details.localPosition;
-                          } else {
-                            setState(() {
-                              points.add(details.localPosition);
-                            });
-                          }
+                          _swipePanStart = details.localPosition;
                         },
-                        onPanUpdate: (details) {
-                          if (_isDragBetting) {
-                            // Initialize drag start position if not set
-                            if (_dragStartPosition == null) {
-                              _dragStartPosition = details.localPosition;
-                            }
-                            final deltaY = details.localPosition.dy - _dragStartPosition!.dy;
-                            _updateDragBetAmount(deltaY);
-                          } else {
-                            setState(() {
-                              points.add(details.localPosition);
-                            });
-                          }
-                        },
-                        onPanEnd: (details) {
-                          if (_isDragBetting) {
-                            _completeDragBetting();
-                          } else {
-                            if (points.length > 3) {
-                              recognizeShape();
-                            }
-                            setState(() {
-                              points.clear();
-                            });
-                          }
-                        },
+                        onPanUpdate: _handleQuickSwipePanUpdate,
+                        onPanEnd: _handleQuickSwipePanEnd,
                         child: Container(
                           width: double.infinity,
                           height: double.infinity,
-                          color: Colors.transparent, // Transparent to show light background
-                          child: CustomPaint(
-                            painter: DrawingPainter(points: points),
-                            size: Size.infinite,
+                          color: Colors.transparent,
+                        ),
+                      ),
+
+
+                    // (Folded to me + Next Hand buttons moved below canvas)
+
+                    // Table icon + blinds display
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Table icon
+                          GestureDetector(
+                            onTap: () {
+                              TableManagementSheet.show(
+                                context: context,
+                                gameState: gameState,
+                                sessionManager: sessionManager,
+                                heroSeat: sessionManager.ourSeatNumber ?? 1,
+                                onChanged: () => setState(() {}),
+                              );
+                            },
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.table_restaurant_outlined,
+                                color: Color(0xFF8C8C8C),
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          // Blinds pill — tappable to edit
+                          GestureDetector(
+                            onTap: () => _showBlindsEditDialog(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '${gameState.smallBlind}/${gameState.bigBlind}',
+                                style: GoogleFonts.robotoMono(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Action flash overlay (top of drawing board)
+                    if (_actionFlashText != null)
+                      Positioned(
+                        top: 12,
+                        left: 16,
+                        right: 16,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _actionFlashText!,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
                       ),
 
-                    // Gesture Guide Icon
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: _buildGestureIcon(context),
-                    ),
-                    
-                    // Drag Betting Amount Display (top-left corner)
-                    if (_isDragBetting && (_pendingAction == PlayerAction.bet || _pendingAction == PlayerAction.raise))
+                    // Street Complete indicator (brief flash before auto-advance)
+                    if (_showStreetCompleteIndicator)
+                      Center(
+                        child: AnimatedOpacity(
+                          opacity: _showStreetCompleteIndicator ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF62E3BC).withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(40),
+                            ),
+                            child: Text(
+                              'Street Complete',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 15,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Raise snap overlay (quick swipe mode)
+                    if (_isRaiseSnapping)
+                      RaiseSnapOverlay(
+                        snapPoints: _raiseSnapPoints,
+                        currentAmount: _raiseSnapAmount,
+                        activeSnapIndex: _activeSnapIndex,
+                        dragProgress: _raiseSnapProgress,
+                        actionLabel: _raiseSnapAction == PlayerAction.raise ? 'RAISE' : 'BET',
+                        formattedAmount: gameState.formatCurrency(_raiseSnapAmount),
+                        isCashGame: gameState.isCashGame,
+                        onTapAmount: _openNumpadFromSnap,
+                      ),
+
+                    // Settling overlay between hands
+                    if (_isSettlingBetweenHands)
+                      GestureDetector(
+                        onTap: _skipSettling,
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_settlingWinnerName != null) ...[
+                                  Text(
+                                    _settlingWinnerName!,
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 22,
+                                      color: const Color(0xFF62E3BC),
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'wins ${_settlingPotAmount != null ? '\$${_settlingPotAmount!.toStringAsFixed(0)}' : 'the pot'}',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 16,
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ] else
+                                  Text(
+                                    'Hand Complete',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 20,
+                                      color: const Color(0xFF62E3BC),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Tap to continue',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 13,
+                                    color: Colors.white.withValues(alpha: 0.4),
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Gesture tooltip overlay (positioned, doesn't push layout)
+                    if (_showGestureTooltip)
                       Positioned(
-                        top: 16,
-                        left: 16,
-                        child: _buildSimpleDragBetDisplay(context),
+                        top: 8,
+                        right: 8,
+                        child: _buildGestureTooltip(),
                       ),
                   ],
                 ),
@@ -1439,37 +1731,68 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             ),
           ),
           
-          // End Street Button (when needed) - Teal design
-          if (!gameState.bettingRoundComplete && gameState.getActivePlayers().length > 1)
+          // Folded to me + Next Hand — side by side below canvas
+          if (_canShowFoldedToMe() || _canShowNextHand())
             Container(
-              margin: EdgeInsets.fromLTRB(16, 7, 16, 0),
-              width: double.infinity,
-              child: GestureDetector(
-                onTap: endStreetManually,
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF89F1EC),
-                    borderRadius: BorderRadius.circular(110),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildIcon('icons/figma_icons/forward.svg', 18, Colors.black),
-                      SizedBox(width: 8),
-                      Text(
-                        'End ${gameState.getCurrentStreetName()} Betting',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.5,
-                          height: 24 / 17,
+              margin: const EdgeInsets.fromLTRB(16, 7, 16, 0),
+              child: Row(
+                children: [
+                  if (_canShowFoldedToMe())
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _handleFoldedToMe,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF62E3BC),
+                            borderRadius: BorderRadius.circular(110),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Folded to me',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                                height: 24 / 17,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                  if (_canShowFoldedToMe() && _canShowNextHand())
+                    const SizedBox(width: 10),
+                  if (_canShowNextHand())
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _skipCurrentAction,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(110),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Next Hand',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
+                                height: 24 / 17,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
 
@@ -1507,19 +1830,55 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
               ),
             ),
 
-          // Stats Row - Three separate cards
+          // Game Info Row - Pot, Stack, To Act
           Container(
             key: _statsRowKey,
             margin: EdgeInsets.fromLTRB(16, 14, 16, 0),
-            child: Row(
-              children: [
-                Expanded(child: _buildStatCard(_formatPotAmount(gameState.currentPot), 'POT')),
-                SizedBox(width: 8),
-                Expanded(child: _buildStatCard(_formatPotAmount(gameState.getEffectiveStackForInfoPanel()), 'EFF')),
-                SizedBox(width: 8),
-                Expanded(child: _buildStatCard(gameState.getSPR().toStringAsFixed(1), 'SPR')),
-              ],
-            ),
+            child: gameState.areAllPlayersAllIn()
+              ? Container(
+                  key: _potInfoKey,
+                  decoration: BoxDecoration(
+                    color: Color(0xFF62E3BC).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Color(0xFF62E3BC), width: 2),
+                  ),
+                  padding: EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.casino, color: Color(0xFF62E3BC), size: 24),
+                      SizedBox(width: 12),
+                      Text(
+                        'ALL IN HAND',
+                        style: GoogleFonts.ibmPlexSans(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        '• POT: ${gameState.formatCurrency(gameState.currentPot)}',
+                        style: GoogleFonts.ibmPlexSans(
+                          color: Color(0xFF62E3BC),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Row(
+                  key: _potInfoKey,
+                  children: [
+                    Expanded(child: _buildInfoCard('Pot', gameState.formatCurrency(gameState.currentPot))),
+                    SizedBox(width: 8),
+                    Expanded(child: _buildStackInfoCard()),
+                    SizedBox(width: 8),
+                    Expanded(child: _buildInfoCard('To Act', _getCurrentPlayerNameSafely())),
+                  ],
+                ),
           ),
 
           // Bottom padding for nav bar
@@ -1533,7 +1892,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
           menuButtonKey: _menuButtonKey,
           gestureInfoKey: _gestureInfoKey,
           skipButtonKey: _skipButtonKey,
-          settingsMenuItemKey: _settingsMenuItemKey,
           onOpenMenu: () => setState(() => _showMenuOverlay = true),
           onCloseMenu: () => setState(() => _showMenuOverlay = false),
           heroSeat: sessionManager.ourSeatNumber,
@@ -1661,11 +2019,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 _buildMenuItem(
-                  icon: 'icons/figma_icons/end_street.svg',
-                  label: 'End Street',
+                  icon: 'icons/figma_icons/forward.svg',
+                  label: 'Next Hand',
                   onTap: () {
                     setState(() => _showMenuOverlay = false);
-                    endStreetManually();
+                    _skipCurrentAction();
                   },
                 ),
                 SizedBox(height: 12),
@@ -1690,6 +2048,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                     _managePlayersDialog();
                   },
                 ),
+                SizedBox(height: 12),
+                _buildMenuSeparator(),
+                SizedBox(height: 12),
+                _buildMenuItem(
+                  icon: 'icons/figma_icons/forward.svg',
+                  label: 'Change Table',
+                  onTap: () {
+                    setState(() => _showMenuOverlay = false);
+                    _handleTableChange();
+                  },
+                  iconColor: Color(0xFF62E3BC),
+                ),
                 if (widget.gameType == GameType.tournament) ...[
                   SizedBox(height: 12),
                   _buildMenuSeparator(),
@@ -1704,18 +2074,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
                     iconColor: Color(0xFF62E3BC),
                   ),
                 ],
-                SizedBox(height: 12),
-                _buildMenuSeparator(),
-                SizedBox(height: 12),
-                _buildMenuItem(
-                  key: _settingsMenuItemKey,
-                  icon: 'icons/figma_icons/menu_settings.svg',
-                  label: 'Settings',
-                  onTap: () {
-                    setState(() => _showMenuOverlay = false);
-                    _showSettingsDialog();
-                  },
-                ),
                 SizedBox(height: 12),
                 _buildMenuSeparator(),
                 SizedBox(height: 12),
@@ -1785,6 +2143,65 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   }
 
   // === Info Card (simple dark card) ===
+
+  Widget _buildStackInfoCard() {
+    final confidence = _getCurrentPlayerStackConfidence();
+    final isHero = gameState.currentPlayer == sessionManager.ourSeatNumber;
+    final currentPlayer = gameState.currentPlayer;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF101115),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Stack',
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFF8C8C8C),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          if (isHero)
+            Text(
+              _getCurrentPlayerStackSafely(),
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            )
+          else
+            StackRangeCircle(
+              currentStack: gameState.getPlayerStack(currentPlayer),
+              bigBlind: sessionManager.bigBlind,
+              confidence: confidence,
+              isHero: false,
+              isInteractive: gameState.currentRound == BettingRound.preflop,
+              formatCurrency: gameState.formatCurrency,
+              onRangeSelected: (StackRange range) {
+                final newStack = StackBucketHelper.midpointBB(range) * sessionManager.bigBlind;
+                setState(() {
+                  gameState.setPlayerStack(currentPlayer, newStack);
+                  // Override to medium — it's a range estimate, not exact
+                  gameState.players[currentPlayer - 1].stackConfidence = StackConfidence.medium;
+                  gameState.players[currentPlayer - 1].handsSinceLastObservation = 0;
+                });
+              },
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildInfoCard(String label, String value) {
     return Container(
@@ -1938,44 +2355,28 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
   bool _showGestureTooltip = false;
 
   Widget _buildGestureIcon(BuildContext context) {
-    return StatefulBuilder(
-      builder: (context, setStateLocal) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            // Info icon button
-            GestureDetector(
-              key: _gestureInfoKey,
-              onTap: () {
-                setStateLocal(() {
-                  _showGestureTooltip = !_showGestureTooltip;
-                });
-              },
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Color(0xFF101115),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: _buildIcon('icons/figma_icons/info.svg', 20, Color(0xFFADF9F5)),
-                ),
-              ),
-            ),
-            // Gesture tooltip
-            if (_showGestureTooltip) ...[
-              SizedBox(height: 8),
-              _buildGestureTooltip(context),
-            ],
-          ],
-        );
+    return GestureDetector(
+      key: _gestureInfoKey,
+      onTap: () {
+        setState(() {
+          _showGestureTooltip = !_showGestureTooltip;
+        });
       },
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: Color(0xFF101115),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Center(
+          child: _buildIcon('icons/figma_icons/info.svg', 20, Color(0xFFADF9F5)),
+        ),
+      ),
     );
   }
 
-  Widget _buildGestureTooltip(BuildContext context) {
+  Widget _buildGestureTooltip() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -1986,7 +2387,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header - 10px Inter Regular
           Text(
             'Gestures',
             style: TextStyle(
@@ -1998,23 +2398,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             ),
           ),
           SizedBox(height: 4),
-          Container(height: 0.5, width: 129, color: Color(0xFF555555)),
+          Container(height: 0.5, width: 140, color: Color(0xFF555555)),
           SizedBox(height: 6),
-          // Gesture rows
           SizedBox(
-            width: 129,
+            width: 140,
             child: Column(
               children: [
-                _buildGestureRowFigma('icons/figma_icons/gesture_tap.svg', 'Tap:', 'Bet or Raise'),
+                _buildGestureRow('Tap', 'Check / Call'),
                 Container(height: 0.5, color: Color(0xFF555555)),
                 SizedBox(height: 6),
-                _buildGestureRowFigma('icons/figma_icons/gesture_tap.svg', 'Double Tap:', 'Check'),
+                _buildGestureRow('Swipe Out', 'Fold'),
                 Container(height: 0.5, color: Color(0xFF555555)),
                 SizedBox(height: 6),
-                _buildGestureRowFigma('icons/figma_icons/gesture_line.svg', 'Draw Line:', 'Fold'),
-                Container(height: 0.5, color: Color(0xFF555555)),
-                SizedBox(height: 6),
-                _buildGestureRowFigma('icons/figma_icons/gesture_circle.svg', 'Draw Circle:', 'Call'),
+                _buildGestureRow('Swipe Up', 'Bet / Raise'),
               ],
             ),
           ),
@@ -2023,29 +2419,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     );
   }
 
-  Widget _buildGestureRowFigma(String svgPath, String gesture, String action) {
+  Widget _buildGestureRow(String gesture, String action) {
     return Padding(
       padding: EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          // SVG Icon 14x14
-          SizedBox(
-            width: 14,
-            height: 14,
-            child: SvgPicture.asset(
-              svgPath,
-              width: 14,
-              height: 14,
-              colorFilter: const ColorFilter.mode(
-                Color(0xFFADF9F5),
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
-          SizedBox(width: 6),
-          // Gesture label - 12px Inter Regular, grey
           Text(
-            gesture,
+            '$gesture:',
             style: TextStyle(
               fontFamily: 'Inter',
               fontWeight: FontWeight.w400,
@@ -2055,7 +2435,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             ),
           ),
           SizedBox(width: 4),
-          // Action - 12px Inter Regular, white
           Text(
             action,
             style: TextStyle(
@@ -2071,315 +2450,217 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     );
   }
 
-  Widget _buildGestureGuide(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(PokerFriendSpacing.xs),
-      decoration: BoxDecoration(
-        color: PokerFriendColors.white.withOpacity(0.98),
-        borderRadius: BorderRadius.circular(PokerFriendRadius.m),
-        border: Border.all(color: PokerFriendColors.light6.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: PokerFriendColors.light6.withOpacity(0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.gesture_rounded,
-                color: PokerFriendColors.purple,
-                size: 18,
-              ),
-              const SizedBox(width: PokerFriendSpacing.xxs),
-              Text(
-                'Gestures',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: PokerFriendColors.midnightPurple,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: PokerFriendSpacing.xxs),
-          _buildGestureItem(context, '👆', 'Tap', 'Bet'),
-          _buildGestureItem(context, '👆👆', 'Double Tap', 'Check'),
-          _buildGestureItem(context, '📏', 'Draw Line', 'Fold'),
-          _buildGestureItem(context, '⭕', 'Draw Circle', 'Call'),
-          _buildGestureItem(context, '📐', 'Draw L', 'Raise'),
-        ],
-      ),
-    );
-  }
+  // ─── GESTURE HANDLERS ──────────────────────────────
 
-  Widget _buildSimpleDragBetDisplay(BuildContext context) {
-    final theme = Theme.of(context);
-    final actionName = _pendingAction == PlayerAction.raise ? 'RAISE' : 'BET';
-    final formattedAmount = gameState.formatCurrency(_dragBetAmount);
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$actionName: ',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.white70,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          Text(
-            formattedAmount,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGestureItem(BuildContext context, String emoji, String gesture, String action) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(emoji, style: TextStyle(fontSize: 12)),
-          SizedBox(width: 6),
-          Text(
-            '$gesture: ',
-            style: GoogleFonts.ibmPlexSans(
-              color: Colors.black54,
-              fontSize: 12,
-            ),
-          ),
-          Text(
-            action,
-            style: GoogleFonts.ibmPlexSans(
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDragBetDisplay(BuildContext context) {
-    final theme = Theme.of(context);
-    final currentPlayer = gameState.getCurrentPlayer();
-    final actionName = _pendingAction == PlayerAction.raise ? 'RAISE' : 'BET';
-    final formattedAmount = gameState.formatCurrency(_dragBetAmount);
-    
-    return Container(
-      width: 200,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            actionName,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            formattedAmount,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.drag_handle,
-                color: Colors.white70,
-                size: 16,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Drag to adjust',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          ),
-          if (currentPlayer != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              'Max: ${gameState.formatCurrency(currentPlayer.currentStack)}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white60,
-                fontSize: 10,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFirebaseStatus(BuildContext context) {
-    final theme = Theme.of(context);
-    final isOnline = sessionManager.sessionId != null && !sessionManager.sessionId!.startsWith('offline_');
-    final stats = sessionManager.getSessionStats();
-    
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isOnline ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
-            color: isOnline ? Colors.green : Colors.orange,
-            size: 16,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            isOnline ? 'Online' : 'Offline',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: isOnline ? Colors.green : Colors.orange,
-              fontWeight: FontWeight.w600,
-              fontSize: 10,
-            ),
-          ),
-          if (stats['totalHands'] > 0) ...[
-            const SizedBox(width: 8),
-            Text(
-              '${stats['totalHands']}H',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-                fontSize: 10,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  void _cancelTapTimer() {
-    if (_tapTimer != null) {
-      _tapTimer!.cancel();
-      _tapTimer = null;
-      _tapCount = 0;
+  /// Tap in Quick Swipe mode: check if no bet, call if bet exists.
+  void _handleQuickSwipeTap() {
+    if (gameState.bettingRoundComplete) return;
+    if (gameState.isValidAction(PlayerAction.check)) {
+      _performPokerAction(PlayerAction.check);
+    } else if (gameState.isValidAction(PlayerAction.call)) {
+      _performPokerAction(PlayerAction.call);
     }
   }
 
-  void handleTap() {
-    _tapCount++;
-    
-    if (_tapTimer != null) {
-      _tapTimer!.cancel();
+  /// Pan update in Quick Swipe mode: detect upward drag and enter raise snap mode.
+  void _handleQuickSwipePanUpdate(DragUpdateDetails details) {
+    final start = _swipePanStart;
+    if (start == null) return;
+    if (gameState.bettingRoundComplete) return;
+
+    final dy = details.localPosition.dy - start.dy;
+
+    // If already in raise snap mode, update the snap position
+    if (_isRaiseSnapping) {
+      _updateRaiseSnap(details.localPosition.dy - start.dy);
+      return;
     }
-    
-    _tapTimer = Timer(const Duration(milliseconds: 400), () {
-      if (_tapCount == 1) {
-        // Single tap - Enter drag mode for bet/raise
-        if (gameState.isValidAction(PlayerAction.bet)) {
-          _enterDragBettingMode(PlayerAction.bet);
-        } else if (gameState.isValidAction(PlayerAction.raise)) {
-          _enterDragBettingMode(PlayerAction.raise);
-        } else if (gameState.isValidAction(PlayerAction.check)) {
-          _performPokerAction(PlayerAction.check);
-        } else {
-          _performPokerAction(PlayerAction.fold);
-        }
-      } else if (_tapCount >= 2) {
-        // Double tap - Check
-        _performPokerAction(PlayerAction.check);
+
+    // Enter raise snap mode when dragging up past threshold (40px)
+    if (dy < -40) {
+      PlayerAction? action;
+      if (gameState.isValidAction(PlayerAction.bet)) {
+        action = PlayerAction.bet;
+      } else if (gameState.isValidAction(PlayerAction.raise)) {
+        action = PlayerAction.raise;
       }
-      
-      _tapCount = 0;
-      _tapTimer = null;
+      if (action != null) {
+        _enterRaiseSnapMode(action);
+      }
+    }
+
+    // Swipe down past threshold → open numpad for manual bet entry
+    if (dy > 60) {
+      _swipePanStart = null; // prevent further processing
+      PlayerAction? action;
+      if (gameState.isValidAction(PlayerAction.bet)) {
+        action = PlayerAction.bet;
+      } else if (gameState.isValidAction(PlayerAction.raise)) {
+        action = PlayerAction.raise;
+      }
+      if (action != null) {
+        _showBetAmountDialog(action).then((customAmount) {
+          if (customAmount != null) {
+            _performPokerActionWithAmount(action!, customAmount);
+          }
+        });
+      }
+    }
+  }
+
+  /// Enter raise snap mode: calculate snap points and show overlay.
+  void _enterRaiseSnapMode(PlayerAction action) {
+    final currentPlayer = gameState.getCurrentPlayer();
+    if (currentPlayer == null) return;
+
+    final isPreflop = gameState.currentRound == BettingRound.preflop;
+    final minBet = action == PlayerAction.raise
+        ? gameState.getMinimumRaise()
+        : gameState.getMinimumBet();
+    final maxBet = currentPlayer.currentStack + currentPlayer.betThisRound;
+    final potAmount = gameState.currentPot;
+    final bigBlind = gameState.bigBlind.toDouble();
+    final isCash = gameState.isCashGame;
+    final lastBet = gameState.getCurrentBet();
+
+    List<SnapPoint> points;
+    if (isPreflop) {
+      points = RaiseSnapOverlay.preflopSnapPoints(
+        minRaise: minBet,
+        bigBlind: bigBlind,
+        potAmount: potAmount,
+        maxBet: maxBet,
+        isCashGame: isCash,
+        lastBet: lastBet,
+      );
+    } else {
+      points = RaiseSnapOverlay.postflopSnapPoints(
+        minBet: minBet,
+        potAmount: potAmount,
+        maxBet: maxBet,
+        isCashGame: isCash,
+        bigBlind: bigBlind,
+        lastBet: lastBet,
+      );
+    }
+
+    setState(() {
+      _isRaiseSnapping = true;
+      _raiseSnapPoints = points;
+      _raiseSnapAction = action;
+      _activeSnapIndex = 0;
+      _raiseSnapProgress = 0.0;
+      _raiseSnapAmount = points.isNotEmpty ? points.first.amount : minBet;
+    });
+
+    // Haptic feedback on entering raise mode
+    HapticFeedback.mediumImpact();
+  }
+
+  /// Update raise snap position based on drag delta Y.
+  void _updateRaiseSnap(double deltaY) {
+    if (_raiseSnapPoints.isEmpty) return;
+
+    // Map drag distance to progress (0 to 1)
+    // Dragging up 200px = full range
+    final dragRange = 200.0;
+    final progress = (-deltaY - 40) / dragRange; // subtract initial threshold
+    final clampedProgress = progress.clamp(0.0, 1.0);
+
+    final newSnapIndex = RaiseSnapOverlay.findClosestSnap(_raiseSnapPoints, clampedProgress);
+    final newAmount = _raiseSnapPoints[newSnapIndex].amount;
+
+    // Haptic feedback when crossing a snap point
+    if (newSnapIndex != _activeSnapIndex) {
+      HapticFeedback.selectionClick();
+    }
+
+    setState(() {
+      _raiseSnapProgress = clampedProgress;
+      _activeSnapIndex = newSnapIndex;
+      _raiseSnapAmount = newAmount;
     });
   }
 
-  void recognizeShape() {
-    if (points.length < 5) return;
-
-    final bounds = getBounds();
-    final width = bounds.width;
-    final height = bounds.height;
-    
-    // Minimum size threshold for gestures
-    if (width < 30 && height < 30) return;
-
-    // Check in priority order: Circle first (most specific), then L-shape, then line (most general)
-    if (isCircle()) {
-      _performPokerAction(PlayerAction.call);
-    } else if (hasRightAngle()) {
-      // For bet/raise, enter drag mode
-      // Use isValidAction to determine correct action (handles preflop where bet is invalid)
-      if (gameState.isValidAction(PlayerAction.bet)) {
-        _enterDragBettingMode(PlayerAction.bet);
-      } else if (gameState.isValidAction(PlayerAction.raise)) {
-        _enterDragBettingMode(PlayerAction.raise);
-      }
-    } else if (isLine(width, height)) {
-      _performPokerAction(PlayerAction.fold);
-    }
+  /// Cancel raise snap mode without performing action.
+  void _cancelRaiseSnap() {
+    setState(() {
+      _isRaiseSnapping = false;
+      _raiseSnapPoints = [];
+      _raiseSnapAction = null;
+      _activeSnapIndex = 0;
+      _raiseSnapProgress = 0.0;
+      _raiseSnapAmount = 0.0;
+    });
   }
 
-  void _enterDragBettingMode(PlayerAction action) async {
-    // Show number input dialog instead of drag mode
-    final amount = await _showBetAmountDialog(action);
+  /// Open numpad dialog for custom amount while in raise snap mode.
+  void _openNumpadFromSnap() async {
+    final action = _raiseSnapAction;
+    if (action == null) return;
 
+    // Cancel snap overlay first
+    _cancelRaiseSnap();
+
+    // Open numpad dialog
+    final amount = await _showBetAmountDialog(action);
     if (amount != null) {
-      // User entered an amount, perform the action
       _performPokerActionWithAmount(action, amount);
     }
-    // If amount is null, user cancelled - do nothing
   }
+
+  /// Pan end in Quick Swipe mode: confirm raise snap or detect fold.
+  void _handleQuickSwipePanEnd(DragEndDetails details) {
+    // If in raise snap mode, confirm the bet or open numpad
+    if (_isRaiseSnapping) {
+      final action = _raiseSnapAction;
+      final amount = _raiseSnapAmount;
+      final progress = _raiseSnapProgress;
+      _cancelRaiseSnap();
+      _swipePanStart = null;
+
+      if (action == null) return;
+
+      // If user dragged back down (progress near 0), open numpad for custom entry
+      if (progress < 0.05) {
+        _showBetAmountDialog(action).then((customAmount) {
+          if (customAmount != null) {
+            _performPokerActionWithAmount(action, customAmount);
+          }
+        });
+        return;
+      }
+
+      if (amount > 0) {
+        // Round amount based on game type
+        double finalAmount = amount;
+        if (gameState.isCashGame) {
+          finalAmount = (finalAmount * 4).round() / 4; // nearest $0.25
+        } else {
+          finalAmount = finalAmount.roundToDouble();
+        }
+        _performPokerActionWithAmount(action, finalAmount);
+      }
+      return;
+    }
+
+    final start = _swipePanStart;
+    _swipePanStart = null;
+    if (start == null) return;
+    if (gameState.bettingRoundComplete) return;
+
+    final velocity = details.velocity.pixelsPerSecond;
+    final speed = velocity.distance;
+
+    // Need minimum speed to register as a fold swipe
+    if (speed > 200) {
+      if (gameState.isValidAction(PlayerAction.fold)) {
+        _performPokerAction(PlayerAction.fold);
+      }
+    }
+  }
+
+  // ─── CLASSIC DRAWING GESTURE HANDLERS ───────��─────────────────
 
   Future<double?> _showBetAmountDialog(PlayerAction action) async {
     final currentPlayer = gameState.getCurrentPlayer();
@@ -2770,151 +3051,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     );
   }
 
-  Widget _buildMultiplierButton(
-    String label,
-    double multiplier,
-    double minBet,
-    double maxBet,
-    TextEditingController controller,
-    void Function(void Function()) setState,
-  ) {
-    return InkWell(
-      onTap: () {
-        double amount = minBet * multiplier;
-        // Clamp to max bet
-        if (amount > maxBet) {
-          amount = maxBet;
-        }
-        // Round appropriately
-        if (widget.gameType == GameType.cash) {
-          amount = (amount * 4).round() / 4; // Round to nearest $0.25
-        } else {
-          amount = amount.round().toDouble(); // Round to nearest chip
-        }
-        setState(() {
-          controller.text = widget.gameType == GameType.cash
-              ? amount.toStringAsFixed(2)
-              : amount.toInt().toString();
-        });
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.whiteBorder()),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: AppColors.accentGreen,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showDragBettingInstruction() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _pendingAction == PlayerAction.raise 
-            ? 'Drag to set raise amount' 
-            : 'Drag to set bet amount',
-        ),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _updateDragBetAmount(double totalDeltaY) {
-    if (!_isDragBetting || _pendingAction == null) return;
-    
-    final currentPlayer = gameState.getCurrentPlayer();
-    if (currentPlayer == null) return;
-    
-    // Calculate sensitivity dynamically based on player's stack and screen size
-    final minBet = _pendingAction == PlayerAction.raise
-        ? gameState.getMinimumRaise()
-        : gameState.getMinimumBet();
-    // For all-in calculation, include what player has already bet this round
-    final maxBet = currentPlayer.currentStack + currentPlayer.betThisRound;
-
-    // If player is short-stacked (can't meet min bet), use maxBet as both min and max
-    final effectiveMinBet = maxBet < minBet ? maxBet : minBet;
-    final betRange = maxBet - effectiveMinBet;
-
-    // Use actual screen height for better sensitivity calculation
-    // Use 60% of screen height as effective drag area
-    final screenHeight = MediaQuery.of(context).size.height;
-    final effectiveDragArea = screenHeight * 0.6; // 60% of screen height
-    final sensitivity = betRange > 0 ? betRange / effectiveDragArea : 0;
-
-    // Calculate new bet amount based on total drag distance from start
-    // Negative totalDeltaY = drag up = increase bet
-    // Positive totalDeltaY = drag down = decrease bet
-    final totalBetChange = -totalDeltaY * sensitivity;
-
-    double newBetAmount = (effectiveMinBet + totalBetChange).clamp(effectiveMinBet, maxBet);
-    
-    // Round to appropriate increments
-    if (widget.gameType == GameType.cash) {
-      // Round to nearest $0.25
-      newBetAmount = (newBetAmount * 4).round() / 4;
-    } else {
-      // For tournaments, round to nearest 1 chip
-      newBetAmount = newBetAmount.round().toDouble();
-
-      // All-in detection: if within 5% of max bet, just go all-in
-      final allInThreshold = (maxBet * 0.05).clamp(1.0, 10.0);
-      if ((maxBet - newBetAmount) <= allInThreshold) {
-        newBetAmount = maxBet;
-      }
-    }
-
-    // Ensure we never exceed the player's stack
-    newBetAmount = newBetAmount.clamp(effectiveMinBet, maxBet);
-
-    // Calculate drag bar position (0 = bottom/min bet, 1 = top/max bet)
-    final betProgress = betRange > 0 ? (newBetAmount - effectiveMinBet) / betRange : 0;
-    final dragBarPosition = betProgress.clamp(0.0, 1.0);
-    
-    setState(() {
-      _dragBetAmount = newBetAmount;
-      _dragBarPosition = dragBarPosition.toDouble();
-    });
-  }
-
-  void _completeDragBetting() {
-    if (!_isDragBetting || _pendingAction == null) return;
-    
-    final action = _pendingAction!;
-    final amount = _dragBetAmount;
-    
-    // Reset drag state BEFORE performing action to prevent corruption
-    _resetDragBettingState();
-    
-    // Perform the action with the specified amount
-    _performPokerActionWithAmount(action, amount);
-  }
-
-  void _resetDragBettingState() {
-    setState(() {
-      _isDragBetting = false;
-      _pendingAction = null;
-      _dragBetAmount = 0.0;
-      _dragStartPosition = null;
-      _dragBarPosition = 0.0;
-    });
-  }
-
-  void _cancelDragBetting() {
-    _resetDragBettingState();
-  }
-
   void _performPokerActionWithAmount(PlayerAction action, double amount) {
     if (_freeTierLocked) {
       _showFreeTierGate();
@@ -2945,6 +3081,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       playerStack: currentPlayerStack,
       amount: amount,
     );
+
+    // Flash the action on screen
+    _showActionFlash(_actionFlashLabel(action, amount));
 
     // Perform action with specified amount
     String result = gameState.performActionWithAmount(action, amount);
@@ -2978,12 +3117,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             // This is an all-in situation - show all-in board dialog
             // addAction removed
             _showAllInBoardCardsDialog();
-          } else if (gameState.areAllPlayersAllIn()) {
-            // addAction removed
-            nextStreet();
-          } else if (autoAdvanceStreets) {
-            // addAction removed
-            nextStreet();
+          } else {
+            _autoAdvanceWithIndicator();
           }
         });
       } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
@@ -3148,6 +3283,33 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     });
   }
 
+  void _showActionFlash(String text) {
+    _actionFlashTimer?.cancel();
+    setState(() => _actionFlashText = text);
+    HapticFeedback.mediumImpact();
+    _actionFlashTimer = Timer(const Duration(milliseconds: 600), () {
+      if (mounted) setState(() => _actionFlashText = null);
+    });
+  }
+
+  String _actionFlashLabel(PlayerAction action, [double? amount]) {
+    final playerName = sessionManager.getPlayerName(gameState.currentPlayer) ?? 'Seat ${gameState.currentPlayer}';
+    switch (action) {
+      case PlayerAction.fold: return '$playerName FOLDS';
+      case PlayerAction.check: return '$playerName CHECKS';
+      case PlayerAction.call:
+        if (amount != null) return '$playerName CALLS ${gameState.formatCurrency(amount)}';
+        return '$playerName CALLS';
+      case PlayerAction.bet:
+        if (amount != null) return '$playerName BETS ${gameState.formatCurrency(amount)}';
+        return '$playerName BETS';
+      case PlayerAction.raise:
+        if (amount != null) return '$playerName RAISES ${gameState.formatCurrency(amount)}';
+        return '$playerName RAISES';
+      default: return '$playerName acts';
+    }
+  }
+
   void _performPokerAction(PlayerAction action) {
     if (_freeTierLocked) {
       _showFreeTierGate();
@@ -3187,6 +3349,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       amount: actionAmount,
     );
 
+    // Flash the action on screen
+    _showActionFlash(_actionFlashLabel(action, actionAmount));
+
     String result = gameState.performAction(action);
 
     // Split result into individual lines and add each as separate action
@@ -3218,12 +3383,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
             // This is an all-in situation - show all-in board dialog
             // addAction removed
             _showAllInBoardCardsDialog();
-          } else if (gameState.areAllPlayersAllIn()) {
-            // addAction removed
-            nextStreet();
-          } else if (autoAdvanceStreets) {
-            // addAction removed
-            nextStreet();
+          } else {
+            _autoAdvanceWithIndicator();
           }
         });
       } else if (gameState.bettingRoundComplete && gameState.currentRound == BettingRound.river) {
@@ -3245,112 +3406,70 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     setState(() {});
   }
 
-  Rect getBounds() {
-    if (points.isEmpty) return Rect.zero;
-    
-    double minX = points.first.dx;
-    double maxX = points.first.dx;
-    double minY = points.first.dy;
-    double maxY = points.first.dy;
+  /// Whether we can show the "Folded to me" shortcut button.
+  /// Conditions: preflop, hero hasn't acted yet, no voluntary non-fold
+  /// actions recorded yet, and current player is NOT the hero (so there
+  /// are players to fold).
+  bool _canShowFoldedToMe() {
+    if (gameState.currentRound != BettingRound.preflop) return false;
+    if (gameState.bettingRoundComplete) return false;
+    final heroSeat = sessionManager.ourSeatNumber;
+    if (heroSeat == null) return false;
+    // Don't show if hero already folded
+    if (gameState.players[heroSeat - 1].hasFolded) return false;
+    // Only show when it's NOT hero's turn — we'll fold everyone to hero
+    if (gameState.currentPlayer == heroSeat) return false;
 
-    for (final point in points) {
-      minX = point.dx < minX ? point.dx : minX;
-      maxX = point.dx > maxX ? point.dx : maxX;
-      minY = point.dy < minY ? point.dy : minY;
-      maxY = point.dy > maxY ? point.dy : maxY;
+    // Check that no voluntary (non-blind, non-fold) actions happened
+    final actions = sessionManager.currentHand?.actions ?? [];
+    for (final a in actions) {
+      if (a.street != BettingRound.preflop) continue;
+      if (a.action == PlayerAction.fold) continue;
+      // Any call/bet/raise means someone voluntarily entered
+      if (a.action == PlayerAction.call ||
+          a.action == PlayerAction.bet ||
+          a.action == PlayerAction.raise) {
+        return false;
+      }
     }
 
-    return Rect.fromLTRB(minX, minY, maxX, maxY);
-  }
-
-  bool isLine(double width, double height) {
-    if (width < 30 && height < 30) return false;
-    
-    // Check if it's predominantly horizontal or vertical
-    final aspectRatio = width / height;
-    if (aspectRatio < 3.0 && aspectRatio > 0.33) return false;
-    
-    // Check that start and end are NOT close (not closed)
-    final firstPoint = points.first;
-    final lastPoint = points.last;
-    final closureDistance = sqrt(pow(lastPoint.dx - firstPoint.dx, 2) + pow(lastPoint.dy - firstPoint.dy, 2));
-    final maxDimension = max(width, height);
-    final closureRatio = closureDistance / maxDimension;
-    
-    if (closureRatio < 0.5) return false;
-    
     return true;
   }
 
-  bool isCircle() {
-    if (points.length < 8) return false;
-    
-    final bounds = getBounds();
-    final width = bounds.width;
-    final height = bounds.height;
-    
-    if (width < 40 || height < 40) return false;
-    
-    // Check aspect ratio - should be roughly square
-    final aspectRatio = width / height;
-    if (aspectRatio < 0.4 || aspectRatio > 2.5) return false;
-    
-    // Check if start and end points are close (closed shape)
-    final firstPoint = points.first;
-    final lastPoint = points.last;
-    final closureDistance = sqrt(pow(lastPoint.dx - firstPoint.dx, 2) + pow(lastPoint.dy - firstPoint.dy, 2));
-    final maxDimension = max(width, height);
-    final closureRatio = closureDistance / maxDimension;
-    
-    // For a circle/oval, start and end should be close
-    if (closureRatio > 0.5) return false;
-    
-    return true;
+  /// Folds all players from current player until it's the hero's turn.
+  void _handleFoldedToMe() {
+    final heroSeat = sessionManager.ourSeatNumber;
+    if (heroSeat == null) return;
+
+    // Fold players one at a time until hero has action
+    // Safety: max 9 iterations to prevent infinite loop
+    for (int i = 0; i < 9; i++) {
+      if (gameState.currentPlayer == heroSeat) break;
+      if (gameState.bettingRoundComplete) break;
+      _performPokerAction(PlayerAction.fold);
+    }
   }
 
-  bool hasRightAngle() {
-    if (points.length < 6) return false;
-    
-    final bounds = getBounds();
-    if (bounds.width < 30 || bounds.height < 30) return false;
-    
-    // Check that start and end are NOT close (not a closed shape like circle)
-    final firstPoint = points.first;
-    final lastPoint = points.last;
-    final closureDistance = sqrt(pow(lastPoint.dx - firstPoint.dx, 2) + pow(lastPoint.dy - firstPoint.dy, 2));
-    final maxDimension = max(bounds.width, bounds.height);
-    final closureRatio = closureDistance / maxDimension;
-    
-    if (closureRatio < 0.3) return false;
-    
-    // Simple approach: divide gesture into two halves and check if they're perpendicular
-    int midPoint = points.length ~/ 2;
-    
-    // First half direction
-    Offset start1 = points[0];
-    Offset end1 = points[midPoint];
-    double dx1 = end1.dx - start1.dx;
-    double dy1 = end1.dy - start1.dy;
-    
-    // Second half direction  
-    Offset start2 = points[midPoint];
-    Offset end2 = points[points.length - 1];
-    double dx2 = end2.dx - start2.dx;
-    double dy2 = end2.dy - start2.dy;
-    
-    double mag1 = sqrt(dx1 * dx1 + dy1 * dy1);
-    double mag2 = sqrt(dx2 * dx2 + dy2 * dy2);
-    
-    if (mag1 < 20 || mag2 < 20) return false;
-    
-    // Check angle between segments
-    double dotProduct = dx1 * dx2 + dy1 * dy2;
-    double cosAngle = dotProduct / (mag1 * mag2);
-    double angle = acos(cosAngle.clamp(-1.0, 1.0));
-    double angleDegrees = angle * 180 / pi;
-    
-    // Check if angle is roughly 90 degrees (60-120 degrees tolerance)
-    return angleDegrees >= 60 && angleDegrees <= 120;
+  /// Whether to show the "Next Hand" button: hero has folded and
+  /// there are 2+ active (non-folded) players still in the hand.
+  bool _canShowNextHand() {
+    final heroSeat = sessionManager.ourSeatNumber;
+    if (heroSeat == null) return false;
+    final heroPlayer = gameState.players[heroSeat - 1];
+    if (!heroPlayer.hasFolded) return false;
+    // Need 2+ active players still playing for there to be actions to skip
+    final activePlayers = gameState.getActivePlayers();
+    return activePlayers.length >= 2;
+  }
+
+  /// Shows a brief "Street Complete" indicator, then auto-advances.
+  void _autoAdvanceWithIndicator() {
+    setState(() => _showStreetCompleteIndicator = true);
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      setState(() => _showStreetCompleteIndicator = false);
+      nextStreet();
+    });
   }
 
   void nextStreet() {
@@ -3803,13 +3922,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
         // Add board cards info to actions
         _addBoardCardsAction(result, round);
+
+        // Notify guided hand overlay about board cards
+        _guidedOverlayKey.currentState?.onBoardCardsDealt(round);
+      } else {
+        // Cancel pressed — roll back the street advance so user can undo actions
+        setState(() {
+          _rollbackStreetAdvance(round);
+        });
       }
-
-      // Notify guided hand overlay about board cards
-      _guidedOverlayKey.currentState?.onBoardCardsDealt(round);
-
-      // Always proceed to next street after dialog
-      _proceedToNextStreet();
     });
   }
 
@@ -4364,6 +4485,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     });
   }
 
+  /// Roll back a street advance when user cancels the board card dialog.
+  /// Restores currentRound to the previous street so undo works.
+  void _rollbackStreetAdvance(BettingRound dialogRound) {
+    // dialogRound is the round the dialog was shown for (the one we advanced TO).
+    // Roll back to the round before it.
+    switch (dialogRound) {
+      case BettingRound.flop:
+        gameState.currentRound = BettingRound.preflop;
+      case BettingRound.turn:
+        gameState.currentRound = BettingRound.flop;
+      case BettingRound.river:
+        gameState.currentRound = BettingRound.turn;
+      case BettingRound.preflop:
+        break; // shouldn't happen
+    }
+    gameState.bettingRoundComplete = false;
+  }
+
   void endStreetManually() {
     setState(() {
       gameState.bettingRoundComplete = true;
@@ -4727,15 +4866,33 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
 
       // addAction removed
 
-      // Show hole cards dialog BEFORE completing the hand
-      // addAction removed
-      await _showHoleCardsDialog();
+      // Show hole cards dialog BEFORE completing the hand — skip only if hero
+      // folded preflop WITHOUT voluntarily entering the pot (no call/bet/raise)
+      final heroSeat = sessionManager.ourSeatNumber ?? 1;
+      final heroFolded = gameState.players[heroSeat - 1].hasFolded;
+      final isPreflopOnly = gameState.currentRound == BettingRound.preflop;
+      bool heroVoluntarilyEntered = false;
+      if (heroFolded && isPreflopOnly) {
+        final actions = sessionManager.currentHand?.actions ?? [];
+        for (final a in actions) {
+          if (a.player == heroSeat &&
+              (a.action == PlayerAction.call ||
+               a.action == PlayerAction.bet ||
+               a.action == PlayerAction.raise)) {
+            heroVoluntarilyEntered = true;
+            break;
+          }
+        }
+      }
+      if (!heroFolded || !isPreflopOnly || heroVoluntarilyEntered) {
+        await _showHoleCardsDialog();
+      }
 
       // Notify guided overlay after all dialogs are done (no opponent dialog in this path)
       _guidedOverlayKey.currentState?.onHoleCardsCompleted();
 
       // Now complete hand in session manager (hole cards are already saved to currentHand)
-      final currentStack = gameState.getPlayerStack(sessionManager.ourSeatNumber ?? 1);
+      final currentStack = gameState.getPlayerStack(heroSeat);
       sessionManager.completeCurrentHand(
         potAmount: potAmount,
         winnerId: winnerId,
@@ -4776,9 +4933,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
   }
 
-  /// Advance to the next hand. Checks the free-tier hand limit first; if
-  /// the user is on the free tier and has reached the cap, shows the
-  /// upgrade dialog and does NOT start a new hand.
+  /// Advance to the next hand. Shows a brief settling overlay (1.5s) with
+  /// winner info, then starts the next hand. Checks free-tier limits first.
   ///
   /// Returns true if a new hand was started, false if blocked by the gate.
   bool _advanceToNextHand() {
@@ -4794,8 +4950,38 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
       return false;
     }
 
+    // Capture settling info from last completed hand
+    final lastHand = sessionManager.completedHands.isNotEmpty
+        ? sessionManager.completedHands.last
+        : null;
+    final winnerName = lastHand?.winnerId != null
+        ? sessionManager.getPlayerName(lastHand!.winnerId!)
+        : null;
+    final potAmount = lastHand?.potAmount;
+
+    // Show settling overlay
     setState(() {
       _allInHandCompleted = false;
+      _isSettlingBetweenHands = true;
+      _settlingWinnerName = winnerName;
+      _settlingPotAmount = potAmount;
+    });
+
+    // After 1.5s, dismiss settling and start next hand (unless already dismissed)
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted || !_isSettlingBetweenHands) return;
+      _skipSettling();
+    });
+    return true;
+  }
+
+  /// Skip settling state immediately (user tapped to dismiss).
+  void _skipSettling() {
+    if (!_isSettlingBetweenHands) return;
+    setState(() {
+      _isSettlingBetweenHands = false;
+      _settlingWinnerName = null;
+      _settlingPotAmount = null;
       gameState.startNewHand();
       gameState.initializePot();
       sessionManager.startHand(
@@ -4805,7 +4991,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
         bbSeat: gameState.effectiveBBPosition,
       );
     });
-    return true;
   }
 
   /// Shows the free-tier gate dialog. On dismiss ("End session") the
@@ -5708,16 +5893,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     Vibration.vibrate(duration: 200);
   }
 
-  String _getValidActionsHint() {
-    List<String> validActions = [];
-    if (gameState.isValidAction(PlayerAction.fold)) validActions.add("Fold");
-    if (gameState.isValidAction(PlayerAction.check)) validActions.add("Check");
-    if (gameState.isValidAction(PlayerAction.call)) validActions.add("Call");
-    if (gameState.isValidAction(PlayerAction.bet)) validActions.add("Bet");
-    if (gameState.isValidAction(PlayerAction.raise)) validActions.add("Raise");
-    return "Valid: ${validActions.join(', ')}";
-  }
-
   void _distributePotToWinner(int winnerId, [double? shareAmount]) {
     // Use provided share amount or current pot amount
     double winAmount = shareAmount ?? gameState.currentPot;
@@ -5742,122 +5917,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> {
     }
   }
 
-  // Drag bar widget positioned on the left side
-  Widget _buildDragBar(BuildContext context) {
-    // Calculate positioning based on actual Online status position
-    final screenHeight = MediaQuery.of(context).size.height;
-    final gameInfoHeight = 140; // Game info section height
-    
-    // Online status is positioned: bottom: 16, left: 16 in the stack
-    // So its actual position from screen bottom is 16px + its own height
-    final onlineStatusFromBottom = 16; // bottom position in CSS
-    final onlineStatusHeight = 40; // actual height of the status container
-    final endStreetButtonHeight = 60; // End Street button height
-    
-    // Calculate where Online status actually sits
-    final onlineStatusTop = screenHeight - endStreetButtonHeight - onlineStatusFromBottom - onlineStatusHeight;
-    
-    // Position drag bar so its bottom edge is ABOVE the Online status with clear gap
-    final clearanceGap = 25; // Clear gap above Online status
-    final barHeight = 300.0; // Fixed height for the drag bar
-    
-    // Calculate bottom position: Online status top minus clearance gap
-    final barBottom = onlineStatusTop - clearanceGap;
-    final topMargin = barBottom - barHeight; // Position from bottom up
-    
-    // Calculate the current position of the drag indicator
-    final indicatorPosition = topMargin + (barHeight * _dragBarPosition);
-    
-    return Positioned(
-      left: 8,
-      top: topMargin,
-      child: Container(
-        width: 40,
-        height: barHeight,
-        child: Stack(
-          children: [
-            // Background track
-            Positioned.fill(
-              child: Container(
-                width: 6,
-                margin: EdgeInsets.symmetric(horizontal: 17),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(3),
-                  border: Border.all(color: AppColors.whiteBorder(), width: 1),
-                ),
-              ),
-            ),
-
-            // Progress fill (from bottom to current position)
-            Positioned(
-              left: 17,
-              bottom: 0,
-              child: Container(
-                width: 6,
-                height: barHeight * _dragBarPosition,
-                decoration: BoxDecoration(
-                  color: AppColors.accentGreen.withOpacity(0.6),
-                  borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(3),
-                    top: _dragBarPosition < 1.0 ? Radius.zero : Radius.circular(3),
-                  ),
-                ),
-              ),
-            ),
-            
-            // Drag indicator (thumb)
-            Positioned(
-              left: 12,
-              bottom: (barHeight * _dragBarPosition) - 8,
-              child: Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: AppColors.accentGreen,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            // Min/Max labels
-            Positioned(
-              right: 0,
-              top: -8,
-              child: Text(
-                'MAX',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Positioned(
-              right: 0,
-              bottom: -8,
-              child: Text(
-                'MIN',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // Dialog for handling busted players
@@ -6068,278 +6127,3 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
   }
 }
 
-class _SettingsDialog extends StatefulWidget {
-  final int currentSmallBlind;
-  final int currentBigBlind;
-  final bool currentHasBBante;
-  final bool currentAutoAdvance;
-  final GameType gameType;
-  final Function(int smallBlind, int bigBlind, bool hasBBante) onBlindsChanged;
-  final Function(bool) onAutoAdvanceChanged;
-
-  const _SettingsDialog({
-    Key? key,
-    required this.currentSmallBlind,
-    required this.currentBigBlind,
-    required this.currentHasBBante,
-    required this.currentAutoAdvance,
-    required this.gameType,
-    required this.onBlindsChanged,
-    required this.onAutoAdvanceChanged,
-  }) : super(key: key);
-
-  @override
-  _SettingsDialogState createState() => _SettingsDialogState();
-}
-
-class _SettingsDialogState extends State<_SettingsDialog> {
-  late int smallBlind;
-  late int bigBlind;
-  late bool hasBBante;
-  late bool autoAdvance;
-
-  @override
-  void initState() {
-    super.initState();
-    smallBlind = widget.currentSmallBlind;
-    bigBlind = widget.currentBigBlind;
-    hasBBante = widget.currentHasBBante;
-    autoAdvance = widget.currentAutoAdvance;
-  }
-
-  Future<void> _showBlindInputDialog(String title, int currentValue, Function(int) onValueChanged) async {
-    final TextEditingController controller = TextEditingController(text: currentValue.toString());
-
-    final result = await showDialog<int>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161618),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Enter $title',
-          style: AppTypography.pageTitle().copyWith(fontSize: 20),
-          textAlign: TextAlign.center,
-        ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          style: AppTypography.bodyLarge(color: Colors.white).copyWith(fontSize: 18),
-          textAlign: TextAlign.center,
-          decoration: InputDecoration(
-            hintText: 'Enter value',
-            hintStyle: AppTypography.bodyLarge(color: Colors.white.withOpacity(0.3)),
-            filled: true,
-            fillColor: Colors.white.withOpacity(0.06),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          ),
-          onSubmitted: (value) {
-            final intValue = int.tryParse(value);
-            if (intValue != null && intValue > 0) {
-              Navigator.pop(context, intValue);
-            }
-          },
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
-        actions: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextButton(
-                onPressed: () {
-                  final intValue = int.tryParse(controller.text);
-                  if (intValue != null && intValue > 0) {
-                    Navigator.pop(context, intValue);
-                  }
-                },
-                child: Text(
-                  'OK',
-                  style: AppTypography.bodyLarge(color: AppColors.buttonPrimary).copyWith(fontWeight: FontWeight.w600),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: AppTypography.bodyLarge(color: Colors.white.withOpacity(0.5)),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-
-    if (result != null) {
-      onValueChanged(result);
-    }
-  }
-
-  Widget _buildBlindRow(String title, int value, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: AppTypography.bodyLarge(color: Colors.white),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  value.toString(),
-                  style: AppTypography.bodyLarge(color: AppColors.buttonPrimary).copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3), size: 20),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildToggleRow(String title, String subtitle, bool value, Function(bool) onChanged) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.bodyLarge(color: Colors.white),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.5)),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.accentGreen,
-            activeTrackColor: AppColors.accentGreen.withOpacity(0.5),
-            inactiveTrackColor: Colors.white.withOpacity(0.1),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: const Color(0xFF161618),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text(
-        'Game Settings',
-        style: AppTypography.pageTitle().copyWith(fontSize: 20),
-        textAlign: TextAlign.center,
-      ),
-      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Blind Levels section
-          Text(
-            'BLIND LEVELS',
-            style: AppTypography.sectionHeader(),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Tap to change. Takes effect next hand.',
-            style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.4)),
-          ),
-          const SizedBox(height: 4),
-          _buildBlindRow('Small Blind', smallBlind, () {
-            _showBlindInputDialog('Small Blind', smallBlind, (value) {
-              setState(() {
-                smallBlind = value;
-                if (bigBlind < smallBlind) {
-                  bigBlind = smallBlind;
-                }
-              });
-            });
-          }),
-          Divider(color: Colors.white.withOpacity(0.08), height: 1),
-          _buildBlindRow('Big Blind', bigBlind, () {
-            _showBlindInputDialog('Big Blind', bigBlind, (value) {
-              setState(() {
-                if (value >= smallBlind) {
-                  bigBlind = value;
-                } else {
-                  bigBlind = smallBlind;
-                }
-              });
-            });
-          }),
-          const SizedBox(height: 16),
-          // Toggles section
-          Text(
-            'OPTIONS',
-            style: AppTypography.sectionHeader(),
-          ),
-          _buildToggleRow(
-            'BB Ante',
-            'Big blind posts ante each hand',
-            hasBBante,
-            (val) => setState(() => hasBBante = val),
-          ),
-          Divider(color: Colors.white.withOpacity(0.08), height: 1),
-          _buildToggleRow(
-            'Auto Advance',
-            'Advance to next street automatically',
-            autoAdvance,
-            (val) => setState(() => autoAdvance = val),
-          ),
-        ],
-      ),
-      actionsAlignment: MainAxisAlignment.center,
-      actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
-      actions: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextButton(
-              onPressed: () {
-                widget.onBlindsChanged(smallBlind, bigBlind, hasBBante);
-                widget.onAutoAdvanceChanged(autoAdvance);
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Apply',
-                style: AppTypography.bodyLarge(color: AppColors.buttonPrimary).copyWith(fontWeight: FontWeight.w600),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancel',
-                style: AppTypography.bodyLarge(color: Colors.white.withOpacity(0.5)),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}

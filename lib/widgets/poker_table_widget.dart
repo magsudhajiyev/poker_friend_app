@@ -43,10 +43,10 @@ class PokerTableWidget extends StatelessWidget {
   /// Optional widget to display in the center of the table (e.g. pot).
   final Widget? centerContent;
 
-  /// Table width as fraction of available width (default 0.80).
+  /// Table width as fraction of available width (default 0.85).
   final double tableWidthFraction;
 
-  /// Table height as fraction of available height (default 0.88).
+  /// Table height as fraction of available height (default 0.72).
   final double tableHeightFraction;
 
   const PokerTableWidget({
@@ -60,8 +60,8 @@ class PokerTableWidget extends StatelessWidget {
     this.isDealerButtonDraggable = false,
     this.onDealerButtonMoved,
     this.centerContent,
-    this.tableWidthFraction = 0.80,
-    this.tableHeightFraction = 0.88,
+    this.tableWidthFraction = 0.85,
+    this.tableHeightFraction = 0.72,
   }) : super(key: key);
 
   // ─── SEAT POSITION MATH ─────────────────────────────────────────
@@ -74,8 +74,8 @@ class PokerTableWidget extends StatelessWidget {
     final double radiusX = (areaSize.width * widthFraction) / 2;
     final double radiusY = (areaSize.height * heightFraction) / 2;
 
-    const double startAngle = math.pi * 1.25;
     final double angleStep = (2 * math.pi) / 9;
+    const double startAngle = math.pi * 1.25 + (2 * math.pi) / 9;
     final double angle = startAngle + (angleStep * (seatNumber - 1));
 
     return Offset(
@@ -85,19 +85,19 @@ class PokerTableWidget extends StatelessWidget {
   }
 
   /// Returns layout variant for a seat's label placement:
-  /// - 'top': seat 1 → label below circle
-  /// - 'right': seats 6-9 (left side of table) → label to the right
-  /// - 'left': seats 2-5 (right side of table) → label to the left
+  /// - 'top': seats 9,1 (top of table) → label below circle
+  /// - 'right': seats 7,8 (left side of table) → label to the right
+  /// - 'left': seats 2,3,4 (right side of table) → label to the left
   static String getSeatLayoutVariant(int seatNumber) {
-    if (seatNumber == 1) return 'top';
-    if ([6, 7, 8, 9].contains(seatNumber)) return 'right';
-    return 'left';
+    if (seatNumber == 9 || seatNumber == 1) return 'top';
+    if ([5, 6, 7, 8].contains(seatNumber)) return 'right';
+    return 'left'; // 2, 3, 4
   }
 
   /// Compute the angle for a seat (used for button offset).
   static double getSeatAngle(int seatNumber) {
-    const double startAngle = math.pi * 1.25;
     final double angleStep = (2 * math.pi) / 9;
+    const double startAngle = math.pi * 1.25 + (2 * math.pi) / 9;
     return startAngle + (angleStep * (seatNumber - 1));
   }
 
@@ -156,14 +156,30 @@ class PokerTableWidget extends StatelessWidget {
   /// The table felt surface with Figma's green gradient + double border.
   /// Matches Figma node 1015:7173-7174.
   Widget _buildTableSurface(double width, double height) {
+    // Use half of each dimension for a true ellipse
+    final outerRadius = BorderRadius.all(
+      Radius.elliptical(width / 2, height / 2),
+    );
+    const borderW = 16.5;
+    final innerRadius = BorderRadius.all(
+      Radius.elliptical((width - borderW * 2) / 2, (height - borderW * 2) / 2),
+    );
+    const railW = 5.9;
+    final innermost = BorderRadius.all(
+      Radius.elliptical(
+        (width - (borderW + railW) * 2) / 2,
+        (height - (borderW + railW) * 2) / 2,
+      ),
+    );
+
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(224),
+        borderRadius: outerRadius,
         border: Border.all(
           color: const Color(0xFF161A14),
-          width: 16.5,
+          width: borderW,
         ),
         gradient: const RadialGradient(
           center: Alignment.center,
@@ -186,23 +202,21 @@ class PokerTableWidget extends StatelessWidget {
       ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(207.5), // 224 - 16.5
+          borderRadius: innerRadius,
           border: Border.all(
             color: const Color(0xFF12332D),
-            width: 5.9,
+            width: railW,
           ),
         ),
-        // Inset shadow overlay: bottom highlight per Figma
-        // (0px -1.178px 4.713px #375E6B inset)
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(201.6), // 207.5 - 5.9
+          borderRadius: innermost,
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [
-                  Color(0x4D375E6B), // subtle highlight at bottom (30% alpha)
+                  Color(0x4D375E6B),
                   Colors.transparent,
                 ],
                 stops: [0.0, 0.08],

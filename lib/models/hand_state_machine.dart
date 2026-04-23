@@ -196,6 +196,9 @@ class HandRecord {
   Map<int, double>? individualShares;
   double? sharePerWinner;
 
+  // Table tracking (cash games)
+  int? tableNumber;
+
   // Hand annotations (for review/tagging)
   bool isStarred = false;
   List<String> tags = [];
@@ -277,6 +280,8 @@ class HandRecord {
       'choppedWinners': choppedWinners,
       'individualShares': individualShares?.map((key, value) => MapEntry(key.toString(), value)),
       'sharePerWinner': sharePerWinner,
+      // Table tracking
+      if (tableNumber != null) 'tableNumber': tableNumber,
       // Hand annotations
       'isStarred': isStarred,
       'tags': tags,
@@ -319,6 +324,9 @@ class HandRecord {
           )
         : null;
     hand.sharePerWinner = map['sharePerWinner']?.toDouble();
+
+    // Set table number
+    hand.tableNumber = map['tableNumber'] as int?;
 
     // Set annotation fields
     hand.isStarred = map['isStarred'] ?? false;
@@ -404,6 +412,9 @@ class PokerSessionManager {
 
   // Biggest pot tracking
   double biggestPot = 0.0;
+
+  // Table change tracking (cash games)
+  int currentTableNumber = 1;
 
   PokerSessionManager({
     required this.smallBlind,
@@ -506,6 +517,7 @@ class PokerSessionManager {
       startTime: DateTime.now(),
     );
     currentHand!.state = HandState.inProgress;
+    currentHand!.tableNumber = currentTableNumber;
 
     // CRITICAL: Explicitly ensure board cards are null for new hand
     currentHand!.boardCards = null;

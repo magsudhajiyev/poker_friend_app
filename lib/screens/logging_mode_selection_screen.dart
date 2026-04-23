@@ -6,6 +6,7 @@ import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import 'individual_session_setup_screen.dart';
+import 'unified_session_setup_screen.dart';
 
 class LoggingModeSelectionScreen extends StatefulWidget {
   const LoggingModeSelectionScreen({super.key});
@@ -352,15 +353,26 @@ class _LoggingModeSelectionScreenState
     if (OnboardingState.isOnboardingActive) {
       OnboardingState.isIndividualMode = (mode == LoggingMode.individual);
     }
-    // Both modes now go to Session Setup first
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => IndividualSessionSetupScreen(
-          loggingMode: mode,
+
+    if (mode == LoggingMode.full) {
+      // Full mode → unified session + table setup screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const UnifiedSessionSetupScreen(),
         ),
-      ),
-    );
+      );
+    } else {
+      // Individual mode → existing setup screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => IndividualSessionSetupScreen(
+            loggingMode: mode,
+          ),
+        ),
+      );
+    }
   }
 }
 

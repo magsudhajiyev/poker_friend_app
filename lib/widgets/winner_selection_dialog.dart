@@ -120,43 +120,6 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
     return selectedWinner != null;
   }
 
-  Widget _buildToggle() {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          isChoppedPot = !isChoppedPot;
-          selectedWinner = null;
-          selectedWinners.clear();
-        });
-      },
-      child: Container(
-        width: 50,
-        height: 20,
-        decoration: BoxDecoration(
-          color: isChoppedPot ? const Color(0xFF1B4341) : const Color(0xFF39393D),
-          borderRadius: BorderRadius.circular(74),
-          border: Border.all(
-            color: isChoppedPot ? const Color(0xFF4B9A96) : const Color(0xFF555555),
-            width: 1,
-          ),
-        ),
-        padding: const EdgeInsets.all(2),
-        child: AnimatedAlign(
-          duration: const Duration(milliseconds: 200),
-          alignment: isChoppedPot ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            width: 15,
-            height: 15,
-            decoration: BoxDecoration(
-              color: isChoppedPot ? const Color(0xFF73D4CF) : const Color(0xFF8C8C8C),
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildPlayerRow(int playerId) {
     final playerDisplayName = _getPlayerDisplayName(playerId);
     final bool isSelected;
@@ -169,17 +132,30 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          if (isChoppedPot) {
+        if (isChoppedPot) {
+          setState(() {
             if (selectedWinners.contains(playerId)) {
               selectedWinners.remove(playerId);
             } else {
               selectedWinners.add(playerId);
             }
-          } else {
-            selectedWinner = playerId;
-          }
-        });
+          });
+        } else {
+          // Single-tap in normal mode → immediately select and save
+          selectedWinner = playerId;
+          _saveChanges();
+        }
+      },
+      onLongPress: () {
+        // Long-press enters chopped pot mode with this player pre-selected
+        if (!isChoppedPot) {
+          setState(() {
+            isChoppedPot = true;
+            selectedWinner = null;
+            selectedWinners.clear();
+            selectedWinners.add(playerId);
+          });
+        }
       },
       child: Container(
         width: double.infinity,
@@ -338,30 +314,32 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Single Winner toggle card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF101115),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            isChoppedPot ? 'Chopped Pot' : 'Single Winner',
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.white,
-                              height: 1.44,
+                    // Chopped pot indicator (only visible in chopped mode)
+                    if (isChoppedPot)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1B4341),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color(0xFF4B9A96)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.call_split, color: Color(0xFF73D4CF), size: 18),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Chopped Pot',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF73D4CF),
+                                height: 1.44,
+                              ),
                             ),
-                          ),
-                          _buildToggle(),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
 
                     // Individual shares display for chopped pot
                     if (isChoppedPot && selectedWinners.isNotEmpty) ...[
@@ -423,7 +401,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
 
                     // "Select the winner:" label
                     Text(
-                      isChoppedPot ? 'Select all winners:' : 'Select the winner:',
+                      isChoppedPot ? 'Select all winners:' : 'Tap the winner:',
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w400,
@@ -431,6 +409,18 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         height: 1.44,
                       ),
                     ),
+                    if (!isChoppedPot)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Long-press for chopped pot',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 18),
 
                     // Player rows
@@ -445,68 +435,75 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
               ),
             ),
 
-            // Bottom buttons
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 34, 16, 34),
-              child: Column(
-                children: [
-                  // Save button
-                  GestureDetector(
-                    onTap: _canSave ? _saveChanges : null,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _canSave
-                            ? const Color(0xFF89F1EC)
-                            : const Color(0xFF89F1EC).withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(110),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Save',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                            letterSpacing: -0.5,
-                            height: 24 / 17,
+            // Bottom buttons — only show in chopped pot mode (single-tap handles normal mode)
+            if (isChoppedPot)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 34, 16, 34),
+                child: Column(
+                  children: [
+                    // Save button
+                    GestureDetector(
+                      onTap: _canSave ? _saveChanges : null,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _canSave
+                              ? const Color(0xFF89F1EC)
+                              : const Color(0xFF89F1EC).withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(110),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Confirm Chop',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                              letterSpacing: -0.5,
+                              height: 24 / 17,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  // Cancel button
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(110),
-                        border: Border.all(
-                          color: const Color(0xFFD3FFFD),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Cancel',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
+                    const SizedBox(height: 14),
+                    // Back to single winner
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isChoppedPot = false;
+                          selectedWinners.clear();
+                          selectedWinner = null;
+                        });
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(110),
+                          border: Border.all(
                             color: const Color(0xFFD3FFFD),
-                            letterSpacing: -0.5,
-                            height: 24 / 17,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Back to Single Winner',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFD3FFFD),
+                              letterSpacing: -0.5,
+                              height: 24 / 17,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),

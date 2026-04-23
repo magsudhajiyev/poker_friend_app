@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/app_toggle.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
@@ -21,7 +20,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool autoAdvanceStreets = false;
   bool _isAppAdmin = false;
   int _pendingRequestCount = 0;
   int _pendingSupportCount = 0;
@@ -30,15 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSettings();
     _checkAppAdminStatus();
-  }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      autoAdvanceStreets = prefs.getBool('auto_advance_streets') ?? false;
-    });
   }
 
   Future<void> _checkAppAdminStatus() async {
@@ -56,14 +46,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
       }
     } catch (_) {}
-  }
-
-  Future<void> _saveAutoAdvanceStreets(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('auto_advance_streets', value);
-    setState(() {
-      autoAdvanceStreets = value;
-    });
   }
 
   @override
@@ -120,32 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Game Flow section
-                    _buildSectionHeader('GAME FLOW'),
-                    const SizedBox(height: 12),
-                    _buildSettingsCard(
-                      children: [
-                        _buildToggleRow(
-                          icon: Icons.fast_forward_rounded,
-                          iconColor: const Color(0xFF89F1EC),
-                          title: 'Auto-Advance Streets',
-                          subtitle: autoAdvanceStreets
-                              ? 'Automatically moves to next street'
-                              : 'Manual control over game progression',
-                          value: autoAdvanceStreets,
-                          onChanged: _saveAutoAdvanceStreets,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildInfoBox(
-                          autoAdvanceStreets
-                              ? 'The game automatically moves from Preflop to Flop to Turn to River. Best for experienced players who want faster gameplay.'
-                              : 'You have full control over when to advance to the next street. Ideal for learning and careful hand review.',
-                        ),
-                      ],
-                    ),
-
                     // Knowledge Base section
-                    const SizedBox(height: 28),
                     _buildSectionHeader('KNOWLEDGE BASE'),
                     const SizedBox(height: 12),
                     _buildSettingsCard(
