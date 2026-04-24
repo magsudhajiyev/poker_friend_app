@@ -2359,18 +2359,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         : '\$${session['smallBlind'] ?? 0}/\$${session['bigBlind'] ?? 0}';
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SessionHistoryScreen(targetSessionId: session['id']),
-          ),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SessionHistoryScreen(targetSessionId: session['id']),
+        ),
+      ),
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.backgroundSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.black),
         ),
@@ -2378,81 +2376,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top row: players • blinds + 3-dot icon
+            // Row 1: Session name + pills
             Row(
               children: [
                 Expanded(
-                  child: Row(
-                    children: [
-                      Text(
-                        '$playerCount players',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF89F1EC),
-                          height: 1.44,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Container(
-                          width: 4,
-                          height: 4,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF89F1EC),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        blindsText,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF89F1EC),
-                          height: 1.44,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    sessionName,
+                    style: AppTypography.infoCardText(),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.5), size: 20),
-              ],
-            ),
-            const SizedBox(height: 14),
-            // Separator
-            Container(height: 1, color: const Color(0xFF1C1F21)),
-            const SizedBox(height: 14),
-            // Session name
-            Text(
-              sessionName,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 17,
-                fontWeight: FontWeight.w400,
-                color: Colors.white,
-                height: 1.44,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            // Date row with clock icon
-            Row(
-              children: [
-                Icon(Icons.access_time, color: const Color(0xFF4E5054), size: 18),
+                const SizedBox(width: 6),
+                _buildSessionPill('$playerCount Players'),
                 const SizedBox(width: 4),
-                Text(
-                  formattedDate,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF4E5054),
-                    height: 1.44,
-                  ),
-                ),
+                _buildSessionPill(blindsText),
               ],
+            ),
+            // Row 2: Date
+            Text(
+              formattedDate,
+              style: AppTypography.infoCardDate(),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSessionPill(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.neutral800,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        text,
+        style: AppTypography.infoCardPill(color: AppColors.infoCardPillTextNeutral),
       ),
     );
   }
@@ -2656,7 +2616,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
+          color: AppColors.backgroundSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.black),
         ),
@@ -2664,70 +2624,56 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top row: game type + drawer dots
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    gameType,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF89F1EC),
-                      height: 1.44,
-                    ),
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.5), size: 20),
-              ],
+            // Row 1: Game type pill
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(120),
+              ),
+              child: Text(
+                gameType,
+                style: AppTypography.infoCardPill(color: AppColors.infoCardPillText),
+              ),
             ),
-            const SizedBox(height: 14),
-            // Separator
-            Container(height: 1, color: const Color(0xFF1C1F21)),
-            const SizedBox(height: 14),
-            // Event name + buy-in
+            const SizedBox(height: 8),
+            // Row 2: Event name + buy-in pill
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    event['title'] ?? 'Event',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
-                      height: 1.44,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      event['title'] ?? 'Event',
+                      style: AppTypography.infoCardText(),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (buyIn.isNotEmpty)
-                  Text(
-                    buyIn,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFFD3FFFD),
-                      height: 1.44,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    child: Text(
+                      buyIn,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.eventBuyInText,
+                        height: 1.44,
+                      ),
                     ),
                   ),
               ],
             ),
             const SizedBox(height: 2),
-            // Date row with clock icon
-            Row(
-              children: [
-                const Icon(Icons.access_time, color: Color(0xFF4E5054), size: 18),
-                const SizedBox(width: 4),
-                Text(
-                  formattedDate,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF4E5054),
-                    height: 1.44,
-                  ),
-                ),
-              ],
+            // Row 3: Date
+            Text(
+              formattedDate,
+              style: AppTypography.infoCardDate(),
             ),
           ],
         ),

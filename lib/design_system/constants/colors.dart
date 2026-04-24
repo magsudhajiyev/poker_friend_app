@@ -83,6 +83,12 @@ class AppColors {
   static const Color calendarDayText = Color(0xFFFFFFFF);
   static const Color calendarDayDisabled = Color(0x4DEBEBF5);  // rgba(235,235,245,0.3)
 
+  // Info Card Colors (Figma node 731:9032)
+  static const Color infoCardPillText = Color(0xFF89F1EC);     // Cyan pill text (matches buttonPrimary)
+  static const Color infoCardPillTextNeutral = Color(0xFFCACACA); // Neutral pill text
+  static const Color infoCardDateText = Color(0xFF4E5054);     // Date/timestamp text
+  static const Color eventBuyInText = Color(0xFFCEEFFF);       // Event buy-in pill text
+
   // Opacity helpers for commonly used transparent colors
   static Color glassyCardColor({double opacity = 0.74}) =>
     glassyCardBase.withOpacity(opacity);

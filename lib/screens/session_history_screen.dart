@@ -488,11 +488,15 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   Widget _buildSessionCard(Map<String, dynamic> session) {
     final startTime = DateTime.parse(session['startTime']);
     final isDealerSession = session['isDealerSession'] == true;
-    final totalHands = session['totalHands'] ?? session['handsLogged'] ?? 0;
+    final playerCount = session['playerCount'] ?? 0;
     final isTournament = (session['gameType'] ?? 'cash').toLowerCase() == 'tournament';
     final secondPillText = isTournament
         ? '\$${session['buyInAmount'] ?? session['totalBuyIn'] ?? 0}'
         : _formatBlinds(session);
+
+    final sessionName = session['sessionName'] != null && session['sessionName'].isNotEmpty
+        ? session['sessionName']
+        : 'Session ${session['id'].substring(0, 8)}...';
 
     return GestureDetector(
       onTap: () {
@@ -507,17 +511,17 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         );
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: 16),
-        padding: EdgeInsets.all(18),
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Color(0xFF101115),
+          color: AppColors.backgroundSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.black),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Row 1: Session name + chevron
+            // Row 1: Session name + pills
             Row(
               children: [
                 Expanded(
@@ -525,30 +529,23 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                     children: [
                       Flexible(
                         child: Text(
-                          session['sessionName'] != null && session['sessionName'].isNotEmpty
-                              ? session['sessionName']
-                              : 'Session ${session['id'].substring(0, 8)}...',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 17,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w400,
-                            height: 1.44,
-                          ),
+                          sessionName,
+                          style: AppTypography.infoCardText(),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (isDealerSession) ...[
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Color(0xFF4CAF50).withValues(alpha: 0.2),
+                            color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             'Live',
                             style: GoogleFonts.ibmPlexSans(
-                              color: Color(0xFF4CAF50),
+                              color: const Color(0xFF4CAF50),
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                             ),
@@ -558,93 +555,33 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
-                // Chevron in dark square
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF02050B),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Color(0xFF02050B)),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.chevron_right,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
+                const SizedBox(width: 6),
+                _buildInfoPill('$playerCount Players'),
+                const SizedBox(width: 4),
+                _buildInfoPill(secondPillText),
               ],
             ),
-
-            SizedBox(height: 6),
-
-            // Row 2: Pills (players + blinds)
-            Row(
-              children: [
-                // Players pill
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1B1E24),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Text(
-                    '$totalHands Hands',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 12,
-                      color: Color(0xFF89F1EC),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 4),
-                // Blinds pill
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1B1E24),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Text(
-                    secondPillText,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 12,
-                      color: Color(0xFF89F1EC),
-                      fontWeight: FontWeight.w500,
-                      height: 1.44,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 14),
-
-            // Row 3: Clock icon + date
-            Row(
-              children: [
-                Icon(
-                  Icons.access_time,
-                  size: 18,
-                  color: Color(0xFF4E5054),
-                ),
-                SizedBox(width: 4),
-                Text(
-                  DateFormat('MMM dd, h:mm a').format(startTime),
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 13,
-                    color: Color(0xFF4E5054),
-                    fontWeight: FontWeight.w500,
-                    height: 1.44,
-                  ),
-                ),
-              ],
+            // Row 2: Date
+            Text(
+              DateFormat('MMM dd, h:mm a').format(startTime),
+              style: AppTypography.infoCardDate(),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoPill(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.neutral800,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        text,
+        style: AppTypography.infoCardPill(),
       ),
     );
   }

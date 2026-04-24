@@ -197,4 +197,19 @@ class AppTypography {
     fontWeight: FontWeight.w400,
     height: 1.44,
   );
+
+  // Info Card Pill Text (12px medium, used in session/event card pills)
+  static TextStyle infoCardPill({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 12,
+    color: color ?? AppColors.infoCardPillText,
+    fontWeight: FontWeight.w500,
+  );
+
+  // Info Card Date (13px medium, muted timestamp)
+  static TextStyle infoCardDate({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 13,
+    color: color ?? AppColors.infoCardDateText,
+    fontWeight: FontWeight.w500,
+    height: 1.44,
+  );
 }
