@@ -108,6 +108,52 @@ class PlayerState {
   }
 }
 
+/// Snapshot of per-player state before a street advance, for rollback.
+class _PlayerSnapshot {
+  final bool hasActed;
+  final bool hasCalledCurrentBet;
+  final bool isAllIn;
+  final PlayerAction lastAction;
+  final double betThisRound;
+  final double totalContribution;
+  final double currentStack;
+
+  _PlayerSnapshot({
+    required this.hasActed,
+    required this.hasCalledCurrentBet,
+    required this.isAllIn,
+    required this.lastAction,
+    required this.betThisRound,
+    required this.totalContribution,
+    required this.currentStack,
+  });
+}
+
+/// Snapshot of game state before a street advance, for rollback.
+class _StreetSnapshot {
+  final BettingRound round;
+  final double currentBet;
+  final double lastRaiseSize;
+  final bool hasBetThisRound;
+  final bool bettingRoundComplete;
+  final double currentPot;
+  final int currentPlayer;
+  final Map<BettingRound, double> streetPots;
+  final List<_PlayerSnapshot> playerSnapshots;
+
+  _StreetSnapshot({
+    required this.round,
+    required this.currentBet,
+    required this.lastRaiseSize,
+    required this.hasBetThisRound,
+    required this.bettingRoundComplete,
+    required this.currentPot,
+    required this.currentPlayer,
+    required this.streetPots,
+    required this.playerSnapshots,
+  });
+}
+
 class PokerGameState {
   final int numberOfPlayers;
   int smallBlind;
@@ -125,6 +171,7 @@ class PokerGameState {
   int _effectiveBBPosition = 1; // Track who actually posted BB
   int _effectiveSBPosition = 1; // Track who actually posted SB
   bool _isInitializing = true; // CRITICAL: Flag to prevent premature action order calculation
+  _StreetSnapshot? _preStreetSnapshot; // Snapshot for rollback on card dialog cancel
 
   // Getters for effective blind positions
   int get effectiveBBPosition => _effectiveBBPosition;
@@ -874,6 +921,65 @@ class PokerGameState {
     }
 
     return true;
+  }
+
+  /// Capture all state that will be modified by [startNewStreet] so we can
+  /// roll back if the user cancels the board cards dialog.
+  void snapshotBeforeStreetAdvance() {
+    _preStreetSnapshot = _StreetSnapshot(
+      round: currentRound,
+      currentBet: currentBet,
+      lastRaiseSize: _lastRaiseSize,
+      hasBetThisRound: hasBetThisRound,
+      bettingRoundComplete: bettingRoundComplete,
+      currentPot: currentPot,
+      currentPlayer: _currentPlayer,
+      streetPots: Map<BettingRound, double>.from(streetPots),
+      playerSnapshots: players.map((p) => _PlayerSnapshot(
+        hasActed: p.hasActed,
+        hasCalledCurrentBet: p.hasCalledCurrentBet,
+        isAllIn: p.isAllIn,
+        lastAction: p.lastAction,
+        betThisRound: p.betThisRound,
+        totalContribution: p.totalContribution,
+        currentStack: p.currentStack,
+      )).toList(),
+    );
+  }
+
+  /// Restore state from snapshot taken before street advance.
+  /// Returns true if snapshot existed and state was restored.
+  bool restoreFromStreetSnapshot() {
+    final snap = _preStreetSnapshot;
+    if (snap == null) return false;
+
+    currentRound = snap.round;
+    currentBet = snap.currentBet;
+    _lastRaiseSize = snap.lastRaiseSize;
+    hasBetThisRound = snap.hasBetThisRound;
+    bettingRoundComplete = snap.bettingRoundComplete;
+    currentPot = snap.currentPot;
+    _currentPlayer = snap.currentPlayer;
+    streetPots = Map<BettingRound, double>.from(snap.streetPots);
+
+    for (int i = 0; i < players.length && i < snap.playerSnapshots.length; i++) {
+      final ps = snap.playerSnapshots[i];
+      players[i].hasActed = ps.hasActed;
+      players[i].hasCalledCurrentBet = ps.hasCalledCurrentBet;
+      players[i].isAllIn = ps.isAllIn;
+      players[i].lastAction = ps.lastAction;
+      players[i].betThisRound = ps.betThisRound;
+      players[i].totalContribution = ps.totalContribution;
+      players[i].currentStack = ps.currentStack;
+    }
+
+    _preStreetSnapshot = null;
+    return true;
+  }
+
+  /// Clear the snapshot after a successful street advance (cards entered).
+  void clearStreetSnapshot() {
+    _preStreetSnapshot = null;
   }
 
   String startNewStreet({Function(BettingRound, double)? onStreetComplete}) {

@@ -4104,6 +4104,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       ),
     ).then((result) {
       if (result is BoardCards) {
+        // Street advance confirmed — clear rollback snapshot
+        gameState.clearStreetSnapshot();
+
         // Save board cards to current hand
         sessionManager.currentHand?.setBoardCards(result);
 
@@ -4656,6 +4659,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   void _proceedToNextStreet() {
     setState(() {
+      gameState.snapshotBeforeStreetAdvance();
       String streetTransitionResult = gameState.startNewStreet();
 
       // Show uncalled bet returns if any
@@ -4673,20 +4677,22 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   /// Roll back a street advance when user cancels the board card dialog.
-  /// Restores currentRound to the previous street so undo works.
+  /// Restores full game state (pot, bets, player state) from snapshot.
   void _rollbackStreetAdvance(BettingRound dialogRound) {
-    // dialogRound is the round the dialog was shown for (the one we advanced TO).
-    // Roll back to the round before it.
-    switch (dialogRound) {
-      case BettingRound.flop:
-        gameState.currentRound = BettingRound.preflop;
-      case BettingRound.turn:
-        gameState.currentRound = BettingRound.flop;
-      case BettingRound.river:
-        gameState.currentRound = BettingRound.turn;
-      case BettingRound.preflop:
-        break; // shouldn't happen
+    if (!gameState.restoreFromStreetSnapshot()) {
+      // Fallback if no snapshot (shouldn't happen)
+      switch (dialogRound) {
+        case BettingRound.flop:
+          gameState.currentRound = BettingRound.preflop;
+        case BettingRound.turn:
+          gameState.currentRound = BettingRound.flop;
+        case BettingRound.river:
+          gameState.currentRound = BettingRound.turn;
+        case BettingRound.preflop:
+          break;
+      }
     }
+    // Always clear bettingRoundComplete so undo button is available.
     gameState.bettingRoundComplete = false;
   }
 
@@ -4771,6 +4777,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       // Get the player state
       final player = gameState.players[playerId - 1];
 
+
       // Restore player state based on action type
       switch (action) {
         case PlayerAction.fold:
@@ -4789,22 +4796,17 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           break;
 
         case PlayerAction.call:
-          // Calculate what the player had bet BEFORE this call
-          double previousBetThisRound = _getPreviousBetThisRound(playerId, lastActionIndex);
+          // Call amounts are recorded as ADDITIONAL (getCurrentBet - betThisRound),
+          // NOT as total bet. So the amount IS what was added to pot — use it directly.
 
-          // Calculate the additional amount that was added to pot
-          double additionalAmount = amount - previousBetThisRound;
-          if (additionalAmount < 0) additionalAmount = 0;
-
-          // Restore stack (add back only the additional amount)
-          player.currentStack += additionalAmount;
+          player.currentStack += amount;
           player.isAllIn = false;
 
-          // Restore bet tracking to previous value
-          player.betThisRound = previousBetThisRound;
+          // Restore betThisRound by subtracting the call amount
+          player.betThisRound -= amount;
+          if (player.betThisRound < 0) player.betThisRound = 0;
 
-          // Restore pot (subtract only the additional amount)
-          gameState.currentPot -= additionalAmount;
+          gameState.currentPot -= amount;
           if (gameState.currentPot < 0) gameState.currentPot = 0;
 
           // Restore player status
@@ -4871,8 +4873,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     _guidedOverlayKey.currentState?.onActionUndone();
   }
 
-  /// Get the amount a player had bet BEFORE a specific action index
-  /// This looks at all previous actions in the same street by the same player
+  /// Get the amount a player had bet BEFORE a specific action index.
+  /// This looks at all previous actions in the same street by the same player,
+  /// and accounts for blind posts on preflop (which aren't in the action list).
   double _getPreviousBetThisRound(int playerId, int beforeIndex) {
     final actions = sessionManager.currentHand!.actions;
     if (beforeIndex <= 0) return 0.0;
@@ -4898,6 +4901,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             totalBet = action.amount!;
           }
         }
+      }
+    }
+
+    // On preflop, if no prior voluntary action was found, the player may have
+    // posted a blind which isn't recorded in the action list.
+    if (totalBet == 0.0 && undoingStreet == BettingRound.preflop) {
+      if (playerId == gameState.effectiveSBPosition) {
+        totalBet = gameState.smallBlind.toDouble();
+      } else if (playerId == gameState.effectiveBBPosition) {
+        totalBet = gameState.bigBlind.toDouble();
       }
     }
 
