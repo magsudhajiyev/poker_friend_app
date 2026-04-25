@@ -54,17 +54,22 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
     final btnPos = widget.gameState.buttonPosition;
     final activeSeats = widget.sessionManager.activeSeats.toList()..sort();
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.55,
-      minChildSize: 0.3,
-      maxChildSize: 0.8,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF1A1A1E),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          child: Column(
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      behavior: HitTestBehavior.opaque,
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.3,
+        maxChildSize: 0.8,
+        builder: (context, scrollController) {
+          return GestureDetector(
+            onTap: () {}, // Absorb taps on the sheet itself
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFF1A1A1E),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Drag handle
@@ -189,8 +194,10 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
               ),
             ],
           ),
+        ),
         );
-      },
+        },
+      ),
     );
   }
 

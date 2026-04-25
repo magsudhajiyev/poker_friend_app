@@ -111,13 +111,34 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Row(
         children: [
+          // Back button
+          GestureDetector(
+            onTap: () => Navigator.pop(context, {'goBack': true}),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: const BoxDecoration(
+                color: Color(0xFF35373C),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.chevron_left,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
           Expanded(
-            child: Text(
-              'Hand Review',
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 17,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+            child: Center(
+              child: Text(
+                'Hand Review',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

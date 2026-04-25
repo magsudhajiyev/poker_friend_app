@@ -1517,9 +1517,32 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                 ),
                               ),
                             ),
-                          // Gesture guide icon
-                          _buildGestureIcon(context),
-                          SizedBox(width: 8),
+                          // Next Hand (skip) button
+                          GestureDetector(
+                            onTap: _skipCurrentAction,
+                            child: Container(
+                              height: 36,
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF101115),
+                                borderRadius: BorderRadius.circular(110),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Next Hand',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 13,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
                           // Menu button
                           _buildMenuButton(context),
                         ],
@@ -1806,6 +1829,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         ),
                       ),
 
+                    // Gesture tooltip backdrop (dismiss on tap anywhere in drawing area)
+                    if (_showGestureTooltip)
+                      Positioned.fill(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _showGestureTooltip = false),
+                          child: Container(color: Colors.transparent),
+                        ),
+                      ),
                     // Gesture tooltip overlay (positioned, doesn't push layout)
                     if (_showGestureTooltip)
                       Positioned(
@@ -1989,6 +2020,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           liveCurrentPlayer: () => gameState.currentPlayer,
           onSkipOrFinish: () => setState(() {}),
         ),
+        // Gesture tooltip backdrop (closes tooltip when tapping outside drawing area)
+        if (_showGestureTooltip)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => setState(() => _showGestureTooltip = false),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
         // Menu overlay backdrop (closes menu when tapping outside)
         if (_showMenuOverlay)
           Positioned.fill(
@@ -2107,11 +2146,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 _buildMenuItem(
-                  icon: 'icons/figma_icons/forward.svg',
-                  label: 'Next Hand',
+                  icon: 'icons/figma_icons/info.svg',
+                  label: 'Gesture Guide',
                   onTap: () {
-                    setState(() => _showMenuOverlay = false);
-                    _skipCurrentAction();
+                    setState(() {
+                      _showMenuOverlay = false;
+                      _showGestureTooltip = true;
+                    });
                   },
                 ),
                 SizedBox(height: 12),
@@ -3313,6 +3354,20 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Skip the entire hand - move button and start fresh without incrementing hand number
     setState(() {
+      // Determine hero's blind obligation for THIS hand (before refunding)
+      final ourSeat = sessionManager.ourSeatNumber;
+      double heroBlindDeduction = 0.0;
+      if (ourSeat != null) {
+        if (ourSeat == gameState.effectiveSBPosition) {
+          heroBlindDeduction = gameState.smallBlind.toDouble();
+        } else if (ourSeat == gameState.effectiveBBPosition) {
+          heroBlindDeduction = gameState.bigBlind.toDouble();
+          if (gameState.hasBBante) {
+            heroBlindDeduction += gameState.bigBlind.toDouble();
+          }
+        }
+      }
+
       // Move button to next active player
       int nextButton = gameState.buttonPosition;
       int attempts = 0;
@@ -3325,17 +3380,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         gameState.buttonPosition = nextButton;
       }
 
-      // CRITICAL: Refund all pot contributions back to players before resetting
-      // This ensures stacks remain correct when skipping incomplete hands
+      // Refund all pot contributions back to players before resetting
       for (var player in gameState.players) {
         if (player.isActive) {
-          // Calculate total contribution (current round + previous rounds)
           final totalContribution = player.betThisRound + player.totalContribution;
           if (totalContribution > 0) {
-            // Refund the contribution back to stack
             player.currentStack += totalContribution;
           }
         }
+      }
+
+      // Deduct hero's blind from the skipped hand (blinds are a cost even if hand is not played out)
+      if (ourSeat != null && heroBlindDeduction > 0) {
+        final heroPlayer = gameState.players[ourSeat - 1];
+        // Cap deduction to hero's stack (in case of all-in for less)
+        final actualDeduction = heroBlindDeduction > heroPlayer.currentStack
+            ? heroPlayer.currentStack
+            : heroBlindDeduction;
+        heroPlayer.currentStack -= actualDeduction;
       }
 
       // Reset all players
@@ -5318,50 +5380,58 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     Map<String, dynamic>? winnerResult;
 
-    // Show multi-pot dialog if there are 2+ pots (main + side), otherwise show regular dialog
-    if (sidePots.length >= 2) {
-      await LoggerService.info('  Showing multi-pot winner dialog with ${sidePots.length} pots');
+    // Loop to allow going back from hole cards to winner selection
+    while (true) {
+      // Show multi-pot dialog if there are 2+ pots (main + side), otherwise show regular dialog
+      if (sidePots.length >= 2) {
+        await LoggerService.info('  Showing multi-pot winner dialog with ${sidePots.length} pots');
 
-      // Create player ID to name map
-      Map<int, String> playerIdToName = {};
-      for (int playerId in activePlayers) {
-        playerIdToName[playerId] = sessionManager.getPlayerNameWithPosition(playerId);
-      }
+        // Create player ID to name map
+        Map<int, String> playerIdToName = {};
+        for (int playerId in activePlayers) {
+          playerIdToName[playerId] = sessionManager.getPlayerNameWithPosition(playerId);
+        }
 
-      winnerResult = await MultiPotWinnerDialog.show(
-        context: context,
-        sidePots: sidePots,
-        playerNames: playerNames,
-        playerIdToName: playerIdToName,
-        gameType: widget.gameType,
-        buttonPosition: gameState.buttonPosition,
-        playerCount: gameState.numberOfPlayers,
-      );
-    } else {
-      await LoggerService.debug('  Showing regular winner selection dialog (${sidePots.length} pot)');
-      // ALWAYS show winner selection dialog
-      winnerResult = await showDialog<Map<String, dynamic>>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => WinnerSelectionDialog(
-          activePlayers: activePlayers,
+        winnerResult = await MultiPotWinnerDialog.show(
+          context: context,
+          sidePots: sidePots,
           playerNames: playerNames,
-          potAmount: potAmount, // Use saved pot amount
-          gameType: widget.gameType, // Pass game type
+          playerIdToName: playerIdToName,
+          gameType: widget.gameType,
           buttonPosition: gameState.buttonPosition,
           playerCount: gameState.numberOfPlayers,
-        ),
-      );
-    }
+        );
+      } else {
+        await LoggerService.debug('  Showing regular winner selection dialog (${sidePots.length} pot)');
+        // ALWAYS show winner selection dialog
+        winnerResult = await showDialog<Map<String, dynamic>>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => WinnerSelectionDialog(
+            activePlayers: activePlayers,
+            playerNames: playerNames,
+            potAmount: potAmount, // Use saved pot amount
+            gameType: widget.gameType, // Pass game type
+            buttonPosition: gameState.buttonPosition,
+            playerCount: gameState.numberOfPlayers,
+          ),
+        );
+      }
 
-    // User can cancel the dialog if they want to continue the hand
-    if (winnerResult == null) {
-      // addAction removed
-      return;
+      // User can cancel the dialog if they want to continue the hand
+      if (winnerResult == null) {
+        // addAction removed
+        return;
+      }
+
+      // Show hole cards dialog — if user goes back, re-show winner selection
+      final goBackToWinner = await _showHoleCardsDialog();
+      if (goBackToWinner) continue;
+      break; // Proceed to opponent cards + completion
     }
 
     // Check if this is a multi-pot scenario
-    final bool isMultiPot = winnerResult.containsKey('potResults');
+    final bool isMultiPot = winnerResult!.containsKey('potResults');
 
     if (isMultiPot) {
       await LoggerService.info('  Processing multi-pot winner result');
@@ -5383,9 +5453,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
       // Notify guided hand overlay that hand is complete
       _guidedOverlayKey.currentState?.onHandComplete();
-
-      // Then show hole cards dialog
-      await _showHoleCardsDialog();
 
       await LoggerService.info('About to call _showOpponentCardsDialog with activePlayers=$activePlayers');
 
@@ -5479,9 +5546,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
       // Notify guided hand overlay that hand is complete
       _guidedOverlayKey.currentState?.onHandComplete();
-
-      // Then show hole cards dialog
-      await _showHoleCardsDialog();
 
       await LoggerService.info('About to call _showOpponentCardsDialog with activePlayers=$activePlayers');
 
@@ -5768,7 +5832,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     }
   }
 
-  Future<void> _showHoleCardsDialog({bool isForCompletedHand = true}) async {
+  /// Returns true if user wants to go back to winner selection.
+  Future<bool> _showHoleCardsDialog({bool isForCompletedHand = true}) async {
     // Collect board cards as used cards
     Set<String> usedCards = {};
     BoardCards? boardCards;
@@ -5813,6 +5878,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       ),
     );
 
+    // User wants to go back to winner selection
+    if (result != null && result['goBack'] == true) {
+      return true;
+    }
+
     if (result != null) {
       // Save data to the current hand (or last completed if current doesn't exist)
       if (sessionManager.currentHand != null) {
@@ -5847,6 +5917,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
     }
 
+    return false;
   }
 
   Future<void> _showOpponentCardsDialog(List<int> activePlayers, List<int> winners) async {
