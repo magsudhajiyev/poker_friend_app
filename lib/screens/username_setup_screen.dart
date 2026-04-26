@@ -123,9 +123,11 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
   }
 
   Future<void> _claimUsername() async {
-    final original = _controller.text.trim();
-    final error = UsernameService.validateUsername(original);
+    final raw = _controller.text.trim();
+    final error = UsernameService.validateUsername(raw);
     if (error != null) return;
+    // Capitalize first letter for display (uniqueness check is case-insensitive)
+    final original = raw[0].toUpperCase() + raw.substring(1);
 
     setState(() => _isClaiming = true);
 
