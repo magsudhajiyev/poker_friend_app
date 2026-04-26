@@ -36,7 +36,10 @@ class OpponentStats {
   final int checkRaiseFlopCount;      // Times player check-raised on flop
   final int checkRaiseFlopOpportunity; // Times player checked OOP and faced bet on flop
 
-  // Legacy counters (kept for backward compatibility, but not used in new stats)
+  // Showdown tracking
+  final int showdownCount;       // Times opponent reached showdown
+
+  // Action counters (used for Aggression Frequency)
   final int aggressionActions;
   final int passiveActions;
   final int foldCount;
@@ -63,7 +66,9 @@ class OpponentStats {
     this.stealOpportunity = 0,
     this.checkRaiseFlopCount = 0,
     this.checkRaiseFlopOpportunity = 0,
-    // Legacy counters (backward compatibility)
+    // Showdown tracking
+    this.showdownCount = 0,
+    // Action counters
     this.aggressionActions = 0,
     this.passiveActions = 0,
     this.foldCount = 0,
@@ -94,7 +99,7 @@ class OpponentStats {
       stealOpportunity: data['stealOpportunity'] ?? 0,
       checkRaiseFlopCount: data['checkRaiseFlopCount'] ?? 0,
       checkRaiseFlopOpportunity: data['checkRaiseFlopOpportunity'] ?? 0,
-      // Legacy counters
+      showdownCount: data['showdownCount'] ?? 0,
       aggressionActions: data['aggressionActions'] ?? 0,
       passiveActions: data['passiveActions'] ?? 0,
       foldCount: data['foldCount'] ?? 0,
@@ -125,7 +130,7 @@ class OpponentStats {
       stealOpportunity: map['stealOpportunity'] ?? 0,
       checkRaiseFlopCount: map['checkRaiseFlopCount'] ?? 0,
       checkRaiseFlopOpportunity: map['checkRaiseFlopOpportunity'] ?? 0,
-      // Legacy counters
+      showdownCount: map['showdownCount'] ?? 0,
       aggressionActions: map['aggressionActions'] ?? 0,
       passiveActions: map['passiveActions'] ?? 0,
       foldCount: map['foldCount'] ?? 0,
@@ -155,7 +160,7 @@ class OpponentStats {
       'stealOpportunity': stealOpportunity,
       'checkRaiseFlopCount': checkRaiseFlopCount,
       'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
-      // Legacy counters (backward compatibility)
+      'showdownCount': showdownCount,
       'aggressionActions': aggressionActions,
       'passiveActions': passiveActions,
       'foldCount': foldCount,
@@ -186,7 +191,7 @@ class OpponentStats {
       'stealOpportunity': stealOpportunity,
       'checkRaiseFlopCount': checkRaiseFlopCount,
       'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
-      // Legacy counters (backward compatibility)
+      'showdownCount': showdownCount,
       'aggressionActions': aggressionActions,
       'passiveActions': passiveActions,
       'foldCount': foldCount,
@@ -214,6 +219,7 @@ class OpponentStats {
     int? stealOpportunity,
     int? checkRaiseFlopCount,
     int? checkRaiseFlopOpportunity,
+    int? showdownCount,
     int? aggressionActions,
     int? passiveActions,
     int? foldCount,
@@ -240,6 +246,7 @@ class OpponentStats {
       stealOpportunity: stealOpportunity ?? this.stealOpportunity,
       checkRaiseFlopCount: checkRaiseFlopCount ?? this.checkRaiseFlopCount,
       checkRaiseFlopOpportunity: checkRaiseFlopOpportunity ?? this.checkRaiseFlopOpportunity,
+      showdownCount: showdownCount ?? this.showdownCount,
       aggressionActions: aggressionActions ?? this.aggressionActions,
       passiveActions: passiveActions ?? this.passiveActions,
       foldCount: foldCount ?? this.foldCount,
@@ -268,7 +275,8 @@ class OpponentStats {
     int stealOpportunityDelta = 0,
     int checkRaiseFlopDelta = 0,
     int checkRaiseFlopOpportunityDelta = 0,
-    // Legacy deltas (backward compatibility)
+    int showdownDelta = 0,
+    // Action counter deltas
     int aggressionDelta = 0,
     int passiveDelta = 0,
     int foldDelta = 0,
@@ -294,6 +302,7 @@ class OpponentStats {
       stealOpportunity: stealOpportunity + stealOpportunityDelta,
       checkRaiseFlopCount: checkRaiseFlopCount + checkRaiseFlopDelta,
       checkRaiseFlopOpportunity: checkRaiseFlopOpportunity + checkRaiseFlopOpportunityDelta,
+      showdownCount: showdownCount + showdownDelta,
       aggressionActions: aggressionActions + aggressionDelta,
       passiveActions: passiveActions + passiveDelta,
       foldCount: foldCount + foldDelta,
@@ -346,12 +355,24 @@ class OpponentStats {
   double get checkRaiseFlopPercentage => checkRaiseFlopOpportunity > 0
       ? (checkRaiseFlopCount / checkRaiseFlopOpportunity * 100).clamp(0.0, 100.0) : 0.0;
 
+  /// Aggression Frequency: (bets + raises) / (bets + raises + calls + checks)
+  double get aggressionFrequency {
+    final totalActions = aggressionActions + passiveActions;
+    return totalActions > 0
+        ? (aggressionActions / totalActions * 100).clamp(0.0, 100.0) : 0.0;
+  }
+
+  /// Showdown percentage: how often opponent reaches showdown
+  double get showdownPercentage => handsPlayed > 0
+      ? (showdownCount / handsPlayed * 100).clamp(0.0, 100.0) : 0.0;
+
   /// Check if a stat has enough data to display (opportunity > 0)
   bool hasDataFor(String stat) {
     switch (stat) {
-      case 'vpip':
-      case 'pfr':
-        return eligibleHands > 0;
+      case 'aggressionFreq':
+        return (aggressionActions + passiveActions) > 0;
+      case 'showdown':
+        return handsPlayed > 0;
       case 'threeBet':
         return threeBetOpportunity > 0;
       case 'fold3bet':
@@ -368,88 +389,40 @@ class OpponentStats {
   }
 
   /// Check if stats have sufficient sample size for reliability
-  bool get hasReliableStats => (handsPlayed ?? 0) >= 50;
+  bool get hasReliableStats => handsPlayed >= 50;
 
-  /// Calculate player type based on VPIP and PFR stats
-  /// Uses PFR/VPIP ratio as aggression proxy (higher = more aggressive)
-  PlayerType get playerType {
-    final vpip = vpipPercentage;
-    final pfr = pfrPercentage;
+  /// Player type — auto-classification removed, will be user-assigned in future
+  PlayerType get playerType => PlayerType.unknown;
 
-    // Return unknown if not enough hands
-    if (eligibleHands < 10) {
-      return PlayerType.unknown;
-    }
-
-    // PFR/VPIP ratio indicates aggression (higher = more aggressive)
-    // 0.6+ is aggressive, below is passive
-    final pfrVpipRatio = vpip > 0 ? pfr / vpip : 0.0;
-    final isAggressive = pfrVpipRatio >= 0.6;
-
-    // Tight: VPIP < 22%, Loose: VPIP > 28%
-    if (vpip < 22) {
-      // Tight player
-      return isAggressive ? PlayerType.tightAggressive : PlayerType.tightPassive;
-    } else if (vpip > 28) {
-      // Loose player
-      if (isAggressive) {
-        return pfr > 25 ? PlayerType.maniac : PlayerType.looseAggressive;
-      } else {
-        return pfr < 10 ? PlayerType.calling_station : PlayerType.loosePassive;
-      }
-    } else {
-      // Middle range VPIP (22-28%)
-      return isAggressive ? PlayerType.tagRegular : PlayerType.loosePassive;
-    }
-  }
-
-  /// Calculate playing style description (same logic as Opponent model)
-  String get playingStyle {
-    switch (playerType) {
-      case PlayerType.tightAggressive:
-        return 'Tight-Aggressive (TAG)';
-      case PlayerType.tightPassive:
-        return 'Tight-Passive (Rock)';
-      case PlayerType.looseAggressive:
-        return 'Loose-Aggressive (LAG)';
-      case PlayerType.loosePassive:
-        return 'Loose-Passive (Fish)';
-      case PlayerType.tagRegular:
-        return 'TAG Regular';
-      case PlayerType.maniac:
-        return 'Maniac';
-      case PlayerType.calling_station:
-        return 'Calling Station';
-      case PlayerType.unknown:
-        return 'No Data';
-    }
-  }
+  /// Playing style description — returns 'No Data' until user-assigned classification is implemented
+  String get playingStyle => 'No Data';
 
   /// Convert to stats map for UI display
   Map<String, dynamic> toLegacyStatsMap() {
     return {
       'totalHands': handsPlayed,
       'totalSessions': sessionsPlayed,
-      // Core poker stats (proper opportunity-based percentages)
-      'vpip': vpipPercentage,
-      'pfr': pfrPercentage,
+      // Core poker stats
+      'aggressionFreq': aggressionFrequency,
+      'showdown': showdownPercentage,
       'threeBet': threeBetPercentage,
       'fold3Bet': fold3betPercentage,
       'cbet': cbetPercentage,
       'steal': stealPercentage,
       'checkRaise': checkRaiseFlopPercentage,
       // Opportunity counts for N/A detection
+      'aggressionTotal': aggressionActions + passiveActions,
+      'showdownHands': handsPlayed,
       'threeBetOpportunity': threeBetOpportunity,
       'facing3BetCount': facing3BetCount,
       'cbetOpportunity': cbetOpportunity,
       'stealOpportunity': stealOpportunity,
       'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
-      'eligibleHands': eligibleHands,
     };
   }
 
   @override
   String toString() {
-    return 'OpponentStats(id: $opponentId, hands: $handsPlayed, vpip: ${vpipPercentage.toStringAsFixed(1)}%, pfr: ${pfrPercentage.toStringAsFixed(1)}%)';
+    return 'OpponentStats(id: $opponentId, hands: $handsPlayed, af: ${aggressionFrequency.toStringAsFixed(1)}%, sd: ${showdownPercentage.toStringAsFixed(1)}%)';
   }
 }

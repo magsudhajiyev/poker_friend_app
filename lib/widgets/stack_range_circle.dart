@@ -12,6 +12,7 @@ class StackRangeCircle extends StatefulWidget {
   final StackConfidence confidence;
   final bool isHero;
   final bool isInteractive;
+  final bool hideLabels;
   final void Function(StackRange range) onRangeSelected;
   final String Function(double) formatCurrency;
 
@@ -22,6 +23,7 @@ class StackRangeCircle extends StatefulWidget {
     required this.confidence,
     required this.isHero,
     required this.isInteractive,
+    this.hideLabels = false,
     required this.onRangeSelected,
     required this.formatCurrency,
   });
@@ -39,8 +41,9 @@ class _StackRangeCircleState extends State<StackRangeCircle> {
   static const double _compactSize = 28.0;
   static const double _expandedSize = 160.0;
 
+  static const int _segmentCount = 7;
   static const double _gapDeg = 5.0;
-  static const double _segmentDeg = (360.0 - _gapDeg * 5) / 5;
+  static const double _segmentDeg = (360.0 - _gapDeg * _segmentCount) / _segmentCount;
   static final double _segmentRad = _segmentDeg * pi / 180;
   static final double _gapRad = _gapDeg * pi / 180;
   static const double _startAngle = -pi / 2;
@@ -75,7 +78,16 @@ class _StackRangeCircleState extends State<StackRangeCircle> {
   void _onLongPressStart(LongPressStartDetails details) {
     if (!widget.isInteractive || widget.isHero) return;
     _hoveredNotifier.value = _currentRange;
-    _overlayCenter = _getAnchorCenter();
+    final anchorCenter = _getAnchorCenter();
+
+    // Clamp center so the expanded ring stays within screen bounds
+    final screenSize = MediaQuery.of(context).size;
+    const padding = 8.0;
+    final half = _expandedSize / 2;
+    final clampedX = anchorCenter.dx.clamp(padding + half, screenSize.width - half - padding);
+    final clampedY = anchorCenter.dy.clamp(padding + half, screenSize.height - half - padding);
+    _overlayCenter = Offset(clampedX, clampedY);
+
     HapticFeedback.mediumImpact();
 
     final overlay = Overlay.of(context);
@@ -86,6 +98,7 @@ class _StackRangeCircleState extends State<StackRangeCircle> {
         currentRange: _currentRange,
         hoveredNotifier: _hoveredNotifier,
         confidence: widget.confidence,
+        hideLabels: widget.hideLabels,
       ),
     );
     overlay.insert(_overlayEntry!);
@@ -102,7 +115,7 @@ class _StackRangeCircleState extends State<StackRangeCircle> {
     final angle = atan2(dy, dx);
     final normalized = (angle - _startAngle + 2 * pi) % (2 * pi);
     final stepSize = _segmentRad + _gapRad;
-    final index = (normalized / stepSize).floor().clamp(0, 4);
+    final index = (normalized / stepSize).floor().clamp(0, _segmentCount - 1);
     final newSegment = StackRange.values[index];
 
     if (newSegment != _hoveredNotifier.value) {
@@ -189,8 +202,9 @@ class _CompactRingPainter extends CustomPainter {
   final StackRange currentRange;
   final StackConfidence confidence;
 
+  static const int _segmentCount = 7;
   static const double _gapDeg = 5.0;
-  static const double _segmentDeg = (360.0 - _gapDeg * 5) / 5;
+  static const double _segmentDeg = (360.0 - _gapDeg * _segmentCount) / _segmentCount;
   static final double _segmentRad = _segmentDeg * pi / 180;
   static final double _gapRad = _gapDeg * pi / 180;
   static const double _startAngle = -pi / 2;
@@ -207,7 +221,7 @@ class _CompactRingPainter extends CustomPainter {
     final radius = (size.width / 2) - strokeWidth / 2;
     final rect = Rect.fromCircle(center: center, radius: radius);
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < _segmentCount; i++) {
       final range = StackRange.values[i];
       final startAngle = _startAngle + i * (_segmentRad + _gapRad);
       final isActive = range == currentRange;
@@ -228,11 +242,13 @@ class _CompactRingPainter extends CustomPainter {
 
   Color _colorForRange(StackRange range) {
     switch (range) {
-      case StackRange.short:    return const Color(0xFFE36262);
-      case StackRange.belowAvg: return const Color(0xFFE3C862);
-      case StackRange.average:  return const Color(0xFF62E3BC);
-      case StackRange.deep:     return const Color(0xFF62B8E3);
-      case StackRange.veryDeep: return const Color(0xFF8C62E3);
+      case StackRange.short:     return const Color(0xFFE36262);
+      case StackRange.belowAvg:  return const Color(0xFFE3C862);
+      case StackRange.average:   return const Color(0xFF62E3BC);
+      case StackRange.deep:      return const Color(0xFF62B8E3);
+      case StackRange.veryDeep:  return const Color(0xFF8C62E3);
+      case StackRange.ultraDeep: return const Color(0xFFE362B8);
+      case StackRange.massive:   return const Color(0xFFE3A262);
     }
   }
 
@@ -257,6 +273,7 @@ class _ExpandedRangeOverlay extends StatefulWidget {
   final StackRange currentRange;
   final ValueNotifier<StackRange> hoveredNotifier;
   final StackConfidence confidence;
+  final bool hideLabels;
 
   const _ExpandedRangeOverlay({
     required this.center,
@@ -264,6 +281,7 @@ class _ExpandedRangeOverlay extends StatefulWidget {
     required this.currentRange,
     required this.hoveredNotifier,
     required this.confidence,
+    this.hideLabels = false,
   });
 
   @override
@@ -331,6 +349,7 @@ class _ExpandedRangeOverlayState extends State<_ExpandedRangeOverlay>
                         currentRange: widget.currentRange,
                         hoveredRange: hovered,
                         confidence: widget.confidence,
+                        hideLabels: widget.hideLabels,
                       ),
                       child: Center(
                         child: Text(
@@ -356,14 +375,16 @@ class _ExpandedRangeOverlayState extends State<_ExpandedRangeOverlay>
   }
 }
 
-/// Expanded ring painter with labels.
+/// Expanded ring painter with optional labels.
 class _ExpandedRingPainter extends CustomPainter {
   final StackRange currentRange;
   final StackRange hoveredRange;
   final StackConfidence confidence;
+  final bool hideLabels;
 
+  static const int _segmentCount = 7;
   static const double _gapDeg = 5.0;
-  static const double _segmentDeg = (360.0 - _gapDeg * 5) / 5;
+  static const double _segmentDeg = (360.0 - _gapDeg * _segmentCount) / _segmentCount;
   static final double _segmentRad = _segmentDeg * pi / 180;
   static final double _gapRad = _gapDeg * pi / 180;
   static const double _startAngle = -pi / 2;
@@ -372,6 +393,7 @@ class _ExpandedRingPainter extends CustomPainter {
     required this.currentRange,
     required this.hoveredRange,
     required this.confidence,
+    this.hideLabels = false,
   });
 
   @override
@@ -381,7 +403,7 @@ class _ExpandedRingPainter extends CustomPainter {
     final radius = (size.width / 2) - strokeWidth / 2 - 4;
     final rect = Rect.fromCircle(center: center, radius: radius);
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < _segmentCount; i++) {
       final range = StackRange.values[i];
       final startAngle = _startAngle + i * (_segmentRad + _gapRad);
       final isHovered = range == hoveredRange;
@@ -405,12 +427,13 @@ class _ExpandedRingPainter extends CustomPainter {
       canvas.drawArc(rect, startAngle, _segmentRad, false, paint);
     }
 
-    // Draw labels outside the ring
-    _drawLabels(canvas, center, radius + strokeWidth / 2 + 14);
+    if (!hideLabels) {
+      _drawLabels(canvas, center, radius + strokeWidth / 2 + 14);
+    }
   }
 
   void _drawLabels(Canvas canvas, Offset center, double labelRadius) {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < _segmentCount; i++) {
       final range = StackRange.values[i];
       final midAngle = _startAngle + i * (_segmentRad + _gapRad) + _segmentRad / 2;
       final labelPos = Offset(
@@ -439,11 +462,13 @@ class _ExpandedRingPainter extends CustomPainter {
 
   Color _colorForRange(StackRange range) {
     switch (range) {
-      case StackRange.short:    return const Color(0xFFE36262);
-      case StackRange.belowAvg: return const Color(0xFFE3C862);
-      case StackRange.average:  return const Color(0xFF62E3BC);
-      case StackRange.deep:     return const Color(0xFF62B8E3);
-      case StackRange.veryDeep: return const Color(0xFF8C62E3);
+      case StackRange.short:     return const Color(0xFFE36262);
+      case StackRange.belowAvg:  return const Color(0xFFE3C862);
+      case StackRange.average:   return const Color(0xFF62E3BC);
+      case StackRange.deep:      return const Color(0xFF62B8E3);
+      case StackRange.veryDeep:  return const Color(0xFF8C62E3);
+      case StackRange.ultraDeep: return const Color(0xFFE362B8);
+      case StackRange.massive:   return const Color(0xFFE3A262);
     }
   }
 
@@ -451,5 +476,6 @@ class _ExpandedRingPainter extends CustomPainter {
   bool shouldRepaint(_ExpandedRingPainter old) =>
       old.currentRange != currentRange ||
       old.hoveredRange != hoveredRange ||
-      old.confidence != confidence;
+      old.confidence != confidence ||
+      old.hideLabels != hideLabels;
 }

@@ -133,6 +133,10 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
                             child: GestureDetector(
                               onTap: () {
                                 widget.gameState.buttonPosition = seat;
+                                // Sync session manager blind positions with recalculated game state
+                                widget.sessionManager.actualSBSeat = widget.gameState.effectiveSBPosition;
+                                widget.sessionManager.actualBBSeat = widget.gameState.effectiveBBPosition;
+                                widget.sessionManager.buttonPosition = seat;
                                 widget.onChanged();
                                 setState(() {});
                               },
@@ -248,9 +252,10 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
     final activeSeatsList = widget.sessionManager.activeSeats.toList()..sort();
     final activeCount = activeSeatsList.length;
 
+    // BTN check must come first — button always takes priority
+    if (seat == btnPos) return 'BTN';
     if (seat == widget.sessionManager.actualBBSeat) return 'BB';
     if (seat == widget.sessionManager.actualSBSeat) return 'SB';
-    if (seat == btnPos) return 'BTN';
 
     if (activeCount <= 3) return '';
 
@@ -350,6 +355,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
                     confidence: confidence,
                     isHero: false,
                     isInteractive: widget.gameState.currentRound == BettingRound.preflop,
+                    hideLabels: true,
                     formatCurrency: widget.gameState.formatCurrency,
                     onRangeSelected: (StackRange range) {
                       final newStack = StackBucketHelper.midpointBB(range) * bigBlind;

@@ -325,6 +325,7 @@ class FirebaseService {
       await _updateOpponentStatsFromHand(
         actions: actions,
         playerNames: playerNames,
+        reachedShowdown: reachedShowdown,
       );
 
       AppDataCache.markHomeDirty();
@@ -1063,6 +1064,7 @@ class FirebaseService {
   static Future<void> _updateOpponentStatsFromHand({
     required List<Map<String, dynamic>> actions,
     required Map<int, String>? playerNames,
+    bool? reachedShowdown,
   }) async {
     if (playerNames == null || actions.isEmpty) return;
 
@@ -1120,6 +1122,7 @@ class FirebaseService {
           'stealOpportunityDelta': 0,
           'checkRaiseFlopCountDelta': 0,
           'checkRaiseFlopOpportunityDelta': 0,
+          'showdownDelta': 0,
         };
 
         final deltas = opponentDeltas[opponentId]!;
@@ -1236,6 +1239,16 @@ class FirebaseService {
               opponentDeltas[opponentId]!['checkRaiseFlopCountDelta'] = 1;
             }
           }
+
+          // Showdown: opponent didn't fold and hand reached showdown
+          if (reachedShowdown == true) {
+            final didFold = actions.any((a) =>
+                a['player'] == opponentSeat &&
+                (a['action'] as String?)?.toLowerCase() == 'fold');
+            if (!didFold) {
+              opponentDeltas[opponentId]!['showdownDelta'] = 1;
+            }
+          }
         }
       }
 
@@ -1287,6 +1300,7 @@ class FirebaseService {
           stealOpportunityDelta: deltas['stealOpportunityDelta'] ?? 0,
           checkRaiseFlopCountDelta: deltas['checkRaiseFlopCountDelta'] ?? 0,
           checkRaiseFlopOpportunityDelta: deltas['checkRaiseFlopOpportunityDelta'] ?? 0,
+          showdownDelta: deltas['showdownDelta'] ?? 0,
         );
 
       }

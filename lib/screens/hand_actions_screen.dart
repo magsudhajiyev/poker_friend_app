@@ -287,10 +287,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
           final stats = await OpponentStatsService.getOpponentStats(opponent.id);
           if (stats != null && stats.handsPlayed >= 10) {
             context[playerName] = {
-              'style': _playStyleCode(stats.playingStyle),
-              'vpip': stats.vpipPercentage,
-              'pfr': stats.pfrPercentage,
+              'aggressionFreq': stats.aggressionFrequency,
+              'showdown': stats.showdownPercentage,
               'threeBet': stats.threeBetPercentage,
+              'cbet': stats.cbetPercentage,
               'hands': stats.handsPlayed,
             };
           }
@@ -298,16 +298,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       } catch (_) {}
     }
     return context;
-  }
-
-  String _playStyleCode(String fullStyle) {
-    if (fullStyle.contains('TAG') || fullStyle.contains('Tight-Aggressive')) return 'TAG';
-    if (fullStyle.contains('LAG') || fullStyle.contains('Loose-Aggressive')) return 'LAG';
-    if (fullStyle.contains('Maniac')) return 'MANIAC';
-    if (fullStyle.contains('Calling Station')) return 'FISH';
-    if (fullStyle.contains('Fish') || fullStyle.contains('Loose-Passive')) return 'FISH';
-    if (fullStyle.contains('Rock') || fullStyle.contains('Tight-Passive') || fullStyle.contains('NIT')) return 'NIT';
-    return 'UNKNOWN';
   }
 
   @override

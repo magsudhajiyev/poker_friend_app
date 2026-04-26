@@ -69,18 +69,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       }
     } catch (e) {
       print('❌ Error loading optimized stats: $e');
-      return {
-        'handsPlayed': 0,
-        'vpip': 0.0,
-        'pfr': 0.0,
-        'aggression': 0.0,
-        'actions': {
-          'preflop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-          'flop': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-          'turn': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-          'river': {'fold': 0, 'call': 0, 'bet': 0, 'raise': 0},
-        },
-      };
+      return _getEmptyStatsMap();
     }
   }
 
@@ -213,15 +202,16 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       return {
         'totalHands': totalHands,
         'totalSessions': totalSessions,
-        'vpip': vpip,
-        'pfr': pfr,
+        'aggressionFreq': 0.0, // Legacy path can't compute this accurately
+        'showdown': 0.0, // Legacy path can't compute this
         'threeBet': threeBet,
         'fold3Bet': fold3Bet,
         'cbet': cbet,
         'steal': steal,
         'checkRaise': checkRaise,
         // Opportunity counts for N/A detection
-        'eligibleHands': eligibleHands,
+        'aggressionTotal': 0,
+        'showdownHands': totalHands,
         'threeBetOpportunity': threeBetOpportunity,
         'facing3BetCount': facing3BetCount,
         'cbetOpportunity': cbetOpportunity,
@@ -239,14 +229,15 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     return {
       'totalHands': 0,
       'totalSessions': 0,
-      'vpip': 0.0,
-      'pfr': 0.0,
+      'aggressionFreq': 0.0,
+      'showdown': 0.0,
       'threeBet': 0.0,
       'fold3Bet': 0.0,
       'cbet': 0.0,
       'steal': 0.0,
       'checkRaise': 0.0,
-      'eligibleHands': 0,
+      'aggressionTotal': 0,
+      'showdownHands': 0,
       'threeBetOpportunity': 0,
       'facing3BetCount': 0,
       'cbetOpportunity': 0,
@@ -537,10 +528,12 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             ),
                             SizedBox(height: 2),
                             Text(
-                              _opponentStats?.playingStyle ?? 'Unknown Style',
+                              _opponentStats != null && _opponentStats!.handsPlayed > 0
+                                  ? '${_opponentStats!.handsPlayed} hands tracked'
+                                  : 'No data yet',
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 15,
-                                color: _getStyleColor(_opponentStats?.playerType ?? PlayerType.unknown),
+                                color: Colors.grey,
                                 fontWeight: FontWeight.w400,
                                 height: 1.2,
                               ),
@@ -943,10 +936,10 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             ),
           ),
           SizedBox(height: 16),
-          // List items with dividers - 7 proper poker stats
-          _buildStatListItem('VPIP', _formatStatWithOpportunity(_statistics!['vpip'], _statistics!['eligibleHands'])),
+          // List items with dividers - 7 poker stats
+          _buildStatListItem('Aggression Freq', _formatStatWithOpportunity(_statistics!['aggressionFreq'], _statistics!['aggressionTotal'])),
           _buildDivider(),
-          _buildStatListItem('PFR', _formatStatWithOpportunity(_statistics!['pfr'], _statistics!['eligibleHands'])),
+          _buildStatListItem('Showdown %', _formatStatWithOpportunity(_statistics!['showdown'], _statistics!['showdownHands'])),
           _buildDivider(),
           _buildStatListItem('3-Bet', _formatStatWithOpportunity(_statistics!['threeBet'], _statistics!['threeBetOpportunity'])),
           _buildDivider(),

@@ -5,24 +5,28 @@ enum StackConfidence {
   low,    // Stale: no observation for 10+ hands
 }
 
-/// 5-range BB-based stack ranges for opponent display and the circular selector.
+/// 8-range BB-based stack ranges for opponent display and the circular selector.
 enum StackRange {
   short,      // 1-15 BB
   belowAvg,   // 16-30 BB
   average,    // 31-60 BB
-  deep,       // 61-100 BB
-  veryDeep,   // 100+ BB
+  deep,       // 61-80 BB
+  veryDeep,   // 81-100 BB
+  ultraDeep,  // 101-150 BB
+  massive,    // 151+ BB
 }
 
 class StackBucketHelper {
   /// Range labels for display.
   static String rangeLabel(StackRange range) {
     switch (range) {
-      case StackRange.short:    return '1-15bb';
-      case StackRange.belowAvg: return '16-30bb';
-      case StackRange.average:  return '31-60bb';
-      case StackRange.deep:     return '61-100bb';
-      case StackRange.veryDeep: return '100+bb';
+      case StackRange.short:     return '1-15bb';
+      case StackRange.belowAvg:  return '16-30bb';
+      case StackRange.average:   return '31-60bb';
+      case StackRange.deep:      return '61-80bb';
+      case StackRange.veryDeep:  return '81-100bb';
+      case StackRange.ultraDeep: return '100-150bb';
+      case StackRange.massive:   return '150+bb';
     }
   }
 
@@ -31,19 +35,23 @@ class StackBucketHelper {
     if (stackInBB <= 15) return StackRange.short;
     if (stackInBB <= 30) return StackRange.belowAvg;
     if (stackInBB <= 60) return StackRange.average;
-    if (stackInBB <= 100) return StackRange.deep;
-    return StackRange.veryDeep;
+    if (stackInBB <= 80) return StackRange.deep;
+    if (stackInBB <= 100) return StackRange.veryDeep;
+    if (stackInBB <= 150) return StackRange.ultraDeep;
+    return StackRange.massive;
   }
 
   /// Returns a representative midpoint BB value for a range.
   /// Used when converting a range selection back to a chip amount.
   static double midpointBB(StackRange range) {
     switch (range) {
-      case StackRange.short:    return 8.0;
-      case StackRange.belowAvg: return 22.0;
-      case StackRange.average:  return 45.0;
-      case StackRange.deep:     return 80.0;
-      case StackRange.veryDeep: return 150.0;
+      case StackRange.short:     return 8.0;
+      case StackRange.belowAvg:  return 22.0;
+      case StackRange.average:   return 45.0;
+      case StackRange.deep:      return 70.0;
+      case StackRange.veryDeep:  return 90.0;
+      case StackRange.ultraDeep: return 125.0;
+      case StackRange.massive:   return 200.0;
     }
   }
 

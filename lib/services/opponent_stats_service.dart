@@ -77,7 +77,7 @@ class OpponentStatsService {
     int threeBetDelta = 0,
     int cbetDelta = 0,
     int fold3betDelta = 0,
-    // New opportunity counters
+    // Opportunity counters
     int walksCountDelta = 0,
     int threeBetOpportunityDelta = 0,
     int facing3BetCountDelta = 0,
@@ -86,6 +86,7 @@ class OpponentStatsService {
     int stealOpportunityDelta = 0,
     int checkRaiseFlopCountDelta = 0,
     int checkRaiseFlopOpportunityDelta = 0,
+    int showdownDelta = 0,
   }) async {
     // Get current stats (or create new if doesn't exist)
     OpponentStats currentStats = await getOpponentStats(opponentId) ??
@@ -116,6 +117,7 @@ class OpponentStatsService {
       stealOpportunityDelta: stealOpportunityDelta,
       checkRaiseFlopDelta: checkRaiseFlopCountDelta,
       checkRaiseFlopOpportunityDelta: checkRaiseFlopOpportunityDelta,
+      showdownDelta: showdownDelta,
     );
 
     // Save updated stats
@@ -139,7 +141,7 @@ class OpponentStatsService {
     int threeBetDelta = 0,
     int cbetDelta = 0,
     int fold3betDelta = 0,
-    // New opportunity counters
+    // Opportunity counters
     int walksCountDelta = 0,
     int threeBetOpportunityDelta = 0,
     int facing3BetCountDelta = 0,
@@ -148,6 +150,7 @@ class OpponentStatsService {
     int stealOpportunityDelta = 0,
     int checkRaiseFlopCountDelta = 0,
     int checkRaiseFlopOpportunityDelta = 0,
+    int showdownDelta = 0,
   }) async {
     try {
       final docRef = _statsCollection.doc(opponentId);
@@ -181,6 +184,7 @@ class OpponentStatsService {
             'stealOpportunity': FieldValue.increment(stealOpportunityDelta),
             'checkRaiseFlopCount': FieldValue.increment(checkRaiseFlopCountDelta),
             'checkRaiseFlopOpportunity': FieldValue.increment(checkRaiseFlopOpportunityDelta),
+            'showdownCount': FieldValue.increment(showdownDelta),
             'lastUpdated': FieldValue.serverTimestamp(),
           });
         } else {
@@ -210,6 +214,7 @@ class OpponentStatsService {
             stealOpportunity: stealOpportunityDelta,
             checkRaiseFlopCount: checkRaiseFlopCountDelta,
             checkRaiseFlopOpportunity: checkRaiseFlopOpportunityDelta,
+            showdownCount: showdownDelta,
           );
           transaction.set(docRef, newStats.toFirestore());
         }
@@ -245,6 +250,7 @@ class OpponentStatsService {
         stealOpportunityDelta: stealOpportunityDelta,
         checkRaiseFlopCountDelta: checkRaiseFlopCountDelta,
         checkRaiseFlopOpportunityDelta: checkRaiseFlopOpportunityDelta,
+        showdownDelta: showdownDelta,
       );
     }
   }
