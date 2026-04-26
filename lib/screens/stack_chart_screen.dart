@@ -222,7 +222,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Stack Growth',
+                  'Stack Chart',
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     color: Colors.white,

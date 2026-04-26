@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
@@ -13,6 +14,8 @@ import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/components/app_toggle.dart';
+import '../models/hand_state_machine.dart';
+import '../widgets/stack_growth_chart.dart';
 
 class IndividualSessionTrackingScreen extends StatefulWidget {
   final String sessionName;
@@ -28,6 +31,10 @@ class IndividualSessionTrackingScreen extends StatefulWidget {
   final String? sessionId;
   final bool isFromActiveSession;
 
+  // Stack chart data (passed from active session)
+  final List<Map<String, dynamic>>? liveStackHistory;
+  final List<HandRecord>? completedHands;
+
   const IndividualSessionTrackingScreen({
     super.key,
     required this.sessionName,
@@ -40,6 +47,8 @@ class IndividualSessionTrackingScreen extends StatefulWidget {
     this.currentStack,
     this.sessionId,
     this.isFromActiveSession = false,
+    this.liveStackHistory,
+    this.completedHands,
   });
 
   @override
@@ -80,8 +89,13 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   // Track if blinds were explicitly changed by user
   bool _blindsWereChanged = false;
 
-  // Display mode
+  // Display mode (persisted via SharedPreferences)
   bool _showBBMode = false;
+  static const _bbModeKey = 'session_bb_mode';
+
+  // Chart state
+  bool _statsExpanded = false;
+  int? _selectedHandIndex;
 
   // Menu key
   final GlobalKey _dotsKey = GlobalKey();
@@ -122,8 +136,21 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       _resumeSession();
     }
 
+    _loadBBMode();
     _startTimer();
     _scheduleIndividualTrackingTour();
+  }
+
+  Future<void> _loadBBMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() => _showBBMode = prefs.getBool(_bbModeKey) ?? false);
+    }
+  }
+
+  Future<void> _saveBBMode(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_bbModeKey, value);
   }
 
   void _scheduleIndividualTrackingTour() {
@@ -1444,7 +1471,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                         ),
                         AppToggle(
                           value: _showBBMode,
-                          onChanged: (value) => setState(() => _showBBMode = value),
+                          onChanged: (value) {
+                            setState(() => _showBBMode = value);
+                            _saveBBMode(value);
+                          },
                         ),
                       ],
                     ),
@@ -1522,50 +1552,26 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'P/L',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 12,
-                                      color: Colors.white.withOpacity(0.5),
-                                    ),
-                                  ),
-                                  Text(
-                                    '${profitLoss >= 0 ? '+' : ''}${widget.gameType == GameType.cash ? '\$' : ''}${profitLoss.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 18,
-                                      color: isProfit ? const Color(0xFF89F1EC) : (profitLoss < 0 ? Colors.red : Colors.white),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                '${profitLoss >= 0 ? '+' : ''}${widget.gameType == GameType.cash ? '\$' : ''}${profitLoss.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 18,
+                                  color: isProfit ? const Color(0xFF89F1EC) : (profitLoss < 0 ? Colors.red : Colors.white),
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Growth',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 12,
-                                      color: Colors.white.withOpacity(0.5),
-                                    ),
-                                  ),
-                                  Text(
-                                    '${stackGrowthPercentage >= 0 ? '+' : ''}${stackGrowthPercentage.toStringAsFixed(1)}%',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 18,
-                                      color: isProfit ? const Color(0xFF89F1EC) : (profitLoss < 0 ? Colors.red : Colors.white),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
+                              const SizedBox(width: 8),
+                              Text(
+                                '(${stackGrowthPercentage >= 0 ? '+' : ''}${stackGrowthPercentage.toStringAsFixed(1)}%)',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 14,
+                                  color: Colors.white.withOpacity(0.4),
+                                ),
                               ),
                             ],
                           ),
+
                         ),
                       ],
                     ),
@@ -1573,7 +1579,14 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
                   const SizedBox(height: 16),
 
-                  // Session Stats
+                  // Stack Chart
+                  if (widget.liveStackHistory != null && widget.liveStackHistory!.isNotEmpty)
+                    _buildStackChartCard(),
+
+                  if (widget.liveStackHistory != null && widget.liveStackHistory!.isNotEmpty)
+                    const SizedBox(height: 16),
+
+                  // Session Info (collapsible)
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -1583,28 +1596,56 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Session Stats',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 17,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                        GestureDetector(
+                          onTap: () => setState(() => _statsExpanded = !_statsExpanded),
+                          behavior: HitTestBehavior.opaque,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Session Info',
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 17,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              AnimatedRotation(
+                                turns: _statsExpanded ? 0.5 : 0.0,
+                                duration: const Duration(milliseconds: 200),
+                                child: Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  size: 24,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        _buildStatRow('Starting Stack', widget.gameType == GameType.cash
-                            ? '\$${widget.startingStack.toStringAsFixed(2)}'
-                            : widget.startingStack.toStringAsFixed(0)),
-                        _buildDivider(),
-                        _buildStatRow('Initial Buy-in', '\$${widget.buyInAmount.toStringAsFixed(2)}'),
-                        _buildDivider(),
-                        _buildStatRow('Rebuys', '${_rebuys.length}'),
-                        _buildDivider(),
-                        _buildStatRow('Total Invested', '\$${_totalBuyIn.toStringAsFixed(2)}'),
-                        _buildDivider(),
-                        _buildClickableStatRow('Blinds', '$_currentSmallBlind/$_currentBigBlind', _showUpdateBlindsDialog),
-                        _buildDivider(),
-                        _buildStatRow('Hands Logged', '$_handsLogged'),
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                          child: _statsExpanded
+                              ? Column(
+                                  children: [
+                                    const SizedBox(height: 16),
+                                    _buildStatRow('Starting Stack', widget.gameType == GameType.cash
+                                        ? '\$${widget.startingStack.toStringAsFixed(2)}'
+                                        : widget.startingStack.toStringAsFixed(0)),
+                                    _buildDivider(),
+                                    _buildStatRow('Initial Buy-in', '\$${widget.buyInAmount.toStringAsFixed(2)}'),
+                                    _buildDivider(),
+                                    _buildStatRow('Rebuys', '${_rebuys.length}'),
+                                    _buildDivider(),
+                                    _buildStatRow('Total Invested', '\$${_totalBuyIn.toStringAsFixed(2)}'),
+                                    _buildDivider(),
+                                    _buildClickableStatRow('Blinds', '$_currentSmallBlind/$_currentBigBlind', _showUpdateBlindsDialog),
+                                    _buildDivider(),
+                                    _buildStatRow('Hands Logged', '$_handsLogged'),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
                       ],
                     ),
                   ),
@@ -1661,6 +1702,100 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     return Container(
       height: 1,
       color: Colors.white.withOpacity(0.1),
+    );
+  }
+
+  String _chartFormatValue(double value) {
+    if (widget.gameType == GameType.cash) {
+      return '\$${value.toStringAsFixed(2)}';
+    }
+    return value.toStringAsFixed(0);
+  }
+
+  Widget _buildStackChartCard() {
+    final history = widget.liveStackHistory!;
+    final hasData = history.length >= 2;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF131616),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Stack Chart',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (hasData)
+                GestureDetector(
+                  onTap: () {
+                    StackGrowthChartFullScreen.show(
+                      context: context,
+                      stackHistory: history,
+                      completedHands: widget.completedHands,
+                      startingStack: widget.startingStack,
+                      formatValue: _chartFormatValue,
+                      profitLoss: _currentStack - _initialStack,
+                      sessionName: widget.sessionName,
+                      sessionDuration: _sessionDuration,
+                      isCashGame: widget.gameType == GameType.cash,
+                    );
+                  },
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.fullscreen,
+                      color: Colors.white.withValues(alpha: 0.6),
+                      size: 18,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Chart
+          if (hasData)
+            StackGrowthChart(
+              stackHistory: history,
+              completedHands: widget.completedHands,
+              startingStack: widget.startingStack,
+              formatValue: _chartFormatValue,
+              height: 200,
+              selectedIndex: _selectedHandIndex,
+              onDotTapped: (index) => setState(() => _selectedHandIndex = index),
+            )
+          else
+            SizedBox(
+              height: 120,
+              child: Center(
+                child: Text(
+                  'Complete a hand to see your stack trend',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.4),
+                  ),
+                ),
+              ),
+            ),
+          // fl_chart handles X-axis labels and tooltips internally
+        ],
+      ),
     );
   }
 

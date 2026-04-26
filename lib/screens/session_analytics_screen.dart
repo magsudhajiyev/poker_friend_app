@@ -562,7 +562,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Stack Growth',
+                  'Stack Chart',
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,

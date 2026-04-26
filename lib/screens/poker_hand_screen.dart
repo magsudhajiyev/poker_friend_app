@@ -1497,26 +1497,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Skip button moved to menu overlay
-                          // Next street button (when betting complete)
-                          if (gameState.bettingRoundComplete && gameState.currentRound != BettingRound.river)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: GestureDetector(
-                                onTap: nextStreet,
-                                child: Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF101115),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Center(
-                                    child: Icon(Icons.fast_forward, color: Colors.white, size: 18),
-                                  ),
-                                ),
-                              ),
-                            ),
+                          // Next street auto-advances via _autoAdvanceWithIndicator()
                           // Next Hand (skip) button
                           GestureDetector(
                             onTap: _skipCurrentAction,
@@ -1798,7 +1779,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'wins ${_settlingPotAmount != null ? '\$${_settlingPotAmount!.toStringAsFixed(0)}' : 'the pot'}',
+                                    'wins ${_settlingPotAmount != null ? '${widget.gameType == GameType.cash ? '\$' : ''}${_settlingPotAmount!.toStringAsFixed(0)}' : 'the pot'}',
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 16,
                                       color: Colors.white.withValues(alpha: 0.7),
@@ -4245,6 +4226,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           currentStack: currentStack,
           sessionId: sessionManager.sessionId,
           isFromActiveSession: true, // Indicate this is from an active poker session
+          liveStackHistory: List<Map<String, dynamic>>.from(sessionManager.stackHistory),
+          completedHands: List<HandRecord>.from(sessionManager.completedHands),
         ),
       ),
     );
