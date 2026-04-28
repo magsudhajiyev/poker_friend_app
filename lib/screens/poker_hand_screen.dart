@@ -1649,6 +1649,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             ),
                           ),
                           const SizedBox(width: 6),
+                          // Session Details info button
+                          GestureDetector(
+                            onTap: () => _showSessionDetails(),
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.info_outline,
+                                color: Color(0xFF8C8C8C),
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
                           // Blinds pill — tappable to edit
                           GestureDetector(
                             onTap: () => _showBlindsEditDialog(),
@@ -2134,17 +2152,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       _showMenuOverlay = false;
                       _showGestureTooltip = true;
                     });
-                  },
-                ),
-                SizedBox(height: 12),
-                _buildMenuSeparator(),
-                SizedBox(height: 12),
-                _buildMenuItem(
-                  icon: 'icons/figma_icons/menu_info.svg',
-                  label: 'Session Details',
-                  onTap: () {
-                    setState(() => _showMenuOverlay = false);
-                    _showSessionDetails();
                   },
                 ),
                 SizedBox(height: 12),

@@ -14,10 +14,10 @@ class BankrollService {
   static Future<double> getBankrollGoal() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getDouble(_goalKey) ?? 20000.0; // Default goal
+      return prefs.getDouble(_goalKey) ?? 0.0;
     } catch (e) {
       print('Error getting bankroll goal: $e');
-      return 20000.0;
+      return 0.0;
     }
   }
 
@@ -36,10 +36,10 @@ class BankrollService {
   static Future<double> getCurrentBankroll() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getDouble(_currentBankrollKey) ?? 7200.0; // Default current
+      return prefs.getDouble(_currentBankrollKey) ?? 0.0;
     } catch (e) {
       print('Error getting current bankroll: $e');
-      return 7200.0;
+      return 0.0;
     }
   }
 
