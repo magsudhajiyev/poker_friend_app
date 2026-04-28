@@ -58,6 +58,13 @@ service cloud.firestore {
       }
     }
 
+    // Shared hands - public read for web viewer, authenticated create
+    match /shared_hands/{shareId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
     // Allow authenticated users to read/write their own data in other collections
     // This is a permissive rule - tighten as needed for production
     match /{document=**} {

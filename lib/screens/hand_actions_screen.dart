@@ -8,7 +8,9 @@ import '../services/ai_analyzer_service.dart';
 import '../services/firebase_service.dart';
 import '../services/subscription_service.dart';
 import '../services/pokerstars_export_service.dart';
+import '../services/hand_sharing_service.dart';
 import '../services/opponent_service.dart';
+import 'package:share_plus/share_plus.dart';
 import '../services/opponent_stats_service.dart';
 import 'paywall_screen.dart';
 
@@ -31,6 +33,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   // Star, tags, and display state
   late bool _isStarred;
   bool _showBB = false;
+  bool _isSharing = false;
   late List<String> _tags;
   String? _notes;
 
@@ -79,6 +82,138 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         );
       }
     }
+  }
+
+  Future<void> _handleShareButtonTap() async {
+    if (_isSharing) return;
+
+    // Ask whether to hide hole cards
+    final hideHoleCards = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: const Color(0xFF131616),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Share Hand',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildShareOption(
+                ctx,
+                icon: Icons.visibility,
+                label: 'Show hole cards',
+                subtitle: 'Your cards will be visible in the shared link',
+                value: false,
+              ),
+              const SizedBox(height: 10),
+              _buildShareOption(
+                ctx,
+                icon: Icons.visibility_off,
+                label: 'Hide hole cards',
+                subtitle: 'Your cards will be hidden from the shared link',
+                value: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (hideHoleCards == null || !mounted) return;
+
+    setState(() => _isSharing = true);
+
+    try {
+      // Fetch session name
+      String? sessionName;
+      final sessionId = widget.hand['sessionId'] as String?;
+      if (sessionId != null) {
+        final session = await FirebaseService.getSession(sessionId);
+        sessionName = session?['sessionName'] as String?;
+      }
+
+      final url = await HandSharingService.shareHand(
+        widget.hand,
+        hideHoleCards: hideHoleCards,
+        sessionName: sessionName,
+      );
+      if (url != null && mounted) {
+        await Share.share(
+          'Check out this hand on Final Table!\n$url',
+          subject: 'Poker Hand #${widget.hand['handNumber']}',
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to share hand')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to share hand')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
+  }
+
+  Widget _buildShareOption(
+    BuildContext ctx, {
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required bool value,
+  }) {
+    return GestureDetector(
+      onTap: () => Navigator.pop(ctx, value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFF89F1EC), size: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white,
+                  )),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: GoogleFonts.ibmPlexSans(
+                    fontSize: 12, color: Colors.white.withOpacity(0.4),
+                  )),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.3), size: 20),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _handleExportButtonTap() async {
@@ -428,6 +563,32 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                             color: Colors.white,
                             size: 22,
                           ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Share button
+                      GestureDetector(
+                        onTap: _handleShareButtonTap,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: _isSharing
+                              ? const Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.ios_share,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                         ),
                       ),
                       const SizedBox(width: 8),
