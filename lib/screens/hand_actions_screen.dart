@@ -28,8 +28,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   String? _analysisError;
   final ScrollController _scrollController = ScrollController();
 
-  // Star and tags state
+  // Star, tags, and display state
   late bool _isStarred;
+  bool _showBB = false;
   late List<String> _tags;
   String? _notes;
 
@@ -385,6 +386,33 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           ],
                         ),
                       ),
+                      // BB toggle button
+                      GestureDetector(
+                        onTap: () => setState(() => _showBB = !_showBB),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _showBB
+                                ? const Color(0xFF89F1EC).withOpacity(0.2)
+                                : const Color(0xFF3C3C43).withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              'BB',
+                              style: GoogleFonts.robotoMono(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: _showBB
+                                    ? const Color(0xFF89F1EC)
+                                    : Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       // Export button
                       GestureDetector(
                         onTap: _handleExportButtonTap,
@@ -402,7 +430,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       // Star button
                       GestureDetector(
                         onTap: _toggleStar,
@@ -679,10 +707,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final gameTypeStr = widget.hand['gameType'] ?? 'cash';
     final gameType = GameTypeExtension.fromString(gameTypeStr);
 
-    String potText = gameType == GameType.cash
-        ? formatCompactCurrency(pot)
-        : formatCompactNumber(pot);
-    String blindsText = gameType == GameType.cash
+    final String potText;
+    if (_showBB) {
+      potText = _formatBB((pot as num).toDouble());
+    } else if (gameType == GameType.cash) {
+      potText = formatCompactCurrency(pot);
+    } else {
+      potText = formatCompactNumber(pot);
+    }
+    final String blindsText = gameType == GameType.cash
         ? '${formatCompactCurrency(smallBlind)}/${formatCompactCurrency(bigBlind)}'
         : '${formatCompactNumber(smallBlind)}/${formatCompactNumber(bigBlind)}';
     String? winnerText = _getWinnerText();
@@ -1342,8 +1375,19 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
+  String _formatBB(double value) {
+    final bb = (widget.hand['bigBlind'] as num?)?.toDouble() ?? 2.0;
+    final bbValue = value / bb;
+    if (bbValue == bbValue.roundToDouble()) {
+      return '${bbValue.toInt()}BB';
+    }
+    return '${bbValue.toStringAsFixed(1)}BB';
+  }
+
   String _formatPotAmount(double amount, String gameType) {
     if (amount <= 0) return '';
+
+    if (_showBB) return 'Pot: ${_formatBB(amount)}';
 
     final isCashGame = gameType == 'cash';
 
@@ -1358,6 +1402,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     if (stack == null || (stack is num && stack <= 0)) return '-';
 
     final stackNum = (stack is num) ? stack.toDouble() : 0.0;
+
+    if (_showBB) return _formatBB(stackNum);
+
     final isCashGame = gameType == 'cash';
 
     if (isCashGame) {
@@ -1372,6 +1419,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
     final amountNum = (amount is num) ? amount.toDouble() : 0.0;
     if (amountNum <= 0) return '-';
+
+    if (_showBB) return _formatBB(amountNum);
 
     final isCashGame = gameType == 'cash';
 
@@ -1541,77 +1590,16 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   Widget _buildAIAnalysisResults() {
     if (_aiAnalysis == null) return const SizedBox.shrink();
 
-    final correct = _aiAnalysis!['correct'] as bool? ?? false;
-    final severity = _aiAnalysis!['severity'] as String? ?? 'unknown';
     final aiAnalysis = _aiAnalysis!['aiAnalysis'] as Map<String, dynamic>?;
     final streetBreakdown = _aiAnalysis!['streetBreakdown'] as Map<String, dynamic>?;
     final exploitativeTip = _aiAnalysis!['exploitativeTip'] as String?;
     final hasStreetBreakdown = streetBreakdown != null && streetBreakdown.isNotEmpty;
     final processingTime = _aiAnalysis!['processingTimeMs'] as int? ?? 0;
 
-    Color severityColor;
-    IconData severityIcon;
-    switch (severity.toLowerCase()) {
-      case 'optimal':
-        severityColor = const Color(0xFF89F1EC);
-        severityIcon = Icons.check_circle;
-        break;
-      case 'minor':
-        severityColor = const Color(0xFFFFD700);
-        severityIcon = Icons.warning;
-        break;
-      case 'major':
-        severityColor = Colors.orange;
-        severityIcon = Icons.error;
-        break;
-      case 'critical':
-        severityColor = Colors.red;
-        severityIcon = Icons.dangerous;
-        break;
-      default:
-        severityColor = Colors.white.withOpacity(0.5);
-        severityIcon = Icons.help;
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'AI Analysis',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Verdict pill
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: severityColor.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(40),
-            border: Border.all(color: severityColor.withOpacity(0.3)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(severityIcon, color: severityColor, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                correct ? 'Correct Play' : 'Mistake — ${severity.toUpperCase()}',
-                style: GoogleFonts.ibmPlexSans(
-                  color: severityColor,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // AI Insights
+        // AI Analysis
         if (aiAnalysis != null) ...[
           const SizedBox(height: 16),
           Container(
@@ -1628,7 +1616,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     const Icon(Icons.psychology, color: Color(0xFF89F1EC), size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'AI Insights',
+                      'AI Analysis',
                       style: GoogleFonts.ibmPlexSans(
                         color: const Color(0xFF89F1EC),
                         fontSize: 16,
@@ -1647,11 +1635,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                ],
-                if (aiAnalysis['optimalAction'] != null &&
-                    aiAnalysis['optimalAction'] != 'unknown') ...[
-                  _buildHighlightedText('Optimal Play', aiAnalysis['optimalAction']),
                   const SizedBox(height: 12),
                 ],
                 if (aiAnalysis['learningPoint'] != null &&
@@ -1837,28 +1820,4 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     }
   }
 
-  Widget _buildHighlightedText(String title, String content) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFF89F1EC),
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          content,
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 13,
-            height: 1.4,
-          ),
-        ),
-      ],
-    );
-  }
 }
