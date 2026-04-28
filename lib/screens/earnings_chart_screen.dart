@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../services/session_result_service.dart';
 import '../design_system/constants/colors.dart';
 
@@ -23,13 +24,9 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
   double _cashTotal = 0.0;
   DateTime? _firstSessionDate;
 
-  // Min/max values for fixed axes
-  double _minValue = 0;
-  double _maxValue = 100;
-
-  final TransformationController _transformationController =
-      TransformationController();
-  double _currentScale = 1.0;
+  // Viewport scrolling
+  late double _viewStart;
+  static const int _visiblePoints = 15;
 
   @override
   void initState() {
@@ -41,7 +38,6 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
   @override
   void dispose() {
     _restorePortraitMode();
-    _transformationController.dispose();
     super.dispose();
   }
 
@@ -87,7 +83,6 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
 
         if (date == null) continue;
 
-        // Normalize to date only (remove time component)
         final dateKey = DateTime(date.year, date.month, date.day);
         final gameType = result['gameType'] as String? ?? 'cash';
         final amount = (result['amount'] as num?)?.toDouble() ?? 0.0;
@@ -97,7 +92,6 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
             (dailyData[dateKey]![gameType] ?? 0.0) + amount;
       }
 
-      // Sort by date
       final sortedDates = dailyData.keys.toList()..sort();
 
       if (sortedDates.isEmpty) {
@@ -110,15 +104,10 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
       // Calculate cumulative totals
       double cumulativeTournament = 0.0;
       double cumulativeCash = 0.0;
-      double maxVal = 0.0;
-      double minVal = 0.0;
 
       List<Map<String, dynamic>> chartData = sortedDates.map((date) {
         cumulativeTournament += dailyData[date]!['tournament']!;
         cumulativeCash += dailyData[date]!['cash']!;
-
-        maxVal = math.max(maxVal, math.max(cumulativeTournament, cumulativeCash));
-        minVal = math.min(minVal, math.min(cumulativeTournament, cumulativeCash));
 
         return {
           'date': date,
@@ -128,49 +117,12 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
         };
       }).toList();
 
-      // Calculate nice min/max for axes
-      double finalMin = minVal;
-      double finalMax = maxVal;
-
-      if (chartData.length == 1) {
-        // Single data point - ensure we show both $0 line and the value
-        final maxCumulative = math.max(cumulativeTournament, cumulativeCash);
-        final minCumulative = math.min(cumulativeTournament, cumulativeCash);
-
-        if (minCumulative < 0) {
-          // Have negative values - show negative side
-          finalMin = minCumulative * 1.2;
-          finalMax = math.max(0, maxCumulative) * 1.2;
-          if (finalMax <= 0) finalMax = math.max(100, finalMin.abs() * 0.2);
-        } else {
-          // All positive
-          finalMin = 0;
-          finalMax = maxCumulative * 1.2;
-          if (finalMax <= 0) finalMax = 100;
-        }
-      } else {
-        // Add padding
-        final range = finalMax - finalMin;
-        final padding = range > 0 ? range * 0.1 : 100;
-        finalMax += padding;
-        finalMin -= padding;
-
-        // Always show $0 line
-        if (finalMin > 0) finalMin = 0;
-        if (finalMax < 0) finalMax = 0;
-      }
-
-      // Round to nice values
-      finalMax = _roundToNice(finalMax, true);
-      finalMin = _roundToNice(finalMin, false);
-
       setState(() {
         _chartData = chartData;
         _tournamentTotal = cumulativeTournament;
         _cashTotal = cumulativeCash;
         _firstSessionDate = sortedDates.first;
-        _minValue = finalMin;
-        _maxValue = finalMax;
+        _viewStart = _computeDefaultViewStart(chartData.length);
         _isLoading = false;
       });
     } catch (e) {
@@ -181,60 +133,9 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
     }
   }
 
-  double _roundToNice(double value, bool roundUp) {
-    if (value == 0) return 0;
-
-    final isNegative = value < 0;
-    final absValue = value.abs();
-
-    // For small values
-    if (absValue < 10) {
-      if (isNegative) {
-        // For negative: roundUp means toward 0, roundDown means away from 0
-        return roundUp ? 0 : -10;
-      }
-      return roundUp ? 10 : 0;
-    }
-
-    final magnitude = math.pow(10, (math.log(absValue) / math.ln10).floor()).toDouble();
-    final normalized = absValue / magnitude;
-
-    double niceValue;
-    // For negative values with roundUp=false, we want to round AWAY from zero (more negative)
-    // So we invert the rounding logic for negative values when roundUp=false
-    final shouldRoundAwayFromZero = isNegative ? !roundUp : roundUp;
-
-    if (shouldRoundAwayFromZero) {
-      // Round up (away from zero for positive, away from zero for negative when !roundUp)
-      if (normalized <= 1) {
-        niceValue = 1;
-      } else if (normalized <= 2) {
-        niceValue = 2;
-      } else if (normalized <= 5) {
-        niceValue = 5;
-      } else {
-        niceValue = 10;
-      }
-    } else {
-      // Round down (toward zero)
-      if (normalized < 1) {
-        niceValue = 0;
-      } else if (normalized < 2) {
-        niceValue = 1;
-      } else if (normalized < 5) {
-        niceValue = 2;
-      } else {
-        niceValue = 5;
-      }
-    }
-
-    final result = niceValue * magnitude;
-    return isNegative ? -result : result;
-  }
-
-  void _resetZoom() {
-    _transformationController.value = Matrix4.identity();
-    setState(() => _currentScale = 1.0);
+  double _computeDefaultViewStart(int total) {
+    if (total <= _visiblePoints) return -0.5;
+    return total - _visiblePoints - 0.5;
   }
 
   @override
@@ -269,30 +170,13 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
   Widget _buildContent() {
     return Column(
       children: [
-        // Header
         _buildHeader(),
-        // Chart area
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // Chart with zoom/pan
-                Expanded(
-                  child: _buildChart(),
-                ),
-                const SizedBox(width: 8),
-                // Fixed Y-axis
-                _buildYAxis(),
-              ],
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: _buildChart(),
           ),
         ),
-        // Fixed X-axis
-        _buildXAxis(),
-        // Zoom indicator
-        _buildZoomIndicator(),
-        const SizedBox(height: 8),
       ],
     );
   }
@@ -443,300 +327,257 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
   }
 
   Widget _buildChart() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final chartWidth = math.max(constraints.maxWidth, _chartData.length * 60.0);
-        final chartHeight = constraints.maxHeight;
+    final data = _chartData;
+    if (data.isEmpty) return const SizedBox.shrink();
 
-        return ClipRect(
-          child: InteractiveViewer(
-            transformationController: _transformationController,
-            onInteractionUpdate: (details) {
+    // Build spots for both lines
+    final tournamentSpots = <FlSpot>[];
+    final cashSpots = <FlSpot>[];
+    for (int i = 0; i < data.length; i++) {
+      final t = (data[i]['tournament'] as num?)?.toDouble() ?? 0.0;
+      final c = (data[i]['cash'] as num?)?.toDouble() ?? 0.0;
+      tournamentSpots.add(FlSpot(i.toDouble(), t));
+      cashSpots.add(FlSpot(i.toDouble(), c));
+    }
+
+    // Compute Y bounds based on visible window
+    final viewStartIdx = _viewStart.floor().clamp(0, data.length - 1);
+    final viewEndIdx = (_viewStart + (_visiblePoints - 1) + 1).ceil().clamp(0, data.length - 1);
+    final visibleT = tournamentSpots.sublist(viewStartIdx, viewEndIdx + 1);
+    final visibleC = cashSpots.sublist(viewStartIdx, viewEndIdx + 1);
+    final allVisible = [...visibleT, ...visibleC];
+    final rawMinY = allVisible.map((e) => e.y).reduce((a, b) => a < b ? a : b);
+    final rawMaxY = allVisible.map((e) => e.y).reduce((a, b) => a > b ? a : b);
+
+    // Always include $0 line
+    final effectiveMin = math.min(rawMinY, 0.0);
+    final effectiveMax = math.max(rawMaxY, 0.0);
+    final yPadding = effectiveMax > effectiveMin
+        ? (effectiveMax - effectiveMin) * 0.15
+        : math.max(effectiveMax.abs(), 100.0) * 0.15;
+    final minY = effectiveMin - yPadding;
+    final maxY = effectiveMax + yPadding;
+    final yRange = maxY > minY ? maxY - minY : 100.0;
+    final yInterval = yRange / 4;
+
+    // Viewport
+    final viewWindow = (_visiblePoints - 1).toDouble() + 1.0;
+    final viewMinX = _viewStart;
+    final viewMaxX = _viewStart + viewWindow;
+
+    // Scroll bounds
+    final totalMaxX = (data.length - 1).toDouble() + 0.5;
+    const scrollMin = -0.5;
+    final scrollMax = (totalMaxX - viewWindow).clamp(scrollMin, double.infinity);
+
+    return GestureDetector(
+      onHorizontalDragUpdate: data.length > _visiblePoints
+          ? (details) {
+              final chartWidth = context.size?.width ?? 300;
+              final unitsPerPixel = viewWindow / chartWidth;
+              final delta = -details.delta.dx * unitsPerPixel;
               setState(() {
-                _currentScale = _transformationController.value.getMaxScaleOnAxis();
+                _viewStart = (_viewStart + delta).clamp(scrollMin, scrollMax);
               });
+            }
+          : null,
+      child: LineChart(
+        LineChartData(
+          clipData: const FlClipData.all(),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: yInterval,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(
+                color: Colors.white.withValues(alpha: 0.06),
+                strokeWidth: 1,
+              );
             },
-            minScale: 1.0,
-            maxScale: 5.0,
-            constrained: false,
-            boundaryMargin: const EdgeInsets.symmetric(horizontal: 20),
-            child: SizedBox(
-              width: chartWidth,
-              height: chartHeight,
-              child: CustomPaint(
-                painter: EarningsChartPainter(
-                  data: _chartData,
-                  tournamentColor: AppColors.tournamentBlue,
-                  cashColor: AppColors.cashGameGreen,
-                  minValue: _minValue,
-                  maxValue: _maxValue,
-                ),
+          ),
+          extraLinesData: ExtraLinesData(
+            horizontalLines: [
+              HorizontalLine(
+                y: 0,
+                color: Colors.white.withValues(alpha: 0.25),
+                strokeWidth: 1,
+                dashArray: [6, 4],
+              ),
+            ],
+          ),
+          titlesData: FlTitlesData(
+            show: true,
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: yInterval,
+                reservedSize: 55,
+                getTitlesWidget: (double value, TitleMeta meta) {
+                  return Text(
+                    _formatYAxisValue(value),
+                    style: GoogleFonts.robotoMono(
+                      color: Colors.white.withValues(alpha: 0.35),
+                      fontSize: 10,
+                    ),
+                  );
+                },
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 24,
+                interval: 1,
+                getTitlesWidget: (double value, TitleMeta meta) {
+                  if (value != value.roundToDouble()) return const SizedBox.shrink();
+                  final idx = value.toInt();
+                  if (idx < 0 || idx >= data.length) return const SizedBox.shrink();
+
+                  // Show label every few points to avoid overlap
+                  final visibleCount = (viewMaxX - viewMinX).round();
+                  final labelInterval = math.max(1, visibleCount ~/ 5);
+                  // Show first, last, and evenly spaced
+                  if (idx != 0 &&
+                      idx != data.length - 1 &&
+                      idx % labelInterval != 0) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    space: 6.0,
+                    child: Text(
+                      data[idx]['dateLabel'] as String,
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        fontSize: 10,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildYAxis() {
-    final valueRange = _maxValue - _minValue;
-    const numLabels = 5;
-
-    return SizedBox(
-      width: 50,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: List.generate(numLabels + 1, (i) {
-          final value = _maxValue - (i * valueRange / numLabels);
-          return Text(
-            '\$${value.toInt()}',
-            style: GoogleFonts.ibmPlexSans(
-              color: Colors.white.withValues(alpha: 0.5),
-              fontSize: 10,
-              fontWeight: FontWeight.w400,
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _buildXAxis() {
-    if (_chartData.isEmpty) return const SizedBox(height: 24);
-
-    // Determine which labels to show
-    List<String> labels;
-    if (_chartData.length <= 5) {
-      labels = _chartData.map((d) => d['dateLabel'] as String).toList();
-    } else {
-      // Show first, middle points, and last
-      labels = [
-        _chartData.first['dateLabel'] as String,
-        _chartData[_chartData.length ~/ 2]['dateLabel'] as String,
-        _chartData.last['dateLabel'] as String,
-      ];
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: labels.map((label) {
-                return Text(
-                  label,
-                  style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w400,
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(width: 58), // Space for Y-axis
-        ],
-      ),
-    );
-  }
-
-  Widget _buildZoomIndicator() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1F1F23).withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.zoom_in, color: Colors.white, size: 14),
-                const SizedBox(width: 4),
-                Text(
-                  '${(_currentScale * 100).toInt()}%',
-                  style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                if (_currentScale > 1.01) ...[
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: _resetZoom,
-                    child: const Icon(
-                      Icons.restart_alt,
-                      color: AppColors.tealAccent,
-                      size: 14,
+          borderData: FlBorderData(show: false),
+          minX: viewMinX,
+          maxX: viewMaxX,
+          minY: minY,
+          maxY: maxY,
+          lineTouchData: LineTouchData(
+            enabled: true,
+            touchSpotThreshold: 40,
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (_) => const Color(0xFF1C2926),
+              tooltipRoundedRadius: 12,
+              tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              getTooltipItems: (touchedSpots) {
+                return touchedSpots.map((spot) {
+                  final idx = spot.x.toInt();
+                  final value = spot.y;
+                  final isT = spot.barIndex == 0;
+                  final label = isT ? 'MTT' : 'Cash';
+                  final color = isT ? AppColors.tournamentBlue : AppColors.cashGameGreen;
+                  String dateLabel = '';
+                  if (idx >= 0 && idx < data.length) {
+                    dateLabel = '${data[idx]['dateLabel']}  ·  ';
+                  }
+                  return LineTooltipItem(
+                    '$dateLabel$label: \$${value.toStringAsFixed(0)}',
+                    GoogleFonts.ibmPlexSans(
+                      color: color,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
-                  ),
-                ],
-              ],
+                  );
+                }).toList();
+              },
             ),
           ),
-          const Spacer(),
-        ],
+          lineBarsData: [
+            // Tournament line
+            LineChartBarData(
+              spots: tournamentSpots,
+              isCurved: true,
+              curveSmoothness: 0.3,
+              preventCurveOverShooting: true,
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.tournamentBlue.withValues(alpha: 0.3),
+                  AppColors.tournamentBlue,
+                ],
+              ),
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (spot, percent, barData, index) =>
+                    FlDotCirclePainter(
+                  radius: 3.5,
+                  color: Colors.white,
+                  strokeWidth: 2,
+                  strokeColor: AppColors.tournamentBlue,
+                ),
+              ),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.tournamentBlue.withValues(alpha: 0.12),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+            // Cash line
+            LineChartBarData(
+              spots: cashSpots,
+              isCurved: true,
+              curveSmoothness: 0.3,
+              preventCurveOverShooting: true,
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.cashGameGreen.withValues(alpha: 0.3),
+                  AppColors.cashGameGreen,
+                ],
+              ),
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (spot, percent, barData, index) =>
+                    FlDotCirclePainter(
+                  radius: 3.5,
+                  color: Colors.white,
+                  strokeWidth: 2,
+                  strokeColor: AppColors.cashGameGreen,
+                ),
+              ),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.cashGameGreen.withValues(alpha: 0.12),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
-/// Custom painter for earnings chart
-class EarningsChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
-  final Color tournamentColor;
-  final Color cashColor;
-  final double minValue;
-  final double maxValue;
-
-  EarningsChartPainter({
-    required this.data,
-    required this.tournamentColor,
-    required this.cashColor,
-    required this.minValue,
-    required this.maxValue,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (data.isEmpty) return;
-
-    final chartArea = Rect.fromLTWH(0, 0, size.width, size.height);
-    final valueRange = maxValue - minValue;
-    if (valueRange == 0) return;
-
-    final zeroY = chartArea.bottom - ((0 - minValue) / valueRange) * chartArea.height;
-
-    // Draw horizontal grid lines
-    final gridPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.08)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    const numGridLines = 5;
-    for (int i = 0; i <= numGridLines; i++) {
-      final y = chartArea.top + (i / numGridLines) * chartArea.height;
-      canvas.drawLine(
-        Offset(chartArea.left, y),
-        Offset(chartArea.right, y),
-        gridPaint,
-      );
+  String _formatYAxisValue(double value) {
+    if (value.abs() >= 1000) {
+      return '\$${(value / 1000).toStringAsFixed(1)}k';
     }
-
-    // Draw zero line (more prominent)
-    if (zeroY >= chartArea.top && zeroY <= chartArea.bottom) {
-      final zeroPaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.3)
-        ..strokeWidth = 1
-        ..style = PaintingStyle.stroke;
-      canvas.drawLine(
-        Offset(chartArea.left, zeroY),
-        Offset(chartArea.right, zeroY),
-        zeroPaint,
-      );
-    }
-
-    // Calculate point spacing
-    final pointSpacing = data.length > 1
-        ? chartArea.width / (data.length - 1)
-        : chartArea.width;
-
-    // Calculate tournament points
-    final tournamentPoints = <Offset>[];
-    for (int i = 0; i < data.length; i++) {
-      final value = (data[i]['tournament'] as num?)?.toDouble() ?? 0.0;
-      final x = data.length == 1
-          ? chartArea.right - 20
-          : chartArea.left + (i * pointSpacing);
-      final y = chartArea.bottom - ((value - minValue) / valueRange) * chartArea.height;
-      tournamentPoints.add(Offset(x, y.clamp(chartArea.top, chartArea.bottom)));
-    }
-
-    // Calculate cash points
-    final cashPoints = <Offset>[];
-    for (int i = 0; i < data.length; i++) {
-      final value = (data[i]['cash'] as num?)?.toDouble() ?? 0.0;
-      final x = data.length == 1
-          ? chartArea.right - 20
-          : chartArea.left + (i * pointSpacing);
-      final y = chartArea.bottom - ((value - minValue) / valueRange) * chartArea.height;
-      cashPoints.add(Offset(x, y.clamp(chartArea.top, chartArea.bottom)));
-    }
-
-    // Draw tournament line
-    final tournamentPaint = Paint()
-      ..color = tournamentColor
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    if (data.length == 1) {
-      // Single point - draw line from $0 to value
-      final zeroYClamped = zeroY.clamp(chartArea.top, chartArea.bottom);
-      final path = Path();
-      path.moveTo(chartArea.left, zeroYClamped);
-      path.lineTo(tournamentPoints.first.dx, tournamentPoints.first.dy);
-      canvas.drawPath(path, tournamentPaint);
-
-      // Draw dot
-      final dotPaint = Paint()
-        ..color = tournamentColor
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(tournamentPoints.first, 5, dotPaint);
-    } else {
-      final path = Path();
-      path.moveTo(tournamentPoints.first.dx, tournamentPoints.first.dy);
-      for (int i = 1; i < tournamentPoints.length; i++) {
-        path.lineTo(tournamentPoints[i].dx, tournamentPoints[i].dy);
-      }
-      canvas.drawPath(path, tournamentPaint);
-    }
-
-    // Draw cash line
-    final cashPaint = Paint()
-      ..color = cashColor
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    if (data.length == 1) {
-      // Single point - draw line from $0 to value
-      final zeroYClamped = zeroY.clamp(chartArea.top, chartArea.bottom);
-      final path = Path();
-      path.moveTo(chartArea.left, zeroYClamped);
-      path.lineTo(cashPoints.first.dx, cashPoints.first.dy);
-      canvas.drawPath(path, cashPaint);
-
-      // Draw dot
-      final dotPaint = Paint()
-        ..color = cashColor
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(cashPoints.first, 5, dotPaint);
-    } else {
-      final path = Path();
-      path.moveTo(cashPoints.first.dx, cashPoints.first.dy);
-      for (int i = 1; i < cashPoints.length; i++) {
-        path.lineTo(cashPoints[i].dx, cashPoints[i].dy);
-      }
-      canvas.drawPath(path, cashPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant EarningsChartPainter oldDelegate) {
-    return data != oldDelegate.data ||
-        minValue != oldDelegate.minValue ||
-        maxValue != oldDelegate.maxValue;
+    return '\$${value.toInt()}';
   }
 }

@@ -26,11 +26,20 @@ class StackChartScreen extends StatefulWidget {
 
 class _StackChartScreenState extends State<StackChartScreen> {
   int? _touchedSpotIndex;
+  late double _viewStart;
+  static const int _visiblePoints = 30;
 
   @override
   void initState() {
     super.initState();
     _setLandscapeMode();
+    _viewStart = _computeDefaultViewStart();
+  }
+
+  double _computeDefaultViewStart() {
+    final total = widget.stackHistory.length;
+    if (total <= _visiblePoints) return -0.5;
+    return total - _visiblePoints - 0.5;
   }
 
   @override
@@ -301,12 +310,46 @@ class _StackChartScreenState extends State<StackChartScreen> {
 
     if (spots.isEmpty) return const SizedBox.shrink();
 
-    final minY = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b) * 0.9;
-    final maxY = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1;
-    final yInterval = maxY > minY ? (maxY - minY) / 4 : 100.0;
+    // Compute Y bounds based on visible window for dynamic scaling
+    final viewStartIdx = _viewStart.floor().clamp(0, spots.length - 1);
+    final viewEndIdx = (_viewStart + (_visiblePoints - 1) + 1).ceil().clamp(0, spots.length - 1);
+    final visibleSpots = spots.sublist(viewStartIdx, viewEndIdx + 1);
+    final rawMinY = visibleSpots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
+    final rawMaxY = visibleSpots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
+    final yPadding = rawMaxY > rawMinY ? (rawMaxY - rawMinY) * 0.15 : rawMaxY * 0.1;
+    final minY = rawMinY - yPadding;
+    final maxY = rawMaxY + yPadding;
+    final yRange = maxY > minY ? maxY - minY : 100.0;
+    final yInterval = yRange / 4;
 
-    return LineChart(
+    // Viewport
+    final viewWindow = (_visiblePoints - 1).toDouble() + 1.0;
+    final viewMinX = _viewStart;
+    final viewMaxX = _viewStart + viewWindow;
+
+    // Scroll bounds
+    final totalMaxX = (spots.length - 1).toDouble() + 0.5;
+    const scrollMin = -0.5;
+    final scrollMax = (totalMaxX - viewWindow).clamp(scrollMin, double.infinity);
+
+    return GestureDetector(
+      onHorizontalDragUpdate: spots.length > _visiblePoints
+          ? (details) {
+              final chartWidth = context.size?.width ?? 300;
+              final unitsPerPixel = viewWindow / chartWidth;
+              final delta = -details.delta.dx * unitsPerPixel;
+              setState(() {
+                _viewStart = (_viewStart + delta).clamp(scrollMin, scrollMax);
+                // Dismiss tooltip on scroll
+                if (_touchedSpotIndex != null) {
+                  _touchedSpotIndex = null;
+                }
+              });
+            }
+          : null,
+      child: LineChart(
       LineChartData(
+        clipData: const FlClipData.all(),
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
@@ -379,8 +422,8 @@ class _StackChartScreenState extends State<StackChartScreen> {
           ),
         ),
         borderData: FlBorderData(show: false),
-        minX: -0.3,
-        maxX: (spots.length - 1).toDouble() + 0.3,
+        minX: viewMinX,
+        maxX: viewMaxX,
         minY: minY,
         maxY: maxY,
         lineTouchData: LineTouchData(
@@ -389,17 +432,29 @@ class _StackChartScreenState extends State<StackChartScreen> {
           touchSpotThreshold: 40,
           touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
             if (event is FlTapUpEvent) {
+              final hasTappedSpot = response != null &&
+                  response.lineBarSpots != null &&
+                  response.lineBarSpots!.isNotEmpty;
+              final tappedIndex = hasTappedSpot
+                  ? response.lineBarSpots!.first.x.toInt()
+                  : null;
+
               if (_touchedSpotIndex != null) {
-                // Tooltip is showing — any tap navigates to that hand
-                final idx = _touchedSpotIndex!;
-                setState(() => _touchedSpotIndex = null);
-                _navigateToHandFromChart(idx);
+                if (tappedIndex == _touchedSpotIndex) {
+                  // Tapped same dot again — navigate to hand details
+                  final idx = _touchedSpotIndex!;
+                  setState(() => _touchedSpotIndex = null);
+                  _navigateToHandFromChart(idx);
+                } else if (tappedIndex != null) {
+                  // Tapped a different dot — switch tooltip
+                  setState(() => _touchedSpotIndex = tappedIndex);
+                } else {
+                  // Tapped empty area — dismiss tooltip
+                  setState(() => _touchedSpotIndex = null);
+                }
                 return;
               }
-              if (response != null &&
-                  response.lineBarSpots != null &&
-                  response.lineBarSpots!.isNotEmpty) {
-                final tappedIndex = response.lineBarSpots!.first.x.toInt();
+              if (tappedIndex != null) {
                 setState(() => _touchedSpotIndex = tappedIndex);
               }
             }
@@ -504,6 +559,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }
