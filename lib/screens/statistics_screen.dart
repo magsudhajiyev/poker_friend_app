@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:ui' as ui;
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/firebase_service.dart';
-import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
 import '../services/user_stats_service.dart';
 import '../services/app_data_cache.dart';
@@ -41,9 +37,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   int cbetOpportunity = 0;
   int stealOpportunity = 0;
   int checkRaiseFlopOpportunity = 0;
-
-  // Positional statistics
-  Map<String, PositionalStats> positionalStats = {};
 
   // Loading state details
   String loadingMessage = 'Loading statistics...';
@@ -103,17 +96,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       'stealOpportunity': stealOpportunity,
       'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
     };
-    // Store positional stats as serialized maps
-    AppDataCache.cachedPositionalStats = {
-      for (final entry in positionalStats.entries)
-        entry.key: {
-          'totalHands': entry.value.totalHands,
-          'playedHands': entry.value.playedHands,
-          'vpipHands': entry.value.vpipHands,
-          'pfrHands': entry.value.pfrHands,
-          'wonHands': entry.value.wonHands,
-        },
-    };
   }
 
   void _restoreFromCache() {
@@ -136,20 +118,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     stealOpportunity = overall['stealOpportunity'] as int;
     checkRaiseFlopOpportunity = overall['checkRaiseFlopOpportunity'] as int;
 
-    final cached = AppDataCache.cachedPositionalStats;
-    if (cached != null) {
-      positionalStats = {};
-      for (final entry in cached.entries) {
-        final data = entry.value as Map<String, dynamic>;
-        final stats = PositionalStats();
-        stats.totalHands = data['totalHands'] as int;
-        stats.playedHands = data['playedHands'] as int;
-        stats.vpipHands = data['vpipHands'] as int;
-        stats.pfrHands = data['pfrHands'] as int;
-        stats.wonHands = data['wonHands'] as int;
-        positionalStats[entry.key] = stats;
-      }
-    }
   }
 
   Future<void> _calculateFromDatabase() async {
@@ -206,91 +174,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       stealOpportunity = userStats.stealOpportunity;
       checkRaiseFlopOpportunity = userStats.checkRaiseFlopOpportunity;
 
-      setState(() {
-        loadingMessage = 'Calculating positional stats...';
-      });
-
-      await _calculatePositionalStats();
     } catch (e) {
       print('Error calculating statistics: $e');
       throw e;
-    }
-  }
-
-  Future<void> _calculatePositionalStats() async {
-    positionalStats = {
-      'UTG': PositionalStats(),
-      'LJ': PositionalStats(),
-      'HJ': PositionalStats(),
-      'CO': PositionalStats(),
-      'BTN': PositionalStats(),
-      'SB': PositionalStats(),
-      'BB': PositionalStats(),
-    };
-
-    try {
-      final userId = AuthService.userId;
-      if (userId == null) return;
-
-      final sessions = await FirebaseService.getAllSessions();
-      final recentSessions = sessions.take(100).toList();
-
-      for (final session in recentSessions) {
-        final sessionId = session['id'] as String;
-        final ourSeatNumber = session['ourSeatNumber'] as int?;
-        if (ourSeatNumber == null) continue;
-
-        List<Map<String, dynamic>> hands;
-        try {
-          hands = await FirebaseService.getSessionHands(sessionId);
-        } catch (e) {
-          continue;
-        }
-
-        for (final hand in hands) {
-          final actions = hand['actions'] as List<dynamic>?;
-          if (actions == null || actions.isEmpty) continue;
-
-          String? ourPosition;
-          bool playerVPIP = false;
-          bool playerPFR = false;
-          bool playerPlayed = false;
-
-          for (final action in actions) {
-            final actionMap = action as Map<String, dynamic>;
-            if (actionMap['isCurrentUser'] != true) continue;
-
-            ourPosition ??= actionMap['playerPosition'] as String?;
-            playerPlayed = true;
-
-            final street = actionMap['street'] as String?;
-            if (street?.toLowerCase().trim() != 'preflop') continue;
-
-            final actionType = actionMap['action']?.toString().toLowerCase();
-            if (actionType == 'call' || actionType == 'bet' || actionType == 'raise') {
-              playerVPIP = true;
-            }
-            if (actionType == 'raise' || actionType == 'bet') {
-              playerPFR = true;
-            }
-          }
-
-          if (ourPosition != null && positionalStats.containsKey(ourPosition)) {
-            final stats = positionalStats[ourPosition]!;
-            stats.totalHands++;
-            if (playerPlayed) stats.playedHands++;
-            if (playerVPIP) stats.vpipHands++;
-            if (playerPFR) stats.pfrHands++;
-
-            final winnerId = hand['winnerId'] as int?;
-            if (winnerId == ourSeatNumber) {
-              stats.wonHands++;
-            }
-          }
-        }
-      }
-    } catch (e) {
-      print('Error calculating positional stats: $e');
     }
   }
 
@@ -430,8 +316,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               children: [
                 _buildOverallStats(),
                 const SizedBox(height: 32),
-                _buildPositionalStats(),
-                const SizedBox(height: 32),
                 _buildSessionStats(),
                 const SizedBox(height: 120),
               ],
@@ -525,187 +409,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  Widget _buildPositionalStats() {
-    final hasData = positionalStats.values.any((stats) => stats.totalHands > 0);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF131616),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Positional Statistics',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (!hasData)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Center(
-                child: Text(
-                  'Play sessions to see positional breakdowns',
-                  style: GoogleFonts.ibmPlexSans(
-                    color: Colors.white.withOpacity(0.4),
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            )
-          else ...[
-            // Header row
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'Position',
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white.withOpacity(0.4),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      'Hands',
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white.withOpacity(0.4),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      'VPIP',
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white.withOpacity(0.4),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      'PFR',
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white.withOpacity(0.4),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      'Win%',
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white.withOpacity(0.4),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            _buildDivider(),
-            // Position rows
-            ...['BTN', 'CO', 'HJ', 'LJ', 'UTG', 'SB', 'BB'].where((pos) {
-              return positionalStats[pos]!.totalHands > 0;
-            }).map((position) {
-              final stats = positionalStats[position]!;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF89F1EC).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          position,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF89F1EC),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        '${stats.totalHands}',
-                        style: GoogleFonts.ibmPlexSans(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        '${stats.vpipPercentage.toStringAsFixed(0)}%',
-                        style: GoogleFonts.ibmPlexSans(
-                          color: _getStatColor(stats.vpipPercentage, isVPIP: true),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        '${stats.pfrPercentage.toStringAsFixed(0)}%',
-                        style: GoogleFonts.ibmPlexSans(
-                          color: _getStatColor(stats.pfrPercentage, isPFR: true),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        '${stats.winRate.toStringAsFixed(0)}%',
-                        style: GoogleFonts.ibmPlexSans(
-                          color: _getStatColor(stats.winRate, isWinRate: true),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildSessionStats() {
     return Container(
       decoration: BoxDecoration(
@@ -781,34 +484,4 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  Color _getStatColor(double value, {bool isVPIP = false, bool isPFR = false, bool isWinRate = false}) {
-    if (isWinRate) {
-      if (value >= 50) return const Color(0xFF89F1EC);
-      if (value >= 30) return Colors.white;
-      return const Color(0xFFFF6B6B);
-    }
-    if (isVPIP) {
-      if (value >= 15 && value <= 30) return const Color(0xFF89F1EC);
-      if (value < 10 || value > 40) return const Color(0xFFFF6B6B);
-      return Colors.white;
-    }
-    if (isPFR) {
-      if (value >= 12 && value <= 25) return const Color(0xFF89F1EC);
-      if (value < 8 || value > 35) return const Color(0xFFFF6B6B);
-      return Colors.white;
-    }
-    return Colors.white;
-  }
-}
-
-class PositionalStats {
-  int totalHands = 0;
-  int vpipHands = 0;
-  int pfrHands = 0;
-  int wonHands = 0;
-  int playedHands = 0;
-
-  double get vpipPercentage => totalHands > 0 ? (vpipHands / totalHands) * 100 : 0.0;
-  double get pfrPercentage => totalHands > 0 ? (pfrHands / totalHands) * 100 : 0.0;
-  double get winRate => playedHands > 0 ? (wonHands / playedHands) * 100 : 0.0;
 }

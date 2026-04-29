@@ -37,7 +37,6 @@ class AppDataCache {
 
   // ── Statistics screen cached data ─────────────────────────────
   static Map<String, dynamic>? cachedOverallStats;
-  static Map<String, dynamic>? cachedPositionalStats;
 
   // ── Dirty markers (called from write points) ─────────────────────
   static void markHomeDirty() => _homeDataDirty = true;
@@ -121,6 +120,5 @@ class AppDataCache {
     cachedIsAdmin = null;
     cachedMemberCount = null;
     cachedOverallStats = null;
-    cachedPositionalStats = null;
   }
 }

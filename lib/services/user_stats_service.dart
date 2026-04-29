@@ -61,10 +61,6 @@ class UserStatsService {
     int wonHandsDelta = 0,
     int sessionsDelta = 0,
     int playTimeMinutesDelta = 0,
-    Map<String, int>? positionHandsDeltas,
-    Map<String, int>? positionVpipDeltas,
-    Map<String, int>? positionPfrDeltas,
-    Map<String, int>? positionThreeBetDeltas,
   }) async {
     try {
       final docRef = _firestore.collection('user_stats').doc(userId);
@@ -100,38 +96,6 @@ class UserStatsService {
         if (sessionsDelta != 0) updates['totalSessions'] = FieldValue.increment(sessionsDelta);
         if (playTimeMinutesDelta != 0) updates['totalPlayTimeMinutes'] = FieldValue.increment(playTimeMinutesDelta);
 
-        // Handle position updates
-        if (positionHandsDeltas != null) {
-          for (final entry in positionHandsDeltas.entries) {
-            if (entry.value != 0) {
-              updates['positionHandsPlayed.${entry.key}'] = FieldValue.increment(entry.value);
-            }
-          }
-        }
-
-        if (positionVpipDeltas != null) {
-          for (final entry in positionVpipDeltas.entries) {
-            if (entry.value != 0) {
-              updates['positionVpipCount.${entry.key}'] = FieldValue.increment(entry.value);
-            }
-          }
-        }
-
-        if (positionPfrDeltas != null) {
-          for (final entry in positionPfrDeltas.entries) {
-            if (entry.value != 0) {
-              updates['positionPfrCount.${entry.key}'] = FieldValue.increment(entry.value);
-            }
-          }
-        }
-
-        if (positionThreeBetDeltas != null) {
-          for (final entry in positionThreeBetDeltas.entries) {
-            if (entry.value != 0) {
-              updates['positionThreeBetCount.${entry.key}'] = FieldValue.increment(entry.value);
-            }
-          }
-        }
 
         updates['lastUpdated'] = FieldValue.serverTimestamp();
 
@@ -156,11 +120,6 @@ class UserStatsService {
       int wonHands = 0;
       int totalSessions = 0;
       int totalPlayTimeMinutes = 0;
-
-      Map<String, int> positionHandsPlayed = {};
-      Map<String, int> positionVpipCount = {};
-      Map<String, int> positionPfrCount = {};
-      Map<String, int> positionThreeBetCount = {};
 
       // Get all sessions
       List<Map<String, dynamic>> sessions;
@@ -205,11 +164,6 @@ class UserStatsService {
           bool didPfr = false;
           bool didThreeBet = false;
 
-          // Get our position for this hand
-          final buttonPosition = handData['buttonPosition'] ?? 1;
-          final playerCount = handData['playerCount'] ?? 6;
-          final ourPosition = _getPositionName(ourSeatNumber, buttonPosition, playerCount);
-
           // Check our actions
           for (var action in actions) {
             if (action['player'] == ourSeatNumber) {
@@ -238,22 +192,16 @@ class UserStatsService {
           if (didPlay) {
             handsPlayed++;
 
-            // Update position counters
-            positionHandsPlayed[ourPosition] = (positionHandsPlayed[ourPosition] ?? 0) + 1;
-
             if (didVpip) {
               vpipCount++;
-              positionVpipCount[ourPosition] = (positionVpipCount[ourPosition] ?? 0) + 1;
             }
 
             if (didPfr) {
               pfrCount++;
-              positionPfrCount[ourPosition] = (positionPfrCount[ourPosition] ?? 0) + 1;
             }
 
             if (didThreeBet) {
               threeBetCount++;
-              positionThreeBetCount[ourPosition] = (positionThreeBetCount[ourPosition] ?? 0) + 1;
             }
 
             // Check if we won (simplified - assume 50% win rate for migration)
@@ -275,10 +223,6 @@ class UserStatsService {
         wonHands: wonHands,
         totalSessions: totalSessions,
         totalPlayTimeMinutes: totalPlayTimeMinutes,
-        positionHandsPlayed: positionHandsPlayed,
-        positionVpipCount: positionVpipCount,
-        positionPfrCount: positionPfrCount,
-        positionThreeBetCount: positionThreeBetCount,
       );
 
       await _firestore.collection('user_stats').doc(userId).set(userStats.toFirestore());
@@ -312,11 +256,6 @@ class UserStatsService {
       int wonHands = 0;
       int totalSessions = 0;
       int totalPlayTimeMinutes = 0;
-
-      Map<String, int> positionHandsPlayed = {};
-      Map<String, int> positionVpipCount = {};
-      Map<String, int> positionPfrCount = {};
-      Map<String, int> positionThreeBetCount = {};
 
       // Get all sessions
       List<Map<String, dynamic>> sessions;
@@ -383,11 +322,6 @@ class UserStatsService {
           bool didVpip = false;
           bool didPfr = false;
 
-          // Get position for this hand
-          final buttonPosition = handData['buttonPosition'] ?? 1;
-          final playerCount = handData['playerCount'] ?? 6;
-          final ourPosition = _getPositionName(ourSeatNumber, buttonPosition, playerCount);
-
           // Check our actions
           for (var action in actions) {
             if (action['player'] == ourSeatNumber) {
@@ -421,22 +355,10 @@ class UserStatsService {
           final didWin = (winnerId == ourSeatNumber);
 
           // Update counters
-          if (didPlay) {
-            handsPlayed++;
-            positionHandsPlayed[ourPosition] = (positionHandsPlayed[ourPosition] ?? 0) + 1;
-          }
-          if (didVpip) {
-            vpipCount++;
-            positionVpipCount[ourPosition] = (positionVpipCount[ourPosition] ?? 0) + 1;
-          }
-          if (didPfr) {
-            pfrCount++;
-            positionPfrCount[ourPosition] = (positionPfrCount[ourPosition] ?? 0) + 1;
-          }
-          if (didThreeBet) {
-            threeBetCount++;
-            positionThreeBetCount[ourPosition] = (positionThreeBetCount[ourPosition] ?? 0) + 1;
-          }
+          if (didPlay) handsPlayed++;
+          if (didVpip) vpipCount++;
+          if (didPfr) pfrCount++;
+          if (didThreeBet) threeBetCount++;
           if (didWin) {
             wonHands++;
           }
@@ -454,10 +376,6 @@ class UserStatsService {
         wonHands: wonHands,
         totalSessions: totalSessions,
         totalPlayTimeMinutes: totalPlayTimeMinutes,
-        positionHandsPlayed: positionHandsPlayed,
-        positionVpipCount: positionVpipCount,
-        positionPfrCount: positionPfrCount,
-        positionThreeBetCount: positionThreeBetCount,
       );
 
       await _firestore.collection('user_stats').doc(userId).set(userStats.toFirestore());
@@ -520,25 +438,4 @@ class UserStatsService {
     return false;
   }
 
-  /// Helper method to get position name
-  static String _getPositionName(int seatNumber, int buttonPosition, int playerCount) {
-    final positions = ['UTG', 'UTG+1', 'MP', 'CO', 'BTN', 'SB', 'BB'];
-    final buttonIndex = (buttonPosition - 1) % playerCount;
-    final seatIndex = (seatNumber - 1) % playerCount;
-    final relativePosition = (seatIndex - buttonIndex) % playerCount;
-
-    if (playerCount == 6) {
-      switch (relativePosition) {
-        case 0: return 'BTN';
-        case 1: return 'SB';
-        case 2: return 'BB';
-        case 3: return 'UTG';
-        case 4: return 'MP';
-        case 5: return 'CO';
-        default: return 'UNK';
-      }
-    } else {
-      return positions[relativePosition.clamp(0, positions.length - 1)];
-    }
-  }
 }

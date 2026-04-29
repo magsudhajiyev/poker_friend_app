@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
-import '../utils/poker_positions.dart';
 import 'auth_service.dart';
 import 'display_identity_service.dart';
 import 'local_storage_service.dart';
@@ -1334,9 +1333,6 @@ class FirebaseService {
       bool didThreeBet = false;
       bool didWin = false;
 
-      // Use the already-calculated position name (no need to recalculate)
-      final positionName = heroPositionName;
-
       // Check if user won this hand (compare seat numbers)
       if (winnerId != null && winnerId == heroSeatNumber) {
         didWin = true;
@@ -1401,19 +1397,6 @@ class FirebaseService {
       final hadCRFlopOpp = StatsCalculator.hadCheckRaiseFlopOpportunity(actions, heroSeatNumber);
       final didCRFlop = hadCRFlopOpp && StatsCalculator.didCheckRaiseFlop(actions, heroSeatNumber);
 
-      // Prepare deltas for atomic update
-      final Map<String, int> positionHandsDeltas = {};
-      final Map<String, int> positionVpipDeltas = {};
-      final Map<String, int> positionPfrDeltas = {};
-      final Map<String, int> positionThreeBetDeltas = {};
-
-      if (didPlay) {
-        positionHandsDeltas[positionName] = 1;
-        if (didVpip) positionVpipDeltas[positionName] = 1;
-        if (didPfr) positionPfrDeltas[positionName] = 1;
-        if (didThreeBet) positionThreeBetDeltas[positionName] = 1;
-      }
-
       // Update user stats atomically with all 7 metrics
       await UserStatsService.updateStatsAtomic(
         userId: userId,
@@ -1433,10 +1416,6 @@ class FirebaseService {
         checkRaiseFlopDelta: didCRFlop ? 1 : 0,
         checkRaiseFlopOpportunityDelta: hadCRFlopOpp ? 1 : 0,
         wonHandsDelta: didWin ? 1 : 0,
-        positionHandsDeltas: positionHandsDeltas.isNotEmpty ? positionHandsDeltas : null,
-        positionVpipDeltas: positionVpipDeltas.isNotEmpty ? positionVpipDeltas : null,
-        positionPfrDeltas: positionPfrDeltas.isNotEmpty ? positionPfrDeltas : null,
-        positionThreeBetDeltas: positionThreeBetDeltas.isNotEmpty ? positionThreeBetDeltas : null,
       );
 
 
@@ -1466,13 +1445,6 @@ class FirebaseService {
       try {
         // Initialize user stats if they don't exist
         await UserStatsService.initializeUserStats(odUserId);
-
-        // Calculate position for this player
-        final positionName = PokerPositions.getPositionNameForActivePlayers(
-          seatNumber,
-          buttonPosition,
-          activeSeats,
-        );
 
         // Analyze player's actions in this hand
         bool didPlay = false;
@@ -1520,19 +1492,6 @@ class FirebaseService {
           didThreeBet = StatsCalculator.didPlayerThreeBet(actions, seatNumber);
         }
 
-        // Prepare deltas for atomic update
-        final Map<String, int> positionHandsDeltas = {};
-        final Map<String, int> positionVpipDeltas = {};
-        final Map<String, int> positionPfrDeltas = {};
-        final Map<String, int> positionThreeBetDeltas = {};
-
-        if (didPlay) {
-          positionHandsDeltas[positionName] = 1;
-          if (didVpip) positionVpipDeltas[positionName] = 1;
-          if (didPfr) positionPfrDeltas[positionName] = 1;
-          if (didThreeBet) positionThreeBetDeltas[positionName] = 1;
-        }
-
         // Update this player's stats atomically
         await UserStatsService.updateStatsAtomic(
           userId: odUserId,
@@ -1542,14 +1501,6 @@ class FirebaseService {
           pfrDelta: didPfr ? 1 : 0,
           threeBetDelta: didThreeBet ? 1 : 0,
           wonHandsDelta: didWin ? 1 : 0,
-          positionHandsDeltas:
-              positionHandsDeltas.isNotEmpty ? positionHandsDeltas : null,
-          positionVpipDeltas:
-              positionVpipDeltas.isNotEmpty ? positionVpipDeltas : null,
-          positionPfrDeltas:
-              positionPfrDeltas.isNotEmpty ? positionPfrDeltas : null,
-          positionThreeBetDeltas:
-              positionThreeBetDeltas.isNotEmpty ? positionThreeBetDeltas : null,
         );
       } catch (e) {
         print('⚠️ Error updating stats for player $odUserId at seat $seatNumber: $e');
@@ -1558,27 +1509,6 @@ class FirebaseService {
     }
   }
 
-  /// Helper to get position name for user stats
-  static String _getPositionName(int seatNumber, int buttonPosition, int playerCount) {
-    final buttonIndex = (buttonPosition - 1) % playerCount;
-    final seatIndex = (seatNumber - 1) % playerCount;
-    final relativePosition = (seatIndex - buttonIndex) % playerCount;
-
-    if (playerCount == 6) {
-      switch (relativePosition) {
-        case 0: return 'BTN';
-        case 1: return 'SB';
-        case 2: return 'BB';
-        case 3: return 'UTG';
-        case 4: return 'MP';
-        case 5: return 'CO';
-        default: return 'UNK';
-      }
-    } else {
-      final positions = ['UTG', 'UTG+1', 'MP', 'CO', 'BTN', 'SB', 'BB'];
-      return positions[relativePosition.clamp(0, positions.length - 1)];
-    }
-  }
 
   /// Set migration completion flag in Firebase
   static Future<void> setMigrationFlag({required bool completed}) async {
