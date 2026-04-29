@@ -312,6 +312,8 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
               LineChartBarData(
                 spots: spots,
                 isCurved: true,
+                curveSmoothness: 0.3,
+                preventCurveOverShooting: true,
                 gradient: LinearGradient(
                   colors: [lineColor.withValues(alpha: 0.3), lineColor],
                 ),

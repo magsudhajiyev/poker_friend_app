@@ -131,7 +131,7 @@ class BankrollService {
       // Win rate should only count hands where we voluntarily put money in
       final handsPlayed = userStats.handsPlayed;
       final wonHands = userStats.wonHands;
-      final winRate = handsPlayed > 0 ? (wonHands / handsPlayed) * 100 : 0.0;
+      final winRate = handsPlayed > 0 ? ((wonHands / handsPlayed) * 100).clamp(0.0, 100.0) : 0.0;
 
       // Calculate total hours from play time minutes
       final totalHours = userStats.totalPlayTimeMinutes / 60.0;

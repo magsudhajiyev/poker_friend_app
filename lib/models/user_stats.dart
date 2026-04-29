@@ -99,7 +99,7 @@ class UserStats {
   double get checkRaiseFlopPercentage => checkRaiseFlopOpportunity > 0
       ? (checkRaiseFlopCount / checkRaiseFlopOpportunity * 100).clamp(0.0, 100.0) : 0.0;
 
-  double get winRate => handsPlayed > 0 ? (wonHands / handsPlayed * 100) : 0.0;
+  double get winRate => handsPlayed > 0 ? (wonHands / handsPlayed * 100).clamp(0.0, 100.0) : 0.0;
 
   /// Check if a stat has enough data to display (opportunity > 0)
   bool hasDataFor(String stat) {

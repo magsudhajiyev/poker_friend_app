@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/introduction_screen.dart';
 import '../screens/logging_mode_selection_screen.dart';
 import '../screens/session_history_screen.dart';
+import '../screens/session_analytics_screen.dart';
 import '../screens/statistics_screen.dart';
 import '../screens/my_opponents_screen.dart';
 import '../screens/settings_screen.dart';
@@ -2362,7 +2363,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SessionHistoryScreen(targetSessionId: session['id']),
+          builder: (context) => SessionAnalyticsScreen(
+            sessionData: session,
+            sessionId: session['id'],
+          ),
         ),
       ),
       child: Container(
@@ -4233,11 +4237,7 @@ class EarningsChartPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round;
 
-      final path = Path();
-      path.moveTo(tournamentPoints.first.dx, tournamentPoints.first.dy);
-      for (int i = 1; i < tournamentPoints.length; i++) {
-        path.lineTo(tournamentPoints[i].dx, tournamentPoints[i].dy);
-      }
+      final path = _buildSmoothPath(tournamentPoints);
       canvas.drawPath(path, tournamentPaint);
     } else if (tournamentPoints.length == 1) {
       final dotPaint = Paint()
@@ -4255,11 +4255,7 @@ class EarningsChartPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round;
 
-      final path = Path();
-      path.moveTo(cashPoints.first.dx, cashPoints.first.dy);
-      for (int i = 1; i < cashPoints.length; i++) {
-        path.lineTo(cashPoints[i].dx, cashPoints[i].dy);
-      }
+      final path = _buildSmoothPath(cashPoints);
       canvas.drawPath(path, cashPaint);
     } else if (cashPoints.length == 1) {
       final dotPaint = Paint()
@@ -4295,6 +4291,21 @@ class EarningsChartPainter extends CustomPainter {
         textPainter.paint(canvas, Offset(labelX, chartArea.bottom + 6));
       }
     }
+  }
+
+  /// Build a smooth cubic Bezier path through the given points.
+  Path _buildSmoothPath(List<Offset> points) {
+    final path = Path();
+    path.moveTo(points.first.dx, points.first.dy);
+
+    for (int i = 1; i < points.length; i++) {
+      final prev = points[i - 1];
+      final curr = points[i];
+      final cpx = (prev.dx + curr.dx) / 2;
+      path.cubicTo(cpx, prev.dy, cpx, curr.dy, curr.dx, curr.dy);
+    }
+
+    return path;
   }
 
   @override

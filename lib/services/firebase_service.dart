@@ -317,6 +317,7 @@ class FirebaseService {
           heroSeatNumber: heroSeatNumber,
           winnerId: winnerId,
           playerNames: playerNames,
+          choppedWinners: choppedWinners,
         );
       }
 
@@ -1318,6 +1319,7 @@ class FirebaseService {
     required int? heroSeatNumber,
     required int? winnerId,
     required Map<int, String>? playerNames,
+    List<int>? choppedWinners,
   }) async {
     final userId = AuthService.userId;
     if (userId == null || heroPositionName == null || heroSeatNumber == null) return;
@@ -1333,8 +1335,9 @@ class FirebaseService {
       bool didThreeBet = false;
       bool didWin = false;
 
-      // Check if user won this hand (compare seat numbers)
-      if (winnerId != null && winnerId == heroSeatNumber) {
+      // Check if user won this hand (compare seat numbers, including chopped pots)
+      if ((winnerId != null && winnerId == heroSeatNumber) ||
+          (choppedWinners?.contains(heroSeatNumber) ?? false)) {
         didWin = true;
       }
 
@@ -1415,7 +1418,7 @@ class FirebaseService {
         stealOpportunityDelta: hadStealOpp ? 1 : 0,
         checkRaiseFlopDelta: didCRFlop ? 1 : 0,
         checkRaiseFlopOpportunityDelta: hadCRFlopOpp ? 1 : 0,
-        wonHandsDelta: didWin ? 1 : 0,
+        wonHandsDelta: (didWin && didPlay) ? 1 : 0,
       );
 
 
@@ -1500,7 +1503,7 @@ class FirebaseService {
           vpipDelta: didVpip ? 1 : 0,
           pfrDelta: didPfr ? 1 : 0,
           threeBetDelta: didThreeBet ? 1 : 0,
-          wonHandsDelta: didWin ? 1 : 0,
+          wonHandsDelta: (didWin && didPlay) ? 1 : 0,
         );
       } catch (e) {
         print('⚠️ Error updating stats for player $odUserId at seat $seatNumber: $e');

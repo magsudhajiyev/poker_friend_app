@@ -164,9 +164,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       steal = userStats.stealPercentage;
       checkRaise = userStats.checkRaiseFlopPercentage;
 
-      if (handsPlayed > 0) {
-        winRate = (userStats.wonHands / handsPlayed) * 100;
-      }
+      winRate = userStats.winRate;
 
       threeBetOpportunity = userStats.threeBetOpportunity;
       facing3BetCount = userStats.facing3BetCount;

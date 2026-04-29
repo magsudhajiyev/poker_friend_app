@@ -499,8 +499,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         : 'Session ${session['id'].substring(0, 8)}...';
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => SessionAnalyticsScreen(
@@ -509,6 +509,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
             ),
           ),
         );
+        if (mounted && AppDataCache.isSessionsDirty) {
+          _loadSessions();
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),

@@ -12,6 +12,7 @@ import 'stack_chart_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../services/session_export_service.dart';
 import '../services/subscription_service.dart';
+import '../services/app_data_cache.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'paywall_screen.dart';
 
@@ -41,11 +42,95 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   int? _touchedSpotIndex;
 
   bool _isExporting = false;
+  bool _isDeleting = false;
 
   @override
   void initState() {
     super.initState();
     _loadSessionAnalytics();
+  }
+
+  Future<void> _handleDeleteSession() async {
+    if (_isDeleting) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Delete Session?',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'This will permanently delete this session including all hand history, stack chart data, and AI analysis reports. This action cannot be undone.',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white.withValues(alpha: 0.8),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.ibmPlexSans(color: Colors.white54),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFFFF6B6B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isDeleting = true);
+
+    try {
+      await FirebaseService.deleteSession(widget.sessionId);
+      await LocalStorageService.deleteSession(widget.sessionId);
+
+      AppDataCache.markSessionsDirty();
+      AppDataCache.markHomeDirty();
+      AppDataCache.markStatsDirty();
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Session deleted',
+              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFF1A1A2E),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isDeleting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to delete session',
+              style: GoogleFonts.ibmPlexSans(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFFF6B6B),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _handleSessionExport() async {
@@ -399,6 +484,32 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                                 )
                               : const Icon(Icons.ios_share,
                                   color: Colors.white, size: 20),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _isDeleting ? null : _handleDeleteSession,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF101115),
+                            shape: BoxShape.circle,
+                          ),
+                          child: _isDeleting
+                              ? const Center(
+                                  child: SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 1.5,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Color(0xFFFF6B6B)),
+                                    ),
+                                  ),
+                                )
+                              : const Icon(Icons.delete_outline,
+                                  color: Color(0xFFFF6B6B), size: 20),
                         ),
                       ),
                     ],
@@ -807,6 +918,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
               LineChartBarData(
                 spots: spots,
                 isCurved: true,
+                curveSmoothness: 0.3,
+                preventCurveOverShooting: true,
                 gradient: LinearGradient(
                   colors: [lineColor.withOpacity(0.3), lineColor],
                 ),
