@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../design_system/poker_friend_theme.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/poker_table.dart';
@@ -179,7 +180,7 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _table?.name ?? 'Table',
+                  _table?.name ?? AppLocalizations.of(context).memberTableFallback,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -187,7 +188,7 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
                   ),
                 ),
                 Text(
-                  '$_occupiedSeats seated  •  $_openSeats open',
+                  AppLocalizations.of(context).memberTableSeatedOpen(_occupiedSeats, _openSeats),
                   style: const TextStyle(
                     color: Color(0xFF9A9A9A),
                     fontSize: 13,
@@ -319,8 +320,8 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: Text(
               isOccupied || isPending
-                  ? playerName.isNotEmpty ? playerName : 'Player'
-                  : 'Empty',
+                  ? playerName.isNotEmpty ? playerName : AppLocalizations.of(context).memberTablePlayer
+                  : AppLocalizations.of(context).memberTableEmpty,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

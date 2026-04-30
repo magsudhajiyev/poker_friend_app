@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
+import '../l10n/app_localizations.dart';
 import '../services/firebase_service.dart';
 
 /// Debug screen to fetch and analyze specific hands from Firebase
@@ -293,7 +294,7 @@ class _DebugHandViewerScreenState extends State<DebugHandViewerScreen> {
       backgroundColor: Color(0xFF161618),
       appBar: AppBar(
         backgroundColor: Color(0xFF1F1F23),
-        title: Text('Debug Hand Viewer', style: TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context).debugHandViewerTitle, style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -312,7 +313,7 @@ class _DebugHandViewerScreenState extends State<DebugHandViewerScreen> {
                   controller: _sessionNameController,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Session Name',
+                    labelText: AppLocalizations.of(context).debugHandViewerSessionName,
                     labelStyle: TextStyle(color: Colors.grey),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey),
@@ -327,7 +328,7 @@ class _DebugHandViewerScreenState extends State<DebugHandViewerScreen> {
                   controller: _handNumbersController,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Hand Numbers (comma-separated, e.g., 27,28)',
+                    labelText: AppLocalizations.of(context).debugHandViewerHandNumbers,
                     labelStyle: TextStyle(color: Colors.grey),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey),
@@ -356,7 +357,7 @@ class _DebugHandViewerScreenState extends State<DebugHandViewerScreen> {
                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                 ),
                               )
-                            : Text('Fetch Data', style: TextStyle(color: Colors.white)),
+                            : Text(AppLocalizations.of(context).debugHandViewerFetchData, style: TextStyle(color: Colors.white)),
                       ),
                     ),
                     SizedBox(width: 12),
@@ -364,7 +365,7 @@ class _DebugHandViewerScreenState extends State<DebugHandViewerScreen> {
                       onPressed: _output.isEmpty ? null : () {
                         Clipboard.setData(ClipboardData(text: _output));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Copied to clipboard')),
+                          SnackBar(content: Text(AppLocalizations.of(context).debugHandViewerCopied)),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -384,7 +385,7 @@ class _DebugHandViewerScreenState extends State<DebugHandViewerScreen> {
               padding: EdgeInsets.all(16),
               child: SingleChildScrollView(
                 child: SelectableText(
-                  _output.isEmpty ? 'No data yet. Enter session name and click Fetch Data.' : _output,
+                  _output.isEmpty ? AppLocalizations.of(context).debugHandViewerNoData : _output,
                   style: TextStyle(
                     color: Colors.white,
                     fontFamily: 'monospace',

@@ -12,6 +12,7 @@ import '../services/hand_sharing_service.dart';
 import '../services/opponent_service.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/opponent_stats_service.dart';
+import '../l10n/app_localizations.dart';
 import 'paywall_screen.dart';
 
 class HandActionsScreen extends StatefulWidget {
@@ -76,7 +77,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update star status'),
+            content: Text(AppLocalizations.of(context).handActionsFailedToUpdateStar),
             backgroundColor: Colors.red,
           ),
         );
@@ -109,7 +110,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Share Hand',
+                AppLocalizations.of(context).handActionsShareHand,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white,
                 ),
@@ -118,16 +119,16 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               _buildShareOption(
                 ctx,
                 icon: Icons.visibility,
-                label: 'Show hole cards',
-                subtitle: 'Your cards will be visible in the shared link',
+                label: AppLocalizations.of(context).handActionsShowHoleCards,
+                subtitle: AppLocalizations.of(context).handActionsShowHoleCardsSubtitle,
                 value: false,
               ),
               const SizedBox(height: 10),
               _buildShareOption(
                 ctx,
                 icon: Icons.visibility_off,
-                label: 'Hide hole cards',
-                subtitle: 'Your cards will be hidden from the shared link',
+                label: AppLocalizations.of(context).handActionsHideHoleCards,
+                subtitle: AppLocalizations.of(context).handActionsHideHoleCardsSubtitle,
                 value: true,
               ),
             ],
@@ -156,18 +157,18 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       );
       if (url != null && mounted) {
         await Share.share(
-          'Check out this hand on Final Table!\n$url',
-          subject: 'Poker Hand #${widget.hand['handNumber']}',
+          '${AppLocalizations.of(context).handActionsShareMessage}\n$url',
+          subject: AppLocalizations.of(context).handActionsShareSubject('${widget.hand['handNumber']}'),
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to share hand')),
+          SnackBar(content: Text(AppLocalizations.of(context).handActionsFailedToShareHand)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to share hand')),
+          SnackBar(content: Text(AppLocalizations.of(context).handActionsFailedToShareHand)),
         );
       }
     } finally {
@@ -232,9 +233,9 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   Future<void> _exportPokerStarsFormat() async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Generating PokerStars export...'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).handActionsGeneratingExport),
+          duration: const Duration(seconds: 2),
         ),
       );
 
@@ -252,7 +253,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hand #${widget.hand['handNumber'] ?? 'N/A'} exported successfully!'),
+            content: Text(AppLocalizations.of(context).handActionsExportedSuccessfully('${widget.hand['handNumber'] ?? 'N/A'}')),
             backgroundColor: Colors.green,
           ),
         );
@@ -261,7 +262,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to export hand: $e'),
+            content: Text(AppLocalizations.of(context).handActionsFailedToExport(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -310,7 +311,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                 const Icon(Icons.error_outline, color: Colors.orange, size: 28),
                 const SizedBox(width: 12),
                 Text(
-                  'Missing Hero Cards',
+                  AppLocalizations.of(context).handActionsMissingHeroCards,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 18,
@@ -320,7 +321,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               ],
             ),
             content: Text(
-              'AI analysis requires your hole cards to be recorded. This hand cannot be analyzed because hero cards are missing.',
+              AppLocalizations.of(context).handActionsMissingHeroCardsMessage,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withOpacity(0.5),
                 fontSize: 14,
@@ -502,7 +503,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hand #${widget.hand['handNumber'] ?? 'N/A'}',
+                              AppLocalizations.of(context).handActionsHandNumber('${widget.hand['handNumber'] ?? 'N/A'}'),
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 20,
                                 color: Colors.white,
@@ -511,7 +512,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Position: ${heroPositionName ?? PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)}',
+                              AppLocalizations.of(context).handActionsPosition(heroPositionName ?? PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount)),
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 13,
                                 color: Colors.white.withOpacity(0.5),
@@ -734,7 +735,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                       Icon(Icons.style, color: const Color(0xFF89F1EC), size: 16),
                       const SizedBox(width: 6),
                       Text(
-                        'Your Cards',
+                        AppLocalizations.of(context).handActionsYourCards,
                         style: GoogleFonts.ibmPlexSans(
                           color: const Color(0xFF89F1EC),
                           fontSize: 12,
@@ -785,7 +786,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               const Icon(Icons.people, color: Color(0xFF8B5CF6), size: 16),
               const SizedBox(width: 6),
               Text(
-                'Opponent Cards',
+                AppLocalizations.of(context).handActionsOpponentCards,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFF8B5CF6),
                   fontSize: 12,
@@ -809,7 +810,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             if (playerNamesData != null && playerNamesData is Map) {
               playerName = playerNamesData[playerId.toString()];
             }
-            playerName ??= 'Player $playerId';
+            playerName ??= AppLocalizations.of(context).handActionsPlayerSeat(playerId);
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 6),
@@ -889,12 +890,12 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       ),
       child: Row(
         children: [
-          Expanded(child: _buildCompactStat('POT', potText)),
+          Expanded(child: _buildCompactStat(AppLocalizations.of(context).handActionsPot, potText)),
           Container(width: 1, height: 32, color: Colors.white.withOpacity(0.1)),
-          Expanded(child: _buildCompactStat('BLINDS', blindsText)),
+          Expanded(child: _buildCompactStat(AppLocalizations.of(context).handActionsBlinds, blindsText)),
           if (winnerText != null) ...[
             Container(width: 1, height: 32, color: Colors.white.withOpacity(0.1)),
-            Expanded(child: _buildCompactStat('WINNER', winnerText, isWinner: true)),
+            Expanded(child: _buildCompactStat(AppLocalizations.of(context).handActionsWinner, winnerText, isWinner: true)),
           ],
         ],
       ),
@@ -917,7 +918,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         }).toList();
         return names.join(', ');
       }
-      return '${choppedWinners.length} players';
+      return AppLocalizations.of(context).handActionsPlayersCount(choppedWinners.length);
     } else if (winnerId != null) {
       if (playerNamesData is Map) {
         return playerNamesData[winnerId.toString()] ?? 'P$winnerId';
@@ -1035,7 +1036,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               Icon(Icons.note, color: Colors.white.withOpacity(0.5), size: 18),
               const SizedBox(width: 8),
               Text(
-                'Notes',
+                AppLocalizations.of(context).handActionsNotes,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white.withOpacity(0.5),
                   fontSize: 14,
@@ -1102,7 +1103,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Action Summary',
+          AppLocalizations.of(context).handActionsActionSummary,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 17,
@@ -1113,7 +1114,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
         // Preflop
         if (actionsByStreet['preflop']!.isNotEmpty)
-          _buildStreetSection('PREFLOP', null, actionsByStreet['preflop']!,
+          _buildStreetSection(AppLocalizations.of(context).handActionsPreflop, null, actionsByStreet['preflop']!,
               buttonPosition, playerCount, heroPosition, playerNamesMap, winnerId, gameType.value, widget.hand['preflopPot']),
 
         _buildPostflopSections(widget.hand, flop, turn, river, actionsByStreet,
@@ -1210,10 +1211,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         children: [
           TableRow(
             children: [
-              _buildTableHeader('PLAYER'),
-              _buildTableHeader('STACK'),
-              _buildTableHeader('ACTION'),
-              _buildTableHeader('AMT'),
+              _buildTableHeader(AppLocalizations.of(context).handActionsPlayer),
+              _buildTableHeader(AppLocalizations.of(context).handActionsStack),
+              _buildTableHeader(AppLocalizations.of(context).handActionsAction),
+              _buildTableHeader(AppLocalizations.of(context).handActionsAmount),
             ],
           ),
           ...actions.map((action) => _buildActionRow(
@@ -1324,7 +1325,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
             child: Row(
               children: [
                 Text(
-                  'BOARD',
+                  AppLocalizations.of(context).handActionsBoard,
                   style: GoogleFonts.ibmPlexSans(
                     color: const Color(0xFF89F1EC),
                     fontSize: 14,
@@ -1401,14 +1402,14 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
 
     String playerName = playerNamesMap[playerSeat.toString()] ??
         action['playerName'] as String? ??
-        'Player $playerSeat';
+        AppLocalizations.of(context).handActionsPlayerSeat(playerSeat);
 
     final isHero = heroPosition != null && playerSeat == heroPosition;
     final isWinner = winnerId != null && playerSeat == winnerId;
     final positionName = action['playerPosition'] as String? ??
         PokerPositions.getPositionName(playerSeat, buttonPosition, playerCount);
 
-    String playerDisplay = isHero ? 'You' : playerName;
+    String playerDisplay = isHero ? AppLocalizations.of(context).handActionsYou : playerName;
     playerDisplay = '$playerDisplay ($positionName)';
 
     Color actionColor = Colors.white.withOpacity(0.5);
@@ -1466,7 +1467,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
-            _isAllInAction(action) ? 'ALL IN' : actionType.toUpperCase(),
+            _isAllInAction(action) ? AppLocalizations.of(context).handActionsAllIn : actionType.toUpperCase(),
             style: GoogleFonts.ibmPlexSans(
               color: actionColor,
               fontSize: 11,
@@ -1548,14 +1549,16 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   String _formatPotAmount(double amount, String gameType) {
     if (amount <= 0) return '';
 
-    if (_showBB) return 'Pot: ${_formatBB(amount)}';
+    final l10n = AppLocalizations.of(context);
+
+    if (_showBB) return l10n.handActionsPotAmount(_formatBB(amount));
 
     final isCashGame = gameType == 'cash';
 
     if (isCashGame) {
-      return 'Pot: \$${amount.toStringAsFixed(2)}';
+      return l10n.handActionsPotAmount('\$${amount.toStringAsFixed(2)}');
     } else {
-      return 'Pot: ${amount.toInt()}';
+      return l10n.handActionsPotAmount('${amount.toInt()}');
     }
   }
 
@@ -1646,7 +1649,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Analyzing Hand...',
+                AppLocalizations.of(context).handActionsAnalyzingHand,
                 style: GoogleFonts.ibmPlexSans(
                   color: textColor,
                   fontSize: 16,
@@ -1657,7 +1660,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               Icon(Icons.block, color: textColor),
               const SizedBox(width: 12),
               Text(
-                'Hero Cards Missing',
+                AppLocalizations.of(context).handActionsHeroCardsMissing,
                 style: GoogleFonts.ibmPlexSans(
                   color: textColor,
                   fontSize: 16,
@@ -1668,7 +1671,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               Icon(Icons.lock_open, color: textColor),
               const SizedBox(width: 12),
               Text(
-                'Unlock AI Analysis',
+                AppLocalizations.of(context).handActionsUnlockAiAnalysis,
                 style: GoogleFonts.ibmPlexSans(
                   color: textColor,
                   fontSize: 16,
@@ -1682,7 +1685,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                _aiAnalysis != null ? 'Analysis Complete' : 'AI Analyzer (beta)',
+                _aiAnalysis != null ? AppLocalizations.of(context).handActionsAnalysisComplete : AppLocalizations.of(context).handActionsAiAnalyzerBeta,
                 style: GoogleFonts.ibmPlexSans(
                   color: textColor,
                   fontSize: 16,
@@ -1725,7 +1728,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Analysis Failed',
+                  AppLocalizations.of(context).handActionsAnalysisFailed,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.red,
                     fontSize: 16,
@@ -1777,7 +1780,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     const Icon(Icons.psychology, color: Color(0xFF89F1EC), size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'AI Analysis',
+                      AppLocalizations.of(context).handActionsAiAnalysis,
                       style: GoogleFonts.ibmPlexSans(
                         color: const Color(0xFF89F1EC),
                         fontSize: 16,
@@ -1848,7 +1851,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                     const Icon(Icons.school_rounded, color: Color(0xFF87ED81), size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Street-by-Street Breakdown',
+                      AppLocalizations.of(context).handActionsStreetByStreetBreakdown,
                       style: GoogleFonts.ibmPlexSans(
                         color: const Color(0xFF87ED81),
                         fontSize: 16,
@@ -1904,7 +1907,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            'Analysis completed in ${(processingTime / 1000).toStringAsFixed(2)}s',
+            AppLocalizations.of(context).handActionsAnalysisCompletedIn((processingTime / 1000).toStringAsFixed(2)),
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white.withOpacity(0.4),
               fontSize: 12,

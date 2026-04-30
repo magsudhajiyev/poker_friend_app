@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../screens/home_screen.dart';
 import '../screens/my_opponents_screen.dart';
 import '../screens/session_history_screen.dart';
@@ -50,49 +51,54 @@ class GlobalBottomNavBar extends StatelessWidget {
               ),
               // Figma: pb-18, pt-14, px-24
               padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Home
-                  _buildNavItem(
-                    context: context,
-                    iconPath: 'icons/figma_icons/navbar_home.svg',
-                    label: 'Home',
-                    isActive: currentScreen == 'home',
-                    onTap: () => _navigateTo(context, 'home'),
-                  ),
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Home
+                      _buildNavItem(
+                        context: context,
+                        iconPath: 'icons/figma_icons/navbar_home.svg',
+                        label: l10n.navHome,
+                        isActive: currentScreen == 'home',
+                        onTap: () => _navigateTo(context, 'home'),
+                      ),
 
-                  // Opponents
-                  _buildNavItem(
-                    context: context,
-                    iconPath: 'icons/figma_icons/navbar_opponents.svg',
-                    label: 'Opponents',
-                    isActive: currentScreen == 'opponents',
-                    onTap: () => _navigateTo(context, 'opponents'),
-                  ),
+                      // Opponents
+                      _buildNavItem(
+                        context: context,
+                        iconPath: 'icons/figma_icons/navbar_opponents.svg',
+                        label: l10n.navOpponents,
+                        isActive: currentScreen == 'opponents',
+                        onTap: () => _navigateTo(context, 'opponents'),
+                      ),
 
-                  // Center spacer
-                  const SizedBox(width: 62, height: 51),
+                      // Center spacer
+                      const SizedBox(width: 62, height: 51),
 
-                  // Sessions
-                  _buildNavItem(
-                    context: context,
-                    iconPath: 'icons/figma_icons/navbar_sessions.svg',
-                    label: 'Sessions',
-                    isActive: currentScreen == 'sessions',
-                    onTap: () => _navigateTo(context, 'sessions'),
-                    itemKey: sessionsKey,
-                  ),
+                      // Sessions
+                      _buildNavItem(
+                        context: context,
+                        iconPath: 'icons/figma_icons/navbar_sessions.svg',
+                        label: l10n.navSessions,
+                        isActive: currentScreen == 'sessions',
+                        onTap: () => _navigateTo(context, 'sessions'),
+                        itemKey: sessionsKey,
+                      ),
 
-                  // Profile
-                  _buildNavItem(
-                    context: context,
-                    iconPath: 'icons/figma_icons/navbar_profile.svg',
-                    label: 'Profile',
-                    isActive: currentScreen == 'profile',
-                    onTap: () => _navigateTo(context, 'profile'),
-                  ),
-                ],
+                      // Profile
+                      _buildNavItem(
+                        context: context,
+                        iconPath: 'icons/figma_icons/navbar_profile.svg',
+                        label: l10n.navProfile,
+                        isActive: currentScreen == 'profile',
+                        onTap: () => _navigateTo(context, 'profile'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),

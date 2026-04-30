@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../design_system/poker_friend_theme.dart';
+import '../l10n/app_localizations.dart';
 import '../models/poker_table.dart';
 import '../services/table_service.dart';
 import '../services/seat_service.dart';
@@ -83,6 +84,7 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Dialog(
       backgroundColor: PokerFriendColors.dark2,
       shape: RoundedRectangleBorder(
@@ -105,8 +107,8 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Select Table',
-                  style: const TextStyle(
+                  l10n.tableSelectionTitle,
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -126,8 +128,8 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
             const SizedBox(height: 8),
             Text(
               widget.isAdminView
-                  ? 'Choose a table to manage'
-                  : 'Choose a table to view availability',
+                  ? l10n.tableSelectionAdminSubtitle
+                  : l10n.tableSelectionMemberSubtitle,
               style: TextStyle(
                 fontSize: 14,
                 color: PokerFriendColors.dark11,
@@ -150,7 +152,7 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
                 child: Padding(
                   padding: const EdgeInsets.all(32),
                   child: Text(
-                    'No tables available',
+                    l10n.tableSelectionNoTables,
                     style: TextStyle(
                       color: PokerFriendColors.dark9,
                       fontSize: 16,
@@ -177,6 +179,7 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
   }
 
   Widget _buildTableCard(_TableInfo info) {
+    final l10n = AppLocalizations.of(context);
     final openSeats = info.totalSeats - info.occupiedSeats - info.pendingSeats;
     final hasOpenSeats = openSeats > 0;
 
@@ -236,14 +239,14 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
                   Row(
                     children: [
                       _buildSeatBadge(
-                        '$openSeats open',
+                        l10n.tableSelectionOpenSeats(openSeats),
                         hasOpenSeats
                             ? PokerFriendColors.green
                             : PokerFriendColors.red,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${info.occupiedSeats}/9 seated',
+                        l10n.tableSelectionSeated(info.occupiedSeats),
                         style: TextStyle(
                           fontSize: 12,
                           color: PokerFriendColors.dark9,

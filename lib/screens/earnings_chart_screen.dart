@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../l10n/app_localizations.dart';
 import '../services/session_result_service.dart';
 import '../design_system/constants/colors.dart';
 
@@ -182,6 +183,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         _buildHeader(),
@@ -197,7 +199,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No earnings data yet',
+                  l10n.earningsChartNoData,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white.withValues(alpha: 0.5),
                     fontSize: 18,
@@ -205,7 +207,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Complete some sessions to see your earnings chart',
+                  l10n.earningsChartNoDataSubtitle,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white.withValues(alpha: 0.3),
                     fontSize: 14,
@@ -220,6 +222,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -249,7 +252,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'All-Time Earnings',
+                  l10n.earningsChartAllTimeEarnings,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 18,
                     color: Colors.white,
@@ -258,7 +261,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
                 ),
                 if (_firstSessionDate != null)
                   Text(
-                    'Since ${DateFormat('MMM d, yyyy').format(_firstSessionDate!)}',
+                    l10n.earningsChartSinceDate(DateFormat('MMM d, yyyy').format(_firstSessionDate!)),
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.6),
@@ -268,9 +271,9 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
             ),
           ),
           // Legend
-          _buildLegendItem('Tournament', AppColors.tournamentBlue),
+          _buildLegendItem(l10n.earningsChartTournament, AppColors.tournamentBlue),
           const SizedBox(width: 16),
-          _buildLegendItem('Cash', AppColors.cashGameGreen),
+          _buildLegendItem(l10n.earningsChartCash, AppColors.cashGameGreen),
           const SizedBox(width: 24),
           // Total
           _buildTotalBadge(_tournamentTotal + _cashTotal),
@@ -473,11 +476,12 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
               tooltipRoundedRadius: 12,
               tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               getTooltipItems: (touchedSpots) {
-                return touchedSpots.map((spot) {
+                final l10nChart = AppLocalizations.of(context);
+              return touchedSpots.map((spot) {
                   final idx = spot.x.toInt();
                   final value = spot.y;
                   final isT = spot.barIndex == 0;
-                  final label = isT ? 'MTT' : 'Cash';
+                  final label = isT ? l10nChart.earningsChartMtt : l10nChart.earningsChartCash;
                   final color = isT ? AppColors.tournamentBlue : AppColors.cashGameGreen;
                   String dateLabel = '';
                   if (idx >= 0 && idx < data.length) {

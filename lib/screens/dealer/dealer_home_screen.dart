@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/club.dart';
 import '../../models/poker_table.dart';
 import '../../models/dealer_session.dart';
@@ -68,7 +69,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading data: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context).dealerHomeErrorLoading(e.toString())),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -119,7 +120,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to start session: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context).dealerHomeStartFailed(e.toString())),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -135,8 +136,8 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
 
     if (club == null || table == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not find club or table'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).dealerHomeCouldNotFind),
           backgroundColor: Colors.red,
         ),
       );
@@ -162,7 +163,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF161B22),
         elevation: 0,
-        title: const Text('Dealer Mode'),
+        title: Text(AppLocalizations.of(context).dealerHomeTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -200,14 +201,14 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
 
             // Active sessions
             if (_activeSessions.isNotEmpty) ...[
-              _buildSectionHeader('Active Sessions'),
+              _buildSectionHeader(AppLocalizations.of(context).dealerHomeActiveSessions),
               const SizedBox(height: 12),
               ..._activeSessions.map(_buildActiveSessionCard),
               const SizedBox(height: 24),
             ],
 
             // Club selector
-            _buildSectionHeader('Clubs'),
+            _buildSectionHeader(AppLocalizations.of(context).dealerHomeClubs),
             const SizedBox(height: 12),
             _buildClubSelector(),
 
@@ -218,7 +219,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildSectionHeader('Tables'),
+                  _buildSectionHeader(AppLocalizations.of(context).dealerHomeTables),
                   if (_isAdmin)
                     TextButton.icon(
                       onPressed: () {
@@ -226,7 +227,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
                         if (club != null) _showCreateTableDialog(club);
                       },
                       icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Add Table'),
+                      label: Text(AppLocalizations.of(context).dealerHomeAddTable),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.blue,
                       ),
@@ -255,9 +256,9 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
               color: Colors.white.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'No Clubs Found',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context).dealerHomeNoClubs,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -266,8 +267,8 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
             const SizedBox(height: 12),
             Text(
               _isAdmin
-                  ? 'Create your first club to get started.'
-                  : 'You are not a member of any clubs yet.\nAsk a club owner to invite you.',
+                  ? AppLocalizations.of(context).dealerHomeNoClubsOwnerHint
+                  : AppLocalizations.of(context).dealerHomeNoClubsMemberHint,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white54,
@@ -279,7 +280,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
               ElevatedButton.icon(
                 onPressed: _showCreateClubDialog,
                 icon: const Icon(Icons.add),
-                label: const Text('Create Club'),
+                label: Text(AppLocalizations.of(context).dealerHomeCreateClub),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   padding: const EdgeInsets.symmetric(
@@ -302,16 +303,16 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text(
-          'Add Table',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context).dealerHomeAddTable,
+          style: const TextStyle(color: Colors.white),
         ),
         content: TextField(
           controller: nameController,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
-            labelText: 'Table Name',
-            hintText: 'e.g., Table 1, Main Table',
+            labelText: AppLocalizations.of(context).dealerHomeTableNameLabel,
+            hintText: AppLocalizations.of(context).dealerHomeTableNameHint,
             labelStyle: const TextStyle(color: Colors.white54),
             hintStyle: const TextStyle(color: Colors.white38),
             filled: true,
@@ -326,7 +327,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -334,7 +335,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
                 Navigator.pop(context, nameController.text.trim());
               }
             },
-            child: const Text('Add'),
+            child: Text(AppLocalizations.of(context).dealerHomeAddTable),
           ),
         ],
       ),
@@ -357,7 +358,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Table "$result" added to ${club.name}!'),
+              content: Text(AppLocalizations.of(context).dealerHomeTableAdded(result, club.name)),
               backgroundColor: Colors.green.shade700,
             ),
           );
@@ -366,7 +367,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to add table: ${e.toString()}'),
+              content: Text(AppLocalizations.of(context).dealerHomeAddTableFailed(e.toString())),
               backgroundColor: Colors.red.shade700,
             ),
           );
@@ -382,15 +383,15 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text(
-          'Create Club',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context).dealerHomeCreateClub,
+          style: const TextStyle(color: Colors.white),
         ),
         content: TextField(
           controller: nameController,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
-            labelText: 'Club Name',
+            labelText: AppLocalizations.of(context).dealerHomeClubName,
             labelStyle: const TextStyle(color: Colors.white54),
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.1),
@@ -404,7 +405,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -412,7 +413,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
                 Navigator.pop(context, nameController.text.trim());
               }
             },
-            child: const Text('Create'),
+            child: Text(AppLocalizations.of(context).dealerHomeCreate),
           ),
         ],
       ),
@@ -425,7 +426,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Club "$result" created successfully!'),
+              content: Text(AppLocalizations.of(context).dealerHomeClubCreated(result)),
               backgroundColor: Colors.green.shade700,
             ),
           );
@@ -434,7 +435,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to create club: ${e.toString()}'),
+              content: Text(AppLocalizations.of(context).dealerHomeClubCreateFailed(e.toString())),
               backgroundColor: Colors.red.shade700,
             ),
           );
@@ -483,9 +484,9 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(
-                  'Dealer',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context).dealerHomeDealer,
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                   ),
@@ -503,7 +504,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${_clubs.length} clubs',
+              AppLocalizations.of(context).dealerHomeClubCount(_clubs.length),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
@@ -647,7 +648,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    '$tableCount tables',
+                    AppLocalizations.of(context).dealerHomeTableCount(tableCount),
                     style: TextStyle(
                       color: isSelected ? Colors.white70 : Colors.white38,
                       fontSize: 12,
@@ -675,16 +676,16 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
         ),
         child: Column(
           children: [
-            const Text(
-              'No tables in this club',
-              style: TextStyle(color: Colors.white54),
+            Text(
+              AppLocalizations.of(context).dealerHomeNoTables,
+              style: const TextStyle(color: Colors.white54),
             ),
             if (_isAdmin && club != null) ...[
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () => _showCreateTableDialog(club),
                 icon: const Icon(Icons.add),
-                label: const Text('Add Table'),
+                label: Text(AppLocalizations.of(context).dealerHomeAddTable),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                 ),
@@ -736,8 +737,8 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
             ),
             subtitle: Text(
               isActive
-                  ? 'Active - Hand #${activeSession!.currentHandNumber}'
-                  : 'Inactive',
+                  ? AppLocalizations.of(context).dealerHomeActiveHand(activeSession!.currentHandNumber)
+                  : AppLocalizations.of(context).dealerHomeInactive,
               style: TextStyle(
                 color: isActive ? Colors.green : Colors.white38,
               ),
@@ -748,7 +749,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                     ),
-                    child: const Text('Resume'),
+                    child: Text(AppLocalizations.of(context).dealerHomeResume),
                   )
                 : ElevatedButton(
                     onPressed: club != null
@@ -757,7 +758,7 @@ class _DealerHomeScreenState extends State<DealerHomeScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                     ),
-                    child: const Text('Start'),
+                    child: Text(AppLocalizations.of(context).dealerHomeStart),
                   ),
           ),
         );
@@ -801,9 +802,9 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: const Color(0xFF1E1E2E),
-      title: const Text(
-        'Session Settings',
-        style: TextStyle(color: Colors.white),
+      title: Text(
+        AppLocalizations.of(context).dealerHomeSessionSettings,
+        style: const TextStyle(color: Colors.white),
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -816,9 +817,9 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Small Blind',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      Text(
+                        AppLocalizations.of(context).dealerHomeSmallBlind,
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -845,9 +846,9 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Big Blind',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      Text(
+                        AppLocalizations.of(context).dealerHomeBigBlind,
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -878,9 +879,9 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
             SwitchListTile(
               value: _hasBBante,
               onChanged: (v) => setState(() => _hasBBante = v),
-              title: const Text(
-                'BB Ante',
-                style: TextStyle(color: Colors.white),
+              title: Text(
+                AppLocalizations.of(context).dealerHomeBBAnte,
+                style: const TextStyle(color: Colors.white),
               ),
               contentPadding: EdgeInsets.zero,
             ),
@@ -891,15 +892,15 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Game Type',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                Text(
+                  AppLocalizations.of(context).dealerHomeGameType,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 const SizedBox(height: 8),
                 SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'cash', label: Text('Cash')),
-                    ButtonSegment(value: 'tournament', label: Text('Tournament')),
+                  segments: [
+                    ButtonSegment(value: 'cash', label: Text(AppLocalizations.of(context).dealerHomeCash)),
+                    ButtonSegment(value: 'tournament', label: Text(AppLocalizations.of(context).dealerHomeTournament)),
                   ],
                   selected: {_gameType},
                   onSelectionChanged: (v) {
@@ -915,9 +916,9 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Button Position',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                Text(
+                  AppLocalizations.of(context).dealerHomeButtonPosition,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -943,7 +944,7 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context).commonCancel),
         ),
         ElevatedButton(
           onPressed: () {
@@ -955,7 +956,7 @@ class _SessionSettingsDialogState extends State<_SessionSettingsDialog> {
               'buttonPosition': _buttonPosition,
             });
           },
-          child: const Text('Start Session'),
+          child: Text(AppLocalizations.of(context).dealerHomeStartSession),
         ),
       ],
     );

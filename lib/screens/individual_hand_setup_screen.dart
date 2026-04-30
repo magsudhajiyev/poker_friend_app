@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../design_system/poker_friend_theme.dart';
+import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import 'individual_session_tracking_screen.dart';
 
@@ -47,7 +48,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Individual Hand',
+                            AppLocalizations.of(context).individualHandSetupTitle,
                             style: TextStyle(
                               fontSize: 32,
                               color: Colors.white,
@@ -57,7 +58,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            'Quick hand logging setup',
+                            AppLocalizations.of(context).individualHandSetupSubtitle,
                             style: TextStyle(
                               fontSize: 16,
                               color: PokerFriendColors.dark9,
@@ -113,7 +114,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                           ),
                           SizedBox(width: 16),
                           Text(
-                            'Hand Name (Optional)',
+                            AppLocalizations.of(context).individualHandSetupHandNameLabel,
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.white,
@@ -127,7 +128,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                         controller: _handNameController,
                         style: TextStyle(color: Colors.white, fontSize: 16),
                         decoration: InputDecoration(
-                          hintText: 'e.g., "AA vs KK Cooler"',
+                          hintText: AppLocalizations.of(context).individualHandSetupNameHint,
                           hintStyle: TextStyle(color: PokerFriendColors.dark9),
                           filled: true,
                           fillColor: PokerFriendColors.dark1,
@@ -159,7 +160,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                   childAspectRatio: 1.0,
                   children: [
                     _buildSettingCard(
-                      title: 'Small Blind',
+                      title: AppLocalizations.of(context).individualHandSetupSmallBlind,
                       value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
                       icon: Icons.monetization_on,
                       onDecrement: () {
@@ -178,7 +179,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                       },
                     ),
                     _buildSettingCard(
-                      title: 'Big Blind',
+                      title: AppLocalizations.of(context).individualHandSetupBigBlind,
                       value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
                       icon: Icons.monetization_on_outlined,
                       onDecrement: () {
@@ -189,7 +190,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                       onIncrement: () => setState(() => bigBlind++),
                     ),
                     _buildSettingCard(
-                      title: 'Players',
+                      title: AppLocalizations.of(context).individualHandSetupPlayers,
                       value: '$numberOfPlayers',
                       icon: Icons.people,
                       onDecrement: () {
@@ -200,7 +201,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                       },
                     ),
                     _buildSettingCard(
-                      title: 'Game Type',
+                      title: AppLocalizations.of(context).individualHandSetupGameType,
                       value: gameType.displayName,
                       icon: gameType == GameType.cash ? Icons.attach_money : Icons.emoji_events,
                       onDecrement: () {

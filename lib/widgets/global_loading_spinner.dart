@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class GlobalLoadingSpinner extends StatefulWidget {
   final String? message;
@@ -151,7 +152,7 @@ class _GlobalLoadingSpinnerState extends State<GlobalLoadingSpinner>
             ),
           ] else ...[
             Text(
-              'Loading...',
+              AppLocalizations.of(context).loadingDefault,
               style: TextStyle(
                 color: Color(0xFF9A9A9A),
                 fontSize: 14,

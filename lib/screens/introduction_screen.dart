@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/modern_setting_row.dart';
 import '../models/game_types.dart';
 import 'poker_hand_screen.dart';
@@ -25,11 +26,12 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // Show loading screen when starting game
     if (isStartingGame) {
-      return LoadingScreen(message: 'Starting your poker session...');
+      return LoadingScreen(message: l10n.introStartingSession);
     }
-    
+
     return Scaffold(
       backgroundColor: Color(0xFF161618),
       body: SafeArea(
@@ -50,7 +52,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Game Setup',
+                            l10n.introGameSetup,
                             style: TextStyle(
                               fontSize: 32,
                               color: Colors.white,
@@ -60,7 +62,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            'Configure your session',
+                            l10n.introConfigureSession,
                             style: TextStyle(
                               fontSize: 16,
                               color: Color(0xFF9A9A9A),
@@ -99,7 +101,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   childAspectRatio: 1.0,
                   children: [
                     _buildSettingCard(
-                      title: 'Small Blind',
+                      title: l10n.introSmallBlind,
                       value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
                       iconPath: 'icons/small_blind.png',
                       onDecrement: () {
@@ -110,14 +112,14 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                       onIncrement: () {
                         setState(() => smallBlind++);
                       },
-                      onValueTap: () => _showBlindInputDialog('Small Blind', smallBlind, (value) {
+                      onValueTap: () => _showBlindInputDialog(l10n.introSmallBlind, smallBlind, (value) {
                         setState(() {
                           smallBlind = value;
                         });
                       }),
                     ),
                     _buildSettingCard(
-                      title: 'Big Blind',
+                      title: l10n.introBigBlind,
                       value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
                       iconPath: 'icons/big_blind.png',
                       onDecrement: () {
@@ -126,14 +128,14 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                         }
                       },
                       onIncrement: () => setState(() => bigBlind++),
-                      onValueTap: () => _showBlindInputDialog('Big Blind', bigBlind, (value) {
+                      onValueTap: () => _showBlindInputDialog(l10n.introBigBlind, bigBlind, (value) {
                         setState(() {
                           bigBlind = value;
                         });
                       }),
                     ),
                     _buildSettingCard(
-                      title: 'Players',
+                      title: l10n.introPlayers,
                       value: '$numberOfPlayers',
                       iconPath: 'icons/players.png',
                       onDecrement: () {
@@ -167,7 +169,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                           ),
                           SizedBox(width: 16),
                           Text(
-                            'Game Type',
+                            l10n.introGameType,
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.white,
@@ -222,7 +224,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'BB Ante',
+                                l10n.introBbAnte,
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: Colors.white,
@@ -231,7 +233,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'Enable big blind ante rule',
+                                l10n.introBbAnteDescription,
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Color(0xFF9A9A9A),
@@ -326,7 +328,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                         ),
                         SizedBox(width: 12),
                         Text(
-                          'START GAME',
+                          l10n.introStartGame,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -348,15 +350,16 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
   }
 
   Future<void> _showBlindInputDialog(String title, int currentValue, Function(int) onChanged) async {
+    final l10n = AppLocalizations.of(context);
     final TextEditingController controller = TextEditingController(text: currentValue.toString());
-    
+
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Color(0xFF1F1F23),
           title: Text(
-            'Enter $title',
+            l10n.introEnterField(title),
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
           content: TextField(
@@ -365,7 +368,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
             autofocus: true,
             style: TextStyle(color: Colors.white, fontSize: 16),
             decoration: InputDecoration(
-              hintText: 'Enter amount',
+              hintText: l10n.introEnterAmount,
               hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
               enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: Color(0xFFcb5242)),
@@ -378,7 +381,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel', style: TextStyle(color: Color(0xFF9A9A9A))),
+              child: Text(l10n.commonCancel, style: TextStyle(color: Color(0xFF9A9A9A))),
             ),
             TextButton(
               onPressed: () {
@@ -389,13 +392,13 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Please enter a valid positive number'),
+                      content: Text(l10n.introPleaseEnterValidNumber),
                       backgroundColor: Color(0xFFcb5242),
                     ),
                   );
                 }
               },
-              child: Text('OK', style: TextStyle(color: Color(0xFFcb5242))),
+              child: Text(l10n.commonOk, style: TextStyle(color: Color(0xFFcb5242))),
             ),
           ],
         );
@@ -531,8 +534,9 @@ class _GameTypeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isSelected = gameType == selectedGameType;
-    
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -560,7 +564,7 @@ class _GameTypeButton extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              gameType == GameType.cash ? 'Ring Game' : 'Multi-Table',
+              gameType == GameType.cash ? l10n.introRingGame : l10n.introMultiTable,
               style: TextStyle(
                 fontSize: 12,
                 color: isSelected ? Colors.white.withOpacity(0.8) : Color(0xFF9A9A9A),

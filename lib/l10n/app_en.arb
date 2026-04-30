@@ -1,0 +1,4032 @@
+{
+  "@@locale": "en",
+
+  "navHome": "Home",
+  "navOpponents": "Opponents",
+  "navSessions": "Sessions",
+  "navProfile": "Profile",
+
+  "commonCancel": "Cancel",
+  "commonConfirm": "Confirm",
+  "commonDelete": "Delete",
+  "commonError": "Error",
+  "commonLoading": "Loading...",
+  "commonSave": "Save",
+  "commonRetry": "Retry",
+  "commonDone": "Done",
+  "commonOk": "OK",
+  "commonYes": "Yes",
+  "commonNo": "No",
+  "commonBack": "Back",
+  "commonSearch": "Search",
+  "commonNoData": "No data available",
+  "commonClose": "Close",
+  "commonNotAvailable": "N/A",
+  "commonApply": "Apply",
+  "commonUpdate": "Update",
+  "commonClear": "Clear",
+  "commonToday": "Today",
+
+  "statsTitle": "Statistics",
+  "statsSubtitle": "Advanced Analytics",
+  "statsHandsPlayed": "Hands Played",
+  "statsFoldTo3Bet": "Fold to 3-Bet",
+  "statsWinRate": "Win Rate",
+  "statsSessionStatistics": "Session Statistics",
+  "statsSessions": "Sessions",
+  "statsTotalTime": "Total Time",
+  "statsAvgSession": "Avg Session",
+  "statsPlayToSee": "Play sessions to see time statistics",
+  "statsLoadingMessage": "Loading statistics...",
+  "statsFetchingMessage": "Fetching user stats...",
+  "statsFailedToLoad": "Failed to load statistics: {error}",
+  "@statsFailedToLoad": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "settingsTitle": "Settings",
+  "settingsLanguage": "Language",
+  "settingsLanguageSubtitle": "Choose app language",
+  "settingsLanguageSystem": "System Default",
+  "settingsKnowledgeBase": "KNOWLEDGE BASE",
+  "settingsGuidedTour": "Guided Tour",
+  "settingsGuidedTourSubtitle": "Replay onboarding tours",
+  "settingsFullLoggingTour": "Full Logging Tour",
+  "settingsFullLoggingTourSubtitle": "Complete session tracking flow",
+  "settingsIndividualLoggingTour": "Individual Logging Tour",
+  "settingsIndividualLoggingTourSubtitle": "Single hand tracking flow",
+  "settingsUnderstandingStats": "Understanding Your Stats",
+  "settingsUnderstandingStatsSubtitle": "Learn what each metric means",
+  "settingsClubsEvents": "Clubs & Events",
+  "settingsClubsEventsSubtitle": "How club play works",
+  "settingsAdmin": "ADMIN",
+  "settingsClubRequests": "Club Requests",
+  "settingsClubRequestsSubtitle": "Manage registration requests",
+  "settingsSupportRequests": "Support Requests",
+  "settingsSupportRequestsSubtitle": "Manage user support tickets",
+  "settingsNotificationTester": "Notification Tester",
+  "settingsNotificationTesterSubtitle": "Preview all notification designs",
+
+  "profileUpgrade": "Upgrade",
+  "profileUsername": "Username",
+  "profileNotSet": "Not set",
+  "profileChange": "Change",
+  "profileSetUsername": "Set username",
+  "profileUseNicknameInGames": "Use nickname in games",
+  "profileUseNicknameDescription": "Show @{username} instead of your name in events and hand logging",
+  "@profileUseNicknameDescription": {
+    "placeholders": {
+      "username": { "type": "String" }
+    }
+  },
+  "profileBankrollGoal": "Bankroll Goal",
+  "profileUpdateGoal": "Update Goal",
+  "profileCurrentBankroll": "Current Bankroll",
+  "profileUpdateBankroll": "Update Bankroll",
+  "profileAddSessionResult": "Add Session Result",
+  "profileSessionResultHint": "Enter positive for wins, negative for losses",
+  "profileAddResult": "Add Result",
+  "profileGoalUpdatedSuccess": "Goal updated successfully!",
+  "profileErrorUpdatingGoal": "Error updating goal",
+  "profileBankrollUpdatedSuccess": "Bankroll updated successfully!",
+  "profileErrorUpdatingBankroll": "Error updating bankroll",
+  "profileSessionResultAdded": "Session result added!",
+  "profileErrorAddingResult": "Error adding session result",
+  "profilePleaseEnterValidAmount": "Please enter a valid amount",
+  "profileLogOut": "Log out",
+  "profileSignOut": "Sign Out",
+  "profileSignOutConfirmation": "Are you sure you want to sign out?",
+
+  "sessionHistoryTitle": "Session History",
+  "sessionLast30Days": "Last 30 days",
+  "sessionUpgradeForFullHistory": "Upgrade for full history",
+  "sessionLoadingMessage": "Loading sessions...",
+  "sessionNoSessions": "No {gameType} Sessions",
+  "@sessionNoSessions": {
+    "placeholders": {
+      "gameType": { "type": "String" }
+    }
+  },
+  "sessionPlayToSee": "Play some {gameType} Poker hands\nto see the results",
+  "@sessionPlayToSee": {
+    "placeholders": {
+      "gameType": { "type": "String" }
+    }
+  },
+  "sessionLive": "Live",
+  "sessionPlayersCount": "{count} Players",
+  "@sessionPlayersCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionSyncingToCloud": "Syncing to cloud...",
+  "sessionClearAllTitle": "Clear All Sessions?",
+  "sessionClearAllDescription": "This will permanently delete all poker sessions and hands from both Firebase and local storage.",
+  "sessionClearAllWarning": "This action cannot be undone!",
+  "sessionClearAll": "Clear All",
+  "sessionClearedSuccessfully": "All sessions have been cleared successfully",
+  "sessionHandDetails": "Hand #{handNumber} Details",
+  "@sessionHandDetails": {
+    "placeholders": {
+      "handNumber": { "type": "int" }
+    }
+  },
+  "sessionYourCards": "Your Cards:",
+  "sessionBoardCards": "Board Cards:",
+  "sessionPotByStreet": "Pot by Street:",
+  "sessionActions": "Actions:",
+  "sessionNoActionsRecorded": "No actions recorded",
+  "sessionNoCardsRecorded": "No cards recorded",
+  "sessionFinalPot": "Final Pot:",
+  "sessionChoppedPot": "Chopped Pot ({count} winners):",
+  "@sessionChoppedPot": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionWinnerNotAvailable": "Winner information not available",
+
+  "opponentsTitle": "Opponents",
+  "opponentsCountFree": "{count}/{max} free",
+  "@opponentsCountFree": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "opponentsCountPremium": "{count} tracked players",
+  "@opponentsCountPremium": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "opponentsSearchHint": "Search opponents...",
+  "opponentsLoadingMessage": "Loading opponents...",
+  "opponentsNoResults": "No Results",
+  "opponentsEmptyTitle": "No Opponents Yet",
+  "opponentsEmptySubtitle": "Opponents to track their playing styles and statistics",
+  "opponentsEmptySearchSubtitle": "Try a different search term",
+  "opponentsAddButton": "Add Opponent",
+  "opponentsLastSeen": "Last Seen: {date}",
+  "@opponentsLastSeen": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "opponentsHands": "Hands",
+  "opponentsEditMenu": "Edit Opponent",
+  "opponentsDeleteMenu": "Delete Opponent",
+  "opponentsAddDialogTitle": "Add Opponent",
+  "opponentsEditDialogTitle": "Edit Opponent",
+  "opponentsNameHint": "Opponent Name",
+  "opponentsNotesHint": "Notes (Optional)",
+  "opponentsPickColor": "Pick a color",
+  "opponentsAddedSuccess": "Opponent added successfully",
+  "opponentsUpdatedSuccess": "Opponent updated successfully",
+  "opponentsDeleteConfirmTitle": "Delete opponent?",
+  "opponentsDeleteConfirmMessage": "Are you sure you want to delete \"{name}\"?\nThis action cannot be undone",
+  "@opponentsDeleteConfirmMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "opponentsDeletedSuccess": "Opponent deleted successfully",
+  "opponentsAnalyticsTitle": "Opponent Analytics",
+  "opponentsAnalyticsTotalLabel": "Total Opponents",
+  "opponentsAnalyticsHandsTracked": "Total Hands Tracked",
+  "opponentsAnalyticsAverage": "Average Hands/Opponent",
+  "opponentsAnalyticsMostPlayed": "Most Played Against",
+  "opponentsAnalyticsDistribution": "Player Type Distribution:",
+  "opponentsClearAllTitle": "Clear All Opponents?",
+  "opponentsClearAllMessage": "This will permanently delete all opponent data. This action cannot be undone!",
+  "opponentsClearAllButton": "Clear All",
+  "opponentsClearedSuccess": "All opponents cleared",
+
+  "setupSessionSetup": "Session Setup",
+  "setupSessionName": "Session Name",
+  "setupSessionNameHint": "e.g., \"Friday Night Poker\"",
+  "setupGameType": "Game Type",
+  "setupCashGame": "Cash Game",
+  "setupTournament": "Tournament",
+  "setupSmallBlind": "Small Blind",
+  "setupBigBlind": "Big Blind",
+  "setupBuyInAmount": "Buy-in Amount",
+  "setupEnterAmount": "Enter amount",
+  "setupStartingStackEqualsBuyIn": "Starting stack equals your buy-in.",
+  "setupStartingStack": "Starting Stack",
+  "setupEnterChipStack": "Enter chip stack",
+  "setupMustBeAtLeastBigBlind": "Must be at least the Big Blind ({bigBlind})",
+  "@setupMustBeAtLeastBigBlind": {
+    "placeholders": {
+      "bigBlind": { "type": "int" }
+    }
+  },
+  "setupBbAnte": "BB Ante",
+  "setupTableSection": "TABLE",
+  "setupTableInstructions": "Tap a seat to add a player. Drag the button to set dealer.",
+  "setupStartSession": "Start Session",
+  "setupMe": "Me",
+  "setupPlayerSeat": "Player {seatNumber}",
+  "@setupPlayerSeat": {
+    "placeholders": {
+      "seatNumber": { "type": "int" }
+    }
+  },
+  "setupHero": "Hero",
+
+  "homeLoadingPokerData": "Loading your poker data...",
+  "homeWelcomeBack": "Welcome back",
+  "homeNoActiveSessions": "No active sessions",
+  "homeLiveSessions": "Live Sessions",
+  "homeClubNotFound": "Club not found",
+  "homeEventNotFound": "Event not found",
+  "homeRecentActivity": "Recent Activity",
+  "homeWinRate": "Win Rate",
+  "homeHours": "Hours",
+  "homePlayStyle": "Play Style",
+  "homeBankroll": "Bankroll",
+  "homeBankrollOfGoal": "{current} of {goal}",
+  "@homeBankrollOfGoal": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "goal": { "type": "String" }
+    }
+  },
+  "homeAmountLeft": "{amount} left",
+  "@homeAmountLeft": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "homeEarnings": "Earnings",
+  "homeAvgAmount": "Avg {amount}",
+  "@homeAvgAmount": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "homeNoEarningsDataYet": "No earnings data yet",
+  "homeRecentSessions": "Recent Sessions",
+  "homeViewAll": "View All",
+  "homeNoRecentSessions": "No recent sessions",
+  "homeStartFirstSession": "Start your first poker session!",
+  "homeAddNew": "Add New",
+  "homeUpcomingEvents": "Upcoming Events",
+  "homeNoRecentEvents": "No recent events",
+  "homeAddFirstEvent": "Add your first poker event!",
+  "homePlayersCount": "{count} Players",
+  "@homePlayersCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homeGoingCount": "{count} going",
+  "@homeGoingCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homePrivateGame": "Private Game",
+  "homeHomeGame": "Home Game",
+  "homeOnline": "Online",
+  "homeEditEvent": "Edit Event",
+  "homeDeleteEvent": "Delete Event",
+  "homeEventName": "Event Name",
+  "homeLocationVenue": "Location/Venue",
+  "homeBuyInAmount": "Buy in amount",
+  "homeSelectDate": "Select date:",
+  "homeSaveChanges": "Save Changes",
+  "homeDeleteEventConfirm": "Delete {eventName}?",
+  "@homeDeleteEventConfirm": {
+    "placeholders": {
+      "eventName": { "type": "String" }
+    }
+  },
+  "homeDeleteEventDescription": "Are you sure you want to delete \"{eventName}\"?",
+  "@homeDeleteEventDescription": {
+    "placeholders": {
+      "eventName": { "type": "String" }
+    }
+  },
+  "homeEventDeletedSuccessfully": "Event deleted successfully",
+  "homeClubInvitation": "Club Invitation",
+  "homeYouveBeenInvitedToJoin": "You've been invited to join",
+  "homeDecline": "Decline",
+  "homeAccept": "Accept",
+  "homeInvitationDeclined": "Invitation declined",
+  "homeInvitationAccepted": "Invitation Accepted",
+  "homeClubInvitations": "Club Invitations",
+  "homeLater": "Later",
+  "homeViewInvitations": "View Invitations",
+  "homeNoEarningsDataTitle": "No Earnings Data Yet",
+  "homeNoEarningsDataDescription": "Add some session results first to view your earnings chart. You can add results from the Profile page.",
+
+  "handHandNumber": "Hand #{number}",
+  "@handHandNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "handFreeCounter": "{used}/{max} free",
+  "@handFreeCounter": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "handNextHand": "Next Hand",
+  "handFoldedToMe": "Folded to me",
+  "handUndoLastAction": "Undo Last Action",
+  "handAllInHand": "ALL IN HAND",
+  "handPot": "Pot",
+  "handStack": "Stack",
+  "handToAct": "To Act",
+  "handStopSessionTitle": "Stop Session?",
+  "handStopSessionMessage": "Are you sure you want to stop this session? All hands will be saved.",
+  "handStop": "Stop",
+  "handChangeTable": "Change Table",
+  "handBlinds": "Blinds",
+  "handTakesEffectNextHand": "Takes effect next hand",
+  "handLeaveSession": "Leave Session?",
+  "handSaveAndExit": "Save & Exit",
+  "handDiscardAndExit": "Discard & Exit",
+  "handAdjustStack": "Adjust Stack",
+  "handEnterStackAmount": "Enter stack amount",
+  "handGestureGuide": "Gesture Guide",
+  "handManagePlayers": "Manage Players",
+  "handStopSession": "Stop Session",
+  "handRebuy": "Rebuy",
+  "handGestures": "Gestures",
+  "handGestureTap": "Tap",
+  "handGestureCheckCall": "Check / Call",
+  "handGestureSwipeOut": "Swipe Out",
+  "handGestureSwipeUp": "Swipe Up",
+  "handGestureBetRaise": "Bet / Raise",
+  "handStreetComplete": "Street Complete",
+  "handWinsThePot": "wins the pot",
+  "handHandComplete": "Hand Complete",
+  "handTapToContinue": "Tap to continue",
+  "handRaiseAmount": "Raise Amount",
+  "handBetAmount": "Bet Amount",
+  "handPleaseEnterValidNumber": "Please enter a valid number",
+  "handConfirmRebuy": "Confirm Rebuy",
+  "handRebuyReplaceStack": "Proceeding with a rebuy will replace your current stack. Are you sure you want to continue?",
+  "handProceed": "Proceed",
+  "handEnterRebuyDetails": "Enter rebuy details for the tournament",
+  "handRebuyAmount": "Rebuy Amount",
+  "handNewStackSize": "New Stack Size",
+  "handChipCountAfterRebuy": "Chip count after rebuy",
+  "handSessionInfo": "Session Info",
+  "handTotalInvested": "Total Invested: {amount}",
+  "@handTotalInvested": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "handRebuysCount": "Rebuys: {count}",
+  "@handRebuysCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "handAddRebuy": "Add Rebuy",
+  "handPleaseEnterValidAmounts": "Please enter valid amounts",
+  "handHandInProgress": "Hand in Progress",
+  "handHandInProgressMessage": "There's a hand in progress. Moving to the next hand will discard all actions and restore player stacks.",
+  "handMoveToNextHand": "Move to Next Hand",
+  "handMainPot": "Main Pot",
+  "handSidePot": "Side Pot {index}",
+  "@handSidePot": {
+    "placeholders": {
+      "index": { "type": "int" }
+    }
+  },
+  "handPokerSession": "Poker Session",
+
+  "handActionsHandNumber": "Hand #{number}",
+  "@handActionsHandNumber": {
+    "placeholders": {
+      "number": { "type": "String" }
+    }
+  },
+  "handActionsPosition": "Position: {position}",
+  "@handActionsPosition": {
+    "placeholders": {
+      "position": { "type": "String" }
+    }
+  },
+  "handActionsShareHand": "Share Hand",
+  "handActionsShowHoleCards": "Show hole cards",
+  "handActionsShowHoleCardsSubtitle": "Your cards will be visible in the shared link",
+  "handActionsHideHoleCards": "Hide hole cards",
+  "handActionsHideHoleCardsSubtitle": "Your cards will be hidden from the shared link",
+  "handActionsShareMessage": "Check out this hand on Final Table!",
+  "handActionsShareSubject": "Poker Hand #{number}",
+  "@handActionsShareSubject": {
+    "placeholders": {
+      "number": { "type": "String" }
+    }
+  },
+  "handActionsFailedToShareHand": "Failed to share hand",
+  "handActionsGeneratingExport": "Generating PokerStars export...",
+  "handActionsExportedSuccessfully": "Hand #{number} exported successfully!",
+  "@handActionsExportedSuccessfully": {
+    "placeholders": {
+      "number": { "type": "String" }
+    }
+  },
+  "handActionsFailedToExport": "Failed to export hand: {error}",
+  "@handActionsFailedToExport": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "handActionsMissingHeroCards": "Missing Hero Cards",
+  "handActionsMissingHeroCardsMessage": "AI analysis requires your hole cards to be recorded. This hand cannot be analyzed because hero cards are missing.",
+  "handActionsYourCards": "Your Cards",
+  "handActionsOpponentCards": "Opponent Cards",
+  "handActionsPlayerSeat": "Player {id}",
+  "@handActionsPlayerSeat": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "handActionsPot": "POT",
+  "handActionsBlinds": "BLINDS",
+  "handActionsWinner": "WINNER",
+  "handActionsPlayersCount": "{count} players",
+  "@handActionsPlayersCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "handActionsActionSummary": "Action Summary",
+  "handActionsPreflop": "PREFLOP",
+  "handActionsBoard": "BOARD",
+  "handActionsPlayer": "PLAYER",
+  "handActionsStack": "STACK",
+  "handActionsAction": "ACTION",
+  "handActionsAmount": "AMT",
+  "handActionsYou": "You",
+  "handActionsAllIn": "ALL IN",
+  "handActionsNotes": "Notes",
+  "handActionsAnalyzingHand": "Analyzing Hand...",
+  "handActionsHeroCardsMissing": "Hero Cards Missing",
+  "handActionsUnlockAiAnalysis": "Unlock AI Analysis",
+  "handActionsAnalysisComplete": "Analysis Complete",
+  "handActionsAiAnalyzerBeta": "AI Analyzer (beta)",
+  "handActionsAnalysisFailed": "Analysis Failed",
+  "handActionsAiAnalysis": "AI Analysis",
+  "handActionsStreetByStreetBreakdown": "Street-by-Street Breakdown",
+  "handActionsAnalysisCompletedIn": "Analysis completed in {time}s",
+  "@handActionsAnalysisCompletedIn": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "handActionsFailedToUpdateStar": "Failed to update star status",
+  "handActionsPotAmount": "Pot: {amount}",
+  "@handActionsPotAmount": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+
+  "opponentDetailHandsTracked": "{count} hands tracked",
+  "@opponentDetailHandsTracked": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "opponentDetailNoDataYet": "No data yet",
+  "opponentDetailHands": "Hands",
+  "opponentDetailLastSeen": "Last Seen:",
+  "opponentDetailNotes": "Notes",
+  "opponentDetailEditOpponent": "Edit Opponent",
+  "opponentDetailDeleteOpponent": "Delete Opponent",
+  "opponentDetailStatistics": "Statistics",
+  "opponentDetailNoStatisticsAvailable": "No statistics available",
+  "opponentDetailAggressionFreq": "Aggression Freq",
+  "opponentDetailShowdownPercent": "Showdown %",
+  "opponentDetailHandHistory": "Hand History",
+  "opponentDetailViewAllHands": "View all hands played with this opponent",
+  "opponentDetailViewHandHistory": "View Hand History",
+  "opponentDetailNoHandsFound": "No Hands Found",
+  "opponentDetailNoHandsMessage": "You haven't played any hands with \"{name}\" yet",
+  "@opponentDetailNoHandsMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "opponentDetailOpponentName": "Opponent Name",
+  "opponentDetailNotesOptional": "Notes (Optional)",
+  "opponentDetailPickColor": "Pick a color",
+  "opponentDetailColorRed": "Red",
+  "opponentDetailColorLightBlue": "Light Blue",
+  "opponentDetailColorGreen": "Green",
+  "opponentDetailColorOrange": "Orange",
+  "opponentDetailColorPurple": "Purple",
+  "opponentDetailColorTeal": "Teal",
+  "opponentDetailColorPink": "Pink",
+  "opponentDetailColorIndigo": "Indigo",
+  "opponentDetailUpdatedSuccessfully": "Opponent updated successfully",
+  "opponentDetailDeleteConfirmTitle": "Delete opponent?",
+  "opponentDetailDeleteConfirmMessage": "Are you sure you want to delete \"{name}\"?\nThis action can not be undone",
+  "@opponentDetailDeleteConfirmMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "opponentDetailDeletedSuccessfully": "Opponent deleted successfully",
+  "opponentDetailErrorDeleting": "Error deleting opponent: {error}",
+  "@opponentDetailErrorDeleting": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "individualSessionCreatedLocally": "Session created locally. Will sync to cloud when connection is available.",
+  "individualUpdateCurrentStack": "Update Current Stack",
+  "individualCurrentStack": "Current Stack:",
+  "individualSetNewTotal": "Set New Total",
+  "individualEnterNewTotalStack": "Enter new total stack",
+  "individualAddSubtractAmount": "Add/Subtract Amount",
+  "individualAmount": "Amount",
+  "individualSetTotal": "Set Total",
+  "individualUpdateBlinds": "Update Blinds",
+  "individualSmallBlind": "Small Blind",
+  "individualBigBlind": "Big Blind",
+  "individualBbMode": "BB Mode",
+  "individualCurrentStackLabel": "Current Stack",
+  "individualSessionInfo": "Session Info",
+  "individualStartingStack": "Starting Stack",
+  "individualInitialBuyIn": "Initial Buy-in",
+  "individualRebuys": "Rebuys",
+  "individualTotalInvested": "Total Invested",
+  "individualBlindsLabel": "Blinds",
+  "individualHandsLogged": "Hands Logged",
+  "individualLogAHand": "Log a Hand",
+  "individualGoBackToHand": "Go Back to Hand",
+  "individualStackChart": "Stack Chart",
+  "individualCompleteHandToSee": "Complete a hand to see your stack trend",
+  "individualStopSessionTitle": "Stop Session?",
+  "individualStopSessionMessage": "Are you sure you want to stop this session? All hands will be saved.",
+  "individualStop": "Stop",
+  "individualConfirmRebuy": "Confirm Rebuy",
+  "individualRebuyCurrentStack": "You currently have {stack} remaining.",
+  "@individualRebuyCurrentStack": {
+    "placeholders": {
+      "stack": { "type": "String" }
+    }
+  },
+  "individualRebuyReplaceMessage": "Proceeding with a rebuy will replace your current stack. Are you sure you want to continue?",
+  "individualProceedWithRebuy": "Proceed with Rebuy",
+  "individualRebuy": "Rebuy",
+  "individualEnterRebuyAmount": "Enter rebuy amount (stack will equal rebuy amount)",
+  "individualEnterRebuyAmountAndStack": "Enter rebuy amount and new stack size",
+  "individualRebuyAmount": "Rebuy Amount",
+  "individualNewStackSize": "New Stack Size",
+  "individualChipCountAfterRebuy": "Chip count after rebuy",
+  "individualTotalInvestedAmount": "Total Invested: ${amount}",
+  "@individualTotalInvestedAmount": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "individualCurrentStackAmount": "Current Stack: {stack}",
+  "@individualCurrentStackAmount": {
+    "placeholders": {
+      "stack": { "type": "String" }
+    }
+  },
+  "individualRebuysCount": "Rebuys: {count}",
+  "@individualRebuysCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "individualAddRebuy": "Add Rebuy",
+  "individualPleaseEnterValidRebuy": "Please enter a valid rebuy amount",
+  "individualPleaseEnterValidStack": "Please enter a valid stack size",
+  "individualRebuyAddedSimple": "Rebuy added: ${amount}",
+  "@individualRebuyAddedSimple": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "individualRebuyAddedWithStack": "Rebuy added: ${amount} (Stack: {stack})",
+  "@individualRebuyAddedWithStack": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "stack": { "type": "String" }
+    }
+  },
+
+  "authWelcome": "Welcome to Final Table",
+  "authSignIn": "Sign In",
+  "authRegister": "Register",
+  "authEmail": "Email",
+  "authPassword": "Password",
+  "authDisplayName": "Display Name",
+  "authConfirmPassword": "Confirm Password",
+  "authPleaseEnterEmail": "Please enter your email",
+  "authPleaseEnterValidEmail": "Please enter a valid email",
+  "authPleaseEnterPassword": "Please enter your password",
+  "authPleaseEnterName": "Please enter your name",
+  "authNameMinLength": "Name must be at least 2 characters",
+  "authPleaseEnterAPassword": "Please enter a password",
+  "authPasswordMinLength": "Password must be at least 6 characters",
+  "authPleaseConfirmPassword": "Please confirm your password",
+  "authPasswordsDoNotMatch": "Passwords do not match",
+  "authCreateAccount": "Create Account",
+  "authForgotPassword": "Forgot Password?",
+  "authResetPassword": "Reset Password",
+  "authResetPasswordMessage": "Enter your email address to receive a password reset link.",
+  "authSendResetLink": "Send Reset Link",
+  "authPasswordResetSent": "Password reset email sent!",
+
+  "paywallRestore": "Restore",
+  "paywallTitle": "FINAL TABLE PREMIUM",
+  "paywallUnlockFeature": "Unlock {featureName}",
+  "@paywallUnlockFeature": {
+    "placeholders": {
+      "featureName": { "type": "String" }
+    }
+  },
+  "paywallGoPremium": "Go Premium",
+  "paywallFeatureSubtitle": "This feature is part of Final Table Premium. Pick a plan that fits how you play.",
+  "paywallGeneralSubtitle": "Unlock everything Final Table has to offer. Track more hands, analyze your game, run your club.",
+  "paywallProTier": "PRO",
+  "paywallFreeTrialBadge": "7-day free trial",
+  "paywallProDescription": "Everything you need to master your game.",
+  "paywallUnlimitedHandLogging": "Unlimited hand logging",
+  "paywallFullSessionHistory": "Full session history",
+  "paywallAiHandAnalysis": "AI hand analysis",
+  "paywallExportHandsCsv": "Export hands to CSV",
+  "paywallProMonthly": "$19.99/mo",
+  "paywallProYearly": "$199.99/yr",
+  "paywallStartFreeTrial": "Start 7-Day Free Trial",
+  "paywallEliteTier": "ELITE",
+  "paywallEliteDescription": "Take your game to the next level.",
+  "paywallEverythingInProElite": "Everything in Pro",
+  "paywallEliteFeature1": "Advanced opponent profiling",
+  "paywallEliteFeature2": "Detailed session analytics",
+  "paywallEliteFeature3": "Priority support",
+  "paywallEliteMonthly": "$29.99/mo",
+  "paywallEliteYearly": "$249.99/yr",
+  "paywallGetElite": "Get Elite",
+  "paywallClubTier": "CLUB",
+  "paywallClubDescription": "For home games, clubs, and live venues.",
+  "paywallEverythingInPro": "Everything in Pro",
+  "paywallClubManagement": "Club management & member roles",
+  "paywallLiveDealerVoice": "Live dealer voice logging",
+  "paywallMultiTableEvents": "Multi-table events with rankings",
+  "paywallClubMonthly": "$39.99/mo",
+  "paywallClubYearly": "$299.99/yr",
+  "paywallGetClub": "Get Club",
+  "paywallDisclaimer": "Subscriptions auto-renew. Cancel anytime from your account settings.",
+  "paywallTerms": "Terms",
+  "paywallPrivacy": "Privacy",
+  "paywallPurchasesRestored": "Purchases restored",
+  "paywallNoPreviousPurchases": "No previous purchases found",
+  "paywallComingSoon": "{tier} subscriptions coming soon",
+  "@paywallComingSoon": {
+    "placeholders": {
+      "tier": { "type": "String" }
+    }
+  },
+
+  "trialConfirmTitle": "The first 7 days of {tier} are on us",
+  "@trialConfirmTitle": {
+    "placeholders": {
+      "tier": { "type": "String" }
+    }
+  },
+  "trialConfirmTodayTitle": "Today",
+  "trialConfirmTodayBody": "Get full access to all {tier} features",
+  "@trialConfirmTodayBody": {
+    "placeholders": {
+      "tier": { "type": "String" }
+    }
+  },
+  "trialConfirmReminderTitle": "In 5 days",
+  "trialConfirmReminderBody": "Get a reminder before your free trial ends",
+  "trialConfirmStartTitle": "In 7 days",
+  "trialConfirmStartBody": "Your subscription starts, unless you cancel anytime before",
+  "trialConfirmPriceSummary": "Try 7 days free, then",
+  "trialConfirmStartCta": "Start my 7-day free trial",
+  "trialConfirmDisclaimer": "No charges yet. Cancel anytime on the App Store.",
+
+  "introGameSetup": "Game Setup",
+  "introConfigureSession": "Configure your session",
+  "introSmallBlind": "Small Blind",
+  "introBigBlind": "Big Blind",
+  "introPlayers": "Players",
+  "introGameType": "Game Type",
+  "introBbAnte": "BB Ante",
+  "introBbAnteDescription": "Enable big blind ante rule",
+  "introStartGame": "START GAME",
+  "introStartingSession": "Starting your poker session...",
+  "introEnterField": "Enter {title}",
+  "@introEnterField": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "introEnterAmount": "Enter amount",
+  "introPleaseEnterValidNumber": "Please enter a valid positive number",
+  "introRingGame": "Ring Game",
+  "introMultiTable": "Multi-Table",
+
+  "invitationTitle": "Club Invitations",
+  "invitationNoPending": "No pending invitations",
+  "invitationYouWillSeeHere": "You'll see invitations from clubs here",
+  "invitationGoBack": "Go Back",
+  "invitationFailedToLoad": "Failed to load invitations: {error}",
+  "@invitationFailedToLoad": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "invitationJoinedAs": "Joined {clubName} as {role}",
+  "@invitationJoinedAs": {
+    "placeholders": {
+      "clubName": { "type": "String" },
+      "role": { "type": "String" }
+    }
+  },
+  "invitationFailedToAccept": "Failed to accept invitation: {error}",
+  "@invitationFailedToAccept": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "invitationDeclined": "Invitation declined",
+  "invitationFailedToDecline": "Failed to decline invitation: {error}",
+  "@invitationFailedToDecline": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "invitationUnknownClub": "Unknown Club",
+  "invitationInvitedBy": "Invited by {name}",
+  "@invitationInvitedBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "invitationExpiresDate": "Expires {date}",
+  "@invitationExpiresDate": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "invitationExpired": "Expired",
+  "invitationExpiresInDays": "in {days} day(s)",
+  "@invitationExpiresInDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "invitationExpiresInHours": "in {hours} hour(s)",
+  "@invitationExpiresInHours": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "invitationExpiresSoon": "soon",
+  "invitationDeclineButton": "Decline",
+  "invitationAcceptButton": "Accept",
+
+  "notificationTitle": "Notifications",
+  "notificationToday": "Today",
+  "notificationYesterday": "Yesterday",
+  "notificationThisWeek": "This Week",
+  "notificationEarlier": "Earlier",
+  "notificationMarkAllRead": "Mark all as read",
+  "notificationMarkAsRead": "Mark as read",
+  "notificationNoNotifications": "No notifications",
+  "notificationEvents": "Events",
+  "notificationRsvp": "RSVP",
+  "notificationClubs": "Clubs",
+  "notificationInvitations": "Invitations",
+  "notificationSeats": "Seats",
+  "notificationSupport": "Support",
+  "notificationClubNotFound": "Club not found",
+  "notificationEventNotFound": "Event not found",
+  "notificationError": "Error: {error}",
+  "@notificationError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "notificationErrorLoadingEvent": "Error loading event: {error}",
+  "@notificationErrorLoadingEvent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "notificationFailedToLoadClub": "Failed to load club: {error}",
+  "@notificationFailedToLoadClub": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "notificationClubInvitation": "Club Invitation",
+  "notificationInvitedToJoin": "You've been invited to join",
+  "notificationInvitationDeclined": "Invitation declined",
+  "notificationNotAuthenticated": "Not authenticated",
+  "notificationInvitationAccepted": "Invitation Accepted",
+  "notificationAcceptedMessage": "{name} has accepted the invitation to join {clubName}.",
+  "@notificationAcceptedMessage": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "clubName": { "type": "String" }
+    }
+  },
+  "notificationInvitationDeclinedTitle": "Invitation Declined",
+  "notificationDeclinedMessage": "{name} has declined the invitation to join {clubName}.",
+  "@notificationDeclinedMessage": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "clubName": { "type": "String" }
+    }
+  },
+  "notificationRequestResolved": "Request Resolved",
+  "notificationRequestClosed": "Request Closed",
+  "notificationResponse": "Response",
+
+  "calendarTitle": "Poker Calendar",
+  "calendarNewEvent": "New Event",
+  "calendarEventType": "Event Type",
+  "calendarEventTitle": "Title",
+  "calendarLocation": "Location",
+  "calendarBuyInAmount": "Buy-in amount",
+  "calendarEventDateTime": "Event Date and Time",
+  "calendarStarts": "Starts",
+  "calendarSelectDate": "Select Date:",
+  "calendarReset": "Reset",
+  "calendarSun": "SUN",
+  "calendarMon": "MON",
+  "calendarTue": "TUE",
+  "calendarWed": "WED",
+  "calendarThu": "THU",
+  "calendarFri": "FRI",
+  "calendarSat": "SAT",
+  "calendarNoRecentEvents": "No recent events",
+  "calendarAddFirstEvent": "Add your first poker event!",
+  "calendarAddNewEvent": "Add New Event",
+  "calendarSelectYear": "Select Year",
+  "calendarEditEvent": "Edit Event",
+  "calendarDeleteEvent": "Delete Event",
+  "calendarTournament": "Tournament",
+  "calendarCashGame": "Cash Game",
+  "calendarPrivateGame": "Private Game",
+  "calendarOnline": "Online",
+  "calendarFailedToCreateEvent": "Failed to create event: {error}",
+  "@calendarFailedToCreateEvent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "calendarFailedToUpdateEvent": "Failed to update event: {error}",
+  "@calendarFailedToUpdateEvent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "calendarFailedToDeleteEvent": "Failed to delete event",
+  "calendarClubNotFound": "Club not found",
+  "calendarEventNotFound": "Event not found",
+  "calendarFailedToLoadEvent": "Failed to load event: {error}",
+  "@calendarFailedToLoadEvent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "calendarDeleteConfirmTitle": "Delete {title}?",
+  "@calendarDeleteConfirmTitle": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "calendarDeleteConfirmMessage": "Are you sure you want to delete \"{title}\"?\nThis action cannot be undone.",
+  "@calendarDeleteConfirmMessage": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+
+  "sessionAnalyticsTitle": "Session Analytics",
+  "sessionAnalyticsHandsLogged": "{count} hands logged",
+  "@sessionAnalyticsHandsLogged": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionAnalyticsDeleteTitle": "Delete Session?",
+  "sessionAnalyticsDeleteMessage": "This will permanently delete this session including all hand history, stack chart data, and AI analysis reports. This action cannot be undone.",
+  "sessionAnalyticsDeleted": "Session deleted",
+  "sessionAnalyticsFailedToDelete": "Failed to delete session",
+  "sessionAnalyticsExportSession": "Export Session",
+  "sessionAnalyticsExportConfirm": "Export {count} hands to {email}?",
+  "@sessionAnalyticsExportConfirm": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "email": { "type": "String" }
+    }
+  },
+  "sessionAnalyticsExport": "Export",
+  "sessionAnalyticsExportSent": "Export sent to {email}",
+  "@sessionAnalyticsExportSent": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "sessionAnalyticsExportFailed": "Export failed: {error}",
+  "@sessionAnalyticsExportFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "sessionAnalyticsNoEmailFound": "No email address found. Please sign in with an email account.",
+  "sessionAnalyticsPokerSession": "Poker Session",
+  "sessionAnalyticsTotalInvested": "Total Invested",
+  "sessionAnalyticsFinalStack": "Final Stack",
+  "sessionAnalyticsProfitLoss": "Profit/Loss",
+  "sessionAnalyticsAvgGrowth": "Avg Growth",
+  "sessionAnalyticsDuration": "Duration",
+  "sessionAnalyticsRebuys": "Rebuys",
+  "sessionAnalyticsStackChart": "Stack Chart",
+  "sessionAnalyticsNoStackHistory": "No Stack History Available",
+  "sessionAnalyticsStackTrackedFuture": "Stack changes will be tracked in future sessions",
+  "sessionAnalyticsViewLoggedHands": "View Logged Hands",
+  "sessionAnalyticsStart": "Start",
+  "sessionAnalyticsRebuy": "Rebuy",
+  "sessionAnalyticsEnd": "End",
+
+  "seatSetupTitle": "Setup Seat",
+  "seatSetupManagePlayers": "Manage Players",
+  "seatSetupClickToConfig": "Click seat to configure. Drag button to position",
+  "seatSetupButtonLocked": "Button locked - hand in progress",
+  "seatSetupUpdatePlayerInfo": "Update player information",
+  "seatSetupEmpty": "Empty",
+  "seatSetupThisIsMySeat": "This is my seat",
+  "seatSetupPlayerName": "Player Name",
+  "seatSetupBuyInAmount": "Buy-in Amount ($)",
+  "seatSetupStartingChips": "Starting Chips",
+  "seatSetupSaveAsOpponent": "Save \"{name}\" as opponent?",
+  "@seatSetupSaveAsOpponent": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "seatSetupOpponentSaved": "Opponent saved!",
+  "seatSetupFailedToSave": "Failed to save: {error}",
+  "@seatSetupFailedToSave": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "seatSetupNoData": "No Data",
+  "seatSetupStartSession": "Start Session",
+  "seatSetupSaveChanges": "Save Changes",
+  "seatSetupPleaseSelectSeat": "Please select your seat",
+  "seatSetupSeatNumber": "Seat {number}",
+  "@seatSetupSeatNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "seatSetupPlayerDefault": "Player {number}",
+  "@seatSetupPlayerDefault": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "quickStackTitle": "Update Stacks & Button",
+  "quickStackBlinds": "Blinds: {blinds}",
+  "@quickStackBlinds": {
+    "placeholders": {
+      "blinds": { "type": "String" }
+    }
+  },
+  "quickStackInstruction": "Tap stack to edit  •  Slide to adjust  •  Tap D for button",
+  "quickStackContinue": "CONTINUE TO LOG HAND",
+  "quickStackEditStack": "Edit Stack",
+  "quickStackStackInBb": "Stack in BB",
+  "quickStackCurrentValue": "Current: {bbValue} BB = {chipValue}",
+  "@quickStackCurrentValue": {
+    "placeholders": {
+      "bbValue": { "type": "String" },
+      "chipValue": { "type": "String" }
+    }
+  },
+  "quickStackValidationError": "Please enter a value between 0 and 1000 BB",
+  "quickStackSeat": "Seat {number}",
+  "@quickStackSeat": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "quickStackEmpty": "Empty",
+  "quickStackPlayerDefault": "Player {id}",
+  "@quickStackPlayerDefault": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+
+  "handReviewTitle": "Hand Review",
+  "handReviewYourHoleCards": "Your Hole Cards",
+  "handReviewOptional": "(optional)",
+  "handReviewQuickTags": "Quick Tags",
+  "handReviewTagBluff": "Bluff",
+  "handReviewTagValue": "Value",
+  "handReviewTagMistake": "Mistake",
+  "handReviewTagCooler": "Cooler",
+  "handReviewTagHeroCall": "Hero Call",
+  "handReviewTagExploit": "Exploit",
+  "handReviewNotes": "Notes",
+  "handReviewNotesHint": "Add a note about this hand...",
+  "handReviewSaveHand": "Save Hand",
+  "handReviewSkip": "Skip",
+  "handReviewDuplicateCardError": "You cannot select the same card twice!",
+  "handReviewSelectBothOrNone": "Please select both hole cards or leave both empty",
+
+  "holeCardsTitle": "Your Hole Cards",
+  "holeCardsSubtitle": "Hole Cards",
+  "holeCardsWinnerBadge": "WINNER",
+  "holeCardsSave": "Save",
+  "holeCardsSkip": "Skip",
+  "holeCardsSkipAllRemaining": "Skip All Remaining",
+  "holeCardsDuplicateCardError": "You cannot select the same card twice!",
+  "holeCardsSelectBothOrSkip": "Please select both hole cards or skip to continue",
+  "holeCardsClearAll": "Clear All",
+
+  "showdownTitle": "Showdown",
+  "showdownEnterOpponentCards": "Enter opponent cards at showdown:",
+  "showdownPlayerLabel": "Player {seatNumber}",
+  "@showdownPlayerLabel": {
+    "placeholders": {
+      "seatNumber": { "type": "int" }
+    }
+  },
+  "showdownCard1": "Card 1",
+  "showdownCard2": "Card 2",
+  "showdownClear": "Clear",
+  "showdownWinner": "Winner:",
+  "showdownHandDescriptionLabel": "Hand Description (optional)",
+  "showdownHandDescriptionHint": "e.g., \"Straight flush\", \"Full house Aces over Kings\"",
+  "showdownSkip": "Skip",
+  "showdownSave": "Save",
+  "showdownSelectCard": "Select Card",
+
+  "tableManagementSectionTitle": "TABLE",
+  "tableManagementPlayersCount": "{count} players",
+  "@tableManagementPlayersCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tableManagementDealerButton": "Dealer Button",
+  "tableManagementAddPlayer": "Add Player",
+  "tableManagementYouSuffix": "{name} (You)",
+  "@tableManagementYouSuffix": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "tableManagementAdjustStack": "Adjust Stack",
+  "tableManagementRebuy": "Rebuy",
+  "tableManagementRemove": "Remove",
+  "tableManagementAdjustStackTitle": "Adjust Stack",
+  "tableManagementEnterStackAmount": "Enter stack amount",
+  "tableManagementRebuyTitle": "Rebuy",
+  "tableManagementRebuyAmountHint": "Rebuy amount to add",
+  "tableManagementAdd": "Add",
+  "tableManagementRemovePlayerTitle": "Remove Player?",
+  "tableManagementRemovePlayerMessage": "Remove {playerName} from the table?",
+  "@tableManagementRemovePlayerMessage": {
+    "placeholders": {
+      "playerName": { "type": "String" }
+    }
+  },
+  "tableManagementAddPlayerSeatTitle": "Add Player — Seat {seatNumber}",
+  "@tableManagementAddPlayerSeatTitle": {
+    "placeholders": {
+      "seatNumber": { "type": "int" }
+    }
+  },
+  "tableManagementThisIsMe": "This is me",
+  "tableManagementNameLabel": "Name",
+  "tableManagementSearchOrEnterName": "Search or enter name",
+  "tableManagementSaveAsOpponent": "Save \"{name}\" as opponent",
+  "@tableManagementSaveAsOpponent": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "tableManagementSavedAsOpponent": "{name} saved as opponent",
+  "@tableManagementSavedAsOpponent": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "tableManagementStartingStack": "Starting Stack",
+  "tableManagementStackAmountHint": "Stack amount",
+  "tableManagementMoveMeHere": "Move Me Here",
+  "tableManagementSeatLabel": "Seat {seatNumber}",
+  "@tableManagementSeatLabel": {
+    "placeholders": {
+      "seatNumber": { "type": "int" }
+    }
+  },
+
+  "seatConfigRemove": "Remove",
+  "seatConfigThisIsMe": "This is me",
+  "seatConfigNameLabel": "Name",
+  "seatConfigSearchOrEnterName": "Search or enter name",
+  "seatConfigSaveAsOpponent": "Save \"{name}\" as opponent",
+  "@seatConfigSaveAsOpponent": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "seatConfigSavedAsOpponent": "{name} saved as opponent",
+  "@seatConfigSavedAsOpponent": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "seatConfigSeatTitle": "Seat {seatNumber}",
+  "@seatConfigSeatTitle": {
+    "placeholders": {
+      "seatNumber": { "type": "int" }
+    }
+  },
+  "seatConfigStackLabel": "Stack",
+  "seatConfigUpdateButton": "Update",
+  "seatConfigAddPlayerButton": "Add Player",
+
+  "seatManagementSetupSeats": "Setup Seats",
+  "seatManagementManagePlayers": "Manage Players",
+  "seatManagementChooseSeatSubtitle": "Choose your seat and configure table",
+  "seatManagementUpdatePlayerSubtitle": "Update player information",
+  "seatManagementButtonPosition": "Button Position",
+  "seatManagementSeatLabel": "Seat {seatNumber}",
+  "@seatManagementSeatLabel": {
+    "placeholders": {
+      "seatNumber": { "type": "int" }
+    }
+  },
+  "seatManagementEmpty": "Empty",
+  "seatManagementActive": "Active",
+  "seatManagementPlayerNameLabel": "Player Name",
+  "seatManagementEnterPlayerName": "Enter player name",
+  "seatManagementBuyInAmountCash": "Buy-in Amount ($)",
+  "seatManagementStartingChips": "Starting Chips",
+  "seatManagementSaveOpponentTitle": "Save Opponent?",
+  "seatManagementSaveOpponentMessage": "Would you like to save \"{name}\" to your opponents list for future tracking?",
+  "@seatManagementSaveOpponentMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "seatManagementNotNow": "Not Now",
+  "seatManagementSaveAsOpponentPrompt": "Save \"{name}\" as opponent?",
+  "@seatManagementSaveAsOpponentPrompt": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "seatManagementOpponentSavedSuccess": "Opponent \"{name}\" saved successfully!",
+  "@seatManagementOpponentSavedSuccess": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "seatManagementFailedToSaveOpponent": "Failed to save opponent: {error}",
+  "@seatManagementFailedToSaveOpponent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "seatManagementStartSession": "Start Session",
+  "seatManagementSaveChanges": "Save Changes",
+  "seatManagementSelectYourSeat": "Please select your seat",
+
+  "inviteMemberTitle": "Invite Member",
+  "inviteMemberEmailLabel": "EMAIL ADDRESS",
+  "inviteMemberEmailHint": "Enter email address",
+  "inviteMemberEmailRequired": "Please enter an email address",
+  "inviteMemberEmailInvalid": "Please enter a valid email address",
+  "inviteMemberRoleLabel": "ROLE",
+  "inviteMemberRoleDealer": "Dealer",
+  "inviteMemberRoleAdmin": "Admin",
+  "inviteMemberSendInvite": "Send Invite",
+  "inviteMemberAlreadyMember": "{displayName} is already a member of {clubName}",
+  "@inviteMemberAlreadyMember": {
+    "placeholders": {
+      "displayName": { "type": "String" },
+      "clubName": { "type": "String" }
+    }
+  },
+  "inviteMemberAddedNotificationTitle": "You've Been Added to a Club!",
+  "inviteMemberAddedNotificationBody": "{inviterName} added you to \"{clubName}\" as {role}.",
+  "@inviteMemberAddedNotificationBody": {
+    "placeholders": {
+      "inviterName": { "type": "String" },
+      "clubName": { "type": "String" },
+      "role": { "type": "String" }
+    }
+  },
+  "inviteMemberAddedSuccessTitle": "Member Added!",
+  "inviteMemberAddedSuccessMessage": "{displayName} has been added to {clubName} as {role}.",
+  "@inviteMemberAddedSuccessMessage": {
+    "placeholders": {
+      "displayName": { "type": "String" },
+      "clubName": { "type": "String" },
+      "role": { "type": "String" }
+    }
+  },
+  "inviteMemberInvitationSentTitle": "Invitation Sent!",
+  "inviteMemberInvitationSentMessage": "An invitation email has been sent to {email}. Once they sign up, they'll be able to join {clubName}.",
+  "@inviteMemberInvitationSentMessage": {
+    "placeholders": {
+      "email": { "type": "String" },
+      "clubName": { "type": "String" }
+    }
+  },
+  "inviteMemberError": "Error: {error}",
+  "@inviteMemberError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "inviteMemberRoleAnAdmin": "an admin",
+  "inviteMemberRoleADealer": "a dealer",
+
+  "registerClubTitle": "Register Club",
+  "registerClubNameLabel": "Club Name",
+  "registerClubNamePlaceholder": "e.g., Lucky Aces Poker Club",
+  "registerClubNameRequired": "Please enter a club name",
+  "registerClubAddressLabel": "Address",
+  "registerClubAddressPlaceholder": "e.g., 123 Main St, City, Country",
+  "registerClubAddressRequired": "Please enter the club address",
+  "registerClubPhoneLabel": "Phone Number",
+  "registerClubPhonePlaceholder": "e.g., +1 555-123-4567",
+  "registerClubPhoneRequired": "Please enter a phone number",
+  "registerClubAdminEmailLabel": "Club Admin Email",
+  "registerClubAdminEmailPlaceholder": "e.g., admin@myclub.com",
+  "registerClubAdminEmailRequired": "Please enter admin email",
+  "registerClubAdminEmailInvalid": "Please enter a valid email",
+  "registerClubInfoMessage": "This person will be notified when the club is approved and will become the club owner.",
+  "registerClubSubmitRequest": "Submit Request",
+  "registerClubFailedToSubmit": "Failed to submit request: {error}",
+  "@registerClubFailedToSubmit": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "registerClubSuccessTitle": "Request Submitted!",
+  "registerClubSuccessMessage": "Your club registration request has been submitted. We'll notify you at {email} once it's reviewed.",
+  "@registerClubSuccessMessage": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "registerClubGotIt": "Got it",
+
+  "loggingModeChooseMode": "Choose Mode",
+  "loggingModeFullTitle": "Full Logging Mode",
+  "loggingModeFullSubtitle": "Complete Session Tracking",
+  "loggingModeFullFeature1": "Multi-hand session tracking",
+  "loggingModeFullFeature2": "Real time statistics",
+  "loggingModeFullFeature3": "Detailed hand history",
+  "loggingModeFullFeature4": "Session analytics",
+  "loggingModeIndividualTitle": "Individual Logging Mode",
+  "loggingModeIndividualSubtitle": "Single hand tracking",
+  "loggingModeIndividualFeature1": "Single hand focus",
+  "loggingModeIndividualFeature2": "Quick logging",
+  "loggingModeIndividualFeature3": "Hand analysis",
+  "loggingModeIndividualFeature4": "Instant results",
+  "loggingModeFeatures": "Features",
+  "loggingModeStart": "Start",
+
+  "earningsChartAllTimeEarnings": "All-Time Earnings",
+  "earningsChartSinceDate": "Since {date}",
+  "@earningsChartSinceDate": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "earningsChartTournament": "Tournament",
+  "earningsChartCash": "Cash",
+  "earningsChartNoData": "No earnings data yet",
+  "earningsChartNoDataSubtitle": "Complete some sessions to see your earnings chart",
+  "earningsChartMtt": "MTT",
+
+  "opponentHandsTitle": "Hand History",
+  "opponentHandsCount": "{count} hands",
+  "@opponentHandsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "opponentHandsLoading": "Loading hand history...",
+  "opponentHandsError": "Something went wrong",
+  "opponentHandsRetry": "Retry",
+  "opponentHandsNoHandsTitle": "No Hands Found",
+  "opponentHandsNoHandsSubtitle": "You haven't played any hands\nwith {name} yet.",
+  "@opponentHandsNoHandsSubtitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "opponentHandsOppWon": "OPP WON",
+  "opponentHandsYou": "You",
+  "opponentHandsPot": "Pot {amount}",
+  "@opponentHandsPot": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "opponentHandsUnknownSession": "Unknown Session",
+
+  "clubDashboardLive": "Live",
+  "clubDashboardUpcoming": "Upcoming",
+  "clubDashboardPast": "Past",
+  "clubDashboardNoLiveEvents": "No live events",
+  "clubDashboardNoUpcomingEvents": "No upcoming events",
+  "clubDashboardNoPastEvents": "No past events",
+  "clubDashboardAdmin": "Admin",
+  "clubDashboardCreateEventHint": "Tap the button below to create one",
+  "clubDashboardCheckBackLater": "Check back later for new events",
+  "clubDashboardEventsWillAppear": "Events will appear here when they start",
+  "clubDashboardPastEventsWillAppear": "Completed events will appear here",
+  "clubDashboardCashGameStakes": "Cash Game {stakes}",
+  "@clubDashboardCashGameStakes": {
+    "placeholders": {
+      "stakes": { "type": "String" }
+    }
+  },
+  "clubDashboardCash": "Cash",
+  "clubDashboardTables": "Tables",
+  "clubDashboardStakes": "Stakes",
+  "clubDashboardPlayingCount": "{count} playing",
+  "@clubDashboardPlayingCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "clubDashboardMemberCount": "{count} members",
+  "@clubDashboardMemberCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "clubSettingsTitle": "Club Settings",
+  "clubSettingsClubInfo": "Club Information",
+  "clubSettingsClubName": "Club Name",
+  "clubSettingsAddress": "Address",
+  "clubSettingsPhone": "Phone",
+  "clubSettingsDescription": "Description",
+  "clubSettingsSaveChanges": "Save Changes",
+  "clubSettingsInfoSaved": "Club info saved",
+  "clubSettingsErrorSaving": "Error saving: {error}",
+  "@clubSettingsErrorSaving": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "clubSettingsNoTablesYet": "No tables yet",
+  "clubSettingsAddTableHint": "Add a table to get started",
+  "clubSettingsErrorLoading": "Error loading data: {error}",
+  "@clubSettingsErrorLoading": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "eventEditTitle": "Edit Event",
+  "eventNewTitle": "New Event",
+  "eventNoTablesAssigned": "No Tables Assigned",
+  "eventNoTablesAssignedDesc": "No tables assigned to this event. Please go back and assign tables first.",
+  "eventGoBack": "Go Back",
+  "eventContinue": "Continue",
+  "eventNameOptional": "Event Name (optional)",
+  "eventNameLabel": "Event Name",
+  "eventStakesHint": "Stakes (e.g. 1/2)",
+  "eventBuyInAmount": "Buy-in amount",
+  "eventMinBuyIn": "Min Buy-in ($)",
+  "eventStartingStack": "Starting stack",
+  "eventGameType": "Game Type",
+  "eventTournament": "Tournament",
+  "eventCashGame": "Cash Game",
+  "eventDateAndTime": "Event Date and Time",
+  "eventStarts": "Starts",
+  "eventTables": "Tables",
+  "eventDeselectAll": "Deselect All",
+  "eventSelectAll": "Select All",
+  "eventAllTablesInUse": "All tables are in use by running events",
+  "eventNoTablesConfigured": "No tables configured yet",
+  "eventDescriptionLabel": "Description",
+  "eventNotifyMembers": "Notify Members",
+  "eventNotifyMembersSubtitle": "Send notification to all club members",
+  "eventDeleteEvent": "Delete Event",
+  "eventDeleteConfirmTitle": "Delete Event?",
+  "eventDeleteConfirmBody": "This will permanently delete this event and all associated data. This action cannot be undone.",
+  "eventDeleteFailed": "Failed to delete event: {error}",
+  "@eventDeleteFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "eventAttendeesTitle": "Attendees",
+  "eventAttendeesGoing": "Going ({count})",
+  "@eventAttendeesGoing": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "eventAttendeesMaybe": "Maybe ({count})",
+  "@eventAttendeesMaybe": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "eventAttendeesNo": "No ({count})",
+  "@eventAttendeesNo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "eventAttendeesNoConfirmed": "No one confirmed yet",
+  "eventAttendeesNoMaybes": "No maybes",
+  "eventAttendeesNoDeclines": "No declines",
+
+  "eventDetailLiveNow": "Event is now LIVE!",
+  "eventDetailEnded": "Event has ended",
+  "eventDetailCancelled": "Event was cancelled",
+  "eventDetailPaused": "Event is paused",
+  "eventDetailStatusUpdated": "Event status updated",
+  "eventDetailRemovedFromCalendar": "Event removed from your calendar",
+  "eventDetailRsvpGoing": "Going",
+  "eventDetailRsvpMaybe": "Maybe",
+  "eventDetailRsvpCantGo": "Can't go",
+  "eventDetailRsvpFailed": "Failed to update RSVP: {error}",
+  "@eventDetailRsvpFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "eventDetailCantStartTitle": "Can't Start Event",
+  "eventDetailCantStartBody": "No tables are assigned to this event. Please add tables first.",
+  "eventDetailStarted": "Event started!",
+  "eventDetailStartFailed": "Failed to start event: {error}",
+  "@eventDetailStartFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "eventDetailFinishTitle": "Finish Event?",
+  "eventDetailCancelTitle": "Cancel Event?",
+  "eventDetailFinishBody": "This will end all active tables and finalize standings.",
+  "eventDetailCancelBody": "This will notify all members and cancel the event.",
+  "eventDetailFinishButton": "Finish Event",
+  "eventDetailCancelButton": "Cancel Event",
+  "eventDetailKeepEvent": "Keep Event",
+  "eventDetailLiveBadge": "LIVE NOW",
+  "eventDetailCancelledBadge": "CANCELLED",
+  "eventDetailCompletedBadge": "COMPLETED",
+  "eventDetailUpcomingBadge": "UPCOMING",
+  "eventDetailLocation": "Location",
+  "eventDetailBuyIn": "Buy-in",
+  "eventDetailStakes": "Stakes",
+  "eventDetailStartingStack": "Starting Stack",
+  "eventDetailAbout": "ABOUT",
+  "eventDetailAddedToCalendar": "Event added to your calendar!",
+  "eventDetailCalendarFailed": "Failed to add to calendar: {error}",
+  "@eventDetailCalendarFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "eventManagementEventsTitle": "Events",
+  "eventManagementNewEvent": "New Event",
+  "eventManagementNoEvents": "No Events",
+  "eventManagementNoEventsSubtitle": "Create an event to track live rankings",
+  "eventManagementActiveEvents": "Active Events",
+  "eventManagementPastEvents": "Past Events",
+  "eventManagementErrorLoading": "Error loading events: {error}",
+  "@eventManagementErrorLoading": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "eventManagementNoTables": "No tables available. Create tables first.",
+  "eventManagementCreated": "Event \"{name}\" created",
+  "@eventManagementCreated": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "eventManagementCreateFailed": "Failed to create event: {error}",
+  "@eventManagementCreateFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "eventManagementEndEvent": "End Event",
+  "eventManagementEndConfirm": "Are you sure you want to end \"{name}\"?",
+  "@eventManagementEndConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "eventManagementEnded": "Event \"{name}\" ended",
+  "@eventManagementEnded": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "eventManagementEndFailed": "Failed to end event: {error}",
+  "@eventManagementEndFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "eventManagementLinkCopied": "Link copied to clipboard",
+  "eventManagementShare": "Share",
+  "eventManagementPause": "Pause",
+  "eventManagementResume": "Resume",
+  "eventManagementEnd": "End",
+  "eventManagementCreateEvent": "Create Event",
+  "eventManagementEventNameHint": "e.g., Friday Night Tournament",
+  "eventManagementSelectTables": "Select Tables",
+  "eventManagementTableNumber": "Table {number}",
+  "@eventManagementTableNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "eventManagementPublicEvent": "Public Event",
+  "eventManagementPublicSubtitle": "Anyone can view the leaderboard",
+  "eventManagementAccessCode": "Access Code (optional)",
+  "eventManagementAccessCodeSubtitle": "For sharing with specific users",
+  "eventManagementEnterName": "Please enter an event name",
+  "eventManagementSelectTable": "Please select at least one table",
+  "eventManagementPublic": "Public",
+  "eventManagementPrivate": "Private",
+
+  "adminEventTablesSummary": "{count} tables • {occupied} seated • {open} open",
+  "@adminEventTablesSummary": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "occupied": { "type": "int" },
+      "open": { "type": "int" }
+    }
+  },
+  "adminEventTablesAddTable": "Add Table",
+  "adminEventTablesNoTables": "No available tables to add",
+  "adminEventTablesCloseConfirm": "Close {tableName}?",
+  "@adminEventTablesCloseConfirm": {
+    "placeholders": {
+      "tableName": { "type": "String" }
+    }
+  },
+  "adminEventTablesCloseWithPlayers": "This will move {count} player(s) to the waitlist and remove the table from this event.",
+  "@adminEventTablesCloseWithPlayers": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "adminEventTablesCloseEmpty": "This will remove the table from this event.",
+  "adminEventTablesCloseButton": "Close Table",
+  "adminEventTablesTableAdded": "{tableName} added to event",
+  "@adminEventTablesTableAdded": {
+    "placeholders": {
+      "tableName": { "type": "String" }
+    }
+  },
+  "adminEventTablesClosedWithWaitlist": "{tableName} closed. {count} player(s) moved to waitlist.",
+  "@adminEventTablesClosedWithWaitlist": {
+    "placeholders": {
+      "tableName": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "adminEventTablesClosed": "{tableName} closed.",
+  "@adminEventTablesClosed": {
+    "placeholders": {
+      "tableName": { "type": "String" }
+    }
+  },
+  "adminEventTablesNoWaitlist": "No one in waitlist",
+  "adminEventTablesWaitlistCount": "{count} in waitlist",
+  "@adminEventTablesWaitlistCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "adminEventTablesWaitlistNext": "Next: {name}",
+  "@adminEventTablesWaitlistNext": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "adminEventTablesWaitlist": "Waitlist",
+  "adminEventTablesNotified": "Notified",
+  "adminEventTablesNotify": "Notify",
+  "adminEventTablesSeat": "Seat",
+  "adminEventTablesSeatAt": "{tableName} ({count} open)",
+  "@adminEventTablesSeatAt": {
+    "placeholders": {
+      "tableName": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "adminEventTablesNoEmptySeats": "No empty seats on this table",
+  "adminEventTablesPlayerSeated": "{name} seated at {tableName}",
+  "@adminEventTablesPlayerSeated": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "tableName": { "type": "String" }
+    }
+  },
+  "adminEventTablesPlayerNotified": "Notified {name}",
+  "@adminEventTablesPlayerNotified": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "adminTableSeatPlayer": "Seat Player",
+  "adminTableFromWaitlist": "From Waitlist",
+  "adminTableWaitlistNextIs": "{name} is next",
+  "@adminTableWaitlistNextIs": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "adminTableClubMember": "Club Member",
+  "adminTableSearchMembers": "Search existing members",
+  "adminTableWalkUpPlayer": "Walk-up Player",
+  "adminTableAddByName": "Add by name",
+  "adminTableSelectMember": "Select Member",
+  "adminTableSearch": "Search...",
+  "adminTablePlayerName": "Player name",
+  "adminTableWaitingForApproval": "Waiting for approval to join seat #{seatNumber}",
+  "@adminTableWaitingForApproval": {
+    "placeholders": {
+      "seatNumber": { "type": "int" }
+    }
+  },
+  "adminTableReject": "Reject",
+  "adminTableApprove": "Approve",
+  "adminTableRemove": "Remove",
+  "adminTableSeatNumber": "Seat #{seatNumber}",
+  "@adminTableSeatNumber": {
+    "placeholders": {
+      "seatNumber": { "type": "int" }
+    }
+  },
+  "adminTableNoEmptySeats": "No empty seats available",
+  "adminTableSeatPlayerName": "Seat {name}",
+  "@adminTableSeatPlayerName": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "adminTableSelectSeat": "Select a seat:",
+  "adminTablePlayerSeated": "{name} seated",
+  "@adminTablePlayerSeated": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "adminTableAlreadySeated": "{name} is already seated at {location}",
+  "@adminTableAlreadySeated": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "location": { "type": "String" }
+    }
+  },
+  "adminTablePlayerApproved": "{name} approved",
+  "@adminTablePlayerApproved": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "adminTablePlayerRejected": "Player rejected",
+  "adminTablePlayerRemoved": "Player removed",
+  "adminTableWaitlistInCount": "{count} in waitlist",
+  "@adminTableWaitlistInCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "adminTableWaitlistNextName": "Next: {name}",
+  "@adminTableWaitlistNextName": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "adminTableNotifiedName": "Notified {name}",
+  "@adminTableNotifiedName": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "clubCashGameStakes": "Cash Game {stakes}",
+  "@clubCashGameStakes": {
+    "placeholders": {
+      "stakes": { "type": "String" }
+    }
+  },
+  "clubCashGameTablesSummary": "{count} tables · {occupied} seated · {open} open",
+  "@clubCashGameTablesSummary": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "occupied": { "type": "int" },
+      "open": { "type": "int" }
+    }
+  },
+  "clubCashGameTableNumber": "Table {number}",
+  "@clubCashGameTableNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "clubCashGameNoTables": "No tables in this group",
+  "clubCashGameFailedToLoad": "Failed to load tables: {error}",
+  "@clubCashGameFailedToLoad": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "clubCashGameAlreadySeated": "You're already seated at a table",
+  "clubCashGameSeatAvailable": "There's a seat available for you, approach registration",
+  "clubCashGameJoinedWaitlist": "Joined waitlist at position #{position}",
+  "@clubCashGameJoinedWaitlist": {
+    "placeholders": {
+      "position": { "type": "int" }
+    }
+  },
+  "clubCashGameJoinFailed": "Failed to join waitlist: {error}",
+  "@clubCashGameJoinFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "clubCashGameLeftWaitlist": "Left the waitlist",
+  "clubCashGameLeaveFailed": "Failed to leave waitlist: {error}",
+  "@clubCashGameLeaveFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "clubCashGameViewWaitlist": "View Waitlist",
+  "clubCashGameInWaitlist": "In waitlist",
+  "clubCashGameInWaitlistPosition": "In waitlist · #{position}",
+  "@clubCashGameInWaitlistPosition": {
+    "placeholders": {
+      "position": { "type": "int" }
+    }
+  },
+  "clubCashGameJoinWaitlist": "Join Waitlist",
+  "clubCashGameLeaveWaitlistConfirm": "Leave waitlist?",
+  "clubCashGameLosePosition": "You will lose your current position.",
+  "clubCashGameKeep": "Keep",
+  "clubCashGameLeave": "Leave",
+  "clubCashGameRefreshFailed": "Could not refresh tables: {error}",
+  "@clubCashGameRefreshFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "clubCashGameWaitlistTitle": "Waitlist",
+  "clubCashGameNotified": "{name} has been notified",
+  "@clubCashGameNotified": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "clubCashGameNotifyFailed": "Failed to notify: {error}",
+  "@clubCashGameNotifyFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "clubCashGameCouldNotLoad": "Could not load waitlist",
+  "clubCashGameNoOneOnWaitlist": "No one on the waitlist",
+  "clubCashGamePlayer": "Player",
+  "clubCashGameNotifiedStatus": "Notified • {time}",
+  "@clubCashGameNotifiedStatus": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "clubCashGameJoinedTime": "Joined {time}",
+  "@clubCashGameJoinedTime": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "clubCashGameJustNow": "just now",
+  "clubCashGameMinutesAgo": "{count}m ago",
+  "@clubCashGameMinutesAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "clubCashGameHoursAgo": "{count}h ago",
+  "@clubCashGameHoursAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "clubCashGameDaysAgo": "{count}d ago",
+  "@clubCashGameDaysAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "clubCashGameAddTable": "Add Table",
+  "clubCashGameNewTableName": "New table name (optional)",
+  "clubCashGameAdd": "Add",
+  "clubCashGameAddedToGroup": "Added {tableName} to the group",
+  "@clubCashGameAddedToGroup": {
+    "placeholders": {
+      "tableName": { "type": "String" }
+    }
+  },
+  "clubCashGameAddFailed": "Failed to add table: {error}",
+  "@clubCashGameAddFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "clubCashGameAttachFailed": "Failed to attach table: {error}",
+  "@clubCashGameAttachFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "clubCashGameAvailableTables": "Available tables",
+  "clubCashGameInUseByOther": "In use by other events",
+  "clubCashGameNoOtherTables": "No other tables in this club yet",
+  "clubCashGameInUseBy": "In use by {eventName}",
+  "@clubCashGameInUseBy": {
+    "placeholders": {
+      "eventName": { "type": "String" }
+    }
+  },
+  "clubCashGameSeats": "Seats {count}",
+  "@clubCashGameSeats": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "memberEventTablesSummary": "{count} tables • {occupied} seated • {open} open",
+  "@memberEventTablesSummary": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "occupied": { "type": "int" },
+      "open": { "type": "int" }
+    }
+  },
+  "memberEventJoinedWaitlist": "Joined waitlist at position #{position}",
+  "@memberEventJoinedWaitlist": {
+    "placeholders": {
+      "position": { "type": "int" }
+    }
+  },
+  "memberEventJoinFailed": "Failed to join waitlist: {error}",
+  "@memberEventJoinFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "memberEventLeftWaitlist": "Left the waitlist",
+  "memberEventLeaveFailed": "Failed to leave waitlist: {error}",
+  "@memberEventLeaveFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "memberEventWaitlistPosition": "Position #{position} in waitlist",
+  "@memberEventWaitlistPosition": {
+    "placeholders": {
+      "position": { "type": "int" }
+    }
+  },
+  "memberEventTotalWaiting": "{count} total waiting",
+  "@memberEventTotalWaiting": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "memberEventLeaveWaitlist": "Leave Waitlist",
+  "memberEventJoinWaitlistWithCount": "Join Waitlist ({count} waiting)",
+  "@memberEventJoinWaitlistWithCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "memberEventJoinWaitlist": "Join Waitlist",
+  "memberEventAllTablesFull": "All tables are full",
+
+  "dealerHomeTitle": "Dealer Mode",
+  "dealerHomeNoClubs": "No Clubs Found",
+  "dealerHomeNoClubsOwnerHint": "Create your first club to get started.",
+  "dealerHomeNoClubsMemberHint": "You are not a member of any clubs yet.\nAsk a club owner to invite you.",
+  "dealerHomeCreateClub": "Create Club",
+  "dealerHomeDealer": "Dealer",
+  "dealerHomeClubCount": "{count} clubs",
+  "@dealerHomeClubCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "dealerHomeActiveSessions": "Active Sessions",
+  "dealerHomeClubs": "Clubs",
+  "dealerHomeTables": "Tables",
+  "dealerHomeAddTable": "Add Table",
+  "dealerHomeTableNameLabel": "Table Name",
+  "dealerHomeTableNameHint": "e.g., Table 1, Main Table",
+  "dealerHomeTableAdded": "Table \"{name}\" added to {clubName}!",
+  "@dealerHomeTableAdded": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "clubName": { "type": "String" }
+    }
+  },
+  "dealerHomeAddTableFailed": "Failed to add table: {error}",
+  "@dealerHomeAddTableFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerHomeClubName": "Club Name",
+  "dealerHomeCreate": "Create",
+  "dealerHomeClubCreated": "Club \"{name}\" created successfully!",
+  "@dealerHomeClubCreated": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "dealerHomeClubCreateFailed": "Failed to create club: {error}",
+  "@dealerHomeClubCreateFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerHomeNoTables": "No tables in this club",
+  "dealerHomeActiveHand": "Active - Hand #{number}",
+  "@dealerHomeActiveHand": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "dealerHomeInactive": "Inactive",
+  "dealerHomeResume": "Resume",
+  "dealerHomeStart": "Start",
+  "dealerHomeSessionSettings": "Session Settings",
+  "dealerHomeSmallBlind": "Small Blind",
+  "dealerHomeBigBlind": "Big Blind",
+  "dealerHomeBBAnte": "BB Ante",
+  "dealerHomeGameType": "Game Type",
+  "dealerHomeCash": "Cash",
+  "dealerHomeTournament": "Tournament",
+  "dealerHomeButtonPosition": "Button Position",
+  "dealerHomeStartSession": "Start Session",
+  "dealerHomeCouldNotFind": "Could not find club or table",
+  "dealerHomeStartFailed": "Failed to start session: {error}",
+  "@dealerHomeStartFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerHomeErrorLoading": "Error loading data: {error}",
+  "@dealerHomeErrorLoading": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerHomeTableCount": "{count} tables",
+  "@dealerHomeTableCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "dealerTableFailedStartHand": "Failed to start hand: {error}",
+  "@dealerTableFailedStartHand": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableChopSummary": "Chop: {winners} split {amount}",
+  "@dealerTableChopSummary": {
+    "placeholders": {
+      "winners": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "dealerTableWins": "{name} wins {amount}",
+  "@dealerTableWins": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "dealerTablePotChopped": "Pot chopped between {names}",
+  "@dealerTablePotChopped": {
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "dealerTableFailedCompleteHand": "Failed to complete hand: {error}",
+  "@dealerTableFailedCompleteHand": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTablePlayerBusted": "{name} Busted!",
+  "@dealerTablePlayerBusted": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "dealerTableNoChipsRemaining": "Seat {seatNumber} has no chips remaining.\nRebuy amount: {amount}",
+  "@dealerTableNoChipsRemaining": {
+    "placeholders": {
+      "seatNumber": { "type": "int" },
+      "amount": { "type": "String" }
+    }
+  },
+  "dealerTableRemovePlayer": "Remove Player",
+  "dealerTableRebuy": "Rebuy",
+  "dealerTableRebuysFor": "{name} rebuys for {amount}",
+  "@dealerTableRebuysFor": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "dealerTableFinishesIn": "{name} finishes in {position} place",
+  "@dealerTableFinishesIn": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "position": { "type": "String" }
+    }
+  },
+  "dealerTableEndSessionTitle": "End Session?",
+  "dealerTableEndSessionBody": "Are you sure you want to end this session?",
+  "dealerTableEnd": "End",
+  "dealerTableDealerChange": "Dealer Change",
+  "dealerTableDealerChangeBody": "The session will be paused and another dealer can scan the table QR code to continue where you left off.",
+  "dealerTableDealerChangePreserve": "All players, blinds, and game state will be preserved.",
+  "dealerTableDealerChangeResume": "You can also resume this session yourself later.",
+  "dealerTableHandOff": "Hand Off",
+  "dealerTableSessionPaused": "Session paused. Another dealer can now take over.",
+  "dealerTablePauseFailed": "Failed to pause session: {error}",
+  "@dealerTablePauseFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableEventCancelled": "Event Cancelled",
+  "dealerTableEventFinished": "Event Finished",
+  "dealerTableEventCancelledBody": "The club admin has cancelled this event. All sessions have been saved.",
+  "dealerTableEventFinishedBody": "The club admin has finished this event. All sessions have been saved.",
+  "dealerTableSessionEnded": "Session Ended",
+  "dealerTableSessionEndedBody": "This session has been ended. All data has been saved.",
+  "dealerTableLeaveTitle": "Leave dealer table?",
+  "dealerTableLeaveActiveHand": "A hand is currently in progress. Leaving now may disrupt logging.",
+  "dealerTableLeaveInactive": "The session stays live. You can return any time.",
+  "dealerTableAutoCorrection": "Auto-corrected \"{detected}\" → \"{corrected}\"",
+  "@dealerTableAutoCorrection": {
+    "placeholders": {
+      "detected": { "type": "String" },
+      "corrected": { "type": "String" }
+    }
+  },
+  "dealerTableApprovePlayer": "Approve {name}?",
+  "@dealerTableApprovePlayer": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "dealerTableStartingChipStack": "Starting Chip Stack",
+  "dealerTablePlayerRejected": "{name} rejected",
+  "@dealerTablePlayerRejected": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "dealerTableRejectFailed": "Failed to reject: {error}",
+  "@dealerTableRejectFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTablePlayerJoined": "{name} joined with {amount}",
+  "@dealerTablePlayerJoined": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "dealerTableApproveFailed": "Failed to approve: {error}",
+  "@dealerTableApproveFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableChipStack": "Chip Stack",
+  "dealerTableSave": "Save",
+
+  "liveSessionHand": "HAND",
+  "liveSessionPot": "POT",
+  "liveSessionStatus": "STATUS",
+  "liveSessionLive": "LIVE",
+  "liveSessionWaiting": "WAITING",
+  "liveSessionWinnerSummary": "{winner} wins ${amount}",
+  "@liveSessionWinnerSummary": {
+    "placeholders": {
+      "winner": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "liveSessionSessionEnded": "Session Ended",
+  "liveSessionSessionEndedBody": "The dealer has ended this session.",
+  "liveSessionLeaveTitle": "Leave Table?",
+  "liveSessionLeaveBody": "Are you sure you want to leave this table?",
+  "liveSessionLeave": "Leave",
+  "liveSessionLeaveFailed": "Failed to leave: {error}",
+  "@liveSessionLeaveFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "liveSessionLeaveTooltip": "Leave Table",
+  "liveSessionSeat": "Seat {number}",
+  "@liveSessionSeat": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "liveSessionYourSeat": "Your Seat",
+  "liveSessionStack": "Stack: {amount}",
+  "@liveSessionStack": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "liveSessionWaitingForDealer": "Waiting for dealer...",
+  "liveSessionOffline": "OFFLINE",
+  "liveSessionRecentActions": "Recent Actions",
+  "liveSessionWaitingForAction": "Waiting for action...",
+  "liveSessionD": "D",
+
+  "qrScanTitle": "Scan Table QR",
+  "qrScanInvalidCode": "Invalid QR code. Please scan a valid poker table QR code.",
+  "qrScanError": "Error processing QR code: {error}",
+  "@qrScanError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "qrScanInstructions": "Point your camera at the QR code on the table to join",
+
+  "clubRequestsTitle": "Club Requests",
+  "clubRequestsAll": "All",
+  "clubRequestsPending": "Pending",
+  "clubRequestsApproved": "Approved",
+  "clubRequestsRejected": "Rejected",
+  "clubRequestsApproveTitle": "Approve Request",
+  "clubRequestsApproveBody": "Are you sure you want to approve \"{name}\"? This will create a new club and add you as the admin.",
+  "@clubRequestsApproveBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "clubRequestsRejectTitle": "Reject Request",
+  "clubRequestsRejectBody": "Please provide a reason for rejecting \"{name}\":",
+  "@clubRequestsRejectBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "clubRequestsRejectHint": "Reason for rejection...",
+  "clubRequestsApproveButton": "Approve",
+  "clubRequestsRejectButton": "Reject",
+  "clubRequestsApproved2": "{name} has been approved!",
+  "@clubRequestsApproved2": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "clubRequestsRejected2": "{name} has been rejected.",
+  "@clubRequestsRejected2": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "clubRequestsNoRequests": "No requests",
+  "clubRequestsPendingBadge": "PENDING",
+  "clubRequestsApprovedBadge": "APPROVED",
+  "clubRequestsRejectedBadge": "REJECTED",
+  "clubRequestsAddress": "Address",
+  "clubRequestsPhone": "Phone",
+  "clubRequestsAdminEmail": "Admin Email",
+  "clubRequestsRequestedBy": "Requested By",
+  "clubRequestsRequesterEmail": "Requester Email",
+  "clubRequestsRequestedAt": "Requested At",
+  "clubRequestsReviewedAt": "Reviewed At",
+  "clubRequestsRejectionReason": "Rejection Reason:",
+
+  "supportRequestsTitle": "Support Requests",
+  "supportRequestsAll": "All",
+  "supportRequestsPending": "Pending",
+  "supportRequestsClosed": "Closed",
+  "supportRequestsResolveTitle": "Resolve Request",
+  "supportRequestsResolveBody": "Optional response to the user:",
+  "supportRequestsResponseHint": "Response (optional)...",
+  "supportRequestsResolve": "Resolve",
+  "supportRequestsResolved": "Request resolved",
+  "supportRequestsRejectTitle": "Reject Request",
+  "supportRequestsRejectBody": "Reason for rejection:",
+  "supportRequestsRejectHint": "Reason...",
+  "supportRequestsReject": "Reject",
+  "supportRequestsRejected": "Request rejected",
+  "supportRequestsNoRequests": "No requests",
+  "supportRequestsPendingBadge": "PENDING",
+  "supportRequestsResolvedBadge": "RESOLVED",
+  "supportRequestsRejectedBadge": "REJECTED",
+  "supportRequestsCategory": "Category",
+  "supportRequestsUser": "User",
+  "supportRequestsEmail": "Email",
+  "supportRequestsSubmitted": "Submitted",
+  "supportRequestsDescription": "Description",
+  "supportRequestsAdminResponse": "Admin Response",
+  "supportRequestsBugReport": "Bug Report",
+  "supportRequestsFeatureRequest": "Feature Request",
+  "supportRequestsAccountIssue": "Account Issue",
+
+  "debugHandViewerTitle": "Debug Hand Viewer",
+  "debugHandViewerSessionName": "Session Name",
+  "debugHandViewerHandNumbers": "Hand Numbers (comma-separated, e.g., 27,28)",
+  "debugHandViewerFetchData": "Fetch Data",
+  "debugHandViewerCopied": "Copied to clipboard",
+  "debugHandViewerNoData": "No data yet. Enter session name and click Fetch Data.",
+
+  "navDrawerSettings": "Settings",
+  "navDrawerRegisterClub": "Register Club",
+  "navDrawerHelpSupport": "Help & Support",
+  "navDrawerLogOut": "Log out",
+  "navDrawerUpgrade": "Upgrade",
+  "navDrawerUserFallback": "User",
+  "navDrawerStatistics": "Statistics",
+  "navDrawerEvents": "Events",
+  "navDrawerBankroll": "Bankroll",
+  "navDrawerClubs": "Clubs",
+  "navDrawerNoClubsYet": "No clubs yet",
+  "navDrawerMemberCount": "{count} members",
+  "@navDrawerMemberCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "navDrawerRoleAdmin": "Admin",
+  "navDrawerRoleDealer": "Dealer",
+  "navDrawerRoleMember": "Member",
+  "navDrawerVersion": "Version 1.0.0",
+  "navDrawerLastLoginToday": "Last login: Today",
+  "navDrawerNoEarningsTitle": "No Earnings Data Yet",
+  "navDrawerNoEarningsBody": "Add some session results first to view your earnings chart. You can add results from the Profile page.",
+  "navDrawerSignOutTitle": "Sign Out",
+  "navDrawerSignOutMessage": "Are you sure you want to sign out?",
+  "navDrawerSignOut": "Sign Out",
+
+  "multiPotMainPot": "Main Pot",
+  "multiPotSidePot": "Side Pot {index}",
+  "@multiPotSidePot": {
+    "placeholders": {
+      "index": { "type": "int" }
+    }
+  },
+  "multiPotPlayerFallback": "Player {id}",
+  "@multiPotPlayerFallback": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+  "multiPotMainPotWinner": "main pot winner",
+  "multiPotEligibleFromPrevious": "eligible from previous pot",
+  "multiPotAutoAwarded": "Auto-awarded to {name} ({reason})",
+  "@multiPotAutoAwarded": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "reason": { "type": "String" }
+    }
+  },
+  "multiPotChoppedPot": "Chopped Pot",
+  "multiPotSingleWinner": "Single Winner",
+  "multiPotSelectAllWinners": "Select all winners:",
+  "multiPotSelectTheWinner": "Select the winner:",
+  "multiPotSelectWinnersTitle": "Select Winners",
+  "multiPotMultiplePots": "Multiple pots - select winner for each pot",
+
+  "winnerSelectionWhoChopped": "Who chopped this pot?",
+  "winnerSelectionWhoWon": "Who won this hand?",
+  "winnerSelectionChoppedPot": "Chopped Pot",
+  "winnerSelectionIndividualShares": "Individual shares:",
+  "winnerSelectionSelectAllWinners": "Select all winners:",
+  "winnerSelectionTapTheWinner": "Tap the winner:",
+  "winnerSelectionLongPressHint": "Long-press for chopped pot",
+  "winnerSelectionConfirmChop": "Confirm Chop",
+  "winnerSelectionBackToSingle": "Back to Single Winner",
+
+  "boardCardsCards": "Cards",
+  "boardCardsCard": "Card",
+
+  "allInBoardTitle": "All-In Board Cards",
+
+  "raiseSnapReleaseToType": "Release at min to type",
+
+  "slidingNotificationHeader": "NOTIFICATION",
+
+  "eventSuccessTitle": "Nice! Your event is now on calendar.",
+  "eventSuccessSubtitle": "You can edit or remove it anytime",
+  "eventSuccessGoToCalendar": "Go to calendar",
+  "eventSuccessAddAnother": "Add another event",
+
+  "stackChartNoData": "No data yet",
+  "stackChartStart": "Start",
+  "stackChartRebuy": "Rebuy",
+  "stackChartEnd": "End",
+  "stackChartTitle": "Stack Chart",
+  "stackChartAvgGrowth": "Avg Growth",
+  "stackChartDuration": "Duration",
+  "stackChartProfitLoss": "P/L",
+
+  "actionGridSelectAction": "Select Action",
+
+  "pokerTablePlayerFallback": "Player",
+
+  "loadingDefault": "Loading...",
+
+  "forgotPasswordFailedSendCode": "Failed to send code. Please try again.",
+  "forgotPasswordNewCodeSent": "New code sent to your email.",
+  "forgotPasswordFailedResend": "Failed to resend code.",
+  "forgotPasswordEnterFullCode": "Please enter the full 6-digit code.",
+  "forgotPasswordInvalidCode": "Invalid or expired code. Please try again.",
+  "forgotPasswordResetSuccess": "Password reset successfully! Please sign in.",
+  "forgotPasswordResetTitle": "Reset password",
+  "forgotPasswordResetSubtitle": "Enter your email to receive a verification code",
+  "forgotPasswordCheckEmail": "Check your email",
+  "forgotPasswordSetNewPassword": "Set new password",
+  "forgotPasswordSetNewSubtitle": "Choose a strong password for your account",
+  "forgotPasswordEmail": "Email",
+  "forgotPasswordEnterEmail": "Please enter your email",
+  "forgotPasswordValidEmail": "Please enter a valid email",
+  "forgotPasswordSendCode": "Send Code",
+  "forgotPasswordVerifyCode": "Verify Code",
+  "forgotPasswordResendCode": "Resend code",
+  "forgotPasswordResendIn": "Resend code in {time}",
+  "@forgotPasswordResendIn": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "forgotPasswordNewPassword": "New password",
+  "forgotPasswordEnterPassword": "Please enter a password",
+  "forgotPasswordMinLength": "Password must be at least 6 characters",
+  "forgotPasswordConfirm": "Confirm password",
+  "forgotPasswordConfirmRequired": "Please confirm your password",
+  "forgotPasswordMismatch": "Passwords do not match",
+  "forgotPasswordResetButton": "Reset Password",
+
+  "onboardingTrackTitle": "TRACK EVERY\nHAND",
+  "onboardingTrackSubtitle": "Log actions, board cards, and results for every hand you play — live or after the session.",
+  "onboardingKnowTitle": "KNOW YOUR\nGAME",
+  "onboardingKnowSubtitle": "VPIP, PFR, 3-Bet, C-Bet and more — see your stats evolve in real time.",
+  "onboardingClubsTitle": "PLAY AT\nCLUBS",
+  "onboardingClubsSubtitle": "Join live events, see rankings, and track your opponents across sessions.",
+
+  "dealerTableEnterStartingStack": "Enter Starting Stack",
+  "dealerTableNoPendingRequests": "No pending join requests",
+  "dealerTablePendingJoinRequests": "Pending Join Requests",
+  "dealerTableUnknown": "Unknown",
+  "dealerTableSeatNumber": "Seat {number}",
+  "@dealerTableSeatNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "dealerTableReview": "Review",
+  "dealerTableSmallBlind": "Small Blind",
+  "dealerTableBigBlind": "Big Blind",
+  "dealerTableNewBlindsNote": "New blinds will apply from the next hand.",
+  "dealerTableSmallMustBeLess": "Small blind must be less than big blind",
+  "dealerTableBlindsMustBePositive": "Blinds must be greater than 0",
+  "dealerTableBlindsUpdated": "Blinds updated to {sb}/{bb}",
+  "@dealerTableBlindsUpdated": {
+    "placeholders": {
+      "sb": { "type": "String" },
+      "bb": { "type": "String" }
+    }
+  },
+  "dealerTableFailedUpdateBlinds": "Failed to update blinds: {error}",
+  "@dealerTableFailedUpdateBlinds": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableFailedMoveButton": "Failed to move button: {error}",
+  "@dealerTableFailedMoveButton": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTablePending": "PENDING",
+  "dealerTableConnectionLost": "Connection Lost",
+  "dealerTableReconnecting": "Attempting to reconnect...",
+  "dealerTableReconnect": "Reconnect",
+  "dealerTableResetHandTitle": "Reset Hand?",
+  "dealerTableResetHandBody": "All actions have been undone. Would you like to start a new hand?",
+  "dealerTableKeepCurrent": "Keep Current",
+  "dealerTableNewHand": "New Hand",
+  "dealerTableHandReset": "Hand reset - ready for new hand",
+  "dealerTableAddPlayerToSeat": "Add Player to Seat {number}",
+  "@dealerTableAddPlayerToSeat": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "dealerTableSearchUser": "Search User",
+  "dealerTableManualEntry": "Manual Entry",
+  "dealerTableSearchByName": "Search by Name",
+  "dealerTableTypeToSearch": "Type to search users...",
+  "dealerTableNoUsersFound": "No users found. Try manual entry.",
+  "dealerTablePlayerNameLabel": "Player Name",
+  "dealerTableEnterPlayerName": "Enter player name",
+  "dealerTableStartingChipStack": "Starting Chip Stack",
+  "dealerTableAddPlayer": "Add Player",
+  "dealerTableEndSession": "End session",
+  "dealerTableUpdatedStack": "Updated {name} stack to {amount}",
+  "@dealerTableUpdatedStack": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "dealerTableFailedUpdateStack": "Failed to update stack: {error}",
+  "@dealerTableFailedUpdateStack": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableSittingAtSeat": "You are now playing at Seat {number}",
+  "@dealerTableSittingAtSeat": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "dealerTableFailedSitAt": "Failed to sit at table: {error}",
+  "@dealerTableFailedSitAt": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableFailedAddPlayer": "Failed to add player: {error}",
+  "@dealerTableFailedAddPlayer": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableFailedRemovePlayer": "Failed to remove player: {error}",
+  "@dealerTableFailedRemovePlayer": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "eventDetailEventType": "Event Type",
+  "eventDetailSeated": "Seated",
+  "eventDetailAreYouGoing": "ARE YOU GOING?",
+  "eventDetailAddedToCalendarBtn": "Added to Calendar",
+  "eventDetailAddToCalendarBtn": "Add to Calendar",
+  "eventDetailWhosGoing": "Who's Coming",
+  "eventDetailSeeAll": "See all",
+  "eventDetailStartDealing": "Start Dealing",
+  "eventDetailViewLiveRankings": "View Live Rankings",
+  "eventDetailNotSeatedAtTable": "You are not currently seated at any table",
+  "eventDetailNotSeatedInEvent": "You are not seated in this event",
+  "eventDetailErrorFindingSeat": "Error finding your seat: {error}",
+  "@eventDetailErrorFindingSeat": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "eventDetailReturnToSeat": "Return to My Seat",
+  "eventDetailViewFinalStandings": "View Final Standings",
+  "eventDetailManageTables": "Manage Tables",
+  "eventDetailManageTable": "Manage Table",
+  "eventDetailSeeAvailability": "See Availability",
+  "eventDetailYoureSeated": "You're Seated",
+  "eventDetailNoTablesAssigned": "No tables assigned to this event",
+  "eventDetailStartEvent": "Start Event",
+  "eventDetailFinish": "Finish",
+  "eventDetailFailedFinishCancel": "Failed to {action} event: {error}",
+  "@eventDetailFailedFinishCancel": {
+    "placeholders": {
+      "action": { "type": "String" },
+      "error": { "type": "String" }
+    }
+  },
+
+  "homeTableSeatInfo": "Table {table}, Seat #{seat}",
+  "@homeTableSeatInfo": {
+    "placeholders": {
+      "table": { "type": "String" },
+      "seat": { "type": "String" }
+    }
+  },
+  "homeRequestResolved": "Request Resolved",
+  "homeRequestClosed": "Request Closed",
+  "homeResponse": "Response",
+  "homeInvitationAccepted": "Invitation Accepted",
+  "homeInvitationDeclined": "Invitation Declined",
+  "homeErrorGeneric": "Error: {error}",
+  "@homeErrorGeneric": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "homeErrorLoadingEvent": "Error loading event: {error}",
+  "@homeErrorLoadingEvent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "homeFailedLoadEvent": "Failed to load event: {error}",
+  "@homeFailedLoadEvent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "homeFailedUpdateEvent": "Failed to update event: {error}",
+  "@homeFailedUpdateEvent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "homeErrorDeletingEvent": "Error deleting event: {error}",
+  "@homeErrorDeletingEvent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "homeTournament": "Tournament",
+  "homeCashGame": "Cash Game",
+  "homeHomeGame": "Home Game",
+  "homeOnline": "Online",
+
+  "commonErrorGeneric": "Error: {error}",
+  "@commonErrorGeneric": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "commonLeave": "Leave",
+  "commonAccept": "Accept",
+  "commonLoadingHands": "Loading hands...",
+
+  "sessionHistoryButtonPosition": "Button Position: {position}",
+  "@sessionHistoryButtonPosition": {
+    "placeholders": {
+      "position": { "type": "String" }
+    }
+  },
+  "sessionHistoryPlayerCount": "Player Count: {count}",
+  "@sessionHistoryPlayerCount": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "sessionHistoryStartTime": "Start Time: {time}",
+  "@sessionHistoryStartTime": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "sessionHistoryPreflop": "Preflop:",
+  "sessionHistoryFlop": "Flop:",
+  "sessionHistoryTurn": "Turn:",
+  "sessionHistoryRiver": "River:",
+  "sessionHistorySyncFailed": "Sync failed: {error}",
+  "@sessionHistorySyncFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "sessionHistoryClearFailed": "Failed to clear sessions: {error}",
+  "@sessionHistoryClearFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "notificationsClubNotFound": "Club not found",
+  "notificationsAccept": "Accept",
+  "notificationsInvitationAccepted": "Invitation Accepted",
+  "notificationsInvitationDeclined": "Invitation Declined",
+  "notificationsInvitationDeclinedMsg": "Invitation declined",
+  "notificationsEventNotFound": "Event not found",
+  "notificationsFailedLoadClub": "Failed to load club: {error}",
+  "@notificationsFailedLoadClub": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "notificationsErrorLoadingEvent": "Error loading event: {error}",
+  "@notificationsErrorLoadingEvent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "invitationsFailedLoad": "Failed to load invitations: {error}",
+  "@invitationsFailedLoad": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "invitationsFailedAccept": "Failed to accept invitation: {error}",
+  "@invitationsFailedAccept": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "invitationsDeclined": "Invitation declined",
+  "invitationsFailedDecline": "Failed to decline invitation: {error}",
+  "@invitationsFailedDecline": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "clubSettingsTableAdded": "Table added",
+  "clubSettingsTableDeleted": "Table deleted",
+  "clubSettingsQrRegenerated": "QR codes regenerated",
+  "clubSettingsErrorPdf": "Error generating PDF: {error}",
+  "@clubSettingsErrorPdf": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "clubDashboardActiveDealers": "Active Dealers",
+  "clubDashboardPendingInvitations": "Pending Invitations",
+  "clubDashboardDealerEmailHint": "dealer@example.com",
+  "clubDashboardInvitationSent": "Invitation sent to {email}",
+  "@clubDashboardInvitationSent": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "clubDashboardFailedSendInvite": "Failed to send invitation: {error}",
+  "@clubDashboardFailedSendInvite": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "clubDashboardFailedCancelInvite": "Failed to cancel invitation: {error}",
+  "@clubDashboardFailedCancelInvite": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "eventManagementClubEvents": "{name} Events",
+  "@eventManagementClubEvents": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "eventManagementFailedUpdate": "Failed to update event: {error}",
+  "@eventManagementFailedUpdate": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "profileCash": "Cash",
+  "profileTournament": "Tournament",
+  "profileDevTools": "Dev Tools",
+  "profilePremiumOverride": "Premium Override",
+  "profileUsingRealStatus": "Using real status: {status}",
+  "@profileUsingRealStatus": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+  "profileOverridden": "Overridden: {status}",
+  "@profileOverridden": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+  "profileResetToReal": "Reset to real status",
+  "profileVersion": "Version 1.0",
+  "profileLastLogin": "Last login {date}",
+  "@profileLastLogin": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+
+  "pokerHandFailedEndSession": "Failed to end session: {error}",
+  "@pokerHandFailedEndSession": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "pokerHandFailedSaveSession": "Failed to save session: {error}",
+  "@pokerHandFailedSaveSession": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "pokerHandRebuyAdded": "Rebuy added: ${amount} (Stack: {stack})",
+  "@pokerHandRebuyAdded": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "stack": { "type": "String" }
+    }
+  },
+  "pokerHandEndSession": "End session",
+  "pokerHandRebuyAmountDollar": "Rebuy Amount ($)",
+  "pokerHandRebuyChips": "Rebuy Chips",
+
+  "seatSetupPlayerName": "Player Name",
+  "seatSetupOpponentSaved": "Opponent saved!",
+  "seatSetupFailedSave": "Failed to save: {error}",
+  "@seatSetupFailedSave": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "seatSetupSelectYourSeat": "Please select your seat",
+
+  "authExpLinkGoogleTitle": "Link Google Account",
+  "authExpPassword": "Password",
+  "authExpLinkAccount": "Link Account",
+
+  "individualSetupSessionNameHint": "e.g., \"Friday Night Poker\"",
+  "individualSetupCashGame": "Cash Game",
+  "individualSetupTournament": "Tournament",
+  "individualSetupEnterAmount": "Enter amount",
+  "individualSetupEnterChipStack": "Enter chip stack",
+  "individualSetupSmallBlind": "Small Blind",
+  "individualSetupBigBlind": "Big Blind",
+  "individualSetupEnterValue": "Enter value",
+
+  "individualHandSetupNameHint": "e.g., \"AA vs KK Cooler\"",
+  "individualHandSetupSmallBlind": "Small Blind",
+  "individualHandSetupBigBlind": "Big Blind",
+  "individualHandSetupPlayers": "Players",
+  "individualHandSetupGameType": "Game Type",
+
+  "playerSessionYourHoleCards": "Your Hole Cards",
+  "playerSessionSeat": "SEAT",
+  "playerSessionStack": "STACK",
+  "playerSessionPot": "POT",
+  "playerSessionNotesHint": "Add notes about this hand...",
+
+  "dealerQrScanInvalidCode": "Invalid QR code. Please scan a valid table QR code.",
+  "dealerQrScanWrongClub": "This table belongs to a different club.",
+  "dealerQrScanTableNotFound": "Table not found. Please scan a valid table QR code.",
+  "dealerQrScanError": "Error processing QR code: {error}",
+  "@dealerQrScanError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerQrScanFailedStart": "Failed to start session: {error}",
+  "@dealerQrScanFailedStart": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerQrScanTakingOver": "Taking over from {name}",
+  "@dealerQrScanTakingOver": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "dealerQrScanHandsPlayed": "Hands Played",
+  "dealerQrScanBlinds": "Blinds",
+  "dealerQrScanPlayers": "Players",
+  "dealerQrScanFailedResume": "Failed to resume session: {error}",
+  "@dealerQrScanFailedResume": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "usernameSetupLabel": "Username",
+
+  "stackChartScreenAvgGrowth": "Avg Growth",
+  "stackChartScreenDuration": "Duration",
+  "stackChartScreenProfitLoss": "P/L",
+  "stackChartScreenStack": "Stack",
+
+  "quickStackSearchHint": "Search or add player...",
+
+  "sessionHandsLoading": "Loading hands...",
+
+  "createEventDefaultCashGame": "Cash Game {stakes}",
+  "@createEventDefaultCashGame": {
+    "placeholders": {
+      "stakes": { "type": "String" }
+    }
+  },
+  "createEventDefaultCashGameNoStakes": "Cash Game",
+
+  "eventDashboardTvMode": "TV Display Mode",
+
+  "tableSelectionTitle": "Select Table",
+  "tableSelectionAdminSubtitle": "Choose a table to manage",
+  "tableSelectionMemberSubtitle": "Choose a table to view availability",
+  "tableSelectionNoTables": "No tables available",
+  "tableSelectionOpenSeats": "{count} open",
+  "@tableSelectionOpenSeats": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tableSelectionSeated": "{occupied}/9 seated",
+  "@tableSelectionSeated": {
+    "placeholders": {
+      "occupied": { "type": "int" }
+    }
+  },
+
+  "monthJan": "Jan",
+  "monthFeb": "Feb",
+  "monthMar": "Mar",
+  "monthApr": "Apr",
+  "monthMay": "May",
+  "monthJun": "Jun",
+  "monthJul": "Jul",
+  "monthAug": "Aug",
+  "monthSep": "Sep",
+  "monthOct": "Oct",
+  "monthNov": "Nov",
+  "monthDec": "Dec",
+
+  "weekdaySun": "Sun",
+  "weekdayMon": "Mon",
+  "weekdayTue": "Tue",
+  "weekdayWed": "Wed",
+  "weekdayThu": "Thu",
+  "weekdayFri": "Fri",
+  "weekdaySat": "Sat",
+
+  "opponentsErrorGeneric": "Error: {error}",
+  "@opponentsErrorGeneric": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "opponentsErrorDeleting": "Error deleting opponent: {error}",
+  "@opponentsErrorDeleting": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "opponentsErrorClearing": "Error clearing opponents: {error}",
+  "@opponentsErrorClearing": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "onboardingReadTitle": "READ THE GAME\nLIKE A PRO",
+  "onboardingReadSubtitle": "Create an account to start tracking your poker journey.",
+  "onboardingCreateAccount": "Create account",
+  "onboardingLogIn": "Log in",
+  "onboardingSkip": "Skip",
+  "onboardingFinalTable": "Final Table",
+
+  "authExpSignUpTitle": "Sign up",
+  "authExpLogInTitle": "Log in to your account",
+  "authExpSignUpSubtitle": "Create an account to continue",
+  "authExpLogInSubtitle": "Enter your email and password to log in",
+  "authExpName": "Name",
+  "authExpEmail": "Email",
+  "authExpEnterName": "Please enter your name",
+  "authExpNameMinLength": "Name must be at least 2 characters",
+  "authExpEnterEmail": "Please enter your email",
+  "authExpValidEmail": "Please enter a valid email",
+  "authExpEnterPassword": "Please enter your password",
+  "authExpPasswordMinLength": "Password must be at least 6 characters",
+  "authExpBySigningUp": "By Signing up, you agree to the ",
+  "authExpTermsOfService": "Terms of Service",
+  "authExpAnd": "\nand ",
+  "authExpPrivacyPolicy": "Privacy Policy",
+  "authExpCreateAccount": "Create account",
+  "authExpAlreadyHaveAccount": "Already have an account? ",
+  "authExpSignIn": "Sign in",
+  "authExpForgotPassword": "Forgot password?",
+  "authExpDontHaveAccount": "Don't have an account? ",
+  "authExpSignUp": "Sign up",
+  "authExpOr": "or",
+  "authExpContinueGoogle": "Continue with Google",
+  "authExpLinkGoogleMessage": "An account with {email} already exists. Enter your password to link your Google account.",
+  "@authExpLinkGoogleMessage": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+
+  "forgotPasswordCodeSubtitle": "Enter the 6-digit code sent to {email}",
+  "@forgotPasswordCodeSubtitle": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+
+  "usernameSetupChangeTitle": "Change your username",
+  "usernameSetupChooseTitle": "Choose your username",
+  "usernameSetupSubtitle": "This is how other players will know you at the table",
+  "usernameSetupRequired": "Username is required",
+  "usernameSetupCheckingAvailability": "Checking availability\u2026",
+  "usernameSetupAvailable": "Available!",
+  "usernameSetupAlreadyTaken": "Already taken",
+  "usernameSetupCurrentUsername": "This is your current username",
+  "usernameSetupCouldNotCheck": "Could not check availability",
+  "usernameSetupJustTaken": "Username was just taken. Try another.",
+  "usernameSetupRulesHint": "3\u201320 characters \u00b7 letters, numbers, underscores",
+  "usernameSetupUpdateButton": "Update username",
+  "usernameSetupClaimButton": "Claim username",
+  "usernameSetupSkip": "Skip for now",
+
+  "sessionHandsTitle": "Session",
+  "sessionHandsHandsLogged": "{count} hands logged",
+  "@sessionHandsHandsLogged": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionHandsError": "Error",
+  "sessionHandsNoHandsTitle": "No Hands Logged",
+  "sessionHandsNoHandsSubtitle": "This session has no recorded hands yet.",
+  "sessionHandsWon": "WON",
+  "sessionHandsActions": "{count} actions",
+  "@sessionHandsActions": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionHandsPot": "Pot",
+
+  "stackChartScreenTitle": "Stack Chart",
+  "stackChartScreenPokerSession": "Poker Session",
+
+  "notificationsScreenTitle": "Notifications",
+  "notificationsScreenToday": "Today",
+  "notificationsScreenMarkAllAsRead": "Mark all as read",
+  "notificationsScreenMarkAsRead": "Mark as read",
+  "notificationsScreenNoNotifications": "No notifications",
+  "notificationsScreenClubInvitation": "Club Invitation",
+  "notificationsScreenInvitedToJoin": "You've been invited to join",
+  "notificationsScreenDecline": "Decline",
+  "notificationsScreenNotAuthenticated": "Not authenticated",
+  "notificationsScreenRequestResolved": "Request Resolved",
+  "notificationsScreenRequestClosed": "Request Closed",
+  "notificationsScreenResponse": "Response",
+  "notificationsScreenEvents": "Events",
+  "notificationsScreenRsvp": "RSVP",
+  "notificationsScreenClubs": "Clubs",
+  "notificationsScreenInvitations": "Invitations",
+  "notificationsScreenSeats": "Seats",
+  "notificationsScreenSupport": "Support",
+
+  "notifEventCreatedTitle": "New Event: {eventName}",
+  "@notifEventCreatedTitle": { "placeholders": { "eventName": { "type": "String" } } },
+  "notifEventCreatedBody": "{date}",
+  "@notifEventCreatedBody": { "placeholders": { "date": { "type": "String" } } },
+  "notifEventUpdatedTitle": "Event Updated: {eventName}",
+  "@notifEventUpdatedTitle": { "placeholders": { "eventName": { "type": "String" } } },
+  "notifEventUpdatedBody": "{clubName} updated the event details",
+  "@notifEventUpdatedBody": { "placeholders": { "clubName": { "type": "String" } } },
+  "notifEventCancelledTitle": "Event Cancelled: {eventName}",
+  "@notifEventCancelledTitle": { "placeholders": { "eventName": { "type": "String" } } },
+  "notifEventCancelledBody": "{clubName} has cancelled the event scheduled for {date}",
+  "@notifEventCancelledBody": { "placeholders": { "clubName": { "type": "String" }, "date": { "type": "String" } } },
+  "notifEventStartingTitle": "{eventName} starts in 1 hour!",
+  "@notifEventStartingTitle": { "placeholders": { "eventName": { "type": "String" } } },
+  "notifEventStartingBody": "{clubName} event is about to begin",
+  "@notifEventStartingBody": { "placeholders": { "clubName": { "type": "String" } } },
+  "notifEventStartedTitle": "{eventName} is now LIVE!",
+  "@notifEventStartedTitle": { "placeholders": { "eventName": { "type": "String" } } },
+  "notifEventStartedBody": "{clubName} event has started - join now to spectate",
+  "@notifEventStartedBody": { "placeholders": { "clubName": { "type": "String" } } },
+  "notifSeatAvailableTitle": "Seat is open: {eventName}",
+  "@notifSeatAvailableTitle": { "placeholders": { "eventName": { "type": "String" } } },
+  "notifSeatAvailableBody": "A seat is now available at {clubName}! Open the app to take your spot.",
+  "@notifSeatAvailableBody": { "placeholders": { "clubName": { "type": "String" } } },
+  "notifMemberRsvpTitle": "RSVP: {memberName}",
+  "@notifMemberRsvpTitle": { "placeholders": { "memberName": { "type": "String" } } },
+  "notifMemberRsvpBody": "{memberName} responded \"{rsvpStatus}\" to {eventName}",
+  "@notifMemberRsvpBody": { "placeholders": { "memberName": { "type": "String" }, "rsvpStatus": { "type": "String" }, "eventName": { "type": "String" } } },
+  "notifNewClubRequestTitle": "New Club Request",
+  "notifNewClubRequestBody": "A new club registration request has been submitted",
+  "notifClubApprovedTitle": "Club Approved",
+  "notifClubApprovedBody": "Your club has been approved!",
+  "notifClubRejectedTitle": "Club Rejected",
+  "notifClubRejectedBody": "Your club request has been rejected",
+  "notifMemberInvitedTitle": "Club Invitation",
+  "notifMemberInvitedBody": "You've been invited to join a club",
+  "notifInvitationAcceptedTitle": "Invitation Accepted",
+  "notifInvitationAcceptedBody": "{memberName} has accepted the invitation",
+  "@notifInvitationAcceptedBody": { "placeholders": { "memberName": { "type": "String" } } },
+  "notifInvitationDeclinedTitle": "Invitation Declined",
+  "notifInvitationDeclinedBody": "{memberName} has declined the invitation",
+  "@notifInvitationDeclinedBody": { "placeholders": { "memberName": { "type": "String" } } },
+  "notifSupportRequestTitle": "Support Request",
+  "notifSupportRequestBody": "A new support request has been submitted",
+  "notifSupportUpdatedTitle": "Support Update",
+  "notifSupportUpdatedBody": "Your support request has been updated",
+  "notifTypeEventCreated": "New Event",
+  "notifTypeEventUpdated": "Event Updated",
+  "notifTypeEventCancelled": "Event Cancelled",
+  "notifTypeEventStarting": "Event Starting Soon",
+  "notifTypeEventStarted": "Event Started",
+  "notifTypeMemberRsvp": "Member RSVP",
+  "notifTypeNewClubRequest": "New Club Request",
+  "notifTypeClubApproved": "Club Approved",
+  "notifTypeClubRejected": "Club Rejected",
+  "notifTypeMemberInvited": "Club Invitation",
+  "notifTypeInvitationAccepted": "Invitation Accepted",
+  "notifTypeInvitationDeclined": "Invitation Declined",
+  "notifTypeSeatAvailable": "Seat Available",
+  "notifTypeSupportRequest": "Support Request",
+  "notifTypeSupportUpdated": "Support Update",
+
+  "invitationsScreenTitle": "Club Invitations",
+  "invitationsScreenNoPending": "No pending invitations",
+  "invitationsScreenYouWillSee": "You'll see invitations from clubs here",
+  "invitationsScreenGoBack": "Go Back",
+  "invitationsScreenUnknownClub": "Unknown Club",
+  "invitationsScreenInvitedBy": "Invited by {name}",
+  "@invitationsScreenInvitedBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "invitationsScreenExpires": "Expires {date}",
+  "@invitationsScreenExpires": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "invitationsScreenExpired": "Expired",
+  "invitationsScreenExpiresInDays": "in {days} day(s)",
+  "@invitationsScreenExpiresInDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "invitationsScreenExpiresInHours": "in {hours} hour(s)",
+  "@invitationsScreenExpiresInHours": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "invitationsScreenExpiresSoon": "soon",
+  "invitationsScreenDecline": "Decline",
+  "invitationsScreenAccept": "Accept",
+  "invitationsScreenJoinedAs": "Joined {clubName} as {role}",
+  "@invitationsScreenJoinedAs": {
+    "placeholders": {
+      "clubName": { "type": "String" },
+      "role": { "type": "String" }
+    }
+  },
+
+  "profilePremium": "Premium",
+  "profileFree": "Free",
+
+  "dealerTableStartNewHand": "Start New Hand",
+  "dealerTableStartSessionBtn": "Start Session",
+  "dealerTableNeedTwoPlayers": "Need at least 2 players to start",
+  "dealerTableAddTestPlayers": "Add Test Players",
+  "dealerTableAddedTestPlayers": "Added {count} test players",
+  "@dealerTableAddedTestPlayers": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "dealerTableRolledBack": "Rolled back to {street}",
+  "@dealerTableRolledBack": {
+    "placeholders": {
+      "street": { "type": "String" }
+    }
+  },
+  "dealerTableUndoneAction": "Undone: {playerName} {action}",
+  "@dealerTableUndoneAction": {
+    "placeholders": {
+      "playerName": { "type": "String" },
+      "action": { "type": "String" }
+    }
+  },
+  "dealerTableScanToJoin": "Scan to join this seat",
+  "dealerTableOccupiedDot": "Occupied · ",
+  "dealerTableEmptyLabel": "Empty",
+  "dealerTableOccupiedLabel": "Occupied",
+  "dealerTableSelectedLabel": "Selected",
+  "dealerTableSelectSeatLabel": "SELECT SEAT",
+  "dealerTableBetAmountDialog": "Bet amount",
+  "dealerTableRaiseToDialog": "Raise to",
+  "dealerTablePausedLabel": "Paused",
+  "dealerTableListeningLabel": "Listening",
+  "dealerTableResumeVoiceTooltip": "Resume Voice",
+  "dealerTablePauseVoiceTooltip": "Pause Voice",
+  "dealerTableVoiceOffLabel": "Voice off",
+  "dealerTableCalibratingLabel": "Calibrating...",
+  "dealerTableCalibrationPrompt": "Please announce: \"Table [number], dealer [name]\"",
+  "dealerTableDealerLockedMsg": "Dealer locked: {name} at table {table}",
+  "@dealerTableDealerLockedMsg": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "table": { "type": "String" }
+    }
+  },
+  "dealerTableNoSpeakersMsg": "No speakers detected - please speak clearly",
+  "dealerTableSayTableDealerMsg": "Please say: \"Table [number], dealer [name]\"",
+  "dealerTableConnectionLostRecovery": "Connection lost - attempting to recover...",
+  "dealerTableConnectionTimeout": "Connection timeout - recalibration required",
+  "dealerTableConnectionRecovered": "Connection recovered!",
+  "dealerTableActionHeldMsg": "Action held",
+  "dealerTableFailedStartStreaming": "Failed to start streaming - check server connection and microphone",
+  "dealerTableFailedStartVoice": "Failed to start voice: {error}",
+  "@dealerTableFailedStartVoice": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableAddPlayerActionLabel": "Add Player",
+  "dealerTableSeatAnotherPlayer": "Seat another player here",
+  "dealerTableSitHereLabel": "Sit Here",
+  "dealerTableJoinAsDealerPlayer": "Join the game as dealer-player",
+  "dealerTableDealerFallback": "Dealer",
+  "dealerTableUpdatedStackMsg": "Updated {name} stack to {amount}",
+  "@dealerTableUpdatedStackMsg": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "dealerTableFailedUpdateStackMsg": "Failed to update stack: {error}",
+  "@dealerTableFailedUpdateStackMsg": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableSittingAtSeatMsg": "You are now playing at Seat {number}",
+  "@dealerTableSittingAtSeatMsg": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "dealerTableFailedSitMsg": "Failed to sit at table: {error}",
+  "@dealerTableFailedSitMsg": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableFailedAddPlayerMsg": "Failed to add player: {error}",
+  "@dealerTableFailedAddPlayerMsg": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "dealerTableRemovedFromSeat": "{name} removed from Seat {seat}",
+  "@dealerTableRemovedFromSeat": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "seat": { "type": "int" }
+    }
+  },
+  "dealerTableFailedRemoveMsg": "Failed to remove player: {error}",
+  "@dealerTableFailedRemoveMsg": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "eventDetailDateAndTime": "Date & Time",
+  "eventDetailTableSeatInfo": "Table {table}, Seat #{seat}",
+  "@eventDetailTableSeatInfo": {
+    "placeholders": {
+      "table": { "type": "String" },
+      "seat": { "type": "int" }
+    }
+  },
+  "eventDetailYoureSeatedGoodLuck": "You're seated, good luck!",
+  "eventDetailHomeGame": "Home Game",
+
+  "clubDashboardDateLabel": "Date",
+  "clubDashboardUnknownLabel": "Unknown",
+  "clubDashboardActiveLabel": "Active",
+  "clubDashboardIdleLabel": "Idle",
+  "clubDashboardInvitedTimeAgo": "Invited {time}",
+  "@clubDashboardInvitedTimeAgo": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "clubDashboardPendingLabel": "Pending",
+  "clubDashboardNoDealersYet": "No dealers yet",
+  "clubDashboardInviteDealersHint": "Invite dealers to help manage your tables",
+  "clubDashboardInviteDealer": "Invite Dealer",
+  "clubDashboardInviteDealerBody": "Enter the email address of the dealer you want to invite.",
+  "clubDashboardSendInvitationBtn": "Send Invitation",
+  "clubDashboardInvitationSentTo": "Invitation sent to {email}",
+  "@clubDashboardInvitationSentTo": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "clubDashboardFailedSendInvitationMsg": "Failed to send invitation: {error}",
+  "@clubDashboardFailedSendInvitationMsg": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "clubDashboardCancelInvitationTitle": "Cancel Invitation?",
+  "clubDashboardCancelInvitationBody": "Cancel the invitation to {email}?",
+  "@clubDashboardCancelInvitationBody": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "clubDashboardKeepBtn": "Keep",
+  "clubDashboardCancelInvitationBtn": "Cancel Invitation",
+  "clubDashboardFailedCancelMsg": "Failed to cancel invitation: {error}",
+  "@clubDashboardFailedCancelMsg": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "clubSettingsMembers": "Members ({count})",
+  "@clubSettingsMembers": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "clubSettingsNoMembersFound": "No members found",
+  "clubSettingsRoleOwner": "Owner",
+  "clubSettingsRoleAdmin": "Admin",
+  "clubSettingsRoleDealer": "Dealer",
+  "clubSettingsRolePlayer": "Player",
+  "clubSettingsTableAddedMsg": "Table added",
+  "clubSettingsEditTableTitle": "Edit Table",
+  "clubSettingsDeleteTableTitle": "Delete Table?",
+  "clubSettingsDeleteTableBody": "Are you sure you want to delete \"{name}\"? This cannot be undone.",
+  "@clubSettingsDeleteTableBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "clubSettingsTableDeletedMsg": "Table deleted",
+  "clubSettingsDealerScanHint": "Dealers scan this to start a session at this table",
+  "clubSettingsRegenerateBtn": "Regenerate",
+  "clubSettingsAppQrCodes": "App QR Codes",
+  "clubSettingsShareWithPlayers": "Share with players to download the app",
+  "clubSettingsDownloadPdf": "Download PDF",
+  "clubSettingsDownloadFinalTable": "Download the Final Table App",
+  "clubSettingsScanQrToGetStarted": "Scan the QR code for your device to get started",
+  "clubSettingsScanToStartSession": "Scan this QR code to start a session",
+  "clubSettingsForDealersOnly": "For dealers only",
+  "clubSettingsTableDefault": "Table {number}",
+  "@clubSettingsTableDefault": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "eventManagementFailedUpdateEvent": "Failed to update event: {error}",
+  "@eventManagementFailedUpdateEvent": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "adminTableThisWillMoveMsg": "This will move {count} player(s) to the waitlist and remove the table from this event.",
+  "@adminTableThisWillMoveMsg": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "adminTableThisWillRemoveMsg": "This will remove the table from this event.",
+  "adminTableClosedWithWaitlistMsg": "{table} closed. {count} player(s) moved to waitlist.",
+  "@adminTableClosedWithWaitlistMsg": {
+    "placeholders": {
+      "table": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "adminTableClosedMsg": "{table} closed.",
+  "@adminTableClosedMsg": {
+    "placeholders": {
+      "table": { "type": "String" }
+    }
+  },
+  "adminTableEmptyLabel": "Empty",
+  "adminTableTableFallback": "Table",
+  "adminTableTableNumberLabel": "Table {number}",
+  "@adminTableTableNumberLabel": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "homePendingInvitationsMsg": "You have {count} pending club invitation(s).",
+  "@homePendingInvitationsMsg": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homeEventFallback": "Event",
+  "homePokerFallback": "Poker",
+  "homeUserFallback": "User",
+  "homeSeatInfoStr": "Seat #{seat}  •  {chipStack}",
+  "@homeSeatInfoStr": {
+    "placeholders": {
+      "seat": { "type": "int" },
+      "chipStack": { "type": "String" }
+    }
+  },
+
+  "pokerHandYouLabel": "You",
+  "pokerHandMovingToTable": "Moving to Table {table}. Your stack ({stack}) will carry over. Other players will be cleared.",
+  "@pokerHandMovingToTable": {
+    "placeholders": {
+      "table": { "type": "int" },
+      "stack": { "type": "String" }
+    }
+  },
+  "pokerHandActiveSessionMsg": "You have an active session with {count} hand(s) logged. What would you like to do?",
+  "@pokerHandActiveSessionMsg": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "pokerHandUnknownLabel": "Unknown",
+  "pokerHandFoldAction": "Fold",
+  "pokerHandRaiseAction": "Raise",
+  "pokerHandBetAction": "Bet",
+  "pokerHandAllInAction": "All-In",
+  "pokerHandAllPlayersAllIn": "All players all-in - dealing remaining cards",
+  "pokerHandWaitingForCards": "Waiting for cards to be dealt",
+  "pokerHandBettingComplete": "Betting complete - ready for next street",
+  "pokerHandSeatFallback": "Seat {id}",
+  "@pokerHandSeatFallback": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "pokerHandPlayerFallback": "Player {id}",
+  "@pokerHandPlayerFallback": {
+    "placeholders": {
+      "id": { "type": "int" }
+    }
+  },
+  "pokerHandChooseOption": "Choose an option:",
+  "pokerHandLeaveBtn": "Leave",
+  "pokerHandConfirmBtn": "Confirm",
+  "pokerHandCurrentlyHaveRemaining": "You currently have {stack} remaining.",
+  "@pokerHandCurrentlyHaveRemaining": {
+    "placeholders": {
+      "stack": { "type": "String" }
+    }
+  },
+
+  "opponentsColorRed": "Red",
+  "opponentsColorLightBlue": "Light Blue",
+  "opponentsColorGreen": "Green",
+  "opponentsColorOrange": "Orange",
+  "opponentsColorPurple": "Purple",
+  "opponentsColorTeal": "Teal",
+  "opponentsColorPink": "Pink",
+  "opponentsColorIndigo": "Indigo",
+  "opponentsFailedToLoad": "Failed to load opponents: {error}",
+  "@opponentsFailedToLoad": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "opponentDetailFoldTo3Bet": "Fold to 3-Bet",
+  "opponentDetailStealLabel": "Steal",
+  "opponentDetailCheckRaiseLabel": "Check/Raise",
+
+  "individualSetupSessionSetup": "Session Setup",
+  "individualSetupSessionNameLabel": "Session Name",
+  "individualSetupGameTypeLabel": "Game Type",
+  "individualSetupCashGameLabel": "Cash Game",
+  "individualSetupTournamentLabel": "Tournament",
+  "individualSetupBuyInAmountLabel": "Buy-in Amount",
+  "individualSetupEnterAmountHint": "Enter amount",
+  "individualSetupCashGameNote": "In cash games your starting stack equals your buy-in amount.",
+  "individualSetupStartingStackLabel": "Starting Stack",
+  "individualSetupEnterChipStackHint": "Enter chip stack",
+  "individualSetupStackValidation": "Starting stack must be at least equal to the Big Blind ({bigBlind})",
+  "@individualSetupStackValidation": {
+    "placeholders": {
+      "bigBlind": { "type": "int" }
+    }
+  },
+  "individualSetupStartSessionBtn": "Start Session",
+  "individualSetupEnterValueHint": "Enter value",
+
+  "individualHandSetupTitle": "Individual Hand",
+  "individualHandSetupSubtitle": "Quick hand logging setup",
+  "individualHandSetupHandNameLabel": "Hand Name (Optional)",
+
+  "playerSessionBluff": "Bluff",
+  "playerSessionValue": "Value",
+  "playerSessionMistake": "Mistake",
+  "playerSessionCooler": "Cooler",
+  "playerSessionHeroCall": "Hero Call",
+  "playerSessionExploit": "Exploit",
+  "playerSessionToughSpot": "Tough Spot",
+  "playerSessionEasyFold": "Easy Fold",
+  "playerSessionEndedTitle": "Session Ended",
+  "playerSessionEndedBody": "The dealer has ended this session.",
+  "playerSessionRemovedTitle": "Removed from Table",
+  "playerSessionRemovedBody": "You have been removed from the table by the dealer.",
+  "playerSessionYouWon": "You won {amount}!",
+  "@playerSessionYouWon": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "playerSessionSeatWins": "Seat {seat} wins {amount}",
+  "@playerSessionSeatWins": {
+    "placeholders": {
+      "seat": { "type": "int" },
+      "amount": { "type": "String" }
+    }
+  },
+  "playerSessionYourHoleCardsTitle": "Your Hole Cards",
+  "playerSessionConnecting": "Connecting...",
+  "playerSessionGoBackBtn": "Go Back",
+  "playerSessionHoleCardsLabel": "Hole Cards",
+  "playerSessionEditBtn": "Edit",
+  "playerSessionAddBtn": "Add",
+  "playerSessionBoardLabel": "Board",
+  "playerSessionNoCardsDealt": "No cards dealt",
+  "playerSessionWaitingForAction": "Waiting for action...",
+  "playerSessionActionsLabel": "Actions",
+  "playerSessionYouLabel": "You",
+  "playerSessionSeatFallback": "Seat {seat}",
+  "@playerSessionSeatFallback": {
+    "placeholders": {
+      "seat": { "type": "int" }
+    }
+  },
+  "playerSessionNotesHintText": "Add notes about this hand...",
+  "playerSessionHandHistoryLabel": "Hand History",
+  "playerSessionNoCompletedHands": "No completed hands yet",
+  "playerSessionWonAmount": "Won {amount}",
+  "@playerSessionWonAmount": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "playerSessionLostLabel": "Lost",
+  "playerSessionDealerChangeTitle": "Dealer Change",
+  "playerSessionWaitingForDealer": "Waiting for new dealer to take over...",
+  "playerSessionHandUpdated": "Hand #{number} updated",
+  "@playerSessionHandUpdated": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "playerSessionErrorSaving": "Error saving: {error}",
+  "@playerSessionErrorSaving": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "playerSessionEditHand": "Edit Hand #{number}",
+  "@playerSessionEditHand": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "playerSessionViewDetails": "View Details",
+  "playerSessionTapToAddHoleCards": "Tap to add hole cards",
+  "playerSessionSaveChanges": "Save Changes",
+  "playerSessionLeaveTableTitle": "Leave Table?",
+  "playerSessionLeaveTableBody": "Are you sure you want to leave this table?",
+  "playerSessionFailedLeave": "Failed to leave: {error}",
+  "@playerSessionFailedLeave": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "playerSessionTableSession": "Table Session",
+  "playerSessionHandNumber": "Hand #{number}",
+  "@playerSessionHandNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "playerSessionUnknownDealer": "Unknown",
+  "playerSessionNotAuthenticated": "Not authenticated",
+
+  "dealerQrScanSessionSettings": "Session Settings",
+  "dealerQrScanTableNameLabel": "Table: {name}",
+  "@dealerQrScanTableNameLabel": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "dealerQrScanEventNameLabel": "Event: {name}",
+  "@dealerQrScanEventNameLabel": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "dealerQrScanBlindsLabel": "Blinds",
+  "dealerQrScanSmallBlindLabel": "Small Blind",
+  "dealerQrScanBigBlindLabel": "Big Blind",
+  "dealerQrScanStartDealingBtn": "Start Dealing",
+  "dealerQrScanResumeSessionTitle": "Resume Session",
+  "dealerQrScanTakingOverFrom": "Taking over from {name}",
+  "@dealerQrScanTakingOverFrom": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "dealerQrScanHandsPlayedLabel": "Hands Played",
+  "dealerQrScanBlindsInfoLabel": "Blinds",
+  "dealerQrScanPlayersLabel": "Players",
+  "dealerQrScanResumeBtn": "Resume",
+  "dealerQrScanTableNotAssigned": "Table Not Assigned",
+  "dealerQrScanEventTablesLabel": "Event tables:",
+  "dealerQrScanNoTablesAssigned": "No tables assigned",
+  "dealerQrScanThisTableId": "This table's ID:",
+  "dealerQrScanCorrectQrUrl": "Correct QR code URL:",
+  "dealerQrScanScanTableQrTitle": "Scan Table QR",
+  "dealerQrScanScanInstructions": "Scan the table QR code to start dealing",
+
+  "eventDashboardTournamentOnBreak": "Tournament on Break",
+  "eventDashboardLiveLabel": "Live",
+  "eventDashboardLocalLabel": "Local",
+  "eventDashboardDisconnectedLabel": "Disconnected",
+  "eventDashboardPlayersLabel": "Players",
+  "eventDashboardTablesLabel": "Tables",
+  "eventDashboardTotalChipsLabel": "Total Chips",
+  "eventDashboardAvgStackLabel": "Avg Stack",
+  "eventDashboardChipLeaderLabel": "Chip Leader",
+  "eventDashboardNoRankingsYet": "No Rankings Yet",
+  "eventDashboardRankingsWillAppear": "Rankings will appear as players join tables",
+  "eventDashboardTableSeatLabel": "{table} - Seat {seat}",
+  "@eventDashboardTableSeatLabel": {
+    "placeholders": {
+      "table": { "type": "String" },
+      "seat": { "type": "int" }
+    }
+  },
+  "eventDashboardPlayerFallback": "Player {id}",
+  "@eventDashboardPlayerFallback": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+
+  "commonNA": "N/A",
+
+  "sessionHistoryFailedLoad": "Failed to load sessions: {error}",
+  "@sessionHistoryFailedLoad": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "sessionHistoryCash": "Cash",
+  "sessionHistoryTournament": "Tournament",
+  "sessionHistorySessionId": "Session {id}...",
+  "@sessionHistorySessionId": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+  "sessionHistorySeatWithPosition": "Seat {seat} ({position})",
+  "@sessionHistorySeatWithPosition": {
+    "placeholders": {
+      "seat": { "type": "String" },
+      "position": { "type": "String" }
+    }
+  },
+  "sessionHistorySeat": "Seat {seat}",
+  "@sessionHistorySeat": {
+    "placeholders": {
+      "seat": { "type": "String" }
+    }
+  },
+  "sessionHistorySyncCompleted": "Sync completed",
+  "sessionHistoryFullHistory": "Full session history",
+
+  "sessionHandsRetry": "Retry",
+
+  "stackChartScreenStart": "Start",
+  "stackChartScreenRebuy": "Rebuy",
+  "stackChartScreenEnd": "End",
+
+  "quickStackSelectPlayer": "Select Player",
+  "quickStackAddPlayer": "Add \"{name}\"",
+  "@quickStackAddPlayer": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "quickStackSaveToOpponents": "Save to opponent list",
+  "quickStackYou": "You",
+  "quickStackNoPlayersFound": "No players found.",
+
+  "seatSetupDone": "Done",
+  "seatSetupCancel": "Cancel",
+
+  "authConnectionIssue": "Connection Issue",
+  "authConnectionIssueBody": "We couldn't connect to our servers.\nPlease check your internet connection\nand try again.",
+  "authTryAgain": "Try Again",
+
+  "redeemInvitationTitle": "Redeem Invitation",
+  "redeemEnterCode": "Enter Invitation Code",
+  "redeemCodeDescription": "Enter the 8-character code you received from a club admin to join their club.",
+  "redeemJoinClub": "Join Club",
+  "redeemWelcome": "Welcome!",
+  "redeemJoinedAs": "You have joined {clubName} as {role}",
+  "@redeemJoinedAs": {
+    "placeholders": {
+      "clubName": { "type": "String" },
+      "role": { "type": "String" }
+    }
+  },
+  "redeemContinue": "Continue",
+
+  "supportBugReport": "Bug Report",
+  "supportFeatureRequest": "Feature Request",
+  "supportAccountIssue": "Account Issue",
+  "supportOther": "Other",
+  "supportFillAllFields": "Please fill in all fields",
+  "supportSubmitted": "Support request submitted successfully",
+  "supportFailedSubmit": "Failed to submit: {error}",
+  "@supportFailedSubmit": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "supportTitle": "Help & Support",
+  "supportSubmitButton": "Submit",
+  "supportCategoryLabel": "CATEGORY",
+  "supportSubjectLabel": "SUBJECT",
+  "supportDescriptionLabel": "DESCRIPTION",
+  "supportSubjectHint": "Brief summary of the issue",
+  "supportDescriptionHint": "Describe the issue in detail...",
+
+  "calendarEventType": "Event Type",
+  "calendarEventLocation": "Location",
+  "calendarEventBuyIn": "Buy-in amount",
+  "calendarEventEdit": "Edit",
+  "calendarEventDelete": "Delete Event",
+  "calendarEventDeleteConfirm": "Delete {title}?",
+  "@calendarEventDeleteConfirm": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "calendarEventDeleteBody": "Are you sure you want to delete \"{title}\"?\nThis action cannot be undone.",
+  "@calendarEventDeleteBody": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "calendarEventDeleteButton": "Delete",
+
+  "clubInfoTitle": "Club Info",
+  "clubInfoMembersCount": "Members ({count})",
+  "@clubInfoMembersCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "clubInfoNoMembers": "No members found",
+
+  "finalStandingsNoData": "No standings available",
+  "finalStandingsNoDataHint": "This event may not have recorded standings",
+  "finalStandingsEmpty": "No standings recorded",
+  "finalStandingsTitle": "Final Standings",
+  "finalStandingsPlayers": "Players",
+  "finalStandingsCompleted": "Completed",
+
+  "liveRankingsTitle": "Live Rankings",
+  "liveRankingsEliminated": "Eliminated players",
+  "liveRankingsWaiting": "Waiting for Players",
+  "liveRankingsWaitingHint": "Rankings will appear once players get seated",
+  "liveRankingsError": "Error Loading Rankings",
+  "liveRankingsTryAgain": "Try Again",
+
+  "leaderboardPlayers": "Players",
+  "leaderboardTotalChips": "Total Chips",
+  "leaderboardWaiting": "Waiting for players...",
+  "leaderboardChipLeader": "Chip Leader: {name}",
+  "@leaderboardChipLeader": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "dealerQrScanBbAnte": "BB Ante",
+
+  "mainDealerOnClub": "You are now a dealer on {clubName}",
+  "@mainDealerOnClub": {
+    "placeholders": {
+      "clubName": { "type": "String" }
+    }
+  },
+
+  "raiseSnapMin": "Min",
+  "raiseSnapPot": "Pot",
+  "raiseSnapAllIn": "All-In",
+
+  "sessionHistoryPlayerWins": "Player {playerId} wins:",
+  "@sessionHistoryPlayerWins": {
+    "placeholders": {
+      "playerId": { "type": "int" }
+    }
+  },
+
+  "inviteClubAdminFallback": "Club Admin",
+
+  "pokerHandBetRange": "Min: {min} · Max: {max}",
+  "@pokerHandBetRange": {
+    "placeholders": {
+      "min": { "type": "String" },
+      "max": { "type": "String" }
+    }
+  },
+
+  "pokerHandAmountBetween": "Amount must be between {min} and {max}",
+  "@pokerHandAmountBetween": {
+    "placeholders": {
+      "min": { "type": "String" },
+      "max": { "type": "String" }
+    }
+  },
+
+  "dealerTableBlindsLabel": "BLINDS",
+  "dealerTableAnteLabel": "ANTE {amount}",
+  "@dealerTableAnteLabel": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "dealerTablePotLabel": "POT",
+  "dealerTableCheckLabel": "CHECK",
+  "dealerTablePlayerToAct": "{playerName} to act ({stack})",
+  "@dealerTablePlayerToAct": {
+    "placeholders": {
+      "playerName": { "type": "String" },
+      "stack": { "type": "String" }
+    }
+  },
+
+  "eventDashboardOnBreakBadge": "ON BREAK",
+
+  "eventDetailAdminActions": "ADMIN ACTIONS",
+
+  "playerSessionHandNotesLabel": "HAND NOTES",
+  "playerSessionTagsLabel": "TAGS",
+  "playerSessionNotesLabel": "NOTES",
+  "playerSessionHoleCardsUpperLabel": "HOLE CARDS",
+
+  "qrJoinDeclined": "Your join request was declined",
+  "qrJoinFailed": "Failed to join seat: {error}",
+  "@qrJoinFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "qrJoinTable": "Join Table",
+  "qrJoinLoading": "Loading table info...",
+  "qrJoinError": "Something went wrong",
+  "qrJoinGoBack": "Go Back",
+  "qrJoinSeatOccupied": "This seat may already be occupied. Joining will replace the current player.",
+  "qrJoinWaitingDealer": "Waiting for Dealer",
+  "qrJoinRequestSent": "Your request to join Seat {seatNumber} has been sent.",
+  "@qrJoinRequestSent": {
+    "placeholders": {
+      "seatNumber": { "type": "int" }
+    }
+  },
+  "qrJoinDealerApproval": "The dealer will set your chip stack and approve your join.",
+  "qrJoinCancelRequest": "Cancel Request",
+  "qrJoinRequestButton": "Request to Join",
+
+  "onboardingSkipTour": "Skip tour",
+  "onboardingWelcomeTitle": "Welcome to Final Table",
+  "onboardingWelcomeBody": "Let's take a quick tour to get you started.\n\nYou can always retake this tour from\nProfile \u2192 Settings \u2192 Knowledge Base.",
+  "onboardingLetsGo": "Let's go",
+  "onboardingGotIt": "Got it",
+  "onboardingNext": "Next",
+  "onboardingStartLoggingTitle": "Start Logging",
+  "onboardingStartLoggingBody": "Tap the + button to begin logging a hand.",
+  "onboardingFullModeTitle": "Full Logging Mode",
+  "onboardingFullModeBody": "Track every action for every player across all streets. Perfect for serious analysis.",
+  "onboardingIndividualModeTitle": "Individual Logging Mode",
+  "onboardingIndividualModeBody": "Quick profit/loss tracking for a single session. Now choose a mode to continue!",
+  "onboardingSessionSetupTitle": "Session Setup",
+  "onboardingSessionSetupBody": "Fill in your session details \u2014 name, buy-in, blinds \u2014 then tap Start Game.",
+  "onboardingTableSetupTitle": "Setup Your Table",
+  "onboardingTableSetupBody": "Tap any seat to set up players. Let's walk through the seat dialog next.",
+  "onboardingSeatOpenTitle": "Seat Open",
+  "onboardingSeatOpenBody": "Toggle to mark a seat as occupied or empty. Open seats are skipped during the hand.",
+  "onboardingThisIsMySeatTitle": "This Is My Seat",
+  "onboardingThisIsMySeatBody": "Tap here if this is your seat. It auto-fills your name and tracks your personal stats.",
+  "onboardingPlayerNameTitle": "Player Name",
+  "onboardingPlayerNameBody": "Type a name or pick from your saved opponents. Saved opponents track stats across sessions.",
+  "onboardingSaveOpponentTitle": "Save Opponent",
+  "onboardingSaveOpponentBody": "New name? Tap here to save them as an opponent. Their stats will be tracked automatically.",
+  "onboardingDealerButtonTitle": "Dealer Button",
+  "onboardingDealerButtonBody": "Drag this to the seat with the dealer position. It determines blinds and action order.",
+  "onboardingViewSessionsTitle": "View Your Sessions",
+  "onboardingViewSessionsBody": "Tap Sessions to see your session results, hand history, and stats.",
+  "onboardingAllSetTitle": "You're All Set!",
+  "onboardingAllSetBody": "You're ready to start tracking your poker sessions.",
+  "onboardingLetsPlay": "Let's play",
+  "onboardingUpdateStackTitle": "Update Stack",
+  "onboardingUpdateStackBody": "Use this to manually update your chip count at any point without logging a full hand.",
+  "onboardingLogAHandTitle": "Log a Hand",
+  "onboardingLogAHandBody": "Tap here to set up the table and log a hand. Let's try it now!",
+  "onboardingMarkSeatOpenTitle": "Mark Seat Open",
+  "onboardingMarkSeatOpenBody": "Tap the checkmark to toggle a seat between occupied and empty. Empty seats are skipped in the hand.",
+  "onboardingDealerButtonQsuTitle": "Dealer Button",
+  "onboardingDealerButtonQsuBody": "Tap \"D\" to assign the dealer button to any seat. This controls blind positions and action order.",
+  "onboardingAssignPlayerTitle": "Assign a Player",
+  "onboardingAssignPlayerBody": "Tap a player's name to seat yourself or a saved opponent. Your stack is auto-applied when you seat yourself.",
+  "onboardingAdjustStackTitle": "Adjust Stack",
+  "onboardingAdjustStackBody": "Drag the slider to set an opponent's stack in BBs. Tap the stack value to type an exact amount.",
+  "onboardingEndSessionTitle": "End Your Session",
+  "onboardingEndSessionBody": "Tap the red Stop button to save your session results and return to the home screen.",
+  "onboardingStepOf": "Step {step} of {total}",
+  "@onboardingStepOf": {
+    "placeholders": {
+      "step": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "guidedGestureGuideTitle": "Gesture Guide",
+  "guidedGestureGuideBody": "Tap this icon anytime to see all gesture controls.",
+  "guidedSkipButtonTitle": "Skip Button",
+  "guidedSkipButtonBody": "If you skip a hand, this button moves the dealer button to the next player. Keep in mind that stacks will be out of sync \u2014 you can update them in Manage Players.",
+  "guidedGameMenuTitle": "Game Menu",
+  "guidedGameMenuBody": "This menu has useful options. Let's take a look at one important setting.",
+  "guidedGameSettingsTitle": "Game Settings",
+  "guidedGameSettingsBody": "Here you can change blinds mid-session \u2014 useful for tournaments when levels go up.",
+  "guidedEndSessionTitle": "End Your Session",
+  "guidedEndSessionBody": "Tap this menu and select \"Stop Session\" to save your results.",
+  "guidedReviewHandTitle": "Review Hand",
+  "guidedReviewHandBody": "Enter your hole cards and any notes.",
+  "guidedHandCompleteTitle": "Hand Complete!",
+  "guidedHandCompleteBody": "Great job! You just logged your first hand.",
+  "guidedSkip": "Skip",
+  "guidedYourTurn": "Your Turn!",
+  "guidedOpenThePotTitle": "Open the Pot",
+  "guidedBetOnceBody": "Tap once to bet.",
+  "guidedFoldTitle": "Fold",
+  "guidedFoldBody": "This player folds. Draw a line to fold.",
+  "guidedCallTitle": "Call",
+  "guidedCallBody": "This player calls. Draw a circle.",
+  "guidedCheckTitle": "Check",
+  "guidedCheckBody": "This player checks. Double tap.",
+  "guidedDealFlopTitle": "Deal the Flop",
+  "guidedDealFlopBody": "Select 3 cards for the flop.",
+  "guidedDealTurnTitle": "Deal the Turn",
+  "guidedDealTurnBody": "Select 1 card for the turn.",
+  "guidedDealRiverTitle": "Deal the River",
+  "guidedDealRiverBody": "Select 1 card for the river.",
+
+  "kbStatsTitle": "Your Stats",
+  "kbClubsTitle": "Clubs & Events",
+  "kbStatsIntro": "Final Table tracks 7 core poker metrics to help you understand and improve your game.",
+  "kbClubsIntro": "Clubs let you connect with your local poker room and track live games.",
+  "kbVpipName": "VPIP",
+  "kbVpipFullName": "Voluntarily Put $ In Pot",
+  "kbVpipDescription": "How often you enter a pot voluntarily (excluding blind posts). A high VPIP means you play many hands; a low VPIP means you're selective.",
+  "kbPfrName": "PFR",
+  "kbPfrFullName": "Preflop Raise",
+  "kbPfrDescription": "How often you raise before the flop. The gap between VPIP and PFR shows how often you limp or cold-call.",
+  "kbThreeBetName": "3-Bet",
+  "kbThreeBetFullName": "Three-Bet Percentage",
+  "kbThreeBetDescription": "How often you re-raise an opponent's open raise preflop. A higher 3-bet% indicates an aggressive preflop style.",
+  "kbFoldTo3BetName": "Fold to 3-Bet",
+  "kbFoldTo3BetFullName": "Fold to Three-Bet",
+  "kbFoldTo3BetDescription": "How often you fold after raising and facing a 3-bet. If too high, opponents can exploit you by 3-betting light.",
+  "kbCBetName": "C-Bet",
+  "kbCBetFullName": "Continuation Bet",
+  "kbCBetDescription": "How often you bet on the flop after being the last preflop aggressor. A standard play showing strength.",
+  "kbStealName": "Steal",
+  "kbStealFullName": "Blind Steal Attempt",
+  "kbStealDescription": "How often you open-raise from late position (CO, BTN, SB) when the pot is unopened, aiming to take the blinds.",
+  "kbCheckRaiseName": "Check-Raise",
+  "kbCheckRaiseFullName": "Flop Check-Raise",
+  "kbCheckRaiseDescription": "How often you check then raise on the flop. A deceptive move that can trap aggressive opponents.",
+  "kbLiveEventsTitle": "Live Events",
+  "kbLiveEventsDescription": "Club managers create events with multiple tables. Join an event to be part of the live rankings.",
+  "kbLiveRankingsTitle": "Live Rankings",
+  "kbLiveRankingsDescription": "See where you stand in real-time during events. Rankings update after every hand.",
+  "kbOpponentTrackingTitle": "Opponent Tracking",
+  "kbOpponentTrackingDescription": "Players you face at the club are automatically tracked. Save opponents to build detailed profiles.",
+  "kbQrSeatTitle": "QR Seat Assignment",
+  "kbQrSeatDescription": "Scan a QR code at your table to join the session instantly. Your hands are tracked automatically by the dealer.",
+  "kbDealerLoggingTitle": "Dealer-Assisted Logging",
+  "kbDealerLoggingDescription": "Dealers use voice commands to log actions for the entire table. No manual input needed from players.",
+  "kbSessionStatsTitle": "Session Stats",
+  "kbSessionStatsDescription": "After each session, see your profit/loss and how your stats changed. Every hand is recorded.",
+
+  "qrJoinTableInfo": "TABLE INFO",
+  "qrJoinSeat": "Seat {number}",
+  "@qrJoinSeat": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "qrJoinTableFallback": "Table",
+  "qrJoinClubLabel": "Club",
+  "qrJoinTableLabel": "Table",
+  "qrJoinSeatLabel": "Seat",
+  "qrJoinStatusLabel": "Status",
+  "qrJoinActiveGame": "Active Game",
+  "qrJoinWaitingStatus": "Waiting",
+
+  "dealerQrTablesAssigned": "{count} table(s) assigned to this event",
+  "@dealerQrTablesAssigned": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "dealerQrTableNotAssigned": "{tableName} is not assigned to this event.",
+  "@dealerQrTableNotAssigned": {
+    "placeholders": {
+      "tableName": { "type": "String" }
+    }
+  },
+
+  "dealerTablePlayerAdded": "{playerName} added to Seat {seatNumber}",
+  "@dealerTablePlayerAdded": {
+    "placeholders": {
+      "playerName": { "type": "String" },
+      "seatNumber": { "type": "int" }
+    }
+  },
+
+  "memberTableSeatedOpen": "{seated} seated  •  {open} open",
+  "@memberTableSeatedOpen": {
+    "placeholders": {
+      "seated": { "type": "int" },
+      "open": { "type": "int" }
+    }
+  },
+  "memberTablePlayer": "Player",
+  "memberTableEmpty": "Empty",
+  "memberTableFallback": "Table",
+
+  "homeEventTypeTournament": "Tournament",
+  "homeEventTypeCashGame": "Cash Game",
+  "homeEventTypeHomeGame": "Home Game",
+  "homeEventTypeOnline": "Online"
+}

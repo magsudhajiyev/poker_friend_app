@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 
 class WinnerSelectionDialog extends StatefulWidget {
@@ -91,7 +92,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
       return widget.playerNames[playerIndex];
     }
 
-    return 'Player $playerId';
+    return AppLocalizations.of(context).multiPotPlayerFallback('$playerId');
   }
 
   void _saveChanges() {
@@ -215,6 +216,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.zero,
@@ -270,7 +272,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                   Expanded(
                     child: Center(
                       child: Text(
-                        isChoppedPot ? 'Who chopped this pot?' : 'Who won this hand?',
+                        isChoppedPot ? l10n.winnerSelectionWhoChopped : l10n.winnerSelectionWhoWon,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
@@ -329,7 +331,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                             const Icon(Icons.call_split, color: Color(0xFF73D4CF), size: 18),
                             const SizedBox(width: 10),
                             Text(
-                              'Chopped Pot',
+                              l10n.winnerSelectionChoppedPot,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w500,
@@ -355,7 +357,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Individual shares:',
+                              l10n.winnerSelectionIndividualShares,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -401,7 +403,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
 
                     // "Select the winner:" label
                     Text(
-                      isChoppedPot ? 'Select all winners:' : 'Tap the winner:',
+                      isChoppedPot ? l10n.winnerSelectionSelectAllWinners : l10n.winnerSelectionTapTheWinner,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w400,
@@ -413,7 +415,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          'Long-press for chopped pot',
+                          l10n.winnerSelectionLongPressHint,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
@@ -455,7 +457,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         ),
                         child: Center(
                           child: Text(
-                            'Confirm Chop',
+                            l10n.winnerSelectionConfirmChop,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -489,7 +491,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                         ),
                         child: Center(
                           child: Text(
-                            'Back to Single Winner',
+                            l10n.winnerSelectionBackToSingle,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,

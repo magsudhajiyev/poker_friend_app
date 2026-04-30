@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../l10n/app_localizations.dart';
 import '../models/club.dart';
 import '../services/auth_service.dart';
 import '../services/club_service.dart';
@@ -111,6 +112,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final topPadding = MediaQuery.of(context).padding.top;
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -188,7 +190,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                 _MenuItemData(
                                   iconPath: 'icons/figma_icons/gear.svg',
                                   fallbackIcon: Icons.settings_rounded,
-                                  label: 'Settings',
+                                  label: l10n.navDrawerSettings,
                                   onTap: () {
                                     Navigator.pop(context);
                                     Navigator.push(
@@ -202,7 +204,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                 _MenuItemData(
                                   iconPath: 'icons/figma_icons/plus.svg',
                                   fallbackIcon: Icons.add_circle_outline_rounded,
-                                  label: 'Register Club',
+                                  label: l10n.navDrawerRegisterClub,
                                   onTap: () {
                                     Navigator.pop(context);
                                     showRegisterClubDialog(context);
@@ -211,7 +213,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                 _MenuItemData(
                                   iconPath: 'icons/figma_icons/question.svg',
                                   fallbackIcon: Icons.help_outline_rounded,
-                                  label: 'Help & Support',
+                                  label: l10n.navDrawerHelpSupport,
                                   onTap: () {
                                     Navigator.pop(context);
                                     Navigator.push(
@@ -225,7 +227,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                 _MenuItemData(
                                   iconPath: 'icons/figma_icons/sign_out.svg',
                                   fallbackIcon: Icons.logout_rounded,
-                                  label: 'Log out',
+                                  label: l10n.navDrawerLogOut,
                                   isDestructive: true,
                                   onTap: () {
                                     Navigator.pop(context);
@@ -254,6 +256,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   }
 
   Widget _buildHeaderRow(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
@@ -312,7 +315,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Upgrade',
+                    l10n.navDrawerUpgrade,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -329,6 +332,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   }
 
   Widget _buildProfileSection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         // Avatar — Google photo or initials fallback
@@ -338,7 +342,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
         // Name (24px, SemiBold)
         Text(
-          widget.username ?? 'User',
+          widget.username ?? l10n.navDrawerUserFallback,
           style: GoogleFonts.inter(
             fontSize: 24,
             fontWeight: FontWeight.w600,
@@ -392,6 +396,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
   /// Menu Card 1 with expandable Clubs section
   Widget _buildMenuCard1() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
@@ -404,7 +409,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           _buildMenuItem(_MenuItemData(
             iconPath: 'icons/figma_icons/chart_regular.svg',
             fallbackIcon: Icons.bar_chart_rounded,
-            label: 'Statistics',
+            label: l10n.navDrawerStatistics,
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
@@ -424,7 +429,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           _buildMenuItem(_MenuItemData(
             iconPath: 'icons/figma_icons/calendar.svg',
             fallbackIcon: Icons.calendar_month_rounded,
-            label: 'Events',
+            label: l10n.navDrawerEvents,
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
@@ -439,7 +444,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           _buildMenuItem(_MenuItemData(
             iconPath: 'icons/figma_icons/bankroll.svg',
             fallbackIcon: Icons.account_balance_wallet_rounded,
-            label: 'Bankroll',
+            label: l10n.navDrawerBankroll,
             onTap: () => _navigateToBankroll(context),
           )),
         ],
@@ -448,6 +453,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   }
 
   Widget _buildExpandableClubsItem() {
+    final l10n = AppLocalizations.of(context);
     final color = Colors.white.withOpacity(0.9);
 
     return Column(
@@ -480,7 +486,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                     // Label
                     Expanded(
                       child: Text(
-                        'Clubs',
+                        l10n.navDrawerClubs,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w400,
@@ -520,11 +526,12 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   }
 
   Widget _buildClubsList() {
+    final l10n = AppLocalizations.of(context);
     if (_clubs.isEmpty) {
       return Padding(
         padding: const EdgeInsets.only(left: 22, top: 12),
         child: Text(
-          'No clubs yet',
+          l10n.navDrawerNoClubsYet,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 14,
             fontWeight: FontWeight.w400,
@@ -546,23 +553,24 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   }
 
   Widget _buildClubItem(Club club, int index) {
+    final l10n = AppLocalizations.of(context);
     final memberCount = _clubMemberCounts[club.id];
     final userRole = _clubUserRoles[club.id];
     final initials = _getClubInitials(club.name);
     final avatarColor = _getAvatarColor(index);
 
     // Build subtitle
-    String subtitle = memberCount != null ? '$memberCount members' : '';
+    String subtitle = memberCount != null ? l10n.navDrawerMemberCount(memberCount) : '';
 
     // Role badge
     final isAdmin = userRole == 'owner' || userRole == 'admin';
     final roleLabel = userRole == 'owner'
-        ? 'Admin'
+        ? l10n.navDrawerRoleAdmin
         : userRole == 'admin'
-            ? 'Admin'
+            ? l10n.navDrawerRoleAdmin
             : userRole == 'dealer'
-                ? 'Dealer'
-                : 'Member';
+                ? l10n.navDrawerRoleDealer
+                : l10n.navDrawerRoleMember;
 
     return Material(
       color: Colors.transparent,
@@ -738,13 +746,14 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   }
 
   Widget _buildFooter() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Column(
         children: [
           // Version
           Text(
-            'Version 1.0.0',
+            l10n.navDrawerVersion,
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w400,
@@ -764,7 +773,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           const SizedBox(height: 4),
           // Last login
           Text(
-            'Last login: Today',
+            l10n.navDrawerLastLoginToday,
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w400,
@@ -856,6 +865,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   }
 
   void _showNoEarningsDataDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -920,7 +930,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
-                              'No Earnings Data Yet',
+                              l10n.navDrawerNoEarningsTitle,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 16,
                                 color: Colors.white,
@@ -939,7 +949,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
-                              'Add some session results first to view your earnings chart. You can add results from the Profile page.',
+                              l10n.navDrawerNoEarningsBody,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 12,
                                 color: Colors.white.withOpacity(0.6),
@@ -967,7 +977,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
                               child: Text(
-                                'OK',
+                                l10n.commonOk,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 16,
                                   color: const Color(0xFF89F1EC),
@@ -996,6 +1006,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
   }
 
   void _showSignOutConfirmation(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1004,14 +1015,14 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           borderRadius: BorderRadius.circular(20),
         ),
         title: Text(
-          'Sign Out',
+          l10n.navDrawerSignOutTitle,
           style: GoogleFonts.inter(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
-          'Are you sure you want to sign out?',
+          l10n.navDrawerSignOutMessage,
           style: GoogleFonts.inter(
             color: Colors.white,
             fontSize: 14,
@@ -1021,7 +1032,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: GoogleFonts.inter(
                 color: Colors.white.withOpacity(0.7),
                 fontWeight: FontWeight.w500,
@@ -1041,7 +1052,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
               }
             },
             child: Text(
-              'Sign Out',
+              l10n.navDrawerSignOut,
               style: GoogleFonts.inter(
                 color: const Color(0xFFFF6B6B),
                 fontWeight: FontWeight.w500,

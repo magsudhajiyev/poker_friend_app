@@ -6,6 +6,7 @@ import '../services/opponent_service.dart';
 import '../services/auth_service.dart';
 import '../models/opponent.dart';
 import '../models/game_types.dart';
+import '../l10n/app_localizations.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
@@ -195,6 +196,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
   }
 
   Future<void> _showOpponentSelectionDialog(int playerId) async {
+    final l10n = AppLocalizations.of(context);
     String searchQuery = '';
 
     // Get user's name
@@ -242,7 +244,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                   Row(
                     children: [
                       Text(
-                        'Select Player',
+                        l10n.quickStackSelectPlayer,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 18,
                           color: Colors.white,
@@ -261,7 +263,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              'Clear',
+                              l10n.commonClear,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 13,
                                 color: Colors.red,
@@ -278,7 +280,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                   TextField(
                     style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
                     decoration: InputDecoration(
-                      hintText: 'Search or add player...',
+                      hintText: l10n.quickStackSearchHint,
                       hintStyle: GoogleFonts.ibmPlexSans(
                         color: Colors.white.withValues(alpha: 0.35),
                         fontSize: 15,
@@ -345,7 +347,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Add "$queryTrimmed"',
+                                            l10n.quickStackAddPlayer(queryTrimmed),
                                             style: GoogleFonts.ibmPlexSans(
                                               fontSize: 14,
                                               color: _mint,
@@ -353,7 +355,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                             ),
                                           ),
                                           Text(
-                                            'Save to opponent list',
+                                            l10n.quickStackSaveToOpponents,
                                             style: GoogleFonts.ibmPlexSans(
                                               fontSize: 12,
                                               color: Colors.white.withValues(alpha: 0.4),
@@ -401,7 +403,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                             ),
                                           ),
                                           Text(
-                                            'You',
+                                            l10n.quickStackYou,
                                             style: GoogleFonts.ibmPlexSans(
                                               fontSize: 11,
                                               color: Colors.white.withValues(alpha: 0.4),
@@ -427,7 +429,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                             Padding(
                               padding: const EdgeInsets.all(16),
                               child: Text(
-                                'No players found.',
+                                l10n.quickStackNoPlayersFound,
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white.withValues(alpha: 0.4),
@@ -482,7 +484,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                     child: GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: Text(
-                        'Cancel',
+                        l10n.commonCancel,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 14,
                           color: Colors.white.withValues(alpha: 0.5),
@@ -574,6 +576,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
   }
 
   Future<void> _showStackEditDialog(int playerId) async {
+    final l10n = AppLocalizations.of(context);
     final currentBB = _getBBValue(playerId);
     final currentChips = _getChipAmount(playerId);
     final controller = TextEditingController(text: currentBB.toInt().toString());
@@ -592,7 +595,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Edit Stack',
+                l10n.quickStackEditStack,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 18,
                   color: Colors.white,
@@ -611,7 +614,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                   keyboardType: TextInputType.number,
                   style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17),
                   decoration: InputDecoration(
-                    labelText: 'Stack in BB',
+                    labelText: l10n.quickStackStackInBb,
                     labelStyle: GoogleFonts.ibmPlexSans(
                       color: Colors.white.withValues(alpha: 0.5),
                     ),
@@ -626,9 +629,10 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                widget.gameType == GameType.cash
-                    ? 'Current: ${currentBB.toInt()} BB = \$${currentChips}'
-                    : 'Current: ${currentBB.toInt()} BB = $currentChips',
+                l10n.quickStackCurrentValue(
+                  '${currentBB.toInt()}',
+                  widget.gameType == GameType.cash ? '\$$currentChips' : '$currentChips',
+                ),
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 13,
@@ -643,7 +647,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       child: Text(
-                        'Cancel',
+                        l10n.commonCancel,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 15,
                           color: Colors.white.withValues(alpha: 0.5),
@@ -661,7 +665,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Please enter a value between 0 and 1000 BB'),
+                            content: Text(l10n.quickStackValidationError),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -674,7 +678,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                         borderRadius: BorderRadius.circular(60),
                       ),
                       child: Text(
-                        'Save',
+                        l10n.commonSave,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 15,
                           color: Colors.black,
@@ -702,7 +706,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
       final name = customPlayerNames[playerId]!;
       // Empty string means explicitly cleared (overrides widget.playerNames)
       if (name.isEmpty) {
-        return 'Player $playerId';
+        return AppLocalizations.of(context).quickStackPlayerDefault(playerId);
       }
       return name;
     }
@@ -776,6 +780,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -832,7 +837,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Update Stacks & Button',
+                                  l10n.quickStackTitle,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 20,
                                     color: Colors.white,
@@ -842,9 +847,11 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  widget.gameType == GameType.cash
-                                      ? 'Blinds: \$${widget.smallBlind}/\$${widget.bigBlind}'
-                                      : 'Blinds: ${widget.smallBlind}/${widget.bigBlind}',
+                                  l10n.quickStackBlinds(
+                                    widget.gameType == GameType.cash
+                                        ? '\$${widget.smallBlind}/\$${widget.bigBlind}'
+                                        : '${widget.smallBlind}/${widget.bigBlind}',
+                                  ),
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 14,
                                     color: Colors.white.withValues(alpha: 0.5),
@@ -878,7 +885,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Tap stack to edit  •  Slide to adjust  •  Tap D for button',
+                                l10n.quickStackInstruction,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 13,
                                   color: Colors.white.withValues(alpha: 0.8),
@@ -927,7 +934,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                           ),
                           const SizedBox(width: 10),
                           Text(
-                            'CONTINUE TO LOG HAND',
+                            l10n.quickStackContinue,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -949,6 +956,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
   }
 
   Widget _buildPlayerRow(int playerId) {
+    final l10n = AppLocalizations.of(context);
     final isButton = playerId == buttonPlayerId;
     final bbValue = _getBBValue(playerId);
     final chipAmount = _getChipAmount(playerId);
@@ -986,7 +994,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
             ),
             const SizedBox(width: 10),
             Text(
-              'Seat $playerId',
+              l10n.quickStackSeat(playerId),
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 14,
                 color: Colors.white.withValues(alpha: 0.3),
@@ -995,7 +1003,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
             ),
             const Spacer(),
             Text(
-              'Empty',
+              l10n.quickStackEmpty,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 13,
                 color: Colors.white.withValues(alpha: 0.25),

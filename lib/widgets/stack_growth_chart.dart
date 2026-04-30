@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 
 /// Default number of data points visible in the viewport.
@@ -62,13 +63,14 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final data = widget.stackHistory;
     if (data.isEmpty) {
       return SizedBox(
         height: widget.height,
         child: Center(
           child: Text(
-            'No data yet',
+            l10n.stackChartNoData,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white.withValues(alpha: 0.4),
               fontSize: 14,
@@ -182,13 +184,13 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
                     String label;
                     switch (changeType) {
                       case 'initial':
-                        label = 'Start';
+                        label = l10n.stackChartStart;
                         break;
                       case 'rebuy':
-                        label = 'Rebuy';
+                        label = l10n.stackChartRebuy;
                         break;
                       case 'final':
-                        label = 'End';
+                        label = l10n.stackChartEnd;
                         break;
                       default:
                         label = '#${entry['handNumber'] ?? idx}';
@@ -444,7 +446,7 @@ class _StackGrowthChartFullScreenState
 
   String _formatAvgGrowth() {
     final history = widget.stackHistory;
-    if (history.length < 2) return 'N/A';
+    if (history.length < 2) return AppLocalizations.of(context).commonNotAvailable;
 
     int handCount = 0;
     double totalGrowth = 0.0;
@@ -456,7 +458,7 @@ class _StackGrowthChartFullScreenState
         handCount++;
       }
     }
-    if (handCount == 0) return 'N/A';
+    if (handCount == 0) return AppLocalizations.of(context).commonNotAvailable;
     final avg = totalGrowth / handCount;
     return '${avg >= 0 ? '+' : ''}${avg.toStringAsFixed(2)}%';
   }
@@ -518,6 +520,7 @@ class _StackGrowthChartFullScreenState
   }
 
   Widget _buildHeader(Color lineColor) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
@@ -547,7 +550,7 @@ class _StackGrowthChartFullScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Stack Chart',
+                  l10n.stackChartTitle,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     color: Colors.white,
@@ -566,12 +569,12 @@ class _StackGrowthChartFullScreenState
             ),
           ),
           // Info pills
-          _buildInfoPill('Avg Growth', _formatAvgGrowth(), lineColor),
+          _buildInfoPill(l10n.stackChartAvgGrowth, _formatAvgGrowth(), lineColor),
           const SizedBox(width: 10),
-          _buildInfoPill('Duration', _formatDuration(), Colors.white),
+          _buildInfoPill(l10n.stackChartDuration, _formatDuration(), Colors.white),
           const SizedBox(width: 10),
           _buildInfoPill(
-            widget.isCashGame ? 'P/L' : 'Stack',
+            widget.isCashGame ? l10n.stackChartProfitLoss : l10n.stackChartScreenStack,
             widget.isCashGame
                 ? _formatPL()
                 : widget.formatValue(

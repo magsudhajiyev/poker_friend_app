@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import '../utils/poker_positions.dart';
 import '../services/auth_service.dart';
@@ -177,7 +178,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                     ),
                     SizedBox(width: 12),
                     Text(
-                      'Save Opponent?',
+                      AppLocalizations.of(context).seatManagementSaveOpponentTitle,
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.white,
@@ -191,7 +192,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
               Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'Would you like to save "$name" to your opponents list for future tracking?',
+                  AppLocalizations.of(context).seatManagementSaveOpponentMessage(name),
                   style: TextStyle(
                     fontSize: 14,
                     color: Color(0xFF9A9A9A),
@@ -219,7 +220,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                             });
                           },
                           child: Text(
-                            'Not Now',
+                            AppLocalizations.of(context).seatManagementNotNow,
                             style: TextStyle(
                               color: Color(0xFF9A9A9A),
                               fontSize: 14,
@@ -265,7 +266,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Opponent "$name" saved successfully!'),
+                                  content: Text(AppLocalizations.of(context).seatManagementOpponentSavedSuccess(name)),
                                   backgroundColor: Color(0xFF5AC95A),
                                 ),
                               );
@@ -273,7 +274,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Failed to save opponent: $e'),
+                                  content: Text(AppLocalizations.of(context).seatManagementFailedToSaveOpponent(e.toString())),
                                   backgroundColor: Colors.red,
                                 ),
                               );
@@ -287,7 +288,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                             ),
                           ),
                           child: Text(
-                            'Save',
+                            AppLocalizations.of(context).commonSave,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 14,
@@ -340,7 +341,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
     if (activeSeats.isEmpty) return '';
 
     // If this seat is not active, return empty
-    if (!activeSeats.contains(seatNumber)) return 'Empty';
+    if (!activeSeats.contains(seatNumber)) return AppLocalizations.of(context).seatManagementEmpty;
 
     // Calculate position based on active players only
     final buttonPos = selectedButtonPosition ?? widget.buttonPosition;
@@ -402,6 +403,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.all(20),
@@ -448,7 +450,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.isInitialSetup ? 'Setup Seats' : 'Manage Players',
+                          widget.isInitialSetup ? l10n.seatManagementSetupSeats : l10n.seatManagementManagePlayers,
                           style: TextStyle(
                             fontSize: 20,
                             color: Colors.white,
@@ -456,9 +458,9 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                           ),
                         ),
                         Text(
-                          widget.isInitialSetup 
-                              ? 'Choose your seat and configure table' 
-                              : 'Update player information',
+                          widget.isInitialSetup
+                              ? l10n.seatManagementChooseSeatSubtitle
+                              : l10n.seatManagementUpdatePlayerSubtitle,
                           style: TextStyle(
                             fontSize: 14,
                             color: Color(0xFF9A9A9A),
@@ -504,7 +506,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                 ),
                                 SizedBox(width: 8),
                                 Text(
-                                  'Button Position',
+                                  l10n.seatManagementButtonPosition,
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.white,
@@ -631,7 +633,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                 Row(
                                                   children: [
                                                     Text(
-                                                      'Seat $seatNumber',
+                                                      l10n.seatManagementSeatLabel(seatNumber),
                                                       style: TextStyle(
                                                         fontSize: 16,
                                                         fontWeight: FontWeight.bold,
@@ -660,7 +662,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                 ),
                                                 SizedBox(height: 2),
                                                 Text(
-                                                  isActive ? _getPositionForActiveSeat(seatNumber) : 'Empty',
+                                                  isActive ? _getPositionForActiveSeat(seatNumber) : l10n.seatManagementEmpty,
                                                   style: TextStyle(
                                                     fontSize: 12,
                                                     color: Color(0xFF9A9A9A),
@@ -707,7 +709,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                             },
                                           ),
                                           Text(
-                                            isActive ? 'Active' : 'Empty',
+                                            isActive ? l10n.seatManagementActive : l10n.seatManagementEmpty,
                                             style: TextStyle(
                                               fontSize: 11,
                                               color: isActive ? Color(0xFF5AC95A) : Color(0xFF9A9A9A),
@@ -752,9 +754,9 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                 onEditingComplete: onEditingComplete,
                                                 style: TextStyle(color: Colors.white, fontSize: 16),
                                                 decoration: InputDecoration(
-                                                  labelText: 'Player Name',
+                                                  labelText: l10n.seatManagementPlayerNameLabel,
                                                   labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                                                  hintText: 'Enter player name',
+                                                  hintText: l10n.seatManagementEnterPlayerName,
                                                   hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
                                                   border: InputBorder.none,
                                                   contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -860,7 +862,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                                   SizedBox(width: 8),
                                                   Expanded(
                                                     child: Text(
-                                                      'Save "${nameControllers[seatNumber]!.text}" as opponent?',
+                                                      l10n.seatManagementSaveAsOpponentPrompt(nameControllers[seatNumber]!.text),
                                                       style: TextStyle(fontSize: 12, color: Color(0xFF5AC95A)),
                                                     ),
                                                   ),
@@ -884,7 +886,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                             keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
                                             style: TextStyle(color: Colors.white, fontSize: 16),
                                             decoration: InputDecoration(
-                                              labelText: widget.isCashGame ? 'Buy-in Amount (\$)' : 'Starting Chips',
+                                              labelText: widget.isCashGame ? l10n.seatManagementBuyInAmountCash : l10n.seatManagementStartingChips,
                                               labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
                                               hintText: widget.isCashGame ? '100.00' : '1500',
                                               hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
@@ -956,7 +958,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                           ),
                         ),
                         child: Text(
-                          'Cancel',
+                          l10n.commonCancel,
                           style: TextStyle(
                             color: Color(0xFF9A9A9A),
                             fontSize: 16,
@@ -988,7 +990,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                           ),
                         ),
                         child: Text(
-                          widget.isInitialSetup ? 'Start Session' : 'Save Changes',
+                          widget.isInitialSetup ? l10n.seatManagementStartSession : l10n.seatManagementSaveChanges,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -1031,7 +1033,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
     if (widget.isInitialSetup && selectedSeat == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please select your seat'),
+          content: Text(AppLocalizations.of(context).seatManagementSelectYourSeat),
           backgroundColor: Colors.red,
         ),
       );

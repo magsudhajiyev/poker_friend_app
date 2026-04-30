@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/user_stats_service.dart';
 import '../services/app_data_cache.dart';
@@ -39,7 +40,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   int checkRaiseFlopOpportunity = 0;
 
   // Loading state details
-  String loadingMessage = 'Loading statistics...';
+  String? _loadingMessageKey;
 
   @override
   void initState() {
@@ -70,7 +71,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       });
     } catch (e) {
       setState(() {
-        error = 'Failed to load statistics: $e';
+        error = e.toString();
         isLoading = false;
       });
     }
@@ -142,7 +143,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     try {
       setState(() {
-        loadingMessage = 'Fetching user stats...';
+        _loadingMessageKey = 'fetching';
       });
 
       final userId = AuthService.userId;
@@ -178,9 +179,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     }
   }
 
+  String _getLoadingMessage(AppLocalizations l10n) {
+    if (_loadingMessageKey == 'fetching') return l10n.statsFetchingMessage;
+    return l10n.statsLoadingMessage;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -219,7 +226,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ? ErrorStateCard(onRetry: () => _loadStatistics(forceRefresh: true))
                 : LoadingWrapper(
                     isLoading: isLoading,
-                    loadingMessage: loadingMessage,
+                    loadingMessage: _getLoadingMessage(l10n),
                     child: _buildContent(),
                   ),
           ),
@@ -230,6 +237,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildContent() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         // Header with back button on left, refresh on right
@@ -261,7 +269,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Statistics',
+                      l10n.statsTitle,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 24,
                         color: Colors.white,
@@ -272,7 +280,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Advanced Analytics',
+                      l10n.statsSubtitle,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 15,
                         color: Colors.white.withOpacity(0.6),
@@ -325,8 +333,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildOverallStats() {
+    final l10n = AppLocalizations.of(context);
+    final na = l10n.commonNotAvailable;
     String formatStat(double value, int opportunity) {
-      if (opportunity == 0) return 'N/A';
+      if (opportunity == 0) return na;
       return '${value.toStringAsFixed(1)}%';
     }
 
@@ -340,7 +350,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Statistics',
+            l10n.statsTitle,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -349,15 +359,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildStatListItem('Hands Played', handsPlayed.toString()),
+          _buildStatListItem(l10n.statsHandsPlayed, handsPlayed.toString()),
           _buildDivider(),
-          _buildStatListItem('VPIP', totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : 'N/A'),
+          _buildStatListItem('VPIP', totalHands > 0 ? '${vpip.toStringAsFixed(1)}%' : na),
           _buildDivider(),
-          _buildStatListItem('PFR', totalHands > 0 ? '${pfr.toStringAsFixed(1)}%' : 'N/A'),
+          _buildStatListItem('PFR', totalHands > 0 ? '${pfr.toStringAsFixed(1)}%' : na),
           _buildDivider(),
           _buildStatListItem('3-Bet', formatStat(threeBet, threeBetOpportunity)),
           _buildDivider(),
-          _buildStatListItem('Fold to 3-Bet', formatStat(fold3Bet, facing3BetCount)),
+          _buildStatListItem(l10n.statsFoldTo3Bet, formatStat(fold3Bet, facing3BetCount)),
           _buildDivider(),
           _buildStatListItem('C-Bet', formatStat(cbet, cbetOpportunity)),
           _buildDivider(),
@@ -365,7 +375,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           _buildDivider(),
           _buildStatListItem('Check/Raise', formatStat(checkRaise, checkRaiseFlopOpportunity)),
           _buildDivider(),
-          _buildStatListItem('Win Rate', handsPlayed > 0 ? '${winRate.toStringAsFixed(1)}%' : 'N/A'),
+          _buildStatListItem(l10n.statsWinRate, handsPlayed > 0 ? '${winRate.toStringAsFixed(1)}%' : na),
         ],
       ),
     );
@@ -408,6 +418,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildSessionStats() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF131616),
@@ -418,7 +429,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Session Statistics',
+            l10n.statsSessionStatistics,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -431,12 +442,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildSessionStatItem('Sessions', totalSessions.toString()),
+                _buildSessionStatItem(l10n.statsSessions, totalSessions.toString()),
                 Container(width: 1, height: 40, color: Colors.white.withOpacity(0.1)),
-                _buildSessionStatItem('Total Time', '${(totalPlayTime / 60).toStringAsFixed(1)}h'),
+                _buildSessionStatItem(l10n.statsTotalTime, '${(totalPlayTime / 60).toStringAsFixed(1)}h'),
                 Container(width: 1, height: 40, color: Colors.white.withOpacity(0.1)),
                 _buildSessionStatItem(
-                  'Avg Session',
+                  l10n.statsAvgSession,
                   totalSessions > 0 ? '${(totalPlayTime / totalSessions).toStringAsFixed(0)}m' : '0m',
                 ),
               ],
@@ -446,7 +457,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Center(
                 child: Text(
-                  'Play sessions to see time statistics',
+                  l10n.statsPlayToSee,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white.withOpacity(0.4),
                     fontSize: 14,

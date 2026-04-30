@@ -13,6 +13,7 @@ import '../../services/seat_service.dart';
 import '../../config/app_config.dart';
 import '../public/public_leaderboard_screen.dart';
 import '../../design_system/components/cards/error_state_card.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Live event dashboard with real-time rankings
 class EventDashboardScreen extends StatefulWidget {
@@ -360,7 +361,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.fullscreen),
-            tooltip: 'TV Display Mode',
+            tooltip: AppLocalizations.of(context).eventDashboardTvMode,
             onPressed: _openFullscreenMode,
           ),
           IconButton(
@@ -409,7 +410,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
                 Icon(Icons.pause_circle, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'Tournament on Break',
+                  AppLocalizations.of(context).eventDashboardTournamentOnBreak,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -463,10 +464,10 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
                     const SizedBox(width: 4),
                     Text(
                       _isConnected
-                          ? 'Live'
+                          ? AppLocalizations.of(context).eventDashboardLiveLabel
                           : (_localRankings?.isNotEmpty ?? false)
-                              ? 'Local'
-                              : 'Disconnected',
+                              ? AppLocalizations.of(context).eventDashboardLocalLabel
+                              : AppLocalizations.of(context).eventDashboardDisconnectedLabel,
                       style: TextStyle(
                         color: _isConnected
                             ? Colors.green
@@ -505,22 +506,22 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildStatItem(
-                'Players',
+                AppLocalizations.of(context).eventDashboardPlayersLabel,
                 '$totalPlayers',
                 Icons.people,
               ),
               _buildStatItem(
-                'Tables',
+                AppLocalizations.of(context).eventDashboardTablesLabel,
                 '${widget.tables.length}',
                 Icons.table_restaurant,
               ),
               _buildStatItem(
-                'Total Chips',
+                AppLocalizations.of(context).eventDashboardTotalChipsLabel,
                 _numberFormat.format(totalChips),
                 Icons.monetization_on,
               ),
               _buildStatItem(
-                'Avg Stack',
+                AppLocalizations.of(context).eventDashboardAvgStackLabel,
                 _numberFormat.format(averageStack),
                 Icons.equalizer,
               ),
@@ -551,9 +552,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Chip Leader',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.of(context).eventDashboardChipLeaderLabel,
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 12,
                           ),
@@ -627,14 +628,14 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No Rankings Yet',
+              AppLocalizations.of(context).eventDashboardNoRankingsYet,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: Colors.grey.shade600,
                   ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Rankings will appear as players join tables',
+              AppLocalizations.of(context).eventDashboardRankingsWillAppear,
               style: TextStyle(color: Colors.grey.shade500),
             ),
           ],
@@ -790,7 +791,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> {
                   border: Border.all(color: Colors.orange.shade700),
                 ),
                 child: Text(
-                  'ON BREAK',
+                  AppLocalizations.of(context).eventDashboardOnBreakBadge,
                   style: TextStyle(
                     fontSize: 10,
                     color: Colors.orange.shade700,

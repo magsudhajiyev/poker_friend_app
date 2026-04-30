@@ -9,6 +9,7 @@ import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/final_standings.dart';
 import '../../services/event_service.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Trophy variant drawn next to the top-3 ranks in the final standings list.
 enum _TrophyKind { gold, silver, bronze }
@@ -122,54 +123,64 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
                 else if (_error != null)
                   Expanded(
                     child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: AppColors.errorRed,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No standings available',
-                            style: GoogleFonts.ibmPlexSans(
-                              color: AppColors.textDisabled,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'This event may not have recorded standings',
-                            style: GoogleFonts.ibmPlexSans(
-                              color: AppColors.textDisabled,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                      child: Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: AppColors.errorRed,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.finalStandingsNoData,
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: AppColors.textDisabled,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n.finalStandingsNoDataHint,
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: AppColors.textDisabled,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   )
                 else if (_standings == null || _standings!.standings.isEmpty)
                   Expanded(
                     child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.emoji_events_outlined,
-                            size: 48,
-                            color: AppColors.textDisabled,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No standings recorded',
-                            style: GoogleFonts.ibmPlexSans(
-                              color: AppColors.textDisabled,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+                      child: Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.emoji_events_outlined,
+                                size: 48,
+                                color: AppColors.textDisabled,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.finalStandingsEmpty,
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: AppColors.textDisabled,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   )
@@ -186,6 +197,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
@@ -202,7 +214,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Final Standings',
+                  l10n.finalStandingsTitle,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 27,
                     fontWeight: FontWeight.w600,
@@ -282,16 +294,26 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: _buildStatTile(
-                value: '${standings.totalPlayers}',
-                label: 'Players',
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return _buildStatTile(
+                    value: '${standings.totalPlayers}',
+                    label: l10n.finalStandingsPlayers,
+                  );
+                },
               ),
             ),
             const SizedBox(width: AppSpacing.xxs),
             Expanded(
-              child: _buildStatTile(
-                value: DateFormat('MMM d').format(standings.completedAt),
-                label: 'Completed',
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return _buildStatTile(
+                    value: DateFormat('MMM d').format(standings.completedAt),
+                    label: l10n.finalStandingsCompleted,
+                  );
+                },
               ),
             ),
           ],

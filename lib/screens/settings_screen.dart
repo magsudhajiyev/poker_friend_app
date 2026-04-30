@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/app_toggle.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../services/club_request_service.dart';
 import '../services/support_request_service.dart';
+import '../services/locale_service.dart';
 import '../onboarding/onboarding_state.dart';
 import 'admin/club_requests_screen.dart';
 import 'admin/support_requests_screen.dart';
@@ -48,8 +50,100 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {}
   }
 
+  String _currentLocaleName() {
+    final l10n = AppLocalizations.of(context);
+    final code = LocaleService.currentLocaleCode;
+    if (code == null) return l10n.settingsLanguageSystem;
+    switch (code) {
+      case 'de': return 'Deutsch';
+      case 'en': return 'English';
+      case 'es': return 'Español';
+      case 'fr': return 'Français';
+      case 'pl': return 'Polski';
+      case 'pt': return 'Português';
+      case 'ru': return 'Русский';
+      default: return code;
+    }
+  }
+
+  void _showLanguagePicker(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final currentCode = LocaleService.currentLocaleCode;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF101115),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.settingsLanguage,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _buildLanguageOption(l10n.settingsLanguageSystem, null, currentCode),
+                _buildLanguageOption('English', 'en', currentCode),
+                _buildLanguageOption('Deutsch', 'de', currentCode),
+                _buildLanguageOption('Español', 'es', currentCode),
+                _buildLanguageOption('Français', 'fr', currentCode),
+                _buildLanguageOption('Polski', 'pl', currentCode),
+                _buildLanguageOption('Português', 'pt', currentCode),
+                _buildLanguageOption('Русский', 'ru', currentCode),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageOption(String label, String? code, String? currentCode) {
+    final isSelected = code == currentCode;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        LocaleService.setLocale(code != null ? Locale(code) : null);
+        Navigator.pop(context);
+        setState(() {});
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected ? const Color(0xFF89F1EC) : Colors.white,
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_rounded, color: Color(0xFF89F1EC), size: 22),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.backgroundPaper,
       body: Stack(
@@ -81,7 +175,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Settings',
+                        l10n.settingsTitle,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
@@ -102,8 +196,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Language section
+                    _buildSectionHeader(l10n.settingsLanguage.toUpperCase()),
+                    const SizedBox(height: 12),
+                    _buildSettingsCard(
+                      children: [
+                        _buildNavigationRow(
+                          icon: Icons.language_rounded,
+                          iconColor: const Color(0xFF89F1EC),
+                          title: l10n.settingsLanguage,
+                          subtitle: _currentLocaleName(),
+                          onTap: () => _showLanguagePicker(context),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 28),
+
                     // Knowledge Base section
-                    _buildSectionHeader('KNOWLEDGE BASE'),
+                    _buildSectionHeader(l10n.settingsKnowledgeBase),
                     const SizedBox(height: 12),
                     _buildSettingsCard(
                       children: [
@@ -128,7 +239,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Guided Tour',
+                                      l10n.settingsGuidedTour,
                                       style: GoogleFonts.ibmPlexSans(
                                         fontSize: 16,
                                         color: Colors.white,
@@ -136,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       ),
                                     ),
                                     Text(
-                                      'Replay onboarding tours',
+                                      l10n.settingsGuidedTourSubtitle,
                                       style: GoogleFonts.ibmPlexSans(
                                         fontSize: 13,
                                         color: Colors.white.withOpacity(0.4),
@@ -166,8 +277,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 _buildNavigationRow(
                                   icon: Icons.style_rounded,
                                   iconColor: const Color(0xFF89F1EC),
-                                  title: 'Full Logging Tour',
-                                  subtitle: 'Complete session tracking flow',
+                                  title: l10n.settingsFullLoggingTour,
+                                  subtitle: l10n.settingsFullLoggingTourSubtitle,
                                   onTap: () {
                                     OnboardingState.startFromPhase(1, individualMode: false);
                                     Navigator.push(
@@ -186,8 +297,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 _buildNavigationRow(
                                   icon: Icons.touch_app_rounded,
                                   iconColor: const Color(0xFF89F1EC),
-                                  title: 'Individual Logging Tour',
-                                  subtitle: 'Single hand tracking flow',
+                                  title: l10n.settingsIndividualLoggingTour,
+                                  subtitle: l10n.settingsIndividualLoggingTourSubtitle,
                                   onTap: () {
                                     OnboardingState.startFromPhase(1, individualMode: true);
                                     Navigator.push(
@@ -214,8 +325,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _buildNavigationRow(
                           icon: Icons.insights_rounded,
                           iconColor: const Color(0xFF89F1EC),
-                          title: 'Understanding Your Stats',
-                          subtitle: 'Learn what each metric means',
+                          title: l10n.settingsUnderstandingStats,
+                          subtitle: l10n.settingsUnderstandingStatsSubtitle,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -231,8 +342,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _buildNavigationRow(
                           icon: Icons.groups_rounded,
                           iconColor: const Color(0xFF89F1EC),
-                          title: 'Clubs & Events',
-                          subtitle: 'How club play works',
+                          title: l10n.settingsClubsEvents,
+                          subtitle: l10n.settingsClubsEventsSubtitle,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -250,15 +361,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     // App Admin Section
                     if (_isAppAdmin) ...[
                       const SizedBox(height: 28),
-                      _buildSectionHeader('ADMIN'),
+                      _buildSectionHeader(l10n.settingsAdmin),
                       const SizedBox(height: 12),
                       _buildSettingsCard(
                         children: [
                           _buildNavigationRow(
                             icon: Icons.business_center_rounded,
                             iconColor: const Color(0xFFE8B55A),
-                            title: 'Club Requests',
-                            subtitle: 'Manage registration requests',
+                            title: l10n.settingsClubRequests,
+                            subtitle: l10n.settingsClubRequestsSubtitle,
                             badge: _pendingRequestCount > 0
                                 ? _pendingRequestCount
                                 : null,
@@ -277,8 +388,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           _buildNavigationRow(
                             icon: Icons.support_agent_rounded,
                             iconColor: const Color(0xFFE8B55A),
-                            title: 'Support Requests',
-                            subtitle: 'Manage user support tickets',
+                            title: l10n.settingsSupportRequests,
+                            subtitle: l10n.settingsSupportRequestsSubtitle,
                             badge: _pendingSupportCount > 0
                                 ? _pendingSupportCount
                                 : null,
@@ -297,8 +408,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           _buildNavigationRow(
                             icon: Icons.notifications_active_rounded,
                             iconColor: const Color(0xFF89F1EC),
-                            title: 'Notification Tester',
-                            subtitle: 'Preview all notification designs',
+                            title: l10n.settingsNotificationTester,
+                            subtitle: l10n.settingsNotificationTesterSubtitle,
                             onTap: () {
                               Navigator.push(
                                 context,

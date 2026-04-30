@@ -7,6 +7,7 @@ import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/buttons/glassy_icon_button.dart';
+import '../l10n/app_localizations.dart';
 import '../services/password_reset_service.dart';
 
 enum _Phase { email, code, password }
@@ -106,7 +107,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _emailController.text.trim(),
       );
       if (!success) {
-        _showError('Failed to send code. Please try again.');
+        _showError(AppLocalizations.of(context).forgotPasswordFailedSendCode);
         return;
       }
       if (mounted) {
@@ -135,9 +136,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (success) {
         _clearCode();
         _startCountdown();
-        _showSuccess('New code sent to your email.');
+        _showSuccess(AppLocalizations.of(context).forgotPasswordNewCodeSent);
       } else {
-        _showError('Failed to resend code.');
+        _showError(AppLocalizations.of(context).forgotPasswordFailedResend);
       }
     } catch (e) {
       _showError(e.toString());
@@ -149,7 +150,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _verifyCode() async {
     final code = _enteredCode;
     if (code.length != 6) {
-      _showError('Please enter the full 6-digit code.');
+      _showError(AppLocalizations.of(context).forgotPasswordEnterFullCode);
       return;
     }
 
@@ -160,7 +161,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         code,
       );
       if (!valid) {
-        _showError('Invalid or expired code. Please try again.');
+        _showError(AppLocalizations.of(context).forgotPasswordInvalidCode);
         _clearCode();
         return;
       }
@@ -185,7 +186,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       );
 
       if (mounted) {
-        _showSuccess('Password reset successfully! Please sign in.');
+        _showSuccess(AppLocalizations.of(context).forgotPasswordResetSuccess);
         Navigator.pop(context); // Back to auth screen
       }
     } catch (e) {
@@ -242,20 +243,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     String title;
     String subtitle;
     switch (_phase) {
       case _Phase.email:
-        title = 'Reset password';
-        subtitle = 'Enter your email to receive a verification code';
+        title = l10n.forgotPasswordResetTitle;
+        subtitle = l10n.forgotPasswordResetSubtitle;
         break;
       case _Phase.code:
-        title = 'Check your email';
-        subtitle = 'Enter the 6-digit code sent to ${_emailController.text.trim()}';
+        title = l10n.forgotPasswordCheckEmail;
+        subtitle = l10n.forgotPasswordCodeSubtitle(_emailController.text.trim());
         break;
       case _Phase.password:
-        title = 'Set new password';
-        subtitle = 'Choose a strong password for your account';
+        title = l10n.forgotPasswordSetNewPassword;
+        subtitle = l10n.forgotPasswordSetNewSubtitle;
         break;
     }
 
@@ -298,6 +300,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   // ==================== Phase 1: Email ====================
 
   Widget _buildEmailPhase() {
+    final l10n = AppLocalizations.of(context);
     return Form(
       key: _emailFormKey,
       child: Column(
@@ -305,19 +308,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         children: [
           _buildInputField(
             controller: _emailController,
-            label: 'Email',
+            label: l10n.forgotPasswordEmail,
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your email';
+              if (value == null || value.isEmpty) return l10n.forgotPasswordEnterEmail;
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email';
+                return l10n.forgotPasswordValidEmail;
               }
               return null;
             },
           ),
           const SizedBox(height: 32),
           _buildPrimaryButton(
-            label: 'Send Code',
+            label: l10n.forgotPasswordSendCode,
             onPressed: _isLoading ? null : _sendCode,
           ),
         ],
@@ -328,6 +331,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   // ==================== Phase 2: Code ====================
 
   Widget _buildCodePhase() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -338,7 +342,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 32),
         _buildPrimaryButton(
-          label: 'Verify Code',
+          label: l10n.forgotPasswordVerifyCode,
           onPressed: _isLoading ? null : _verifyCode,
         ),
         const SizedBox(height: 24),
@@ -348,7 +352,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ? GestureDetector(
                   onTap: _isLoading ? null : _resendCode,
                   child: Text(
-                    'Resend code',
+                    l10n.forgotPasswordResendCode,
                     style: AppTypography.bodySmall(color: Colors.white).copyWith(
                       fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
@@ -356,7 +360,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 )
               : Text(
-                  'Resend code in 0:${_secondsRemaining.toString().padLeft(2, '0')}',
+                  l10n.forgotPasswordResendIn('0:${_secondsRemaining.toString().padLeft(2, '0')}'),
                   style: AppTypography.bodySmall(
                     color: Colors.white.withOpacity(0.50),
                   ),
@@ -416,6 +420,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   // ==================== Phase 3: Password ====================
 
   Widget _buildPasswordPhase() {
+    final l10n = AppLocalizations.of(context);
     return Form(
       key: _passwordFormKey,
       child: Column(
@@ -423,7 +428,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         children: [
           _buildInputField(
             controller: _passwordController,
-            label: 'New password',
+            label: l10n.forgotPasswordNewPassword,
             obscureText: _obscurePassword,
             suffixIcon: IconButton(
               icon: Icon(
@@ -433,15 +438,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter a password';
-              if (value.length < 6) return 'Password must be at least 6 characters';
+              if (value == null || value.isEmpty) return l10n.forgotPasswordEnterPassword;
+              if (value.length < 6) return l10n.forgotPasswordMinLength;
               return null;
             },
           ),
           const SizedBox(height: 16),
           _buildInputField(
             controller: _confirmPasswordController,
-            label: 'Confirm password',
+            label: l10n.forgotPasswordConfirm,
             obscureText: _obscureConfirm,
             suffixIcon: IconButton(
               icon: Icon(
@@ -451,14 +456,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please confirm your password';
-              if (value != _passwordController.text) return 'Passwords do not match';
+              if (value == null || value.isEmpty) return l10n.forgotPasswordConfirmRequired;
+              if (value != _passwordController.text) return l10n.forgotPasswordMismatch;
               return null;
             },
           ),
           const SizedBox(height: 32),
           _buildPrimaryButton(
-            label: 'Reset Password',
+            label: l10n.forgotPasswordResetButton,
             onPressed: _isLoading ? null : _resetPassword,
           ),
         ],

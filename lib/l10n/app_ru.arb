@@ -1,0 +1,4327 @@
+{
+  "@@locale": "ru",
+  "navHome": "Главная",
+  "navOpponents": "Соперники",
+  "navSessions": "Сессии",
+  "navProfile": "Профиль",
+  "commonCancel": "Отмена",
+  "commonConfirm": "Подтвердить",
+  "commonDelete": "Удалить",
+  "commonError": "Ошибка",
+  "commonLoading": "Загрузка...",
+  "commonSave": "Сохранить",
+  "commonRetry": "Повторить",
+  "commonDone": "Готово",
+  "commonOk": "ОК",
+  "commonYes": "Да",
+  "commonNo": "Нет",
+  "commonBack": "Назад",
+  "commonSearch": "Поиск",
+  "commonNoData": "Нет данных",
+  "commonClose": "Закрыть",
+  "commonNotAvailable": "Н/Д",
+  "statsTitle": "Статистика",
+  "statsSubtitle": "Расширенная аналитика",
+  "statsHandsPlayed": "Сыграно рук",
+  "statsFoldTo3Bet": "Fold на 3-Bet",
+  "statsWinRate": "Винрейт",
+  "statsSessionStatistics": "Статистика сессий",
+  "statsSessions": "Сессии",
+  "statsTotalTime": "Общее время",
+  "statsAvgSession": "Ср. сессия",
+  "statsPlayToSee": "Играйте сессии, чтобы увидеть статистику времени",
+  "statsLoadingMessage": "Загрузка статистики...",
+  "statsFetchingMessage": "Получение статистики...",
+  "statsFailedToLoad": "Не удалось загрузить статистику: {error}",
+  "settingsTitle": "Настройки",
+  "settingsLanguage": "Язык",
+  "settingsLanguageSubtitle": "Выберите язык приложения",
+  "settingsLanguageSystem": "Системный",
+  "settingsKnowledgeBase": "БАЗА ЗНАНИЙ",
+  "settingsGuidedTour": "Обучение",
+  "settingsGuidedTourSubtitle": "Повторить обучение",
+  "settingsFullLoggingTour": "Полное логирование",
+  "settingsFullLoggingTourSubtitle": "Полный поток отслеживания сессии",
+  "settingsIndividualLoggingTour": "Индивидуальное логирование",
+  "settingsIndividualLoggingTourSubtitle": "Отслеживание одной руки",
+  "settingsUnderstandingStats": "Ваши показатели",
+  "settingsUnderstandingStatsSubtitle": "Узнайте что означает каждая метрика",
+  "settingsClubsEvents": "Клубы и события",
+  "settingsClubsEventsSubtitle": "Как работает клубная игра",
+  "settingsAdmin": "АДМИН",
+  "settingsClubRequests": "Заявки клубов",
+  "settingsClubRequestsSubtitle": "Управление заявками на регистрацию",
+  "settingsSupportRequests": "Обращения в поддержку",
+  "settingsSupportRequestsSubtitle": "Управление обращениями пользователей",
+  "settingsNotificationTester": "Тестер уведомлений",
+  "settingsNotificationTesterSubtitle": "Предпросмотр всех уведомлений",
+  "profileUpgrade": "Улучшить",
+  "profileUsername": "Имя пользователя",
+  "profileNotSet": "Не задано",
+  "profileChange": "Изменить",
+  "profileSetUsername": "Задать имя",
+  "profileUseNicknameInGames": "Использовать ник в играх",
+  "profileUseNicknameDescription": "Показывать @{username} вместо вашего имени в событиях и логировании рук",
+  "profileBankrollGoal": "Цель банкролла",
+  "profileUpdateGoal": "Обновить цель",
+  "profileCurrentBankroll": "Текущий банкролл",
+  "profileUpdateBankroll": "Обновить банкролл",
+  "profileAddSessionResult": "Добавить результат сессии",
+  "profileSessionResultHint": "Положительное значение для выигрыша, отрицательное для проигрыша",
+  "profileAddResult": "Добавить результат",
+  "profileGoalUpdatedSuccess": "Цель обновлена!",
+  "profileErrorUpdatingGoal": "Ошибка обновления цели",
+  "profileBankrollUpdatedSuccess": "Банкролл обновлён!",
+  "profileErrorUpdatingBankroll": "Ошибка обновления банкролла",
+  "profileSessionResultAdded": "Результат сессии добавлен!",
+  "profileErrorAddingResult": "Ошибка добавления результата сессии",
+  "profilePleaseEnterValidAmount": "Введите корректную сумму",
+  "profileLogOut": "Выйти",
+  "profileSignOut": "Выйти",
+  "profileSignOutConfirmation": "Вы уверены, что хотите выйти?",
+  "sessionHistoryTitle": "История сессий",
+  "sessionLast30Days": "Последние 30 дней",
+  "sessionUpgradeForFullHistory": "Улучшите для полной истории",
+  "sessionLoadingMessage": "Загрузка сессий...",
+  "sessionNoSessions": "Нет сессий {gameType}",
+  "sessionPlayToSee": "Сыграйте несколько рук {gameType}\nчтобы увидеть результаты",
+  "sessionLive": "Онлайн",
+  "sessionPlayersCount": "{count} Игроков",
+  "sessionSyncingToCloud": "Синхронизация с облаком...",
+  "sessionClearAllTitle": "Удалить все сессии?",
+  "sessionClearAllDescription": "Это навсегда удалит все покерные сессии и руки из Firebase и локального хранилища.",
+  "sessionClearAllWarning": "Это действие нельзя отменить!",
+  "sessionClearAll": "Удалить всё",
+  "sessionClearedSuccessfully": "Все сессии успешно удалены",
+  "sessionHandDetails": "Рука #{handNumber} — подробности",
+  "sessionYourCards": "Ваши карты:",
+  "sessionBoardCards": "Карты на столе:",
+  "sessionPotByStreet": "Банк по улицам:",
+  "sessionActions": "Действия:",
+  "sessionNoActionsRecorded": "Нет записанных действий",
+  "sessionNoCardsRecorded": "Нет записанных карт",
+  "sessionFinalPot": "Итоговый банк:",
+  "sessionChoppedPot": "Разделённый банк ({count} победителей):",
+  "sessionWinnerNotAvailable": "Информация о победителе недоступна",
+  "opponentsTitle": "Соперники",
+  "opponentsCountFree": "{count}/{max} бесплатно",
+  "opponentsCountPremium": "{count} отслеживаемых игроков",
+  "opponentsSearchHint": "Поиск соперников...",
+  "opponentsLoadingMessage": "Загрузка соперников...",
+  "opponentsNoResults": "Нет результатов",
+  "opponentsEmptyTitle": "Нет соперников",
+  "opponentsEmptySubtitle": "Отслеживайте стили игры и статистику соперников",
+  "opponentsEmptySearchSubtitle": "Попробуйте другой запрос",
+  "opponentsAddButton": "Добавить соперника",
+  "opponentsLastSeen": "Последний раз: {date}",
+  "opponentsHands": "Руки",
+  "opponentsEditMenu": "Редактировать соперника",
+  "opponentsDeleteMenu": "Удалить соперника",
+  "opponentsAddDialogTitle": "Добавить соперника",
+  "opponentsEditDialogTitle": "Редактировать соперника",
+  "opponentsNameHint": "Имя соперника",
+  "opponentsNotesHint": "Заметки (необязательно)",
+  "opponentsPickColor": "Выберите цвет",
+  "opponentsAddedSuccess": "Соперник добавлен",
+  "opponentsUpdatedSuccess": "Соперник обновлён",
+  "opponentsDeleteConfirmTitle": "Удалить соперника?",
+  "opponentsDeleteConfirmMessage": "Вы уверены, что хотите удалить \"{name}\"?\nЭто действие нельзя отменить",
+  "opponentsDeletedSuccess": "Соперник удалён",
+  "opponentsAnalyticsTitle": "Аналитика соперников",
+  "opponentsAnalyticsTotalLabel": "Всего соперников",
+  "opponentsAnalyticsHandsTracked": "Всего отслеженных рук",
+  "opponentsAnalyticsAverage": "Среднее рук на соперника",
+  "opponentsAnalyticsMostPlayed": "Чаще всего играли против",
+  "opponentsAnalyticsDistribution": "Распределение типов игроков:",
+  "opponentsClearAllTitle": "Удалить всех соперников?",
+  "opponentsClearAllMessage": "Это навсегда удалит все данные соперников. Это действие нельзя отменить!",
+  "opponentsClearAllButton": "Удалить всё",
+  "opponentsClearedSuccess": "Все соперники удалены",
+  "commonApply": "Применить",
+  "commonUpdate": "Обновить",
+  "commonClear": "Очистить",
+  "commonToday": "Сегодня",
+  "setupSessionSetup": "Настройка сессии",
+  "setupSessionName": "Название сессии",
+  "setupSessionNameHint": "напр., \"Пятничный покер\"",
+  "setupGameType": "Тип игры",
+  "setupCashGame": "Кэш-игра",
+  "setupTournament": "Турнир",
+  "setupSmallBlind": "Small Blind",
+  "setupBigBlind": "Big Blind",
+  "setupBuyInAmount": "Сумма бай-ина",
+  "setupEnterAmount": "Введите сумму",
+  "setupStartingStackEqualsBuyIn": "Начальный стек равен вашему бай-ину.",
+  "setupStartingStack": "Начальный стек",
+  "setupEnterChipStack": "Введите стек фишек",
+  "setupMustBeAtLeastBigBlind": "Должен быть не менее Big Blind ({bigBlind})",
+  "setupBbAnte": "BB Ante",
+  "setupTableSection": "СТОЛ",
+  "setupTableInstructions": "Нажмите на место, чтобы добавить игрока. Перетащите кнопку, чтобы установить дилера.",
+  "setupStartSession": "Начать сессию",
+  "setupMe": "Я",
+  "setupPlayerSeat": "Игрок {seatNumber}",
+  "setupHero": "Hero",
+  "homeLoadingPokerData": "Загрузка покерных данных...",
+  "homeWelcomeBack": "С возвращением",
+  "homeNoActiveSessions": "Нет активных сессий",
+  "homeLiveSessions": "Живые сессии",
+  "homeClubNotFound": "Клуб не найден",
+  "homeEventNotFound": "Событие не найдено",
+  "homeRecentActivity": "Последняя активность",
+  "homeWinRate": "Винрейт",
+  "homeHours": "Часы",
+  "homePlayStyle": "Стиль игры",
+  "homeBankroll": "Банкролл",
+  "homeBankrollOfGoal": "{current} из {goal}",
+  "homeAmountLeft": "Осталось {amount}",
+  "homeEarnings": "Заработок",
+  "homeAvgAmount": "Ср. {amount}",
+  "homeNoEarningsDataYet": "Нет данных о заработке",
+  "homeRecentSessions": "Последние сессии",
+  "homeViewAll": "Показать все",
+  "homeNoRecentSessions": "Нет последних сессий",
+  "homeStartFirstSession": "Начните свою первую покерную сессию!",
+  "homeAddNew": "Добавить",
+  "homeUpcomingEvents": "Предстоящие события",
+  "homeNoRecentEvents": "Нет последних событий",
+  "homeAddFirstEvent": "Добавьте своё первое покерное событие!",
+  "homePlayersCount": "{count} Игроков",
+  "homeGoingCount": "{count} идёт",
+  "homePrivateGame": "Приватная игра",
+  "homeHomeGame": "Домашняя игра",
+  "homeOnline": "Онлайн",
+  "homeEditEvent": "Редактировать событие",
+  "homeDeleteEvent": "Удалить событие",
+  "homeEventName": "Название события",
+  "homeLocationVenue": "Место проведения",
+  "homeBuyInAmount": "Сумма бай-ина",
+  "homeSelectDate": "Выберите дату:",
+  "homeSaveChanges": "Сохранить изменения",
+  "homeDeleteEventConfirm": "Удалить {eventName}?",
+  "homeDeleteEventDescription": "Вы уверены, что хотите удалить \"{eventName}\"?",
+  "homeEventDeletedSuccessfully": "Событие успешно удалено",
+  "homeClubInvitation": "Приглашение в клуб",
+  "homeYouveBeenInvitedToJoin": "Вас пригласили присоединиться к",
+  "homeDecline": "Отклонить",
+  "homeAccept": "Принять",
+  "homeInvitationDeclined": "Приглашение отклонено",
+  "homeInvitationAccepted": "Приглашение принято",
+  "homeClubInvitations": "Приглашения в клубы",
+  "homeLater": "Позже",
+  "homeViewInvitations": "Посмотреть приглашения",
+  "homeNoEarningsDataTitle": "Нет данных о заработке",
+  "homeNoEarningsDataDescription": "Сначала добавьте результаты сессий, чтобы увидеть график заработка. Результаты можно добавить на странице Профиль.",
+  "handHandNumber": "Рука #{number}",
+  "handFreeCounter": "{used}/{max} бесплатно",
+  "handNextHand": "Следующая рука",
+  "handFoldedToMe": "Сфолдили ко мне",
+  "handUndoLastAction": "Отменить последнее действие",
+  "handAllInHand": "ALL IN",
+  "handPot": "Банк",
+  "handStack": "Стек",
+  "handToAct": "Ход",
+  "handStopSessionTitle": "Завершить сессию?",
+  "handStopSessionMessage": "Вы уверены, что хотите завершить эту сессию? Все руки будут сохранены.",
+  "handStop": "Завершить",
+  "handChangeTable": "Сменить стол",
+  "handBlinds": "Блайнды",
+  "handTakesEffectNextHand": "Вступает в силу со следующей руки",
+  "handLeaveSession": "Покинуть сессию?",
+  "handSaveAndExit": "Сохранить и выйти",
+  "handDiscardAndExit": "Отменить и выйти",
+  "handAdjustStack": "Изменить стек",
+  "handEnterStackAmount": "Введите размер стека",
+  "handGestureGuide": "Руководство по жестам",
+  "handManagePlayers": "Управление игроками",
+  "handStopSession": "Завершить сессию",
+  "handRebuy": "Ребай",
+  "handGestures": "Жесты",
+  "handGestureTap": "Нажатие",
+  "handGestureCheckCall": "Check / Call",
+  "handGestureSwipeOut": "Свайп наружу",
+  "handGestureSwipeUp": "Свайп вверх",
+  "handGestureBetRaise": "Bet / Raise",
+  "handStreetComplete": "Улица завершена",
+  "handWinsThePot": "выигрывает банк",
+  "handHandComplete": "Рука завершена",
+  "handTapToContinue": "Нажмите, чтобы продолжить",
+  "handRaiseAmount": "Сумма рейза",
+  "handBetAmount": "Сумма ставки",
+  "handPleaseEnterValidNumber": "Введите корректное число",
+  "handConfirmRebuy": "Подтвердить ребай",
+  "handRebuyReplaceStack": "Ребай заменит ваш текущий стек. Вы уверены, что хотите продолжить?",
+  "handProceed": "Продолжить",
+  "handEnterRebuyDetails": "Введите данные ребая для турнира",
+  "handRebuyAmount": "Сумма ребая",
+  "handNewStackSize": "Новый размер стека",
+  "handChipCountAfterRebuy": "Количество фишек после ребая",
+  "handSessionInfo": "Информация о сессии",
+  "handTotalInvested": "Всего вложено: {amount}",
+  "handRebuysCount": "Ребаи: {count}",
+  "handAddRebuy": "Добавить ребай",
+  "handPleaseEnterValidAmounts": "Введите корректные суммы",
+  "handHandInProgress": "Рука в процессе",
+  "handHandInProgressMessage": "Рука в процессе. Переход к следующей руке отменит все действия и восстановит стеки игроков.",
+  "handMoveToNextHand": "Перейти к следующей руке",
+  "handMainPot": "Основной банк",
+  "handSidePot": "Побочный банк {index}",
+  "handPokerSession": "Покерная сессия",
+  "handActionsHandNumber": "Hand #{number}",
+  "@handActionsHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsPosition": "Позиция: {position}",
+  "@handActionsPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsShareHand": "Поделиться Hand",
+  "handActionsShowHoleCards": "Показать карты",
+  "handActionsShowHoleCardsSubtitle": "Ваши карты будут видны по ссылке",
+  "handActionsHideHoleCards": "Скрыть карты",
+  "handActionsHideHoleCardsSubtitle": "Ваши карты будут скрыты в общей ссылке",
+  "handActionsShareMessage": "Посмотри эту раздачу в Final Table!",
+  "handActionsShareSubject": "Poker Hand #{number}",
+  "@handActionsShareSubject": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToShareHand": "Не удалось поделиться раздачей",
+  "handActionsGeneratingExport": "Генерация экспорта PokerStars...",
+  "handActionsExportedSuccessfully": "Hand #{number} экспортирована успешно!",
+  "@handActionsExportedSuccessfully": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToExport": "Ошибка экспорта: {error}",
+  "@handActionsFailedToExport": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsMissingHeroCards": "Карты Hero отсутствуют",
+  "handActionsMissingHeroCardsMessage": "Для AI-анализа необходимо записать ваши карты. Эту раздачу невозможно проанализировать, так как карты Hero отсутствуют.",
+  "handActionsYourCards": "Ваши карты",
+  "handActionsOpponentCards": "Карты оппонента",
+  "handActionsPlayerSeat": "Игрок {id}",
+  "@handActionsPlayerSeat": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "handActionsPot": "POT",
+  "handActionsBlinds": "BLINDS",
+  "handActionsWinner": "ПОБЕДИТЕЛЬ",
+  "handActionsPlayersCount": "{count} игроков",
+  "@handActionsPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "handActionsActionSummary": "Сводка действий",
+  "handActionsPreflop": "PREFLOP",
+  "handActionsBoard": "БОРД",
+  "handActionsPlayer": "ИГРОК",
+  "handActionsStack": "STACK",
+  "handActionsAction": "ДЕЙСТВИЕ",
+  "handActionsAmount": "СУММА",
+  "handActionsYou": "Вы",
+  "handActionsAllIn": "ALL IN",
+  "handActionsNotes": "Заметки",
+  "handActionsAnalyzingHand": "Анализ раздачи...",
+  "handActionsHeroCardsMissing": "Карты Hero отсутствуют",
+  "handActionsUnlockAiAnalysis": "Разблокировать AI-анализ",
+  "handActionsAnalysisComplete": "Анализ завершён",
+  "handActionsAiAnalyzerBeta": "AI-анализатор (бета)",
+  "handActionsAnalysisFailed": "Ошибка анализа",
+  "handActionsAiAnalysis": "AI-анализ",
+  "handActionsStreetByStreetBreakdown": "Разбор по улицам",
+  "handActionsAnalysisCompletedIn": "Анализ завершён за {time} сек.",
+  "@handActionsAnalysisCompletedIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "handActionsFailedToUpdateStar": "Не удалось обновить избранное",
+  "handActionsPotAmount": "Pot: {amount}",
+  "@handActionsPotAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailHandsTracked": "{count} раздач отслежено",
+  "@opponentDetailHandsTracked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentDetailNoDataYet": "Данных пока нет",
+  "opponentDetailHands": "Раздачи",
+  "opponentDetailLastSeen": "Последний раз:",
+  "opponentDetailNotes": "Заметки",
+  "opponentDetailEditOpponent": "Редактировать оппонента",
+  "opponentDetailDeleteOpponent": "Удалить оппонента",
+  "opponentDetailStatistics": "Статистика",
+  "opponentDetailNoStatisticsAvailable": "Статистика недоступна",
+  "opponentDetailAggressionFreq": "Aggression Freq",
+  "opponentDetailShowdownPercent": "Showdown %",
+  "opponentDetailHandHistory": "История раздач",
+  "opponentDetailViewAllHands": "Просмотреть все раздачи с этим оппонентом",
+  "opponentDetailViewHandHistory": "Просмотреть историю раздач",
+  "opponentDetailNoHandsFound": "Раздачи не найдены",
+  "opponentDetailNoHandsMessage": "Вы ещё не играли с \"{name}\"",
+  "@opponentDetailNoHandsMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailOpponentName": "Имя оппонента",
+  "opponentDetailNotesOptional": "Заметки (необязательно)",
+  "opponentDetailPickColor": "Выберите цвет",
+  "opponentDetailColorRed": "Красный",
+  "opponentDetailColorLightBlue": "Голубой",
+  "opponentDetailColorGreen": "Зелёный",
+  "opponentDetailColorOrange": "Оранжевый",
+  "opponentDetailColorPurple": "Фиолетовый",
+  "opponentDetailColorTeal": "Бирюзовый",
+  "opponentDetailColorPink": "Розовый",
+  "opponentDetailColorIndigo": "Индиго",
+  "opponentDetailUpdatedSuccessfully": "Оппонент обновлён",
+  "opponentDetailDeleteConfirmTitle": "Удалить оппонента?",
+  "opponentDetailDeleteConfirmMessage": "Вы уверены, что хотите удалить \"{name}\"?\nЭто действие нельзя отменить",
+  "@opponentDetailDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailDeletedSuccessfully": "Оппонент удалён",
+  "opponentDetailErrorDeleting": "Ошибка удаления оппонента: {error}",
+  "@opponentDetailErrorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "individualSessionCreatedLocally": "Сессия создана локально. Синхронизируется с облаком при наличии подключения.",
+  "individualUpdateCurrentStack": "Обновить текущий Stack",
+  "individualCurrentStack": "Текущий Stack:",
+  "individualSetNewTotal": "Установить новый итог",
+  "individualEnterNewTotalStack": "Введите новый общий Stack",
+  "individualAddSubtractAmount": "Добавить/Вычесть сумму",
+  "individualAmount": "Сумма",
+  "individualSetTotal": "Установить итог",
+  "individualUpdateBlinds": "Обновить Blinds",
+  "individualSmallBlind": "Small Blind",
+  "individualBigBlind": "Big Blind",
+  "individualBbMode": "Режим BB",
+  "individualCurrentStackLabel": "Текущий Stack",
+  "individualSessionInfo": "Информация о сессии",
+  "individualStartingStack": "Начальный Stack",
+  "individualInitialBuyIn": "Начальный Buy-in",
+  "individualRebuys": "Rebuys",
+  "individualTotalInvested": "Всего вложено",
+  "individualBlindsLabel": "Blinds",
+  "individualHandsLogged": "Записано раздач",
+  "individualLogAHand": "Записать раздачу",
+  "individualGoBackToHand": "Вернуться к раздаче",
+  "individualStackChart": "График Stack",
+  "individualCompleteHandToSee": "Завершите раздачу, чтобы увидеть динамику Stack",
+  "individualStopSessionTitle": "Остановить сессию?",
+  "individualStopSessionMessage": "Вы уверены, что хотите остановить эту сессию? Все раздачи будут сохранены.",
+  "individualStop": "Остановить",
+  "individualConfirmRebuy": "Подтвердить Rebuy",
+  "individualRebuyCurrentStack": "У вас сейчас {stack}.",
+  "@individualRebuyCurrentStack": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuyReplaceMessage": "При Rebuy ваш текущий Stack будет заменён. Вы уверены, что хотите продолжить?",
+  "individualProceedWithRebuy": "Продолжить Rebuy",
+  "individualRebuy": "Rebuy",
+  "individualEnterRebuyAmount": "Введите сумму Rebuy (Stack будет равен сумме Rebuy)",
+  "individualEnterRebuyAmountAndStack": "Введите сумму Rebuy и новый размер Stack",
+  "individualRebuyAmount": "Сумма Rebuy",
+  "individualNewStackSize": "Новый размер Stack",
+  "individualChipCountAfterRebuy": "Количество фишек после Rebuy",
+  "individualTotalInvestedAmount": "Всего вложено: ${amount}",
+  "@individualTotalInvestedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "individualCurrentStackAmount": "Текущий Stack: {stack}",
+  "@individualCurrentStackAmount": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuysCount": "Rebuys: {count}",
+  "@individualRebuysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "individualAddRebuy": "Добавить Rebuy",
+  "individualPleaseEnterValidRebuy": "Введите корректную сумму Rebuy",
+  "individualPleaseEnterValidStack": "Введите корректный размер Stack",
+  "individualRebuyAddedSimple": "Rebuy добавлен: ${amount}",
+  "@individualRebuyAddedSimple": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "individualRebuyAddedWithStack": "Rebuy добавлен: ${amount} (Stack: {stack})",
+  "@individualRebuyAddedWithStack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "authWelcome": "Добро пожаловать в Final Table",
+  "authSignIn": "Войти",
+  "authRegister": "Регистрация",
+  "authEmail": "Email",
+  "authPassword": "Пароль",
+  "authDisplayName": "Отображаемое имя",
+  "authConfirmPassword": "Подтвердите пароль",
+  "authPleaseEnterEmail": "Пожалуйста, введите email",
+  "authPleaseEnterValidEmail": "Пожалуйста, введите корректный email",
+  "authPleaseEnterPassword": "Пожалуйста, введите пароль",
+  "authPleaseEnterName": "Пожалуйста, введите имя",
+  "authNameMinLength": "Имя должно содержать минимум 2 символа",
+  "authPleaseEnterAPassword": "Пожалуйста, введите пароль",
+  "authPasswordMinLength": "Пароль должен содержать минимум 6 символов",
+  "authPleaseConfirmPassword": "Пожалуйста, подтвердите пароль",
+  "authPasswordsDoNotMatch": "Пароли не совпадают",
+  "authCreateAccount": "Создать аккаунт",
+  "authForgotPassword": "Забыли пароль?",
+  "authResetPassword": "Сбросить пароль",
+  "authResetPasswordMessage": "Введите email для получения ссылки сброса пароля.",
+  "authSendResetLink": "Отправить ссылку",
+  "authPasswordResetSent": "Письмо для сброса пароля отправлено!",
+  "paywallRestore": "Восстановить",
+  "paywallTitle": "FINAL TABLE PREMIUM",
+  "paywallUnlockFeature": "Разблокировать {featureName}",
+  "@paywallUnlockFeature": {
+    "placeholders": {
+      "featureName": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallGoPremium": "Перейти на Premium",
+  "paywallFeatureSubtitle": "Эта функция входит в Final Table Premium. Выберите план, который подходит вашей игре.",
+  "paywallGeneralSubtitle": "Разблокируйте все возможности Final Table. Больше раздач, анализ игры, управление клубом.",
+  "paywallProTier": "PRO",
+  "paywallFreeTrialBadge": "7 дней бесплатно",
+  "paywallProDescription": "Всё, что нужно для совершенствования игры.",
+  "paywallUnlimitedHandLogging": "Неограниченная запись раздач",
+  "paywallFullSessionHistory": "Полная история сессий",
+  "paywallAiHandAnalysis": "AI-анализ раздач",
+  "paywallExportHandsCsv": "Экспорт раздач в CSV",
+  "paywallProMonthly": "$19.99/мес.",
+  "paywallProYearly": "$199.99/год",
+  "paywallStartFreeTrial": "Начать 7-дневный пробный период",
+  "paywallEliteTier": "ELITE",
+  "paywallEliteDescription": "Поднимите свою игру на новый уровень.",
+  "paywallEverythingInProElite": "Всё из Pro",
+  "paywallEliteFeature1": "Продвинутое профилирование оппонентов",
+  "paywallEliteFeature2": "Детальная аналитика сессий",
+  "paywallEliteFeature3": "Приоритетная поддержка",
+  "paywallEliteMonthly": "$29.99/мес.",
+  "paywallEliteYearly": "$249.99/год",
+  "paywallGetElite": "Получить Elite",
+  "paywallClubTier": "CLUB",
+  "paywallClubDescription": "Для домашних игр, клубов и живых площадок.",
+  "paywallEverythingInPro": "Всё из Pro",
+  "paywallClubManagement": "Управление клубом и роли участников",
+  "paywallLiveDealerVoice": "Голосовая запись Dealer",
+  "paywallMultiTableEvents": "Мультистоловые турниры с рейтингами",
+  "paywallClubMonthly": "$39.99/мес.",
+  "paywallClubYearly": "$299.99/год",
+  "paywallGetClub": "Получить Club",
+  "paywallDisclaimer": "Подписки продлеваются автоматически. Отмена возможна в любое время в настройках аккаунта.",
+  "paywallTerms": "Условия",
+  "paywallPrivacy": "Конфиденциальность",
+  "paywallPurchasesRestored": "Покупки восстановлены",
+  "paywallNoPreviousPurchases": "Предыдущие покупки не найдены",
+  "paywallComingSoon": "Подписка {tier} скоро появится",
+  "@paywallComingSoon": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "trialConfirmTitle": "Первые 7 дней {tier} — бесплатно",
+  "@trialConfirmTitle": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "trialConfirmTodayTitle": "Сегодня",
+  "trialConfirmTodayBody": "Полный доступ ко всем функциям {tier}",
+  "@trialConfirmTodayBody": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "trialConfirmReminderTitle": "Через 5 дней",
+  "trialConfirmReminderBody": "Напоминание перед окончанием пробного периода",
+  "trialConfirmStartTitle": "Через 7 дней",
+  "trialConfirmStartBody": "Начнётся подписка, если вы не отмените раньше",
+  "trialConfirmPriceSummary": "Попробуйте 7 дней бесплатно, затем",
+  "trialConfirmStartCta": "Начать 7-дневный бесплатный период",
+  "trialConfirmDisclaimer": "Без оплаты. Отмените в любое время в App Store.",
+  "introGameSetup": "Настройка игры",
+  "introConfigureSession": "Настройте вашу сессию",
+  "introSmallBlind": "Small Blind",
+  "introBigBlind": "Big Blind",
+  "introPlayers": "Игроки",
+  "introGameType": "Тип игры",
+  "introBbAnte": "BB Ante",
+  "introBbAnteDescription": "Включить правило BB Ante",
+  "introStartGame": "НАЧАТЬ ИГРУ",
+  "introStartingSession": "Запуск покерной сессии...",
+  "introEnterField": "Введите {title}",
+  "@introEnterField": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "introEnterAmount": "Введите сумму",
+  "introPleaseEnterValidNumber": "Пожалуйста, введите корректное положительное число",
+  "introRingGame": "Ring Game",
+  "introMultiTable": "Multi-Table",
+  "invitationTitle": "Приглашения в клуб",
+  "invitationNoPending": "Нет ожидающих приглашений",
+  "invitationYouWillSeeHere": "Приглашения от клубов будут отображаться здесь",
+  "invitationGoBack": "Назад",
+  "invitationFailedToLoad": "Не удалось загрузить приглашения: {error}",
+  "@invitationFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationJoinedAs": "Вы вступили в {clubName} как {role}",
+  "@invitationJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationFailedToAccept": "Не удалось принять приглашение: {error}",
+  "@invitationFailedToAccept": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationDeclined": "Приглашение отклонено",
+  "invitationFailedToDecline": "Не удалось отклонить приглашение: {error}",
+  "@invitationFailedToDecline": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationUnknownClub": "Неизвестный клуб",
+  "invitationInvitedBy": "Пригласил: {name}",
+  "@invitationInvitedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationExpiresDate": "Истекает {date}",
+  "@invitationExpiresDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationExpired": "Истекло",
+  "invitationExpiresInDays": "через {days} дн.",
+  "@invitationExpiresInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationExpiresInHours": "через {hours} ч.",
+  "@invitationExpiresInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationExpiresSoon": "скоро",
+  "invitationDeclineButton": "Отклонить",
+  "invitationAcceptButton": "Принять",
+  "notificationTitle": "Уведомления",
+  "notificationToday": "Сегодня",
+  "notificationYesterday": "Вчера",
+  "notificationThisWeek": "На этой неделе",
+  "notificationEarlier": "Ранее",
+  "notificationMarkAllRead": "Отметить всё как прочитанное",
+  "notificationMarkAsRead": "Отметить как прочитанное",
+  "notificationNoNotifications": "Нет уведомлений",
+  "notificationEvents": "Мероприятия",
+  "notificationRsvp": "RSVP",
+  "notificationClubs": "Клубы",
+  "notificationInvitations": "Приглашения",
+  "notificationSeats": "Места",
+  "notificationSupport": "Поддержка",
+  "notificationClubNotFound": "Клуб не найден",
+  "notificationEventNotFound": "Мероприятие не найдено",
+  "notificationError": "Ошибка: {error}",
+  "@notificationError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationErrorLoadingEvent": "Ошибка загрузки мероприятия: {error}",
+  "@notificationErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationFailedToLoadClub": "Не удалось загрузить клуб: {error}",
+  "@notificationFailedToLoadClub": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubInvitation": "Приглашение в клуб",
+  "notificationInvitedToJoin": "Вас пригласили присоединиться",
+  "notificationInvitationDeclined": "Приглашение отклонено",
+  "notificationNotAuthenticated": "Не авторизован",
+  "notificationInvitationAccepted": "Приглашение принято",
+  "notificationAcceptedMessage": "{name} принял приглашение в {clubName}.",
+  "@notificationAcceptedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationInvitationDeclinedTitle": "Приглашение отклонено",
+  "notificationDeclinedMessage": "{name} отклонил приглашение в {clubName}.",
+  "@notificationDeclinedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationRequestResolved": "Запрос решён",
+  "notificationRequestClosed": "Запрос закрыт",
+  "notificationResponse": "Ответ",
+  "calendarTitle": "Покерный календарь",
+  "calendarNewEvent": "Новое мероприятие",
+  "calendarEventType": "Тип мероприятия",
+  "calendarEventTitle": "Название",
+  "calendarLocation": "Место",
+  "calendarBuyInAmount": "Сумма Buy-in",
+  "calendarEventDateTime": "Дата и время мероприятия",
+  "calendarStarts": "Начало",
+  "calendarSelectDate": "Выберите дату:",
+  "calendarReset": "Сброс",
+  "calendarSun": "ВС",
+  "calendarMon": "ПН",
+  "calendarTue": "ВТ",
+  "calendarWed": "СР",
+  "calendarThu": "ЧТ",
+  "calendarFri": "ПТ",
+  "calendarSat": "СБ",
+  "calendarNoRecentEvents": "Нет недавних мероприятий",
+  "calendarAddFirstEvent": "Добавьте ваше первое покерное мероприятие!",
+  "calendarAddNewEvent": "Добавить мероприятие",
+  "calendarSelectYear": "Выберите год",
+  "calendarEditEvent": "Редактировать мероприятие",
+  "calendarDeleteEvent": "Удалить мероприятие",
+  "calendarTournament": "Tournament",
+  "calendarCashGame": "Cash Game",
+  "calendarPrivateGame": "Приватная игра",
+  "calendarOnline": "Онлайн",
+  "calendarFailedToCreateEvent": "Не удалось создать мероприятие: {error}",
+  "@calendarFailedToCreateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarFailedToUpdateEvent": "Не удалось обновить мероприятие: {error}",
+  "@calendarFailedToUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarFailedToDeleteEvent": "Не удалось удалить мероприятие",
+  "calendarClubNotFound": "Клуб не найден",
+  "calendarEventNotFound": "Мероприятие не найдено",
+  "calendarFailedToLoadEvent": "Не удалось загрузить мероприятие: {error}",
+  "@calendarFailedToLoadEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarDeleteConfirmTitle": "Удалить {title}?",
+  "@calendarDeleteConfirmTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarDeleteConfirmMessage": "Вы уверены, что хотите удалить \"{title}\"?\nЭто действие нельзя отменить.",
+  "@calendarDeleteConfirmMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsTitle": "Аналитика сессии",
+  "sessionAnalyticsHandsLogged": "{count} раздач записано",
+  "@sessionAnalyticsHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionAnalyticsDeleteTitle": "Удалить сессию?",
+  "sessionAnalyticsDeleteMessage": "Это навсегда удалит эту сессию, включая всю историю раздач, данные графика Stack и отчёты AI-анализа. Это действие нельзя отменить.",
+  "sessionAnalyticsDeleted": "Сессия удалена",
+  "sessionAnalyticsFailedToDelete": "Не удалось удалить сессию",
+  "sessionAnalyticsExportSession": "Экспорт сессии",
+  "sessionAnalyticsExportConfirm": "Экспортировать {count} раздач на {email}?",
+  "@sessionAnalyticsExportConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsExport": "Экспорт",
+  "sessionAnalyticsExportSent": "Экспорт отправлен на {email}",
+  "@sessionAnalyticsExportSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsExportFailed": "Ошибка экспорта: {error}",
+  "@sessionAnalyticsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAnalyticsNoEmailFound": "Email не найден. Пожалуйста, войдите с учётной записью email.",
+  "sessionAnalyticsPokerSession": "Покерная сессия",
+  "sessionAnalyticsTotalInvested": "Всего вложено",
+  "sessionAnalyticsFinalStack": "Финальный Stack",
+  "sessionAnalyticsProfitLoss": "Прибыль/Убыток",
+  "sessionAnalyticsAvgGrowth": "Средний рост",
+  "sessionAnalyticsDuration": "Продолжительность",
+  "sessionAnalyticsRebuys": "Rebuys",
+  "sessionAnalyticsStackChart": "График Stack",
+  "sessionAnalyticsNoStackHistory": "История Stack недоступна",
+  "sessionAnalyticsStackTrackedFuture": "Изменения Stack будут отслеживаться в будущих сессиях",
+  "sessionAnalyticsViewLoggedHands": "Просмотреть записанные раздачи",
+  "sessionAnalyticsStart": "Начало",
+  "sessionAnalyticsRebuy": "Rebuy",
+  "sessionAnalyticsEnd": "Конец",
+  "seatSetupTitle": "Настройка мест",
+  "seatSetupManagePlayers": "Управление игроками",
+  "seatSetupClickToConfig": "Нажмите на место для настройки. Перетащите кнопку для позиции",
+  "seatSetupButtonLocked": "Кнопка заблокирована — раздача в процессе",
+  "seatSetupUpdatePlayerInfo": "Обновить информацию об игроке",
+  "seatSetupEmpty": "Пусто",
+  "seatSetupThisIsMySeat": "Это моё место",
+  "seatSetupPlayerName": "Имя игрока",
+  "seatSetupBuyInAmount": "Сумма Buy-in ($)",
+  "seatSetupStartingChips": "Начальные фишки",
+  "seatSetupSaveAsOpponent": "Сохранить \"{name}\" как оппонента?",
+  "@seatSetupSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupOpponentSaved": "Оппонент сохранён!",
+  "seatSetupFailedToSave": "Не удалось сохранить: {error}",
+  "@seatSetupFailedToSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupNoData": "Нет данных",
+  "seatSetupStartSession": "Начать сессию",
+  "seatSetupSaveChanges": "Сохранить изменения",
+  "seatSetupPleaseSelectSeat": "Пожалуйста, выберите своё место",
+  "seatSetupSeatNumber": "Место {number}",
+  "@seatSetupSeatNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "seatSetupPlayerDefault": "Игрок {number}",
+  "@seatSetupPlayerDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "quickStackTitle": "Обновить Stack и кнопку",
+  "quickStackBlinds": "Blinds: {blinds}",
+  "@quickStackBlinds": {
+    "placeholders": {
+      "blinds": {
+        "type": "String"
+      }
+    }
+  },
+  "quickStackInstruction": "Нажмите на Stack для редактирования  •  Проведите для корректировки  •  Нажмите D для кнопки",
+  "quickStackContinue": "ПРОДОЛЖИТЬ ЗАПИСЬ РАЗДАЧИ",
+  "quickStackEditStack": "Редактировать Stack",
+  "quickStackStackInBb": "Stack в BB",
+  "quickStackCurrentValue": "Текущее: {bbValue} BB = {chipValue}",
+  "@quickStackCurrentValue": {
+    "placeholders": {
+      "bbValue": {
+        "type": "String"
+      },
+      "chipValue": {
+        "type": "String"
+      }
+    }
+  },
+  "quickStackValidationError": "Введите значение от 0 до 1000 BB",
+  "quickStackSeat": "Место {number}",
+  "@quickStackSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "quickStackEmpty": "Пусто",
+  "quickStackPlayerDefault": "Игрок {id}",
+  "@quickStackPlayerDefault": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "handReviewTitle": "Обзор раздачи",
+  "handReviewYourHoleCards": "Ваши карты",
+  "handReviewOptional": "(необязательно)",
+  "handReviewQuickTags": "Быстрые теги",
+  "handReviewTagBluff": "Bluff",
+  "handReviewTagValue": "Value",
+  "handReviewTagMistake": "Ошибка",
+  "handReviewTagCooler": "Cooler",
+  "handReviewTagHeroCall": "Hero Call",
+  "handReviewTagExploit": "Exploit",
+  "handReviewNotes": "Заметки",
+  "handReviewNotesHint": "Добавить заметку к этой раздаче...",
+  "handReviewSaveHand": "Сохранить раздачу",
+  "handReviewSkip": "Пропустить",
+  "handReviewDuplicateCardError": "Нельзя выбрать одну и ту же карту дважды!",
+  "handReviewSelectBothOrNone": "Выберите обе карты или оставьте обе пустыми",
+  "holeCardsTitle": "Ваши карты",
+  "holeCardsSubtitle": "Hole Cards",
+  "holeCardsWinnerBadge": "ПОБЕДИТЕЛЬ",
+  "holeCardsSave": "Сохранить",
+  "holeCardsSkip": "Пропустить",
+  "holeCardsSkipAllRemaining": "Пропустить все оставшиеся",
+  "holeCardsDuplicateCardError": "Нельзя выбрать одну и ту же карту дважды!",
+  "holeCardsSelectBothOrSkip": "Выберите обе карты или пропустите",
+  "holeCardsClearAll": "Очистить всё",
+  "showdownTitle": "Showdown",
+  "showdownEnterOpponentCards": "Введите карты оппонентов на Showdown:",
+  "showdownPlayerLabel": "Игрок {seatNumber}",
+  "@showdownPlayerLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "showdownCard1": "Карта 1",
+  "showdownCard2": "Карта 2",
+  "showdownClear": "Очистить",
+  "showdownWinner": "Победитель:",
+  "showdownHandDescriptionLabel": "Описание руки (необязательно)",
+  "showdownHandDescriptionHint": "напр., \"Стрит-флеш\", \"Фулл-хаус тузы и короли\"",
+  "showdownSkip": "Пропустить",
+  "showdownSave": "Сохранить",
+  "showdownSelectCard": "Выберите карту",
+  "tableManagementSectionTitle": "СТОЛ",
+  "tableManagementPlayersCount": "{count} игроков",
+  "@tableManagementPlayersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tableManagementDealerButton": "Кнопка Dealer",
+  "tableManagementAddPlayer": "Добавить игрока",
+  "tableManagementYouSuffix": "{name} (Вы)",
+  "@tableManagementYouSuffix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementAdjustStack": "Изменить Stack",
+  "tableManagementRebuy": "Rebuy",
+  "tableManagementRemove": "Удалить",
+  "tableManagementAdjustStackTitle": "Изменить Stack",
+  "tableManagementEnterStackAmount": "Введите размер Stack",
+  "tableManagementRebuyTitle": "Rebuy",
+  "tableManagementRebuyAmountHint": "Сумма Rebuy для добавления",
+  "tableManagementAdd": "Добавить",
+  "tableManagementRemovePlayerTitle": "Удалить игрока?",
+  "tableManagementRemovePlayerMessage": "Удалить {playerName} со стола?",
+  "@tableManagementRemovePlayerMessage": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementAddPlayerSeatTitle": "Добавить игрока — Место {seatNumber}",
+  "@tableManagementAddPlayerSeatTitle": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "tableManagementThisIsMe": "Это я",
+  "tableManagementNameLabel": "Имя",
+  "tableManagementSearchOrEnterName": "Найти или ввести имя",
+  "tableManagementSaveAsOpponent": "Сохранить \"{name}\" как оппонента",
+  "@tableManagementSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementSavedAsOpponent": "{name} сохранён как оппонент",
+  "@tableManagementSavedAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tableManagementStartingStack": "Начальный Stack",
+  "tableManagementStackAmountHint": "Размер Stack",
+  "tableManagementMoveMeHere": "Пересадить меня сюда",
+  "tableManagementSeatLabel": "Место {seatNumber}",
+  "@tableManagementSeatLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatConfigRemove": "Удалить",
+  "seatConfigThisIsMe": "Это я",
+  "seatConfigNameLabel": "Имя",
+  "seatConfigSearchOrEnterName": "Найти или ввести имя",
+  "seatConfigSaveAsOpponent": "Сохранить \"{name}\" как оппонента",
+  "@seatConfigSaveAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatConfigSavedAsOpponent": "{name} сохранён как оппонент",
+  "@seatConfigSavedAsOpponent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatConfigSeatTitle": "Место {seatNumber}",
+  "@seatConfigSeatTitle": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatConfigStackLabel": "Stack",
+  "seatConfigUpdateButton": "Обновить",
+  "seatConfigAddPlayerButton": "Добавить игрока",
+  "seatManagementSetupSeats": "Настройка мест",
+  "seatManagementManagePlayers": "Управление игроками",
+  "seatManagementChooseSeatSubtitle": "Выберите своё место и настройте стол",
+  "seatManagementUpdatePlayerSubtitle": "Обновить информацию об игроке",
+  "seatManagementButtonPosition": "Позиция кнопки",
+  "seatManagementSeatLabel": "Место {seatNumber}",
+  "@seatManagementSeatLabel": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "seatManagementEmpty": "Пусто",
+  "seatManagementActive": "Активен",
+  "seatManagementPlayerNameLabel": "Имя игрока",
+  "seatManagementEnterPlayerName": "Введите имя игрока",
+  "seatManagementBuyInAmountCash": "Сумма Buy-in ($)",
+  "seatManagementStartingChips": "Начальные фишки",
+  "seatManagementSaveOpponentTitle": "Сохранить оппонента?",
+  "seatManagementSaveOpponentMessage": "Хотите сохранить \"{name}\" в список оппонентов для отслеживания?",
+  "@seatManagementSaveOpponentMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementNotNow": "Не сейчас",
+  "seatManagementSaveAsOpponentPrompt": "Сохранить \"{name}\" как оппонента?",
+  "@seatManagementSaveAsOpponentPrompt": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementOpponentSavedSuccess": "Оппонент \"{name}\" сохранён!",
+  "@seatManagementOpponentSavedSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementFailedToSaveOpponent": "Не удалось сохранить оппонента: {error}",
+  "@seatManagementFailedToSaveOpponent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatManagementStartSession": "Начать сессию",
+  "seatManagementSaveChanges": "Сохранить изменения",
+  "seatManagementSelectYourSeat": "Пожалуйста, выберите своё место",
+  "inviteMemberTitle": "Пригласить участника",
+  "inviteMemberEmailLabel": "EMAIL АДРЕС",
+  "inviteMemberEmailHint": "Введите email адрес",
+  "inviteMemberEmailRequired": "Пожалуйста, введите email адрес",
+  "inviteMemberEmailInvalid": "Пожалуйста, введите корректный email адрес",
+  "inviteMemberRoleLabel": "РОЛЬ",
+  "inviteMemberRoleDealer": "Dealer",
+  "inviteMemberRoleAdmin": "Администратор",
+  "inviteMemberSendInvite": "Отправить приглашение",
+  "inviteMemberAlreadyMember": "{displayName} уже является участником {clubName}",
+  "@inviteMemberAlreadyMember": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberAddedNotificationTitle": "Вас добавили в клуб!",
+  "inviteMemberAddedNotificationBody": "{inviterName} добавил вас в \"{clubName}\" как {role}.",
+  "@inviteMemberAddedNotificationBody": {
+    "placeholders": {
+      "inviterName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberAddedSuccessTitle": "Участник добавлен!",
+  "inviteMemberAddedSuccessMessage": "{displayName} добавлен в {clubName} как {role}.",
+  "@inviteMemberAddedSuccessMessage": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberInvitationSentTitle": "Приглашение отправлено!",
+  "inviteMemberInvitationSentMessage": "Приглашение отправлено на {email}. После регистрации они смогут присоединиться к {clubName}.",
+  "@inviteMemberInvitationSentMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberError": "Ошибка: {error}",
+  "@inviteMemberError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMemberRoleAnAdmin": "администратор",
+  "inviteMemberRoleADealer": "Dealer",
+  "registerClubTitle": "Регистрация клуба",
+  "registerClubNameLabel": "Название клуба",
+  "registerClubNamePlaceholder": "напр., Lucky Aces Poker Club",
+  "registerClubNameRequired": "Пожалуйста, введите название клуба",
+  "registerClubAddressLabel": "Адрес",
+  "registerClubAddressPlaceholder": "напр., ул. Главная, 123, Город",
+  "registerClubAddressRequired": "Пожалуйста, введите адрес клуба",
+  "registerClubPhoneLabel": "Номер телефона",
+  "registerClubPhonePlaceholder": "напр., +7 555-123-4567",
+  "registerClubPhoneRequired": "Пожалуйста, введите номер телефона",
+  "registerClubAdminEmailLabel": "Email администратора клуба",
+  "registerClubAdminEmailPlaceholder": "напр., admin@myclub.com",
+  "registerClubAdminEmailRequired": "Пожалуйста, введите email администратора",
+  "registerClubAdminEmailInvalid": "Пожалуйста, введите корректный email",
+  "registerClubInfoMessage": "Этот человек будет уведомлён, когда клуб будет одобрен, и станет владельцем клуба.",
+  "registerClubSubmitRequest": "Отправить запрос",
+  "registerClubFailedToSubmit": "Не удалось отправить запрос: {error}",
+  "@registerClubFailedToSubmit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "registerClubSuccessTitle": "Запрос отправлен!",
+  "registerClubSuccessMessage": "Ваш запрос на регистрацию клуба отправлен. Мы уведомим вас на {email} после рассмотрения.",
+  "@registerClubSuccessMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "registerClubGotIt": "Понятно",
+  "loggingModeChooseMode": "Выберите режим",
+  "loggingModeFullTitle": "Полная запись",
+  "loggingModeFullSubtitle": "Полное отслеживание сессии",
+  "loggingModeFullFeature1": "Многораздачная сессия",
+  "loggingModeFullFeature2": "Статистика в реальном времени",
+  "loggingModeFullFeature3": "Детальная история раздач",
+  "loggingModeFullFeature4": "Аналитика сессии",
+  "loggingModeIndividualTitle": "Индивидуальная запись",
+  "loggingModeIndividualSubtitle": "Запись отдельных раздач",
+  "loggingModeIndividualFeature1": "Фокус на одной раздаче",
+  "loggingModeIndividualFeature2": "Быстрая запись",
+  "loggingModeIndividualFeature3": "Анализ раздачи",
+  "loggingModeIndividualFeature4": "Мгновенные результаты",
+  "loggingModeFeatures": "Возможности",
+  "loggingModeStart": "Начать",
+  "earningsChartAllTimeEarnings": "Доход за всё время",
+  "earningsChartSinceDate": "С {date}",
+  "@earningsChartSinceDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "earningsChartTournament": "Tournament",
+  "earningsChartCash": "Cash",
+  "earningsChartNoData": "Данных о доходах пока нет",
+  "earningsChartNoDataSubtitle": "Завершите несколько сессий, чтобы увидеть график доходов",
+  "earningsChartMtt": "MTT",
+  "opponentHandsTitle": "История раздач",
+  "opponentHandsCount": "{count} раздач",
+  "@opponentHandsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentHandsLoading": "Загрузка истории раздач...",
+  "opponentHandsError": "Что-то пошло не так",
+  "opponentHandsRetry": "Повторить",
+  "opponentHandsNoHandsTitle": "Раздачи не найдены",
+  "opponentHandsNoHandsSubtitle": "Вы ещё не играли раздач\nс {name}.",
+  "@opponentHandsNoHandsSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentHandsOppWon": "ОПП ВЫИГРАЛ",
+  "opponentHandsYou": "Вы",
+  "opponentHandsPot": "Pot {amount}",
+  "@opponentHandsPot": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentHandsUnknownSession": "Неизвестная сессия",
+  "clubDashboardLive": "Live",
+  "clubDashboardUpcoming": "Предстоящие",
+  "clubDashboardPast": "Прошедшие",
+  "clubDashboardNoLiveEvents": "Нет активных мероприятий",
+  "clubDashboardNoUpcomingEvents": "Нет предстоящих мероприятий",
+  "clubDashboardNoPastEvents": "Нет прошедших мероприятий",
+  "clubDashboardAdmin": "Админ",
+  "clubDashboardCreateEventHint": "Нажмите кнопку ниже, чтобы создать мероприятие",
+  "clubDashboardCheckBackLater": "Загляните позже для новых мероприятий",
+  "clubDashboardEventsWillAppear": "Мероприятия появятся здесь, когда начнутся",
+  "clubDashboardPastEventsWillAppear": "Завершённые мероприятия появятся здесь",
+  "clubDashboardCashGameStakes": "Cash Game {stakes}",
+  "@clubDashboardCashGameStakes": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardCash": "Cash",
+  "clubDashboardTables": "Столы",
+  "clubDashboardStakes": "Ставки",
+  "clubDashboardPlayingCount": "{count} играют",
+  "@clubDashboardPlayingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubDashboardMemberCount": "{count} участников",
+  "@clubDashboardMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubSettingsTitle": "Настройки клуба",
+  "clubSettingsClubInfo": "Информация о клубе",
+  "clubSettingsClubName": "Название клуба",
+  "clubSettingsAddress": "Адрес",
+  "clubSettingsPhone": "Телефон",
+  "clubSettingsDescription": "Описание",
+  "clubSettingsSaveChanges": "Сохранить изменения",
+  "clubSettingsInfoSaved": "Информация о клубе сохранена",
+  "clubSettingsErrorSaving": "Ошибка сохранения: {error}",
+  "@clubSettingsErrorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsNoTablesYet": "Столов пока нет",
+  "clubSettingsAddTableHint": "Добавьте стол, чтобы начать",
+  "clubSettingsErrorLoading": "Ошибка загрузки данных: {error}",
+  "@clubSettingsErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventEditTitle": "Редактировать мероприятие",
+  "eventNewTitle": "Новое мероприятие",
+  "eventNoTablesAssigned": "Столы не назначены",
+  "eventNoTablesAssignedDesc": "Этому мероприятию не назначены столы. Пожалуйста, вернитесь и назначьте столы.",
+  "eventGoBack": "Назад",
+  "eventContinue": "Продолжить",
+  "eventNameOptional": "Название мероприятия (необязательно)",
+  "eventNameLabel": "Название мероприятия",
+  "eventStakesHint": "Ставки (напр. 1/2)",
+  "eventBuyInAmount": "Сумма Buy-in",
+  "eventMinBuyIn": "Мин. Buy-in ($)",
+  "eventStartingStack": "Начальный Stack",
+  "eventGameType": "Тип игры",
+  "eventTournament": "Tournament",
+  "eventCashGame": "Cash Game",
+  "eventDateAndTime": "Дата и время мероприятия",
+  "eventStarts": "Начало",
+  "eventTables": "Столы",
+  "eventDeselectAll": "Снять выделение",
+  "eventSelectAll": "Выбрать все",
+  "eventAllTablesInUse": "Все столы заняты текущими мероприятиями",
+  "eventNoTablesConfigured": "Столы ещё не настроены",
+  "eventDescriptionLabel": "Описание",
+  "eventNotifyMembers": "Уведомить участников",
+  "eventNotifyMembersSubtitle": "Отправить уведомление всем участникам клуба",
+  "eventDeleteEvent": "Удалить мероприятие",
+  "eventDeleteConfirmTitle": "Удалить мероприятие?",
+  "eventDeleteConfirmBody": "Это навсегда удалит мероприятие и все связанные данные. Это действие нельзя отменить.",
+  "eventDeleteFailed": "Не удалось удалить мероприятие: {error}",
+  "@eventDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventAttendeesTitle": "Участники",
+  "eventAttendeesGoing": "Придут ({count})",
+  "@eventAttendeesGoing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesMaybe": "Возможно ({count})",
+  "@eventAttendeesMaybe": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesNo": "Нет ({count})",
+  "@eventAttendeesNo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAttendeesNoConfirmed": "Пока никто не подтвердил",
+  "eventAttendeesNoMaybes": "Нет сомневающихся",
+  "eventAttendeesNoDeclines": "Нет отказов",
+  "eventDetailLiveNow": "Мероприятие сейчас LIVE!",
+  "eventDetailEnded": "Мероприятие завершено",
+  "eventDetailCancelled": "Мероприятие отменено",
+  "eventDetailPaused": "Мероприятие на паузе",
+  "eventDetailStatusUpdated": "Статус мероприятия обновлён",
+  "eventDetailRemovedFromCalendar": "Мероприятие удалено из вашего календаря",
+  "eventDetailRsvpGoing": "Приду",
+  "eventDetailRsvpMaybe": "Возможно",
+  "eventDetailRsvpCantGo": "Не смогу",
+  "eventDetailRsvpFailed": "Не удалось обновить RSVP: {error}",
+  "@eventDetailRsvpFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailCantStartTitle": "Невозможно начать мероприятие",
+  "eventDetailCantStartBody": "Этому мероприятию не назначены столы. Пожалуйста, сначала добавьте столы.",
+  "eventDetailStarted": "Мероприятие начато!",
+  "eventDetailStartFailed": "Не удалось начать мероприятие: {error}",
+  "@eventDetailStartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailFinishTitle": "Завершить мероприятие?",
+  "eventDetailCancelTitle": "Отменить мероприятие?",
+  "eventDetailFinishBody": "Это завершит все активные столы и зафиксирует результаты.",
+  "eventDetailCancelBody": "Это уведомит всех участников и отменит мероприятие.",
+  "eventDetailFinishButton": "Завершить мероприятие",
+  "eventDetailCancelButton": "Отменить мероприятие",
+  "eventDetailKeepEvent": "Оставить мероприятие",
+  "eventDetailLiveBadge": "LIVE",
+  "eventDetailCancelledBadge": "ОТМЕНЕНО",
+  "eventDetailCompletedBadge": "ЗАВЕРШЕНО",
+  "eventDetailUpcomingBadge": "ПРЕДСТОЯЩЕЕ",
+  "eventDetailLocation": "Место",
+  "eventDetailBuyIn": "Buy-in",
+  "eventDetailStakes": "Ставки",
+  "eventDetailStartingStack": "Начальный Stack",
+  "eventDetailAbout": "О МЕРОПРИЯТИИ",
+  "eventDetailAddedToCalendar": "Мероприятие добавлено в ваш календарь!",
+  "eventDetailCalendarFailed": "Не удалось добавить в календарь: {error}",
+  "@eventDetailCalendarFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEventsTitle": "Мероприятия",
+  "eventManagementNewEvent": "Новое мероприятие",
+  "eventManagementNoEvents": "Нет мероприятий",
+  "eventManagementNoEventsSubtitle": "Создайте мероприятие для отслеживания рейтингов в реальном времени",
+  "eventManagementActiveEvents": "Активные мероприятия",
+  "eventManagementPastEvents": "Прошедшие мероприятия",
+  "eventManagementErrorLoading": "Ошибка загрузки мероприятий: {error}",
+  "@eventManagementErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementNoTables": "Нет доступных столов. Сначала создайте столы.",
+  "eventManagementCreated": "Мероприятие \"{name}\" создано",
+  "@eventManagementCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementCreateFailed": "Не удалось создать мероприятие: {error}",
+  "@eventManagementCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEndEvent": "Завершить мероприятие",
+  "eventManagementEndConfirm": "Вы уверены, что хотите завершить \"{name}\"?",
+  "@eventManagementEndConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEnded": "Мероприятие \"{name}\" завершено",
+  "@eventManagementEnded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementEndFailed": "Не удалось завершить мероприятие: {error}",
+  "@eventManagementEndFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementLinkCopied": "Ссылка скопирована",
+  "eventManagementShare": "Поделиться",
+  "eventManagementPause": "Пауза",
+  "eventManagementResume": "Возобновить",
+  "eventManagementEnd": "Завершить",
+  "eventManagementCreateEvent": "Создать мероприятие",
+  "eventManagementEventNameHint": "напр., Пятничный турнир",
+  "eventManagementSelectTables": "Выбрать столы",
+  "eventManagementTableNumber": "Стол {number}",
+  "@eventManagementTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "eventManagementPublicEvent": "Публичное мероприятие",
+  "eventManagementPublicSubtitle": "Все могут видеть таблицу лидеров",
+  "eventManagementAccessCode": "Код доступа (необязательно)",
+  "eventManagementAccessCodeSubtitle": "Для обмена с конкретными пользователями",
+  "eventManagementEnterName": "Пожалуйста, введите название мероприятия",
+  "eventManagementSelectTable": "Пожалуйста, выберите хотя бы один стол",
+  "eventManagementPublic": "Публичное",
+  "eventManagementPrivate": "Приватное",
+  "adminEventTablesSummary": "{count} столов • {occupied} сидят • {open} свободных",
+  "@adminEventTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesAddTable": "Добавить стол",
+  "adminEventTablesNoTables": "Нет доступных столов для добавления",
+  "adminEventTablesCloseConfirm": "Закрыть {tableName}?",
+  "@adminEventTablesCloseConfirm": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesCloseWithPlayers": "Это переместит {count} игрок(ов) в список ожидания и удалит стол из мероприятия.",
+  "@adminEventTablesCloseWithPlayers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesCloseEmpty": "Это удалит стол из мероприятия.",
+  "adminEventTablesCloseButton": "Закрыть стол",
+  "adminEventTablesTableAdded": "{tableName} добавлен к мероприятию",
+  "@adminEventTablesTableAdded": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesClosedWithWaitlist": "{tableName} закрыт. {count} игрок(ов) перемещены в список ожидания.",
+  "@adminEventTablesClosedWithWaitlist": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesClosed": "{tableName} закрыт.",
+  "@adminEventTablesClosed": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesNoWaitlist": "Список ожидания пуст",
+  "adminEventTablesWaitlistCount": "{count} в списке ожидания",
+  "@adminEventTablesWaitlistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesWaitlistNext": "Следующий: {name}",
+  "@adminEventTablesWaitlistNext": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesWaitlist": "Список ожидания",
+  "adminEventTablesNotified": "Уведомлён",
+  "adminEventTablesNotify": "Уведомить",
+  "adminEventTablesSeat": "Посадить",
+  "adminEventTablesSeatAt": "{tableName} ({count} свободных)",
+  "@adminEventTablesSeatAt": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminEventTablesNoEmptySeats": "Нет свободных мест за этим столом",
+  "adminEventTablesPlayerSeated": "{name} посажен за {tableName}",
+  "@adminEventTablesPlayerSeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEventTablesPlayerNotified": "{name} уведомлён",
+  "@adminEventTablesPlayerNotified": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableSeatPlayer": "Посадить игрока",
+  "adminTableFromWaitlist": "Из списка ожидания",
+  "adminTableWaitlistNextIs": "Следующий: {name}",
+  "@adminTableWaitlistNextIs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableClubMember": "Участник клуба",
+  "adminTableSearchMembers": "Поиск среди участников",
+  "adminTableWalkUpPlayer": "Новый игрок",
+  "adminTableAddByName": "Добавить по имени",
+  "adminTableSelectMember": "Выбрать участника",
+  "adminTableSearch": "Поиск...",
+  "adminTablePlayerName": "Имя игрока",
+  "adminTableWaitingForApproval": "Ожидает одобрения на место #{seatNumber}",
+  "@adminTableWaitingForApproval": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableReject": "Отклонить",
+  "adminTableApprove": "Одобрить",
+  "adminTableRemove": "Удалить",
+  "adminTableSeatNumber": "Место #{seatNumber}",
+  "@adminTableSeatNumber": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableNoEmptySeats": "Нет свободных мест",
+  "adminTableSeatPlayerName": "Посадить {name}",
+  "@adminTableSeatPlayerName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableSelectSeat": "Выберите место:",
+  "adminTablePlayerSeated": "{name} посажен",
+  "@adminTablePlayerSeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableAlreadySeated": "{name} уже сидит за {location}",
+  "@adminTableAlreadySeated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTablePlayerApproved": "{name} одобрен",
+  "@adminTablePlayerApproved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTablePlayerRejected": "Игрок отклонён",
+  "adminTablePlayerRemoved": "Игрок удалён",
+  "adminTableWaitlistInCount": "{count} в списке ожидания",
+  "@adminTableWaitlistInCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableWaitlistNextName": "Следующий: {name}",
+  "@adminTableWaitlistNextName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableNotifiedName": "{name} уведомлён",
+  "@adminTableNotifiedName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameStakes": "Cash Game {stakes}",
+  "@clubCashGameStakes": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameTablesSummary": "{count} столов · {occupied} сидят · {open} свободных",
+  "@clubCashGameTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameTableNumber": "Стол {number}",
+  "@clubCashGameTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameNoTables": "Нет столов в этой группе",
+  "clubCashGameFailedToLoad": "Не удалось загрузить столы: {error}",
+  "@clubCashGameFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAlreadySeated": "Вы уже сидите за столом",
+  "clubCashGameSeatAvailable": "Для вас есть свободное место, подойдите к регистрации",
+  "clubCashGameJoinedWaitlist": "Вы в списке ожидания на позиции #{position}",
+  "@clubCashGameJoinedWaitlist": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameJoinFailed": "Не удалось присоединиться к списку ожидания: {error}",
+  "@clubCashGameJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameLeftWaitlist": "Вы покинули список ожидания",
+  "clubCashGameLeaveFailed": "Не удалось покинуть список ожидания: {error}",
+  "@clubCashGameLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameViewWaitlist": "Просмотр списка ожидания",
+  "clubCashGameInWaitlist": "В списке ожидания",
+  "clubCashGameInWaitlistPosition": "В списке ожидания · #{position}",
+  "@clubCashGameInWaitlistPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameJoinWaitlist": "Встать в очередь",
+  "clubCashGameLeaveWaitlistConfirm": "Покинуть список ожидания?",
+  "clubCashGameLosePosition": "Вы потеряете текущую позицию.",
+  "clubCashGameKeep": "Остаться",
+  "clubCashGameLeave": "Покинуть",
+  "clubCashGameRefreshFailed": "Не удалось обновить столы: {error}",
+  "@clubCashGameRefreshFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameWaitlistTitle": "Список ожидания",
+  "clubCashGameNotified": "{name} уведомлён",
+  "@clubCashGameNotified": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameNotifyFailed": "Не удалось уведомить: {error}",
+  "@clubCashGameNotifyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameCouldNotLoad": "Не удалось загрузить список ожидания",
+  "clubCashGameNoOneOnWaitlist": "Список ожидания пуст",
+  "clubCashGamePlayer": "Игрок",
+  "clubCashGameNotifiedStatus": "Уведомлён • {time}",
+  "@clubCashGameNotifiedStatus": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameJoinedTime": "Присоединился {time}",
+  "@clubCashGameJoinedTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameJustNow": "только что",
+  "clubCashGameMinutesAgo": "{count} мин. назад",
+  "@clubCashGameMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameHoursAgo": "{count} ч. назад",
+  "@clubCashGameHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameDaysAgo": "{count} дн. назад",
+  "@clubCashGameDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubCashGameAddTable": "Добавить стол",
+  "clubCashGameNewTableName": "Название нового стола (необязательно)",
+  "clubCashGameAdd": "Добавить",
+  "clubCashGameAddedToGroup": "{tableName} добавлен в группу",
+  "@clubCashGameAddedToGroup": {
+    "placeholders": {
+      "tableName": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAddFailed": "Не удалось добавить стол: {error}",
+  "@clubCashGameAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAttachFailed": "Не удалось прикрепить стол: {error}",
+  "@clubCashGameAttachFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameAvailableTables": "Доступные столы",
+  "clubCashGameInUseByOther": "Заняты другими мероприятиями",
+  "clubCashGameNoOtherTables": "В этом клубе пока нет других столов",
+  "clubCashGameInUseBy": "Используется: {eventName}",
+  "@clubCashGameInUseBy": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "clubCashGameSeats": "Мест: {count}",
+  "@clubCashGameSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventTablesSummary": "{count} столов • {occupied} сидят • {open} свободных",
+  "@memberEventTablesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "occupied": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinedWaitlist": "Вы в списке ожидания на позиции #{position}",
+  "@memberEventJoinedWaitlist": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinFailed": "Не удалось присоединиться к списку ожидания: {error}",
+  "@memberEventJoinFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "memberEventLeftWaitlist": "Вы покинули список ожидания",
+  "memberEventLeaveFailed": "Не удалось покинуть список ожидания: {error}",
+  "@memberEventLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "memberEventWaitlistPosition": "Позиция #{position} в списке ожидания",
+  "@memberEventWaitlistPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventTotalWaiting": "Всего ожидают: {count}",
+  "@memberEventTotalWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventLeaveWaitlist": "Покинуть список ожидания",
+  "memberEventJoinWaitlistWithCount": "Встать в очередь ({count} ожидают)",
+  "@memberEventJoinWaitlistWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memberEventJoinWaitlist": "Встать в очередь",
+  "memberEventAllTablesFull": "Все столы заняты",
+  "dealerHomeTitle": "Режим Dealer",
+  "dealerHomeNoClubs": "Клубы не найдены",
+  "dealerHomeNoClubsOwnerHint": "Создайте свой первый клуб, чтобы начать.",
+  "dealerHomeNoClubsMemberHint": "Вы ещё не состоите ни в одном клубе.\nПопросите владельца клуба пригласить вас.",
+  "dealerHomeCreateClub": "Создать клуб",
+  "dealerHomeDealer": "Dealer",
+  "dealerHomeClubCount": "{count} клубов",
+  "@dealerHomeClubCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerHomeActiveSessions": "Активные сессии",
+  "dealerHomeClubs": "Клубы",
+  "dealerHomeTables": "Столы",
+  "dealerHomeAddTable": "Добавить стол",
+  "dealerHomeTableNameLabel": "Название стола",
+  "dealerHomeTableNameHint": "напр., Стол 1, Главный стол",
+  "dealerHomeTableAdded": "Стол \"{name}\" добавлен в {clubName}!",
+  "@dealerHomeTableAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "clubName": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeAddTableFailed": "Не удалось добавить стол: {error}",
+  "@dealerHomeAddTableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeClubName": "Название клуба",
+  "dealerHomeCreate": "Создать",
+  "dealerHomeClubCreated": "Клуб \"{name}\" создан!",
+  "@dealerHomeClubCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeClubCreateFailed": "Не удалось создать клуб: {error}",
+  "@dealerHomeClubCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeNoTables": "В этом клубе нет столов",
+  "dealerHomeActiveHand": "Активен — Hand #{number}",
+  "@dealerHomeActiveHand": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerHomeInactive": "Неактивен",
+  "dealerHomeResume": "Возобновить",
+  "dealerHomeStart": "Начать",
+  "dealerHomeSessionSettings": "Настройки сессии",
+  "dealerHomeSmallBlind": "Small Blind",
+  "dealerHomeBigBlind": "Big Blind",
+  "dealerHomeBBAnte": "BB Ante",
+  "dealerHomeGameType": "Тип игры",
+  "dealerHomeCash": "Cash",
+  "dealerHomeTournament": "Tournament",
+  "dealerHomeButtonPosition": "Позиция кнопки",
+  "dealerHomeStartSession": "Начать сессию",
+  "dealerHomeCouldNotFind": "Не удалось найти клуб или стол",
+  "dealerHomeStartFailed": "Не удалось начать сессию: {error}",
+  "@dealerHomeStartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeErrorLoading": "Ошибка загрузки данных: {error}",
+  "@dealerHomeErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerHomeTableCount": "{count} столов",
+  "@dealerHomeTableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedStartHand": "Не удалось начать раздачу: {error}",
+  "@dealerTableFailedStartHand": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableChopSummary": "Chop: {winners} делят {amount}",
+  "@dealerTableChopSummary": {
+    "placeholders": {
+      "winners": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableWins": "{name} выигрывает {amount}",
+  "@dealerTableWins": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePotChopped": "Pot разделён между {names}",
+  "@dealerTablePotChopped": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedCompleteHand": "Не удалось завершить раздачу: {error}",
+  "@dealerTableFailedCompleteHand": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerBusted": "{name} выбыл!",
+  "@dealerTablePlayerBusted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableNoChipsRemaining": "У места {seatNumber} не осталось фишек.\nСумма Rebuy: {amount}",
+  "@dealerTableNoChipsRemaining": {
+    "placeholders": {
+      "seatNumber": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRemovePlayer": "Удалить игрока",
+  "dealerTableRebuy": "Rebuy",
+  "dealerTableRebuysFor": "{name} делает Rebuy на {amount}",
+  "@dealerTableRebuysFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFinishesIn": "{name} финиширует на {position} месте",
+  "@dealerTableFinishesIn": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableEndSessionTitle": "Завершить сессию?",
+  "dealerTableEndSessionBody": "Вы уверены, что хотите завершить эту сессию?",
+  "dealerTableEnd": "Завершить",
+  "dealerTableDealerChange": "Смена Dealer",
+  "dealerTableDealerChangeBody": "Сессия будет поставлена на паузу, и другой Dealer сможет отсканировать QR-код стола, чтобы продолжить.",
+  "dealerTableDealerChangePreserve": "Все игроки, блайнды и состояние игры будут сохранены.",
+  "dealerTableDealerChangeResume": "Вы также можете возобновить эту сессию позже.",
+  "dealerTableHandOff": "Передать смену",
+  "dealerTableSessionPaused": "Сессия на паузе. Другой Dealer может продолжить.",
+  "dealerTablePauseFailed": "Не удалось поставить сессию на паузу: {error}",
+  "@dealerTablePauseFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableEventCancelled": "Мероприятие отменено",
+  "dealerTableEventFinished": "Мероприятие завершено",
+  "dealerTableEventCancelledBody": "Администратор клуба отменил это мероприятие. Все сессии сохранены.",
+  "dealerTableEventFinishedBody": "Администратор клуба завершил это мероприятие. Все сессии сохранены.",
+  "dealerTableSessionEnded": "Сессия завершена",
+  "dealerTableSessionEndedBody": "Эта сессия завершена. Все данные сохранены.",
+  "dealerTableLeaveTitle": "Покинуть стол Dealer?",
+  "dealerTableLeaveActiveHand": "Сейчас идёт раздача. Уход может нарушить запись.",
+  "dealerTableLeaveInactive": "Сессия остаётся активной. Вы можете вернуться в любое время.",
+  "dealerTableAutoCorrection": "Автокоррекция \"{detected}\" → \"{corrected}\"",
+  "@dealerTableAutoCorrection": {
+    "placeholders": {
+      "detected": {
+        "type": "String"
+      },
+      "corrected": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableApprovePlayer": "Одобрить {name}?",
+  "@dealerTableApprovePlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableStartingChipStack": "Начальный Stack фишек",
+  "dealerTablePlayerRejected": "{name} отклонён",
+  "@dealerTablePlayerRejected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRejectFailed": "Не удалось отклонить: {error}",
+  "@dealerTableRejectFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTablePlayerJoined": "{name} присоединился с {amount}",
+  "@dealerTablePlayerJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableApproveFailed": "Не удалось одобрить: {error}",
+  "@dealerTableApproveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableChipStack": "Stack фишек",
+  "dealerTableSave": "Сохранить",
+  "liveSessionHand": "HAND",
+  "liveSessionPot": "POT",
+  "liveSessionStatus": "СТАТУС",
+  "liveSessionLive": "LIVE",
+  "liveSessionWaiting": "ОЖИДАНИЕ",
+  "liveSessionWinnerSummary": "{winner} выигрывает ${amount}",
+  "@liveSessionWinnerSummary": {
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionSessionEnded": "Сессия завершена",
+  "liveSessionSessionEndedBody": "Dealer завершил эту сессию.",
+  "liveSessionLeaveTitle": "Покинуть стол?",
+  "liveSessionLeaveBody": "Вы уверены, что хотите покинуть стол?",
+  "liveSessionLeave": "Покинуть",
+  "liveSessionLeaveFailed": "Не удалось покинуть: {error}",
+  "@liveSessionLeaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionLeaveTooltip": "Покинуть стол",
+  "liveSessionSeat": "Место {number}",
+  "@liveSessionSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "liveSessionYourSeat": "Ваше место",
+  "liveSessionStack": "Stack: {amount}",
+  "@liveSessionStack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "liveSessionWaitingForDealer": "Ожидание Dealer...",
+  "liveSessionOffline": "ОФЛАЙН",
+  "liveSessionRecentActions": "Последние действия",
+  "liveSessionWaitingForAction": "Ожидание действия...",
+  "liveSessionD": "D",
+  "qrScanTitle": "Сканировать QR стола",
+  "qrScanInvalidCode": "Недействительный QR-код. Отсканируйте QR-код покерного стола.",
+  "qrScanError": "Ошибка обработки QR-кода: {error}",
+  "@qrScanError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "qrScanInstructions": "Наведите камеру на QR-код на столе, чтобы присоединиться",
+  "clubRequestsTitle": "Заявки на клуб",
+  "clubRequestsAll": "Все",
+  "clubRequestsPending": "Ожидающие",
+  "clubRequestsApproved": "Одобренные",
+  "clubRequestsRejected": "Отклонённые",
+  "clubRequestsApproveTitle": "Одобрить заявку",
+  "clubRequestsApproveBody": "Вы уверены, что хотите одобрить \"{name}\"? Это создаст новый клуб и добавит вас как администратора.",
+  "@clubRequestsApproveBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejectTitle": "Отклонить заявку",
+  "clubRequestsRejectBody": "Укажите причину отклонения \"{name}\":",
+  "@clubRequestsRejectBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejectHint": "Причина отклонения...",
+  "clubRequestsApproveButton": "Одобрить",
+  "clubRequestsRejectButton": "Отклонить",
+  "clubRequestsApproved2": "\"{name}\" одобрен!",
+  "@clubRequestsApproved2": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsRejected2": "\"{name}\" отклонён.",
+  "@clubRequestsRejected2": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubRequestsNoRequests": "Нет заявок",
+  "clubRequestsPendingBadge": "ОЖИДАНИЕ",
+  "clubRequestsApprovedBadge": "ОДОБРЕНО",
+  "clubRequestsRejectedBadge": "ОТКЛОНЕНО",
+  "clubRequestsAddress": "Адрес",
+  "clubRequestsPhone": "Телефон",
+  "clubRequestsAdminEmail": "Email администратора",
+  "clubRequestsRequestedBy": "Запрос от",
+  "clubRequestsRequesterEmail": "Email заявителя",
+  "clubRequestsRequestedAt": "Дата запроса",
+  "clubRequestsReviewedAt": "Дата рассмотрения",
+  "clubRequestsRejectionReason": "Причина отклонения:",
+  "supportRequestsTitle": "Обращения в поддержку",
+  "supportRequestsAll": "Все",
+  "supportRequestsPending": "Ожидающие",
+  "supportRequestsClosed": "Закрытые",
+  "supportRequestsResolveTitle": "Решить обращение",
+  "supportRequestsResolveBody": "Ответ пользователю (необязательно):",
+  "supportRequestsResponseHint": "Ответ (необязательно)...",
+  "supportRequestsResolve": "Решить",
+  "supportRequestsResolved": "Обращение решено",
+  "supportRequestsRejectTitle": "Отклонить обращение",
+  "supportRequestsRejectBody": "Причина отклонения:",
+  "supportRequestsRejectHint": "Причина...",
+  "supportRequestsReject": "Отклонить",
+  "supportRequestsRejected": "Обращение отклонено",
+  "supportRequestsNoRequests": "Нет обращений",
+  "supportRequestsPendingBadge": "ОЖИДАНИЕ",
+  "supportRequestsResolvedBadge": "РЕШЕНО",
+  "supportRequestsRejectedBadge": "ОТКЛОНЕНО",
+  "supportRequestsCategory": "Категория",
+  "supportRequestsUser": "Пользователь",
+  "supportRequestsEmail": "Email",
+  "supportRequestsSubmitted": "Отправлено",
+  "supportRequestsDescription": "Описание",
+  "supportRequestsAdminResponse": "Ответ администратора",
+  "supportRequestsBugReport": "Отчёт об ошибке",
+  "supportRequestsFeatureRequest": "Запрос функции",
+  "supportRequestsAccountIssue": "Проблема с аккаунтом",
+  "debugHandViewerTitle": "Просмотр раздач (отладка)",
+  "debugHandViewerSessionName": "Название сессии",
+  "debugHandViewerHandNumbers": "Номера раздач (через запятую, напр., 27,28)",
+  "debugHandViewerFetchData": "Загрузить данные",
+  "debugHandViewerCopied": "Скопировано",
+  "debugHandViewerNoData": "Данных пока нет. Введите название сессии и нажмите «Загрузить данные».",
+  "actionGridSelectAction": "Выберите действие",
+  "allInBoardTitle": "Карты борда при All-in",
+  "authExpLinkAccount": "Привязать аккаунт",
+  "authExpLinkGoogleTitle": "Привязать аккаунт Google",
+  "authExpPassword": "Пароль",
+  "boardCardsCard": "Карта",
+  "boardCardsCards": "Карты",
+  "clubDashboardActiveDealers": "Активные Dealer",
+  "clubDashboardDealerEmailHint": "dealer@example.com",
+  "clubDashboardFailedCancelInvite": "Не удалось отменить приглашение: {error}",
+  "@clubDashboardFailedCancelInvite": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedSendInvite": "Не удалось отправить приглашение: {error}",
+  "@clubDashboardFailedSendInvite": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardInvitationSent": "Приглашение отправлено на {email}",
+  "@clubDashboardInvitationSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardPendingInvitations": "Ожидающие приглашения",
+  "clubSettingsErrorPdf": "Ошибка генерации PDF: {error}",
+  "@clubSettingsErrorPdf": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsQrRegenerated": "QR-коды перегенерированы",
+  "clubSettingsTableAdded": "Стол добавлен",
+  "clubSettingsTableDeleted": "Стол удалён",
+  "commonAccept": "Принять",
+  "commonErrorGeneric": "Ошибка: {error}",
+  "@commonErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commonLeave": "Покинуть",
+  "commonLoadingHands": "Загрузка рук...",
+  "createEventDefaultCashGame": "Cash Game {stakes}",
+  "@createEventDefaultCashGame": {
+    "placeholders": {
+      "stakes": {
+        "type": "String"
+      }
+    }
+  },
+  "createEventDefaultCashGameNoStakes": "Cash Game",
+  "dealerQrScanBlinds": "Блайнды",
+  "dealerQrScanError": "Ошибка обработки QR-кода: {error}",
+  "@dealerQrScanError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanFailedResume": "Не удалось возобновить сессию: {error}",
+  "@dealerQrScanFailedResume": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanFailedStart": "Не удалось начать сессию: {error}",
+  "@dealerQrScanFailedStart": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanHandsPlayed": "Сыграно рук",
+  "dealerQrScanInvalidCode": "Недействительный QR-код. Отсканируйте действительный QR-код стола.",
+  "dealerQrScanPlayers": "Игроки",
+  "dealerQrScanTableNotFound": "Стол не найден. Отсканируйте действительный QR-код стола.",
+  "dealerQrScanTakingOver": "Принимаете смену от {name}",
+  "@dealerQrScanTakingOver": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanWrongClub": "Этот стол принадлежит другому клубу.",
+  "dealerTableAddPlayer": "Добавить игрока",
+  "dealerTableAddPlayerToSeat": "Добавить игрока на место {number}",
+  "@dealerTableAddPlayerToSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableBigBlind": "Big Blind",
+  "dealerTableBlindsMustBePositive": "Блайнды должны быть больше 0",
+  "dealerTableBlindsUpdated": "Блайнды обновлены на {sb}/{bb}",
+  "@dealerTableBlindsUpdated": {
+    "placeholders": {
+      "sb": {
+        "type": "String"
+      },
+      "bb": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableConnectionLost": "Соединение потеряно",
+  "dealerTableEndSession": "Завершить сессию",
+  "dealerTableEnterPlayerName": "Введите имя игрока",
+  "dealerTableEnterStartingStack": "Введите начальный Stack",
+  "dealerTableFailedAddPlayer": "Не удалось добавить игрока: {error}",
+  "@dealerTableFailedAddPlayer": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedMoveButton": "Не удалось переместить BTN: {error}",
+  "@dealerTableFailedMoveButton": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedRemovePlayer": "Не удалось удалить игрока: {error}",
+  "@dealerTableFailedRemovePlayer": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedSitAt": "Не удалось сесть за стол: {error}",
+  "@dealerTableFailedSitAt": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateBlinds": "Не удалось обновить блайнды: {error}",
+  "@dealerTableFailedUpdateBlinds": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateStack": "Не удалось обновить Stack: {error}",
+  "@dealerTableFailedUpdateStack": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableHandReset": "Рука сброшена — готов к новой руке",
+  "dealerTableKeepCurrent": "Оставить текущие",
+  "dealerTableManualEntry": "Ручной ввод",
+  "dealerTableNewBlindsNote": "Новые блайнды будут применены со следующей руки.",
+  "dealerTableNewHand": "Новая рука",
+  "dealerTableNoPendingRequests": "Нет ожидающих запросов на присоединение",
+  "dealerTableNoUsersFound": "Пользователи не найдены. Попробуйте ручной ввод.",
+  "dealerTablePending": "ОЖИДАНИЕ",
+  "dealerTablePendingJoinRequests": "Ожидающие запросы на присоединение",
+  "dealerTablePlayerNameLabel": "Имя игрока",
+  "dealerTableReconnect": "Переподключиться",
+  "dealerTableReconnecting": "Попытка переподключения...",
+  "dealerTableResetHandBody": "Все действия были отменены. Хотите начать новую руку?",
+  "dealerTableResetHandTitle": "Сбросить руку?",
+  "dealerTableReview": "Обзор",
+  "dealerTableSearchByName": "Поиск по имени",
+  "dealerTableSearchUser": "Найти пользователя",
+  "dealerTableSeatNumber": "Место {number}",
+  "@dealerTableSeatNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableSittingAtSeat": "Вы теперь играете на месте {number}",
+  "@dealerTableSittingAtSeat": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableSmallBlind": "Small Blind",
+  "dealerTableSmallMustBeLess": "Small Blind должен быть меньше Big Blind",
+  "dealerTableTypeToSearch": "Введите для поиска пользователей...",
+  "dealerTableUnknown": "Неизвестно",
+  "dealerTableUpdatedStack": "Stack {name} обновлён на {amount}",
+  "@dealerTableUpdatedStack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDashboardTvMode": "Режим ТВ-дисплея",
+  "eventDetailAddToCalendarBtn": "Добавить в календарь",
+  "eventDetailAddedToCalendarBtn": "Добавлено в календарь",
+  "eventDetailAreYouGoing": "ВЫ ИДЁТЕ?",
+  "eventDetailErrorFindingSeat": "Ошибка поиска места: {error}",
+  "@eventDetailErrorFindingSeat": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailEventType": "Тип события",
+  "eventDetailFailedFinishCancel": "Не удалось {action} событие: {error}",
+  "@eventDetailFailedFinishCancel": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailFinish": "Завершить",
+  "eventDetailManageTable": "Управление столом",
+  "eventDetailManageTables": "Управление столами",
+  "eventDetailNoTablesAssigned": "К этому событию не привязаны столы",
+  "eventDetailNotSeatedAtTable": "Вы сейчас не сидите ни за одним столом",
+  "eventDetailNotSeatedInEvent": "Вы не усажены в этом событии",
+  "eventDetailReturnToSeat": "Вернуться на моё место",
+  "eventDetailSeated": "Усажен",
+  "eventDetailSeeAll": "Показать все",
+  "eventDetailSeeAvailability": "Посмотреть наличие мест",
+  "eventDetailStartDealing": "Начать раздачу",
+  "eventDetailStartEvent": "Начать событие",
+  "eventDetailViewFinalStandings": "Итоговые результаты",
+  "eventDetailViewLiveRankings": "Рейтинг в реальном времени",
+  "eventDetailWhosGoing": "Кто придёт",
+  "eventDetailYoureSeated": "Вы усажены",
+  "eventManagementClubEvents": "События {name}",
+  "@eventManagementClubEvents": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventManagementFailedUpdate": "Не удалось обновить событие: {error}",
+  "@eventManagementFailedUpdate": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventSuccessAddAnother": "Добавить ещё событие",
+  "eventSuccessGoToCalendar": "Перейти в календарь",
+  "eventSuccessSubtitle": "Вы можете отредактировать или удалить его в любое время",
+  "eventSuccessTitle": "Отлично! Ваше событие добавлено в календарь.",
+  "forgotPasswordCheckEmail": "Проверьте вашу почту",
+  "forgotPasswordConfirm": "Подтвердите пароль",
+  "forgotPasswordConfirmRequired": "Пожалуйста, подтвердите пароль",
+  "forgotPasswordEmail": "E-mail",
+  "forgotPasswordEnterEmail": "Пожалуйста, введите e-mail",
+  "forgotPasswordEnterFullCode": "Пожалуйста, введите полный 6-значный код.",
+  "forgotPasswordEnterPassword": "Пожалуйста, введите пароль",
+  "forgotPasswordFailedResend": "Не удалось повторно отправить код.",
+  "forgotPasswordFailedSendCode": "Не удалось отправить код. Попробуйте снова.",
+  "forgotPasswordInvalidCode": "Недействительный или просроченный код. Попробуйте снова.",
+  "forgotPasswordMinLength": "Пароль должен содержать минимум 6 символов",
+  "forgotPasswordMismatch": "Пароли не совпадают",
+  "forgotPasswordNewCodeSent": "Новый код отправлен на вашу почту.",
+  "forgotPasswordNewPassword": "Новый пароль",
+  "forgotPasswordResendCode": "Отправить код повторно",
+  "forgotPasswordResendIn": "Повторная отправка через {time}",
+  "@forgotPasswordResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordResetButton": "Сбросить пароль",
+  "forgotPasswordResetSubtitle": "Введите ваш e-mail для получения кода подтверждения",
+  "forgotPasswordResetSuccess": "Пароль успешно сброшен! Пожалуйста, войдите в систему.",
+  "forgotPasswordResetTitle": "Сброс пароля",
+  "forgotPasswordSendCode": "Отправить код",
+  "forgotPasswordSetNewPassword": "Установить новый пароль",
+  "forgotPasswordSetNewSubtitle": "Выберите надёжный пароль для вашего аккаунта",
+  "forgotPasswordValidEmail": "Пожалуйста, введите действительный e-mail",
+  "forgotPasswordVerifyCode": "Подтвердить код",
+  "homeCashGame": "Cash Game",
+  "homeErrorDeletingEvent": "Ошибка удаления события: {error}",
+  "@homeErrorDeletingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeErrorGeneric": "Ошибка: {error}",
+  "@homeErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeErrorLoadingEvent": "Ошибка загрузки события: {error}",
+  "@homeErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFailedLoadEvent": "Не удалось загрузить событие: {error}",
+  "@homeFailedLoadEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFailedUpdateEvent": "Не удалось обновить событие: {error}",
+  "@homeFailedUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRequestClosed": "Запрос закрыт",
+  "homeRequestResolved": "Запрос решён",
+  "homeResponse": "Ответ",
+  "homeTableSeatInfo": "Стол {table}, Место #{seat}",
+  "@homeTableSeatInfo": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTournament": "Tournament",
+  "individualHandSetupBigBlind": "Big Blind",
+  "individualHandSetupGameType": "Тип игры",
+  "individualHandSetupNameHint": "напр. \"AA vs KK Cooler\"",
+  "individualHandSetupPlayers": "Игроки",
+  "individualHandSetupSmallBlind": "Small Blind",
+  "individualSetupBigBlind": "Big Blind",
+  "individualSetupCashGame": "Cash Game",
+  "individualSetupEnterAmount": "Введите сумму",
+  "individualSetupEnterChipStack": "Введите Stack фишек",
+  "individualSetupEnterValue": "Введите значение",
+  "individualSetupSessionNameHint": "напр. \"Пятничный покер\"",
+  "individualSetupSmallBlind": "Small Blind",
+  "individualSetupTournament": "Tournament",
+  "invitationsDeclined": "Приглашение отклонено",
+  "invitationsFailedAccept": "Не удалось принять приглашение: {error}",
+  "@invitationsFailedAccept": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsFailedDecline": "Не удалось отклонить приглашение: {error}",
+  "@invitationsFailedDecline": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsFailedLoad": "Не удалось загрузить приглашения: {error}",
+  "@invitationsFailedLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loadingDefault": "Загрузка...",
+  "monthApr": "Апр",
+  "monthAug": "Авг",
+  "monthDec": "Дек",
+  "monthFeb": "Фев",
+  "monthJan": "Янв",
+  "monthJul": "Июл",
+  "monthJun": "Июн",
+  "monthMar": "Мар",
+  "monthMay": "Май",
+  "monthNov": "Ноя",
+  "monthOct": "Окт",
+  "monthSep": "Сен",
+  "multiPotAutoAwarded": "Автоматически присуждено {name} ({reason})",
+  "@multiPotAutoAwarded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "multiPotChoppedPot": "Chopped Pot",
+  "multiPotEligibleFromPrevious": "имеет право из предыдущего Pot",
+  "multiPotMainPot": "Main Pot",
+  "multiPotMainPotWinner": "победитель Main Pot",
+  "multiPotMultiplePots": "Несколько Pot — выберите победителя для каждого",
+  "multiPotPlayerFallback": "Игрок {id}",
+  "@multiPotPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "multiPotSelectAllWinners": "Выберите всех победителей:",
+  "multiPotSelectTheWinner": "Выберите победителя:",
+  "multiPotSelectWinnersTitle": "Выбор победителей",
+  "multiPotSidePot": "Side Pot {index}",
+  "@multiPotSidePot": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "multiPotSingleWinner": "Один победитель",
+  "navDrawerBankroll": "Bankroll",
+  "navDrawerClubs": "Клубы",
+  "navDrawerEvents": "События",
+  "navDrawerHelpSupport": "Помощь и поддержка",
+  "navDrawerLastLoginToday": "Последний вход: Сегодня",
+  "navDrawerLogOut": "Выйти",
+  "navDrawerMemberCount": "{count} участников",
+  "@navDrawerMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navDrawerNoClubsYet": "Пока нет клубов",
+  "navDrawerNoEarningsBody": "Сначала добавьте результаты сессий, чтобы увидеть график заработка. Результаты можно добавить на странице Профиля.",
+  "navDrawerNoEarningsTitle": "Нет данных о заработке",
+  "navDrawerRegisterClub": "Зарегистрировать клуб",
+  "navDrawerRoleAdmin": "Админ",
+  "navDrawerRoleDealer": "Dealer",
+  "navDrawerRoleMember": "Участник",
+  "navDrawerSettings": "Настройки",
+  "navDrawerSignOut": "Выйти",
+  "navDrawerSignOutMessage": "Вы уверены, что хотите выйти?",
+  "navDrawerSignOutTitle": "Выход",
+  "navDrawerStatistics": "Статистика",
+  "navDrawerUpgrade": "Улучшить",
+  "navDrawerUserFallback": "Пользователь",
+  "navDrawerVersion": "Версия 1.0.0",
+  "notificationsAccept": "Принять",
+  "notificationsClubNotFound": "Клуб не найден",
+  "notificationsErrorLoadingEvent": "Ошибка загрузки события: {error}",
+  "@notificationsErrorLoadingEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsEventNotFound": "Событие не найдено",
+  "notificationsFailedLoadClub": "Не удалось загрузить клуб: {error}",
+  "@notificationsFailedLoadClub": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsInvitationAccepted": "Приглашение принято",
+  "notificationsInvitationDeclined": "Приглашение отклонено",
+  "notificationsInvitationDeclinedMsg": "Приглашение отклонено",
+  "onboardingClubsSubtitle": "Присоединяйтесь к живым событиям, следите за рейтингами и отслеживайте противников между сессиями.",
+  "onboardingClubsTitle": "ИГРАЙТЕ В\nКЛУБАХ",
+  "onboardingKnowSubtitle": "VPIP, PFR, 3-Bet, C-Bet и другие — наблюдайте за развитием своей статистики в реальном времени.",
+  "onboardingKnowTitle": "ЗНАЙТЕ СВОЮ\nИГРУ",
+  "onboardingTrackSubtitle": "Записывайте действия, карты борда и результаты каждой сыгранной руки — в реальном времени или после сессии.",
+  "onboardingTrackTitle": "ОТСЛЕЖИВАЙТЕ\nКАЖДУЮ РУКУ",
+  "opponentsErrorClearing": "Ошибка очистки противников: {error}",
+  "@opponentsErrorClearing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsErrorDeleting": "Ошибка удаления противника: {error}",
+  "@opponentsErrorDeleting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsErrorGeneric": "Ошибка: {error}",
+  "@opponentsErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionNotesHint": "Добавить заметки об этой руке...",
+  "playerSessionPot": "POT",
+  "playerSessionSeat": "МЕСТО",
+  "playerSessionStack": "STACK",
+  "playerSessionYourHoleCards": "Ваши Hole Cards",
+  "pokerHandEndSession": "Завершить сессию",
+  "pokerHandFailedEndSession": "Не удалось завершить сессию: {error}",
+  "@pokerHandFailedEndSession": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandFailedSaveSession": "Не удалось сохранить сессию: {error}",
+  "@pokerHandFailedSaveSession": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandRebuyAdded": "Rebuy добавлен: ${amount} (Stack: {stack})",
+  "@pokerHandRebuyAdded": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandRebuyAmountDollar": "Сумма Rebuy ($)",
+  "pokerHandRebuyChips": "Фишки Rebuy",
+  "pokerTablePlayerFallback": "Игрок",
+  "profileCash": "Cash",
+  "profileDevTools": "Инструменты разработчика",
+  "profileLastLogin": "Последний вход {date}",
+  "@profileLastLogin": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "profileOverridden": "Переопределено: {status}",
+  "@profileOverridden": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "profilePremiumOverride": "Переопределение Premium",
+  "profileResetToReal": "Сбросить на реальный статус",
+  "profileTournament": "Tournament",
+  "profileUsingRealStatus": "Реальный статус: {status}",
+  "@profileUsingRealStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "profileVersion": "Версия 1.0",
+  "quickStackSearchHint": "Найти или добавить игрока...",
+  "raiseSnapReleaseToType": "Отпустите на мин., чтобы ввести",
+  "seatSetupFailedSave": "Не удалось сохранить: {error}",
+  "@seatSetupFailedSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seatSetupSelectYourSeat": "Выберите ваше место",
+  "sessionHandsLoading": "Загрузка рук...",
+  "sessionHistoryButtonPosition": "Позиция BTN: {position}",
+  "@sessionHistoryButtonPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryClearFailed": "Не удалось очистить сессии: {error}",
+  "@sessionHistoryClearFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryFlop": "Flop:",
+  "sessionHistoryPlayerCount": "Количество игроков: {count}",
+  "@sessionHistoryPlayerCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryPreflop": "Preflop:",
+  "sessionHistoryRiver": "River:",
+  "sessionHistoryStartTime": "Время начала: {time}",
+  "@sessionHistoryStartTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySyncFailed": "Синхронизация не удалась: {error}",
+  "@sessionHistorySyncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryTurn": "Turn:",
+  "slidingNotificationHeader": "УВЕДОМЛЕНИЕ",
+  "stackChartAvgGrowth": "Ср. рост",
+  "stackChartDuration": "Длительность",
+  "stackChartEnd": "Конец",
+  "stackChartNoData": "Нет данных",
+  "stackChartProfitLoss": "П/У",
+  "stackChartRebuy": "Rebuy",
+  "stackChartScreenAvgGrowth": "Ср. рост",
+  "stackChartScreenDuration": "Длительность",
+  "stackChartScreenProfitLoss": "П/У",
+  "stackChartScreenStack": "Stack",
+  "stackChartStart": "Старт",
+  "stackChartTitle": "График Stack",
+  "tableSelectionAdminSubtitle": "Выберите стол для управления",
+  "tableSelectionMemberSubtitle": "Выберите стол для просмотра наличия мест",
+  "tableSelectionNoTables": "Нет доступных столов",
+  "tableSelectionOpenSeats": "{count} свободных",
+  "@tableSelectionOpenSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tableSelectionSeated": "{occupied}/9 занято",
+  "@tableSelectionSeated": {
+    "placeholders": {
+      "occupied": {
+        "type": "int"
+      }
+    }
+  },
+  "tableSelectionTitle": "Выбор стола",
+  "usernameSetupLabel": "Имя пользователя",
+  "weekdayFri": "Пт",
+  "weekdayMon": "Пн",
+  "weekdaySat": "Сб",
+  "weekdaySun": "Вс",
+  "weekdayThu": "Чт",
+  "weekdayTue": "Вт",
+  "weekdayWed": "Ср",
+  "winnerSelectionBackToSingle": "Вернуться к одному победителю",
+  "winnerSelectionChoppedPot": "Chopped Pot",
+  "winnerSelectionConfirmChop": "Подтвердить Chop",
+  "winnerSelectionIndividualShares": "Индивидуальные доли:",
+  "winnerSelectionLongPressHint": "Долгое нажатие для Chopped Pot",
+  "winnerSelectionSelectAllWinners": "Выберите всех победителей:",
+  "winnerSelectionTapTheWinner": "Нажмите на победителя:",
+  "winnerSelectionWhoChopped": "Кто разделил этот Pot?",
+  "winnerSelectionWhoWon": "Кто выиграл эту руку?",
+  "onboardingReadTitle": "ЧИТАЙ ИГРУ\nКАК PRO",
+  "onboardingReadSubtitle": "Создайте аккаунт, чтобы начать отслеживать свой покерный путь.",
+  "onboardingCreateAccount": "Создать аккаунт",
+  "onboardingLogIn": "Войти",
+  "onboardingSkip": "Пропустить",
+  "onboardingFinalTable": "Final Table",
+  "authExpSignUpTitle": "Регистрация",
+  "authExpLogInTitle": "Войдите в свой аккаунт",
+  "authExpSignUpSubtitle": "Создайте аккаунт, чтобы продолжить",
+  "authExpLogInSubtitle": "Введите email и пароль для входа",
+  "authExpName": "Имя",
+  "authExpEmail": "Email",
+  "authExpEnterName": "Введите ваше имя",
+  "authExpNameMinLength": "Имя должно содержать минимум 2 символа",
+  "authExpEnterEmail": "Введите ваш email",
+  "authExpValidEmail": "Введите корректный email",
+  "authExpEnterPassword": "Введите ваш пароль",
+  "authExpPasswordMinLength": "Пароль должен содержать минимум 6 символов",
+  "authExpBySigningUp": "Регистрируясь, вы принимаете ",
+  "authExpTermsOfService": "Условия использования",
+  "authExpAnd": "\nи ",
+  "authExpPrivacyPolicy": "Политику конфиденциальности",
+  "authExpCreateAccount": "Создать аккаунт",
+  "authExpAlreadyHaveAccount": "Уже есть аккаунт? ",
+  "authExpSignIn": "Войти",
+  "authExpForgotPassword": "Забыли пароль?",
+  "authExpDontHaveAccount": "Нет аккаунта? ",
+  "authExpSignUp": "Зарегистрироваться",
+  "authExpOr": "или",
+  "authExpContinueGoogle": "Продолжить с Google",
+  "authExpLinkGoogleMessage": "Аккаунт с адресом {email} уже существует. Введите пароль, чтобы привязать аккаунт Google.",
+  "@authExpLinkGoogleMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "forgotPasswordCodeSubtitle": "Введите 6-значный код, отправленный на {email}",
+  "@forgotPasswordCodeSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "usernameSetupChangeTitle": "Изменить имя пользователя",
+  "usernameSetupChooseTitle": "Выберите имя пользователя",
+  "usernameSetupSubtitle": "Так вас будут знать другие игроки за столом",
+  "usernameSetupRequired": "Имя пользователя обязательно",
+  "usernameSetupCheckingAvailability": "Проверка доступности…",
+  "usernameSetupAvailable": "Доступно!",
+  "usernameSetupAlreadyTaken": "Уже занято",
+  "usernameSetupCurrentUsername": "Это ваше текущее имя пользователя",
+  "usernameSetupCouldNotCheck": "Не удалось проверить доступность",
+  "usernameSetupJustTaken": "Имя пользователя только что занято. Попробуйте другое.",
+  "usernameSetupRulesHint": "3–20 символов · буквы, цифры, подчёркивания",
+  "usernameSetupUpdateButton": "Обновить имя",
+  "usernameSetupClaimButton": "Занять имя",
+  "usernameSetupSkip": "Пропустить",
+  "sessionHandsTitle": "Сессия",
+  "sessionHandsHandsLogged": "{count} рук записано",
+  "@sessionHandsHandsLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionHandsError": "Ошибка",
+  "sessionHandsNoHandsTitle": "Нет записанных рук",
+  "sessionHandsNoHandsSubtitle": "В этой сессии пока нет записанных рук.",
+  "sessionHandsWon": "ВЫИГРЫШ",
+  "sessionHandsActions": "{count} действий",
+  "@sessionHandsActions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionHandsPot": "Pot",
+  "stackChartScreenTitle": "График Stack",
+  "stackChartScreenPokerSession": "Покерная сессия",
+  "notificationsScreenTitle": "Уведомления",
+  "notificationsScreenToday": "Сегодня",
+  "notificationsScreenMarkAllAsRead": "Отметить все как прочитанные",
+  "notificationsScreenMarkAsRead": "Отметить как прочитанное",
+  "notificationsScreenNoNotifications": "Нет уведомлений",
+  "notificationsScreenClubInvitation": "Приглашение в клуб",
+  "notificationsScreenInvitedToJoin": "Вас пригласили присоединиться",
+  "notificationsScreenDecline": "Отклонить",
+  "notificationsScreenNotAuthenticated": "Не авторизован",
+  "notificationsScreenRequestResolved": "Запрос решён",
+  "notificationsScreenRequestClosed": "Запрос закрыт",
+  "notificationsScreenResponse": "Ответ",
+  "notificationsScreenEvents": "События",
+  "notificationsScreenRsvp": "RSVP",
+  "notificationsScreenClubs": "Клубы",
+  "notificationsScreenInvitations": "Приглашения",
+  "notificationsScreenSeats": "Места",
+  "notificationsScreenSupport": "Поддержка",
+  "notifEventCreatedTitle": "Новое событие: {eventName}",
+  "notifEventCreatedBody": "{date}",
+  "notifEventUpdatedTitle": "Событие обновлено: {eventName}",
+  "notifEventUpdatedBody": "{clubName} обновил детали события",
+  "notifEventCancelledTitle": "Событие отменено: {eventName}",
+  "notifEventCancelledBody": "{clubName} отменил событие, запланированное на {date}",
+  "notifEventStartingTitle": "{eventName} начнётся через 1 час!",
+  "notifEventStartingBody": "Событие {clubName} вот-вот начнётся",
+  "notifEventStartedTitle": "{eventName} уже в ЭФИРЕ!",
+  "notifEventStartedBody": "Событие {clubName} началось — присоединяйтесь",
+  "notifSeatAvailableTitle": "Свободное место: {eventName}",
+  "notifSeatAvailableBody": "Место доступно в {clubName}! Откройте приложение, чтобы занять его.",
+  "notifMemberRsvpTitle": "RSVP: {memberName}",
+  "notifMemberRsvpBody": "{memberName} ответил \"{rsvpStatus}\" на {eventName}",
+  "notifNewClubRequestTitle": "Новый запрос на клуб",
+  "notifNewClubRequestBody": "Подана новая заявка на регистрацию клуба",
+  "notifClubApprovedTitle": "Клуб одобрен",
+  "notifClubApprovedBody": "Ваш клуб одобрен!",
+  "notifClubRejectedTitle": "Клуб отклонён",
+  "notifClubRejectedBody": "Ваш запрос на клуб отклонён",
+  "notifMemberInvitedTitle": "Приглашение в клуб",
+  "notifMemberInvitedBody": "Вас пригласили вступить в клуб",
+  "notifInvitationAcceptedTitle": "Приглашение принято",
+  "notifInvitationAcceptedBody": "{memberName} принял приглашение",
+  "notifInvitationDeclinedTitle": "Приглашение отклонено",
+  "notifInvitationDeclinedBody": "{memberName} отклонил приглашение",
+  "notifSupportRequestTitle": "Запрос в поддержку",
+  "notifSupportRequestBody": "Подан новый запрос в поддержку",
+  "notifSupportUpdatedTitle": "Обновление поддержки",
+  "notifSupportUpdatedBody": "Ваш запрос в поддержку обновлён",
+  "notifTypeEventCreated": "Новое событие",
+  "notifTypeEventUpdated": "Событие обновлено",
+  "notifTypeEventCancelled": "Событие отменено",
+  "notifTypeEventStarting": "Событие скоро начнётся",
+  "notifTypeEventStarted": "Событие началось",
+  "notifTypeMemberRsvp": "RSVP участника",
+  "notifTypeNewClubRequest": "Новый запрос на клуб",
+  "notifTypeClubApproved": "Клуб одобрен",
+  "notifTypeClubRejected": "Клуб отклонён",
+  "notifTypeMemberInvited": "Приглашение в клуб",
+  "notifTypeInvitationAccepted": "Приглашение принято",
+  "notifTypeInvitationDeclined": "Приглашение отклонено",
+  "notifTypeSeatAvailable": "Свободное место",
+  "notifTypeSupportRequest": "Запрос в поддержку",
+  "notifTypeSupportUpdated": "Обновление поддержки",
+  "invitationsScreenTitle": "Приглашения в клубы",
+  "invitationsScreenNoPending": "Нет ожидающих приглашений",
+  "invitationsScreenYouWillSee": "Здесь будут отображаться приглашения из клубов",
+  "invitationsScreenGoBack": "Назад",
+  "invitationsScreenUnknownClub": "Неизвестный клуб",
+  "invitationsScreenInvitedBy": "Приглашён {name}",
+  "@invitationsScreenInvitedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsScreenExpires": "Истекает {date}",
+  "@invitationsScreenExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsScreenExpired": "Истекло",
+  "invitationsScreenExpiresInDays": "через {days} дн.",
+  "@invitationsScreenExpiresInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationsScreenExpiresInHours": "через {hours} ч.",
+  "@invitationsScreenExpiresInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "invitationsScreenExpiresSoon": "скоро",
+  "invitationsScreenDecline": "Отклонить",
+  "invitationsScreenAccept": "Принять",
+  "invitationsScreenJoinedAs": "Вы вступили в {clubName} как {role}",
+  "@invitationsScreenJoinedAs": {
+    "placeholders": {
+      "clubName": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "profilePremium": "Премиум",
+  "profileFree": "Бесплатный",
+  "dealerTableStartNewHand": "Новая раздача",
+  "dealerTableStartSessionBtn": "Начать сессию",
+  "dealerTableNeedTwoPlayers": "Нужно минимум 2 игрока для начала",
+  "dealerTableAddTestPlayers": "Добавить тестовых игроков",
+  "dealerTableAddedTestPlayers": "Добавлено {count} тестовых игроков",
+  "@dealerTableAddedTestPlayers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableRolledBack": "Откат к {street}",
+  "@dealerTableRolledBack": {
+    "placeholders": {
+      "street": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableUndoneAction": "Отменено: {playerName} {action}",
+  "@dealerTableUndoneAction": {
+    "placeholders": {
+      "playerName": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableScanToJoin": "Сканируйте, чтобы занять это место",
+  "dealerTableOccupiedDot": "Занято · ",
+  "dealerTableEmptyLabel": "Пусто",
+  "dealerTableOccupiedLabel": "Занято",
+  "dealerTableSelectedLabel": "Выбрано",
+  "dealerTableSelectSeatLabel": "ВЫБЕРИТЕ МЕСТО",
+  "dealerTableBetAmountDialog": "Сумма Bet",
+  "dealerTableRaiseToDialog": "Raise до",
+  "dealerTablePausedLabel": "Пауза",
+  "dealerTableListeningLabel": "Слушаю",
+  "dealerTableResumeVoiceTooltip": "Возобновить голос",
+  "dealerTablePauseVoiceTooltip": "Пауза голоса",
+  "dealerTableVoiceOffLabel": "Голос выключен",
+  "dealerTableCalibratingLabel": "Калибровка...",
+  "dealerTableCalibrationPrompt": "Скажите: «Стол [номер], Dealer [имя]»",
+  "dealerTableDealerLockedMsg": "Dealer закреплён: {name} за столом {table}",
+  "@dealerTableDealerLockedMsg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "table": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableNoSpeakersMsg": "Голос не обнаружен — говорите чётче",
+  "dealerTableSayTableDealerMsg": "Скажите: «Стол [номер], Dealer [имя]»",
+  "dealerTableConnectionLostRecovery": "Соединение потеряно — попытка восстановления...",
+  "dealerTableConnectionTimeout": "Тайм-аут соединения — требуется повторная калибровка",
+  "dealerTableConnectionRecovered": "Соединение восстановлено!",
+  "dealerTableActionHeldMsg": "Действие отложено",
+  "dealerTableFailedStartStreaming": "Не удалось начать стриминг — проверьте подключение к серверу и микрофон",
+  "dealerTableFailedStartVoice": "Не удалось запустить голос: {error}",
+  "@dealerTableFailedStartVoice": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableAddPlayerActionLabel": "Добавить игрока",
+  "dealerTableSeatAnotherPlayer": "Посадить другого игрока сюда",
+  "dealerTableSitHereLabel": "Сесть здесь",
+  "dealerTableJoinAsDealerPlayer": "Присоединиться к игре как Dealer-игрок",
+  "dealerTableDealerFallback": "Dealer",
+  "dealerTableUpdatedStackMsg": "Stack {name} обновлён до {amount}",
+  "@dealerTableUpdatedStackMsg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedUpdateStackMsg": "Не удалось обновить Stack: {error}",
+  "@dealerTableFailedUpdateStackMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableSittingAtSeatMsg": "Вы теперь играете на месте {number}",
+  "@dealerTableSittingAtSeatMsg": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedSitMsg": "Не удалось сесть за стол: {error}",
+  "@dealerTableFailedSitMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableFailedAddPlayerMsg": "Не удалось добавить игрока: {error}",
+  "@dealerTableFailedAddPlayerMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerTableRemovedFromSeat": "{name} удалён с места {seat}",
+  "@dealerTableRemovedFromSeat": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "dealerTableFailedRemoveMsg": "Не удалось удалить игрока: {error}",
+  "@dealerTableFailedRemoveMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailDateAndTime": "Дата и время",
+  "eventDetailTableSeatInfo": "Стол {table}, Место #{seat}",
+  "@eventDetailTableSeatInfo": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailYoureSeatedGoodLuck": "Вы на месте, удачи!",
+  "eventDetailHomeGame": "Домашняя игра",
+  "clubDashboardDateLabel": "Дата",
+  "clubDashboardUnknownLabel": "Неизвестно",
+  "clubDashboardActiveLabel": "Активный",
+  "clubDashboardIdleLabel": "Неактивный",
+  "clubDashboardInvitedTimeAgo": "Приглашён {time}",
+  "@clubDashboardInvitedTimeAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardPendingLabel": "Ожидает",
+  "clubDashboardNoDealersYet": "Нет Dealerов",
+  "clubDashboardInviteDealersHint": "Пригласите Dealerов для управления вашими столами",
+  "clubDashboardInviteDealer": "Пригласить Dealerа",
+  "clubDashboardInviteDealerBody": "Введите email Dealerа, которого хотите пригласить.",
+  "clubDashboardSendInvitationBtn": "Отправить приглашение",
+  "clubDashboardInvitationSentTo": "Приглашение отправлено на {email}",
+  "@clubDashboardInvitationSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardFailedSendInvitationMsg": "Не удалось отправить приглашение: {error}",
+  "@clubDashboardFailedSendInvitationMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardCancelInvitationTitle": "Отменить приглашение?",
+  "clubDashboardCancelInvitationBody": "Отменить приглашение для {email}?",
+  "@clubDashboardCancelInvitationBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "clubDashboardKeepBtn": "Оставить",
+  "clubDashboardCancelInvitationBtn": "Отменить приглашение",
+  "clubDashboardFailedCancelMsg": "Не удалось отменить приглашение: {error}",
+  "@clubDashboardFailedCancelMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsMembers": "Участники ({count})",
+  "@clubSettingsMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clubSettingsNoMembersFound": "Участники не найдены",
+  "clubSettingsRoleOwner": "Владелец",
+  "clubSettingsRoleAdmin": "Админ",
+  "clubSettingsRoleDealer": "Dealer",
+  "clubSettingsRolePlayer": "Игрок",
+  "clubSettingsTableAddedMsg": "Стол добавлен",
+  "clubSettingsEditTableTitle": "Редактировать стол",
+  "clubSettingsDeleteTableTitle": "Удалить стол?",
+  "clubSettingsDeleteTableBody": "Вы уверены, что хотите удалить «{name}»? Это действие нельзя отменить.",
+  "@clubSettingsDeleteTableBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "clubSettingsTableDeletedMsg": "Стол удалён",
+  "clubSettingsDealerScanHint": "Dealerы сканируют этот код, чтобы начать сессию за этим столом",
+  "clubSettingsRegenerateBtn": "Обновить",
+  "clubSettingsAppQrCodes": "QR-коды приложения",
+  "clubSettingsShareWithPlayers": "Поделитесь с игроками для скачивания приложения",
+  "clubSettingsDownloadPdf": "Скачать PDF",
+  "clubSettingsDownloadFinalTable": "Скачайте приложение Final Table",
+  "clubSettingsScanQrToGetStarted": "Отсканируйте QR-код для вашего устройства, чтобы начать",
+  "clubSettingsScanToStartSession": "Отсканируйте этот QR-код, чтобы начать сессию",
+  "clubSettingsForDealersOnly": "Только для Dealerов",
+  "clubSettingsTableDefault": "Стол {number}",
+  "@clubSettingsTableDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "eventManagementFailedUpdateEvent": "Не удалось обновить событие: {error}",
+  "@eventManagementFailedUpdateEvent": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableThisWillMoveMsg": "Это переместит {count} игрока(ов) в лист ожидания и удалит стол из этого события.",
+  "@adminTableThisWillMoveMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableThisWillRemoveMsg": "Это удалит стол из этого события.",
+  "adminTableClosedWithWaitlistMsg": "{table} закрыт. {count} игрок(ов) перемещено в лист ожидания.",
+  "@adminTableClosedWithWaitlistMsg": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminTableClosedMsg": "{table} закрыт.",
+  "@adminTableClosedMsg": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableEmptyLabel": "Пусто",
+  "adminTableTableFallback": "Стол",
+  "adminTableTableNumberLabel": "Стол {number}",
+  "@adminTableTableNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "homePendingInvitationsMsg": "У вас {count} ожидающих приглашений в клубы.",
+  "@homePendingInvitationsMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeEventFallback": "Событие",
+  "homePokerFallback": "Покер",
+  "homeUserFallback": "Пользователь",
+  "homeSeatInfoStr": "Место #{seat}  •  {chipStack}",
+  "@homeSeatInfoStr": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      },
+      "chipStack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandYouLabel": "Вы",
+  "pokerHandMovingToTable": "Переход к столу {table}. Ваш Stack ({stack}) будет перенесён. Остальные игроки будут удалены.",
+  "@pokerHandMovingToTable": {
+    "placeholders": {
+      "table": {
+        "type": "int"
+      },
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "pokerHandActiveSessionMsg": "У вас активная сессия с {count} записанными руками. Что вы хотите сделать?",
+  "@pokerHandActiveSessionMsg": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandUnknownLabel": "Неизвестно",
+  "pokerHandFoldAction": "Fold",
+  "pokerHandRaiseAction": "Raise",
+  "pokerHandBetAction": "Bet",
+  "pokerHandAllInAction": "All-In",
+  "pokerHandAllPlayersAllIn": "Все игроки All-In — раздаются оставшиеся карты",
+  "pokerHandWaitingForCards": "Ожидание раздачи карт",
+  "pokerHandBettingComplete": "Торговля завершена — готово к следующей улице",
+  "pokerHandSeatFallback": "Место {id}",
+  "@pokerHandSeatFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandPlayerFallback": "Игрок {id}",
+  "@pokerHandPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "pokerHandChooseOption": "Выберите вариант:",
+  "pokerHandLeaveBtn": "Уйти",
+  "pokerHandConfirmBtn": "Подтвердить",
+  "pokerHandCurrentlyHaveRemaining": "У вас осталось {stack}.",
+  "@pokerHandCurrentlyHaveRemaining": {
+    "placeholders": {
+      "stack": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentsColorRed": "Красный",
+  "opponentsColorLightBlue": "Голубой",
+  "opponentsColorGreen": "Зелёный",
+  "opponentsColorOrange": "Оранжевый",
+  "opponentsColorPurple": "Фиолетовый",
+  "opponentsColorTeal": "Бирюзовый",
+  "opponentsColorPink": "Розовый",
+  "opponentsColorIndigo": "Индиго",
+  "opponentsFailedToLoad": "Не удалось загрузить оппонентов: {error}",
+  "@opponentsFailedToLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "opponentDetailFoldTo3Bet": "Fold to 3-Bet",
+  "opponentDetailStealLabel": "Steal",
+  "opponentDetailCheckRaiseLabel": "Check/Raise",
+  "individualSetupSessionSetup": "Настройка сессии",
+  "individualSetupSessionNameLabel": "Название сессии",
+  "individualSetupGameTypeLabel": "Тип игры",
+  "individualSetupCashGameLabel": "Cash Game",
+  "individualSetupTournamentLabel": "Tournament",
+  "individualSetupBuyInAmountLabel": "Сумма Buy-in",
+  "individualSetupEnterAmountHint": "Введите сумму",
+  "individualSetupCashGameNote": "В Cash Game ваш начальный Stack равен сумме Buy-in.",
+  "individualSetupStartingStackLabel": "Начальный Stack",
+  "individualSetupEnterChipStackHint": "Введите Stack фишек",
+  "individualSetupStackValidation": "Начальный Stack должен быть не менее Big Blind ({bigBlind})",
+  "@individualSetupStackValidation": {
+    "placeholders": {
+      "bigBlind": {
+        "type": "int"
+      }
+    }
+  },
+  "individualSetupStartSessionBtn": "Начать сессию",
+  "individualSetupEnterValueHint": "Введите значение",
+  "individualHandSetupTitle": "Отдельная раздача",
+  "individualHandSetupSubtitle": "Быстрая запись раздачи",
+  "individualHandSetupHandNameLabel": "Название раздачи (необязательно)",
+  "playerSessionBluff": "Bluff",
+  "playerSessionValue": "Value",
+  "playerSessionMistake": "Ошибка",
+  "playerSessionCooler": "Cooler",
+  "playerSessionHeroCall": "Hero Call",
+  "playerSessionExploit": "Exploit",
+  "playerSessionToughSpot": "Сложная ситуация",
+  "playerSessionEasyFold": "Лёгкий Fold",
+  "playerSessionEndedTitle": "Сессия завершена",
+  "playerSessionEndedBody": "Dealer завершил эту сессию.",
+  "playerSessionRemovedTitle": "Удалены со стола",
+  "playerSessionRemovedBody": "Вы были удалены со стола Dealerом.",
+  "playerSessionYouWon": "Вы выиграли {amount}!",
+  "@playerSessionYouWon": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionSeatWins": "Место {seat} выигрывает {amount}",
+  "@playerSessionSeatWins": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionYourHoleCardsTitle": "Ваши Hole Cards",
+  "playerSessionConnecting": "Подключение...",
+  "playerSessionGoBackBtn": "Назад",
+  "playerSessionHoleCardsLabel": "Hole Cards",
+  "playerSessionEditBtn": "Редактировать",
+  "playerSessionAddBtn": "Добавить",
+  "playerSessionBoardLabel": "Board",
+  "playerSessionNoCardsDealt": "Карты не розданы",
+  "playerSessionWaitingForAction": "Ожидание действия...",
+  "playerSessionActionsLabel": "Действия",
+  "playerSessionYouLabel": "Вы",
+  "playerSessionSeatFallback": "Место {seat}",
+  "@playerSessionSeatFallback": {
+    "placeholders": {
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionNotesHintText": "Добавьте заметки об этой раздаче...",
+  "playerSessionHandHistoryLabel": "История раздач",
+  "playerSessionNoCompletedHands": "Нет завершённых раздач",
+  "playerSessionWonAmount": "Выигрыш {amount}",
+  "@playerSessionWonAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionLostLabel": "Проигрыш",
+  "playerSessionDealerChangeTitle": "Смена Dealerа",
+  "playerSessionWaitingForDealer": "Ожидание нового Dealerа...",
+  "playerSessionHandUpdated": "Раздача #{number} обновлена",
+  "@playerSessionHandUpdated": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionErrorSaving": "Ошибка сохранения: {error}",
+  "@playerSessionErrorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionEditHand": "Редактировать раздачу #{number}",
+  "@playerSessionEditHand": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionViewDetails": "Подробнее",
+  "playerSessionTapToAddHoleCards": "Нажмите, чтобы добавить Hole Cards",
+  "playerSessionSaveChanges": "Сохранить изменения",
+  "playerSessionLeaveTableTitle": "Покинуть стол?",
+  "playerSessionLeaveTableBody": "Вы уверены, что хотите покинуть этот стол?",
+  "playerSessionFailedLeave": "Не удалось выйти: {error}",
+  "@playerSessionFailedLeave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSessionTableSession": "Сессия за столом",
+  "playerSessionHandNumber": "Раздача #{number}",
+  "@playerSessionHandNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSessionUnknownDealer": "Неизвестно",
+  "playerSessionNotAuthenticated": "Не авторизован",
+  "dealerQrScanSessionSettings": "Настройки сессии",
+  "dealerQrScanTableNameLabel": "Стол: {name}",
+  "@dealerQrScanTableNameLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanEventNameLabel": "Событие: {name}",
+  "@dealerQrScanEventNameLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanBlindsLabel": "Блайнды",
+  "dealerQrScanSmallBlindLabel": "Small Blind",
+  "dealerQrScanBigBlindLabel": "Big Blind",
+  "dealerQrScanStartDealingBtn": "Начать раздачу",
+  "dealerQrScanResumeSessionTitle": "Возобновить сессию",
+  "dealerQrScanTakingOverFrom": "Смена с {name}",
+  "@dealerQrScanTakingOverFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealerQrScanHandsPlayedLabel": "Сыграно раздач",
+  "dealerQrScanBlindsInfoLabel": "Блайнды",
+  "dealerQrScanPlayersLabel": "Игроки",
+  "dealerQrScanResumeBtn": "Возобновить",
+  "dealerQrScanTableNotAssigned": "Стол не назначен",
+  "dealerQrScanEventTablesLabel": "Столы события:",
+  "dealerQrScanNoTablesAssigned": "Нет назначенных столов",
+  "dealerQrScanThisTableId": "ID этого стола:",
+  "dealerQrScanCorrectQrUrl": "Правильный URL QR-кода:",
+  "dealerQrScanScanTableQrTitle": "Сканировать QR стола",
+  "dealerQrScanScanInstructions": "Отсканируйте QR-код стола, чтобы начать раздачу",
+  "eventDashboardTournamentOnBreak": "Tournament на перерыве",
+  "eventDashboardLiveLabel": "Онлайн",
+  "eventDashboardLocalLabel": "Локально",
+  "eventDashboardDisconnectedLabel": "Отключён",
+  "eventDashboardPlayersLabel": "Игроки",
+  "eventDashboardTablesLabel": "Столы",
+  "eventDashboardTotalChipsLabel": "Всего фишек",
+  "eventDashboardAvgStackLabel": "Средний Stack",
+  "eventDashboardChipLeaderLabel": "Chip Leader",
+  "eventDashboardNoRankingsYet": "Нет рейтингов",
+  "eventDashboardRankingsWillAppear": "Рейтинги появятся, когда игроки присоединятся к столам",
+  "eventDashboardTableSeatLabel": "{table} - Место {seat}",
+  "@eventDashboardTableSeatLabel": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "seat": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDashboardPlayerFallback": "Игрок {id}",
+  "@eventDashboardPlayerFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "commonNA": "Н/Д",
+  "sessionHistoryFailedLoad": "Не удалось загрузить сессии: {error}",
+  "@sessionHistoryFailedLoad": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistoryCash": "Cash",
+  "sessionHistoryTournament": "Tournament",
+  "sessionHistorySessionId": "Сессия {id}...",
+  "@sessionHistorySessionId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySeatWithPosition": "Место {seat} ({position})",
+  "@sessionHistorySeatWithPosition": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      },
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySeat": "Место {seat}",
+  "@sessionHistorySeat": {
+    "placeholders": {
+      "seat": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionHistorySyncCompleted": "Синхронизация завершена",
+  "sessionHistoryFullHistory": "Полная история сессий",
+  "sessionHandsRetry": "Повторить",
+  "stackChartScreenStart": "Старт",
+  "stackChartScreenRebuy": "Rebuy",
+  "stackChartScreenEnd": "Конец",
+  "quickStackSelectPlayer": "Выбрать игрока",
+  "quickStackAddPlayer": "Добавить «{name}»",
+  "@quickStackAddPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "quickStackSaveToOpponents": "Сохранить в список оппонентов",
+  "quickStackYou": "Вы",
+  "quickStackNoPlayersFound": "Игроки не найдены.",
+  "seatSetupDone": "Готово",
+  "seatSetupCancel": "Отмена",
+  "authConnectionIssue": "Проблема с подключением",
+  "authConnectionIssueBody": "Не удалось подключиться к нашим серверам.\nПожалуйста, проверьте интернет-соединение\nи попробуйте снова.",
+  "authTryAgain": "Попробовать снова",
+  "calendarEventBuyIn": "Сумма бай-ина",
+  "calendarEventDelete": "Удалить событие",
+  "calendarEventDeleteBody": "Вы уверены, что хотите удалить \"{title}\"?\nЭто действие нельзя отменить.",
+  "calendarEventDeleteButton": "Удалить",
+  "calendarEventDeleteConfirm": "Удалить {title}?",
+  "calendarEventEdit": "Редактировать",
+  "calendarEventLocation": "Местоположение",
+  "clubInfoMembersCount": "Участники ({count})",
+  "clubInfoNoMembers": "Участники не найдены",
+  "clubInfoTitle": "Информация о клубе",
+  "dealerQrScanBbAnte": "BB Ante",
+  "dealerQrTableNotAssigned": "{tableName} не назначен для этого события.",
+  "dealerQrTablesAssigned": "{count} стол(ов) назначено для этого события",
+  "dealerTableAnteLabel": "АНТЕ {amount}",
+  "dealerTableBlindsLabel": "БЛАЙНДЫ",
+  "dealerTableCheckLabel": "CHECK",
+  "dealerTablePlayerAdded": "{playerName} добавлен на Место {seatNumber}",
+  "dealerTablePlayerToAct": "{playerName} действует ({stack})",
+  "dealerTablePotLabel": "БАНК",
+  "eventDashboardOnBreakBadge": "ПЕРЕРЫВ",
+  "eventDetailAdminActions": "ДЕЙСТВИЯ АДМИНИСТРАТОРА",
+  "finalStandingsCompleted": "Завершено",
+  "finalStandingsEmpty": "Результаты не записаны",
+  "finalStandingsNoData": "Результаты недоступны",
+  "finalStandingsNoDataHint": "Это событие могло не записать результаты",
+  "finalStandingsPlayers": "Игроки",
+  "finalStandingsTitle": "Итоговые результаты",
+  "guidedBetOnceBody": "Нажмите один раз, чтобы сделать ставку.",
+  "guidedCallBody": "Этот игрок делает call. Нарисуйте круг.",
+  "guidedCallTitle": "Call",
+  "guidedCheckBody": "Этот игрок делает check. Нажмите дважды.",
+  "guidedCheckTitle": "Check",
+  "guidedDealFlopBody": "Выберите 3 карты для Flop.",
+  "guidedDealFlopTitle": "Сдать Flop",
+  "guidedDealRiverBody": "Выберите 1 карту для River.",
+  "guidedDealRiverTitle": "Сдать River",
+  "guidedDealTurnBody": "Выберите 1 карту для Turn.",
+  "guidedDealTurnTitle": "Сдать Turn",
+  "guidedEndSessionBody": "Нажмите это меню и выберите «Остановить сессию», чтобы сохранить результаты.",
+  "guidedEndSessionTitle": "Завершить сессию",
+  "guidedFoldBody": "Этот игрок сбрасывает карты. Нарисуйте линию для fold.",
+  "guidedFoldTitle": "Fold",
+  "guidedGameMenuBody": "В этом меню есть полезные опции. Давайте рассмотрим одну важную настройку.",
+  "guidedGameMenuTitle": "Меню игры",
+  "guidedGameSettingsBody": "Здесь вы можете изменить блайнды в ходе сессии — полезно в турнирах при повышении уровней.",
+  "guidedGameSettingsTitle": "Настройки игры",
+  "guidedGestureGuideBody": "Нажмите на эту иконку в любое время, чтобы увидеть все жесты управления.",
+  "guidedGestureGuideTitle": "Руководство по жестам",
+  "guidedHandCompleteBody": "Отличная работа! Вы только что записали свою первую раздачу.",
+  "guidedHandCompleteTitle": "Раздача завершена!",
+  "guidedOpenThePotTitle": "Открыть банк",
+  "guidedReviewHandBody": "Введите свои карты и заметки.",
+  "guidedReviewHandTitle": "Просмотр раздачи",
+  "guidedSkip": "Пропустить",
+  "guidedSkipButtonBody": "Если вы пропускаете раздачу, эта кнопка перемещает кнопку дилера к следующему игроку. Имейте в виду, что стеки могут рассинхронизироваться — вы можете обновить их в разделе «Управление игроками».",
+  "guidedSkipButtonTitle": "Кнопка пропуска",
+  "guidedYourTurn": "Ваш ход!",
+  "homeEventTypeCashGame": "Cash Game",
+  "homeEventTypeHomeGame": "Домашняя игра",
+  "homeEventTypeOnline": "Онлайн",
+  "homeEventTypeTournament": "Турнир",
+  "inviteClubAdminFallback": "Администратор клуба",
+  "kbCBetDescription": "Как часто вы делаете ставку на Flop, будучи последним агрессором до флопа. Стандартный ход, демонстрирующий силу.",
+  "kbCBetFullName": "Continuation Bet",
+  "kbCBetName": "C-Bet",
+  "kbCheckRaiseDescription": "Как часто вы делаете check, а затем raise на Flop. Обманный ход, который может поймать агрессивных соперников.",
+  "kbCheckRaiseFullName": "Flop Check-Raise",
+  "kbCheckRaiseName": "Check-Raise",
+  "kbClubsIntro": "Клубы позволяют вам подключиться к местному покерному залу и отслеживать живые игры.",
+  "kbClubsTitle": "Клубы и события",
+  "kbDealerLoggingDescription": "Дилеры используют голосовые команды для записи действий всего стола. Игрокам не нужно вводить данные вручную.",
+  "kbDealerLoggingTitle": "Запись с помощью дилера",
+  "kbFoldTo3BetDescription": "Как часто вы сбрасываете карты после рейза, столкнувшись с 3-Bet. Если слишком часто, соперники могут эксплуатировать вас лёгкими 3-Bet.",
+  "kbFoldTo3BetFullName": "Fold to Three-Bet",
+  "kbFoldTo3BetName": "Fold to 3-Bet",
+  "kbLiveEventsDescription": "Менеджеры клубов создают события с несколькими столами. Присоединитесь к событию, чтобы участвовать в рейтингах в реальном времени.",
+  "kbLiveEventsTitle": "Живые события",
+  "kbLiveRankingsDescription": "Следите за своим местом в рейтинге в реальном времени во время событий. Рейтинги обновляются после каждой раздачи.",
+  "kbLiveRankingsTitle": "Живые рейтинги",
+  "kbOpponentTrackingDescription": "Игроки, которых вы встречаете в клубе, отслеживаются автоматически. Сохраняйте соперников для создания подробных профилей.",
+  "kbOpponentTrackingTitle": "Отслеживание соперников",
+  "kbPfrDescription": "Как часто вы рейзите до флопа. Разница между VPIP и PFR показывает, как часто вы лимпуете или холд-коллируете.",
+  "kbPfrFullName": "Preflop Raise",
+  "kbPfrName": "PFR",
+  "kbQrSeatDescription": "Отсканируйте QR-код за своим столом, чтобы мгновенно присоединиться к сессии. Ваши раздачи автоматически отслеживаются дилером.",
+  "kbQrSeatTitle": "Назначение места по QR",
+  "kbSessionStatsDescription": "После каждой сессии смотрите свой выигрыш/проигрыш и как изменилась ваша статистика. Каждая раздача записывается.",
+  "kbSessionStatsTitle": "Статистика сессии",
+  "kbStatsIntro": "Final Table отслеживает 7 ключевых покерных метрик, чтобы помочь вам понять и улучшить свою игру.",
+  "kbStatsTitle": "Ваша статистика",
+  "kbStealDescription": "Как часто вы открываете рейзом с поздней позиции (CO, BTN, SB), когда банк не вскрыт, стремясь забрать блайнды.",
+  "kbStealFullName": "Blind Steal Attempt",
+  "kbStealName": "Steal",
+  "kbThreeBetDescription": "Как часто вы делаете ре-рейз на открытый рейз соперника до флопа. Более высокий процент 3-Bet указывает на агрессивный стиль до флопа.",
+  "kbThreeBetFullName": "Three-Bet Percentage",
+  "kbThreeBetName": "3-Bet",
+  "kbVpipDescription": "Как часто вы добровольно входите в банк (исключая постинг блайндов). Высокий VPIP означает игру многими руками; низкий VPIP означает избирательность.",
+  "kbVpipFullName": "Voluntarily Put $ In Pot",
+  "kbVpipName": "VPIP",
+  "leaderboardChipLeader": "Chip Leader: {name}",
+  "leaderboardPlayers": "Игроки",
+  "leaderboardTotalChips": "Всего фишек",
+  "leaderboardWaiting": "Ожидание игроков...",
+  "liveRankingsEliminated": "Выбывшие игроки",
+  "liveRankingsError": "Ошибка загрузки рейтингов",
+  "liveRankingsTitle": "Живые рейтинги",
+  "liveRankingsTryAgain": "Попробовать снова",
+  "liveRankingsWaiting": "Ожидание игроков",
+  "liveRankingsWaitingHint": "Рейтинги появятся, когда игроки займут места",
+  "mainDealerOnClub": "Теперь вы дилер в {clubName}",
+  "memberTableEmpty": "Пустой",
+  "memberTableFallback": "Стол",
+  "memberTablePlayer": "Игрок",
+  "memberTableSeatedOpen": "{seated} занято  •  {open} свободно",
+  "onboardingAdjustStackBody": "Перетащите ползунок, чтобы установить стек соперника в BB. Нажмите на значение стека, чтобы ввести точную сумму.",
+  "onboardingAdjustStackTitle": "Настройка стека",
+  "onboardingAllSetBody": "Вы готовы начать отслеживать свои покерные сессии.",
+  "onboardingAllSetTitle": "Всё готово!",
+  "onboardingAssignPlayerBody": "Нажмите на имя игрока, чтобы посадить себя или сохранённого соперника. Ваш стек применяется автоматически, когда вы садитесь.",
+  "onboardingAssignPlayerTitle": "Назначить игрока",
+  "onboardingDealerButtonBody": "Перетащите это на место с позицией дилера. Это определяет блайнды и порядок действий.",
+  "onboardingDealerButtonQsuBody": "Нажмите «D», чтобы назначить кнопку дилера на любое место. Это управляет позициями блайндов и порядком действий.",
+  "onboardingDealerButtonQsuTitle": "Кнопка дилера",
+  "onboardingDealerButtonTitle": "Кнопка дилера",
+  "onboardingEndSessionBody": "Нажмите красную кнопку «Стоп», чтобы сохранить результаты сессии и вернуться на главный экран.",
+  "onboardingEndSessionTitle": "Завершить сессию",
+  "onboardingFullModeBody": "Отслеживайте каждое действие каждого игрока на всех улицах. Идеально для серьёзного анализа.",
+  "onboardingFullModeTitle": "Режим полной записи",
+  "onboardingGotIt": "Понял",
+  "onboardingIndividualModeBody": "Быстрое отслеживание выигрыша/проигрыша за одну сессию. Теперь выберите режим для продолжения!",
+  "onboardingIndividualModeTitle": "Режим индивидуальной записи",
+  "onboardingLetsGo": "Поехали",
+  "onboardingLetsPlay": "Играть",
+  "onboardingLogAHandBody": "Нажмите здесь, чтобы настроить стол и записать раздачу. Попробуем прямо сейчас!",
+  "onboardingLogAHandTitle": "Записать раздачу",
+  "onboardingMarkSeatOpenBody": "Нажмите на флажок, чтобы переключить место между занятым и пустым. Пустые места пропускаются в раздаче.",
+  "onboardingMarkSeatOpenTitle": "Отметить место как свободное",
+  "onboardingNext": "Далее",
+  "onboardingPlayerNameBody": "Введите имя или выберите из сохранённых соперников. Сохранённые соперники отслеживают статистику между сессиями.",
+  "onboardingPlayerNameTitle": "Имя игрока",
+  "onboardingSaveOpponentBody": "Новое имя? Нажмите здесь, чтобы сохранить его как соперника. Его статистика будет отслеживаться автоматически.",
+  "onboardingSaveOpponentTitle": "Сохранить соперника",
+  "onboardingSeatOpenBody": "Переключите, чтобы отметить место как занятое или пустое. Свободные места пропускаются во время раздачи.",
+  "onboardingSeatOpenTitle": "Свободное место",
+  "onboardingSessionSetupBody": "Заполните данные сессии — название, бай-ин, блайнды — и нажмите «Начать игру».",
+  "onboardingSessionSetupTitle": "Настройка сессии",
+  "onboardingSkipTour": "Пропустить тур",
+  "onboardingStartLoggingBody": "Нажмите кнопку +, чтобы начать запись раздачи.",
+  "onboardingStartLoggingTitle": "Начать запись",
+  "onboardingStepOf": "Шаг {step} из {total}",
+  "onboardingTableSetupBody": "Нажмите на любое место, чтобы настроить игроков. Давайте пройдём через диалог места далее.",
+  "onboardingTableSetupTitle": "Настройка стола",
+  "onboardingThisIsMySeatBody": "Нажмите здесь, если это ваше место. Автоматически заполняет ваше имя и отслеживает вашу личную статистику.",
+  "onboardingThisIsMySeatTitle": "Это моё место",
+  "onboardingUpdateStackBody": "Используйте это для ручного обновления количества фишек в любой момент без записи полной раздачи.",
+  "onboardingUpdateStackTitle": "Обновить стек",
+  "onboardingViewSessionsBody": "Нажмите «Сессии», чтобы увидеть результаты сессий, историю раздач и статистику.",
+  "onboardingViewSessionsTitle": "Просмотр сессий",
+  "onboardingWelcomeBody": "Давайте проведём быстрый тур для начала.\n\nВы всегда можете повторить этот тур из\nПрофиль → Настройки → База знаний.",
+  "onboardingWelcomeTitle": "Добро пожаловать в Final Table",
+  "playerSessionHandNotesLabel": "ЗАМЕТКИ К РАЗДАЧЕ",
+  "playerSessionHoleCardsUpperLabel": "КАРМАННЫЕ КАРТЫ",
+  "playerSessionNotesLabel": "ЗАМЕТКИ",
+  "playerSessionTagsLabel": "ТЕГИ",
+  "pokerHandAmountBetween": "Сумма должна быть от {min} до {max}",
+  "pokerHandBetRange": "Мин: {min} · Макс: {max}",
+  "qrJoinActiveGame": "Активная игра",
+  "qrJoinCancelRequest": "Отменить запрос",
+  "qrJoinClubLabel": "Клуб",
+  "qrJoinDealerApproval": "Дилер установит ваш стек фишек и подтвердит присоединение.",
+  "qrJoinDeclined": "Ваш запрос на присоединение был отклонён",
+  "qrJoinError": "Что-то пошло не так",
+  "qrJoinFailed": "Не удалось присоединиться к месту: {error}",
+  "qrJoinGoBack": "Назад",
+  "qrJoinLoading": "Загрузка информации о столе...",
+  "qrJoinRequestButton": "Запрос на присоединение",
+  "qrJoinRequestSent": "Ваш запрос на присоединение к Месту {seatNumber} отправлен.",
+  "qrJoinSeat": "Место {number}",
+  "qrJoinSeatLabel": "Место",
+  "qrJoinSeatOccupied": "Это место может быть уже занято. Присоединение заменит текущего игрока.",
+  "qrJoinStatusLabel": "Статус",
+  "qrJoinTable": "Присоединиться к столу",
+  "qrJoinTableFallback": "Стол",
+  "qrJoinTableInfo": "ИНФОРМАЦИЯ О СТОЛЕ",
+  "qrJoinTableLabel": "Стол",
+  "qrJoinWaitingDealer": "Ожидание дилера",
+  "qrJoinWaitingStatus": "Ожидание",
+  "raiseSnapAllIn": "All-In",
+  "raiseSnapMin": "Мин",
+  "raiseSnapPot": "Банк",
+  "redeemCodeDescription": "Введите 8-значный код, полученный от администратора клуба, чтобы вступить в их клуб.",
+  "redeemContinue": "Продолжить",
+  "redeemEnterCode": "Введите код приглашения",
+  "redeemInvitationTitle": "Активировать приглашение",
+  "redeemJoinClub": "Вступить в клуб",
+  "redeemJoinedAs": "Вы вступили в {clubName} как {role}",
+  "redeemWelcome": "Добро пожаловать!",
+  "sessionHistoryPlayerWins": "Игрок {playerId} выигрывает:",
+  "supportAccountIssue": "Проблема с аккаунтом",
+  "supportBugReport": "Сообщение об ошибке",
+  "supportCategoryLabel": "КАТЕГОРИЯ",
+  "supportDescriptionHint": "Опишите проблему подробно...",
+  "supportDescriptionLabel": "ОПИСАНИЕ",
+  "supportFailedSubmit": "Не удалось отправить: {error}",
+  "supportFeatureRequest": "Запрос функции",
+  "supportFillAllFields": "Пожалуйста, заполните все поля",
+  "supportOther": "Другое",
+  "supportSubjectHint": "Краткое описание проблемы",
+  "supportSubjectLabel": "ТЕМА",
+  "supportSubmitButton": "Отправить",
+  "supportSubmitted": "Запрос в поддержку успешно отправлен",
+  "supportTitle": "Помощь и поддержка"
+}

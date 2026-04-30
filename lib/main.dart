@@ -16,7 +16,10 @@ import 'services/club_service.dart';
 import 'services/event_service.dart';
 import 'services/subscription_service.dart';
 import 'services/app_data_cache.dart';
+import 'services/locale_service.dart';
 import 'config/env_config.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 import 'design_system/poker_friend_theme.dart';
 import 'screens/club/event_detail_screen.dart';
 import 'screens/club/club_dashboard_screen.dart';
@@ -52,6 +55,13 @@ void main() async {
     print('Firestore offline persistence enabled');
   } catch (e) {
     print('Firebase initialization failed: $e');
+  }
+
+  // Load saved locale preference
+  try {
+    await LocaleService.init();
+  } catch (e) {
+    print('Locale service init failed: $e');
   }
 
   // Launch app FIRST, then init services in background.
@@ -137,7 +147,7 @@ void _showInvitationAcceptedNotification(String clubName) {
 
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text('You are now a dealer on $clubName'),
+      content: Text(AppLocalizations.of(context).mainDealerOnClub(clubName)),
       backgroundColor: PokerFriendColors.green,
       duration: const Duration(seconds: 4),
       behavior: SnackBarBehavior.floating,
@@ -303,31 +313,39 @@ class PokerTrackerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      title: 'Poker Hand Tracker',
-      theme: AppTheme.lightTheme,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const AuthWrapper(),
+    return ValueListenableBuilder<Locale?>(
+      valueListenable: LocaleService.localeNotifier,
+      builder: (context, locale, _) {
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          title: 'Poker Hand Tracker',
+          theme: AppTheme.lightTheme,
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const AuthWrapper(),
+          },
+          onGenerateRoute: (settings) {
+            // Handle player session route with arguments
+            if (settings.name == '/player_session') {
+              final args = settings.arguments as Map<String, dynamic>?;
+              if (args != null) {
+                return MaterialPageRoute(
+                  builder: (context) => PlayerSessionScreen(
+                    clubId: args['clubId'] as String,
+                    tableId: args['tableId'] as String,
+                    seatNumber: args['seatNumber'] as int,
+                  ),
+                );
+              }
+            }
+            return null;
+          },
+          debugShowCheckedModeBanner: false,
+        );
       },
-      onGenerateRoute: (settings) {
-        // Handle player session route with arguments
-        if (settings.name == '/player_session') {
-          final args = settings.arguments as Map<String, dynamic>?;
-          if (args != null) {
-            return MaterialPageRoute(
-              builder: (context) => PlayerSessionScreen(
-                clubId: args['clubId'] as String,
-                tableId: args['tableId'] as String,
-                seatNumber: args['seatNumber'] as int,
-              ),
-            );
-          }
-        }
-        return null;
-      },
-      debugShowCheckedModeBanner: false,
     );
   }
 }

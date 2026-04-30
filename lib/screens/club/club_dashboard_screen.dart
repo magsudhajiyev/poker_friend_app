@@ -20,6 +20,7 @@ import '../../services/dealer_service.dart';
 import '../../services/seat_service.dart';
 import '../../design_system/components/cards/error_state_card.dart';
 import '../../services/app_data_cache.dart';
+import '../../l10n/app_localizations.dart';
 import '../../widgets/global_bottom_nav_bar.dart';
 import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
@@ -414,9 +415,9 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         : TabBarView(
                         controller: _tabController!,
                         children: [
-                          _buildEventList(_liveEvents, 'No live events', 'live'),
-                          _buildEventList(_upcomingEvents, 'No upcoming events', 'scheduled'),
-                          _buildEventList(_pastEvents, 'No past events', 'past'),
+                          _buildEventList(_liveEvents, AppLocalizations.of(context).clubDashboardNoLiveEvents, 'live'),
+                          _buildEventList(_upcomingEvents, AppLocalizations.of(context).clubDashboardNoUpcomingEvents, 'scheduled'),
+                          _buildEventList(_pastEvents, AppLocalizations.of(context).clubDashboardNoPastEvents, 'past'),
                         ],
                       ),
               ),
@@ -500,7 +501,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          '$_memberCount member${_memberCount == 1 ? '' : 's'}',
+                          AppLocalizations.of(context).clubDashboardMemberCount(_memberCount),
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
@@ -539,7 +540,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        'Admin',
+                        AppLocalizations.of(context).clubDashboardAdmin,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -602,7 +603,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
   /// Segmented control matching Figma (node 416:4363)
   /// Uses AnimatedBuilder to smoothly slide the indicator during swipe
   Widget _buildSegmentedControl() {
-    final tabs = ['Live', 'Upcoming', 'Past'];
+    final tabs = [AppLocalizations.of(context).clubDashboardLive, AppLocalizations.of(context).clubDashboardUpcoming, AppLocalizations.of(context).clubDashboardPast];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -832,7 +833,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
-                            'Cash Game $stakes',
+                            AppLocalizations.of(context).clubDashboardCashGameStakes(stakes),
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 17,
                               color: Colors.white,
@@ -849,7 +850,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          'Cash',
+                          AppLocalizations.of(context).clubDashboardCash,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 11,
                             color: const Color(0xFF89F1EC),
@@ -866,11 +867,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
                   // Tables row
                   _buildGroupedCashInfoRow(
-                    'Tables',
+                    AppLocalizations.of(context).clubDashboardTables,
                     '$totalTables table${totalTables == 1 ? '' : 's'}',
                   ),
                   const SizedBox(height: 6),
-                  _buildGroupedCashInfoRow('Stakes', stakes),
+                  _buildGroupedCashInfoRow(AppLocalizations.of(context).clubDashboardStakes, stakes),
 
                   const SizedBox(height: 14),
 
@@ -889,7 +890,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Text(
-                              '$totalPlaying playing',
+                              AppLocalizations.of(context).clubDashboardPlayingCount(totalPlaying),
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 13,
                                 color: const Color(0xFF808285),
@@ -962,14 +963,14 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     switch (type) {
       case 'scheduled':
         subtitle = _isAdmin
-            ? 'Tap the button below to create one'
-            : 'Check back later for new events';
+            ? AppLocalizations.of(context).clubDashboardCreateEventHint
+            : AppLocalizations.of(context).clubDashboardCheckBackLater;
         break;
       case 'live':
-        subtitle = 'Events will appear here when they start';
+        subtitle = AppLocalizations.of(context).clubDashboardEventsWillAppear;
         break;
       case 'past':
-        subtitle = 'Completed events will appear here';
+        subtitle = AppLocalizations.of(context).clubDashboardPastEventsWillAppear;
         break;
       default:
         subtitle = '';
@@ -1053,7 +1054,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                   const Icon(Icons.add, size: 18, color: Colors.white),
                   const SizedBox(width: 8),
                   Text(
-                    'Create Event',
+                    AppLocalizations.of(context).eventManagementCreateEvent,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1164,7 +1165,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          event.gameType == 'cash' ? 'Cash' : 'Tournament',
+                          event.gameType == 'cash' ? AppLocalizations.of(context).clubDashboardCash : AppLocalizations.of(context).setupTournament,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 11,
                             color: const Color(0xFF89F1EC),
@@ -1192,7 +1193,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
-                          'Date',
+                          AppLocalizations.of(context).clubDashboardDateLabel,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
                             color: const Color(0xFFB3B4B6),
@@ -1225,7 +1226,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
-                            event.gameType == 'cash' ? 'Stakes' : 'Buy-in',
+                            event.gameType == 'cash' ? AppLocalizations.of(context).eventDetailStakes : AppLocalizations.of(context).eventDetailBuyIn,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 17,
                               color: const Color(0xFFB3B4B6),
@@ -1321,13 +1322,13 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         padding: const EdgeInsets.all(24),
         children: [
           if (_dealers.isNotEmpty) ...[
-            _buildSectionTitle('Active Dealers', _dealers.length),
+            _buildSectionTitle(AppLocalizations.of(context).clubDashboardActiveDealers, _dealers.length),
             const SizedBox(height: 12),
             ..._dealers.map(_buildDealerCard),
             const SizedBox(height: 24),
           ],
           if (_pendingInvitations.isNotEmpty) ...[
-            _buildSectionTitle('Pending Invitations', _pendingInvitations.length),
+            _buildSectionTitle(AppLocalizations.of(context).clubDashboardPendingInvitations, _pendingInvitations.length),
             const SizedBox(height: 12),
             ..._pendingInvitations.map(_buildPendingInvitationCard),
           ],
@@ -1406,7 +1407,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  dealer.displayName ?? 'Unknown',
+                  dealer.displayName ?? AppLocalizations.of(context).clubDashboardUnknownLabel,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     color: Colors.white,
@@ -1445,7 +1446,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  isActive ? 'Active' : 'Idle',
+                  isActive ? AppLocalizations.of(context).clubDashboardActiveLabel : AppLocalizations.of(context).clubDashboardIdleLabel,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
                     color: isActive ? const Color(0xFF54E98A) : const Color(0xFF8C8C8C),
@@ -1499,7 +1500,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Invited ${_formatTimeAgo(invitation.createdAt)}',
+                  AppLocalizations.of(context).clubDashboardInvitedTimeAgo(_formatTimeAgo(invitation.createdAt)),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
                     color: const Color(0xFF8C8C8C),
@@ -1515,7 +1516,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              'Pending',
+              AppLocalizations.of(context).clubDashboardPendingLabel,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 12,
                 color: const Color(0xFFFFD60A),
@@ -1567,7 +1568,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           ),
           const SizedBox(height: 16),
           Text(
-            'No dealers yet',
+            AppLocalizations.of(context).clubDashboardNoDealersYet,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 22,
               color: Colors.white,
@@ -1577,7 +1578,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Invite dealers to help manage your tables',
+            AppLocalizations.of(context).clubDashboardInviteDealersHint,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 15,
               color: const Color(0xFF8C8C8C),
@@ -1613,7 +1614,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         backgroundColor: const Color(0xFF101115),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Invite Dealer',
+          AppLocalizations.of(context).clubDashboardInviteDealer,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -1624,7 +1625,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Enter the email address of the dealer you want to invite.',
+              AppLocalizations.of(context).clubDashboardInviteDealerBody,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF8C8C8C),
                 fontSize: 14,
@@ -1636,7 +1637,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               keyboardType: TextInputType.emailAddress,
               style: GoogleFonts.ibmPlexSans(color: Colors.white),
               decoration: InputDecoration(
-                hintText: 'dealer@example.com',
+                hintText: AppLocalizations.of(context).clubDashboardDealerEmailHint,
                 hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
                 filled: true,
                 fillColor: const Color(0xFF1B1E24),
@@ -1653,7 +1654,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(context).commonCancel,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             ),
           ),
@@ -1670,7 +1671,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: Text(
-              'Send Invitation',
+              AppLocalizations.of(context).clubDashboardSendInvitationBtn,
               style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
             ),
           ),
@@ -1694,7 +1695,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Invitation sent to $email'),
+            content: Text(AppLocalizations.of(context).clubDashboardInvitationSentTo(email)),
             backgroundColor: const Color(0xFF54E98A),
           ),
         );
@@ -1705,7 +1706,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to send invitation: $e'),
+            content: Text(AppLocalizations.of(context).clubDashboardFailedSendInvitationMsg(e.toString())),
             backgroundColor: const Color(0xFFDA5B5E),
           ),
         );
@@ -1719,18 +1720,18 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF101115),
         title: Text(
-          'Cancel Invitation?',
+          AppLocalizations.of(context).clubDashboardCancelInvitationTitle,
           style: GoogleFonts.ibmPlexSans(color: Colors.white),
         ),
         content: Text(
-          'Cancel the invitation to ${invitation.email}?',
+          AppLocalizations.of(context).clubDashboardCancelInvitationBody(invitation.email),
           style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Keep',
+              AppLocalizations.of(context).clubDashboardKeepBtn,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             ),
           ),
@@ -1738,7 +1739,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: const Color(0xFFDA5B5E)),
             child: Text(
-              'Cancel Invitation',
+              AppLocalizations.of(context).clubDashboardCancelInvitationBtn,
               style: GoogleFonts.ibmPlexSans(),
             ),
           ),
@@ -1757,7 +1758,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to cancel invitation: $e'),
+              content: Text(AppLocalizations.of(context).clubDashboardFailedCancelMsg(e.toString())),
               backgroundColor: const Color(0xFFDA5B5E),
             ),
           );

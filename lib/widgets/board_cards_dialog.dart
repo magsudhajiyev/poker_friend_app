@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import '../models/poker_game_state.dart';
 import 'card_keyboard.dart';
@@ -96,6 +97,7 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         SvgPicture.asset(
@@ -106,7 +108,7 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            '${_getStreetName()} ${widget.currentRound == BettingRound.flop ? 'Cards' : 'Card'}',
+            '${_getStreetName()} ${widget.currentRound == BettingRound.flop ? l10n.boardCardsCards : l10n.boardCardsCard}',
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -166,6 +168,7 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
   }
 
   Widget _buildActionButtons() {
+    final l10n = AppLocalizations.of(context);
     final valid = _isValid();
     return Column(
       children: [
@@ -182,7 +185,7 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
               padding: EdgeInsets.zero,
             ),
             child: Text(
-              'Save',
+              l10n.commonSave,
               style: GoogleFonts.ibmPlexSans(
                 color: valid ? Colors.black : const Color(0xFF4E5054),
                 fontSize: 17,
@@ -210,7 +213,7 @@ class _BoardCardsDialogState extends State<BoardCardsDialog> {
               padding: EdgeInsets.zero,
             ),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 17,

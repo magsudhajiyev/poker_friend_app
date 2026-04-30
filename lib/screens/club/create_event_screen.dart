@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/poker_table.dart';
@@ -181,14 +182,14 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             borderRadius: BorderRadius.circular(18),
           ),
           title: Text(
-            'No Tables Assigned',
+            AppLocalizations.of(context).eventNoTablesAssigned,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
           content: Text(
-            'No tables assigned to this event. You can assign tables later but without them the event can\'t be started.',
+            AppLocalizations.of(context).eventNoTablesAssignedDesc,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white.withOpacity(0.7),
             ),
@@ -197,7 +198,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(
-                'Go Back',
+                AppLocalizations.of(context).eventGoBack,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white.withOpacity(0.5),
                 ),
@@ -209,7 +210,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                 foregroundColor: const Color(0xFF89F1EC),
               ),
               child: Text(
-                'Continue',
+                AppLocalizations.of(context).eventContinue,
                 style: GoogleFonts.ibmPlexSans(
                   fontWeight: FontWeight.w600,
                 ),
@@ -252,8 +253,8 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       String eventName = _nameController.text.trim();
       if (_gameType == 'cash' && eventName.isEmpty) {
         eventName = stakes != null && stakes.isNotEmpty
-            ? 'Cash Game $stakes'
-            : 'Cash Game';
+            ? AppLocalizations.of(context).createEventDefaultCashGame(stakes)
+            : AppLocalizations.of(context).createEventDefaultCashGameNoStakes;
       }
 
       if (_isEditMode) {
@@ -393,7 +394,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           ),
           // Title
           Text(
-            _isEditMode ? 'Edit Event' : 'New Event',
+            _isEditMode ? AppLocalizations.of(context).eventEditTitle : AppLocalizations.of(context).eventNewTitle,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 17,
@@ -459,15 +460,15 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             _buildCardTextField(
               controller: _nameController,
               hint: _gameType == 'cash'
-                  ? 'Event Name (optional)'
-                  : 'Event Name',
+                  ? AppLocalizations.of(context).eventNameOptional
+                  : AppLocalizations.of(context).eventNameLabel,
               showError: _isFieldEmpty(_nameController),
             ),
             _buildSeparator(),
             // Buy-in / Stakes
             _buildCardTextField(
               controller: _buyInController,
-              hint: _gameType == 'cash' ? 'Stakes (e.g. 1/2)' : 'Buy-in amount',
+              hint: _gameType == 'cash' ? AppLocalizations.of(context).eventStakesHint : AppLocalizations.of(context).eventBuyInAmount,
               keyboardType: _gameType == 'cash'
                   ? TextInputType.text
                   : const TextInputType.numberWithOptions(decimal: true),
@@ -480,7 +481,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             // Starting Stack / Min Buy-in
             _buildCardTextField(
               controller: _startingStackController,
-              hint: _gameType == 'cash' ? 'Min Buy-in (\$)' : 'Starting stack',
+              hint: _gameType == 'cash' ? AppLocalizations.of(context).eventMinBuyIn : AppLocalizations.of(context).eventStartingStack,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
               showError: _isFieldEmpty(_startingStackController),
@@ -504,7 +505,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Game Type',
+              AppLocalizations.of(context).eventGameType,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 17,
@@ -517,9 +518,9 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             const SizedBox(height: 16),
             Row(
               children: [
-                _buildGameTypePill('Tournament', 'tournament'),
+                _buildGameTypePill(AppLocalizations.of(context).eventTournament, 'tournament'),
                 const SizedBox(width: 8),
-                _buildGameTypePill('Cash Game', 'cash'),
+                _buildGameTypePill(AppLocalizations.of(context).eventCashGame, 'cash'),
               ],
             ),
           ],
@@ -567,7 +568,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Event Date and Time',
+              AppLocalizations.of(context).eventDateAndTime,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 17,
@@ -581,7 +582,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             Row(
               children: [
                 Text(
-                  'Starts',
+                  AppLocalizations.of(context).eventStarts,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 17,
@@ -653,7 +654,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Tables',
+                  AppLocalizations.of(context).eventTables,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 17,
@@ -674,8 +675,8 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                     },
                     child: Text(
                       _selectedTableIds.length == _availableTables.length
-                          ? 'Deselect All'
-                          : 'Select All',
+                          ? AppLocalizations.of(context).eventDeselectAll
+                          : AppLocalizations.of(context).eventSelectAll,
                       style: GoogleFonts.ibmPlexSans(
                         color: const Color(0xFF89F1EC),
                         fontSize: 13,
@@ -705,8 +706,8 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             else if (_availableTables.isEmpty)
               Text(
                 _totalTablesCount > 0
-                    ? 'All tables are in use by running events'
-                    : 'No tables configured yet',
+                    ? AppLocalizations.of(context).eventAllTablesInUse
+                    : AppLocalizations.of(context).eventNoTablesConfigured,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFF8C8C8C),
                   fontSize: 15,
@@ -785,7 +786,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: _buildCardTextField(
           controller: _descriptionController,
-          hint: 'Description',
+          hint: AppLocalizations.of(context).eventDescriptionLabel,
           maxLines: null,
           minLines: 3,
         ),
@@ -823,7 +824,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Notify Members',
+                    AppLocalizations.of(context).eventNotifyMembers,
                     style: GoogleFonts.ibmPlexSans(
                       color: Colors.white,
                       fontSize: 17,
@@ -832,7 +833,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
                     ),
                   ),
                   Text(
-                    'Send notification to all club members',
+                    AppLocalizations.of(context).eventNotifyMembersSubtitle,
                     style: GoogleFonts.ibmPlexSans(
                       color: const Color(0xFF8C8C8C),
                       fontSize: 13,
@@ -880,7 +881,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
             ),
             const SizedBox(width: 8),
             Text(
-              'Delete Event',
+              AppLocalizations.of(context).eventDeleteEvent,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 17,
                 color: const Color(0xFFFF4444),
@@ -903,14 +904,14 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           borderRadius: BorderRadius.circular(18),
         ),
         title: Text(
-          'Delete Event?',
+          AppLocalizations.of(context).eventDeleteConfirmTitle,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
-          'This will permanently delete this event and notify all members. This action cannot be undone.',
+          AppLocalizations.of(context).eventDeleteConfirmBody,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white.withOpacity(0.7),
           ),
@@ -919,7 +920,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(context).commonCancel,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withOpacity(0.5),
               ),
@@ -931,7 +932,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
               foregroundColor: const Color(0xFFFF4444),
             ),
             child: Text(
-              'Delete',
+              AppLocalizations.of(context).commonDelete,
               style: GoogleFonts.ibmPlexSans(
                 fontWeight: FontWeight.w600,
               ),
@@ -951,7 +952,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to delete event: $e'),
+              content: Text(AppLocalizations.of(context).eventDeleteFailed('$e')),
               backgroundColor: const Color(0xFFFF4444),
             ),
           );

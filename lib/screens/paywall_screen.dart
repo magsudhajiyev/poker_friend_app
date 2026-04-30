@@ -1,11 +1,13 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/spacing.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../services/subscription_service.dart';
+import 'trial_confirmation_screen.dart';
 
 /// Paywall screen for displaying subscription options.
 ///
@@ -51,14 +53,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Purchases restored'),
+          content: Text(AppLocalizations.of(context).paywallPurchasesRestored),
           backgroundColor: AppColors.limeGreen.withOpacity(0.2),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No previous purchases found'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).paywallNoPreviousPurchases),
         ),
       );
     }
@@ -67,8 +69,26 @@ class _PaywallScreenState extends State<PaywallScreen> {
   void _showComingSoon(String tierLabel) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$tierLabel subscriptions coming soon'),
+        content: Text(AppLocalizations.of(context).paywallComingSoon(tierLabel)),
         duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showTrialConfirmation({
+    required String tierLabel,
+    required Color accentColor,
+    required String monthlyPrice,
+    required String annualPrice,
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => TrialConfirmationScreen(
+          tierLabel: tierLabel,
+          accentColor: accentColor,
+          monthlyPrice: monthlyPrice,
+          annualPrice: annualPrice,
+        ),
       ),
     );
   }
@@ -91,22 +111,28 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 _buildTopBar(),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      AppSpacing.md,
-                      horizontalPadding,
-                      AppSpacing.bottomPadding,
+                    padding: EdgeInsets.only(
+                      top: AppSpacing.md,
+                      bottom: AppSpacing.bottomPadding,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildHeader(),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                          ),
+                          child: _buildHeader(),
+                        ),
                         SizedBox(height: AppSpacing.xxxl),
-                        _buildProTierCard(),
-                        SizedBox(height: AppSpacing.md),
-                        _buildClubTierCard(),
+                        _buildTierCarousel(),
                         SizedBox(height: AppSpacing.xl),
-                        _buildLegalFooter(),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                          ),
+                          child: _buildLegalFooter(),
+                        ),
                       ],
                     ),
                   ),
@@ -120,6 +146,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Widget _buildTopBar() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -144,7 +171,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     ),
                   )
                 : Text(
-                    'Restore',
+                    l10n.paywallRestore,
                     style: AppTypography.bodyMedium(
                       color: AppColors.textSecondary,
                     ).copyWith(fontWeight: FontWeight.w500),
@@ -156,18 +183,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     final title = widget.featureName != null
-        ? 'Unlock ${widget.featureName}'
-        : 'Go Premium';
+        ? l10n.paywallUnlockFeature(widget.featureName!)
+        : l10n.paywallGoPremium;
     final subtitle = widget.featureName != null
-        ? 'This feature is part of Final Table Premium. Pick a plan that fits how you play.'
-        : 'Unlock everything Final Table has to offer. Track more hands, analyze your game, run your club.';
+        ? l10n.paywallFeatureSubtitle
+        : l10n.paywallGeneralSubtitle;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'FINAL TABLE PREMIUM',
+          l10n.paywallTitle,
           style: AppTypography.sectionHeader(),
         ),
         SizedBox(height: AppSpacing.xs),
@@ -186,55 +214,129 @@ class _PaywallScreenState extends State<PaywallScreen> {
     );
   }
 
+  Widget _buildTierCarousel() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 28.0);
+    final cardWidth = screenWidth * 0.78;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      clipBehavior: Clip.none,
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: cardWidth,
+              child: _buildProTierCard(),
+            ),
+            SizedBox(width: AppSpacing.md),
+            SizedBox(
+              width: cardWidth,
+              child: _buildEliteTierCard(),
+            ),
+            SizedBox(width: AppSpacing.md),
+            SizedBox(
+              width: cardWidth,
+              child: _buildClubTierCard(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildProTierCard() {
+    final l10n = AppLocalizations.of(context);
     return _TierCard(
-      tierLabel: 'PRO',
+      tierLabel: l10n.paywallProTier,
       accentColor: AppColors.buttonPrimary, // mint
-      trialBadge: '7-day free trial',
-      tagline: 'Everything you need to master your game.',
-      features: const [
-        'Unlimited hand logging',
-        'Full session history',
-        'AI hand analysis',
-        'Export hands to CSV',
+      trialBadge: l10n.paywallFreeTrialBadge,
+      tagline: l10n.paywallProDescription,
+      features: [
+        l10n.paywallUnlimitedHandLogging,
+        l10n.paywallFullSessionHistory,
+        l10n.paywallAiHandAnalysis,
+        l10n.paywallExportHandsCsv,
       ],
-      monthlyPrice: '\$29.99/mo',
-      annualPrice: '\$249.99/yr',
-      ctaLabel: 'Start 7-Day Free Trial',
+      monthlyPrice: l10n.paywallProMonthly,
+      annualPrice: l10n.paywallProYearly,
+      ctaLabel: l10n.paywallStartFreeTrial,
       ctaBackgroundColor: Colors.white,
       ctaTextColor: Colors.black,
       isHighlighted: true,
-      onTap: () => _showComingSoon('Pro'),
+      onTap: () => _showTrialConfirmation(
+        tierLabel: l10n.paywallProTier,
+        accentColor: AppColors.buttonPrimary,
+        monthlyPrice: l10n.paywallProMonthly,
+        annualPrice: l10n.paywallProYearly,
+      ),
+    );
+  }
+
+  Widget _buildEliteTierCard() {
+    final l10n = AppLocalizations.of(context);
+    return _TierCard(
+      tierLabel: l10n.paywallEliteTier,
+      accentColor: const Color(0xFFFFD700), // gold
+      trialBadge: null,
+      tagline: l10n.paywallEliteDescription,
+      features: [
+        l10n.paywallEverythingInProElite,
+        l10n.paywallEliteFeature1,
+        l10n.paywallEliteFeature2,
+        l10n.paywallEliteFeature3,
+      ],
+      monthlyPrice: l10n.paywallEliteMonthly,
+      annualPrice: l10n.paywallEliteYearly,
+      ctaLabel: l10n.paywallGetElite,
+      ctaBackgroundColor: const Color(0xFFFFD700),
+      ctaTextColor: Colors.black,
+      isHighlighted: false,
+      onTap: () => _showTrialConfirmation(
+        tierLabel: l10n.paywallEliteTier,
+        accentColor: const Color(0xFFFFD700),
+        monthlyPrice: l10n.paywallEliteMonthly,
+        annualPrice: l10n.paywallEliteYearly,
+      ),
     );
   }
 
   Widget _buildClubTierCard() {
+    final l10n = AppLocalizations.of(context);
     return _TierCard(
-      tierLabel: 'CLUB',
+      tierLabel: l10n.paywallClubTier,
       accentColor: AppColors.limeGreen,
       trialBadge: null,
-      tagline: 'For home games, clubs, and live venues.',
-      features: const [
-        'Everything in Pro',
-        'Club management & member roles',
-        'Live dealer voice logging',
-        'Multi-table events with rankings',
+      tagline: l10n.paywallClubDescription,
+      features: [
+        l10n.paywallEverythingInPro,
+        l10n.paywallClubManagement,
+        l10n.paywallLiveDealerVoice,
+        l10n.paywallMultiTableEvents,
       ],
-      monthlyPrice: '\$39.99/mo',
-      annualPrice: '\$299.99/yr',
-      ctaLabel: 'Get Club',
+      monthlyPrice: l10n.paywallClubMonthly,
+      annualPrice: l10n.paywallClubYearly,
+      ctaLabel: l10n.paywallGetClub,
       ctaBackgroundColor: AppColors.limeGreen,
       ctaTextColor: Colors.black,
       isHighlighted: false,
-      onTap: () => _showComingSoon('Club'),
+      onTap: () => _showTrialConfirmation(
+        tierLabel: l10n.paywallClubTier,
+        accentColor: AppColors.limeGreen,
+        monthlyPrice: l10n.paywallClubMonthly,
+        annualPrice: l10n.paywallClubYearly,
+      ),
     );
   }
 
   Widget _buildLegalFooter() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         Text(
-          'Subscriptions auto-renew. Cancel anytime from your account settings.',
+          l10n.paywallDisclaimer,
           style: AppTypography.bodySmall(
             color: Colors.white.withOpacity(0.5),
           ),
@@ -245,7 +347,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _FooterLink(
-              label: 'Terms',
+              label: l10n.paywallTerms,
               onTap: () {
                 // TODO: link to ToS page (Week 2 task)
               },
@@ -257,7 +359,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
             ),
             _FooterLink(
-              label: 'Privacy',
+              label: l10n.paywallPrivacy,
               onTap: () {
                 // TODO: link to privacy policy page (Week 2 task)
               },
@@ -517,9 +619,12 @@ class _TierCard extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              ctaLabel,
-              style: AppTypography.buttonText(color: ctaTextColor),
+            Flexible(
+              child: Text(
+                ctaLabel,
+                style: AppTypography.buttonText(color: ctaTextColor),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             Icon(
               Icons.arrow_forward,

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../widgets/poker_table_widget.dart';
 import '../../models/seat_assignment.dart';
 import '../../models/dealer_session.dart';
@@ -256,11 +257,12 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
   void _showHandResult(Map<String, dynamic> data) {
     final winnerSeat = data['winner_seat'];
     final potAmount = data['pot_amount'];
-    final winnerName = _seats[winnerSeat]?.playerName ?? 'Seat $winnerSeat';
+    final l10n = AppLocalizations.of(context);
+    final winnerName = _seats[winnerSeat]?.playerName ?? l10n.liveSessionSeat(winnerSeat);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$winnerName wins \$$potAmount'),
+        content: Text(l10n.liveSessionWinnerSummary(winnerName, potAmount.toString())),
         backgroundColor: Colors.green.shade700,
         duration: const Duration(seconds: 3),
       ),
@@ -271,15 +273,17 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
         backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text(
-          'Session Ended',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          l10n.liveSessionSessionEnded,
+          style: const TextStyle(color: Colors.white),
         ),
-        content: const Text(
-          'The dealer has ended this session.',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          l10n.liveSessionSessionEndedBody,
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
@@ -287,35 +291,37 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('OK'),
+            child: Text(l10n.commonOk),
           ),
         ],
-      ),
+      );
+      },
     );
   }
 
   Future<void> _leaveTable() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text(
-          'Leave Table?',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          l10n.liveSessionLeaveTitle,
+          style: const TextStyle(color: Colors.white),
         ),
-        content: const Text(
-          'Are you sure you want to leave this table?',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          l10n.liveSessionLeaveBody,
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Leave'),
+            child: Text(l10n.liveSessionLeave),
           ),
         ],
       ),
@@ -335,7 +341,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to leave: ${e.toString()}'),
+              content: Text(l10n.liveSessionLeaveFailed(e.toString())),
               backgroundColor: Colors.red.shade700,
             ),
           );
@@ -371,7 +377,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
           IconButton(
             icon: const Icon(Icons.exit_to_app),
             onPressed: _leaveTable,
-            tooltip: 'Leave Table',
+            tooltip: AppLocalizations.of(context).liveSessionLeaveTooltip,
           ),
         ],
       ),
@@ -401,7 +407,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Go Back'),
+              child: Text(AppLocalizations.of(context).commonBack),
             ),
           ],
         ),
@@ -432,6 +438,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
   }
 
   Widget _buildPotDisplay() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       color: const Color(0xFF161B22),
@@ -442,7 +449,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
           Column(
             children: [
               Text(
-                'HAND',
+                l10n.liveSessionHand,
                 style: TextStyle(
                   color: Colors.purple.withValues(alpha: 0.7),
                   fontSize: 10,
@@ -463,7 +470,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
           Column(
             children: [
               Text(
-                'POT',
+                l10n.liveSessionPot,
                 style: TextStyle(
                   color: Colors.amber.withValues(alpha: 0.7),
                   fontSize: 10,
@@ -484,7 +491,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
           Column(
             children: [
               Text(
-                'STATUS',
+                l10n.liveSessionStatus,
                 style: TextStyle(
                   color: (_isHandActive ? Colors.green : Colors.grey).withValues(alpha: 0.7),
                   fontSize: 10,
@@ -492,7 +499,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                 ),
               ),
               Text(
-                _isHandActive ? 'LIVE' : 'WAITING',
+                _isHandActive ? l10n.liveSessionLive : l10n.liveSessionWaiting,
                 style: TextStyle(
                   color: _isHandActive ? Colors.green : Colors.grey,
                   fontSize: 16,
@@ -545,7 +552,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
               shadows: [Shadow(color: Colors.black, blurRadius: 4)],
             ),
           ),
-          const Text('POT', style: TextStyle(color: Colors.white70, fontSize: 12)),
+          Text(AppLocalizations.of(context).liveSessionPot, style: const TextStyle(color: Colors.white70, fontSize: 12)),
         ],
       ),
     );
@@ -639,9 +646,9 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.black, width: 2),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  'D',
+                  AppLocalizations.of(context).liveSessionD,
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 10,
@@ -671,12 +678,12 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.history, color: Colors.white54, size: 18),
-              SizedBox(width: 8),
+              const Icon(Icons.history, color: Colors.white54, size: 18),
+              const SizedBox(width: 8),
               Text(
-                'Recent Actions',
+                AppLocalizations.of(context).liveSessionRecentActions,
                 style: TextStyle(
                   color: Colors.white70,
                   fontWeight: FontWeight.bold,
@@ -687,9 +694,9 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
           const Divider(color: Colors.white12),
           Expanded(
             child: _recentActions.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
-                      'Waiting for action...',
+                      AppLocalizations.of(context).liveSessionWaitingForAction,
                       style: TextStyle(color: Colors.white38),
                     ),
                   )
@@ -711,7 +718,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
     final seatNumber = action['seat_number'];
     final actionType = action['action'];
     final amount = action['amount'];
-    final playerName = _seats[seatNumber]?.playerName ?? 'Seat $seatNumber';
+    final playerName = _seats[seatNumber]?.playerName ?? AppLocalizations.of(context).liveSessionSeat(seatNumber);
 
     String actionText = '$playerName $actionType';
     if (amount != null && amount > 0) {
@@ -749,6 +756,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
   }
 
   Widget _buildMySeatInfo() {
+    final l10n = AppLocalizations.of(context);
     final mySeat = _seats[widget.seatNumber];
     final myStack = mySeat?.chipStack ?? 0;
 
@@ -785,8 +793,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Your Seat',
+                  Text(
+                    l10n.liveSessionYourSeat,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -794,7 +802,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                     ),
                   ),
                   Text(
-                    myStack > 0 ? 'Stack: ${formatCompactCurrency(myStack)}' : 'Waiting for dealer...',
+                    myStack > 0 ? l10n.liveSessionStack(formatCompactCurrency(myStack)) : l10n.liveSessionWaitingForDealer,
                     style: TextStyle(
                       color: myStack > 0 ? Colors.greenAccent : Colors.white54,
                       fontSize: 14,
@@ -829,7 +837,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    _dealerSession != null ? 'LIVE' : 'OFFLINE',
+                    _dealerSession != null ? l10n.liveSessionLive : l10n.liveSessionOffline,
                     style: TextStyle(
                       color: _dealerSession != null ? Colors.green : Colors.grey,
                       fontSize: 12,

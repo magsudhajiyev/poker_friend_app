@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../design_system/constants/typography.dart';
+import '../l10n/app_localizations.dart';
 import 'onboarding_state.dart';
 
 /// Thin progress bar shown at the top of screens during onboarding.
@@ -44,7 +45,7 @@ class OnboardingProgressBar extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Step ${phase + 1} of $total',
+                AppLocalizations.of(context).onboardingStepOf(phase + 1, total),
                 style: AppTypography.bodySmall(
                   color: Colors.white.withOpacity(0.54),
                 ).copyWith(fontSize: 11),

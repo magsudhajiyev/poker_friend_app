@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
+import '../l10n/app_localizations.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/design_system.dart';
 import '../widgets/drawing_painter.dart';
@@ -514,6 +515,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   Future<void> _handleTableChange() async {
+    final l10n = AppLocalizations.of(context);
     // Get hero's current stack to carry over
     final heroSeat = sessionManager.ourSeatNumber;
     final heroStack = heroSeat != null ? gameState.getPlayerStack(heroSeat) : 0.0;
@@ -524,21 +526,21 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A1E),
         title: Text(
-          'Change Table',
+          l10n.handChangeTable,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Moving to Table ${sessionManager.currentTableNumber + 1}. Your stack (${gameState.formatCurrency(heroStack)}) will carry over. Other players will be cleared.',
+          l10n.pokerHandMovingToTable(sessionManager.currentTableNumber + 1, gameState.formatCurrency(heroStack)),
           style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+            child: Text(l10n.commonCancel, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Change Table', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
+            child: Text(l10n.handChangeTable, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
           ),
         ],
       ),
@@ -581,6 +583,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   Future<void> _stopSession() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -625,7 +628,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Stop Session?',
+                  l10n.handStopSessionTitle,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 17,
@@ -635,7 +638,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Are you sure you want to stop this session? All hands will be saved.',
+                  l10n.handStopSessionMessage,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ibmPlexSans(
                     color: const Color(0xFF8C8C8C),
@@ -657,7 +660,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           ),
                           child: Center(
                             child: Text(
-                              'Cancel',
+                              l10n.commonCancel,
                               style: GoogleFonts.ibmPlexSans(
                                 color: Colors.white,
                                 fontSize: 17,
@@ -682,7 +685,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           ),
                           child: Center(
                             child: Text(
-                              'Stop',
+                              l10n.handStop,
                               style: GoogleFonts.ibmPlexSans(
                                 color: Colors.black,
                                 fontSize: 17,
@@ -735,7 +738,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to end session: $e'),
+            content: Text(AppLocalizations.of(context).pokerHandFailedEndSession(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -905,6 +908,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   Future<void> _showBlindsEditDialog() async {
+    final l10n = AppLocalizations.of(context);
     final sbController = TextEditingController(text: gameState.smallBlind.toString());
     final bbController = TextEditingController(text: gameState.bigBlind.toString());
 
@@ -915,7 +919,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         backgroundColor: const Color(0xFF161618),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Blinds',
+          l10n.handBlinds,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -927,7 +931,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Takes effect next hand',
+              l10n.handTakesEffectNextHand,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 12,
                 color: Colors.white.withValues(alpha: 0.4),
@@ -1002,7 +1006,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: Text(
-                'Apply',
+                l10n.commonApply,
                 style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.black),
               ),
             ),
@@ -1076,6 +1080,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   /// Shows confirmation dialog when user tries to navigate away from active session
   /// Returns: 'save' to save and exit, 'discard' to exit without saving, null to cancel
   Future<String?> _showNavigationConfirmationDialog() async {
+    final l10n = AppLocalizations.of(context);
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
@@ -1086,12 +1091,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Leave Session?',
+            l10n.handLeaveSession,
             style: AppTypography.pageTitle().copyWith(fontSize: 20),
             textAlign: TextAlign.center,
           ),
           content: Text(
-            'You have an active session with ${sessionManager.completedHands.length} hand(s) logged. What would you like to do?',
+            l10n.pokerHandActiveSessionMsg(sessionManager.completedHands.length),
             textAlign: TextAlign.center,
             style: AppTypography.bodySmall(
               color: Colors.white.withOpacity(0.7),
@@ -1110,7 +1115,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: Text(
-                    'Save & Exit',
+                    l10n.handSaveAndExit,
                     style: AppTypography.bodyLarge(
                       color: AppColors.buttonPrimary,
                     ).copyWith(fontWeight: FontWeight.w600),
@@ -1124,7 +1129,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: Text(
-                    'Discard & Exit',
+                    l10n.handDiscardAndExit,
                     style: AppTypography.bodyLarge(
                       color: const Color(0xFFFF4444),
                     ).copyWith(fontWeight: FontWeight.w600),
@@ -1138,7 +1143,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: Text(
-                    'Cancel',
+                    l10n.commonCancel,
                     style: AppTypography.bodyLarge(
                       color: Colors.white.withOpacity(0.5),
                     ),
@@ -1193,7 +1198,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save session: $e'),
+            content: Text(AppLocalizations.of(context).pokerHandFailedSaveSession(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -1246,6 +1251,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   void _showAdjustStackDialog() {
+    final l10n = AppLocalizations.of(context);
     final player = gameState.currentPlayer;
     final currentStack = gameState.getPlayerStack(player);
     final controller = TextEditingController(text: currentStack.toStringAsFixed(0));
@@ -1255,7 +1261,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A1E),
         title: Text(
-          'Adjust Stack',
+          l10n.handAdjustStack,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: TextField(
@@ -1264,7 +1270,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           autofocus: true,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
           decoration: InputDecoration(
-            hintText: 'Enter stack amount',
+            hintText: l10n.handEnterStackAmount,
             hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             enabledBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF62E3BC)),
@@ -1277,7 +1283,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+            child: Text(l10n.commonCancel, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
           ),
           TextButton(
             onPressed: () {
@@ -1289,7 +1295,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               }
               Navigator.pop(ctx);
             },
-            child: Text('Update', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
+            child: Text(l10n.commonUpdate, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
           ),
         ],
       ),
@@ -1330,8 +1336,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    
+
     final screenWidth = MediaQuery.of(context).size.width;
 
     return PopScope(
@@ -1373,7 +1380,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to save session: $e'),
+                      content: Text(AppLocalizations.of(context).pokerHandFailedSaveSession(e.toString())),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -1456,7 +1463,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hand #${gameState.handNumber}',
+                              l10n.handHandNumber(gameState.handNumber),
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 27,
                                 color: Colors.white,
@@ -1477,7 +1484,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                 final handsUsed = sessionManager
                                     .completedHands.length;
                                 final subtitle = showFreeCounter
-                                    ? '$baseSubtitle • $handsUsed/${FreeTierLimits.maxHandsPerSession} free'
+                                    ? '$baseSubtitle • ${l10n.handFreeCounter(handsUsed, FreeTierLimits.maxHandsPerSession)}'
                                     : baseSubtitle;
                                 return Text(
                                   subtitle,
@@ -1513,7 +1520,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               ),
                               child: Center(
                                 child: Text(
-                                  'Next Hand',
+                                  l10n.handNextHand,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 13,
                                     color: Colors.white.withValues(alpha: 0.8),
@@ -1751,7 +1758,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               borderRadius: BorderRadius.circular(40),
                             ),
                             child: Text(
-                              'Street Complete',
+                              l10n.handStreetComplete,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 15,
                                 color: Colors.black,
@@ -1797,7 +1804,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'wins ${_settlingPotAmount != null ? '${widget.gameType == GameType.cash ? '\$' : ''}${_settlingPotAmount!.toStringAsFixed(0)}' : 'the pot'}',
+                                    'wins ${_settlingPotAmount != null ? '${widget.gameType == GameType.cash ? '\$' : ''}${_settlingPotAmount!.toStringAsFixed(0)}' : l10n.handWinsThePot}',
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 16,
                                       color: Colors.white.withValues(alpha: 0.7),
@@ -1806,7 +1813,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   ),
                                 ] else
                                   Text(
-                                    'Hand Complete',
+                                    l10n.handHandComplete,
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 20,
                                       color: const Color(0xFF62E3BC),
@@ -1815,7 +1822,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   ),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'Tap to continue',
+                                  l10n.handTapToContinue,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 13,
                                     color: Colors.white.withValues(alpha: 0.4),
@@ -1867,7 +1874,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           ),
                           child: Center(
                             child: Text(
-                              'Folded to me',
+                              l10n.handFoldedToMe,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 17,
                                 color: Colors.black,
@@ -1897,7 +1904,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           ),
                           child: Center(
                             child: Text(
-                              'Next Hand',
+                              l10n.handNextHand,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 17,
                                 color: Colors.white.withValues(alpha: 0.8),
@@ -1933,7 +1940,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       _buildIcon('icons/figma_icons/undo.svg', 24, Colors.black),
                       SizedBox(width: 8),
                       Text(
-                        'Undo Last Action',
+                        l10n.handUndoLastAction,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           color: Colors.black,
@@ -1967,7 +1974,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       Icon(Icons.casino, color: Color(0xFF62E3BC), size: 24),
                       SizedBox(width: 12),
                       Text(
-                        'ALL IN HAND',
+                        l10n.handAllInHand,
                         style: GoogleFonts.ibmPlexSans(
                           color: Colors.white,
                           fontSize: 18,
@@ -1990,11 +1997,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               : Row(
                   key: _potInfoKey,
                   children: [
-                    Expanded(child: _buildInfoCard('Pot', gameState.formatCurrency(gameState.currentPot))),
+                    Expanded(child: _buildInfoCard(l10n.handPot, gameState.formatCurrency(gameState.currentPot))),
                     SizedBox(width: 8),
                     Expanded(child: _buildStackInfoCard()),
                     SizedBox(width: 8),
-                    Expanded(child: _buildInfoCard('To Act', _getCurrentPlayerNameSafely())),
+                    Expanded(child: _buildInfoCard(l10n.handToAct, _getCurrentPlayerNameSafely())),
                   ],
                 ),
           ),
@@ -2119,6 +2126,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   Widget _buildMenuOverlay() {
+    final l10n = AppLocalizations.of(context);
     // Get the position of the menu button
     final RenderBox? renderBox = _menuButtonKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return SizedBox.shrink();
@@ -2146,7 +2154,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               children: [
                 _buildMenuItem(
                   icon: 'icons/figma_icons/info.svg',
-                  label: 'Gesture Guide',
+                  label: l10n.handGestureGuide,
                   onTap: () {
                     setState(() {
                       _showMenuOverlay = false;
@@ -2159,7 +2167,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 SizedBox(height: 12),
                 _buildMenuItem(
                   icon: 'icons/figma_icons/menu_players.svg',
-                  label: 'Manage Players',
+                  label: l10n.handManagePlayers,
                   onTap: () {
                     setState(() => _showMenuOverlay = false);
                     _managePlayersDialog();
@@ -2170,7 +2178,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 SizedBox(height: 12),
                 _buildMenuItem(
                   icon: 'icons/figma_icons/forward.svg',
-                  label: 'Change Table',
+                  label: l10n.handChangeTable,
                   onTap: () {
                     setState(() => _showMenuOverlay = false);
                     _handleTableChange();
@@ -2183,7 +2191,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                   SizedBox(height: 12),
                   _buildMenuItem(
                     icon: 'icons/figma_icons/plus.svg',
-                    label: 'Rebuy',
+                    label: l10n.handRebuy,
                     onTap: () {
                       setState(() => _showMenuOverlay = false);
                       _showRebuyDialog();
@@ -2196,7 +2204,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 SizedBox(height: 12),
                 _buildMenuItem(
                   icon: 'icons/figma_icons/menu_stop.svg',
-                  label: 'Stop Session',
+                  label: l10n.handStopSession,
                   onTap: () {
                     setState(() => _showMenuOverlay = false);
                     _stopSession();
@@ -2262,6 +2270,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   // === Info Card (simple dark card) ===
 
   Widget _buildStackInfoCard() {
+    final l10n = AppLocalizations.of(context);
     final confidence = _getCurrentPlayerStackConfidence();
     final isHero = gameState.currentPlayer == sessionManager.ourSeatNumber;
     final currentPlayer = gameState.currentPlayer;
@@ -2276,7 +2285,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Stack',
+            l10n.handStack,
             style: GoogleFonts.ibmPlexSans(
               color: const Color(0xFF8C8C8C),
               fontSize: 13,
@@ -2494,6 +2503,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   Widget _buildGestureTooltip() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -2505,7 +2515,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Gestures',
+            l10n.handGestures,
             style: TextStyle(
               fontFamily: 'Inter',
               fontWeight: FontWeight.w400,
@@ -2521,13 +2531,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             width: 140,
             child: Column(
               children: [
-                _buildGestureRow('Tap', 'Check / Call'),
+                _buildGestureRow(l10n.handGestureTap, l10n.handGestureCheckCall),
                 Container(height: 0.5, color: Color(0xFF555555)),
                 SizedBox(height: 6),
-                _buildGestureRow('Swipe Out', 'Fold'),
+                _buildGestureRow(l10n.handGestureSwipeOut, 'Fold'),
                 Container(height: 0.5, color: Color(0xFF555555)),
                 SizedBox(height: 6),
-                _buildGestureRow('Swipe Up', 'Bet / Raise'),
+                _buildGestureRow(l10n.handGestureSwipeUp, l10n.handGestureBetRaise),
               ],
             ),
           ),
@@ -2811,6 +2821,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   // ─── CLASSIC DRAWING GESTURE HANDLERS ───────��─────────────────
 
   Future<double?> _showBetAmountDialog(PlayerAction action) async {
+    final l10n = AppLocalizations.of(context);
     final currentPlayer = gameState.getCurrentPlayer();
     if (currentPlayer == null) return null;
 
@@ -2863,7 +2874,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                   child: Column(
                     children: [
                       Text(
-                        action == PlayerAction.raise ? 'Raise Amount' : 'Bet Amount',
+                        action == PlayerAction.raise ? l10n.handRaiseAmount : l10n.handBetAmount,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           color: Colors.white,
@@ -2872,7 +2883,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Min: ${widget.gameType == GameType.cash ? '\$${effectiveMinBet.toStringAsFixed(2)}' : effectiveMinBet.toInt()} · Max: ${widget.gameType == GameType.cash ? '\$${maxBet.toStringAsFixed(2)}' : maxBet.toInt()}',
+                        l10n.pokerHandBetRange(
+                          widget.gameType == GameType.cash ? '\$${effectiveMinBet.toStringAsFixed(2)}' : effectiveMinBet.toInt().toString(),
+                          widget.gameType == GameType.cash ? '\$${maxBet.toStringAsFixed(2)}' : maxBet.toInt().toString(),
+                        ),
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 13,
                           color: const Color(0xFF8C8C8C),
@@ -2955,7 +2969,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Amount must be between ${effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)} and ${maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
+                                    l10n.pokerHandAmountBetween(
+                              effectiveMinBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0),
+                              maxBet.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0),
+                            ),
                                   ),
                                   backgroundColor: Colors.red,
                                 ),
@@ -2965,7 +2982,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Please enter a valid number'),
+                                content: Text(l10n.handPleaseEnterValidNumber),
                                 backgroundColor: Colors.red,
                               ),
                             );
@@ -3006,7 +3023,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           ),
                           child: Center(
                             child: Text(
-                              'Cancel',
+                              l10n.commonCancel,
                               style: GoogleFonts.ibmPlexSans(
                                 color: Colors.white,
                                 fontSize: 17,
@@ -3187,12 +3204,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           color: const Color(0xFFD55A41),
           borderRadius: BorderRadius.circular(40),
         ),
-        child: Text(
-          'All-In',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+        child: Builder(
+          builder: (context) => Text(
+            AppLocalizations.of(context).pokerHandAllInAction,
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -3289,6 +3308,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   Future<void> _skipCurrentAction() async {
+    final l10n = AppLocalizations.of(context);
     // If actions have been taken in this hand, confirm before discarding
     final hasActions = sessionManager.currentHand?.actions.isNotEmpty == true;
     if (hasActions) {
@@ -3300,14 +3320,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             borderRadius: BorderRadius.circular(18),
           ),
           title: Text(
-            'Hand in Progress',
+            l10n.handHandInProgress,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
           content: Text(
-            'There\'s a hand in progress. Moving to the next hand will discard all actions and restore player stacks.',
+            l10n.handHandInProgressMessage,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white.withOpacity(0.7),
             ),
@@ -3316,7 +3336,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(
-                'Cancel',
+                l10n.commonCancel,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white.withOpacity(0.5),
                 ),
@@ -3328,7 +3348,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                 foregroundColor: const Color(0xFF89F1EC),
               ),
               child: Text(
-                'Move to Next Hand',
+                l10n.handMoveToNextHand,
                 style: GoogleFonts.ibmPlexSans(
                   fontWeight: FontWeight.w600,
                 ),
@@ -3812,6 +3832,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
 
   void _showWinnerSelectionForAllIn() async {
+    final l10n = AppLocalizations.of(context);
     await LoggerService.info('🏆 _showWinnerSelectionForAllIn() called - Winner selection for all-in');
 
     // Get active players and their names
@@ -3888,6 +3909,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   void _processAllInWinnerResult(Map<String, dynamic> winnerResult) {
+    final l10n = AppLocalizations.of(context);
     LoggerService.info('💰 _processAllInWinnerResult() called - Processing all-in winner');
 
     // Check if this is a multi-pot scenario
@@ -3935,7 +3957,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           for (int potIndex = 0; potIndex < resultSidePots.length; potIndex++) {
             final potResult = potResults[potIndex]!;
             final sidePot = resultSidePots[potIndex];
-            final potName = potIndex == 0 ? 'Main Pot' : 'Side Pot $potIndex';
+            final potName = potIndex == 0 ? l10n.handMainPot : l10n.handSidePot(potIndex);
 
             if (potResult['isChoppedPot'] == true) {
               final winners = List<int>.from(potResult['winners']);
@@ -4198,6 +4220,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   // Navigate to session details screen
   Future<void> _showSessionDetails() async {
+    final l10n = AppLocalizations.of(context);
     // Get current stack for our seat
     // Try multiple sources to find the correct seat number
     int? ourSeat = sessionManager.ourSeatNumber;
@@ -4223,7 +4246,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       context,
       MaterialPageRoute(
         builder: (context) => IndividualSessionTrackingScreen(
-          sessionName: sessionManager.sessionName ?? 'Poker Session',
+          sessionName: sessionManager.sessionName ?? l10n.handPokerSession,
           buyInAmount: widget.buyInAmount ?? sessionManager.totalBuyIn, // Initial buy-in amount (money)
           startingStack: sessionManager.initialStartingStack ?? sessionManager.totalBuyIn, // Starting chips (MTT) or buy-in (cash)
           gameType: widget.gameType,
@@ -4281,6 +4304,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   // Confirmation dialog for rebuy when user has existing stack
   Future<bool?> _showRebuyConfirmationDialog(double currentStack) async {
+    final l10n = AppLocalizations.of(context);
     // Format stack value based on game type
     String formatStackValue(double value) {
       return widget.gameType == GameType.cash
@@ -4329,7 +4353,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         ),
                         SizedBox(width: 12),
                         Text(
-                          'Confirm Rebuy',
+                          l10n.handConfirmRebuy,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -4347,7 +4371,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'You currently have ${formatStackValue(currentStack)} remaining.',
+                          l10n.pokerHandCurrentlyHaveRemaining(formatStackValue(currentStack)),
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.7),
                             fontSize: 15,
@@ -4355,7 +4379,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         ),
                         SizedBox(height: 12),
                         Text(
-                          'Proceeding with a rebuy will replace your current stack. Are you sure you want to continue?',
+                          l10n.handRebuyReplaceStack,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,
@@ -4377,7 +4401,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                 child: TextButton(
                                   onPressed: () => Navigator.pop(context, false),
                                   child: Text(
-                                    'Cancel',
+                                    l10n.commonCancel,
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.6),
                                       fontSize: 14,
@@ -4409,7 +4433,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                     ),
                                   ),
                                   child: Text(
-                                    'Proceed',
+                                    l10n.handProceed,
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 14,
@@ -4434,6 +4458,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   }
 
   void _showRebuyDialog() async {
+    final l10n = AppLocalizations.of(context);
     if (widget.gameType != GameType.tournament) return;
 
     // Check if user has existing stack and confirm they want to lose it
@@ -4491,7 +4516,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           ),
                           SizedBox(width: 12),
                           Text(
-                            'Rebuy',
+                            l10n.handRebuy,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -4509,7 +4534,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Enter rebuy details for the tournament',
+                            l10n.handEnterRebuyDetails,
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.7),
                               fontSize: 14,
@@ -4529,7 +4554,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               keyboardType: TextInputType.numberWithOptions(decimal: true),
                               style: TextStyle(color: Colors.white, fontSize: 16),
                               decoration: InputDecoration(
-                                labelText: 'Rebuy Amount',
+                                labelText: l10n.handRebuyAmount,
                                 labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
                                 prefixText: '\$ ',
                                 prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
@@ -4553,9 +4578,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               keyboardType: TextInputType.numberWithOptions(decimal: true),
                               style: TextStyle(color: Colors.white, fontSize: 16),
                               decoration: InputDecoration(
-                                labelText: 'New Stack Size',
+                                labelText: l10n.handNewStackSize,
                                 labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                                hintText: 'Chip count after rebuy',
+                                hintText: l10n.handChipCountAfterRebuy,
                                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -4577,7 +4602,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Session Info',
+                                  l10n.handSessionInfo,
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 14,
@@ -4586,11 +4611,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  'Total Invested: \$${sessionManager.totalBuyIn.toStringAsFixed(2)}',
+                                  l10n.handTotalInvested(sessionManager.totalBuyIn.toStringAsFixed(2)),
                                   style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
                                 ),
                                 Text(
-                                  'Rebuys: ${sessionManager.getRebuyCount()}',
+                                  l10n.handRebuysCount(sessionManager.getRebuyCount()),
                                   style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
                                 ),
                               ],
@@ -4615,7 +4640,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                       Navigator.pop(context);
                                     },
                                     child: Text(
-                                      'Cancel',
+                                      l10n.commonCancel,
                                       style: TextStyle(
                                         color: Colors.white.withOpacity(0.6),
                                         fontSize: 14,
@@ -4662,7 +4687,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                         // Show confirmation
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('Rebuy added: \$${rebuyAmount.toStringAsFixed(2)} (Stack: ${stackSize.toStringAsFixed(0)})'),
+                                            content: Text(AppLocalizations.of(context).pokerHandRebuyAdded(rebuyAmount.toStringAsFixed(2), stackSize.toStringAsFixed(0))),
                                             backgroundColor: AppColors.gradientGreenEnd,
                                           ),
                                         );
@@ -4670,7 +4695,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                         // Show error
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('Please enter valid amounts'),
+                                            content: Text(l10n.handPleaseEnterValidAmounts),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -4684,7 +4709,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                       ),
                                     ),
                                     child: Text(
-                                      'Add Rebuy',
+                                      l10n.handAddRebuy,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
@@ -5252,7 +5277,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   Future<void> _showFreeTierGate() async {
     final upgradeTapped = await FreeTierLimits.showHandsLimitDialog(
       context,
-      dismissLabel: 'End session',
+      dismissLabel: AppLocalizations.of(context).pokerHandEndSession,
     );
     if (!mounted) return;
     if (upgradeTapped == true) {
@@ -5286,7 +5311,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to save session: $e'),
+          content: Text(AppLocalizations.of(context).pokerHandFailedSaveSession(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -5326,6 +5351,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   /// Internal function to show winner selection dialog and complete the hand.
   /// Only called by game logic (showdown, auto-completion), not by user action.
   void _showWinnerSelectionAndComplete() async {
+    final l10n = AppLocalizations.of(context);
     await LoggerService.info('═══ _showWinnerSelectionAndComplete() called ═══');
 
     // Save the pot amount BEFORE showing any dialogs
@@ -5460,7 +5486,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         for (int potIndex = 0; potIndex < resultSidePots.length; potIndex++) {
           final potResult = potResults[potIndex]!;
           final sidePot = resultSidePots[potIndex];
-          final potName = potIndex == 0 ? 'Main Pot' : 'Side Pot $potIndex';
+          final potName = potIndex == 0 ? l10n.handMainPot : l10n.handSidePot(potIndex);
 
           if (potResult['isChoppedPot'] == true) {
             final winners = List<int>.from(potResult['winners']);
@@ -6208,6 +6234,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
@@ -6247,7 +6274,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Choose an option:',
+              l10n.pokerHandChooseOption,
               textAlign: TextAlign.center,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF8C8C8C),
@@ -6271,7 +6298,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                   height: 1.44,
                 ),
                 decoration: InputDecoration(
-                  labelText: widget.isCashGame ? 'Rebuy Amount (\$)' : 'Rebuy Chips',
+                  labelText: widget.isCashGame ? AppLocalizations.of(context).pokerHandRebuyAmountDollar : AppLocalizations.of(context).pokerHandRebuyChips,
                   labelStyle: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 13,
@@ -6306,7 +6333,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                       ),
                       child: Center(
                         child: Text(
-                          'Rebuy',
+                          l10n.handRebuy,
                           style: GoogleFonts.ibmPlexSans(
                             color: Colors.white,
                             fontSize: 17,
@@ -6335,7 +6362,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                       ),
                       child: Center(
                         child: Text(
-                          'Leave',
+                          AppLocalizations.of(context).commonLeave,
                           style: GoogleFonts.ibmPlexSans(
                             color: Colors.black,
                             fontSize: 17,
@@ -6369,7 +6396,7 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
                 ),
                 child: Center(
                   child: Text(
-                    'Confirm',
+                    AppLocalizations.of(context).commonConfirm,
                     style: GoogleFonts.ibmPlexSans(
                       color: Colors.black,
                       fontSize: 17,

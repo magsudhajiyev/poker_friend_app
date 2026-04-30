@@ -16,6 +16,7 @@ import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/components/app_toggle.dart';
 import '../models/hand_state_machine.dart';
 import '../widgets/stack_growth_chart.dart';
+import '../l10n/app_localizations.dart';
 
 class IndividualSessionTrackingScreen extends StatefulWidget {
   final String sessionName;
@@ -207,8 +208,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Session created locally. Will sync to cloud when connection is available.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).individualSessionCreatedLocally),
             backgroundColor: Colors.orange,
           ),
         );
@@ -325,6 +326,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   // ─── Dialogs ───
 
   Future<void> _showUpdateStackDialog() async {
+    final l10n = AppLocalizations.of(context);
     final newStackController = TextEditingController(text: _currentStack.toString());
     final changeAmountController = TextEditingController();
 
@@ -336,7 +338,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           borderRadius: BorderRadius.circular(18),
         ),
         title: Text(
-          'Update Current Stack',
+          l10n.individualUpdateCurrentStack,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 20,
@@ -360,7 +362,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Current Stack:',
+                      l10n.individualCurrentStack,
                       style: GoogleFonts.ibmPlexSans(
                         color: Colors.white.withOpacity(0.5),
                         fontSize: 14,
@@ -381,7 +383,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               const SizedBox(height: 20),
 
               Text(
-                'Set New Total',
+                l10n.individualSetNewTotal,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 16,
@@ -394,7 +396,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                 decoration: InputDecoration(
-                  hintText: 'Enter new total stack',
+                  hintText: l10n.individualEnterNewTotalStack,
                   hintStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.3)),
                   prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
                   prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
@@ -411,7 +413,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               const SizedBox(height: 20),
 
               Text(
-                'Add/Subtract Amount',
+                l10n.individualAddSubtractAmount,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 16,
@@ -428,7 +430,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                       decoration: InputDecoration(
-                        hintText: 'Amount',
+                        hintText: l10n.individualAmount,
                         hintStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.3)),
                         prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
                         prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
@@ -493,7 +495,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
             ),
           ),
@@ -503,7 +505,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               Navigator.pop(context, value);
             },
             child: Text(
-              'Set Total',
+              l10n.individualSetTotal,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF89F1EC),
                 fontWeight: FontWeight.w600,
@@ -539,6 +541,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   }
 
   void _showOptionsMenu() {
+    final l10n = AppLocalizations.of(context);
     final RenderBox renderBox = _dotsKey.currentContext!.findRenderObject() as RenderBox;
     final Offset offset = renderBox.localToGlobal(Offset.zero);
     final Size size = renderBox.size;
@@ -594,7 +597,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Text(
-                                'Rebuy',
+                                l10n.individualRebuy,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
@@ -618,6 +621,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   }
 
   Future<void> _showUpdateBlindsDialog() async {
+    final l10n = AppLocalizations.of(context);
     final smallBlindController = TextEditingController(text: _currentSmallBlind.toString());
     final bigBlindController = TextEditingController(text: _currentBigBlind.toString());
 
@@ -630,7 +634,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             borderRadius: BorderRadius.circular(18),
           ),
           title: Text(
-            'Update Blinds',
+            l10n.individualUpdateBlinds,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 20,
@@ -645,7 +649,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 keyboardType: TextInputType.number,
                 style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
                 decoration: InputDecoration(
-                  labelText: 'Small Blind',
+                  labelText: l10n.individualSmallBlind,
                   labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.05),
@@ -662,7 +666,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 keyboardType: TextInputType.number,
                 style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
                 decoration: InputDecoration(
-                  labelText: 'Big Blind',
+                  labelText: l10n.individualBigBlind,
                   labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.05),
@@ -679,7 +683,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                'Cancel',
+                l10n.commonCancel,
                 style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
               ),
             ),
@@ -697,7 +701,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 }
               },
               child: Text(
-                'Update',
+                l10n.commonUpdate,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFF89F1EC),
                   fontWeight: FontWeight.w600,
@@ -894,6 +898,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   }
 
   Future<void> _stopSession() async {
+    final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -938,7 +943,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Stop Session?',
+                  l10n.individualStopSessionTitle,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 17,
@@ -948,7 +953,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Are you sure you want to stop this session? All hands will be saved.',
+                  l10n.individualStopSessionMessage,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ibmPlexSans(
                     color: const Color(0xFF8C8C8C),
@@ -970,7 +975,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                           ),
                           child: Center(
                             child: Text(
-                              'Cancel',
+                              l10n.commonCancel,
                               style: GoogleFonts.ibmPlexSans(
                                 color: Colors.white,
                                 fontSize: 17,
@@ -995,7 +1000,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                           ),
                           child: Center(
                             child: Text(
-                              'Stop',
+                              l10n.individualStop,
                               style: GoogleFonts.ibmPlexSans(
                                 color: Colors.black,
                                 fontSize: 17,
@@ -1038,6 +1043,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   }
 
   Future<bool?> _showRebuyConfirmationDialog() async {
+    final l10n = AppLocalizations.of(context);
     return await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1050,7 +1056,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
             const SizedBox(width: 12),
             Text(
-              'Confirm Rebuy',
+              l10n.individualConfirmRebuy,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 20,
@@ -1064,7 +1070,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'You currently have ${_formatStackValue(_currentStack)} remaining.',
+              l10n.individualRebuyCurrentStack(_formatStackValue(_currentStack)),
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withOpacity(0.5),
                 fontSize: 16,
@@ -1072,7 +1078,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             ),
             const SizedBox(height: 12),
             Text(
-              'Proceeding with a rebuy will replace your current stack. Are you sure you want to continue?',
+              l10n.individualRebuyReplaceMessage,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 16,
@@ -1085,7 +1091,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
             ),
           ),
@@ -1098,7 +1104,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 borderRadius: BorderRadius.circular(60),
               ),
               child: Text(
-                'Proceed with Rebuy',
+                l10n.individualProceedWithRebuy,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 14,
@@ -1113,6 +1119,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   }
 
   Future<void> _showRebuyDialog() async {
+    final l10n = AppLocalizations.of(context);
     if (_currentStack > 0) {
       final confirmed = await _showRebuyConfirmationDialog();
       if (confirmed != true) return;
@@ -1132,7 +1139,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             const Icon(Icons.add_circle_outline, color: Color(0xFF89F1EC), size: 24),
             const SizedBox(width: 12),
             Text(
-              'Rebuy',
+              l10n.individualRebuy,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 20,
@@ -1148,8 +1155,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             children: [
               Text(
                 widget.gameType == GameType.cash
-                    ? 'Enter rebuy amount (stack will equal rebuy amount)'
-                    : 'Enter rebuy amount and new stack size',
+                    ? l10n.individualEnterRebuyAmount
+                    : l10n.individualEnterRebuyAmountAndStack,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white.withOpacity(0.5),
                   fontSize: 14,
@@ -1163,7 +1170,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 autofocus: true,
                 style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                 decoration: InputDecoration(
-                  labelText: 'Rebuy Amount',
+                  labelText: l10n.individualRebuyAmount,
                   labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
                   prefixText: '\$ ',
                   prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
@@ -1184,9 +1191,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                   decoration: InputDecoration(
-                    labelText: 'New Stack Size',
+                    labelText: l10n.individualNewStackSize,
                     labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
-                    hintText: 'Chip count after rebuy',
+                    hintText: l10n.individualChipCountAfterRebuy,
                     hintStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.3)),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
@@ -1212,7 +1219,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Session Info',
+                      l10n.individualSessionInfo,
                       style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 14,
@@ -1221,15 +1228,15 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Total Invested: \$${_totalBuyIn.toStringAsFixed(2)}',
+                      l10n.individualTotalInvestedAmount(_totalBuyIn.toStringAsFixed(2)),
                       style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5), fontSize: 12),
                     ),
                     Text(
-                      'Current Stack: ${_formatStackValue(_currentStack)}',
+                      l10n.individualCurrentStackAmount(_formatStackValue(_currentStack)),
                       style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5), fontSize: 12),
                     ),
                     Text(
-                      'Rebuys: ${_rebuys.length}',
+                      l10n.individualRebuysCount(_rebuys.length),
                       style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5), fontSize: 12),
                     ),
                   ],
@@ -1242,7 +1249,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
             ),
           ),
@@ -1252,8 +1259,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
               if (rebuyAmount == null || rebuyAmount <= 0) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a valid rebuy amount'),
+                  SnackBar(
+                    content: Text(l10n.individualPleaseEnterValidRebuy),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -1269,8 +1276,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 final stackSize = double.tryParse(stackSizeController.text);
                 if (stackSize == null || stackSize <= 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a valid stack size'),
+                    SnackBar(
+                      content: Text(l10n.individualPleaseEnterValidStack),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -1290,7 +1297,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 borderRadius: BorderRadius.circular(60),
               ),
               child: Text(
-                'Add Rebuy',
+                l10n.individualAddRebuy,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.black,
                   fontSize: 14,
@@ -1343,8 +1350,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         SnackBar(
           content: Text(
             widget.gameType == GameType.cash
-                ? 'Rebuy added: \$${rebuyAmount.toStringAsFixed(2)}'
-                : 'Rebuy added: \$${rebuyAmount.toStringAsFixed(2)} (Stack: ${newStack.toStringAsFixed(0)})',
+                ? l10n.individualRebuyAddedSimple(rebuyAmount.toStringAsFixed(2))
+                : l10n.individualRebuyAddedWithStack(rebuyAmount.toStringAsFixed(2), newStack.toStringAsFixed(0)),
           ),
           backgroundColor: const Color(0xFF89F1EC),
         ),
@@ -1356,6 +1363,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final profitLoss = _currentStack - _initialStack;
     final isProfit = _currentStack > _initialStack;
@@ -1462,7 +1470,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'BB Mode',
+                          l10n.individualBbMode,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 15,
                             color: Colors.white.withOpacity(0.8),
@@ -1494,7 +1502,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Current Stack',
+                              l10n.individualCurrentStackLabel,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 14,
                                 color: Colors.white.withOpacity(0.5),
@@ -1517,7 +1525,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                                     const Icon(Icons.edit, color: Color(0xFF89F1EC), size: 14),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Update',
+                                      l10n.commonUpdate,
                                       style: GoogleFonts.ibmPlexSans(
                                         color: const Color(0xFF89F1EC),
                                         fontSize: 13,
@@ -1603,7 +1611,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Session Info',
+                                l10n.individualSessionInfo,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 17,
                                   color: Colors.white,
@@ -1629,19 +1637,19 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                               ? Column(
                                   children: [
                                     const SizedBox(height: 16),
-                                    _buildStatRow('Starting Stack', widget.gameType == GameType.cash
+                                    _buildStatRow(l10n.individualStartingStack, widget.gameType == GameType.cash
                                         ? '\$${widget.startingStack.toStringAsFixed(2)}'
                                         : widget.startingStack.toStringAsFixed(0)),
                                     _buildDivider(),
-                                    _buildStatRow('Initial Buy-in', '\$${widget.buyInAmount.toStringAsFixed(2)}'),
+                                    _buildStatRow(l10n.individualInitialBuyIn, '\$${widget.buyInAmount.toStringAsFixed(2)}'),
                                     _buildDivider(),
-                                    _buildStatRow('Rebuys', '${_rebuys.length}'),
+                                    _buildStatRow(l10n.individualRebuys, '${_rebuys.length}'),
                                     _buildDivider(),
-                                    _buildStatRow('Total Invested', '\$${_totalBuyIn.toStringAsFixed(2)}'),
+                                    _buildStatRow(l10n.individualTotalInvested, '\$${_totalBuyIn.toStringAsFixed(2)}'),
                                     _buildDivider(),
-                                    _buildClickableStatRow('Blinds', '$_currentSmallBlind/$_currentBigBlind', _showUpdateBlindsDialog),
+                                    _buildClickableStatRow(l10n.individualBlindsLabel, '$_currentSmallBlind/$_currentBigBlind', _showUpdateBlindsDialog),
                                     _buildDivider(),
-                                    _buildStatRow('Hands Logged', '$_handsLogged'),
+                                    _buildStatRow(l10n.individualHandsLogged, '$_handsLogged'),
                                   ],
                                 )
                               : const SizedBox.shrink(),
@@ -1676,7 +1684,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                           if (widget.isFromActiveSession)
                             const SizedBox(width: 8),
                           Text(
-                            widget.isFromActiveSession ? 'Go Back to Hand' : 'Log a Hand',
+                            widget.isFromActiveSession ? l10n.individualGoBackToHand : l10n.individualLogAHand,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -1713,6 +1721,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   }
 
   Widget _buildStackChartCard() {
+    final l10n = AppLocalizations.of(context);
     final history = widget.liveStackHistory!;
     final hasData = history.length >= 2;
 
@@ -1730,7 +1739,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Stack Chart',
+                l10n.individualStackChart,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   color: Colors.white,
@@ -1785,7 +1794,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               height: 120,
               child: Center(
                 child: Text(
-                  'Complete a hand to see your stack trend',
+                  l10n.individualCompleteHandToSee,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.4),

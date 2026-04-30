@@ -236,6 +236,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                   title: 'Gesture Guide',
                   body: 'Tap this icon anytime to see all gesture controls.',
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -296,6 +297,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                 title: 'Skip Button',
                 body: 'If you skip a hand, this button moves the dealer button to the next player. Keep in mind that stacks will be out of sync — you can update them in Manage Players.',
                 onNext: () => controller.next(),
+                context: context,
                 isLast: true,
               );
             },
@@ -488,6 +490,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                   title: 'Game Menu',
                   body: 'This menu has useful options. Let\'s take a look at one important setting.',
                   onNext: () => controller.next(),
+                  context: context,
                 );
               },
             ),
@@ -557,6 +560,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                   title: 'Game Settings',
                   body: 'Here you can change blinds mid-session — useful for tournaments when levels go up.',
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -630,6 +634,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                   title: 'End Your Session',
                   body: 'Tap this menu and select "Stop Session" to save your results.',
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },

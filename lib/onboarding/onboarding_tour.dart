@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
+import '../l10n/app_localizations.dart';
 import 'onboarding_prefs.dart';
 import 'onboarding_state.dart';
 
@@ -13,7 +14,9 @@ TutorialCoachMark _createCoachMark({
   required List<TargetFocus> targets,
   required VoidCallback onFinish,
   VoidCallback? onSkip,
+  required BuildContext context,
 }) {
+  final l10n = AppLocalizations.of(context);
   return TutorialCoachMark(
     targets: targets,
     colorShadow: Colors.black,
@@ -29,7 +32,7 @@ TutorialCoachMark _createCoachMark({
           border: Border.all(color: Colors.white54),
         ),
         child: Text(
-          'Skip tour',
+          l10n.onboardingSkipTour,
           style: AppTypography.bodySmall(color: Colors.white70),
         ),
       ),
@@ -44,7 +47,8 @@ TutorialCoachMark _createCoachMark({
   );
 }
 
-Widget buildWelcomeCard({required VoidCallback onNext}) {
+Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext context}) {
+  final l10n = AppLocalizations.of(context);
   return Container(
     padding: const EdgeInsets.all(28),
     margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -67,14 +71,13 @@ Widget buildWelcomeCard({required VoidCallback onNext}) {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Welcome to Final Table',
+          l10n.onboardingWelcomeTitle,
           style: AppTypography.pageTitle().copyWith(fontSize: 22),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
         Text(
-          'Let\'s take a quick tour to get you started.\n\n'
-          'You can always retake this tour from\nProfile → Settings → Knowledge Base.',
+          l10n.onboardingWelcomeBody,
           style: AppTypography.bodySmall(
             color: Colors.white.withOpacity(0.7),
           ).copyWith(height: 1.4),
@@ -93,7 +96,7 @@ Widget buildWelcomeCard({required VoidCallback onNext}) {
               ),
             ),
             child: Text(
-              'Let\'s go',
+              l10n.onboardingLetsGo,
               style: AppTypography.bodyLarge(color: Colors.black).copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -109,8 +112,10 @@ Widget buildTooltip({
   required String title,
   required String body,
   required VoidCallback onNext,
+  required BuildContext context,
   bool isLast = false,
 }) {
+  final l10n = AppLocalizations.of(context);
   return Container(
     padding: const EdgeInsets.all(24),
     margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -142,7 +147,7 @@ Widget buildTooltip({
           child: TextButton(
             onPressed: onNext,
             child: Text(
-              isLast ? 'Got it' : 'Next',
+              isLast ? l10n.onboardingGotIt : l10n.onboardingNext,
               style: AppTypography.bodyLarge(color: AppColors.buttonPrimary)
                   .copyWith(fontWeight: FontWeight.w600),
             ),
@@ -185,7 +190,7 @@ class HomeTour {
                   0.3,
             ),
             builder: (context, controller) {
-              return buildWelcomeCard(onNext: () => controller.next());
+              return buildWelcomeCard(onNext: () => controller.next(), context: context);
             },
           ),
         ],
@@ -204,10 +209,12 @@ class HomeTour {
             TargetContent(
               align: ContentAlign.top,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Start Logging',
-                  body: 'Tap the + button to begin logging a hand.',
+                  title: l10n.onboardingStartLoggingTitle,
+                  body: l10n.onboardingStartLoggingBody,
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -221,6 +228,7 @@ class HomeTour {
 
     final coach = _createCoachMark(
       targets: targets,
+      context: context,
       onFinish: () {
         OnboardingState.advanceTo(1);
       },
@@ -275,11 +283,12 @@ class LoggingModeTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Full Logging Mode',
-                  body:
-                      'Track every action for every player across all streets. Perfect for serious analysis.',
+                  title: l10n.onboardingFullModeTitle,
+                  body: l10n.onboardingFullModeBody,
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: isReplay && !isIndividual,
                 );
               },
@@ -301,11 +310,12 @@ class LoggingModeTour {
             TargetContent(
               align: ContentAlign.top,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Individual Logging Mode',
-                  body:
-                      'Quick profit/loss tracking for a single session. Now choose a mode to continue!',
+                  title: l10n.onboardingIndividualModeTitle,
+                  body: l10n.onboardingIndividualModeBody,
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -319,6 +329,7 @@ class LoggingModeTour {
 
     final coach = _createCoachMark(
       targets: targets,
+      context: context,
       onFinish: () {
         OnboardingState.advanceTo(2);
       },
@@ -360,11 +371,12 @@ class SessionSetupTour {
                   0.3,
             ),
             builder: (context, controller) {
+              final l10n = AppLocalizations.of(context);
               return buildTooltip(
-                title: 'Session Setup',
-                body:
-                    'Fill in your session details \u2014 name, buy-in, blinds \u2014 then tap Start Game.',
+                title: l10n.onboardingSessionSetupTitle,
+                body: l10n.onboardingSessionSetupBody,
                 onNext: () => controller.next(),
+                context: context,
                 isLast: true,
               );
             },
@@ -375,6 +387,7 @@ class SessionSetupTour {
 
     final coach = _createCoachMark(
       targets: targets,
+      context: context,
       onFinish: () {
         OnboardingState.advanceTo(3);
         if (OnboardingState.isIndividualMode) {
@@ -413,11 +426,12 @@ class SeatSetupTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Setup Your Table',
-                  body:
-                      'Tap any seat to set up players. Let\'s walk through the seat dialog next.',
+                  title: l10n.onboardingTableSetupTitle,
+                  body: l10n.onboardingTableSetupBody,
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -431,6 +445,7 @@ class SeatSetupTour {
 
     final coach = _createCoachMark(
       targets: targets,
+      context: context,
       onFinish: () {
         // Stay at phase 3 — seat dialog tour still needs to run
         OnboardingState.seatDialogTourPending = true;
@@ -476,11 +491,12 @@ class SeatDialogTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Seat Open',
-                  body:
-                      'Toggle to mark a seat as occupied or empty. Open seats are skipped during the hand.',
+                  title: l10n.onboardingSeatOpenTitle,
+                  body: l10n.onboardingSeatOpenBody,
                   onNext: () => controller.next(),
+                  context: context,
                 );
               },
             ),
@@ -501,11 +517,12 @@ class SeatDialogTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'This Is My Seat',
-                  body:
-                      'Tap here if this is your seat. It auto-fills your name and tracks your personal stats.',
+                  title: l10n.onboardingThisIsMySeatTitle,
+                  body: l10n.onboardingThisIsMySeatBody,
                   onNext: () => controller.next(),
+                  context: context,
                 );
               },
             ),
@@ -526,11 +543,12 @@ class SeatDialogTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Player Name',
-                  body:
-                      'Type a name or pick from your saved opponents. Saved opponents track stats across sessions.',
+                  title: l10n.onboardingPlayerNameTitle,
+                  body: l10n.onboardingPlayerNameBody,
                   onNext: () => controller.next(),
+                  context: context,
                 );
               },
             ),
@@ -551,11 +569,12 @@ class SeatDialogTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Save Opponent',
-                  body:
-                      'New name? Tap here to save them as an opponent. Their stats will be tracked automatically.',
+                  title: l10n.onboardingSaveOpponentTitle,
+                  body: l10n.onboardingSaveOpponentBody,
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -573,6 +592,7 @@ class SeatDialogTour {
 
     final coach = _createCoachMark(
       targets: targets,
+      context: context,
       onFinish: () {
         OnboardingState.seatDialogTourPending = false;
         OnboardingState.buttonTokenTourPending = true;
@@ -608,11 +628,12 @@ class ButtonTokenTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Dealer Button',
-                  body:
-                      'Drag this to the seat with the dealer position. It determines blinds and action order.',
+                  title: l10n.onboardingDealerButtonTitle,
+                  body: l10n.onboardingDealerButtonBody,
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -629,6 +650,7 @@ class ButtonTokenTour {
 
     final coach = _createCoachMark(
       targets: targets,
+      context: context,
       onFinish: () {
         OnboardingState.advanceTo(4);
       },
@@ -668,11 +690,12 @@ class SessionResultTour {
             TargetContent(
               align: ContentAlign.top,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'View Your Sessions',
-                  body:
-                      'Tap Sessions to see your session results, hand history, and stats.',
+                  title: l10n.onboardingViewSessionsTitle,
+                  body: l10n.onboardingViewSessionsBody,
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -689,6 +712,7 @@ class SessionResultTour {
 
     final coach = _createCoachMark(
       targets: targets,
+      context: context,
       onFinish: () {
         _finishAndShowCompletion(context);
       },
@@ -721,6 +745,7 @@ class _OnboardingCompleteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 32),
@@ -747,13 +772,13 @@ class _OnboardingCompleteDialog extends StatelessWidget {
                 color: Color(0xFF89F1EC), size: 48),
             const SizedBox(height: 16),
             Text(
-              'You\'re All Set!',
+              l10n.onboardingAllSetTitle,
               style: AppTypography.pageTitle().copyWith(fontSize: 22, decoration: TextDecoration.none),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'You\'re ready to start tracking your poker sessions.',
+              l10n.onboardingAllSetBody,
               style: AppTypography.bodySmall(
                 color: Colors.white.withOpacity(0.7),
               ).copyWith(height: 1.4, decoration: TextDecoration.none),
@@ -772,7 +797,7 @@ class _OnboardingCompleteDialog extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Let\'s play',
+                  l10n.onboardingLetsPlay,
                   style:
                       AppTypography.bodyLarge(color: Colors.black).copyWith(
                     fontWeight: FontWeight.w600,
@@ -824,6 +849,7 @@ class IndividualTrackingTour {
                   body:
                       'Use this to manually update your chip count at any point without logging a full hand.',
                   onNext: () => controller.next(),
+                  context: context,
                 );
               },
             ),
@@ -849,6 +875,7 @@ class IndividualTrackingTour {
                   body:
                       'Tap here to set up the table and log a hand. Let\'s try it now!',
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -866,6 +893,7 @@ class IndividualTrackingTour {
 
     final coach = _createCoachMark(
       targets: targets,
+      context: context,
       onFinish: () {
         OnboardingState.individualTrackingTourPending = false;
         OnboardingState.quickStackUpdateTourPending = true;
@@ -916,6 +944,7 @@ class QuickStackUpdateTour {
                   body:
                       'Tap the checkmark to toggle a seat between occupied and empty. Empty seats are skipped in the hand.',
                   onNext: () => controller.next(),
+                  context: context,
                 );
               },
             ),
@@ -940,6 +969,7 @@ class QuickStackUpdateTour {
                   body:
                       'Tap "D" to assign the dealer button to any seat. This controls blind positions and action order.',
                   onNext: () => controller.next(),
+                  context: context,
                 );
               },
             ),
@@ -965,6 +995,7 @@ class QuickStackUpdateTour {
                   body:
                       'Tap a player\'s name to seat yourself or a saved opponent. Your stack is auto-applied when you seat yourself.',
                   onNext: () => controller.next(),
+                  context: context,
                 );
               },
             ),
@@ -990,6 +1021,7 @@ class QuickStackUpdateTour {
                   body:
                       'Drag the slider to set an opponent\'s stack in BBs. Tap the stack value to type an exact amount.',
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -1007,6 +1039,7 @@ class QuickStackUpdateTour {
 
     final coach = _createCoachMark(
       targets: targets,
+      context: context,
       onFinish: () {
         OnboardingState.quickStackUpdateTourPending = false;
         OnboardingState.advanceTo(4);
@@ -1047,6 +1080,7 @@ class IndividualStopSessionTour {
                   body:
                       'Tap the red Stop button to save your session results and return to the home screen.',
                   onNext: () => controller.next(),
+                  context: context,
                   isLast: true,
                 );
               },
@@ -1064,6 +1098,7 @@ class IndividualStopSessionTour {
 
     final coach = _createCoachMark(
       targets: targets,
+      context: context,
       onFinish: () {
         OnboardingState.individualStopSessionTourPending = false;
         OnboardingState.advanceTo(5);

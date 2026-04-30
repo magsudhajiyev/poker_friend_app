@@ -15,6 +15,7 @@ import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/event_success_popup.dart';
 import 'club/event_detail_screen.dart' as club_detail;
 import 'event_detail_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -62,6 +63,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _showAddEventDialog() {
+    final l10n = AppLocalizations.of(context);
     final outerContext = context;
     final titleController = TextEditingController();
     final locationController = TextEditingController();
@@ -73,7 +75,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     FormDrawer.show(
       context: context,
-      title: 'New Event',
+      title: l10n.calendarNewEvent,
       onSave: () async {
         if (titleController.text.isEmpty && locationController.text.isEmpty) {
           return;
@@ -118,7 +120,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           }
         } catch (e) {
           ScaffoldMessenger.of(outerContext).showSnackBar(
-            SnackBar(content: Text('Failed to create event: $e')),
+            SnackBar(content: Text(l10n.calendarFailedToCreateEvent(e.toString()))),
           );
         }
       },
@@ -163,6 +165,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     required ValueChanged<TimeOfDay> onTimeChanged,
     required ValueChanged<String> onTypeChanged,
   }) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         // Form Card 1 - Input Fields
@@ -190,7 +193,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Event Type',
+                          l10n.calendarEventType,
                           style: GoogleFonts.ibmPlexSans(
                             color: const Color(0xFFD3FFFD),
                             fontSize: 17,
@@ -232,7 +235,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     height: 1.44,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Title',
+                    hintText: l10n.calendarEventTitle,
                     hintStyle: GoogleFonts.ibmPlexSans(
                       color: const Color(0xFF8C8C8C),
                       fontSize: 17,
@@ -257,7 +260,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     height: 1.44,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Location',
+                    hintText: l10n.calendarLocation,
                     hintStyle: GoogleFonts.ibmPlexSans(
                       color: const Color(0xFF8C8C8C),
                       fontSize: 17,
@@ -283,7 +286,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     height: 1.44,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Buy-in amount',
+                    hintText: l10n.calendarBuyInAmount,
                     hintStyle: GoogleFonts.ibmPlexSans(
                       color: const Color(0xFF8C8C8C),
                       fontSize: 17,
@@ -315,7 +318,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Event Date and Time',
+                  l10n.calendarEventDateTime,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 17,
@@ -332,7 +335,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 Row(
                   children: [
                     Text(
-                      'Starts',
+                      l10n.calendarStarts,
                       style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 17,
@@ -540,6 +543,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   /// readable on small phones and scales on tablets — no hardcoded pixels
   /// tuned to one device.
   Future<DateTime?> _showCustomDatePicker(BuildContext context, DateTime initialDate) async {
+    final l10n = AppLocalizations.of(context);
     DateTime displayMonth = DateTime(initialDate.year, initialDate.month);
     DateTime? selectedDate = initialDate;
 
@@ -647,7 +651,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             Row(
                               children: [
                                 Text(
-                                  'Select Date:',
+                                  l10n.calendarSelectDate,
                                   style: AppTypography.subtitle(
                                     color: Colors.white.withOpacity(0.7),
                                   ),
@@ -658,7 +662,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 // because Done always returns a non-null date.
                                 _pickerPillButton(
                                   icon: Icons.close,
-                                  label: 'Reset',
+                                  label: l10n.calendarReset,
                                   color: AppColors.errorRed,
                                   bordered: false,
                                   onTap: () {
@@ -675,7 +679,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 // "Today" — jumps to today's date.
                                 _pickerPillButton(
                                   icon: Icons.today,
-                                  label: 'Today',
+                                  label: l10n.commonToday,
                                   color: Colors.white,
                                   bordered: true,
                                   onTap: () {
@@ -747,7 +751,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             // ── Day-of-week header row (SUN-first)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: const ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+                              children: [l10n.calendarSun, l10n.calendarMon, l10n.calendarTue, l10n.calendarWed, l10n.calendarThu, l10n.calendarFri, l10n.calendarSat]
                                   .map((day) {
                                 return SizedBox(
                                   width: cellSize,
@@ -790,7 +794,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               children: [
                                 Expanded(
                                   child: _pickerFooterButton(
-                                    label: 'Cancel',
+                                    label: l10n.commonCancel,
                                     filled: false,
                                     onTap: () => Navigator.pop(dialogContext),
                                   ),
@@ -798,7 +802,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 SizedBox(width: AppSpacing.md),
                                 Expanded(
                                   child: _pickerFooterButton(
-                                    label: 'Done',
+                                    label: l10n.commonDone,
                                     filled: true,
                                     onTap: () => Navigator.pop(
                                       dialogContext,
@@ -1047,7 +1051,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             children: [
               // Header
               CalendarHeader(
-                title: 'Poker Calendar',
+                title: AppLocalizations.of(context).calendarTitle,
                 onBackPressed: () => Navigator.pop(context),
                 onAddPressed: _showAddEventDialog,
               ),
@@ -1127,6 +1131,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildEventsForSelectedDate() {
+    final l10n = AppLocalizations.of(context);
     final eventsForDate = _getEventsForDate(selectedDate);
 
     if (eventsForDate.isEmpty) {
@@ -1151,7 +1156,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               const SizedBox(height: 6),
               // Title
               Text(
-                'No recent events',
+                l10n.calendarNoRecentEvents,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w400,
@@ -1162,7 +1167,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               const SizedBox(height: 4),
               // Subtitle
               Text(
-                'Add your first poker event!',
+                l10n.calendarAddFirstEvent,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w400,
@@ -1188,7 +1193,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       Icon(Icons.add, size: 24, color: Colors.black),
                       const SizedBox(width: 8),
                       Text(
-                        'Add New Event',
+                        l10n.calendarAddNewEvent,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
@@ -1213,6 +1218,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildYearPicker() {
+    final l10n = AppLocalizations.of(context);
     final currentYear = DateTime.now().year;
     final startYear = currentYear - 10;
     final endYear = currentYear + 10;
@@ -1230,7 +1236,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         child: Column(
           children: [
             Text(
-              'Select Year',
+              l10n.calendarSelectYear,
               style: GoogleFonts.ibmPlexSans(
                 color: Color(0xFFEBEBEB),
                 fontSize: 18,
@@ -1371,6 +1377,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _showEventOptions(PokerEvent event, Offset iconOffset, Size iconSize) {
+    final l10n = AppLocalizations.of(context);
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
 
@@ -1435,7 +1442,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 child: Text(
-                                  'Edit Event',
+                                  l10n.calendarEditEvent,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
@@ -1475,7 +1482,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 child: Text(
-                                  'Delete Event',
+                                  l10n.calendarDeleteEvent,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
@@ -1502,13 +1509,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _navigateToEventDetail(PokerEvent event) async {
+    final l10n = AppLocalizations.of(context);
     // Club events -> club detail screen
     if (event.clubId != null && event.clubEventId != null) {
       try {
         final club = await ClubService.getClub(event.clubId!);
         if (club == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Club not found')),
+            SnackBar(content: Text(l10n.calendarClubNotFound)),
           );
           return;
         }
@@ -1516,7 +1524,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         final clubEvent = await EventService.getEvent(event.clubId!, event.clubEventId!);
         if (clubEvent == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Event not found')),
+            SnackBar(content: Text(l10n.calendarEventNotFound)),
           );
           return;
         }
@@ -1536,7 +1544,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load event: $e')),
+          SnackBar(content: Text(l10n.calendarFailedToLoadEvent(e.toString()))),
         );
       }
       return;
@@ -1565,6 +1573,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _showEditEventDialog(PokerEvent event) {
+    final l10n = AppLocalizations.of(context);
     final titleController = TextEditingController(text: event.title);
     final locationController = TextEditingController(text: event.location);
     final buyInController = TextEditingController(
@@ -1577,7 +1586,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     FormDrawer.show(
       context: context,
-      title: 'Edit Event',
+      title: l10n.calendarEditEvent,
       onSave: () async {
         final eventDate = DateTime(
           dialogSelectedDate.year,
@@ -1601,7 +1610,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           _loadEvents();
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update event: $e')),
+            SnackBar(content: Text(l10n.calendarFailedToUpdateEvent(e.toString()))),
           );
         }
       },
@@ -1643,6 +1652,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       required double buyIn,
     }) updateDetail,
   ) {
+    final l10n = AppLocalizations.of(context);
     final titleController = TextEditingController(text: event.title);
     final locationController = TextEditingController(text: event.location);
     final buyInController = TextEditingController(
@@ -1655,7 +1665,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     FormDrawer.show(
       context: context,
-      title: 'Edit Event',
+      title: l10n.calendarEditEvent,
       onSave: () async {
         final eventDate = DateTime(
           dialogSelectedDate.year,
@@ -1688,7 +1698,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           _loadEvents();
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update event: $e')),
+            SnackBar(content: Text(l10n.calendarFailedToUpdateEvent(e.toString()))),
           );
         }
       },
@@ -1736,13 +1746,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete event')),
+          SnackBar(content: Text(AppLocalizations.of(context).calendarFailedToDeleteEvent)),
         );
       }
     }
   }
 
   Future<bool?> _showDeleteConfirmation(String eventTitle) {
+    final l10n = AppLocalizations.of(context);
     return showModalBottomSheet<bool>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1766,7 +1777,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
-                        'Delete $eventTitle?',
+                        l10n.calendarDeleteConfirmTitle(eventTitle),
                         textAlign: TextAlign.center,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
@@ -1780,7 +1791,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
-                        'Are you sure you want to delete "$eventTitle"?\nThis action cannot be undone.',
+                        l10n.calendarDeleteConfirmMessage(eventTitle),
                         textAlign: TextAlign.center,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 14,
@@ -1797,7 +1808,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
                         child: Text(
-                          'Delete',
+                          l10n.commonDelete,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
@@ -1823,7 +1834,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      'Cancel',
+                      l10n.commonCancel,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,

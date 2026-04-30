@@ -9,6 +9,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 import '../../design_system/constants/colors.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/club.dart';
 import '../../models/club_member.dart';
 import '../../models/poker_table.dart';
@@ -83,7 +84,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading data: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).clubSettingsErrorLoading('$e'))),
         );
       }
     }
@@ -112,8 +113,8 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Club info saved'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).clubSettingsInfoSaved),
             backgroundColor: Color(0xFF4CAF50),
           ),
         );
@@ -122,7 +123,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving: $e'),
+            content: Text(AppLocalizations.of(context).clubSettingsErrorSaving('$e')),
             backgroundColor: const Color(0xFFDA5B5E),
           ),
         );
@@ -245,7 +246,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               // Title
               Expanded(
                 child: Text(
-                  'Club Settings',
+                  AppLocalizations.of(context).clubSettingsTitle,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 27,
                     fontWeight: FontWeight.w600,
@@ -272,7 +273,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         children: [
           // Section label
           Text(
-            'Club Information',
+            AppLocalizations.of(context).clubSettingsClubInfo,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w500,
@@ -284,23 +285,23 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           // Text fields with 28px gap
           _buildOutlineTextField(
             controller: _nameController,
-            label: 'Club Name',
+            label: AppLocalizations.of(context).clubSettingsClubName,
           ),
           const SizedBox(height: 28),
           _buildOutlineTextField(
             controller: _addressController,
-            label: 'Address',
+            label: AppLocalizations.of(context).clubSettingsAddress,
           ),
           const SizedBox(height: 28),
           _buildOutlineTextField(
             controller: _phoneController,
-            label: 'Phone',
+            label: AppLocalizations.of(context).clubSettingsPhone,
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 28),
           _buildOutlineTextField(
             controller: _descriptionController,
-            label: 'Description',
+            label: AppLocalizations.of(context).clubSettingsDescription,
             maxLines: 3,
           ),
           const SizedBox(height: 24),
@@ -325,7 +326,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                         ),
                       )
                     : Text(
-                        'Save Changes',
+                        AppLocalizations.of(context).clubSettingsSaveChanges,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
@@ -401,7 +402,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           child: Row(
             children: [
               Text(
-                'Tables',
+                AppLocalizations.of(context).dealerHomeTables,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
@@ -449,7 +450,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'No tables yet',
+                  AppLocalizations.of(context).clubSettingsNoTablesYet,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
@@ -459,7 +460,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Add a table to get started',
+                  AppLocalizations.of(context).clubSettingsAddTableHint,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
@@ -598,7 +599,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           child: Row(
             children: [
               Text(
-                'Members (${_members.length})',
+                AppLocalizations.of(context).clubSettingsMembers(_members.length),
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
@@ -631,7 +632,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Text(
-              'No members found',
+              AppLocalizations.of(context).clubSettingsNoMembersFound,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 17,
                 color: const Color(0xFF8C8C8C),
@@ -649,13 +650,14 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   Widget _buildMemberRow(ClubMember member) {
     final initials = _getInitials(member.displayName ?? 'U');
     final avatarColor = _getAvatarColor(member.role);
+    final l10n = AppLocalizations.of(context);
     final roleLabel = member.role == ClubRole.owner
-        ? 'Owner'
+        ? l10n.clubSettingsRoleOwner
         : member.role == ClubRole.admin
-            ? 'Admin'
+            ? l10n.clubSettingsRoleAdmin
             : member.role == ClubRole.dealer
-                ? 'Dealer'
-                : 'Player';
+                ? l10n.clubSettingsRoleDealer
+                : l10n.clubSettingsRolePlayer;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -754,7 +756,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   // ========== Dialogs ==========
 
   Future<void> _showAddTableDialog() async {
-    final nameController = TextEditingController(text: 'Table ${_tables.length + 1}');
+    final nameController = TextEditingController(text: AppLocalizations.of(context).clubSettingsTableDefault(_tables.length + 1));
 
     final result = await showDialog<bool>(
       context: context,
@@ -762,7 +764,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         backgroundColor: const Color(0xFF101115),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Add Table',
+          AppLocalizations.of(context).dealerHomeAddTable,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -772,7 +774,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           controller: nameController,
           style: GoogleFonts.ibmPlexSans(color: Colors.white),
           decoration: InputDecoration(
-            labelText: 'Table Name',
+            labelText: AppLocalizations.of(context).dealerHomeTableNameLabel,
             labelStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             filled: true,
             fillColor: const Color(0xFF1B1E24),
@@ -786,7 +788,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(context).commonCancel,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             ),
           ),
@@ -800,7 +802,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               ),
             ),
             child: Text(
-              'Add',
+              AppLocalizations.of(context).clubCashGameAdd,
               style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
             ),
           ),
@@ -819,9 +821,9 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         await _loadData();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Table added'),
-              backgroundColor: Color(0xFF4CAF50),
+            SnackBar(
+              content: Text(AppLocalizations.of(context).clubSettingsTableAddedMsg),
+              backgroundColor: const Color(0xFF4CAF50),
             ),
           );
         }
@@ -829,7 +831,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: $e'),
+              content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')),
               backgroundColor: const Color(0xFFDA5B5E),
             ),
           );
@@ -848,7 +850,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         backgroundColor: const Color(0xFF101115),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Edit Table',
+          AppLocalizations.of(context).clubSettingsEditTableTitle,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -858,7 +860,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           controller: nameController,
           style: GoogleFonts.ibmPlexSans(color: Colors.white),
           decoration: InputDecoration(
-            labelText: 'Table Name',
+            labelText: AppLocalizations.of(context).dealerHomeTableNameLabel,
             labelStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             filled: true,
             fillColor: const Color(0xFF1B1E24),
@@ -872,7 +874,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(context).commonCancel,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             ),
           ),
@@ -886,7 +888,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               ),
             ),
             child: Text(
-              'Save',
+              AppLocalizations.of(context).commonSave,
               style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
             ),
           ),
@@ -906,7 +908,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: $e'),
+              content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')),
               backgroundColor: const Color(0xFFDA5B5E),
             ),
           );
@@ -922,21 +924,21 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF101115),
         title: Text(
-          'Delete Table?',
+          AppLocalizations.of(context).clubSettingsDeleteTableTitle,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
-          'Are you sure you want to delete "${table.name}"? This cannot be undone.',
+          AppLocalizations.of(context).clubSettingsDeleteTableBody(table.name),
           style: GoogleFonts.ibmPlexSans(color: Colors.white),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(context).commonCancel,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             ),
           ),
@@ -944,7 +946,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: const Color(0xFFDA5B5E)),
             child: Text(
-              'Delete',
+              AppLocalizations.of(context).commonDelete,
               style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
             ),
           ),
@@ -958,14 +960,14 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         await _loadData();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Table deleted')),
+            SnackBar(content: Text(AppLocalizations.of(context).clubSettingsTableDeletedMsg)),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: $e'),
+              content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')),
               backgroundColor: const Color(0xFFDA5B5E),
             ),
           );
@@ -1022,7 +1024,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 ),
               const SizedBox(height: 16),
               Text(
-                'Dealers scan this to start a session at this table',
+                AppLocalizations.of(context).clubSettingsDealerScanHint,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 14,
                   color: const Color(0xFF8C8C8C),
@@ -1053,8 +1055,8 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 await _loadData();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('QR codes regenerated'),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context).clubSettingsQrRegenerated),
                       backgroundColor: Color(0xFF4CAF50),
                     ),
                   );
@@ -1062,13 +1064,13 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
+                    SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e'))),
                   );
                 }
               }
             },
             child: Text(
-              'Regenerate',
+              AppLocalizations.of(context).clubSettingsRegenerateBtn,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFFFFB300)),
             ),
           ),
@@ -1082,7 +1084,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               ),
             ),
             child: Text(
-              'Done',
+              AppLocalizations.of(context).commonDone,
               style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600),
             ),
           ),
@@ -1134,7 +1136,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'App QR Codes',
+                          AppLocalizations.of(context).clubSettingsAppQrCodes,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -1143,7 +1145,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Share with players to download the app',
+                          AppLocalizations.of(context).clubSettingsShareWithPlayers,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 13,
                             color: const Color(0xFF8C8C8C),
@@ -1161,7 +1163,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                   onPressed: _downloadAppQRCodePDF,
                   icon: const Icon(Icons.download_rounded, size: 18),
                   label: Text(
-                    'Download PDF',
+                    AppLocalizations.of(context).clubSettingsDownloadPdf,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -1186,6 +1188,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
 
   /// Generate and download/share App Store QR codes as PDF
   Future<void> _downloadAppQRCodePDF() async {
+    final pdfL10n = AppLocalizations.of(context);
     try {
       final qrImages = <String, pw.MemoryImage>{};
       final qrImageSize = 300.0;
@@ -1236,7 +1239,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                   ),
                   pw.SizedBox(height: 12),
                   pw.Text(
-                    'Download the Final Table App',
+                    pdfL10n.clubSettingsDownloadFinalTable,
                     style: const pw.TextStyle(fontSize: 18),
                   ),
                   pw.SizedBox(height: 40),
@@ -1270,7 +1273,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                   ),
                   pw.SizedBox(height: 40),
                   pw.Text(
-                    'Scan the QR code for your device to get started',
+                    pdfL10n.clubSettingsScanQrToGetStarted,
                     style: pw.TextStyle(
                       fontSize: 14,
                       color: PdfColors.grey700,
@@ -1297,7 +1300,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error generating PDF: $e'),
+            content: Text(AppLocalizations.of(context).clubSettingsErrorPdf('$e')),
             backgroundColor: const Color(0xFFDA5B5E),
           ),
         );
@@ -1307,6 +1310,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
 
   /// Generate and download/share QR code as PDF
   Future<void> _downloadQRCodePDF(PokerTable table, String qrCode) async {
+    final pdfL10n = AppLocalizations.of(context);
     try {
       final qrPainter = QrPainter(
         data: qrCode,
@@ -1367,12 +1371,12 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                   ),
                   pw.SizedBox(height: 30),
                   pw.Text(
-                    'Scan this QR code to start a session',
+                    pdfL10n.clubSettingsScanToStartSession,
                     style: const pw.TextStyle(fontSize: 16),
                   ),
                   pw.SizedBox(height: 10),
                   pw.Text(
-                    'For dealers only',
+                    pdfL10n.clubSettingsForDealersOnly,
                     style: pw.TextStyle(
                       fontSize: 14,
                       color: PdfColors.grey700,
@@ -1399,7 +1403,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error generating PDF: $e'),
+            content: Text(AppLocalizations.of(context).clubSettingsErrorPdf('$e')),
             backgroundColor: const Color(0xFFDA5B5E),
           ),
         );

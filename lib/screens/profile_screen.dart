@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/bankroll_service.dart';
 import '../services/display_identity_service.dart';
@@ -72,6 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _updateGoal() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final newGoal = double.tryParse(_goalController.text) ?? 0.0;
       if (newGoal > 0) {
@@ -81,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Goal updated successfully!'),
+            content: Text(l10n.profileGoalUpdatedSuccess),
             backgroundColor: Color(0xFF89F1EC),
           ),
         );
@@ -89,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error updating goal'),
+          content: Text(l10n.profileErrorUpdatingGoal),
           backgroundColor: Colors.red,
         ),
       );
@@ -97,6 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _updateBankroll() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final newBankroll = double.tryParse(_bankrollController.text) ?? 0.0;
       if (newBankroll >= 0) {
@@ -106,7 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Bankroll updated successfully!'),
+            content: Text(l10n.profileBankrollUpdatedSuccess),
             backgroundColor: Color(0xFF89F1EC),
           ),
         );
@@ -114,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error updating bankroll'),
+          content: Text(l10n.profileErrorUpdatingBankroll),
           backgroundColor: Colors.red,
         ),
       );
@@ -122,13 +125,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _addSessionResult() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final result = double.tryParse(_sessionResultController.text) ?? 0.0;
 
       if (result == 0.0) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Please enter a valid amount'),
+            content: Text(l10n.profilePleaseEnterValidAmount),
             backgroundColor: Colors.orange,
           ),
         );
@@ -146,14 +150,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Session result added!'),
+          content: Text(l10n.profileSessionResultAdded),
           backgroundColor: Color(0xFF62E3BC),
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error adding session result'),
+          content: Text(l10n.profileErrorAddingResult),
           backgroundColor: Colors.red,
         ),
       );
@@ -249,6 +253,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildHeaderRow() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -304,7 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 SizedBox(width: 6),
                 Text(
-                  'Upgrade',
+                  l10n.profileUpgrade,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -369,6 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildUsernameCard() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -380,7 +386,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           // Header
           Text(
-            'Username',
+            l10n.profileUsername,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w500,
@@ -396,7 +402,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // Username or "Not set" label
               Expanded(
                 child: Text(
-                  _username != null ? '@$_username' : 'Not set',
+                  _username != null ? '@$_username' : l10n.profileNotSet,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -437,7 +443,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   child: Text(
-                    _username != null ? 'Change' : 'Set username',
+                    _username != null ? l10n.profileChange : l10n.profileSetUsername,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -465,7 +471,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Use nickname in games',
+                        l10n.profileUseNicknameInGames,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
@@ -474,7 +480,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'Show @$_username instead of your name in events and hand logging',
+                        l10n.profileUseNicknameDescription(_username!),
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
@@ -507,6 +513,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildBankrollGoalCard() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -517,7 +524,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Bankroll Goal',
+            l10n.profileBankrollGoal,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w500,
@@ -531,13 +538,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: 24),
 
           // Button
-          _buildActionButton('Update Goal', _updateGoal),
+          _buildActionButton(l10n.profileUpdateGoal, _updateGoal),
         ],
       ),
     );
   }
 
   Widget _buildCurrentBankrollCard() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -548,7 +556,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Current Bankroll',
+            l10n.profileCurrentBankroll,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w500,
@@ -560,13 +568,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildInputField(_bankrollController, '${currentBankroll.toStringAsFixed(0)}'),
           SizedBox(height: 24),
 
-          _buildActionButton('Update Bankroll', _updateBankroll),
+          _buildActionButton(l10n.profileUpdateBankroll, _updateBankroll),
         ],
       ),
     );
   }
 
   Widget _buildSessionResultCard() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -577,7 +586,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Add Session Result',
+            l10n.profileAddSessionResult,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w500,
@@ -586,7 +595,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           SizedBox(height: 4),
           Text(
-            'Enter positive for wins, negative for losses',
+            l10n.profileSessionResultHint,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 13,
               fontWeight: FontWeight.w400,
@@ -602,7 +611,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildInputField(_sessionResultController, '0'),
           SizedBox(height: 24),
 
-          _buildActionButton('Add Result', _addSessionResult),
+          _buildActionButton(l10n.profileAddResult, _addSessionResult),
         ],
       ),
     );
@@ -632,7 +641,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    'Cash',
+                    AppLocalizations.of(context).profileCash,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -659,7 +668,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    'Tournament',
+                    AppLocalizations.of(context).profileTournament,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -771,7 +780,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Icon(Icons.bug_report, color: Color(0xFFFF6B6B), size: 20),
               SizedBox(width: 8),
               Text(
-                'Dev Tools',
+                AppLocalizations.of(context).profileDevTools,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -788,7 +797,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Premium Override',
+                    AppLocalizations.of(context).profilePremiumOverride,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
@@ -798,8 +807,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(height: 2),
                   Text(
                     override == null
-                        ? 'Using real status: ${SubscriptionService.isPremium ? "Premium" : "Free"}'
-                        : 'Overridden: ${override ? "Premium" : "Free"}',
+                        ? AppLocalizations.of(context).profileUsingRealStatus(SubscriptionService.isPremium ? AppLocalizations.of(context).profilePremium : AppLocalizations.of(context).profileFree)
+                        : AppLocalizations.of(context).profileOverridden(override ? AppLocalizations.of(context).profilePremium : AppLocalizations.of(context).profileFree),
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
@@ -828,7 +837,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 setState(() {});
               },
               child: Text(
-                'Reset to real status',
+                AppLocalizations.of(context).profileResetToReal,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -845,6 +854,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildSettingsCard() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
@@ -856,7 +866,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Settings
           _buildMenuItem(
             icon: Icons.settings_outlined,
-            label: 'Settings',
+            label: l10n.settingsTitle,
             onTap: () {
               Navigator.push(
                 context,
@@ -869,7 +879,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Log out
           _buildMenuItem(
             icon: Icons.logout,
-            label: 'Log out',
+            label: l10n.profileLogOut,
             onTap: _showSignOutConfirmation,
           ),
         ],
@@ -905,10 +915,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildFooter() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         Text(
-          'Version 1.0',
+          l10n.profileVersion,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
             fontWeight: FontWeight.w400,
@@ -917,7 +928,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         SizedBox(height: 4),
         Text(
-          'Final Table',
+          l10n.onboardingFinalTable,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
             fontWeight: FontWeight.w400,
@@ -926,7 +937,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         SizedBox(height: 4),
         Text(
-          'Last login ${_getLastLoginText()}',
+          l10n.profileLastLogin(_getLastLoginText()),
           style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
             fontWeight: FontWeight.w400,
@@ -990,11 +1001,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _getLastLoginText() {
     final now = DateTime.now();
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final l10n = AppLocalizations.of(context);
+    final months = [l10n.monthJan, l10n.monthFeb, l10n.monthMar, l10n.monthApr, l10n.monthMay, l10n.monthJun, l10n.monthJul, l10n.monthAug, l10n.monthSep, l10n.monthOct, l10n.monthNov, l10n.monthDec];
     return '${now.day} ${months[now.month - 1]} ${now.year} at ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
   }
 
   void _showSignOutConfirmation() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1003,14 +1016,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           borderRadius: BorderRadius.circular(20),
         ),
         title: Text(
-          'Sign Out',
+          l10n.profileSignOut,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
-          'Are you sure you want to sign out?',
+          l10n.profileSignOutConfirmation,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 14,
@@ -1020,7 +1033,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withOpacity(0.7),
                 fontWeight: FontWeight.w500,
@@ -1040,7 +1053,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
             },
             child: Text(
-              'Sign Out',
+              l10n.profileSignOut,
               style: GoogleFonts.ibmPlexSans(
                 color: Color(0xFFFF6B6B),
                 fontWeight: FontWeight.w500,

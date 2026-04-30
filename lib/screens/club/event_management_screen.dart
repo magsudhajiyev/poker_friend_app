@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/poker_table.dart';
@@ -48,7 +49,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading events: $e'),
+            content: Text(AppLocalizations.of(context).eventManagementErrorLoading('$e')),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -59,8 +60,8 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
   Future<void> _createEvent() async {
     if (_tables.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No tables available. Create tables first.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).eventManagementNoTables),
           backgroundColor: Colors.orange,
         ),
       );
@@ -90,7 +91,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Event "${event.name}" created'),
+            content: Text(AppLocalizations.of(context).eventManagementCreated(event.name)),
             backgroundColor: Colors.green.shade700,
           ),
         );
@@ -102,7 +103,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create event: $e'),
+            content: Text(AppLocalizations.of(context).eventManagementCreateFailed('$e')),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -145,7 +146,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update event: $e'),
+            content: Text(AppLocalizations.of(context).eventManagementFailedUpdateEvent('$e')),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -157,17 +158,17 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('End Event'),
-        content: Text('Are you sure you want to end "${event.name}"?'),
+        title: Text(AppLocalizations.of(context).eventManagementEndEvent),
+        content: Text(AppLocalizations.of(context).eventManagementEndConfirm(event.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('End Event'),
+            child: Text(AppLocalizations.of(context).eventManagementEndEvent),
           ),
         ],
       ),
@@ -192,7 +193,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Event "${event.name}" ended'),
+            content: Text(AppLocalizations.of(context).eventManagementEnded(event.name)),
             backgroundColor: Colors.blue.shade700,
           ),
         );
@@ -201,7 +202,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to end event: $e'),
+            content: Text(AppLocalizations.of(context).eventManagementEndFailed('$e')),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -218,8 +219,8 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
     Clipboard.setData(ClipboardData(text: url));
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Link copied to clipboard'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).eventManagementLinkCopied),
         backgroundColor: Colors.green,
       ),
     );
@@ -229,7 +230,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.club.name} Events'),
+        title: Text(AppLocalizations.of(context).eventManagementClubEvents(widget.club.name)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -240,7 +241,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createEvent,
         icon: const Icon(Icons.add),
-        label: const Text('New Event'),
+        label: Text(AppLocalizations.of(context).eventManagementNewEvent),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -262,14 +263,14 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No Events',
+            AppLocalizations.of(context).eventManagementNoEvents,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: Colors.grey.shade600,
                 ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Create an event to track live rankings',
+            AppLocalizations.of(context).eventManagementNoEventsSubtitle,
             style: TextStyle(color: Colors.grey.shade500),
           ),
         ],
@@ -285,12 +286,12 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         if (activeEvents.isNotEmpty) ...[
-          _buildSectionHeader('Active Events'),
+          _buildSectionHeader(AppLocalizations.of(context).eventManagementActiveEvents),
           ...activeEvents.map((e) => _buildEventCard(e)),
           const SizedBox(height: 24),
         ],
         if (pastEvents.isNotEmpty) ...[
-          _buildSectionHeader('Past Events'),
+          _buildSectionHeader(AppLocalizations.of(context).eventManagementPastEvents),
           ...pastEvents.map((e) => _buildEventCard(e)),
         ],
       ],
@@ -380,7 +381,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    event.isPublic ? 'Public' : 'Private',
+                    event.isPublic ? AppLocalizations.of(context).eventManagementPublic : AppLocalizations.of(context).eventManagementPrivate,
                     style: TextStyle(color: Colors.grey.shade600),
                   ),
                 ],
@@ -393,7 +394,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                     TextButton.icon(
                       onPressed: () => _shareEvent(event),
                       icon: const Icon(Icons.share, size: 18),
-                      label: const Text('Share'),
+                      label: Text(AppLocalizations.of(context).eventManagementShare),
                     ),
                     const SizedBox(width: 8),
                     TextButton.icon(
@@ -405,14 +406,14 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                         size: 18,
                       ),
                       label: Text(
-                        event.status == EventStatus.active ? 'Pause' : 'Resume',
+                        event.status == EventStatus.active ? AppLocalizations.of(context).eventManagementPause : AppLocalizations.of(context).eventManagementResume,
                       ),
                     ),
                     const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: () => _endEvent(event),
                       icon: const Icon(Icons.stop, size: 18),
-                      label: const Text('End'),
+                      label: Text(AppLocalizations.of(context).eventManagementEnd),
                       style: TextButton.styleFrom(foregroundColor: Colors.red),
                     ),
                   ],
@@ -452,8 +453,8 @@ class _CreateEventDialogState extends State<_CreateEventDialog> {
   void _submit() {
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter an event name'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).eventManagementEnterName),
           backgroundColor: Colors.orange,
         ),
       );
@@ -462,8 +463,8 @@ class _CreateEventDialogState extends State<_CreateEventDialog> {
 
     if (_selectedTableIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one table'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).eventManagementSelectTable),
           backgroundColor: Colors.orange,
         ),
       );
@@ -483,7 +484,7 @@ class _CreateEventDialogState extends State<_CreateEventDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Create Event'),
+      title: Text(AppLocalizations.of(context).eventManagementCreateEvent),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -491,22 +492,22 @@ class _CreateEventDialogState extends State<_CreateEventDialog> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Event Name',
-                hintText: 'e.g., Friday Night Tournament',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).eventNameLabel,
+                hintText: AppLocalizations.of(context).eventManagementEventNameHint,
                 border: OutlineInputBorder(),
               ),
               autofocus: true,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Select Tables',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            Text(
+              AppLocalizations.of(context).eventManagementSelectTables,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             ...widget.tables.map((table) => CheckboxListTile(
                   title: Text(table.name),
-                  subtitle: Text('Table ${table.tableNumber}'),
+                  subtitle: Text(AppLocalizations.of(context).eventManagementTableNumber(table.tableNumber)),
                   value: _selectedTableIds.contains(table.id),
                   onChanged: (checked) {
                     setState(() {
@@ -522,8 +523,8 @@ class _CreateEventDialogState extends State<_CreateEventDialog> {
                 )),
             const SizedBox(height: 16),
             SwitchListTile(
-              title: const Text('Public Event'),
-              subtitle: const Text('Anyone can view the leaderboard'),
+              title: Text(AppLocalizations.of(context).eventManagementPublicEvent),
+              subtitle: Text(AppLocalizations.of(context).eventManagementPublicSubtitle),
               value: _isPublic,
               onChanged: (value) {
                 setState(() => _isPublic = value);
@@ -534,9 +535,9 @@ class _CreateEventDialogState extends State<_CreateEventDialog> {
               const SizedBox(height: 8),
               TextField(
                 controller: _accessCodeController,
-                decoration: const InputDecoration(
-                  labelText: 'Access Code (optional)',
-                  hintText: 'For sharing with specific users',
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context).eventManagementAccessCode,
+                  hintText: AppLocalizations.of(context).eventManagementAccessCodeSubtitle,
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -547,11 +548,11 @@ class _CreateEventDialogState extends State<_CreateEventDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context).commonCancel),
         ),
         FilledButton(
           onPressed: _submit,
-          child: const Text('Create'),
+          child: Text(AppLocalizations.of(context).eventManagementCreateEvent),
         ),
       ],
     );

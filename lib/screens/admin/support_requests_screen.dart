@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
 import '../../models/support_request.dart';
@@ -59,6 +60,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
   }
 
   Future<void> _resolveRequest(SupportRequest request) async {
+    final l10n = AppLocalizations.of(context);
     final responseController = TextEditingController();
 
     final response = await showDialog<String>(
@@ -67,7 +69,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
         backgroundColor: AppColors.backgroundSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Resolve Request',
+          l10n.supportRequestsResolveTitle,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: Column(
@@ -75,7 +77,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Optional response to the user:',
+              l10n.supportRequestsResolveBody,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 14),
             ),
             const SizedBox(height: 12),
@@ -84,7 +86,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
               maxLines: 3,
               style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
               decoration: InputDecoration(
-                hintText: 'Response (optional)...',
+                hintText: l10n.supportRequestsResponseHint,
                 hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
                 filled: true,
                 fillColor: AppColors.backgroundPaper,
@@ -100,7 +102,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, null),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             ),
           ),
@@ -111,7 +113,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text('Resolve', style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
+            child: Text(l10n.supportRequestsResolve, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -129,7 +131,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       _loadRequests();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Request resolved', style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+          content: Text(l10n.supportRequestsResolved, style: GoogleFonts.ibmPlexSans(color: Colors.white)),
           backgroundColor: const Color(0xFF87ED81),
         ),
       );
@@ -137,7 +139,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e', style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+          content: Text(AppLocalizations.of(context).commonErrorGeneric('$e'), style: GoogleFonts.ibmPlexSans(color: Colors.white)),
           backgroundColor: const Color(0xFFD55A41),
         ),
       );
@@ -145,6 +147,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
   }
 
   Future<void> _rejectRequest(SupportRequest request) async {
+    final l10n = AppLocalizations.of(context);
     final reasonController = TextEditingController();
 
     final reason = await showDialog<String>(
@@ -153,7 +156,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
         backgroundColor: AppColors.backgroundSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Reject Request',
+          l10n.supportRequestsRejectTitle,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: Column(
@@ -161,7 +164,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Reason for rejection:',
+              l10n.supportRequestsRejectBody,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 14),
             ),
             const SizedBox(height: 12),
@@ -170,7 +173,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
               maxLines: 3,
               style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
               decoration: InputDecoration(
-                hintText: 'Reason...',
+                hintText: l10n.supportRequestsRejectHint,
                 hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
                 filled: true,
                 fillColor: AppColors.backgroundPaper,
@@ -186,7 +189,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, null),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             ),
           ),
@@ -201,7 +204,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text('Reject', style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
+            child: Text(l10n.supportRequestsReject, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -216,7 +219,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       _loadRequests();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Request rejected', style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+          content: Text(l10n.supportRequestsRejected, style: GoogleFonts.ibmPlexSans(color: Colors.white)),
           backgroundColor: const Color(0xFFD55A41),
         ),
       );
@@ -224,7 +227,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e', style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+          content: Text(AppLocalizations.of(context).commonErrorGeneric('$e'), style: GoogleFonts.ibmPlexSans(color: Colors.white)),
           backgroundColor: const Color(0xFFD55A41),
         ),
       );
@@ -242,6 +245,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
   }
 
   void _showRequestDetails(SupportRequest request) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -267,16 +271,16 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('Category', request.category),
-              _buildDetailRow('User', request.userName),
-              _buildDetailRow('Email', request.userEmail),
+              _buildDetailRow(l10n.supportRequestsCategory, request.category),
+              _buildDetailRow(l10n.supportRequestsUser, request.userName),
+              _buildDetailRow(l10n.supportRequestsEmail, request.userEmail),
               _buildDetailRow(
-                'Submitted',
+                l10n.supportRequestsSubmitted,
                 DateFormat('MMM d, yyyy HH:mm').format(request.submittedAt),
               ),
               const SizedBox(height: 12),
               Text(
-                'Description',
+                l10n.supportRequestsDescription,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFF8C8C8C),
                   fontSize: 12,
@@ -302,7 +306,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
               if (request.adminResponse != null) ...[
                 const SizedBox(height: 12),
                 Text(
-                  'Admin Response',
+                  l10n.supportRequestsAdminResponse,
                   style: GoogleFonts.ibmPlexSans(
                     color: const Color(0xFF8C8C8C),
                     fontSize: 12,
@@ -336,7 +340,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Close',
+              l10n.commonClose,
               style: GoogleFonts.ibmPlexSans(color: const Color(0xFF89F1EC)),
             ),
           ),
@@ -351,7 +355,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: Text('Reject', style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
+              child: Text(l10n.supportRequestsReject, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -363,7 +367,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: Text('Resolve', style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
+              child: Text(l10n.supportRequestsResolve, style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600)),
             ),
           ],
         ],
@@ -463,7 +467,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
           ),
           const SizedBox(width: 12),
           Text(
-            'Support Requests',
+            AppLocalizations.of(context).supportRequestsTitle,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 24,
               fontWeight: FontWeight.w600,
@@ -504,14 +508,14 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
         ),
         padding: const EdgeInsets.all(4),
         tabs: [
-          const Tab(text: 'All'),
+          Tab(text: AppLocalizations.of(context).supportRequestsAll),
           Tab(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Flexible(
-                  child: Text('Pending', overflow: TextOverflow.ellipsis),
+                Flexible(
+                  child: Text(AppLocalizations.of(context).supportRequestsPending, overflow: TextOverflow.ellipsis),
                 ),
                 if (pendingCount > 0) ...[
                   const SizedBox(width: 4),
@@ -534,7 +538,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
               ],
             ),
           ),
-          const Tab(text: 'Closed'),
+          Tab(text: AppLocalizations.of(context).supportRequestsClosed),
         ],
       ),
     );
@@ -555,7 +559,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'No requests',
+              AppLocalizations.of(context).supportRequestsNoRequests,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF8C8C8C),
                 fontSize: 16,
@@ -653,7 +657,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                         ),
                         child: Center(
                           child: Text(
-                            'Reject',
+                            AppLocalizations.of(context).supportRequestsReject,
                             style: GoogleFonts.ibmPlexSans(
                               color: const Color(0xFFD55A41),
                               fontSize: 14,
@@ -676,7 +680,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                         ),
                         child: Center(
                           child: Text(
-                            'Resolve',
+                            AppLocalizations.of(context).supportRequestsResolve,
                             style: GoogleFonts.ibmPlexSans(
                               color: Colors.black,
                               fontSize: 14,
@@ -730,21 +734,22 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
   }
 
   Widget _buildStatusBadge(SupportRequestStatus status) {
+    final l10n = AppLocalizations.of(context);
     Color color;
     String label;
 
     switch (status) {
       case SupportRequestStatus.pending:
         color = const Color(0xFFE8B55A);
-        label = 'PENDING';
+        label = l10n.supportRequestsPendingBadge;
         break;
       case SupportRequestStatus.resolved:
         color = const Color(0xFF87ED81);
-        label = 'RESOLVED';
+        label = l10n.supportRequestsResolvedBadge;
         break;
       case SupportRequestStatus.rejected:
         color = const Color(0xFFD55A41);
-        label = 'REJECTED';
+        label = l10n.supportRequestsRejectedBadge;
         break;
     }
 

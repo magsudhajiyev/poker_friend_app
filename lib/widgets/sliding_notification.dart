@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 
 /// A sliding in-app notification that appears from the top of the screen.
 /// Swipe up to dismiss, or tap to trigger an action.
@@ -183,7 +184,7 @@ class _SlidingNotificationState extends State<SlidingNotification>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'NOTIFICATION',
+                      AppLocalizations.of(context).slidingNotificationHeader,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,

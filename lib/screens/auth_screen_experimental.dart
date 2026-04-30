@@ -5,6 +5,7 @@ import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../design_system/components/buttons/glassy_icon_button.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import 'forgot_password_screen.dart';
@@ -147,6 +148,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   void _showAccountLinkDialog(GoogleSignInAccountLinkException e) {
     final passwordController = TextEditingController();
     bool isLinking = false;
+    final l10n = AppLocalizations.of(context);
 
     showDialog(
       context: context,
@@ -155,15 +157,14 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: AppColors.backgroundSurface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Link Google Account',
+          title: Text(l10n.authExpLinkGoogleTitle,
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'An account with ${e.email} already exists. '
-                'Enter your password to link your Google account.',
+                l10n.authExpLinkGoogleMessage(e.email),
                 style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
               const SizedBox(height: 16),
@@ -172,7 +173,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                 obscureText: true,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  labelText: 'Password',
+                  labelText: l10n.authExpPassword,
                   labelStyle: TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: AppColors.whiteOverlay(opacity: 0.10),
@@ -187,7 +188,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel', style: TextStyle(color: Colors.white54)),
+              child: Text(l10n.commonCancel, style: TextStyle(color: Colors.white54)),
             ),
             ElevatedButton(
               onPressed: isLinking
@@ -223,7 +224,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Link Account'),
+                  : Text(l10n.authExpLinkAccount),
             ),
           ],
         ),
@@ -232,6 +233,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   }
 
   Widget _buildGoogleSection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         const SizedBox(height: 20),
@@ -240,7 +242,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
             Expanded(child: Divider(color: AppColors.whiteOverlay(opacity: 0.24))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text('or', style: AppTypography.bodySmall(color: Colors.white54)),
+              child: Text(l10n.authExpOr, style: AppTypography.bodySmall(color: Colors.white54)),
             ),
             Expanded(child: Divider(color: AppColors.whiteOverlay(opacity: 0.24))),
           ],
@@ -263,7 +265,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                 SvgPicture.asset('assets/icons/google_logo.svg', height: 20, width: 20),
                 const SizedBox(width: 10),
                 Text(
-                  'Continue with Google',
+                  l10n.authExpContinueGoogle,
                   style: AppTypography.buttonText(color: Colors.white).copyWith(
                     fontSize: 16,
                   ),
@@ -320,7 +322,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
         // Title
         Text(
-          _isSignUp ? 'Sign up' : 'Log in to your account',
+          _isSignUp ? AppLocalizations.of(context).authExpSignUpTitle : AppLocalizations.of(context).authExpLogInTitle,
           style: AppTypography.pageTitleLarge().copyWith(
             letterSpacing: -1,
           ),
@@ -331,8 +333,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         // Subtitle
         Text(
           _isSignUp
-            ? 'Create an account to continue'
-            : 'Enter your email and password to log in',
+            ? AppLocalizations.of(context).authExpSignUpSubtitle
+            : AppLocalizations.of(context).authExpLogInSubtitle,
           style: AppTypography.bodyMedium(
             color: Colors.white.withOpacity(0.70),
           ).copyWith(fontSize: 16),
@@ -342,6 +344,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   }
 
   Widget _buildSignUpForm() {
+    final l10n = AppLocalizations.of(context);
     return Form(
       key: _registerFormKey,
       child: Column(
@@ -349,11 +352,11 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         children: [
           _buildInputField(
             controller: _registerNameController,
-            label: 'Name',
+            label: l10n.authExpName,
             showIcon: false,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your name';
-              if (value.length < 2) return 'Name must be at least 2 characters';
+              if (value == null || value.isEmpty) return l10n.authExpEnterName;
+              if (value.length < 2) return l10n.authExpNameMinLength;
               return null;
             },
           ),
@@ -362,13 +365,13 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           _buildInputField(
             controller: _registerEmailController,
-            label: 'Email',
+            label: l10n.authExpEmail,
             keyboardType: TextInputType.emailAddress,
             showIcon: false,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your email';
+              if (value == null || value.isEmpty) return l10n.authExpEnterEmail;
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email';
+                return l10n.authExpValidEmail;
               }
               return null;
             },
@@ -378,7 +381,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           _buildInputField(
             controller: _registerPasswordController,
-            label: 'Password',
+            label: l10n.authExpPassword,
             obscureText: _obscureRegisterPassword,
             showIcon: true,
             suffixIcon: IconButton(
@@ -389,8 +392,8 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
               onPressed: () => setState(() => _obscureRegisterPassword = !_obscureRegisterPassword),
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter a password';
-              if (value.length < 6) return 'Password must be at least 6 characters';
+              if (value == null || value.isEmpty) return l10n.authExpEnterPassword;
+              if (value.length < 6) return l10n.authExpPasswordMinLength;
               return null;
             },
           ),
@@ -406,14 +409,14 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                   color: Colors.white.withOpacity(0.60),
                 ).copyWith(fontSize: 13, height: 1.5),
                 children: [
-                  TextSpan(text: 'By Signing up, you agree to the '),
+                  TextSpan(text: l10n.authExpBySigningUp),
                   TextSpan(
-                    text: 'Terms of Service',
+                    text: l10n.authExpTermsOfService,
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                   ),
-                  TextSpan(text: '\nand '),
+                  TextSpan(text: l10n.authExpAnd),
                   TextSpan(
-                    text: 'Privacy Policy',
+                    text: l10n.authExpPrivacyPolicy,
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -425,7 +428,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           // Create Account Button
           _buildPrimaryButton(
-            label: 'Create account',
+            label: l10n.authExpCreateAccount,
             onPressed: _isLoading ? null : _register,
           ),
 
@@ -439,9 +442,9 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                 text: TextSpan(
                   style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
                   children: [
-                    TextSpan(text: 'Already have an account? '),
+                    TextSpan(text: l10n.authExpAlreadyHaveAccount),
                     TextSpan(
-                      text: 'Sign in',
+                      text: l10n.authExpSignIn,
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -461,6 +464,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   }
 
   Widget _buildSignInForm() {
+    final l10n = AppLocalizations.of(context);
     return Form(
       key: _loginFormKey,
       child: Column(
@@ -468,13 +472,13 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         children: [
           _buildInputField(
             controller: _loginEmailController,
-            label: 'Email',
+            label: l10n.authExpEmail,
             keyboardType: TextInputType.emailAddress,
             showIcon: false,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your email';
+              if (value == null || value.isEmpty) return l10n.authExpEnterEmail;
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email';
+                return l10n.authExpValidEmail;
               }
               return null;
             },
@@ -484,7 +488,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           _buildInputField(
             controller: _loginPasswordController,
-            label: 'Password',
+            label: l10n.authExpPassword,
             obscureText: _obscureLoginPassword,
             showIcon: true,
             suffixIcon: IconButton(
@@ -495,7 +499,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
               onPressed: () => setState(() => _obscureLoginPassword = !_obscureLoginPassword),
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your password';
+              if (value == null || value.isEmpty) return l10n.authExpEnterPassword;
               return null;
             },
           ),
@@ -508,7 +512,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
             child: GestureDetector(
               onTap: _handleForgotPassword,
               child: Text(
-                'Forgot password?',
+                l10n.authExpForgotPassword,
                 style: AppTypography.bodySmall(
                   color: Colors.white.withOpacity(0.70),
                 ).copyWith(
@@ -523,7 +527,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
 
           // Sign In Button
           _buildPrimaryButton(
-            label: 'Sign in',
+            label: l10n.authExpSignIn,
             onPressed: _isLoading ? null : _signIn,
           ),
 
@@ -537,9 +541,9 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                 text: TextSpan(
                   style: AppTypography.bodySmall(color: Colors.white.withOpacity(0.70)),
                   children: [
-                    TextSpan(text: "Don't have an account? "),
+                    TextSpan(text: l10n.authExpDontHaveAccount),
                     TextSpan(
-                      text: 'Sign up',
+                      text: l10n.authExpSignUp,
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,

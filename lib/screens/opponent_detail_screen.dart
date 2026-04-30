@@ -12,6 +12,7 @@ import 'opponent_hands_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/form_drawer.dart';
+import '../l10n/app_localizations.dart';
 
 class OpponentDetailScreen extends StatefulWidget {
   final Opponent opponent;
@@ -451,6 +452,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -529,8 +531,8 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             SizedBox(height: 2),
                             Text(
                               _opponentStats != null && _opponentStats!.handsPlayed > 0
-                                  ? '${_opponentStats!.handsPlayed} hands tracked'
-                                  : 'No data yet',
+                                  ? l10n.opponentDetailHandsTracked(_opponentStats!.handsPlayed)
+                                  : l10n.opponentDetailNoDataYet,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 15,
                                 color: Colors.grey,
@@ -576,6 +578,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   }
 
   Widget _buildBasicInfoCard() {
+    final l10n = AppLocalizations.of(context);
     final cardColor = _getColorForOpponent(_opponent.color);
     final dotsKey = GlobalKey();
 
@@ -644,7 +647,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 4),
                   child: Text(
-                    'Hands',
+                    l10n.opponentDetailHands,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       color: Color(0xFFB3B4B6),
@@ -685,7 +688,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 4),
                       child: Text(
-                        'Last Seen:',
+                        l10n.opponentDetailLastSeen,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 13,
                           color: Color(0xFF808285),
@@ -717,6 +720,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   }
 
   Widget _buildNotesSection() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -738,7 +742,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               ),
               SizedBox(width: 8),
               Text(
-                'Notes',
+                l10n.opponentDetailNotes,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 13,
                   color: Color(0xFF808285),
@@ -765,6 +769,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   }
 
   void _showOpponentOptionsMenu(GlobalKey dotsKey) {
+    final l10n = AppLocalizations.of(context);
     // Get position of the dots icon
     final RenderBox renderBox = dotsKey.currentContext!.findRenderObject() as RenderBox;
     final Offset offset = renderBox.localToGlobal(Offset.zero);
@@ -830,7 +835,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 12),
                               child: Text(
-                                'Edit Opponent',
+                                l10n.opponentDetailEditOpponent,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
@@ -867,7 +872,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 12),
                               child: Text(
-                                'Delete Opponent',
+                                l10n.opponentDetailDeleteOpponent,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
@@ -891,6 +896,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   }
 
   Widget _buildStatisticsSection() {
+    final l10n = AppLocalizations.of(context);
     if (_isLoadingStats) {
       return Center(
         child: CircularProgressIndicator(
@@ -907,7 +913,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
-          'No statistics available',
+          l10n.opponentDetailNoStatisticsAvailable,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white.withOpacity(0.6),
             fontSize: 14,
@@ -927,7 +933,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         children: [
           // Section header
           Text(
-            'Statistics',
+            l10n.opponentDetailStatistics,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -937,9 +943,9 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
           ),
           SizedBox(height: 16),
           // List items with dividers - 7 poker stats
-          _buildStatListItem('Aggression Freq', _formatStatWithOpportunity(_statistics!['aggressionFreq'], _statistics!['aggressionTotal'])),
+          _buildStatListItem(l10n.opponentDetailAggressionFreq, _formatStatWithOpportunity(_statistics!['aggressionFreq'], _statistics!['aggressionTotal'])),
           _buildDivider(),
-          _buildStatListItem('Showdown %', _formatStatWithOpportunity(_statistics!['showdown'], _statistics!['showdownHands'])),
+          _buildStatListItem(l10n.opponentDetailShowdownPercent, _formatStatWithOpportunity(_statistics!['showdown'], _statistics!['showdownHands'])),
           _buildDivider(),
           _buildStatListItem('3-Bet', _formatStatWithOpportunity(_statistics!['threeBet'], _statistics!['threeBetOpportunity'])),
           _buildDivider(),
@@ -1003,6 +1009,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   }
 
   Widget _buildHandHistorySection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1014,7 +1021,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
             children: [
               // Title
               Text(
-                'Hand History',
+                l10n.opponentDetailHandHistory,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
@@ -1024,7 +1031,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               ),
               // Subtitle
               Text(
-                'View all hands played with this opponent',
+                l10n.opponentDetailViewAllHands,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -1067,7 +1074,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               elevation: 0,
             ),
             child: Text(
-              'View Hand History',
+              l10n.opponentDetailViewHandHistory,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
@@ -1083,6 +1090,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   }
 
   void _showNoHandsFoundDialog() {
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1127,7 +1135,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               const SizedBox(height: 18),
               // Title
               Text(
-                'No Hands Found',
+                l10n.opponentDetailNoHandsFound,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
@@ -1139,7 +1147,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               const SizedBox(height: 7),
               // Description
               Text(
-                'You haven\'t played any hands with\n"${_opponent.name}" yet',
+                l10n.opponentDetailNoHandsMessage(_opponent.name),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
@@ -1164,7 +1172,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     elevation: 0,
                   ),
                   child: Text(
-                    'Close',
+                    l10n.commonClose,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -1191,6 +1199,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     return '-';
   }
   void _showEditOpponentDialog() {
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController(text: _opponent.name);
     final notesController = TextEditingController(text: _opponent.notes ?? '');
     OpponentColor selectedColor = _opponent.color;
@@ -1199,14 +1208,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     // Color name mapping
     String getColorName(OpponentColor color) {
       switch (color) {
-        case OpponentColor.red: return 'Red';
-        case OpponentColor.blue: return 'Light Blue';
-        case OpponentColor.green: return 'Green';
-        case OpponentColor.orange: return 'Orange';
-        case OpponentColor.purple: return 'Purple';
-        case OpponentColor.teal: return 'Teal';
-        case OpponentColor.pink: return 'Pink';
-        case OpponentColor.indigo: return 'Indigo';
+        case OpponentColor.red: return l10n.opponentDetailColorRed;
+        case OpponentColor.blue: return l10n.opponentDetailColorLightBlue;
+        case OpponentColor.green: return l10n.opponentDetailColorGreen;
+        case OpponentColor.orange: return l10n.opponentDetailColorOrange;
+        case OpponentColor.purple: return l10n.opponentDetailColorPurple;
+        case OpponentColor.teal: return l10n.opponentDetailColorTeal;
+        case OpponentColor.pink: return l10n.opponentDetailColorPink;
+        case OpponentColor.indigo: return l10n.opponentDetailColorIndigo;
       }
     }
 
@@ -1348,14 +1357,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Opponent updated successfully'),
+            content: Text(l10n.opponentDetailUpdatedSuccessfully),
             backgroundColor: Color(0xFF44D69B),
           ),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(l10n.commonErrorGeneric(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -1364,7 +1373,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
 
     FormDrawer.show(
       context: context,
-      title: 'Edit Opponent',
+      title: l10n.opponentDetailEditOpponent,
       onSave: saveOpponent,
       body: StatefulBuilder(
         builder: (context, setSheetState) {
@@ -1390,7 +1399,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         height: 1.44,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Opponent Name',
+                        hintText: l10n.opponentDetailOpponentName,
                         hintStyle: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           color: Colors.white,
@@ -1425,7 +1434,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         height: 1.44,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Notes (Optional)',
+                        hintText: l10n.opponentDetailNotesOptional,
                         hintStyle: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           color: Colors.white.withOpacity(0.5),
@@ -1460,7 +1469,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Pick a color',
+                            l10n.opponentDetailPickColor,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 17,
                               color: Color(0xFFB9B9B9),
@@ -1501,6 +1510,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
   }
 
   void _showDeleteConfirmation() {
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1522,7 +1532,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     SizedBox(height: 24),
                     // Title
                     Text(
-                      'Delete opponent?',
+                      l10n.opponentDetailDeleteConfirmTitle,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -1535,7 +1545,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
-                        'Are you sure you want to delete "${_opponent.name}"?\nThis action can not be undone',
+                        l10n.opponentDetailDeleteConfirmMessage(_opponent.name),
                         textAlign: TextAlign.center,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
@@ -1561,14 +1571,14 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                           Navigator.pop(context, true); // Go back with result
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Opponent deleted successfully'),
+                              content: Text(l10n.opponentDetailDeletedSuccessfully),
                               backgroundColor: Colors.orange,
                             ),
                           );
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Error deleting opponent: $e'),
+                              content: Text(l10n.opponentDetailErrorDeleting(e.toString())),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -1578,7 +1588,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 10),
                         child: Text(
-                          'Delete',
+                          l10n.commonDelete,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
@@ -1604,7 +1614,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Text(
-                    'Cancel',
+                    l10n.commonCancel,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 16,

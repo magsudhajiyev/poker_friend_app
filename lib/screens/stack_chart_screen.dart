@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import 'hand_actions_screen.dart';
 
@@ -95,21 +96,21 @@ class _StackChartScreenState extends State<StackChartScreen> {
           return '${minutes}m';
         }
       } catch (_) {
-        return 'N/A';
+        return AppLocalizations.of(context).commonNA;
       }
     }
-    return 'N/A';
+    return AppLocalizations.of(context).commonNA;
   }
 
   String _formatAvgGrowth() {
-    if (widget.stackHistory.length < 2) return 'N/A';
+    if (widget.stackHistory.length < 2) return AppLocalizations.of(context).commonNA;
 
     final initialEntry = widget.stackHistory.firstWhere(
       (e) => e['changeType'] == 'initial',
       orElse: () => widget.stackHistory.first,
     );
     final startStack = initialEntry['stackSize']?.toDouble() ?? 0.0;
-    if (startStack <= 0) return 'N/A';
+    if (startStack <= 0) return AppLocalizations.of(context).commonNA;
 
     // Count actual hand entries (exclude initial, rebuy, final)
     int handCount = 0;
@@ -122,7 +123,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
         handCount++;
       }
     }
-    if (handCount == 0) return 'N/A';
+    if (handCount == 0) return AppLocalizations.of(context).commonNA;
     final avg = totalGrowth / handCount;
     return '${avg >= 0 ? '+' : ''}${avg.toStringAsFixed(2)}%';
   }
@@ -200,7 +201,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
   Widget _buildHeader(Color lineColor) {
     final avgGrowth = _formatAvgGrowth();
     final duration = _formatDuration();
-    final sessionName = widget.sessionData['sessionName'] ?? 'Poker Session';
+    final sessionName = widget.sessionData['sessionName'] ?? AppLocalizations.of(context).stackChartScreenPokerSession;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -231,7 +232,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Stack Chart',
+                  AppLocalizations.of(context).stackChartScreenTitle,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     color: Colors.white,
@@ -250,12 +251,12 @@ class _StackChartScreenState extends State<StackChartScreen> {
             ),
           ),
           // Info pills
-          _buildInfoPill('Avg Growth', avgGrowth, lineColor),
+          _buildInfoPill(AppLocalizations.of(context).stackChartScreenAvgGrowth, avgGrowth, lineColor),
           const SizedBox(width: 10),
-          _buildInfoPill('Duration', duration, Colors.white),
+          _buildInfoPill(AppLocalizations.of(context).stackChartScreenDuration, duration, Colors.white),
           const SizedBox(width: 10),
           _buildInfoPill(
-            _isCashGame() ? 'P/L' : 'Stack',
+            _isCashGame() ? AppLocalizations.of(context).stackChartScreenProfitLoss : AppLocalizations.of(context).stackChartScreenStack,
             _isCashGame()
                 ? '${widget.profitLoss >= 0 ? '+' : ''}${_formatCurrency(widget.profitLoss)}'
                 : _formatCurrency(widget.stackHistory.isNotEmpty
@@ -395,13 +396,13 @@ class _StackChartScreenState extends State<StackChartScreen> {
                 String label;
                 switch (changeType) {
                   case 'initial':
-                    label = 'Start';
+                    label = AppLocalizations.of(context).stackChartScreenStart;
                     break;
                   case 'rebuy':
-                    label = 'Rebuy';
+                    label = AppLocalizations.of(context).stackChartScreenRebuy;
                     break;
                   case 'final':
-                    label = 'End';
+                    label = AppLocalizations.of(context).stackChartScreenEnd;
                     break;
                   default:
                     label = '#${entry['handNumber'] ?? idx}';

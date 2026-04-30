@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import 'card_keyboard.dart';
 
@@ -107,6 +108,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Row(
@@ -133,7 +135,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
           Expanded(
             child: Center(
               child: Text(
-                'Hand Review',
+                l10n.handReviewTitle,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   color: Colors.white,
@@ -170,13 +172,14 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
   }
 
   Widget _buildHoleCardsSection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Text(
-              'Your Hole Cards',
+              l10n.handReviewYourHoleCards,
               style: GoogleFonts.ibmPlexSans(
                 fontWeight: FontWeight.w500,
                 color: Colors.white,
@@ -185,7 +188,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             ),
             const SizedBox(width: 6),
             Text(
-              '(optional)',
+              l10n.handReviewOptional,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF8C8C8C),
                 fontSize: 13,
@@ -206,11 +209,12 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
   }
 
   Widget _buildTagsSection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Tags',
+          l10n.handReviewQuickTags,
           style: GoogleFonts.ibmPlexSans(
             fontWeight: FontWeight.w500,
             color: Colors.white,
@@ -275,11 +279,12 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
   }
 
   Widget _buildNotesSection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Notes',
+          l10n.handReviewNotes,
           style: GoogleFonts.ibmPlexSans(
             fontWeight: FontWeight.w500,
             color: Colors.white,
@@ -298,7 +303,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
             maxLines: 2,
             style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14),
             decoration: InputDecoration(
-              hintText: 'Add a note about this hand...',
+              hintText: l10n.handReviewNotesHint,
               hintStyle: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF4E5054),
                 fontSize: 13,
@@ -313,6 +318,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
   }
 
   Widget _buildActions() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         SizedBox(
@@ -328,7 +334,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
               padding: EdgeInsets.zero,
             ),
             child: Text(
-              'Save Hand',
+              l10n.handReviewSaveHand,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.black,
                 fontSize: 17,
@@ -356,7 +362,7 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
               padding: EdgeInsets.zero,
             ),
             child: Text(
-              'Skip',
+              l10n.handReviewSkip,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 17,
@@ -407,16 +413,18 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
 
     if (c1 && c2) {
       if (_slots[0] == _slots[1]) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You cannot select the same card twice!'), backgroundColor: Colors.red),
+          SnackBar(content: Text(l10n.handReviewDuplicateCardError), backgroundColor: Colors.red),
         );
         return;
       }
       holeCards = HoleCards(card1: _slots[0], card2: _slots[1]);
     } else if (c1 || c2) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select both hole cards or leave both empty'),
+        SnackBar(
+          content: Text(l10n.handReviewSelectBothOrNone),
           backgroundColor: Colors.orange,
         ),
       );

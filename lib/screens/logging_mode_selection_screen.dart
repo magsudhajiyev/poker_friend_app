@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -64,6 +65,7 @@ class _LoggingModeSelectionScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -108,7 +110,7 @@ class _LoggingModeSelectionScreenState
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Choose Mode',
+                        l10n.loggingModeChooseMode,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           color: Colors.white,
@@ -152,13 +154,13 @@ class _LoggingModeSelectionScreenState
                         _buildModeCard(
                           context: context,
                           key: _fullModeCardKey,
-                          title: 'Full Logging Mode',
-                          subtitle: 'Complete Session Tracking',
+                          title: l10n.loggingModeFullTitle,
+                          subtitle: l10n.loggingModeFullSubtitle,
                           features: [
-                            'Multi-hand session tracking',
-                            'Real time statistics',
-                            'Detailed hand history',
-                            'Session analytics',
+                            l10n.loggingModeFullFeature1,
+                            l10n.loggingModeFullFeature2,
+                            l10n.loggingModeFullFeature3,
+                            l10n.loggingModeFullFeature4,
                           ],
                           onTap: () =>
                               _navigateToMode(context, LoggingMode.full),
@@ -170,13 +172,13 @@ class _LoggingModeSelectionScreenState
                         _buildModeCard(
                           context: context,
                           key: _individualModeCardKey,
-                          title: 'Individual Logging Mode',
-                          subtitle: 'Single hand tracking',
+                          title: l10n.loggingModeIndividualTitle,
+                          subtitle: l10n.loggingModeIndividualSubtitle,
                           features: [
-                            'Single hand focus',
-                            'Quick logging',
-                            'Hand analysis',
-                            'Instant results',
+                            l10n.loggingModeIndividualFeature1,
+                            l10n.loggingModeIndividualFeature2,
+                            l10n.loggingModeIndividualFeature3,
+                            l10n.loggingModeIndividualFeature4,
                           ],
                           onTap: () =>
                               _navigateToMode(context, LoggingMode.individual),
@@ -204,6 +206,7 @@ class _LoggingModeSelectionScreenState
     required VoidCallback onTap,
     Key? key,
   }) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       key: key,
       width: double.infinity,
@@ -263,7 +266,7 @@ class _LoggingModeSelectionScreenState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Features',
+                      l10n.loggingModeFeatures,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         color: Colors.white,
@@ -330,7 +333,7 @@ class _LoggingModeSelectionScreenState
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Center(
                   child: Text(
-                    'Start',
+                    l10n.loggingModeStart,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       color: Colors.black,

@@ -4,6 +4,7 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/username_service.dart';
 import '../services/display_identity_service.dart';
@@ -85,7 +86,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
         _hasChecked = false;
         _isAvailable = false;
         _isChecking = false;
-        _availabilityError = 'This is your current username';
+        _availabilityError = AppLocalizations.of(context).usernameSetupCurrentUsername;
       });
       return;
     }
@@ -107,7 +108,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
             _isChecking = false;
             _hasChecked = true;
             _isAvailable = available;
-            _availabilityError = available ? null : 'Already taken';
+            _availabilityError = available ? null : AppLocalizations.of(context).usernameSetupAlreadyTaken;
           });
         }
       } catch (e) {
@@ -115,7 +116,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
           setState(() {
             _isChecking = false;
             _hasChecked = false;
-            _availabilityError = 'Could not check availability';
+            _availabilityError = AppLocalizations.of(context).usernameSetupCouldNotCheck;
           });
         }
       }
@@ -155,7 +156,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
         _isClaiming = false;
         _isAvailable = false;
         _hasChecked = true;
-        _availabilityError = 'Username was just taken. Try another.';
+        _availabilityError = AppLocalizations.of(context).usernameSetupJustTaken;
       });
     }
   }
@@ -203,13 +204,13 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                       ),
                     Text(
                       widget.isChanging
-                          ? 'Change your username'
-                          : 'Choose your username',
+                          ? AppLocalizations.of(context).usernameSetupChangeTitle
+                          : AppLocalizations.of(context).usernameSetupChooseTitle,
                       style: AppTypography.pageTitleLarge(),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'This is how other players will know you at the table',
+                      AppLocalizations.of(context).usernameSetupSubtitle,
                       style: AppTypography.bodyMedium()
                           .copyWith(color: Colors.white.withOpacity(0.60)),
                     ),
@@ -224,7 +225,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                       autocorrect: false,
                       enableSuggestions: false,
                       decoration: InputDecoration(
-                        labelText: 'Username',
+                        labelText: AppLocalizations.of(context).usernameSetupLabel,
                         labelStyle: TextStyle(
                           color: Colors.white.withOpacity(0.50),
                           fontSize: 16,
@@ -276,7 +277,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Username is required';
+                          return AppLocalizations.of(context).usernameSetupRequired;
                         }
                         return UsernameService.validateUsername(
                             value.toLowerCase().trim());
@@ -294,7 +295,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Text(
-                        '3–20 characters · letters, numbers, underscores',
+                        AppLocalizations.of(context).usernameSetupRulesHint,
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.35),
                           fontSize: 13,
@@ -334,8 +335,8 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                               )
                             : Text(
                                 widget.isChanging
-                                    ? 'Update username'
-                                    : 'Claim username',
+                                    ? AppLocalizations.of(context).usernameSetupUpdateButton
+                                    : AppLocalizations.of(context).usernameSetupClaimButton,
                                 style: AppTypography.buttonText()
                                     .copyWith(fontSize: 16),
                               ),
@@ -349,7 +350,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                         child: TextButton(
                           onPressed: _isClaiming ? null : _skipUsername,
                           child: Text(
-                            'Skip for now',
+                            AppLocalizations.of(context).usernameSetupSkip,
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.50),
                               fontSize: 15,
@@ -408,16 +409,16 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Text(
-          'Checking availability…',
+          AppLocalizations.of(context).usernameSetupCheckingAvailability,
           style: TextStyle(color: Colors.white.withOpacity(0.50), fontSize: 13),
         ),
       );
     }
     if (_hasChecked && _isAvailable) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 4),
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Text(
-          'Available!',
+          AppLocalizations.of(context).usernameSetupAvailable,
           style: TextStyle(color: AppColors.accentGreen, fontSize: 13),
         ),
       );

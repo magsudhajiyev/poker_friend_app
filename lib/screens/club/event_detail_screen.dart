@@ -28,6 +28,7 @@ import '../spectator/event_rankings_screen.dart';
 import '../player/player_session_screen.dart';
 import 'final_standings_screen.dart';
 import '../../design_system/components/cards/error_state_card.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Event detail screen with RSVP functionality
 class EventDetailScreen extends StatefulWidget {
@@ -142,20 +143,21 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         String message;
         Color bgColor;
 
+        final l10n = AppLocalizations.of(context);
         if (newStatus == EventStatus.active) {
-          message = 'Event is now LIVE!';
+          message = l10n.eventDetailLiveNow;
           bgColor = const Color(0xFF89F1EC);
         } else if (newStatus == EventStatus.completed) {
-          message = 'Event has ended';
+          message = l10n.eventDetailEnded;
           bgColor = Colors.white.withOpacity(0.3);
         } else if (newStatus == EventStatus.cancelled) {
-          message = 'Event was cancelled';
+          message = l10n.eventDetailCancelled;
           bgColor = const Color(0xFFFF4444);
         } else if (newStatus == EventStatus.paused) {
-          message = 'Event is paused';
+          message = l10n.eventDetailPaused;
           bgColor = Colors.amber;
         } else {
-          message = 'Event status updated';
+          message = l10n.eventDetailStatusUpdated;
           bgColor = Colors.white.withOpacity(0.2);
         }
 
@@ -296,8 +298,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Event removed from your calendar'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context).eventDetailRemovedFromCalendar),
               backgroundColor: Colors.orange,
             ),
           );
@@ -306,16 +308,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
       // Notify admin about the RSVP
       final memberName = AuthService.userDisplayName ?? 'A member';
+      final l10n = AppLocalizations.of(context);
       String rsvpStatusText;
       switch (status) {
         case AttendanceStatus.going:
-          rsvpStatusText = 'Going';
+          rsvpStatusText = l10n.eventDetailRsvpGoing;
           break;
         case AttendanceStatus.maybe:
-          rsvpStatusText = 'Maybe';
+          rsvpStatusText = l10n.eventDetailRsvpMaybe;
           break;
         case AttendanceStatus.notGoing:
-          rsvpStatusText = "Can't go";
+          rsvpStatusText = l10n.eventDetailRsvpCantGo;
           break;
       }
 
@@ -329,7 +332,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       _loadData(); // Refresh
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update RSVP: $e')),
+        SnackBar(content: Text(AppLocalizations.of(context).eventDetailRsvpFailed('$e'))),
       );
     }
   }
@@ -345,14 +348,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             borderRadius: BorderRadius.circular(18),
           ),
           title: Text(
-            "Can't Start Event",
+            AppLocalizations.of(context).eventDetailCantStartTitle,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
           content: Text(
-            'No tables are assigned to this event. Please edit the event and assign tables first.',
+            AppLocalizations.of(context).eventDetailCantStartBody,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white.withOpacity(0.7),
             ),
@@ -364,7 +367,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 foregroundColor: const Color(0xFF89F1EC),
               ),
               child: Text(
-                'OK',
+                AppLocalizations.of(context).commonOk,
                 style: GoogleFonts.ibmPlexSans(
                   fontWeight: FontWeight.w600,
                 ),
@@ -384,11 +387,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         setState(() => _event = updatedEvent);
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event started!')),
+        SnackBar(content: Text(AppLocalizations.of(context).eventDetailStarted)),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to start event: $e')),
+        SnackBar(content: Text(AppLocalizations.of(context).eventDetailStartFailed('$e'))),
       );
     }
   }
@@ -398,12 +401,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final isLive = _event.status == EventStatus.active ||
         _event.status == EventStatus.paused;
 
-    final dialogTitle = isLive ? 'Finish Event?' : 'Cancel Event?';
+    final l10n = AppLocalizations.of(context);
+    final dialogTitle = isLive ? l10n.eventDetailFinishTitle : l10n.eventDetailCancelTitle;
     final dialogContent = isLive
-        ? 'This will end all active tables and save all player data.'
-        : 'This will notify all members. This action cannot be undone.';
-    final confirmButtonText = isLive ? 'Finish Event' : 'Cancel Event';
-    final keepButtonText = 'Keep Event';
+        ? l10n.eventDetailFinishBody
+        : l10n.eventDetailCancelBody;
+    final confirmButtonText = isLive ? l10n.eventDetailFinishButton : l10n.eventDetailCancelButton;
+    final keepButtonText = l10n.eventDetailKeepEvent;
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -463,7 +467,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         Navigator.pop(context, true); // Return to refresh list
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to ${isLive ? "finish" : "cancel"} event: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).eventDetailFailedFinishCancel(isLive ? "finish" : "cancel", e.toString()))),
         );
       }
     }
@@ -514,7 +518,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Event added to your calendar!'),
+            content: Text(AppLocalizations.of(context).eventDetailAddedToCalendar),
             backgroundColor: const Color(0xFF89F1EC),
           ),
         );
@@ -523,7 +527,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to add to calendar: $e'),
+            content: Text(AppLocalizations.of(context).eventDetailCalendarFailed('$e')),
             backgroundColor: const Color(0xFFFF4444),
           ),
         );
@@ -623,7 +627,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   const SizedBox(height: 8),
                                   _buildInfoCard(
                                     icon: Icons.location_on_outlined,
-                                    title: 'Location',
+                                    title: AppLocalizations.of(context).eventDetailLocation,
                                     content: Text(
                                       _event.location!,
                                       style: GoogleFonts.ibmPlexSans(
@@ -639,7 +643,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   const SizedBox(height: 8),
                                   _buildInfoCard(
                                     icon: Icons.attach_money,
-                                    title: 'Buy-in',
+                                    title: AppLocalizations.of(context).eventDetailBuyIn,
                                     content: Text(
                                       '\$${_event.buyInAmount?.toStringAsFixed(0)}',
                                       style: GoogleFonts.ibmPlexSans(
@@ -656,7 +660,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   const SizedBox(height: 8),
                                   _buildInfoCard(
                                     icon: Icons.casino_outlined,
-                                    title: 'Stakes',
+                                    title: AppLocalizations.of(context).eventDetailStakes,
                                     content: Text(
                                       _event.stakes!,
                                       style: GoogleFonts.ibmPlexSans(
@@ -673,7 +677,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   const SizedBox(height: 8),
                                   _buildInfoCard(
                                     icon: Icons.layers_outlined,
-                                    title: 'Starting Stack',
+                                    title: AppLocalizations.of(context).eventDetailStartingStack,
                                     content: Text(
                                       '${_event.startingStack!.toStringAsFixed(0)}',
                                       style: GoogleFonts.ibmPlexSans(
@@ -689,7 +693,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 if (_event.description != null && _event.description!.isNotEmpty) ...[
                                   const SizedBox(height: 16),
                                   Text(
-                                    'ABOUT',
+                                    AppLocalizations.of(context).eventDetailAbout,
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 12,
                                       color: const Color(0xFF87ED81),
@@ -859,22 +863,23 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     Color textColor;
     String text;
 
+    final l10n = AppLocalizations.of(context);
     if (_event.isLive) {
       bgColor = const Color(0xFFEE3E1A);
       textColor = Colors.white;
-      text = 'LIVE NOW';
+      text = l10n.eventDetailLiveBadge;
     } else if (_event.status == EventStatus.cancelled) {
       bgColor = Colors.white.withOpacity(0.1);
       textColor = Colors.white.withOpacity(0.5);
-      text = 'CANCELLED';
+      text = l10n.eventDetailCancelledBadge;
     } else if (_event.status == EventStatus.completed) {
       bgColor = Colors.white.withOpacity(0.1);
       textColor = Colors.white.withOpacity(0.7);
-      text = 'COMPLETED';
+      text = l10n.eventDetailCompletedBadge;
     } else {
       bgColor = const Color(0xFF89F1EC).withOpacity(0.2);
       textColor = const Color(0xFF89F1EC);
-      text = 'UPCOMING';
+      text = l10n.eventDetailUpcomingBadge;
     }
 
     return Container(
@@ -1007,7 +1012,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "You're seated, good luck!",
+                          AppLocalizations.of(context).eventDetailYoureSeatedGoodLuck,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 15,
                             color: Colors.white,
@@ -1038,7 +1043,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Date & Time',
+                    AppLocalizations.of(context).eventDetailDateAndTime,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
                       color: const Color(0xFFB3B4B6),
@@ -1079,9 +1084,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     if (_currentSeat != null) {
       final tableIndex = _event.tableIds.indexOf(_currentSeat!.tableId);
       final tableNum = tableIndex >= 0 ? tableIndex + 1 : 1;
-      return 'Table $tableNum, Seat #${_currentSeat!.seatNumber}';
+      return AppLocalizations.of(context).eventDetailTableSeatInfo(tableNum.toString(), _currentSeat!.seatNumber);
     }
-    return 'Seated';
+    return AppLocalizations.of(context).eventDetailSeated;
   }
 
   Widget _buildRSVPSection() {
@@ -1089,7 +1094,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'ARE YOU GOING?',
+          AppLocalizations.of(context).eventDetailAreYouGoing,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
             color: const Color(0xFF87ED81),
@@ -1104,7 +1109,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               child: _buildRSVPButton(
                 status: AttendanceStatus.going,
                 icon: Icons.check_circle,
-                label: 'Going',
+                label: AppLocalizations.of(context).eventDetailRsvpGoing,
                 color: const Color(0xFF89F1EC),
               ),
             ),
@@ -1113,7 +1118,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               child: _buildRSVPButton(
                 status: AttendanceStatus.maybe,
                 icon: Icons.help_outline,
-                label: 'Maybe',
+                label: AppLocalizations.of(context).eventDetailRsvpMaybe,
                 color: Colors.amber,
               ),
             ),
@@ -1122,7 +1127,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               child: _buildRSVPButton(
                 status: AttendanceStatus.notGoing,
                 icon: Icons.cancel_outlined,
-                label: "Can't go",
+                label: AppLocalizations.of(context).eventDetailRsvpCantGo,
                 color: const Color(0xFFFF4444),
               ),
             ),
@@ -1202,7 +1207,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             const SizedBox(width: 10),
             Text(
-              _addedToCalendar ? 'Added to Calendar' : 'Add to Calendar',
+              _addedToCalendar ? AppLocalizations.of(context).eventDetailAddedToCalendarBtn : AppLocalizations.of(context).eventDetailAddToCalendarBtn,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1233,7 +1238,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Who's Coming",
+                AppLocalizations.of(context).eventDetailWhosGoing,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   color: Colors.white,
@@ -1245,7 +1250,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               GestureDetector(
                 onTap: _navigateToAttendees,
                 child: Text(
-                  'See all',
+                  AppLocalizations.of(context).eventDetailSeeAll,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     color: const Color(0xFFD3FFFD),
@@ -1262,7 +1267,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
           // Going row
           _buildAttendanceRow(
-            label: 'Going',
+            label: AppLocalizations.of(context).eventDetailRsvpGoing,
             count: goingCount,
             countColor: const Color(0xFF89F1EC),
           ),
@@ -1270,7 +1275,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
           // Maybe row
           _buildAttendanceRow(
-            label: 'Maybe',
+            label: AppLocalizations.of(context).eventDetailRsvpMaybe,
             count: maybeCount,
             countColor: const Color(0xFFE3FF68),
           ),
@@ -1340,7 +1345,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             const SizedBox(width: 10),
             Text(
-              'Start Dealing',
+              AppLocalizations.of(context).eventDetailStartDealing,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1386,7 +1391,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             const SizedBox(width: 10),
             Text(
-              'View Live Rankings',
+              AppLocalizations.of(context).eventDetailViewLiveRankings,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1410,8 +1415,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (seats.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('You are not currently seated at any table'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context).eventDetailNotSeatedAtTable),
               backgroundColor: Colors.orange,
             ),
           );
@@ -1426,8 +1431,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (seatInEvent == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('You are not seated in this event'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context).eventDetailNotSeatedInEvent),
               backgroundColor: Colors.orange,
             ),
           );
@@ -1452,7 +1457,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error finding your seat: $e'),
+            content: Text(AppLocalizations.of(context).eventDetailErrorFindingSeat(e.toString())),
             backgroundColor: const Color(0xFFFF4444),
           ),
         );
@@ -1483,7 +1488,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             const SizedBox(width: 10),
             Text(
-              'Return to My Seat',
+              AppLocalizations.of(context).eventDetailReturnToSeat,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1529,7 +1534,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             const SizedBox(width: 10),
             Text(
-              'View Final Standings',
+              AppLocalizations.of(context).eventDetailViewFinalStandings,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1562,7 +1567,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             const SizedBox(width: 10),
             Text(
-              _event.tableIds.length > 1 ? 'Manage Tables' : 'Manage Table',
+              _event.tableIds.length > 1 ? AppLocalizations.of(context).eventDetailManageTables : AppLocalizations.of(context).eventDetailManageTable,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1598,7 +1603,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             const SizedBox(width: 10),
             Text(
-              'See Availability',
+              AppLocalizations.of(context).eventDetailSeeAvailability,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1633,7 +1638,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ),
           const SizedBox(width: 10),
           Text(
-            "You're Seated",
+            AppLocalizations.of(context).eventDetailYoureSeated,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -1648,8 +1653,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   Future<void> _navigateToTableView({required bool isAdmin}) async {
     if (_event.tableIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No tables assigned to this event'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).eventDetailNoTablesAssigned),
           backgroundColor: Colors.orange,
         ),
       );
@@ -1717,7 +1722,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'ADMIN ACTIONS',
+          AppLocalizations.of(context).eventDetailAdminActions,
           style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
             color: const Color(0xFF87ED81),
@@ -1733,7 +1738,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 child: _buildAdminButton(
                   onTap: _startEvent,
                   icon: Icons.play_arrow,
-                  label: 'Start Event',
+                  label: AppLocalizations.of(context).eventDetailStartEvent,
                   color: const Color(0xFF89F1EC),
                 ),
               ),
@@ -1751,8 +1756,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       : Icons.cancel,
                   label: (_event.status == EventStatus.active ||
                           _event.status == EventStatus.paused)
-                      ? 'Finish'
-                      : 'Cancel',
+                      ? AppLocalizations.of(context).eventDetailFinish
+                      : AppLocalizations.of(context).commonCancel,
                   color: (_event.status == EventStatus.active ||
                           _event.status == EventStatus.paused)
                       ? const Color(0xFF89F1EC)

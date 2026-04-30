@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import 'card_keyboard.dart';
 
 class HoleCardsDialog extends StatefulWidget {
   final HoleCards? existingCards;
   final Set<String> usedCards; // Board cards to exclude from selection
-  final String title; // Dialog title
+  final String? title; // Dialog title
   final String? playerName; // Optional player name to highlight
   final bool isWinner; // Whether this player is a winner (shows badge)
   final bool showSkipAll; // Show "Skip All" button for remaining opponents
@@ -15,7 +16,7 @@ class HoleCardsDialog extends StatefulWidget {
     Key? key,
     this.existingCards,
     this.usedCards = const {},
-    this.title = 'Your Hole Cards',
+    this.title,
     this.playerName,
     this.isWinner = false,
     this.showSkipAll = false,
@@ -82,6 +83,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Row(
@@ -117,7 +119,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                             ),
                           ),
                           child: Text(
-                            'WINNER',
+                            l10n.holeCardsWinnerBadge,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 10,
                               color: const Color(0xFF54E98A),
@@ -131,7 +133,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Hole Cards',
+                    l10n.holeCardsSubtitle,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
                       color: const Color(0xFF8C8C8C),
@@ -139,7 +141,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                   ),
                 ] else ...[
                   Text(
-                    widget.title,
+                    widget.title ?? l10n.holeCardsTitle,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       color: Colors.white,
@@ -156,6 +158,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
   }
 
   Widget _buildActions() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         // Save button
@@ -172,7 +175,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
               padding: EdgeInsets.zero,
             ),
             child: Text(
-              'Save',
+              l10n.holeCardsSave,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.black,
                 fontSize: 17,
@@ -201,7 +204,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
               padding: EdgeInsets.zero,
             ),
             child: Text(
-              'Skip',
+              l10n.holeCardsSkip,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 17,
@@ -233,7 +236,7 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
                 padding: EdgeInsets.zero,
               ),
               child: Text(
-                'Skip All Remaining',
+                l10n.holeCardsSkipAllRemaining,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFFD55A41),
                   fontSize: 17,
@@ -278,8 +281,9 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
 
     if (c1 && c2) {
       if (_slots[0] == _slots[1]) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You cannot select the same card twice!'), backgroundColor: Colors.red),
+          SnackBar(content: Text(l10n.holeCardsDuplicateCardError), backgroundColor: Colors.red),
         );
         return;
       }
@@ -287,12 +291,13 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Please select both hole cards or skip to continue'),
+        content: Text(l10n.holeCardsSelectBothOrSkip),
         backgroundColor: Colors.orange,
         action: SnackBarAction(
-          label: 'Clear All',
+          label: l10n.holeCardsClearAll,
           textColor: Colors.white,
           onPressed: () {
             setState(() {

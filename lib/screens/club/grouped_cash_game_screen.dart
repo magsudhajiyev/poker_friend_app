@@ -14,6 +14,7 @@ import '../../services/event_service.dart';
 import '../../services/seat_service.dart';
 import '../../services/table_service.dart';
 import '../../services/waitlist_service.dart';
+import '../../l10n/app_localizations.dart';
 import 'admin_table_management_screen.dart';
 import 'member_table_view_screen.dart';
 
@@ -229,7 +230,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
     if (_isUserSeated) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("You're already seated at a table"),
+          content: Text(AppLocalizations.of(context).clubCashGameAlreadySeated),
           backgroundColor: AppColors.mint700,
         ),
       );
@@ -241,8 +242,8 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
     if (_anySeatAvailable) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            "There's a seat available for you, approach registration",
+          content: Text(
+            AppLocalizations.of(context).clubCashGameSeatAvailable,
           ),
           backgroundColor: AppColors.mint700,
         ),
@@ -268,7 +269,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Joined waitlist at position #$position'),
+          content: Text(AppLocalizations.of(context).clubCashGameJoinedWaitlist(position ?? 0)),
           backgroundColor: AppColors.mint700,
         ),
       );
@@ -277,7 +278,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       setState(() => _isJoining = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to join waitlist: $e'),
+          content: Text(AppLocalizations.of(context).clubCashGameJoinFailed('$e')),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -299,8 +300,8 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
         _isLeaving = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Left the waitlist'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).clubCashGameLeftWaitlist),
           backgroundColor: Colors.orange,
         ),
       );
@@ -309,7 +310,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       setState(() => _isLeaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to leave waitlist: $e'),
+          content: Text(AppLocalizations.of(context).clubCashGameLeaveFailed('$e')),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -455,7 +456,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Cash Game ${widget.stakes}',
+                  AppLocalizations.of(context).clubCashGameStakes(widget.stakes),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 27,
                     fontWeight: FontWeight.w600,
@@ -466,7 +467,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                 ),
                 const SizedBox(height: AppSpacing.xxxs),
                 Text(
-                  '${_tables.length} tables · $_totalOccupied seated · $_totalOpen open',
+                  AppLocalizations.of(context).clubCashGameTablesSummary(_tables.length, _totalOccupied, _totalOpen),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
@@ -571,7 +572,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not refresh tables: $e'),
+          content: Text(AppLocalizations.of(context).clubCashGameRefreshFailed('$e')),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -582,7 +583,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
     if (_tables.isEmpty) {
       return Center(
         child: Text(
-          'No tables in this group',
+          AppLocalizations.of(context).clubCashGameNoTables,
           style: GoogleFonts.ibmPlexSans(
             color: AppColors.textDisabled,
             fontSize: 14,
@@ -645,7 +646,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                 _buildMiniOvalTable(ovalRenderedWidth, ovalRenderedHeight),
                 const SizedBox(height: 10),
                 Text(
-                  'Table ${t.table.tableNumber}',
+                  AppLocalizations.of(context).clubCashGameTableNumber(t.table.tableNumber),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
@@ -811,15 +812,15 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
     final IconData icon;
     final VoidCallback? onTap;
     if (isAdmin) {
-      label = 'View Waitlist';
+      label = AppLocalizations.of(context).clubCashGameViewWaitlist;
       icon = Icons.visibility_outlined;
       onTap = _viewWaitlistAsAdmin;
     } else if (inWaitlist) {
-      label = 'In waitlist${_waitlistPosition != null ? ' · #$_waitlistPosition' : ''}';
+      label = _waitlistPosition != null ? AppLocalizations.of(context).clubCashGameInWaitlistPosition(_waitlistPosition!) : AppLocalizations.of(context).clubCashGameInWaitlist;
       icon = Icons.check;
       onTap = busy ? null : _confirmLeaveWaitlist;
     } else {
-      label = 'Join Waitlist';
+      label = AppLocalizations.of(context).clubCashGameJoinWaitlist;
       icon = Icons.add;
       onTap = busy ? null : _joinWaitlist;
     }
@@ -911,25 +912,25 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.backgroundSurface,
         title: Text(
-          'Leave waitlist?',
+          AppLocalizations.of(context).clubCashGameLeaveWaitlistConfirm,
           style: GoogleFonts.ibmPlexSans(color: Colors.white),
         ),
         content: Text(
-          'You will lose your current position.',
+          AppLocalizations.of(context).clubCashGameLosePosition,
           style: GoogleFonts.ibmPlexSans(color: AppColors.textDisabled),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
-              'Keep',
+              AppLocalizations.of(context).clubCashGameKeep,
               style: GoogleFonts.ibmPlexSans(color: AppColors.textSecondary),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Leave',
+              AppLocalizations.of(context).clubCashGameLeave,
               style: GoogleFonts.ibmPlexSans(color: AppColors.errorRed),
             ),
           ),
@@ -1043,7 +1044,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${entry.userDisplayName} has been notified',
+            AppLocalizations.of(context).clubCashGameNotified(entry.userDisplayName),
             style: GoogleFonts.ibmPlexSans(),
           ),
           backgroundColor: AppColors.mint700,
@@ -1054,7 +1055,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Failed to notify: $e',
+            AppLocalizations.of(context).clubCashGameNotifyFailed('$e'),
             style: GoogleFonts.ibmPlexSans(),
           ),
           backgroundColor: AppColors.errorRed,
@@ -1109,7 +1110,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                 child: Row(
                   children: [
                     Text(
-                      'Cash Game ${widget.stakesDisplay}',
+                      AppLocalizations.of(context).clubCashGameStakes(widget.stakesDisplay),
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
@@ -1180,7 +1181,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
           ),
           // Title — center
           Text(
-            'Waitlist',
+            AppLocalizations.of(context).clubCashGameWaitlistTitle,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 17,
@@ -1214,7 +1215,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
       return Padding(
         padding: const EdgeInsets.all(32),
         child: Text(
-          'Could not load waitlist',
+          AppLocalizations.of(context).clubCashGameCouldNotLoad,
           style: GoogleFonts.ibmPlexSans(color: AppColors.errorRed),
         ),
       );
@@ -1232,7 +1233,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
             ),
             const SizedBox(height: 12),
             Text(
-              'No one on the waitlist',
+              AppLocalizations.of(context).clubCashGameNoOneOnWaitlist,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 15,
                 color: AppColors.textDisabled,
@@ -1306,7 +1307,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
               children: [
                 Text(
                   entry.userDisplayName.isEmpty
-                      ? 'Player'
+                      ? AppLocalizations.of(context).clubCashGamePlayer
                       : entry.userDisplayName,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
@@ -1318,8 +1319,8 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                 const SizedBox(height: 2),
                 Text(
                   isNotified
-                      ? 'Notified • ${_formatJoinedAt(entry.joinedAt)}'
-                      : 'Joined ${_formatJoinedAt(entry.joinedAt)}',
+                      ? AppLocalizations.of(context).clubCashGameNotifiedStatus(_formatJoinedAt(context, entry.joinedAt))
+                      : AppLocalizations.of(context).clubCashGameJoinedTime(_formatJoinedAt(context, entry.joinedAt)),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 11,
                     color: isNotified
@@ -1367,13 +1368,14 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
     );
   }
 
-  String _formatJoinedAt(DateTime joinedAt) {
+  String _formatJoinedAt(BuildContext context, DateTime joinedAt) {
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final diff = now.difference(joinedAt);
-    if (diff.inSeconds < 60) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+    if (diff.inSeconds < 60) return l10n.clubCashGameJustNow;
+    if (diff.inMinutes < 60) return l10n.clubCashGameMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.clubCashGameHoursAgo(diff.inHours);
+    return l10n.clubCashGameDaysAgo(diff.inDays);
   }
 }
 
@@ -1504,7 +1506,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Added ${newTable.name} to the group'),
+          content: Text(AppLocalizations.of(context).clubCashGameAddedToGroup(newTable.name)),
           backgroundColor: AppColors.mint700,
         ),
       );
@@ -1513,7 +1515,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
       setState(() => _isCreating = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to add table: $e'),
+          content: Text(AppLocalizations.of(context).clubCashGameAddFailed('$e')),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -1534,7 +1536,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Added ${table.name} to the group'),
+          content: Text(AppLocalizations.of(context).clubCashGameAddedToGroup(table.name)),
           backgroundColor: AppColors.mint700,
         ),
       );
@@ -1543,7 +1545,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
       setState(() => _attachingTableId = null);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to attach table: $e'),
+          content: Text(AppLocalizations.of(context).clubCashGameAttachFailed('$e')),
           backgroundColor: AppColors.errorRed,
         ),
       );
@@ -1579,7 +1581,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
             child: Row(
               children: [
                 Text(
-                  'Cash Game ${widget.stakes}',
+                  AppLocalizations.of(context).clubCashGameStakes(widget.stakes),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
@@ -1622,7 +1624,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
             ),
           ),
           Text(
-            'Add Table',
+            AppLocalizations.of(context).clubCashGameAddTable,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 17,
@@ -1673,14 +1675,14 @@ class _AddTableSheetState extends State<_AddTableSheet> {
       children: [
         _buildNewTableForm(),
         const SizedBox(height: 24),
-        _buildSectionLabel('Available tables'),
+        _buildSectionLabel(AppLocalizations.of(context).clubCashGameAvailableTables),
         const SizedBox(height: 12),
         if (available.isEmpty && liveBusy.isEmpty)
-          _buildEmptyRow('No other tables in this club yet'),
+          _buildEmptyRow(AppLocalizations.of(context).clubCashGameNoOtherTables),
         ...available.map((t) => _buildTableRow(t, isBusy: false)),
         if (liveBusy.isNotEmpty) ...[
           const SizedBox(height: 16),
-          _buildSectionLabel('In use by other events'),
+          _buildSectionLabel(AppLocalizations.of(context).clubCashGameInUseByOther),
           const SizedBox(height: 12),
           ...liveBusy.map((t) => _buildTableRow(t, isBusy: true)),
         ],
@@ -1709,7 +1711,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                 fontSize: 14,
               ),
               decoration: InputDecoration(
-                hintText: 'New table name (optional)',
+                hintText: AppLocalizations.of(context).clubCashGameNewTableName,
                 hintStyle: GoogleFonts.ibmPlexSans(
                   color: AppColors.textDisabled,
                   fontSize: 14,
@@ -1747,7 +1749,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                     ),
                   )
                 : Text(
-                    'Add',
+                    AppLocalizations.of(context).clubCashGameAdd,
                     style: GoogleFonts.ibmPlexSans(
                       color: const Color(0xFF02050B),
                       fontSize: 15,
@@ -1791,9 +1793,10 @@ class _AddTableSheetState extends State<_AddTableSheet> {
 
   Widget _buildTableRow(PokerTable table, {required bool isBusy}) {
     final isAttaching = _attachingTableId == table.id;
+    final l10n = AppLocalizations.of(context);
     final subtitle = isBusy
-        ? 'In use by ${_liveBusyTableIds[table.id] ?? 'another event'}'
-        : 'Seats ${table.qrCodes.length > 0 ? table.qrCodes.length : 9}';
+        ? l10n.clubCashGameInUseBy(_liveBusyTableIds[table.id] ?? 'another event')
+        : l10n.clubCashGameSeats(table.qrCodes.length > 0 ? table.qrCodes.length : 9);
 
     return Opacity(
       opacity: isBusy ? 0.45 : 1.0,

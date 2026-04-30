@@ -6,6 +6,7 @@ import '../../models/event_ranking.dart';
 import '../../services/event_service.dart';
 import '../../services/websocket_service.dart';
 import '../../config/app_config.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Full-screen leaderboard for TV display mode
 /// Large fonts, high contrast, auto-updates
@@ -204,12 +205,12 @@ class _PublicLeaderboardScreenState extends State<PublicLeaderboardScreen> {
           ),
           // Stats
           _buildHeaderStat(
-            'Players',
+            AppLocalizations.of(context).leaderboardPlayers,
             '${_rankingsData?.totalPlayers ?? 0}',
           ),
           const SizedBox(width: 32),
           _buildHeaderStat(
-            'Total Chips',
+            AppLocalizations.of(context).leaderboardTotalChips,
             _numberFormat.format(_rankingsData?.totalChips ?? 0),
           ),
           const SizedBox(width: 32),
@@ -284,10 +285,10 @@ class _PublicLeaderboardScreenState extends State<PublicLeaderboardScreen> {
     final rankings = _rankingsData?.rankings ?? [];
 
     if (rankings.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'Waiting for players...',
-          style: TextStyle(
+          AppLocalizations.of(context).leaderboardWaiting,
+          style: const TextStyle(
             color: Colors.white54,
             fontSize: 24,
           ),
@@ -425,7 +426,7 @@ class _PublicLeaderboardScreenState extends State<PublicLeaderboardScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              'Chip Leader: ${_rankingsData!.rankings.first.playerName}',
+              AppLocalizations.of(context).leaderboardChipLeader(name: _rankingsData!.rankings.first.playerName),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,

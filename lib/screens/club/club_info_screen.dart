@@ -4,6 +4,7 @@ import '../../design_system/constants/colors.dart';
 import '../../models/club.dart';
 import '../../models/club_member.dart';
 import '../../services/club_service.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Club info screen for regular members (read-only view)
 class ClubInfoScreen extends StatefulWidget {
@@ -105,6 +106,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         GestureDetector(
@@ -128,7 +130,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: Text(
-            'Club Info',
+            l10n.clubInfoTitle,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 24,
               color: Colors.white,
@@ -238,11 +240,12 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
   }
 
   Widget _buildMembersSection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Members (${_members.length})',
+          l10n.clubInfoMembersCount(_members.length),
           style: GoogleFonts.ibmPlexSans(
             fontSize: 17,
             color: Colors.white,
@@ -259,7 +262,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
-              'No members found',
+              l10n.clubInfoNoMembers,
               style: GoogleFonts.ibmPlexSans(
                 color: AppColors.textDisabled,
               ),

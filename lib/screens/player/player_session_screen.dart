@@ -13,6 +13,7 @@ import '../../services/auth_service.dart';
 import '../../utils/number_formatter.dart';
 import '../../widgets/hole_cards_dialog.dart';
 import '../../models/club_event.dart';
+import '../../l10n/app_localizations.dart';
 import '../hand_actions_screen.dart';
 import '../spectator/event_rankings_screen.dart';
 
@@ -380,7 +381,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         backgroundColor: AppColors.backgroundSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Session Ended',
+          AppLocalizations.of(context).playerSessionEndedTitle,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 18,
@@ -388,7 +389,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           ),
         ),
         content: Text(
-          'The dealer has ended this session.',
+          AppLocalizations.of(context).playerSessionEndedBody,
           style: GoogleFonts.ibmPlexSans(
             color: const Color(0xFF8C8C8C),
             fontSize: 15,
@@ -401,7 +402,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               if (mounted) Navigator.pop(context);
             },
             child: Text(
-              'OK',
+              AppLocalizations.of(context).commonOk,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF89F1EC),
                 fontWeight: FontWeight.w600,
@@ -428,7 +429,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         backgroundColor: AppColors.backgroundSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Removed from Table',
+          AppLocalizations.of(context).playerSessionRemovedTitle,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 18,
@@ -436,7 +437,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           ),
         ),
         content: Text(
-          'You have been removed from the table by the dealer.',
+          AppLocalizations.of(context).playerSessionRemovedBody,
           style: GoogleFonts.ibmPlexSans(
             color: const Color(0xFF8C8C8C),
             fontSize: 15,
@@ -449,7 +450,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               if (mounted) Navigator.pop(context);
             },
             child: Text(
-              'OK',
+              AppLocalizations.of(context).commonOk,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF89F1EC),
                 fontWeight: FontWeight.w600,
@@ -496,7 +497,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             ? HoleCards(card1: _myCard1!, card2: _myCard2!)
             : null,
         usedCards: usedCards,
-        title: 'Your Hole Cards',
+        title: AppLocalizations.of(context).playerSessionYourHoleCards,
       ),
     );
 
@@ -569,7 +570,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         backgroundColor: AppColors.backgroundSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Leave Table?',
+          AppLocalizations.of(context).playerSessionLeaveTableTitle,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 18,
@@ -577,7 +578,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           ),
         ),
         content: Text(
-          'Are you sure you want to leave this table?',
+          AppLocalizations.of(context).playerSessionLeaveTableBody,
           style: GoogleFonts.ibmPlexSans(
             color: const Color(0xFF8C8C8C),
             fontSize: 15,
@@ -587,7 +588,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(context).commonCancel,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF8C8C8C),
                 fontWeight: FontWeight.w600,
@@ -597,7 +598,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
-              'Leave',
+              AppLocalizations.of(context).commonLeave,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFFD55A41),
                 fontWeight: FontWeight.w600,
@@ -623,7 +624,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Failed to leave: ${e.toString()}',
+                AppLocalizations.of(context).playerSessionFailedLeave(e.toString()),
                 style: GoogleFonts.ibmPlexSans(color: Colors.white),
               ),
               backgroundColor: const Color(0xFFD55A41),
@@ -702,7 +703,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 Row(
                   children: [
                     Text(
-                      'Hand #$_handNumber',
+                      AppLocalizations.of(context).playerSessionHandNumber(_handNumber),
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         color: const Color(0xFF8C8C8C),
@@ -810,7 +811,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Connecting...',
+              AppLocalizations.of(context).playerSessionConnecting,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF8C8C8C),
                 fontSize: 15,
@@ -860,7 +861,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                     borderRadius: BorderRadius.circular(60),
                   ),
                   child: Text(
-                    'Go Back',
+                    AppLocalizations.of(context).playerSessionGoBackBtn,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -918,9 +919,9 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatusItem('SEAT', '#${widget.seatNumber}', const Color(0xFF89F1EC)),
-          _buildStatusItem('STACK', _formatAmount(_myStack), const Color(0xFF87ED81)),
-          _buildStatusItem('POT', _formatAmount(_potAmount), const Color(0xFFFFA726)),
+          _buildStatusItem(AppLocalizations.of(context).playerSessionSeat, '#${widget.seatNumber}', const Color(0xFF89F1EC)),
+          _buildStatusItem(AppLocalizations.of(context).playerSessionStack, _formatAmount(_myStack), const Color(0xFF87ED81)),
+          _buildStatusItem(AppLocalizations.of(context).playerSessionPot, _formatAmount(_potAmount), const Color(0xFFFFA726)),
         ],
       ),
     );
@@ -978,7 +979,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              'Hole Cards',
+              AppLocalizations.of(context).playerSessionHoleCardsLabel,
               style: GoogleFonts.ibmPlexSans(
                 color: hasCards ? const Color(0xFF89F1EC) : const Color(0xFF8C8C8C),
                 fontSize: 14,
@@ -1037,7 +1038,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           const Icon(Icons.dashboard_rounded, color: Color(0xFFFFA726), size: 18),
           const SizedBox(width: 8),
           Text(
-            'Board',
+            AppLocalizations.of(context).playerSessionBoardLabel,
             style: GoogleFonts.ibmPlexSans(
               color: const Color(0xFFFFA726),
               fontSize: 14,
@@ -1060,7 +1061,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
             ],
           ] else
             Text(
-              'No cards dealt',
+              AppLocalizations.of(context).playerSessionNoCardsDealt,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF8C8C8C),
                 fontSize: 13,
@@ -1118,7 +1119,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         ),
         child: Center(
           child: Text(
-            'Waiting for action...',
+            AppLocalizations.of(context).playerSessionWaitingForAction,
             style: GoogleFonts.ibmPlexSans(
               color: const Color(0xFF8C8C8C),
               fontSize: 14,
@@ -1173,7 +1174,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
                 const Icon(Icons.history_rounded, color: Color(0xFF8C8C8C), size: 18),
                 const SizedBox(width: 8),
                 Text(
-                  'Actions',
+                  AppLocalizations.of(context).playerSessionActionsLabel,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 14,
@@ -1334,7 +1335,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'HAND NOTES',
+            AppLocalizations.of(context).playerSessionHandNotesLabel,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -1353,7 +1354,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               height: 1.44,
             ),
             decoration: InputDecoration(
-              hintText: 'Add notes about this hand...',
+              hintText: AppLocalizations.of(context).playerSessionNotesHint,
               hintStyle: GoogleFonts.ibmPlexSans(
                 fontSize: 15,
                 color: const Color(0xFF8C8C8C),
@@ -2026,7 +2027,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
             ? HoleCards(card1: _card1!, card2: _card2!)
             : null,
         usedCards: widget.usedCards,
-        title: 'Your Hole Cards',
+        title: AppLocalizations.of(context).playerSessionYourHoleCards,
       ),
     );
 
@@ -2183,7 +2184,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                   height: 1.44,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Add notes about this hand...',
+                  hintText: AppLocalizations.of(context).playerSessionNotesHint,
                   hintStyle: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     color: const Color(0xFF8C8C8C),

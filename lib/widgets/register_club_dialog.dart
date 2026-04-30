@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/poker_friend_theme.dart';
+import '../l10n/app_localizations.dart';
 import '../services/club_request_service.dart';
 
 /// Show the Register Club dialog with blurred background
@@ -88,7 +89,7 @@ class _RegisterClubDialogState extends State<RegisterClubDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit request: $e'),
+            content: Text(AppLocalizations.of(context).registerClubFailedToSubmit(e.toString())),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -190,6 +191,7 @@ class _RegisterClubDialogState extends State<RegisterClubDialog> {
   /// Header with close button, title, and submit checkmark
   /// Figma node 324:3732
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
@@ -230,7 +232,7 @@ class _RegisterClubDialogState extends State<RegisterClubDialog> {
           Expanded(
             child: Center(
               child: Text(
-                'Register Club',
+                l10n.registerClubTitle,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -282,59 +284,60 @@ class _RegisterClubDialogState extends State<RegisterClubDialog> {
 
   /// Form fields section
   Widget _buildFormFields() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildInputField(
-            label: 'Club Name',
-            placeholder: 'e.g., Lucky Aces Poker Club',
+            label: l10n.registerClubNameLabel,
+            placeholder: l10n.registerClubNamePlaceholder,
             controller: _clubNameController,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter a club name';
+                return l10n.registerClubNameRequired;
               }
               return null;
             },
           ),
           const SizedBox(height: 18),
           _buildInputField(
-            label: 'Address',
-            placeholder: 'e.g., 123 Main St, City, Country',
+            label: l10n.registerClubAddressLabel,
+            placeholder: l10n.registerClubAddressPlaceholder,
             controller: _addressController,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter the club address';
+                return l10n.registerClubAddressRequired;
               }
               return null;
             },
           ),
           const SizedBox(height: 18),
           _buildInputField(
-            label: 'Phone Number',
-            placeholder: 'e.g., +1 555-123-4567',
+            label: l10n.registerClubPhoneLabel,
+            placeholder: l10n.registerClubPhonePlaceholder,
             controller: _phoneController,
             keyboardType: TextInputType.phone,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter a phone number';
+                return l10n.registerClubPhoneRequired;
               }
               return null;
             },
           ),
           const SizedBox(height: 18),
           _buildInputField(
-            label: 'Club Admin Email',
-            placeholder: 'e.g., admin@myclub.com',
+            label: l10n.registerClubAdminEmailLabel,
+            placeholder: l10n.registerClubAdminEmailPlaceholder,
             controller: _adminEmailController,
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter admin email';
+                return l10n.registerClubAdminEmailRequired;
               }
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email';
+                return l10n.registerClubAdminEmailInvalid;
               }
               return null;
             },
@@ -452,7 +455,7 @@ class _RegisterClubDialogState extends State<RegisterClubDialog> {
           // Info text
           Expanded(
             child: Text(
-              'This person will be notified when the club is approved and will become the club owner.',
+              AppLocalizations.of(context).registerClubInfoMessage,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
@@ -493,7 +496,7 @@ class _RegisterClubDialogState extends State<RegisterClubDialog> {
                     ),
                   )
                 : Text(
-                    'Submit Request',
+                    AppLocalizations.of(context).registerClubSubmitRequest,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -521,6 +524,7 @@ class _SuccessDialogContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Material(
       color: Colors.transparent,
       child: Container(
@@ -565,7 +569,7 @@ class _SuccessDialogContent extends StatelessWidget {
                       children: [
                         // Title
                         Text(
-                          'Request Submitted!',
+                          l10n.registerClubSuccessTitle,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 27,
                             fontWeight: FontWeight.w600,
@@ -580,7 +584,7 @@ class _SuccessDialogContent extends StatelessWidget {
 
                         // Description
                         Text(
-                          'Your club registration request has been submitted. We\'ll notify you at $email once it\'s reviewed.',
+                          l10n.registerClubSuccessMessage(email),
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 15,
                             fontWeight: FontWeight.w400,
@@ -612,7 +616,7 @@ class _SuccessDialogContent extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      'Got it',
+                      l10n.registerClubGotIt,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,

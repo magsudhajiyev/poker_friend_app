@@ -12,6 +12,7 @@ import '../../services/auth_service.dart';
 import '../../services/qr_service.dart';
 import '../../services/dealer_service.dart';
 import '../../services/table_service.dart';
+import '../../l10n/app_localizations.dart';
 import 'dealer_table_screen.dart';
 
 /// Screen for dealers to scan a table QR code to start dealing at an event
@@ -91,13 +92,13 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
       }
 
       if (clubId == null || tableId == null) {
-        _showError('Invalid QR code. Please scan a valid table QR code.');
+        _showError(AppLocalizations.of(context).dealerQrScanInvalidCode);
         return;
       }
 
       // Validate the table belongs to this event's club
       if (clubId != widget.club.id) {
-        _showError('This table belongs to a different club.');
+        _showError(AppLocalizations.of(context).dealerQrScanWrongClub);
         return;
       }
 
@@ -109,7 +110,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
       }
 
       if (table == null) {
-        _showError('Table not found. Please scan a valid table QR code.');
+        _showError(AppLocalizations.of(context).dealerQrScanTableNotFound);
         return;
       }
 
@@ -148,7 +149,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
         _showSessionSettingsDialog(table);
       }
     } catch (e) {
-      _showError('Error processing QR code: ${e.toString()}');
+      _showError(AppLocalizations.of(context).dealerQrScanError(e.toString()));
     } finally {
       if (mounted) {
         setState(() {
@@ -176,7 +177,9 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) {
+          final l10n = AppLocalizations.of(context);
+          return Dialog(
           backgroundColor: const Color(0xFF101115),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -191,7 +194,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                 children: [
                   // Title
                   Text(
-                    'Session Settings',
+                    l10n.dealerQrScanSessionSettings,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
@@ -202,7 +205,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                   const SizedBox(height: 13),
                   // Info lines
                   Text(
-                    'Table: ${table.name}',
+                    l10n.dealerQrScanTableNameLabel(table.name),
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
                       color: const Color(0xFF8C8C8C),
@@ -211,7 +214,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Event: ${widget.event.name}',
+                    l10n.dealerQrScanEventNameLabel(widget.event.name),
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
                       color: const Color(0xFF8C8C8C),
@@ -223,7 +226,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
 
                   // Blinds section
                   Text(
-                    'Blinds',
+                    l10n.dealerQrScanBlindsLabel,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
@@ -237,7 +240,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                     children: [
                       Expanded(
                         child: _buildBlindCard(
-                          label: 'Small Blind',
+                          label: l10n.dealerQrScanSmallBlindLabel,
                           controller: sbController,
                           onChanged: (v) => setDialogState(() => smallBlind = v),
                           showDollarSign: !isTournament,
@@ -246,7 +249,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildBlindCard(
-                          label: 'Big Blind',
+                          label: l10n.dealerQrScanBigBlindLabel,
                           controller: bbController,
                           onChanged: (v) => setDialogState(() => bigBlind = v),
                           showDollarSign: !isTournament,
@@ -268,7 +271,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'BB Ante',
+                          l10n.dealerQrScanBbAnte,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
                             color: Colors.white,
@@ -295,7 +298,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             alignment: Alignment.center,
                             child: Text(
-                              'Cancel',
+                              l10n.commonCancel,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
@@ -329,7 +332,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                             borderRadius: BorderRadius.circular(110),
                           ),
                           child: Text(
-                            'Start Dealing',
+                            l10n.dealerQrScanStartDealingBtn,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -345,7 +348,8 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
               ),
             ),
           ),
-        ),
+        );
+        },
       ),
     );
   }
@@ -455,7 +459,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
         );
       }
     } catch (e) {
-      _showError('Failed to start session: ${e.toString()}');
+      _showError(AppLocalizations.of(context).dealerQrScanFailedStart(e.toString()));
       setState(() => _isProcessing = false);
     }
   }
@@ -475,7 +479,9 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
     final activePlayers = session.players.values.where((p) => p.isActive).length;
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) {
+        final dialogL10n = AppLocalizations.of(context);
+        return Dialog(
         backgroundColor: const Color(0xFF101115),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -506,7 +512,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Resume Session',
+                      dialogL10n.dealerQrScanResumeSessionTitle,
                       style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 19,
@@ -519,7 +525,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Taking over from ${session.dealerName ?? "previous dealer"}',
+                dialogL10n.dealerQrScanTakingOverFrom(session.dealerName ?? dialogL10n.dealerTableDealerFallback),
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFFD3FFFD),
                   fontSize: 14,
@@ -528,11 +534,11 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
               ),
               const SizedBox(height: 20),
               // Stats rows
-              _buildResumeInfoRow('Hands Played', '${session.currentHandNumber}'),
+              _buildResumeInfoRow(dialogL10n.dealerQrScanHandsPlayedLabel, '${session.currentHandNumber}'),
               const Divider(color: Color(0xFF1B1E24), height: 1),
-              _buildResumeInfoRow('Blinds', '${session.smallBlind}/${session.bigBlind}'),
+              _buildResumeInfoRow(dialogL10n.dealerQrScanBlindsInfoLabel, '${session.smallBlind}/${session.bigBlind}'),
               const Divider(color: Color(0xFF1B1E24), height: 1),
-              _buildResumeInfoRow('Players', '$activePlayers'),
+              _buildResumeInfoRow(dialogL10n.dealerQrScanPlayersLabel, '$activePlayers'),
               const SizedBox(height: 24),
               // Buttons
               Row(
@@ -544,7 +550,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         alignment: Alignment.center,
                         child: Text(
-                          'Cancel',
+                          dialogL10n.commonCancel,
                           style: GoogleFonts.ibmPlexSans(
                             color: Colors.white,
                             fontSize: 17,
@@ -565,7 +571,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                         borderRadius: BorderRadius.circular(60),
                       ),
                       child: Text(
-                        'Resume',
+                        dialogL10n.dealerQrScanResumeBtn,
                         style: GoogleFonts.ibmPlexSans(
                           color: Colors.black,
                           fontSize: 17,
@@ -579,7 +585,8 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
             ],
           ),
         ),
-      ),
+      );
+      },
     );
     return result ?? false;
   }
@@ -627,7 +634,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
         );
       }
     } catch (e) {
-      _showError('Failed to resume session: ${e.toString()}');
+      _showError(AppLocalizations.of(context).dealerQrScanFailedResume(e.toString()));
       setState(() => _isProcessing = false);
     }
   }
@@ -645,7 +652,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
             Icon(Icons.warning_amber, color: PokerFriendColors.yellow),
             SizedBox(width: 12),
             Text(
-              'Table Not Assigned',
+              AppLocalizations.of(context).dealerQrScanTableNotAssigned,
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
           ],
@@ -655,12 +662,12 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${table.name} is not assigned to this event.',
+              AppLocalizations.of(context).dealerQrTableNotAssigned(table.name),
               style: TextStyle(color: Colors.white),
             ),
             SizedBox(height: 16),
             Text(
-              'Event tables:',
+              AppLocalizations.of(context).dealerQrScanEventTablesLabel,
               style: TextStyle(
                 color: PokerFriendColors.dark9,
                 fontSize: 12,
@@ -669,7 +676,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
             SizedBox(height: 4),
             Text(
               widget.event.tableIds.isEmpty
-                  ? 'No tables assigned'
+                  ? AppLocalizations.of(context).dealerQrScanNoTablesAssigned
                   : widget.event.tableIds.join(', '),
               style: TextStyle(
                 color: PokerFriendColors.dark11,
@@ -679,7 +686,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
             ),
             SizedBox(height: 16),
             Text(
-              'This table\'s ID:',
+              AppLocalizations.of(context).dealerQrScanThisTableId,
               style: TextStyle(
                 color: PokerFriendColors.dark9,
                 fontSize: 12,
@@ -697,7 +704,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
             if (table.tableQRCode != null) ...[
               SizedBox(height: 16),
               Text(
-                'Correct QR code URL:',
+                AppLocalizations.of(context).dealerQrScanCorrectQrUrl,
                 style: TextStyle(
                   color: PokerFriendColors.dark9,
                   fontSize: 12,
@@ -719,7 +726,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'OK',
+              AppLocalizations.of(context).commonOk,
               style: TextStyle(color: PokerFriendColors.purple),
             ),
           ),
@@ -739,7 +746,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Scan Table QR',
+              AppLocalizations.of(context).dealerQrScanScanTableQrTitle,
               style: TextStyle(fontSize: 18),
             ),
             Text(
@@ -807,7 +814,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Scan the table QR code to start dealing',
+                        AppLocalizations.of(context).dealerQrScanScanInstructions,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white,
@@ -817,7 +824,7 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                       if (widget.event.tableIds.isNotEmpty) ...[
                         SizedBox(height: 8),
                         Text(
-                          '${widget.event.tableIds.length} table(s) assigned to this event',
+                          AppLocalizations.of(context).dealerQrTablesAssigned(widget.event.tableIds.length),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: PokerFriendColors.dark9,

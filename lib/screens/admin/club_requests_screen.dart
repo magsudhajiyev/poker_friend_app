@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../design_system/poker_friend_theme.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/club_request.dart';
 import '../../services/club_request_service.dart';
 
@@ -65,19 +66,19 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
       builder: (context) => AlertDialog(
         backgroundColor: PokerFriendColors.dark3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Approve Request',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context).clubRequestsApproveTitle,
+          style: const TextStyle(color: Colors.white),
         ),
         content: Text(
-          'Are you sure you want to approve "${request.clubName}"?\n\nThis will create the club and notify ${request.adminEmail}.',
+          AppLocalizations.of(context).clubRequestsApproveBody(request.clubName),
           style: TextStyle(color: PokerFriendColors.dark11),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(context).commonCancel,
               style: TextStyle(color: PokerFriendColors.dark9),
             ),
           ),
@@ -86,7 +87,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: PokerFriendColors.green,
             ),
-            child: const Text('Approve'),
+            child: Text(AppLocalizations.of(context).clubRequestsApproveButton),
           ),
         ],
       ),
@@ -100,7 +101,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
         _loadRequests();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${request.clubName} has been approved!'),
+            content: Text(AppLocalizations.of(context).clubRequestsApproved2(request.clubName)),
             backgroundColor: PokerFriendColors.green,
           ),
         );
@@ -108,7 +109,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
         Navigator.pop(context); // Close loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -124,16 +125,16 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
       builder: (context) => AlertDialog(
         backgroundColor: PokerFriendColors.dark3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Reject Request',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context).clubRequestsRejectTitle,
+          style: const TextStyle(color: Colors.white),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Please provide a reason for rejecting "${request.clubName}":',
+              AppLocalizations.of(context).clubRequestsRejectBody(request.clubName),
               style: TextStyle(color: PokerFriendColors.dark11),
             ),
             const SizedBox(height: 16),
@@ -142,7 +143,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
               maxLines: 3,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: 'Reason for rejection...',
+                hintText: AppLocalizations.of(context).clubRequestsRejectHint,
                 hintStyle: TextStyle(color: PokerFriendColors.dark9),
                 filled: true,
                 fillColor: PokerFriendColors.dark1,
@@ -158,7 +159,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, null),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(context).commonCancel,
               style: TextStyle(color: PokerFriendColors.dark9),
             ),
           ),
@@ -171,7 +172,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: PokerFriendColors.red,
             ),
-            child: const Text('Reject'),
+            child: Text(AppLocalizations.of(context).clubRequestsRejectButton),
           ),
         ],
       ),
@@ -185,7 +186,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
         _loadRequests();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${request.clubName} has been rejected.'),
+            content: Text(AppLocalizations.of(context).clubRequestsRejected2(request.clubName)),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -193,7 +194,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
         Navigator.pop(context); // Close loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -237,27 +238,27 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('Address', request.address),
-              _buildDetailRow('Phone', request.phone),
-              _buildDetailRow('Admin Email', request.adminEmail),
+              _buildDetailRow(AppLocalizations.of(context).clubRequestsAddress, request.address),
+              _buildDetailRow(AppLocalizations.of(context).clubRequestsPhone, request.phone),
+              _buildDetailRow(AppLocalizations.of(context).clubRequestsAdminEmail, request.adminEmail),
               const Divider(color: PokerFriendColors.dark5),
-              _buildDetailRow('Requested By', request.requestedByName),
-              _buildDetailRow('Requester Email', request.requestedByEmail),
+              _buildDetailRow(AppLocalizations.of(context).clubRequestsRequestedBy, request.requestedByName),
+              _buildDetailRow(AppLocalizations.of(context).clubRequestsRequesterEmail, request.requestedByEmail),
               _buildDetailRow(
-                'Requested At',
+                AppLocalizations.of(context).clubRequestsRequestedAt,
                 DateFormat('MMM d, yyyy HH:mm').format(request.requestedAt),
               ),
               if (request.reviewedAt != null) ...[
                 const Divider(color: PokerFriendColors.dark5),
                 _buildDetailRow(
-                  'Reviewed At',
+                  AppLocalizations.of(context).clubRequestsReviewedAt,
                   DateFormat('MMM d, yyyy HH:mm').format(request.reviewedAt!),
                 ),
               ],
               if (request.rejectionReason != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Rejection Reason:',
+                  AppLocalizations.of(context).clubRequestsRejectionReason,
                   style: TextStyle(
                     color: PokerFriendColors.dark9,
                     fontSize: 12,
@@ -285,9 +286,9 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Close',
-              style: TextStyle(color: PokerFriendColors.purple),
+            child: Text(
+              AppLocalizations.of(context).commonClose,
+              style: const TextStyle(color: PokerFriendColors.purple),
             ),
           ),
           if (request.isPending) ...[
@@ -299,7 +300,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: PokerFriendColors.red,
               ),
-              child: const Text('Reject'),
+              child: Text(AppLocalizations.of(context).clubRequestsRejectButton),
             ),
             ElevatedButton(
               onPressed: () {
@@ -309,7 +310,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: PokerFriendColors.green,
               ),
-              child: const Text('Approve'),
+              child: Text(AppLocalizations.of(context).clubRequestsApproveButton),
             ),
           ],
         ],
@@ -405,10 +406,10 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
             ),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Club Requests',
-              style: TextStyle(
+              AppLocalizations.of(context).clubRequestsTitle,
+              style: const TextStyle(
                 fontSize: 24,
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -449,15 +450,15 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
         ),
         padding: const EdgeInsets.all(4),
         tabs: [
-          const Tab(text: 'All'),
+          Tab(text: AppLocalizations.of(context).clubRequestsAll),
           Tab(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Flexible(
+                Flexible(
                   child: Text(
-                    'Pending',
+                    AppLocalizations.of(context).clubRequestsPending,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -482,8 +483,8 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
               ],
             ),
           ),
-          const Tab(text: 'Approved'),
-          const Tab(text: 'Rejected'),
+          Tab(text: AppLocalizations.of(context).clubRequestsApproved),
+          Tab(text: AppLocalizations.of(context).clubRequestsRejected),
         ],
       ),
     );
@@ -504,7 +505,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'No requests',
+              AppLocalizations.of(context).clubRequestsNoRequests,
               style: TextStyle(
                 color: PokerFriendColors.dark9,
                 fontSize: 16,
@@ -612,7 +613,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text('Reject'),
+                      child: Text(AppLocalizations.of(context).clubRequestsRejectButton),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -625,7 +626,7 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text('Approve'),
+                      child: Text(AppLocalizations.of(context).clubRequestsApproveButton),
                     ),
                   ),
                 ],
@@ -638,21 +639,22 @@ class _ClubRequestsScreenState extends State<ClubRequestsScreen>
   }
 
   Widget _buildStatusBadge(ClubRequestStatus status) {
+    final l10n = AppLocalizations.of(context);
     Color color;
     String label;
 
     switch (status) {
       case ClubRequestStatus.pending:
         color = PokerFriendColors.yellow;
-        label = 'PENDING';
+        label = l10n.clubRequestsPendingBadge;
         break;
       case ClubRequestStatus.approved:
         color = PokerFriendColors.green;
-        label = 'APPROVED';
+        label = l10n.clubRequestsApprovedBadge;
         break;
       case ClubRequestStatus.rejected:
         color = PokerFriendColors.red;
-        label = 'REJECTED';
+        label = l10n.clubRequestsRejectedBadge;
         break;
     }
 

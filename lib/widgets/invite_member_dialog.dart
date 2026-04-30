@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../models/club.dart';
 import '../models/club_member.dart';
 import '../models/club_notification.dart';
@@ -43,10 +44,12 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
     });
 
     try {
+      final l10n = AppLocalizations.of(context);
       final email = _emailController.text.trim().toLowerCase();
       final club = widget.club;
       final inviterName = AuthService.userDisplayName ?? 'Club Admin';
       final roleName = _selectedRole == ClubRole.admin ? 'admin' : 'dealer';
+      final roleDisplay = _selectedRole == ClubRole.admin ? l10n.inviteMemberRoleAnAdmin : l10n.inviteMemberRoleADealer;
 
       // Check if user already exists in the system
       final existingUser = await _findUserByEmail(email);
@@ -63,7 +66,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${existingUser['displayName']} is already a member of ${club.name}'),
+              content: Text(l10n.inviteMemberAlreadyMember(existingUser['displayName'], club.name)),
               backgroundColor: Colors.amber,
             ),
           );
@@ -83,8 +86,8 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
         await ClubNotificationService.notifyUser(
           userId: existingUser['userId'],
           type: NotificationType.memberInvited,
-          title: 'You\'ve Been Added to a Club!',
-          body: '$inviterName added you to "${club.name}" as ${_selectedRole == ClubRole.admin ? 'an admin' : 'a dealer'}.',
+          title: l10n.inviteMemberAddedNotificationTitle,
+          body: l10n.inviteMemberAddedNotificationBody(inviterName, club.name, roleDisplay),
           clubId: club.id,
           clubName: club.name,
           data: {
@@ -104,8 +107,8 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
         if (!mounted) return;
         Navigator.pop(context, true); // Return true to indicate member was added
         _showSuccessDialog(
-          title: 'Member Added!',
-          message: '${existingUser['displayName']} has been added to ${club.name} as ${_selectedRole == ClubRole.admin ? 'an admin' : 'a dealer'}.',
+          title: l10n.inviteMemberAddedSuccessTitle,
+          message: l10n.inviteMemberAddedSuccessMessage(existingUser['displayName'], club.name, roleDisplay),
         );
       } else {
         // User doesn't exist - just send email invitation
@@ -119,8 +122,8 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
         if (!mounted) return;
         Navigator.pop(context, false); // Return false as no member was added yet
         _showSuccessDialog(
-          title: 'Invitation Sent!',
-          message: 'An invitation email has been sent to $email. Once they sign up, they\'ll be able to join ${club.name}.',
+          title: l10n.inviteMemberInvitationSentTitle,
+          message: l10n.inviteMemberInvitationSentMessage(email, club.name),
         );
       }
     } catch (e) {
@@ -130,7 +133,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text(AppLocalizations.of(context).inviteMemberError(e.toString())),
           backgroundColor: const Color(0xFFFF4444),
         ),
       );
@@ -207,7 +210,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Done',
+              AppLocalizations.of(context).commonDone,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF89F1EC),
                 fontWeight: FontWeight.w600,
@@ -236,6 +239,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
   }
 
   Widget _buildForm() {
+    final l10n = AppLocalizations.of(context);
     return Form(
       key: _formKey,
       child: Column(
@@ -264,7 +268,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Invite Member',
+                      l10n.inviteMemberTitle,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -296,7 +300,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
 
           // Email field
           Text(
-            'EMAIL ADDRESS',
+            l10n.inviteMemberEmailLabel,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -310,7 +314,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
             keyboardType: TextInputType.emailAddress,
             style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
             decoration: InputDecoration(
-              hintText: 'Enter email address',
+              hintText: l10n.inviteMemberEmailHint,
               hintStyle: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withOpacity(0.25),
                 fontSize: 15,
@@ -345,10 +349,10 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter an email address';
+                return l10n.inviteMemberEmailRequired;
               }
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email address';
+                return l10n.inviteMemberEmailInvalid;
               }
               return null;
             },
@@ -358,7 +362,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
 
           // Role selector
           Text(
-            'ROLE',
+            l10n.inviteMemberRoleLabel,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -373,7 +377,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                 child: _buildRoleOption(
                   role: ClubRole.dealer,
                   icon: Icons.style,
-                  label: 'Dealer',
+                  label: l10n.inviteMemberRoleDealer,
                 ),
               ),
               const SizedBox(width: 10),
@@ -381,7 +385,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                 child: _buildRoleOption(
                   role: ClubRole.admin,
                   icon: Icons.admin_panel_settings,
-                  label: 'Admin',
+                  label: l10n.inviteMemberRoleAdmin,
                 ),
               ),
             ],
@@ -403,7 +407,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                     ),
                     child: Center(
                       child: Text(
-                        'Cancel',
+                        l10n.commonCancel,
                         style: GoogleFonts.ibmPlexSans(
                           color: Colors.white.withOpacity(0.5),
                           fontWeight: FontWeight.w600,
@@ -435,7 +439,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
                               ),
                             )
                           : Text(
-                              'Send Invite',
+                              l10n.inviteMemberSendInvite,
                               style: GoogleFonts.ibmPlexSans(
                                 color: Colors.black,
                                 fontWeight: FontWeight.w600,

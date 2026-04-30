@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import '../widgets/global_bottom_nav_bar.dart';
+import '../l10n/app_localizations.dart';
 
 /// Event detail screen matching Figma node 158:2943
 /// Shows event title, date/time, details card, and delete button
@@ -152,14 +153,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           color: const Color(0xFF131616),
                           borderRadius: BorderRadius.circular(18),
                         ),
-                        child: Column(
-                          children: [
-                            _buildListRow('Event Type', _type),
-                            _buildSeparator(),
-                            _buildListRow('Location', _location.isNotEmpty ? _location : '-'),
-                            _buildSeparator(),
-                            _buildListRow('Buy-in amount', _buyIn > 0 ? '\$${_buyIn.toStringAsFixed(0)}' : '-'),
-                          ],
+                        child: Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context);
+                            return Column(
+                              children: [
+                                _buildListRow(l10n.calendarEventType, _type),
+                                _buildSeparator(),
+                                _buildListRow(l10n.calendarEventLocation, _location.isNotEmpty ? _location : '-'),
+                                _buildSeparator(),
+                                _buildListRow(l10n.calendarEventBuyIn, _buyIn > 0 ? '\$${_buyIn.toStringAsFixed(0)}' : '-'),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -227,27 +233,32 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             ),
                           ),
                           // Edit pill
-                          GestureDetector(
-                            onTap: () => widget.onEdit?.call(_updateFromEdit),
-                            child: Container(
-                              height: 36,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1B1E24),
-                                borderRadius: BorderRadius.circular(40),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Edit',
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.white,
-                                    height: 1.44,
+                          Builder(
+                            builder: (context) {
+                              final l10n = AppLocalizations.of(context);
+                              return GestureDetector(
+                                onTap: () => widget.onEdit?.call(_updateFromEdit),
+                                child: Container(
+                                  height: 36,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1B1E24),
+                                    borderRadius: BorderRadius.circular(40),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      l10n.calendarEventEdit,
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.white,
+                                        height: 1.44,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -267,24 +278,29 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 100),
                 child: Center(
-                  child: GestureDetector(
-                    onTap: () => _confirmDelete(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDA5B5E),
-                        borderRadius: BorderRadius.circular(70),
-                      ),
-                      child: Text(
-                        'Delete Event',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                          height: 1.44,
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return GestureDetector(
+                        onTap: () => _confirmDelete(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDA5B5E),
+                            borderRadius: BorderRadius.circular(70),
+                          ),
+                          child: Text(
+                            l10n.calendarEventDelete,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                              height: 1.44,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -297,30 +313,87 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   void _confirmDelete(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet<bool>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Main card
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF101115),
-                  borderRadius: BorderRadius.circular(18),
+      builder: (ctx) {
+        final sheetL10n = AppLocalizations.of(ctx);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Main card
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF101115),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 24),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          sheetL10n.calendarEventDeleteConfirm(_title),
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          sheetL10n.calendarEventDeleteBody(_title),
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, true),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                          child: Text(
+                            sheetL10n.calendarEventDeleteButton,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFDA5B5E),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                const SizedBox(height: 8),
+                // Cancel card
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx, false),
+                  child: Container(
+                    width: double.infinity,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF101115),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Center(
                       child: Text(
-                        'Delete $_title?',
-                        textAlign: TextAlign.center,
+                        sheetL10n.commonCancel,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
@@ -328,66 +401,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        'Are you sure you want to delete "$_title"?\nThis action cannot be undone.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(ctx, true),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
-                        child: Text(
-                          'Delete',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFDA5B5E),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Cancel card
-              GestureDetector(
-                onTap: () => Navigator.pop(ctx, false),
-                child: Container(
-                  width: double.infinity,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF101115),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Cancel',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     ).then((confirmed) {
       if (confirmed == true) {
         widget.onDelete?.call();

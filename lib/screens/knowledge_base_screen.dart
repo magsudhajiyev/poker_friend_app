@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
+import '../l10n/app_localizations.dart';
 
 enum KnowledgeBaseSection { stats, clubs }
 
@@ -11,6 +12,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.backgroundPaper,
       body: SafeArea(
@@ -40,8 +42,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
                   const SizedBox(width: 16),
                   Text(
                     section == KnowledgeBaseSection.stats
-                        ? 'Your Stats'
-                        : 'Clubs & Events',
+                        ? l10n.kbStatsTitle
+                        : l10n.kbClubsTitle,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
@@ -57,8 +59,8 @@ class KnowledgeBaseScreen extends StatelessWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
                 child: section == KnowledgeBaseSection.stats
-                    ? _buildStatsContent()
-                    : _buildClubsContent(),
+                    ? _buildStatsContent(l10n)
+                    : _buildClubsContent(l10n),
               ),
             ),
           ],
@@ -67,90 +69,86 @@ class KnowledgeBaseScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsContent() {
+  Widget _buildStatsContent(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildInfoText(
-          'Final Table tracks 7 core poker metrics to help you understand and improve your game.',
-        ),
+        _buildInfoText(l10n.kbStatsIntro),
         const SizedBox(height: 24),
         _buildStatItem(
-          'VPIP',
-          'Voluntarily Put \$ In Pot',
-          'How often you enter a pot voluntarily (excluding blind posts). A high VPIP means you play many hands; a low VPIP means you\'re selective.',
+          l10n.kbVpipName,
+          l10n.kbVpipFullName,
+          l10n.kbVpipDescription,
         ),
         _buildStatItem(
-          'PFR',
-          'Preflop Raise',
-          'How often you raise before the flop. The gap between VPIP and PFR shows how often you limp or cold-call.',
+          l10n.kbPfrName,
+          l10n.kbPfrFullName,
+          l10n.kbPfrDescription,
         ),
         _buildStatItem(
-          '3-Bet',
-          'Three-Bet Percentage',
-          'How often you re-raise an opponent\'s open raise preflop. A higher 3-bet% indicates an aggressive preflop style.',
+          l10n.kbThreeBetName,
+          l10n.kbThreeBetFullName,
+          l10n.kbThreeBetDescription,
         ),
         _buildStatItem(
-          'Fold to 3-Bet',
-          'Fold to Three-Bet',
-          'How often you fold after raising and facing a 3-bet. If too high, opponents can exploit you by 3-betting light.',
+          l10n.kbFoldTo3BetName,
+          l10n.kbFoldTo3BetFullName,
+          l10n.kbFoldTo3BetDescription,
         ),
         _buildStatItem(
-          'C-Bet',
-          'Continuation Bet',
-          'How often you bet on the flop after being the last preflop aggressor. A standard play showing strength.',
+          l10n.kbCBetName,
+          l10n.kbCBetFullName,
+          l10n.kbCBetDescription,
         ),
         _buildStatItem(
-          'Steal',
-          'Blind Steal Attempt',
-          'How often you open-raise from late position (CO, BTN, SB) when the pot is unopened, aiming to take the blinds.',
+          l10n.kbStealName,
+          l10n.kbStealFullName,
+          l10n.kbStealDescription,
         ),
         _buildStatItem(
-          'Check-Raise',
-          'Flop Check-Raise',
-          'How often you check then raise on the flop. A deceptive move that can trap aggressive opponents.',
+          l10n.kbCheckRaiseName,
+          l10n.kbCheckRaiseFullName,
+          l10n.kbCheckRaiseDescription,
         ),
       ],
     );
   }
 
-  Widget _buildClubsContent() {
+  Widget _buildClubsContent(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildInfoText(
-          'Clubs let you connect with your local poker room and track live games.',
-        ),
+        _buildInfoText(l10n.kbClubsIntro),
         const SizedBox(height: 24),
         _buildFeatureItem(
           Icons.event_rounded,
-          'Live Events',
-          'Club managers create events with multiple tables. Join an event to be part of the live rankings.',
+          l10n.kbLiveEventsTitle,
+          l10n.kbLiveEventsDescription,
         ),
         _buildFeatureItem(
           Icons.leaderboard_rounded,
-          'Live Rankings',
-          'See where you stand in real-time during events. Rankings update after every hand.',
+          l10n.kbLiveRankingsTitle,
+          l10n.kbLiveRankingsDescription,
         ),
         _buildFeatureItem(
           Icons.people_rounded,
-          'Opponent Tracking',
-          'Players you face at the club are automatically tracked. Save opponents to build detailed profiles.',
+          l10n.kbOpponentTrackingTitle,
+          l10n.kbOpponentTrackingDescription,
         ),
         _buildFeatureItem(
           Icons.qr_code_scanner_rounded,
-          'QR Seat Assignment',
-          'Scan a QR code at your table to join the session instantly. Your hands are tracked automatically by the dealer.',
+          l10n.kbQrSeatTitle,
+          l10n.kbQrSeatDescription,
         ),
         _buildFeatureItem(
           Icons.record_voice_over_rounded,
-          'Dealer-Assisted Logging',
-          'Dealers use voice commands to log actions for the entire table. No manual input needed from players.',
+          l10n.kbDealerLoggingTitle,
+          l10n.kbDealerLoggingDescription,
         ),
         _buildFeatureItem(
           Icons.bar_chart_rounded,
-          'Session Stats',
-          'After each session, see your profit/loss and how your stats changed. Every hand is recorded.',
+          l10n.kbSessionStatsTitle,
+          l10n.kbSessionStatsDescription,
         ),
       ],
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../design_system/poker_friend_theme.dart';
+import '../l10n/app_localizations.dart';
 import '../models/club_invitation.dart';
 import '../models/club_member.dart';
 import '../services/invitation_service.dart';
@@ -34,7 +35,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load invitations: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).invitationsFailedLoad(e.toString()))),
         );
       }
     }
@@ -50,7 +51,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Joined ${invitation.clubName ?? 'club'} as ${invitation.role.displayName}'),
+            content: Text(AppLocalizations.of(context).invitationsScreenJoinedAs(invitation.clubName ?? 'club', invitation.role.displayName)),
             backgroundColor: PokerFriendColors.green,
           ),
         );
@@ -61,7 +62,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to accept invitation: $e'),
+            content: Text(AppLocalizations.of(context).invitationsFailedAccept(e.toString())),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -78,8 +79,8 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invitation declined'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).invitationsDeclined),
           ),
         );
       }
@@ -89,7 +90,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to decline invitation: $e'),
+            content: Text(AppLocalizations.of(context).invitationsFailedDecline(e.toString())),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -108,8 +109,8 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Club Invitations',
+        title: Text(
+          AppLocalizations.of(context).invitationsScreenTitle,
           style: TextStyle(
             color: Colors.white,
             fontSize: 20,
@@ -146,8 +147,8 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'No pending invitations',
+          Text(
+            AppLocalizations.of(context).invitationsScreenNoPending,
             style: TextStyle(
               fontSize: 18,
               color: Colors.white,
@@ -156,7 +157,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'You\'ll see invitations from clubs here',
+            AppLocalizations.of(context).invitationsScreenYouWillSee,
             style: TextStyle(
               fontSize: 14,
               color: PokerFriendColors.dark9,
@@ -166,7 +167,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Go Back',
+              AppLocalizations.of(context).invitationsScreenGoBack,
               style: TextStyle(
                 color: PokerFriendColors.purple,
                 fontWeight: FontWeight.w600,
@@ -229,7 +230,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      invitation.clubName ?? 'Unknown Club',
+                      invitation.clubName ?? AppLocalizations.of(context).invitationsScreenUnknownClub,
                       style: const TextStyle(
                         fontSize: 18,
                         color: Colors.white,
@@ -276,7 +277,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
               ),
               const SizedBox(width: 6),
               Text(
-                'Invited by ${invitation.invitedByName ?? 'Admin'}',
+                AppLocalizations.of(context).invitationsScreenInvitedBy(invitation.invitedByName ?? 'Admin'),
                 style: TextStyle(
                   fontSize: 13,
                   color: PokerFriendColors.dark9,
@@ -296,7 +297,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
               ),
               const SizedBox(width: 6),
               Text(
-                'Expires ${_formatExpiryDate(invitation.expiresAt)}',
+                AppLocalizations.of(context).invitationsScreenExpires(_formatExpiryDate(invitation.expiresAt)),
                 style: TextStyle(
                   fontSize: 13,
                   color: invitation.isExpired
@@ -322,7 +323,7 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: Text(
-                    'Decline',
+                    AppLocalizations.of(context).invitationsScreenDecline,
                     style: TextStyle(
                       color: PokerFriendColors.dark11,
                       fontWeight: FontWeight.w600,
@@ -344,8 +345,8 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text(
-                    'Accept',
+                  child: Text(
+                    AppLocalizations.of(context).invitationsScreenAccept,
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -373,15 +374,16 @@ class _InvitationsScreenState extends State<InvitationsScreen> {
   String _formatExpiryDate(DateTime expiresAt) {
     final now = DateTime.now();
     final difference = expiresAt.difference(now);
+    final l10n = AppLocalizations.of(context);
 
     if (difference.isNegative) {
-      return 'Expired';
+      return l10n.invitationsScreenExpired;
     } else if (difference.inDays > 0) {
-      return 'in ${difference.inDays} day${difference.inDays > 1 ? 's' : ''}';
+      return l10n.invitationsScreenExpiresInDays(difference.inDays);
     } else if (difference.inHours > 0) {
-      return 'in ${difference.inHours} hour${difference.inHours > 1 ? 's' : ''}';
+      return l10n.invitationsScreenExpiresInHours(difference.inHours);
     } else {
-      return 'soon';
+      return l10n.invitationsScreenExpiresSoon;
     }
   }
 }

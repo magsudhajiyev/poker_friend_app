@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/event_attendance.dart';
@@ -169,7 +170,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Attendees',
+                  AppLocalizations.of(context).eventAttendeesTitle,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 18,
                     color: Colors.white,
@@ -228,7 +229,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
               children: [
                 const Icon(Icons.check_circle, size: 14),
                 const SizedBox(width: 5),
-                Text('Going (${_going.length})'),
+                Text(AppLocalizations.of(context).eventAttendeesGoing(_going.length)),
               ],
             ),
           ),
@@ -239,7 +240,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
               children: [
                 const Icon(Icons.help_outline, size: 14),
                 const SizedBox(width: 5),
-                Text('Maybe (${_maybe.length})'),
+                Text(AppLocalizations.of(context).eventAttendeesMaybe(_maybe.length)),
               ],
             ),
           ),
@@ -250,7 +251,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
               children: [
                 const Icon(Icons.cancel_outlined, size: 14),
                 const SizedBox(width: 5),
-                Text('No (${_notGoing.length})'),
+                Text(AppLocalizations.of(context).eventAttendeesNo(_notGoing.length)),
               ],
             ),
           ),
@@ -281,23 +282,24 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
   }
 
   Widget _buildEmptyState(AttendanceStatus status) {
+    final l10n = AppLocalizations.of(context);
     String message;
     IconData icon;
     Color color;
 
     switch (status) {
       case AttendanceStatus.going:
-        message = 'No one confirmed yet';
+        message = l10n.eventAttendeesNoConfirmed;
         icon = Icons.check_circle_outline;
         color = const Color(0xFF89F1EC);
         break;
       case AttendanceStatus.maybe:
-        message = 'No maybes';
+        message = l10n.eventAttendeesNoMaybes;
         icon = Icons.help_outline;
         color = Colors.amber;
         break;
       case AttendanceStatus.notGoing:
-        message = 'No declines';
+        message = l10n.eventAttendeesNoDeclines;
         icon = Icons.cancel_outlined;
         color = const Color(0xFFFF4444);
         break;

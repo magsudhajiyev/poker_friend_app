@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../services/opponent_service.dart';
 import '../models/opponent.dart';
 
@@ -107,9 +108,10 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
         _filteredOpponents = [];
       });
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('$name saved as opponent'),
+            content: Text(l10n.seatConfigSavedAsOpponent(name)),
             backgroundColor: const Color(0xFF1A1A1E),
             duration: const Duration(seconds: 2),
           ),
@@ -194,6 +196,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return AnimatedPadding(
@@ -238,7 +241,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Seat ${widget.seatNumber}',
+                          l10n.seatConfigSeatTitle(widget.seatNumber),
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 20,
                             color: const Color(0xFF62E3BC),
@@ -258,7 +261,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                               Navigator.pop(context);
                             },
                             child: Text(
-                              'Remove',
+                              l10n.seatConfigRemove,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 15,
                                 color: const Color(0xFFFF4444),
@@ -319,7 +322,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'This is me',
+                              l10n.seatConfigThisIsMe,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 14,
                                 color: _isHero
@@ -336,7 +339,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
 
                     // Name field with opponent search
                     Text(
-                      'Name',
+                      l10n.seatConfigNameLabel,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         color: Colors.white.withOpacity(0.6),
@@ -352,7 +355,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         fontWeight: FontWeight.w400,
                         height: 1.44,
                       ),
-                      decoration: _inputDecoration('Search or enter name'),
+                      decoration: _inputDecoration(l10n.seatConfigSearchOrEnterName),
                       textCapitalization: TextCapitalization.words,
                     ),
 
@@ -410,7 +413,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(
-                                            'Seat $seatedAt',
+                                            l10n.seatConfigSeatTitle(seatedAt!),
                                             style: GoogleFonts.ibmPlexSans(
                                               color: const Color(0xFF8C8C8C),
                                               fontSize: 11,
@@ -445,7 +448,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
-                                          'Save "${_nameController.text.trim()}" as opponent',
+                                          l10n.seatConfigSaveAsOpponent(_nameController.text.trim()),
                                           style: GoogleFonts.ibmPlexSans(
                                             color: const Color(0xFF62E3BC),
                                             fontSize: 14,
@@ -467,7 +470,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
 
                     // Stack field
                     Text(
-                      'Stack',
+                      l10n.seatConfigStackLabel,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         color: Colors.white.withOpacity(0.6),
@@ -504,7 +507,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                         ),
                         child: Center(
                           child: Text(
-                            _isActive ? 'Update' : 'Add Player',
+                            _isActive ? l10n.seatConfigUpdateButton : l10n.seatConfigAddPlayerButton,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 17,
                               color: Colors.black,

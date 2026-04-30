@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link_service.dart';
 import '../services/username_service.dart';
+import '../l10n/app_localizations.dart';
 import 'intro_screen.dart';
 import 'home_screen.dart';
 import 'username_setup_screen.dart';
@@ -214,6 +215,7 @@ class _AuthWrapperState extends State<AuthWrapper> with SingleTickerProviderStat
   }
 
   Widget _buildConnectionErrorScreen(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFF02050B),
       body: Center(
@@ -237,7 +239,7 @@ class _AuthWrapperState extends State<AuthWrapper> with SingleTickerProviderStat
               ),
               const SizedBox(height: 24),
               Text(
-                'Connection Issue',
+                l10n.authConnectionIssue,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -247,7 +249,7 @@ class _AuthWrapperState extends State<AuthWrapper> with SingleTickerProviderStat
               ),
               const SizedBox(height: 12),
               Text(
-                'We couldn\'t connect to our servers.\nPlease check your internet connection\nand try again.',
+                l10n.authConnectionIssueBody,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
                   color: const Color(0xFF8C8C8C),
@@ -271,7 +273,7 @@ class _AuthWrapperState extends State<AuthWrapper> with SingleTickerProviderStat
                     ),
                   ),
                   child: Text(
-                    'Try Again',
+                    l10n.authTryAgain,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,

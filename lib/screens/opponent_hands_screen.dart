@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../l10n/app_localizations.dart';
 import '../models/opponent.dart';
 import '../services/local_storage_service.dart';
 import '../services/firebase_service.dart';
@@ -293,6 +294,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Colors.black,
@@ -359,7 +361,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Hand History',
+                              l10n.opponentHandsTitle,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 14,
                                 color: Colors.white.withValues(alpha: 0.5),
@@ -378,7 +380,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                             borderRadius: BorderRadius.circular(40),
                           ),
                           child: Text(
-                            '${totalHandsCount ?? hands.length} hands',
+                            l10n.opponentHandsCount(totalHandsCount ?? hands.length),
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 13,
                               color: Colors.white.withValues(alpha: 0.6),
@@ -423,7 +425,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Loading hand history...',
+            AppLocalizations.of(context).opponentHandsLoading,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
@@ -452,7 +454,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Something went wrong',
+              AppLocalizations.of(context).opponentHandsError,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 17,
@@ -478,7 +480,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                   borderRadius: BorderRadius.circular(60),
                 ),
                 child: Text(
-                  'Retry',
+                  AppLocalizations.of(context).opponentHandsRetry,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     color: Colors.black,
@@ -515,7 +517,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'No Hands Found',
+              AppLocalizations.of(context).opponentHandsNoHandsTitle,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 18,
@@ -524,7 +526,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'You haven\'t played any hands\nwith ${widget.opponent.name} yet.',
+              AppLocalizations.of(context).opponentHandsNoHandsSubtitle(widget.opponent.name),
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withValues(alpha: 0.45),
                 fontSize: 14,
@@ -569,8 +571,9 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
   }
 
   Widget _buildHandCard(Map<String, dynamic> hand, int index) {
+    final l10n = AppLocalizations.of(context);
     final startTime = DateTime.parse(hand['startTime']);
-    final sessionName = hand['sessionName'] ?? 'Unknown Session';
+    final sessionName = hand['sessionName'] ?? l10n.opponentHandsUnknownSession;
     final handNumber = hand['handNumber'] ?? (index + 1);
     final buttonPosition = hand['buttonPosition'] ?? 1;
     final playerCount = hand['playerCount'] ?? 6;
@@ -674,7 +677,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'OPP WON',
+                      l10n.opponentHandsOppWon,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 10,
                         color: Colors.red,
@@ -694,7 +697,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
             Row(
               children: [
                 // Your position
-                _buildPositionChip('You', heroPositionName, _mint),
+                _buildPositionChip(l10n.opponentHandsYou, heroPositionName, _mint),
                 const SizedBox(width: 8),
                 // Opponent position
                 if (opponentPosition != null)
@@ -708,7 +711,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                 const Spacer(),
                 // Pot
                 Text(
-                  'Pot ${isCash ? '\$' : ''}${potAmount.toStringAsFixed(0)}',
+                  l10n.opponentHandsPot('${isCash ? '\$' : ''}${potAmount.toStringAsFixed(0)}'),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     color: _mint,

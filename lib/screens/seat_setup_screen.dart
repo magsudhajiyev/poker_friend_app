@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design_system/components.dart';
+import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import '../utils/poker_positions.dart';
 import '../services/display_identity_service.dart';
@@ -265,7 +266,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     }
 
     if (activeSeats.isEmpty) return '';
-    if (!activeSeats.contains(seatNumber)) return 'Empty';
+    if (!activeSeats.contains(seatNumber)) return AppLocalizations.of(context).seatSetupEmpty;
 
     final buttonPos = selectedButtonPosition ?? widget.buttonPosition ?? 1;
     return PokerPositions.getPositionNameForActivePlayers(seatNumber, buttonPos, activeSeats);
@@ -373,7 +374,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                       ),
                       // Title
                       Text(
-                        'Set up Seat',
+                        AppLocalizations.of(context).seatSetupTitle,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           color: Colors.white,
@@ -430,7 +431,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Seat $seatNumber',
+                                    AppLocalizations.of(context).seatSetupSeatNumber(seatNumber),
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 17,
                                       color: Colors.white,
@@ -555,7 +556,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                 ),
                                 SizedBox(width: 10),
                                 Text(
-                                  'This is my seat',
+                                  AppLocalizations.of(context).seatSetupThisIsMySeat,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 15,
                                     color: Colors.white,
@@ -608,7 +609,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                       fontSize: 17,
                                     ),
                                     decoration: InputDecoration(
-                                      hintText: 'Player Name',
+                                      hintText: AppLocalizations.of(context).seatSetupPlayerName,
                                       hintStyle: GoogleFonts.ibmPlexSans(
                                         color: Colors.white.withOpacity(0.4),
                                         fontSize: 15,
@@ -708,7 +709,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   fontSize: 17,
                                 ),
                                 decoration: InputDecoration(
-                                  hintText: widget.isCashGame ? 'Buy-in Amount (\$)' : 'Starting Chips',
+                                  hintText: widget.isCashGame ? AppLocalizations.of(context).seatSetupBuyInAmount : AppLocalizations.of(context).seatSetupStartingChips,
                                   hintStyle: GoogleFonts.ibmPlexSans(
                                     color: Colors.white.withOpacity(0.4),
                                     fontSize: 15,
@@ -770,7 +771,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Opponent saved!'),
+                                    content: Text(AppLocalizations.of(context).seatSetupOpponentSaved),
                                     backgroundColor: Color(0xFF62E3BC),
                                   ),
                                 );
@@ -782,7 +783,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Failed to save: $e'),
+                                    content: Text(AppLocalizations.of(context).seatSetupFailedSave(e.toString())),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
@@ -801,7 +802,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                   SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'Save "$tempName" as opponent?',
+                                      AppLocalizations.of(context).seatSetupSaveAsOpponent(tempName),
                                       style: GoogleFonts.ibmPlexSans(fontSize: 12, color: Color(0xFF62E3BC)),
                                     ),
                                   ),
@@ -826,7 +827,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                'Done',
+                                AppLocalizations.of(context).seatSetupDone,
                                 style: GoogleFonts.ibmPlexSans(
                                   color: Colors.black,
                                   fontSize: 17,
@@ -1072,7 +1073,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8),
                                   child: Text(
-                                    'Cancel',
+                                    AppLocalizations.of(context).seatSetupCancel,
                                     style: GoogleFonts.ibmPlexSans(
                                       color: Colors.white,
                                       fontSize: 17,
@@ -1142,7 +1143,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     if (widget.isInitialSetup && selectedSeat == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please select your seat'),
+          content: Text(AppLocalizations.of(context).seatSetupSelectYourSeat),
           backgroundColor: Colors.red,
         ),
       );

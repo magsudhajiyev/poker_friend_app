@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../l10n/app_localizations.dart';
 import '../services/firebase_service.dart';
 import '../services/dealer_service.dart';
 import '../services/auth_service.dart';
@@ -186,7 +187,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                               widget.session['sessionName'] != null &&
                               widget.session['sessionName'].isNotEmpty
                                   ? widget.session['sessionName']
-                                  : 'Session ${widget.session['id'].substring(0, 8)}...',
+                                  : AppLocalizations.of(context).sessionHistorySessionId(widget.session['id'].substring(0, 8)),
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 20,
                                 color: Colors.white,
@@ -195,7 +196,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${hands.length} hands logged',
+                              AppLocalizations.of(context).sessionHandsHandsLogged(hands.length),
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 13,
                                 color: Colors.white.withOpacity(0.5),
@@ -223,7 +224,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
 
   Widget _buildBody() {
     if (isLoading) {
-      return LoadingScreen(message: 'Loading hands...');
+      return LoadingScreen(message: AppLocalizations.of(context).sessionHandsLoading);
     }
 
     if (error != null) {
@@ -234,7 +235,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
             const Icon(Icons.error_outline, color: Colors.red, size: 64),
             const SizedBox(height: 16),
             Text(
-              'Error',
+              AppLocalizations.of(context).sessionHandsError,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 18,
@@ -257,7 +258,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                   borderRadius: BorderRadius.circular(60),
                 ),
                 child: Text(
-                  'Retry',
+                  AppLocalizations.of(context).commonRetry,
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.black,
                     fontWeight: FontWeight.w600,
@@ -301,7 +302,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'No Hands Logged',
+              AppLocalizations.of(context).sessionHandsNoHandsTitle,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 18,
@@ -310,7 +311,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'This session has no recorded hands yet.',
+              AppLocalizations.of(context).sessionHandsNoHandsSubtitle,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withOpacity(0.5),
                 fontSize: 14,
@@ -394,7 +395,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 // Time + actions count
                 Expanded(
                   child: Text(
-                    '${DateFormat('HH:mm').format(startTime)}  ·  ${actions.length} actions  ·  ${hand['playerCount']}p',
+                    '${DateFormat('HH:mm').format(startTime)}  ·  ${AppLocalizations.of(context).sessionHandsActions(actions.length)}  ·  ${hand['playerCount']}p',
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.4),
@@ -411,7 +412,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'WON',
+                      AppLocalizations.of(context).sessionHandsWon,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 10,
                         color: _mint,
@@ -448,7 +449,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 const Spacer(),
                 // Pot
                 Text(
-                  'Pot ${isCash ? '\$' : ''}${potAmount is double ? potAmount.toStringAsFixed(0) : potAmount}',
+                  '${AppLocalizations.of(context).sessionHandsPot} ${isCash ? '\$' : ''}${potAmount is double ? potAmount.toStringAsFixed(0) : potAmount}',
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     color: _mint,

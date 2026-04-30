@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../models/poker_game_state.dart';
 import '../models/hand_state_machine.dart';
 import '../models/stack_bucket.dart';
@@ -51,6 +52,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final btnPos = widget.gameState.buttonPosition;
     final activeSeats = widget.sessionManager.activeSeats.toList()..sort();
 
@@ -88,7 +90,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
                 child: Row(
                   children: [
                     Text(
-                      'TABLE',
+                      l10n.tableManagementSectionTitle,
                       style: GoogleFonts.ibmPlexSans(
                         color: const Color(0xFF87ED81),
                         fontSize: 12,
@@ -98,7 +100,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
                     ),
                     const Spacer(),
                     Text(
-                      '${widget.gameState.getActivePlayers().length} players',
+                      l10n.tableManagementPlayersCount(widget.gameState.getActivePlayers().length),
                       style: GoogleFonts.ibmPlexSans(
                         color: const Color(0xFF8C8C8C),
                         fontSize: 12,
@@ -113,7 +115,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
                 child: Row(
                   children: [
                     Text(
-                      'Dealer Button',
+                      l10n.tableManagementDealerButton,
                       style: GoogleFonts.ibmPlexSans(
                         color: Colors.white70,
                         fontSize: 14,
@@ -206,6 +208,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
   }
 
   Widget _buildEmptySeat(int seat) {
+    final l10n = AppLocalizations.of(context);
     return InkWell(
       onTap: () => _showAddPlayerDialog(seat),
       child: Padding(
@@ -232,7 +235,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
             ),
             const SizedBox(width: 12),
             Text(
-              'Add Player',
+              l10n.tableManagementAddPlayer,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF62E3BC),
                 fontSize: 15,
@@ -264,8 +267,9 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
   }
 
   Widget _buildActiveSeat(int seat, bool isHero) {
+    final l10n = AppLocalizations.of(context);
     final player = widget.gameState.players[seat - 1];
-    final name = widget.sessionManager.playerNames[seat] ?? 'Seat $seat';
+    final name = widget.sessionManager.playerNames[seat] ?? l10n.tableManagementSeatLabel(seat);
     final stack = player.currentStack;
     final confidence = player.stackConfidence;
     final bigBlind = widget.sessionManager.bigBlind;
@@ -313,7 +317,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
                   children: [
                     Flexible(
                       child: Text(
-                        isHero ? '$name (You)' : name,
+                        isHero ? l10n.tableManagementYouSuffix(name) : name,
                         style: GoogleFonts.ibmPlexSans(
                           color: Colors.white,
                           fontSize: 15,
@@ -382,19 +386,19 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
           if (!isHero) ...[
             _buildActionButton(
               icon: Icons.tune,
-              tooltip: 'Adjust Stack',
+              tooltip: l10n.tableManagementAdjustStack,
               onTap: () => _showAdjustStackDialog(seat, stack),
             ),
             const SizedBox(width: 4),
             _buildActionButton(
               icon: Icons.add_shopping_cart,
-              tooltip: 'Rebuy',
+              tooltip: l10n.tableManagementRebuy,
               onTap: () => _showRebuyDialog(seat, stack),
             ),
             const SizedBox(width: 4),
             _buildActionButton(
               icon: Icons.logout,
-              tooltip: 'Remove',
+              tooltip: l10n.tableManagementRemove,
               onTap: () => _removePlayer(seat),
               color: const Color(0xFFE36262),
             ),
@@ -495,6 +499,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
   }
 
   void _showAdjustStackDialog(int seat, double currentStack) {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: currentStack.toStringAsFixed(0));
 
     showDialog(
@@ -502,7 +507,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A1E),
         title: Text(
-          'Adjust Stack',
+          l10n.tableManagementAdjustStackTitle,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: TextField(
@@ -511,7 +516,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
           autofocus: true,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
           decoration: InputDecoration(
-            hintText: 'Enter stack amount',
+            hintText: l10n.tableManagementEnterStackAmount,
             hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             enabledBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF62E3BC)),
@@ -524,7 +529,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+            child: Text(l10n.commonCancel, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
           ),
           TextButton(
             onPressed: () {
@@ -537,7 +542,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
               }
               Navigator.pop(ctx);
             },
-            child: Text('Update', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
+            child: Text(l10n.commonUpdate, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
           ),
         ],
       ),
@@ -545,6 +550,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
   }
 
   void _showRebuyDialog(int seat, double currentStack) {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
 
     showDialog(
@@ -552,7 +558,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A1E),
         title: Text(
-          'Rebuy',
+          l10n.tableManagementRebuyTitle,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: TextField(
@@ -561,7 +567,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
           autofocus: true,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
           decoration: InputDecoration(
-            hintText: 'Rebuy amount to add',
+            hintText: l10n.tableManagementRebuyAmountHint,
             hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
             enabledBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF62E3BC)),
@@ -574,7 +580,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+            child: Text(l10n.commonCancel, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
           ),
           TextButton(
             onPressed: () {
@@ -588,7 +594,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
               }
               Navigator.pop(ctx);
             },
-            child: Text('Add', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
+            child: Text(l10n.tableManagementAdd, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
           ),
         ],
       ),
@@ -596,22 +602,24 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
   }
 
   void _removePlayer(int seat) {
+    final l10n = AppLocalizations.of(context);
+    final playerName = widget.sessionManager.playerNames[seat] ?? l10n.tableManagementSeatLabel(seat);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A1E),
         title: Text(
-          'Remove Player?',
+          l10n.tableManagementRemovePlayerTitle,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Remove ${widget.sessionManager.playerNames[seat] ?? "Seat $seat"} from the table?',
+          l10n.tableManagementRemovePlayerMessage(playerName),
           style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+            child: Text(l10n.commonCancel, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
           ),
           TextButton(
             onPressed: () {
@@ -621,7 +629,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
               setState(() {});
               Navigator.pop(ctx);
             },
-            child: Text('Remove', style: GoogleFonts.ibmPlexSans(color: const Color(0xFFE36262))),
+            child: Text(l10n.tableManagementRemove, style: GoogleFonts.ibmPlexSans(color: const Color(0xFFE36262))),
           ),
         ],
       ),
@@ -720,9 +728,10 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
         _filteredOpponents = [];
       });
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('$name saved as opponent'),
+            content: Text(l10n.tableManagementSavedAsOpponent(name)),
             backgroundColor: const Color(0xFF1A1A1E),
             duration: const Duration(seconds: 2),
           ),
@@ -753,6 +762,7 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return AnimatedPadding(
@@ -785,7 +795,7 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
               child: Row(
                 children: [
                   Text(
-                    'Add Player — Seat ${widget.seat}',
+                    l10n.tableManagementAddPlayerSeatTitle(widget.seat),
                     style: GoogleFonts.ibmPlexSans(
                       color: Colors.white,
                       fontSize: 18,
@@ -833,7 +843,7 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'This is me',
+                              l10n.tableManagementThisIsMe,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 14,
                                 color: _isMe
@@ -851,7 +861,7 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
                     // Name field (hidden when "This is me")
                     if (!_isMe) ...[
                     Text(
-                      'Name',
+                      l10n.tableManagementNameLabel,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         color: const Color(0xFF8C8C8C),
@@ -868,7 +878,7 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
                       ),
                       textCapitalization: TextCapitalization.words,
                       decoration: InputDecoration(
-                        hintText: 'Search or enter name',
+                        hintText: l10n.tableManagementSearchOrEnterName,
                         hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
                         filled: true,
                         fillColor: const Color(0xFF101115),
@@ -940,7 +950,7 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(
-                                            'Seat $seatedAt',
+                                            l10n.tableManagementSeatLabel(seatedAt!),
                                             style: GoogleFonts.ibmPlexSans(
                                               color: const Color(0xFF8C8C8C),
                                               fontSize: 11,
@@ -974,7 +984,7 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
-                                          'Save "${_nameController.text.trim()}" as opponent',
+                                          l10n.tableManagementSaveAsOpponent(_nameController.text.trim()),
                                           style: GoogleFonts.ibmPlexSans(
                                             color: const Color(0xFF62E3BC),
                                             fontSize: 14,
@@ -996,7 +1006,7 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
 
                     // Stack field
                     Text(
-                      'Starting Stack',
+                      l10n.tableManagementStartingStack,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         color: const Color(0xFF8C8C8C),
@@ -1014,7 +1024,7 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
                       ),
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
-                        hintText: widget.defaultStack > 0 ? widget.defaultStack.toStringAsFixed(0) : 'Stack amount',
+                        hintText: widget.defaultStack > 0 ? widget.defaultStack.toStringAsFixed(0) : l10n.tableManagementStackAmountHint,
                         hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
                         filled: true,
                         fillColor: const Color(0xFF101115),
@@ -1059,7 +1069,7 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
                         ),
                         child: Center(
                           child: Text(
-                            _isMe ? 'Move Me Here' : 'Add Player',
+                            _isMe ? l10n.tableManagementMoveMeHere : l10n.tableManagementAddPlayer,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 17,
                               color: Colors.black,

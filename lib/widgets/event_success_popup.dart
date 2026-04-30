@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 
 /// Success popup shown after successfully adding a calendar event.
 /// Slides up from the bottom of the screen with two action buttons.
@@ -39,6 +40,7 @@ class EventSuccessPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1B1E24),
@@ -92,7 +94,7 @@ class EventSuccessPopup extends StatelessWidget {
 
                   // Title
                   Text(
-                    'Nice! Your event is now on calendar.',
+                    l10n.eventSuccessTitle,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.ibmPlexSans(
                       color: Colors.white,
@@ -105,7 +107,7 @@ class EventSuccessPopup extends StatelessWidget {
 
                   // Subtitle
                   Text(
-                    'You can edit or remove it anytime',
+                    l10n.eventSuccessSubtitle,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.ibmPlexSans(
                       color: const Color(0xFFB3B4B6),
@@ -131,7 +133,7 @@ class EventSuccessPopup extends StatelessWidget {
                             borderRadius: BorderRadius.circular(110),
                           ),
                           child: Text(
-                            'Go to calendar',
+                            l10n.eventSuccessGoToCalendar,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.ibmPlexSans(
                               color: Colors.black,
@@ -166,7 +168,7 @@ class EventSuccessPopup extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Add another event',
+                                l10n.eventSuccessAddAnother,
                                 style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
                                   fontSize: 17,

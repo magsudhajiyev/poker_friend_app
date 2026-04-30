@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../l10n/app_localizations.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/subscription_service.dart';
@@ -116,7 +117,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       }
     } catch (e) {
       setState(() {
-        error = 'Failed to load sessions: $e';
+        error = AppLocalizations.of(context).sessionHistoryFailedLoad(e.toString());
         isLoading = false;
       });
     }
@@ -163,13 +164,14 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   }
 
   Widget _buildFreeTierStatusIndicator() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: GestureDetector(
         onTap: () async {
           await PaywallScreen.show(
             context,
-            featureName: 'Full session history',
+            featureName: l10n.sessionHistoryFullHistory,
           );
           if (mounted) {
             setState(() {});
@@ -194,13 +196,13 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               ),
               SizedBox(width: 8),
               Text(
-                'Last 30 days • ',
+                '${l10n.sessionLast30Days} • ',
                 style: AppTypography.bodySmall(
                   color: AppColors.textSecondary,
                 ).copyWith(fontSize: 13),
               ),
               Text(
-                'Upgrade for full history',
+                l10n.sessionUpgradeForFullHistory,
                 style: AppTypography.bodySmall(
                   color: AppColors.buttonPrimary,
                 ).copyWith(
@@ -218,6 +220,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -281,7 +284,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                       SizedBox(width: 12),
                       // Title
                       Text(
-                        'Session History',
+                        l10n.sessionHistoryTitle,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 24,
                           color: Colors.white,
@@ -343,7 +346,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                                         behavior: HitTestBehavior.opaque,
                                         child: Center(
                                           child: Text(
-                                            'Cash',
+                                            l10n.sessionHistoryCash,
                                             style: GoogleFonts.ibmPlexSans(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w500,
@@ -365,7 +368,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                                         behavior: HitTestBehavior.opaque,
                                         child: Center(
                                           child: Text(
-                                            'Tournament',
+                                            l10n.sessionHistoryTournament,
                                             style: GoogleFonts.ibmPlexSans(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w500,
@@ -396,8 +399,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildSessionsList(cashSessions, 'Cash'),
-                      _buildSessionsList(tournamentSessions, 'Tournament'),
+                      _buildSessionsList(cashSessions, l10n.sessionHistoryCash),
+                      _buildSessionsList(tournamentSessions, l10n.sessionHistoryTournament),
                     ],
                   ),
                 ),
@@ -411,8 +414,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   }
 
   Widget _buildSessionsList(List<Map<String, dynamic>> sessionList, String gameType) {
+    final l10n = AppLocalizations.of(context);
     if (isLoading) {
-      return LoadingScreen(message: 'Loading sessions...');
+      return LoadingScreen(message: l10n.sessionLoadingMessage);
     }
 
     if (error != null) {
@@ -437,7 +441,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               children: [
                 // Icon - dollar for Cash, clubs for Tournament
                 _buildIcon(
-                  gameType == 'Cash'
+                  gameType == l10n.sessionHistoryCash
                       ? 'icons/figma_icons/dollar.svg'
                       : 'icons/figma_icons/clubs.svg',
                   24,
@@ -446,7 +450,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                 SizedBox(height: 6),
                 // Title
                 Text(
-                  'No $gameType Sessions',
+                  l10n.sessionNoSessions(gameType),
                   style: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 17,
@@ -458,7 +462,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                 SizedBox(height: 4),
                 // Description
                 Text(
-                  'Play some $gameType Poker hands \nto see the results',
+                  l10n.sessionPlayToSee(gameType),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.ibmPlexSans(
                     color: Color(0xFFB3B4B6),
@@ -486,6 +490,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   }
 
   Widget _buildSessionCard(Map<String, dynamic> session) {
+    final l10n = AppLocalizations.of(context);
     final startTime = DateTime.parse(session['startTime']);
     final isDealerSession = session['isDealerSession'] == true;
     final playerCount = session['playerCount'] ?? 0;
@@ -496,7 +501,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
     final sessionName = session['sessionName'] != null && session['sessionName'].isNotEmpty
         ? session['sessionName']
-        : 'Session ${session['id'].substring(0, 8)}...';
+        : AppLocalizations.of(context).sessionHistorySessionId(session['id'].substring(0, 8));
 
     return GestureDetector(
       onTap: () async {
@@ -546,7 +551,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'Live',
+                            l10n.sessionLive,
                             style: GoogleFonts.ibmPlexSans(
                               color: const Color(0xFF4CAF50),
                               fontSize: 10,
@@ -559,7 +564,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                   ),
                 ),
                 const SizedBox(width: 6),
-                _buildInfoPill('$playerCount Players'),
+                _buildInfoPill(l10n.sessionPlayersCount(playerCount)),
                 const SizedBox(width: 4),
                 _buildInfoPill(secondPillText),
               ],
@@ -590,27 +595,28 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   }
 
   void _showHandDetails(Map<String, dynamic> hand, {int? ourSeat}) {
+    final l10n = AppLocalizations.of(context);
     final actions = List<Map<String, dynamic>>.from(hand['actions'] ?? []);
     final boardCards = hand['boardCards'] as Map<String, dynamic>?;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Hand #${hand['handNumber']} Details'),
+        title: Text(l10n.sessionHandDetails(hand['handNumber'] as int)),
         content: Container(
           width: double.maxFinite,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Button Position: ${PokerPositions.getPositionName(hand['buttonPosition'], hand['buttonPosition'], hand['playerCount'])}'),
-              Text('Player Count: ${hand['playerCount']}'),
-              Text('Start Time: ${DateFormat('MMM dd, HH:mm:ss').format(DateTime.parse(hand['startTime']))}'),
+              Text(l10n.sessionHistoryButtonPosition(PokerPositions.getPositionName(hand['buttonPosition'], hand['buttonPosition'], hand['playerCount']))),
+              Text(l10n.sessionHistoryPlayerCount(hand['playerCount'].toString())),
+              Text(l10n.sessionHistoryStartTime(DateFormat('MMM dd, HH:mm:ss').format(DateTime.parse(hand['startTime'])))),
               
-              // Hole Cards Section  
+              // Hole Cards Section
               if (hand['ourHoleCards'] != null) ...[
                 SizedBox(height: 16),
-                Text('Your Cards:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(l10n.sessionYourCards, style: TextStyle(fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
                 _buildHoleCardsDisplay(hand['ourHoleCards']),
               ],
@@ -618,15 +624,15 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               // Board Cards Section
               if (boardCards != null) ...[
                 SizedBox(height: 16),
-                Text('Board Cards:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(l10n.sessionBoardCards, style: TextStyle(fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
                 _buildBoardCardsDisplay(boardCards),
               ],
-              
+
               // Pot Tracking Section
               if (_hasAnyPotData(hand)) ...[
                 SizedBox(height: 16),
-                Text('Pot by Street:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(l10n.sessionPotByStreet, style: TextStyle(fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
                 _buildPotTrackingDisplay(hand, boardCards),
               ],
@@ -636,10 +642,10 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               _buildWinnerDisplay(hand),
 
               SizedBox(height: 16),
-              Text('Actions:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(l10n.sessionActions, style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               if (actions.isEmpty)
-                Text('No actions recorded')
+                Text(l10n.sessionNoActionsRecorded)
               else
                 ...actions.map((action) {
                   // Get the player name and position from the stored action record
@@ -655,9 +661,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                     if (isPositionName) {
                       // If it's just a position name, show seat number with current position
                       if (storedPlayerPosition != null && storedPlayerPosition.isNotEmpty) {
-                        displayName = 'Seat $playerSeat ($storedPlayerPosition)';
+                        displayName = AppLocalizations.of(context).sessionHistorySeatWithPosition(playerSeat.toString(), storedPlayerPosition);
                       } else {
-                        displayName = 'Seat $playerSeat';
+                        displayName = AppLocalizations.of(context).sessionHistorySeat(playerSeat.toString());
                       }
                     } else {
                       // Use custom player name with position: "Gringo (SB)"
@@ -671,9 +677,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                   } else {
                     // Fallback to seat number with position
                     if (storedPlayerPosition != null && storedPlayerPosition.isNotEmpty) {
-                      displayName = 'Seat $playerSeat ($storedPlayerPosition)';
+                      displayName = AppLocalizations.of(context).sessionHistorySeatWithPosition(playerSeat.toString(), storedPlayerPosition);
                     } else {
-                      displayName = 'Seat $playerSeat';
+                      displayName = AppLocalizations.of(context).sessionHistorySeat(playerSeat.toString());
                     }
                   }
                   
@@ -706,7 +712,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Close'),
+            child: Text(l10n.commonClose),
           ),
         ],
       ),
@@ -723,7 +729,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         if (card1 != null && card2 != null) SizedBox(width: 8),
         if (card2 != null) _buildCard(card2),
         if (card1 == null && card2 == null)
-          Text('No cards recorded', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
+          Text(AppLocalizations.of(context).sessionNoCardsRecorded, style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
       ],
     );
   }
@@ -738,17 +744,17 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       runSpacing: 8,
       children: [
         if (flop.isNotEmpty) ...[
-          Text('Flop: ', style: TextStyle(fontSize: 12)),
+          Text('${AppLocalizations.of(context).sessionHistoryFlop} ', style: TextStyle(fontSize: 12)),
           ...flop.map((card) => _buildCard(card)),
         ],
         if (turn != null) ...[
           SizedBox(width: 16),
-          Text('Turn: ', style: TextStyle(fontSize: 12)),
+          Text('${AppLocalizations.of(context).sessionHistoryTurn} ', style: TextStyle(fontSize: 12)),
           _buildCard(turn),
         ],
         if (river != null) ...[
           SizedBox(width: 16),
-          Text('River: ', style: TextStyle(fontSize: 12)),
+          Text('${AppLocalizations.of(context).sessionHistoryRiver} ', style: TextStyle(fontSize: 12)),
           _buildCard(river),
         ],
       ],
@@ -798,15 +804,16 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
   String _formatStreet(String street) {
     switch (street.toLowerCase()) {
-      case 'preflop': return 'Preflop';
-      case 'flop': return 'Flop';
-      case 'turn': return 'Turn';
-      case 'river': return 'River';
+      case 'preflop': return AppLocalizations.of(context).sessionHistoryPreflop;
+      case 'flop': return AppLocalizations.of(context).sessionHistoryFlop;
+      case 'turn': return AppLocalizations.of(context).sessionHistoryTurn;
+      case 'river': return AppLocalizations.of(context).sessionHistoryRiver;
       default: return street;
     }
   }
 
   Future<void> _syncLocalToFirebase() async {
+    final l10n = AppLocalizations.of(context);
     // Show loading dialog
     showDialog(
       context: context,
@@ -818,7 +825,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           children: [
             CircularProgressIndicator(color: Colors.blue),
             SizedBox(height: 16),
-            Text('Syncing to cloud...', style: TextStyle(color: Colors.white)),
+            Text(l10n.sessionSyncingToCloud, style: TextStyle(color: Colors.white)),
           ],
         ),
       ),
@@ -834,7 +841,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       // Show result
       if (mounted) {
         final success = result['success'] == true;
-        final message = result['message'] ?? 'Sync completed';
+        final message = result['message'] ?? l10n.sessionHistorySyncCompleted;
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -857,7 +864,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Sync failed: $e'),
+            content: Text(l10n.sessionHistorySyncFailed(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -866,6 +873,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   }
 
   void _showClearConfirmation() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -873,17 +881,17 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           children: [
             Icon(Icons.warning, color: Colors.red),
             SizedBox(width: 8),
-            Text('Clear All Sessions?'),
+            Text(l10n.sessionClearAllTitle),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('This will permanently delete all poker sessions and hands from both Firebase and local storage.'),
+            Text(l10n.sessionClearAllDescription),
             SizedBox(height: 8),
             Text(
-              'This action cannot be undone!',
+              l10n.sessionClearAllWarning,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.red,
@@ -894,7 +902,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -905,7 +913,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text('Clear All'),
+            child: Text(l10n.sessionClearAll),
           ),
         ],
       ),
@@ -940,21 +948,21 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('All sessions have been cleared successfully'),
+            content: Text(AppLocalizations.of(context).sessionClearedSuccessfully),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       setState(() {
-        error = 'Failed to clear sessions: $e';
+        error = AppLocalizations.of(context).sessionHistoryClearFailed(e.toString());
         isLoading = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to clear sessions: $e'),
+            content: Text(AppLocalizations.of(context).sessionHistoryClearFailed(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -997,7 +1005,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Preflop:', style: TextStyle(fontSize: 12)),
+            Text('${AppLocalizations.of(context).sessionHistoryPreflop}', style: TextStyle(fontSize: 12)),
             Text(formatAmount(preflopPot), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           ],
         ),
@@ -1006,7 +1014,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Flop:', style: TextStyle(fontSize: 12)),
+              Text('${AppLocalizations.of(context).sessionHistoryFlop}', style: TextStyle(fontSize: 12)),
               Text(formatAmount(flopPot), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           ),
@@ -1016,7 +1024,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Turn:', style: TextStyle(fontSize: 12)),
+              Text('${AppLocalizations.of(context).sessionHistoryTurn}', style: TextStyle(fontSize: 12)),
               Text(formatAmount(turnPot), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           ),
@@ -1026,7 +1034,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('River:', style: TextStyle(fontSize: 12)),
+              Text('${AppLocalizations.of(context).sessionHistoryRiver}', style: TextStyle(fontSize: 12)),
               Text(formatAmount(riverPot), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           ),
@@ -1036,7 +1044,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Final Pot:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context).sessionFinalPot, style: TextStyle(fontWeight: FontWeight.bold)),
             Text(formatAmount(totalPot), style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
@@ -1071,7 +1079,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               Icon(Icons.call_split, color: Colors.orange, size: 20),
               SizedBox(width: 8),
               Text(
-                'Chopped Pot (${choppedWinners.length} winners):',
+                AppLocalizations.of(context).sessionChoppedPot(choppedWinners.length),
                 style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
               ),
             ],
@@ -1086,7 +1094,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('🏆 Player $playerId wins:',
+                    Text('🏆 ${AppLocalizations.of(context).sessionHistoryPlayerWins(playerId)}',
                          style: TextStyle(fontWeight: FontWeight.w500, color: Colors.green)),
                     Text(formatAmount(amount),
                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
@@ -1104,7 +1112,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('🏆 Player $winnerIdInt wins:',
+                    Text('🏆 ${AppLocalizations.of(context).sessionHistoryPlayerWins(winnerIdInt)}',
                          style: TextStyle(fontWeight: FontWeight.w500, color: Colors.green)),
                     Text(formatAmount(shareAmount),
                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
@@ -1125,7 +1133,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               Icon(Icons.emoji_events, color: Colors.amber, size: 20),
               SizedBox(width: 8),
               Text(
-                '🏆 Player $winnerId wins:',
+                '🏆 ${AppLocalizations.of(context).sessionHistoryPlayerWins(winnerId!)}',
                 style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
               ),
             ],
@@ -1139,7 +1147,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     } else {
       // No winner info available
       return Text(
-        'Winner information not available',
+        AppLocalizations.of(context).sessionWinnerNotAvailable,
         style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
       );
     }

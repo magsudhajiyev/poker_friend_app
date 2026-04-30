@@ -65,6 +65,7 @@ import '../services/event_attendance_service.dart';
 import '../models/event_attendance.dart';
 import '../services/app_data_cache.dart';
 import '../services/display_identity_service.dart';
+import '../l10n/app_localizations.dart';
 
 /// Home screen
 class HomeScreen extends StatefulWidget {
@@ -359,8 +360,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     SlidingNotificationOverlay.show(
       context: context,
-      title: "You're seated, good luck!",
-      subtitle: 'Table $tableNumber, Seat #${seat.seatNumber}',
+      title: AppLocalizations.of(context).eventDetailYoureSeatedGoodLuck,
+      subtitle: AppLocalizations.of(context).homeTableSeatInfo(tableNumber.toString(), seat.seatNumber.toString()),
       icon: Icons.event_seat,
       iconColor: const Color(0xFF5AC95A),
       displayDuration: const Duration(seconds: 6),
@@ -423,8 +424,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (_activeSeats.isEmpty) {
       // No active sessions - show a message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No active sessions'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).homeNoActiveSessions),
           duration: Duration(seconds: 2),
         ),
       );
@@ -507,8 +508,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Text(
-                  'Live Sessions',
+                Text(
+                  AppLocalizations.of(context).homeLiveSessions,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -547,7 +548,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildActiveSessionItem(BuildContext context, SeatAssignment seat) {
     final chipStackStr = seat.chipStack != null
         ? '\$${seat.chipStack!.toStringAsFixed(0)}'
-        : 'Not set';
+        : AppLocalizations.of(context).profileNotSet;
 
     return InkWell(
       onTap: () {
@@ -590,7 +591,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Seat #${seat.seatNumber}  •  $chipStackStr',
+                    AppLocalizations.of(context).homeSeatInfoStr(seat.seatNumber, chipStackStr),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 13,
@@ -700,7 +701,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                isResolved ? 'Request Resolved' : 'Request Closed',
+                isResolved ? AppLocalizations.of(context).homeRequestResolved : AppLocalizations.of(context).homeRequestClosed,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 18,
@@ -733,7 +734,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             if (request.adminResponse != null && request.adminResponse!.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text(
-                'Response',
+                AppLocalizations.of(context).homeResponse,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFF8C8C8C),
                   fontSize: 12,
@@ -783,7 +784,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _handleMemberInvitationTap(ClubNotification notification) async {
     if (notification.clubId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Club not found')),
+        SnackBar(content: Text(AppLocalizations.of(context).homeClubNotFound)),
       );
       return;
     }
@@ -805,7 +806,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (club == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Club not found')),
+            SnackBar(content: Text(AppLocalizations.of(context).homeClubNotFound)),
           );
         }
         return;
@@ -820,7 +821,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(e.toString()))),
         );
       }
     }
@@ -833,8 +834,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Club Invitation',
+        title: Text(
+          AppLocalizations.of(context).homeClubInvitation,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
@@ -856,7 +857,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             const SizedBox(height: 16),
             Text(
-              'You\'ve been invited to join',
+              AppLocalizations.of(context).homeYouveBeenInvitedToJoin,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
@@ -890,8 +891,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Navigator.pop(dialogContext);
               await _respondToInvitation(notification, club, false);
             },
-            child: const Text(
-              'Decline',
+            child: Text(
+              AppLocalizations.of(context).homeDecline,
               style: TextStyle(color: Color(0xFFEF5350)),
             ),
           ),
@@ -907,7 +908,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Accept'),
+            child: Text(AppLocalizations.of(context).homeAccept),
           ),
         ],
       ),
@@ -939,7 +940,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         await _notifyClubAdmins(
           club: club,
           type: NotificationType.invitationAccepted,
-          title: 'Invitation Accepted',
+          title: AppLocalizations.of(context).homeInvitationAccepted,
           body: '$userName has accepted the invitation to join ${club.name}.',
         );
 
@@ -963,7 +964,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         await _notifyClubAdmins(
           club: club,
           type: NotificationType.invitationDeclined,
-          title: 'Invitation Declined',
+          title: AppLocalizations.of(context).homeInvitationDeclined,
           body: '$userName has declined the invitation to join ${club.name}.',
         );
 
@@ -972,7 +973,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invitation declined')),
+            SnackBar(content: Text(AppLocalizations.of(context).homeInvitationDeclined)),
           );
         }
       }
@@ -981,7 +982,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(e.toString()))),
         );
       }
     }
@@ -1031,7 +1032,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _navigateToClub(String clubId) async {
     if (clubId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Club not found')),
+        SnackBar(content: Text(AppLocalizations.of(context).homeClubNotFound)),
       );
       return;
     }
@@ -1052,7 +1053,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (club == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Club not found')),
+            SnackBar(content: Text(AppLocalizations.of(context).homeClubNotFound)),
           );
         }
         return;
@@ -1071,7 +1072,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(e.toString()))),
         );
       }
     }
@@ -1081,7 +1082,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _navigateToEventFromNotification(ClubNotification notification) async {
     if (notification.eventId == null || notification.clubId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event not found')),
+        SnackBar(content: Text(AppLocalizations.of(context).homeEventNotFound)),
       );
       return;
     }
@@ -1106,7 +1107,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (club == null || event == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Event not found')),
+            SnackBar(content: Text(AppLocalizations.of(context).homeEventNotFound)),
           );
         }
         return;
@@ -1130,7 +1131,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading event: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).homeErrorLoadingEvent(e.toString()))),
         );
       }
     }
@@ -1260,8 +1261,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   color: PokerFriendColors.purple,
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Club Invitations',
+                Text(
+                  AppLocalizations.of(context).homeClubInvitations,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -1271,7 +1272,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ],
             ),
             content: Text(
-              'You have ${invitations.length} pending club invitation${invitations.length > 1 ? 's' : ''}.',
+              AppLocalizations.of(context).homePendingInvitationsMsg(invitations.length),
               style: TextStyle(
                 color: PokerFriendColors.dark11,
                 fontSize: 14,
@@ -1281,7 +1282,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
-                  'Later',
+                  AppLocalizations.of(context).homeLater,
                   style: TextStyle(
                     color: PokerFriendColors.dark9,
                   ),
@@ -1303,8 +1304,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'View Invitations',
+                child: Text(
+                  AppLocalizations.of(context).homeViewInvitations,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -1488,7 +1489,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     if (isLoadingData && currentBankroll == 0.0 && recentSessions.isEmpty) {
-      return LoadingScreen(message: 'Loading your poker data...');
+      return LoadingScreen(message: AppLocalizations.of(context).homeLoadingPokerData);
     }
 
     if (_loadError != null && currentBankroll == 0.0 && recentSessions.isEmpty) {
@@ -1581,7 +1582,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         filter: ui.ImageFilter.blur(sigmaX: 27, sigmaY: 27),
                         child: HomeHeader(
                           userName: userName,
-                          subtitle: 'Welcome back',
+                          subtitle: AppLocalizations.of(context).homeWelcomeBack,
                           onMenuPressed: () {
                             Navigator.push(
                               context,
@@ -1831,7 +1832,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
-            'Recent Activity',
+            AppLocalizations.of(context).homeRecentActivity,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w500,
@@ -1849,14 +1850,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   Expanded(
                     child: _buildStatCell(
-                      'Sessions',
+                      AppLocalizations.of(context).statsSessions,
                       '${playerStats['totalSessions'] ?? 0}',
                     ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: _buildStatCell(
-                      'Win Rate',
+                      AppLocalizations.of(context).homeWinRate,
                       '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
                     ),
                   ),
@@ -1867,14 +1868,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   Expanded(
                     child: _buildStatCell(
-                      'Hours',
+                      AppLocalizations.of(context).homeHours,
                       '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(0)}',
                     ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: _buildStatCell(
-                      'Play Style',
+                      AppLocalizations.of(context).homePlayStyle,
                       _getPlayStyleName(),
                     ),
                   ),
@@ -1973,7 +1974,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Bankroll',
+                            AppLocalizations.of(context).homeBankroll,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 13,
                               fontWeight: FontWeight.w300,
@@ -2021,7 +2022,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                '\$${currentBankroll.toInt()} of \$${bankrollGoal.toInt()}',
+                                AppLocalizations.of(context).homeBankrollOfGoal('\$${currentBankroll.toInt()}', '\$${bankrollGoal.toInt()}'),
                                 style: GoogleFonts.familjenGrotesk(
                                   fontSize: 40,
                                   fontWeight: FontWeight.w600,
@@ -2055,7 +2056,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
                                       : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
                                   child: Text(
-                                    '\$${remaining.toInt()} left',
+                                    AppLocalizations.of(context).homeAmountLeft('\$${remaining.toInt()}'),
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
@@ -2131,8 +2132,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       children: [
         // Header row with title and avg badge
         SectionHeadline(
-          title: 'Earnings',
-          badgeText: 'Avg \$${avgEarnings.toStringAsFixed(0)}',
+          title: AppLocalizations.of(context).homeEarnings,
+          badgeText: AppLocalizations.of(context).homeAvgAmount('\$${avgEarnings.toStringAsFixed(0)}'),
         ),
         const SizedBox(height: 12),
         // Legend
@@ -2140,9 +2141,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              _buildLegendItem('Tournament', AppColors.tournamentBlue),
+              _buildLegendItem(AppLocalizations.of(context).homeTournament, AppColors.tournamentBlue),
               const SizedBox(width: 16),
-              _buildLegendItem('Cash Game', AppColors.cashGameGreen),
+              _buildLegendItem(AppLocalizations.of(context).homeCashGame, AppColors.cashGameGreen),
             ],
           ),
         ),
@@ -2157,7 +2158,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: earningsChartData.isEmpty
                   ? Center(
                       child: Text(
-                        'No earnings data yet',
+                        AppLocalizations.of(context).homeNoEarningsDataYet,
                         style: AppTypography.listRowText(
                           color: Colors.white.withOpacity(0.40),
                         ),
@@ -2180,8 +2181,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       children: [
         // Header row with title and view all
         SectionHeadline(
-          title: 'Recent Sessions',
-          actionText: 'View All',
+          title: AppLocalizations.of(context).homeRecentSessions,
+          actionText: AppLocalizations.of(context).homeViewAll,
           onActionPressed: () {
             Navigator.push(
               context,
@@ -2195,8 +2196,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: recentSessions.isEmpty
               ? _buildEmptyInfoCard(
-                  title: 'No recent sessions',
-                  subtitle: 'Start your first poker session!',
+                  title: AppLocalizations.of(context).homeNoRecentSessions,
+                  subtitle: AppLocalizations.of(context).homeStartFirstSession,
                   onAddTap: () {
                     Navigator.push(
                       context,
@@ -2274,7 +2275,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Add New',
+                    AppLocalizations.of(context).homeAddNew,
                     style: GoogleFonts.ibmPlexSans(
                       color: Colors.white,
                       fontSize: 15,
@@ -2303,8 +2304,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       children: [
         // Header row with title and view all
         SectionHeadline(
-          title: 'Upcoming Events',
-          actionText: 'View All',
+          title: AppLocalizations.of(context).homeUpcomingEvents,
+          actionText: AppLocalizations.of(context).homeViewAll,
           onActionPressed: () async {
             await Navigator.push(
               context,
@@ -2319,8 +2320,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: upcomingEvents.isEmpty
               ? _buildEmptyInfoCard(
-                  title: 'No recent events',
-                  subtitle: 'Add your first poker event!',
+                  title: AppLocalizations.of(context).homeNoRecentEvents,
+                  subtitle: AppLocalizations.of(context).homeAddFirstEvent,
                   onAddTap: () async {
                     await Navigator.push(
                       context,
@@ -2346,7 +2347,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     String sessionName = session['sessionName'] ?? '';
     if (sessionName.isEmpty) {
       final createdAt = _parseSessionDate(session);
-      final gameType = session['gameType'] ?? 'Poker';
+      final gameType = session['gameType'] ?? AppLocalizations.of(context).homePokerFallback;
       final dateStr = DateFormat('MMM d').format(createdAt);
       sessionName = '$gameType Session - $dateStr';
     }
@@ -2391,7 +2392,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 const SizedBox(width: 6),
-                _buildSessionPill('$playerCount Players'),
+                _buildSessionPill(AppLocalizations.of(context).homePlayersCount(playerCount)),
                 const SizedBox(width: 4),
                 _buildSessionPill(blindsText),
               ],
@@ -2512,7 +2513,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    event['title'] ?? 'Event',
+                    event['title'] ?? AppLocalizations.of(context).homeEventFallback,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 20,
                       color: Color(0xFFF8FFF7),
@@ -2552,7 +2553,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '$goingCount going',
+                                AppLocalizations.of(context).homeGoingCount(goingCount),
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 11,
                                   color: PokerFriendColors.green,
@@ -2609,10 +2610,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Club events store lowercase in 'gameType' (e.g. 'cash', 'tournament')
     final eventType = event['type'] as String?;
     final clubGameType = event['gameType'] as String?;
+    final l10n = AppLocalizations.of(context);
     final gameType = eventType ?? switch (clubGameType) {
-      'tournament' => 'Tournament',
-      'private' => 'Private Game',
-      _ => 'Cash Game',
+      'tournament' => l10n.homeTournament,
+      'private' => l10n.homePrivateGame,
+      _ => l10n.homeCashGame,
     };
 
     return GestureDetector(
@@ -2648,7 +2650,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                      event['title'] ?? 'Event',
+                      event['title'] ?? AppLocalizations.of(context).homeEventFallback,
                       style: AppTypography.infoCardText(),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -2696,7 +2698,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         context,
         MaterialPageRoute(
           builder: (_) => personal_detail.EventDetailScreen(
-            title: event['title'] ?? 'Event',
+            title: event['title'] ?? AppLocalizations.of(context).homeEventFallback,
             type: event['type'] ?? '',
             location: event['location'] ?? '',
             date: date,
@@ -2714,7 +2716,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (club == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Club not found')),
+            SnackBar(content: Text(AppLocalizations.of(context).homeClubNotFound)),
           );
         }
         return;
@@ -2724,7 +2726,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (clubEvent == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Event not found')),
+            SnackBar(content: Text(AppLocalizations.of(context).homeEventNotFound)),
           );
         }
         return;
@@ -2751,7 +2753,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load event: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).homeFailedLoadEvent(e.toString()))),
         );
       }
     }
@@ -2768,7 +2770,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     if (event.isEmpty) return SizedBox.shrink();
 
-    final eventTitle = event['title'] ?? 'Event';
+    final eventTitle = event['title'] ?? AppLocalizations.of(context).homeEventFallback;
 
     return AnimatedScale(
       scale: _selectedEventId != null ? 1.0 : 0.0,
@@ -2821,7 +2823,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Edit Event',
+                            AppLocalizations.of(context).homeEditEvent,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 14,
                               color: Color(0xFFEBFFEF),
@@ -2864,7 +2866,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         _selectedEventId = null;
                         _popupPosition = null;
                       });
-                      _handleDeleteEvent(event['id'], event['title'] ?? 'Event');
+                      _handleDeleteEvent(event['id'], event['title'] ?? AppLocalizations.of(context).homeEventFallback);
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 4, vertical: 14),
@@ -2872,7 +2874,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Delete Event',
+                            AppLocalizations.of(context).homeDeleteEvent,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 14,
                               color: Color(0xFFEBFFEF),
@@ -2970,7 +2972,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Edit Event',
+                                AppLocalizations.of(context).homeEditEvent,
                                 style: GoogleFonts.ibmPlexSans(
                                   color: Colors.white,
                                   fontSize: 20,
@@ -3011,8 +3013,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   fontWeight: FontWeight.w400,
                                   height: 1.2,
                                 ),
-                                items: ['Tournament', 'Cash Game', 'Home Game', 'Online']
-                                    .map((type) => DropdownMenuItem(
+                                items: [
+                                  AppLocalizations.of(context).homeEventTypeTournament,
+                                  AppLocalizations.of(context).homeEventTypeCashGame,
+                                  AppLocalizations.of(context).homeEventTypeHomeGame,
+                                  AppLocalizations.of(context).homeEventTypeOnline,
+                                ].map((type) => DropdownMenuItem(
                                           value: type,
                                           child: Text(type),
                                         ))
@@ -3036,7 +3042,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Event Name',
+                              hintText: AppLocalizations.of(context).homeEventName,
                               hintStyle: GoogleFonts.ibmPlexSans(
                                 color: Color(0x99EBFFEF),
                                 fontSize: 14,
@@ -3070,7 +3076,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Location/Venue',
+                              hintText: AppLocalizations.of(context).homeLocationVenue,
                               hintStyle: GoogleFonts.ibmPlexSans(
                                 color: Color(0x99EBFFEF),
                                 fontSize: 14,
@@ -3105,7 +3111,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Buy in amount',
+                              hintText: AppLocalizations.of(context).homeBuyInAmount,
                               hintStyle: GoogleFonts.ibmPlexSans(
                                 color: Color(0x99EBFFEF),
                                 fontSize: 14,
@@ -3242,7 +3248,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 _loadData();
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Failed to update event: $e')),
+                                  SnackBar(content: Text(AppLocalizations.of(context).homeFailedUpdateEvent(e.toString()))),
                                 );
                               }
                             },
@@ -3256,7 +3262,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                               child: Center(
                                 child: Text(
-                                  'Save Changes',
+                                  AppLocalizations.of(context).homeSaveChanges,
                                   style: GoogleFonts.ibmPlexSans(
                                     color: Colors.black,
                                     fontSize: 16,
@@ -3334,7 +3340,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             child: Row(
                               children: [
                                 Text(
-                                  'Select date:',
+                                  AppLocalizations.of(context).homeSelectDate,
                                   style: GoogleFonts.ibmPlexSans(
                                     color: Color(0xFFBDBDBD),
                                     fontSize: 14,
@@ -3358,7 +3364,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         Icon(Icons.close, color: Color(0xFFD55A41), size: 12),
                                         SizedBox(width: 4),
                                         Text(
-                                          'Clear',
+                                          AppLocalizations.of(context).commonClear,
                                           style: GoogleFonts.ibmPlexSans(
                                             color: Color(0xFFD55A41),
                                             fontSize: 10,
@@ -3391,7 +3397,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         Icon(Icons.today, color: Color(0xFFFAFAFA), size: 12),
                                         SizedBox(width: 4),
                                         Text(
-                                          'Today',
+                                          AppLocalizations.of(context).commonToday,
                                           style: GoogleFonts.ibmPlexSans(
                                             color: Color(0xFFFAFAFA),
                                             fontSize: 10,
@@ -3499,7 +3505,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
-                                      children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                                      children: [AppLocalizations.of(context).weekdaySun, AppLocalizations.of(context).weekdayMon, AppLocalizations.of(context).weekdayTue, AppLocalizations.of(context).weekdayWed, AppLocalizations.of(context).weekdayThu, AppLocalizations.of(context).weekdayFri, AppLocalizations.of(context).weekdaySat]
                                           .map((day) => Expanded(
                                                 child: Container(
                                                   height: 24,
@@ -3624,7 +3630,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ),
                                     child: Center(
                                       child: Text(
-                                        'Cancel',
+                                        AppLocalizations.of(context).commonCancel,
                                         style: GoogleFonts.ibmPlexSans(
                                           color: Color(0xFFFAFAFA),
                                           fontSize: 12,
@@ -3647,7 +3653,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                       child: Center(
                                         child: Text(
-                                          'Done',
+                                          AppLocalizations.of(context).commonDone,
                                           style: GoogleFonts.ibmPlexSans(
                                             color: Colors.black,
                                             fontSize: 12,
@@ -3734,7 +3740,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
-                        'Delete $eventName?',
+                        AppLocalizations.of(context).homeDeleteEventConfirm(eventName),
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 16,
                           color: Colors.white,
@@ -3753,7 +3759,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
-                        'Are you sure you want to delete "$eventName"?',
+                        AppLocalizations.of(context).homeDeleteEventDescription(eventName),
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           color: Colors.white,
@@ -3786,7 +3792,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 10),
                         child: Text(
-                          'Delete',
+                          AppLocalizations.of(context).commonDelete,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 16,
                             color: Color(0xFFD55A41), // Red color
@@ -3818,7 +3824,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                   width: double.infinity,
                   child: Text(
-                    'Cancel',
+                    AppLocalizations.of(context).commonCancel,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 16,
                       color: Colors.white,
@@ -3933,7 +3939,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
-                              'No Earnings Data Yet',
+                              AppLocalizations.of(context).homeNoEarningsDataTitle,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 16,
                                 color: Colors.white,
@@ -3952,7 +3958,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
-                              'Add some session results first to view your earnings chart. You can add results from the Profile page.',
+                              AppLocalizations.of(context).homeNoEarningsDataDescription,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 12,
                                 color: Colors.white.withOpacity(0.6),
@@ -4019,7 +4025,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Event deleted successfully'),
+          content: Text(AppLocalizations.of(context).homeEventDeletedSuccessfully),
           backgroundColor: Color(0xFF5AC95A),
           duration: Duration(seconds: 2),
         ),
@@ -4027,7 +4033,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error deleting event: $e'),
+          content: Text(AppLocalizations.of(context).homeErrorDeletingEvent(e.toString())),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 3),
         ),

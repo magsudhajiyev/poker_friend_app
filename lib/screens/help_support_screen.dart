@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
 import '../services/support_request_service.dart';
+import '../l10n/app_localizations.dart';
 
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
@@ -14,15 +15,8 @@ class HelpSupportScreen extends StatefulWidget {
 class _HelpSupportScreenState extends State<HelpSupportScreen> {
   final _subjectController = TextEditingController();
   final _descriptionController = TextEditingController();
-  String _selectedCategory = 'Bug Report';
+  String _selectedCategoryKey = 'Bug Report';
   bool _isSubmitting = false;
-
-  static const _categories = [
-    'Bug Report',
-    'Feature Request',
-    'Account Issue',
-    'Other',
-  ];
 
   @override
   void dispose() {
@@ -32,6 +26,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
     final subject = _subjectController.text.trim();
     final description = _descriptionController.text.trim();
 
@@ -39,7 +34,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Please fill in all fields',
+            l10n.supportFillAllFields,
             style: GoogleFonts.ibmPlexSans(color: Colors.white),
           ),
           backgroundColor: const Color(0xFFD55A41),
@@ -52,7 +47,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
     try {
       await SupportRequestService.submitRequest(
-        category: _selectedCategory,
+        category: _selectedCategoryKey,
         subject: subject,
         description: description,
       );
@@ -62,7 +57,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Support request submitted successfully',
+            l10n.supportSubmitted,
             style: GoogleFonts.ibmPlexSans(color: Colors.white),
           ),
           backgroundColor: const Color(0xFF87ED81),
@@ -76,7 +71,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Failed to submit: $e',
+            l10n.supportFailedSubmit(e.toString()),
             style: GoogleFonts.ibmPlexSans(color: Colors.white),
           ),
           backgroundColor: const Color(0xFFD55A41),
@@ -87,6 +82,13 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final categories = [
+      (key: 'Bug Report', label: l10n.supportBugReport),
+      (key: 'Feature Request', label: l10n.supportFeatureRequest),
+      (key: 'Account Issue', label: l10n.supportAccountIssue),
+      (key: 'Other', label: l10n.supportOther),
+    ];
     return Scaffold(
       backgroundColor: AppColors.backgroundPaper,
       body: Stack(
@@ -118,7 +120,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Help & Support',
+                        l10n.supportTitle,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
@@ -140,15 +142,15 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Category
-                        _buildSectionHeader('CATEGORY'),
+                        _buildSectionHeader(l10n.supportCategoryLabel),
                         const SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: _categories.map((cat) {
-                            final isSelected = _selectedCategory == cat;
+                          children: categories.map((cat) {
+                            final isSelected = _selectedCategoryKey == cat.key;
                             return GestureDetector(
-                              onTap: () => setState(() => _selectedCategory = cat),
+                              onTap: () => setState(() => _selectedCategoryKey = cat.key),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                 decoration: BoxDecoration(
@@ -164,7 +166,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  cat,
+                                  cat.label,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -181,21 +183,21 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         const SizedBox(height: 28),
 
                         // Subject
-                        _buildSectionHeader('SUBJECT'),
+                        _buildSectionHeader(l10n.supportSubjectLabel),
                         const SizedBox(height: 12),
                         _buildTextField(
                           controller: _subjectController,
-                          hint: 'Brief summary of the issue',
+                          hint: l10n.supportSubjectHint,
                         ),
 
                         const SizedBox(height: 28),
 
                         // Description
-                        _buildSectionHeader('DESCRIPTION'),
+                        _buildSectionHeader(l10n.supportDescriptionLabel),
                         const SizedBox(height: 12),
                         _buildTextField(
                           controller: _descriptionController,
-                          hint: 'Describe the issue in detail...',
+                          hint: l10n.supportDescriptionHint,
                           maxLines: 6,
                         ),
 
@@ -225,7 +227,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                         ),
                                       )
                                     : Text(
-                                        'Submit',
+                                        l10n.supportSubmitButton,
                                         style: GoogleFonts.ibmPlexSans(
                                           fontSize: 17,
                                           fontWeight: FontWeight.w600,

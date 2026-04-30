@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 
 /// Reusable poker table widget that renders a vertical oval table with
 /// seats positioned around it. Used across seat setup, dealer table,
@@ -135,7 +136,7 @@ class PokerTableWidget extends StatelessWidget {
                 // Default seat rendering
                 return Stack(
                   children: _buildDefaultSeatWidgets(
-                      seatNumber, isActive, position),
+                      context, seatNumber, isActive, position),
                 );
               }
             }),
@@ -258,11 +259,12 @@ class PokerTableWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDefaultSeatLabel(int seatNumber, bool isActive, String label) {
+  Widget _buildDefaultSeatLabel(BuildContext context, int seatNumber, bool isActive, String label) {
+    final l10n = AppLocalizations.of(context);
     final isDefaultName =
         label.isEmpty || RegExp(r'^Player\s*\d*$').hasMatch(label);
     final displayName = isDefaultName
-        ? 'Player'
+        ? l10n.pokerTablePlayerFallback
         : (label.length > 8 ? '${label.substring(0, 8)}...' : label);
 
     return Text(
@@ -279,7 +281,7 @@ class PokerTableWidget extends StatelessWidget {
   }
 
   List<Widget> _buildDefaultSeatWidgets(
-      int seatNumber, bool isActive, Offset position) {
+      BuildContext context, int seatNumber, bool isActive, Offset position) {
     const double circleR = 19.0; // half of 38
     final variant = getSeatLayoutVariant(seatNumber);
     final label = seatLabels[seatNumber] ?? '';
@@ -303,7 +305,7 @@ class PokerTableWidget extends StatelessWidget {
           child: GestureDetector(
             onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
             child: Center(
-                child: _buildDefaultSeatLabel(seatNumber, isActive, label)),
+                child: _buildDefaultSeatLabel(context, seatNumber, isActive, label)),
           ),
         ),
       );
@@ -313,7 +315,7 @@ class PokerTableWidget extends StatelessWidget {
         top: position.dy - 7,
         child: GestureDetector(
           onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
-          child: _buildDefaultSeatLabel(seatNumber, isActive, label),
+          child: _buildDefaultSeatLabel(context, seatNumber, isActive, label),
         ),
       );
     } else {
@@ -324,7 +326,7 @@ class PokerTableWidget extends StatelessWidget {
           onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
           child: FractionalTranslation(
             translation: const Offset(-1.0, 0.0),
-            child: _buildDefaultSeatLabel(seatNumber, isActive, label),
+            child: _buildDefaultSeatLabel(context, seatNumber, isActive, label),
           ),
         ),
       );

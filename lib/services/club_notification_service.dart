@@ -152,6 +152,8 @@ class ClubNotificationService {
         'action': 'view_event',
         'clubId': clubId,
         'eventId': event.id,
+        'eventName': event.name,
+        'date': _formatDate(event.startTime),
       },
       excludeUserId: event.createdBy,  // Don't notify the admin who created it
     );
@@ -176,6 +178,8 @@ class ClubNotificationService {
         'action': 'view_event',
         'clubId': clubId,
         'eventId': event.id,
+        'eventName': event.name,
+        'changeDescription': changeDescription,
       },
     );
   }
@@ -197,6 +201,8 @@ class ClubNotificationService {
       data: {
         'action': 'view_club',
         'clubId': clubId,
+        'eventName': event.name,
+        'date': _formatDate(event.startTime),
       },
     );
   }
@@ -219,6 +225,7 @@ class ClubNotificationService {
         'action': 'view_event',
         'clubId': clubId,
         'eventId': event.id,
+        'eventName': event.name,
       },
     );
   }
@@ -241,6 +248,7 @@ class ClubNotificationService {
         'action': 'spectate_event',
         'clubId': clubId,
         'eventId': event.id,
+        'eventName': event.name,
       },
     );
   }
@@ -267,6 +275,7 @@ class ClubNotificationService {
           'action': 'view_event',
           'clubId': clubId,
           'eventId': eventId,
+          'eventName': eventName,
         },
       );
     } catch (e) {
@@ -310,6 +319,9 @@ class ClubNotificationService {
           'action': 'view_event',
           'clubId': clubId,
           'eventId': event.id,
+          'eventName': event.name,
+          'memberName': memberName,
+          'rsvpStatus': rsvpStatus,
         },
         createdAt: DateTime.now(),
         recipientUserIds: nonCurrentAdminIds,

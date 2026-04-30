@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../models/hand_state_machine.dart';
 import '../services/display_identity_service.dart';
@@ -165,7 +166,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
     // Ensure hero is registered
     if (_heroSeat != null && _seatActive[_heroSeat!] != true) {
-      sessionManager.addPlayer(_heroSeat!, _heroName.isNotEmpty ? _heroName : 'Hero');
+      final l10n = AppLocalizations.of(context);
+      sessionManager.addPlayer(_heroSeat!, _heroName.isNotEmpty ? _heroName : l10n.setupHero);
       sessionManager.setPlayerStack(_heroSeat!, startingStack);
     }
 
@@ -336,6 +338,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -398,7 +401,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                         ),
                       ),
                       Text(
-                        'Session Setup',
+                        l10n.setupSessionSetup,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           color: Colors.white,
@@ -448,13 +451,13 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildCardTitle('Session Name'),
+                              _buildCardTitle(l10n.setupSessionName),
                               const SizedBox(height: 12),
                               TextField(
                                 controller: _sessionNameController,
                                 style: _textFieldStyle,
                                 decoration: _inputDecoration(
-                                    'e.g., "Friday Night Poker"'),
+                                    l10n.setupSessionNameHint),
                                 onChanged: (_) => setState(() {}),
                               ),
                             ],
@@ -468,13 +471,13 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildCardTitle('Game Type'),
+                              _buildCardTitle(l10n.setupGameType),
                               const SizedBox(height: 12),
                               Row(
                                 children: [
                                   Expanded(
                                     child: _buildToggle(
-                                      'Cash Game',
+                                      l10n.setupCashGame,
                                       _gameType == GameType.cash,
                                       () => setState(() {
                                         _gameType = GameType.cash;
@@ -485,7 +488,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: _buildToggle(
-                                      'Tournament',
+                                      l10n.setupTournament,
                                       _gameType == GameType.tournament,
                                       () => setState(() {
                                         _gameType = GameType.tournament;
@@ -505,11 +508,11 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                         Row(
                           children: [
                             Expanded(
-                              child: _buildBlindCard('Small Blind',
+                              child: _buildBlindCard(l10n.setupSmallBlind,
                                   _gameType == GameType.cash
                                       ? '\$$_smallBlind'
                                       : '$_smallBlind', () {
-                                _showBlindDialog('Small Blind', _smallBlind,
+                                _showBlindDialog(l10n.setupSmallBlind, _smallBlind,
                                     (v) {
                                   setState(() => _smallBlind = v);
                                 });
@@ -517,11 +520,11 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: _buildBlindCard('Big Blind',
+                              child: _buildBlindCard(l10n.setupBigBlind,
                                   _gameType == GameType.cash
                                       ? '\$$_bigBlind'
                                       : '$_bigBlind', () {
-                                _showBlindDialog('Big Blind', _bigBlind, (v) {
+                                _showBlindDialog(l10n.setupBigBlind, _bigBlind, (v) {
                                   setState(() => _bigBlind = v);
                                 });
                               }),
@@ -536,7 +539,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildCardTitle('Buy-in Amount'),
+                              _buildCardTitle(l10n.setupBuyInAmount),
                               const SizedBox(height: 12),
                               TextField(
                                 controller: _buyInController,
@@ -545,7 +548,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                                         decimal: true),
                                 style: _textFieldStyle,
                                 decoration:
-                                    _inputDecoration('Enter amount', prefixText: '\$ '),
+                                    _inputDecoration(l10n.setupEnterAmount, prefixText: '\$ '),
                                 onChanged: (_) => setState(() {}),
                               ),
                               if (_gameType == GameType.cash) ...[
@@ -560,7 +563,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'Starting stack equals your buy-in.',
+                                        l10n.setupStartingStackEqualsBuyIn,
                                         style: GoogleFonts.ibmPlexSans(
                                           color: Colors.white.withOpacity(0.5),
                                           fontSize: 13,
@@ -587,7 +590,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _buildCardTitle('Starting Stack'),
+                                  _buildCardTitle(l10n.setupStartingStack),
                                   const SizedBox(height: 12),
                                   TextField(
                                     controller: _startingStackController,
@@ -596,7 +599,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                                             decimal: true),
                                     style: _textFieldStyle,
                                     decoration: InputDecoration(
-                                      hintText: 'Enter chip stack',
+                                      hintText: l10n.setupEnterChipStack,
                                       hintStyle: GoogleFonts.ibmPlexSans(
                                         color: Colors.white.withOpacity(0.4),
                                         fontSize: 17,
@@ -663,7 +666,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'BB Ante',
+                                  l10n.setupBbAnte,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 17,
                                     color: Colors.white,
@@ -683,10 +686,10 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                         const SizedBox(height: 20),
 
                         // ── SECTION: Table Setup ──────────────────
-                        _buildSectionHeader('TABLE'),
+                        _buildSectionHeader(l10n.setupTableSection),
                         const SizedBox(height: 8),
                         Text(
-                          'Tap a seat to add a player. Drag the button to set dealer.',
+                          l10n.setupTableInstructions,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 13,
                             color: Colors.white.withOpacity(0.5),
@@ -729,7 +732,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                'Start Session',
+                                l10n.setupStartSession,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 17,
                                   color: _isFormValid
@@ -772,8 +775,9 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
     final circleFill = isActive ? Colors.black : const Color(0xFF2A2A2E);
 
+    final l10n = AppLocalizations.of(context);
     final displayName = isHero
-        ? (_heroName.isNotEmpty ? _heroName : 'Me')
+        ? (_heroName.isNotEmpty ? _heroName : l10n.setupMe)
         : (name.isNotEmpty
             ? (name.length > 7 ? '${name.substring(0, 7)}..' : name)
             : '');
@@ -841,10 +845,11 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   }
 
   Map<int, String> _buildSeatLabels() {
+    final l10n = AppLocalizations.of(context);
     final labels = <int, String>{};
     for (int i = 1; i <= 9; i++) {
       if (_heroSeat == i) {
-        labels[i] = _heroName.isNotEmpty ? _heroName : 'Me';
+        labels[i] = _heroName.isNotEmpty ? _heroName : l10n.setupMe;
       } else if (_seatNames[i]?.isNotEmpty == true) {
         labels[i] = _seatNames[i]!;
       }
@@ -1022,6 +1027,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   void _showBlindDialog(
       String title, int currentValue, ValueChanged<int> onConfirm) {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: currentValue.toString());
 
     showDialog(
@@ -1053,7 +1059,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withOpacity(0.6),
                 fontWeight: FontWeight.w500,
@@ -1069,7 +1075,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
               }
             },
             child: Text(
-              'OK',
+              l10n.commonOk,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF62E3BC),
                 fontWeight: FontWeight.w600,

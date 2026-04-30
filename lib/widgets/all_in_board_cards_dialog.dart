@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import 'card_keyboard.dart';
 
@@ -97,6 +98,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         SvgPicture.asset(
@@ -107,7 +109,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            'All-In Board Cards',
+            l10n.allInBoardTitle,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -121,6 +123,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
   }
 
   Widget _buildActionButtons() {
+    final l10n = AppLocalizations.of(context);
     final valid = _canSave();
     return Column(
       children: [
@@ -137,7 +140,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
               padding: EdgeInsets.zero,
             ),
             child: Text(
-              'Save',
+              l10n.commonSave,
               style: GoogleFonts.ibmPlexSans(
                 color: valid ? Colors.black : const Color(0xFF4E5054),
                 fontSize: 17,
@@ -165,7 +168,7 @@ class _AllInBoardCardsDialogState extends State<AllInBoardCardsDialog> {
               padding: EdgeInsets.zero,
             ),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 17,

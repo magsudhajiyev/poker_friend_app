@@ -9,6 +9,7 @@ import '../../models/waitlist_entry.dart';
 import '../../services/table_service.dart';
 import '../../services/seat_service.dart';
 import '../../services/waitlist_service.dart';
+import '../../l10n/app_localizations.dart';
 import 'member_table_view_screen.dart';
 
 /// Screen for members to view all tables in a multi-table event
@@ -201,7 +202,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Joined waitlist at position #$position'),
+            content: Text(AppLocalizations.of(context).memberEventJoinedWaitlist(position ?? 0)),
             backgroundColor: PokerFriendColors.green,
           ),
         );
@@ -211,7 +212,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
         setState(() => _isJoiningWaitlist = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to join waitlist: $e'),
+            content: Text(AppLocalizations.of(context).memberEventJoinFailed('$e')),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -235,8 +236,8 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Left the waitlist'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).memberEventLeftWaitlist),
             backgroundColor: Colors.orange,
           ),
         );
@@ -246,7 +247,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
         setState(() => _isLeavingWaitlist = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to leave waitlist: $e'),
+            content: Text(AppLocalizations.of(context).memberEventLeaveFailed('$e')),
             backgroundColor: PokerFriendColors.red,
           ),
         );
@@ -314,7 +315,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
                   ),
                 ),
                 Text(
-                  '${_tables.length} tables  •  $_totalOccupied seated  •  $_totalOpen open',
+                  AppLocalizations.of(context).memberEventTablesSummary(_tables.length, _totalOccupied, _totalOpen),
                   style: const TextStyle(
                     color: Color(0xFF9A9A9A),
                     fontSize: 13,
@@ -521,7 +522,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Position #$_waitlistPosition in waitlist',
+                        AppLocalizations.of(context).memberEventWaitlistPosition(_waitlistPosition ?? 0),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 15,
@@ -529,7 +530,7 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
                         ),
                       ),
                       Text(
-                        '$_totalWaitlistCount total waiting',
+                        AppLocalizations.of(context).memberEventTotalWaiting(_totalWaitlistCount),
                         style: const TextStyle(
                           color: Color(0xFF9A9A9A),
                           fontSize: 12,
@@ -560,9 +561,9 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
                             color: PokerFriendColors.red,
                           ),
                         )
-                      : const Text(
-                          'Leave Waitlist',
-                          style: TextStyle(
+                      : Text(
+                          AppLocalizations.of(context).memberEventLeaveWaitlist,
+                          style: const TextStyle(
                             color: PokerFriendColors.red,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -604,8 +605,8 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
                 const SizedBox(width: 10),
                 Text(
                   _totalWaitlistCount > 0
-                      ? 'Join Waitlist ($_totalWaitlistCount waiting)'
-                      : 'Join Waitlist',
+                      ? AppLocalizations.of(context).memberEventJoinWaitlistWithCount(_totalWaitlistCount)
+                      : AppLocalizations.of(context).memberEventJoinWaitlist,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -643,8 +644,8 @@ class _MemberEventTablesScreenState extends State<MemberEventTablesScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
-            'All tables are full',
+          Text(
+            AppLocalizations.of(context).memberEventAllTablesFull,
             style: TextStyle(
               color: Color(0xFF9A9A9A),
               fontSize: 15,

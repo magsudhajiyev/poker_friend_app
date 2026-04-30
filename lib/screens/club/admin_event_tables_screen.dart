@@ -10,6 +10,7 @@ import '../../services/table_service.dart';
 import '../../services/seat_service.dart';
 import '../../services/waitlist_service.dart';
 import '../../services/event_service.dart';
+import '../../l10n/app_localizations.dart';
 import 'admin_table_management_screen.dart';
 
 /// Screen for admin to view all tables in an event with shared waitlist
@@ -148,8 +149,8 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
   Future<void> _showAddTableDialog() async {
     if (_availableTables.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No available tables to add'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).adminEventTablesNoTables),
           backgroundColor: Colors.orange,
         ),
       );
@@ -161,7 +162,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF161618),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Add Table', style: TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context).adminEventTablesAddTable, style: const TextStyle(color: Colors.white)),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -200,7 +201,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
           ),
         ],
       ),
@@ -222,7 +223,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${table.name} added to event'),
+            content: Text(AppLocalizations.of(context).adminEventTablesTableAdded(table.name)),
             backgroundColor: PokerFriendColors.green,
           ),
         );
@@ -231,7 +232,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -245,21 +246,21 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF161618),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Close ${tableData.table.name}?', style: const TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context).adminEventTablesCloseConfirm(tableData.table.name), style: const TextStyle(color: Colors.white)),
         content: Text(
           occupiedCount > 0
-              ? 'This will move $occupiedCount player${occupiedCount > 1 ? 's' : ''} to the waitlist and remove the table from this event.'
-              : 'This will remove the table from this event.',
+              ? AppLocalizations.of(context).adminEventTablesCloseWithPlayers(occupiedCount)
+              : AppLocalizations.of(context).adminEventTablesCloseEmpty,
           style: const TextStyle(color: Color(0xFF9A9A9A)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Close Table', style: TextStyle(color: PokerFriendColors.red)),
+            child: Text(AppLocalizations.of(context).adminEventTablesCloseButton, style: const TextStyle(color: PokerFriendColors.red)),
           ),
         ],
       ),
@@ -280,8 +281,8 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
 
       if (mounted) {
         final message = movedCount > 0
-            ? '${tableData.table.name} closed. $movedCount player${movedCount > 1 ? 's' : ''} moved to waitlist.'
-            : '${tableData.table.name} closed.';
+            ? AppLocalizations.of(context).adminEventTablesClosedWithWaitlist(tableData.table.name, movedCount)
+            : AppLocalizations.of(context).adminEventTablesClosed(tableData.table.name);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
@@ -293,7 +294,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -377,7 +378,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
                   ),
                 ),
                 Text(
-                  '${_tables.length} tables  •  $_totalOccupied seated  •  $_totalOpen open',
+                  AppLocalizations.of(context).adminEventTablesSummary(_tables.length, _totalOccupied, _totalOpen),
                   style: const TextStyle(
                     color: Color(0xFF9A9A9A),
                     fontSize: 13,
@@ -614,8 +615,8 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'No one in waitlist',
+            Text(
+              AppLocalizations.of(context).adminEventTablesNoWaitlist,
               style: TextStyle(
                 color: Color(0xFF9A9A9A),
                 fontSize: 15,
@@ -659,7 +660,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${_waitlist.length} in waitlist',
+                    AppLocalizations.of(context).adminEventTablesWaitlistCount(_waitlist.length),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
@@ -667,7 +668,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
                     ),
                   ),
                   Text(
-                    'Next: ${_waitlist.first.userDisplayName}',
+                    AppLocalizations.of(context).adminEventTablesWaitlistNext(_waitlist.first.userDisplayName),
                     style: const TextStyle(
                       color: Color(0xFF9A9A9A),
                       fontSize: 12,
@@ -715,7 +716,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
       if (mounted && notified != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Notified ${notified.userDisplayName}'),
+            content: Text(AppLocalizations.of(context).adminEventTablesPlayerNotified(notified.userDisplayName)),
             backgroundColor: PokerFriendColors.purple,
           ),
         );
@@ -723,7 +724,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -742,8 +743,8 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
 
     if (emptySeat == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No empty seats on this table'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).adminEventTablesNoEmptySeats),
           backgroundColor: Colors.orange,
         ),
       );
@@ -770,7 +771,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${entry.userDisplayName} seated at ${tableData.table.name}'),
+            content: Text(AppLocalizations.of(context).adminEventTablesPlayerSeated(entry.userDisplayName, tableData.table.name)),
             backgroundColor: PokerFriendColors.green,
           ),
         );
@@ -778,7 +779,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -844,9 +845,9 @@ class _WaitlistSheet extends StatelessWidget {
             children: [
               const Icon(Icons.people, color: PokerFriendColors.purple),
               const SizedBox(width: 12),
-              const Text(
-                'Waitlist',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              Text(
+                AppLocalizations.of(context).adminEventTablesWaitlist,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const Spacer(),
               Container(
@@ -919,9 +920,9 @@ class _WaitlistSheet extends StatelessWidget {
                           style: const TextStyle(color: Colors.white, fontSize: 15),
                         ),
                         if (isNotified)
-                          const Text(
-                            'Notified',
-                            style: TextStyle(color: Color(0xFFF59E0B), fontSize: 11),
+                          Text(
+                            AppLocalizations.of(context).adminEventTablesNotified,
+                            style: const TextStyle(color: Color(0xFFF59E0B), fontSize: 11),
                           ),
                       ],
                     ),
@@ -938,9 +939,9 @@ class _WaitlistSheet extends StatelessWidget {
                           color: PokerFriendColors.purple.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          'Notify',
-                          style: TextStyle(
+                        child: Text(
+                          AppLocalizations.of(context).adminEventTablesNotify,
+                          style: const TextStyle(
                             color: PokerFriendColors.purple,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -976,12 +977,12 @@ class _WaitlistSheet extends StatelessWidget {
                           color: PokerFriendColors.green.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Seat',
-                              style: TextStyle(
+                              AppLocalizations.of(context).adminEventTablesSeat,
+                              style: const TextStyle(
                                 color: PokerFriendColors.green,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,

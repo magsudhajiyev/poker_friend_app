@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 
 class ShowdownDialog extends StatefulWidget {
@@ -35,8 +36,9 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: Text('Showdown'),
+      title: Text(l10n.showdownTitle),
       content: Container(
         width: double.maxFinite,
         constraints: BoxConstraints(maxHeight: 500),
@@ -44,7 +46,7 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Enter opponent cards at showdown:'),
+              Text(l10n.showdownEnterOpponentCards),
               SizedBox(height: 16),
               
               // Player cards section
@@ -66,11 +68,11 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Skip'),
+          child: Text(l10n.showdownSkip),
         ),
         ElevatedButton(
           onPressed: () => _saveShowdown(),
-          child: Text('Save'),
+          child: Text(l10n.showdownSave),
         ),
       ],
     );
@@ -90,21 +92,21 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Player $player', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context).showdownPlayerLabel(player), style: TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildPlayerCardSelector(
-                player, 
-                'Card 1', 
-                playerCards.card1 ?? '', 
+                player,
+                AppLocalizations.of(context).showdownCard1,
+                playerCards.card1 ?? '',
                 (card) => setState(() => playerCards.card1 = card.isEmpty ? null : card)
               ),
               _buildPlayerCardSelector(
-                player, 
-                'Card 2', 
-                playerCards.card2 ?? '', 
+                player,
+                AppLocalizations.of(context).showdownCard2,
+                playerCards.card2 ?? '',
                 (card) => setState(() => playerCards.card2 = card.isEmpty ? null : card)
               ),
             ],
@@ -145,7 +147,7 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
         if (currentCard.isNotEmpty)
           TextButton(
             onPressed: () => onChanged(''),
-            child: Text('Clear', style: TextStyle(fontSize: 8)),
+            child: Text(AppLocalizations.of(context).showdownClear, style: TextStyle(fontSize: 8)),
           ),
       ],
     );
@@ -162,14 +164,14 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Winner:', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context).showdownWinner, style: TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
           Wrap(
             children: widget.activePlayers.map((player) {
               return Container(
                 margin: EdgeInsets.only(right: 8, bottom: 4),
                 child: ChoiceChip(
-                  label: Text('Player $player'),
+                  label: Text(AppLocalizations.of(context).showdownPlayerLabel(player)),
                   selected: _showdownData.winner == player,
                   onSelected: (selected) {
                     setState(() {
@@ -190,8 +192,8 @@ class _ShowdownDialogState extends State<ShowdownDialog> {
       width: double.infinity,
       child: TextField(
         decoration: InputDecoration(
-          labelText: 'Hand Description (optional)',
-          hintText: 'e.g., "Straight flush", "Full house Aces over Kings"',
+          labelText: AppLocalizations.of(context).showdownHandDescriptionLabel,
+          hintText: AppLocalizations.of(context).showdownHandDescriptionHint,
           border: OutlineInputBorder(),
         ),
         onChanged: (value) {
@@ -251,7 +253,7 @@ class _CardPickerDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Select Card'),
+      title: Text(AppLocalizations.of(context).showdownSelectCard),
       content: Container(
         width: double.maxFinite,
         height: 400,
@@ -299,7 +301,7 @@ class _CardPickerDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Cancel'),
+          child: Text(AppLocalizations.of(context).commonCancel),
         ),
       ],
     );

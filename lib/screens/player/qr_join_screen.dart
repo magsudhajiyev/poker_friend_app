@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../design_system/constants/colors.dart';
 import '../../design_system/components/backgrounds/gradient_background.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/qr_seat_data.dart';
 import '../../models/poker_table.dart';
 import '../../models/club.dart';
@@ -113,7 +114,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Your join request was declined',
+                AppLocalizations.of(context).qrJoinDeclined,
                 style: GoogleFonts.ibmPlexSans(color: Colors.white),
               ),
               backgroundColor: const Color(0xFFD55A41),
@@ -142,7 +143,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Failed to join seat: ${e.toString()}',
+              AppLocalizations.of(context).qrJoinFailed(e.toString()),
               style: GoogleFonts.ibmPlexSans(color: Colors.white),
             ),
             backgroundColor: const Color(0xFFD55A41),
@@ -206,7 +207,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Join Table',
+                        AppLocalizations.of(context).qrJoinTable,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
@@ -244,7 +245,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Loading table info...',
+              AppLocalizations.of(context).qrJoinLoading,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF8C8C8C),
                 fontSize: 15,
@@ -288,7 +289,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Something went wrong',
+              AppLocalizations.of(context).qrJoinError,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 20,
@@ -316,7 +317,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                   borderRadius: BorderRadius.circular(60),
                 ),
                 child: Text(
-                  'Go Back',
+                  AppLocalizations.of(context).qrJoinGoBack,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
@@ -346,7 +347,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           const SizedBox(height: 28),
 
           // Info section
-          _buildSectionHeader('TABLE INFO'),
+          _buildSectionHeader(AppLocalizations.of(context).qrJoinTableInfo),
           const SizedBox(height: 12),
           _buildInfoCard(isActive),
 
@@ -370,7 +371,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
-                  'Cancel',
+                  AppLocalizations.of(context).commonCancel,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -418,7 +419,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Seat ${widget.qrData.seatNumber}',
+                AppLocalizations.of(context).qrJoinSeat(widget.qrData.seatNumber),
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
@@ -434,7 +435,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                   borderRadius: BorderRadius.circular(40),
                 ),
                 child: Text(
-                  _table?.name ?? 'Table',
+                  _table?.name ?? AppLocalizations.of(context).qrJoinTableFallback,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -462,6 +463,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
   }
 
   Widget _buildInfoCard(bool isActive) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -473,8 +475,8 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
         children: [
           _buildInfoRow(
             icon: Icons.business_rounded,
-            label: 'Club',
-            value: _club?.name ?? 'Unknown',
+            label: l10n.qrJoinClubLabel,
+            value: _club?.name ?? l10n.commonNotAvailable,
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 4),
@@ -482,8 +484,8 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           ),
           _buildInfoRow(
             icon: Icons.table_restaurant_rounded,
-            label: 'Table',
-            value: _table?.name ?? 'Unknown',
+            label: l10n.qrJoinTableLabel,
+            value: _table?.name ?? l10n.commonNotAvailable,
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 4),
@@ -491,8 +493,8 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           ),
           _buildInfoRow(
             icon: Icons.event_seat_rounded,
-            label: 'Seat',
-            value: 'Seat ${widget.qrData.seatNumber}',
+            label: l10n.qrJoinSeatLabel,
+            value: l10n.qrJoinSeat(widget.qrData.seatNumber),
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 4),
@@ -501,8 +503,8 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           _buildInfoRow(
             icon: Icons.circle,
             iconSize: 10,
-            label: 'Status',
-            value: isActive ? 'Active Game' : 'Waiting',
+            label: l10n.qrJoinStatusLabel,
+            value: isActive ? l10n.qrJoinActiveGame : l10n.qrJoinWaitingStatus,
             valueColor: isActive
                 ? const Color(0xFF87ED81)
                 : const Color(0xFFFFA726),
@@ -567,7 +569,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'This seat may already be occupied. Joining will replace the current player.',
+              AppLocalizations.of(context).qrJoinSeatOccupied,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFFFFA726),
                 fontSize: 13,
@@ -608,7 +610,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             ),
             const SizedBox(height: 28),
             Text(
-              'Waiting for Dealer',
+              AppLocalizations.of(context).qrJoinWaitingDealer,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 24,
@@ -618,7 +620,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Your request to join Seat ${widget.qrData.seatNumber} has been sent.',
+              AppLocalizations.of(context).qrJoinRequestSent(widget.qrData.seatNumber),
               textAlign: TextAlign.center,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFFD3FFFD),
@@ -628,7 +630,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'The dealer will set your chip stack and approve your join.',
+              AppLocalizations.of(context).qrJoinDealerApproval,
               textAlign: TextAlign.center,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF8C8C8C),
@@ -656,7 +658,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    _table?.name ?? 'Table',
+                    _table?.name ?? AppLocalizations.of(context).qrJoinTableFallback,
                     style: GoogleFonts.ibmPlexSans(
                       color: Colors.white,
                       fontSize: 15,
@@ -671,7 +673,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                       borderRadius: BorderRadius.circular(40),
                     ),
                     child: Text(
-                      'Seat ${widget.qrData.seatNumber}',
+                      AppLocalizations.of(context).qrJoinSeat(widget.qrData.seatNumber),
                       style: GoogleFonts.ibmPlexSans(
                         color: const Color(0xFF89F1EC),
                         fontSize: 13,
@@ -692,7 +694,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                 if (mounted) Navigator.pop(context);
               },
               child: Text(
-                'Cancel Request',
+                AppLocalizations.of(context).qrJoinCancelRequest,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFFD55A41),
                   fontSize: 15,
@@ -728,7 +730,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
                   ),
                 )
               : Text(
-                  'Request to Join',
+                  AppLocalizations.of(context).qrJoinRequestButton,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,

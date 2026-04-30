@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design_system/components/app_toggle.dart';
+import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../models/poker_game_state.dart';
 
@@ -354,8 +355,9 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
   }
 
   Widget _buildPotSection(int potIndex) {
+    final l10n = AppLocalizations.of(context);
     final sidePot = widget.sidePots[potIndex];
-    final potName = potIndex == 0 ? 'Main Pot' : 'Side Pot $potIndex';
+    final potName = potIndex == 0 ? l10n.multiPotMainPot : l10n.multiPotSidePot(potIndex);
     final isChopped = isChoppedPot[potIndex] ?? false;
     final eligiblePlayers = sidePot.eligiblePlayers;
     final isAutoAwarded = autoAwardedPots.contains(potIndex);
@@ -363,9 +365,9 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
     // Auto-awarded simplified view
     if (isAutoAwarded && potIndex > 0) {
       final autoAwardWinner = singleWinners[potIndex]!;
-      final winnerName = widget.playerIdToName[autoAwardWinner] ?? 'Player $autoAwardWinner';
+      final winnerName = widget.playerIdToName[autoAwardWinner] ?? l10n.multiPotPlayerFallback('$autoAwardWinner');
       final isMainPotWinner = singleWinners[0] == autoAwardWinner;
-      final awardReason = isMainPotWinner ? 'main pot winner' : 'eligible from previous pot';
+      final awardReason = isMainPotWinner ? l10n.multiPotMainPotWinner : l10n.multiPotEligibleFromPrevious;
 
       return Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -402,7 +404,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Auto-awarded to $winnerName ($awardReason)',
+              l10n.multiPotAutoAwarded(winnerName, awardReason),
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 13,
                 color: const Color(0xFF8C8C8C),
@@ -461,7 +463,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  isChopped ? 'Chopped Pot' : 'Single Winner',
+                  isChopped ? l10n.multiPotChoppedPot : l10n.multiPotSingleWinner,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     color: Colors.white,
@@ -487,7 +489,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
 
           // Winner selection label
           Text(
-            isChopped ? 'Select all winners:' : 'Select the winner:',
+            isChopped ? l10n.multiPotSelectAllWinners : l10n.multiPotSelectTheWinner,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 15,
               color: Colors.white,
@@ -499,7 +501,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
 
           // Player list
           ...eligiblePlayers.map((playerId) {
-            final playerName = widget.playerIdToName[playerId] ?? 'Player $playerId';
+            final playerName = widget.playerIdToName[playerId] ?? l10n.multiPotPlayerFallback('$playerId');
             if (isChopped) {
               return _buildPlayerCheckbox(potIndex, playerId, playerName);
             } else {
@@ -513,6 +515,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: BoxDecoration(
@@ -563,7 +566,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                 ),
                 // Title
                 Text(
-                  'Select Winners',
+                  l10n.multiPotSelectWinnersTitle,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     color: Colors.white,
@@ -615,7 +618,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                   children: [
                     // Description
                     Text(
-                      'Multiple pots - select winner for each pot',
+                      l10n.multiPotMultiplePots,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         color: Colors.white,
@@ -651,7 +654,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                               ),
                               child: Center(
                                 child: Text(
-                                  'Save',
+                                  l10n.commonSave,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 17,
                                     color: _isFormValid()
@@ -681,7 +684,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                               ),
                               child: Center(
                                 child: Text(
-                                  'Cancel',
+                                  l10n.commonCancel,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 17,
                                     color: const Color(0xFFD3FFFD),

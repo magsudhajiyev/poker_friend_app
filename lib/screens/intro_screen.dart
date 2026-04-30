@@ -4,6 +4,7 @@ import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
 import '../design_system/components/backgrounds/gradient_background.dart';
+import '../l10n/app_localizations.dart';
 import 'auth_screen_experimental.dart';
 
 class IntroScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class _IntroScreenState extends State<IntroScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.backgroundPaper,
       body: Stack(
@@ -76,7 +78,7 @@ class _IntroScreenState extends State<IntroScreen> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Final Table',
+                        l10n.onboardingFinalTable,
                         style: AppTypography.pageSubtitle(),
                       ),
                       const Spacer(),
@@ -85,7 +87,7 @@ class _IntroScreenState extends State<IntroScreen> {
                         GestureDetector(
                           onTap: () => _goToPage(_totalPages - 1),
                           child: Text(
-                            'Skip',
+                            l10n.onboardingSkip,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
@@ -106,18 +108,18 @@ class _IntroScreenState extends State<IntroScreen> {
                     },
                     children: [
                       _buildSlide(
-                        title: 'TRACK EVERY\nHAND',
-                        subtitle: 'Log actions, board cards, and results for every hand you play — live or after the session.',
+                        title: l10n.onboardingTrackTitle,
+                        subtitle: l10n.onboardingTrackSubtitle,
                         icon: Icons.style_rounded,
                       ),
                       _buildSlide(
-                        title: 'KNOW YOUR\nGAME',
-                        subtitle: 'VPIP, PFR, 3-Bet, C-Bet and more — see your stats evolve in real time.',
+                        title: l10n.onboardingKnowTitle,
+                        subtitle: l10n.onboardingKnowSubtitle,
                         icon: Icons.insights_rounded,
                       ),
                       _buildSlide(
-                        title: 'PLAY AT\nCLUBS',
-                        subtitle: 'Join live events, see rankings, and track your opponents across sessions.',
+                        title: l10n.onboardingClubsTitle,
+                        subtitle: l10n.onboardingClubsSubtitle,
                         icon: Icons.groups_rounded,
                       ),
                       _buildAuthPage(),
@@ -202,6 +204,7 @@ class _IntroScreenState extends State<IntroScreen> {
   }
 
   Widget _buildAuthPage() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -209,7 +212,7 @@ class _IntroScreenState extends State<IntroScreen> {
         children: [
           const Spacer(flex: 2),
           Text(
-            'READ THE GAME\nLIKE A PRO',
+            l10n.onboardingReadTitle,
             style: AppTypography.pageTitleLarge().copyWith(
               fontSize: 40,
               fontWeight: FontWeight.w800,
@@ -219,7 +222,7 @@ class _IntroScreenState extends State<IntroScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Create an account to start tracking your poker journey.',
+            l10n.onboardingReadSubtitle,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w400,
@@ -252,7 +255,7 @@ class _IntroScreenState extends State<IntroScreen> {
                 elevation: 0,
               ),
               child: Text(
-                'Create account',
+                l10n.onboardingCreateAccount,
                 style: AppTypography.buttonText().copyWith(fontSize: 16),
               ),
             ),
@@ -283,7 +286,7 @@ class _IntroScreenState extends State<IntroScreen> {
                 ),
               ),
               child: Text(
-                'Log in',
+                l10n.onboardingLogIn,
                 style: AppTypography.buttonText(color: Colors.white).copyWith(
                   fontSize: 16,
                 ),

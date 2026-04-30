@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 
 /// A snap point for the raise slider.
 class SnapPoint {
@@ -36,6 +37,7 @@ class RaiseSnapOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // Fill the parent Stack entirely — no overflow
     return Positioned.fill(
       child: LayoutBuilder(
@@ -94,7 +96,7 @@ class RaiseSnapOverlay extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Release at min to type',
+                        l10n.raiseSnapReleaseToType,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 11,
                           color: Colors.white.withValues(alpha: 0.3),

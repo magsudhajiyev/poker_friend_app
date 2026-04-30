@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:google_fonts/google_fonts.dart';
 import '../design_system/constants/colors.dart';
+import '../l10n/app_localizations.dart';
 import '../models/club_notification.dart';
 import '../models/club.dart';
 import '../models/club_member.dart';
@@ -103,28 +104,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   /// Get category label for notification type
   String _getCategoryLabel(NotificationType type) {
+    final l10n = AppLocalizations.of(context);
     switch (type) {
       case NotificationType.eventCreated:
       case NotificationType.eventUpdated:
       case NotificationType.eventCancelled:
       case NotificationType.eventStarting:
       case NotificationType.eventStarted:
-        return 'Events';
+        return l10n.notificationsScreenEvents;
       case NotificationType.memberRSVP:
-        return 'RSVP';
+        return l10n.notificationsScreenRsvp;
       case NotificationType.newClubRequest:
       case NotificationType.clubApproved:
       case NotificationType.clubRejected:
-        return 'Clubs';
+        return l10n.notificationsScreenClubs;
       case NotificationType.memberInvited:
       case NotificationType.invitationAccepted:
       case NotificationType.invitationDeclined:
-        return 'Invitations';
+        return l10n.notificationsScreenInvitations;
       case NotificationType.seatAvailable:
-        return 'Seats';
+        return l10n.notificationsScreenSeats;
       case NotificationType.newSupportRequest:
       case NotificationType.supportRequestUpdated:
-        return 'Support';
+        return l10n.notificationsScreenSupport;
     }
   }
 
@@ -250,7 +252,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     Padding(
                       padding: const EdgeInsets.only(left: 12),
                       child: Text(
-                        'Notifications',
+                        AppLocalizations.of(context).notificationsScreenTitle,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 27,
                           fontWeight: FontWeight.w600,
@@ -329,7 +331,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             children: [
               // "Today" (Figma node 343:4915): Medium 17px, white, line-height 1.44
               Text(
-                'Today',
+                AppLocalizations.of(context).notificationsScreenToday,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
@@ -342,7 +344,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 GestureDetector(
                   onTap: _markAllAsRead,
                   child: Text(
-                    'Mark all as read',
+                    AppLocalizations.of(context).notificationsScreenMarkAllAsRead,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -382,7 +384,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No notifications',
+            AppLocalizations.of(context).notificationsScreenNoNotifications,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w500,
@@ -562,7 +564,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                isResolved ? 'Request Resolved' : 'Request Closed',
+                isResolved ? AppLocalizations.of(context).notificationsScreenRequestResolved : AppLocalizations.of(context).notificationsScreenRequestClosed,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 18,
@@ -595,7 +597,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             if (request.adminResponse != null && request.adminResponse!.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text(
-                'Response',
+                AppLocalizations.of(context).notificationsScreenResponse,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFF8C8C8C),
                   fontSize: 12,
@@ -629,7 +631,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'OK',
+              AppLocalizations.of(context).commonOk,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF89F1EC),
                 fontWeight: FontWeight.w600,
@@ -645,7 +647,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _handleMemberInvitationTap(ClubNotification notification) async {
     if (notification.clubId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Club not found')),
+        SnackBar(content: Text(AppLocalizations.of(context).notificationsClubNotFound)),
       );
       return;
     }
@@ -669,7 +671,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (club == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Club not found')),
+            SnackBar(content: Text(AppLocalizations.of(context).notificationsClubNotFound)),
           );
         }
         return;
@@ -684,7 +686,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(e.toString()))),
         );
       }
     }
@@ -697,8 +699,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Club Invitation',
+        title: Text(
+          AppLocalizations.of(context).notificationsScreenClubInvitation,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
@@ -720,7 +722,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'You\'ve been invited to join',
+              AppLocalizations.of(context).notificationsScreenInvitedToJoin,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
@@ -754,8 +756,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               Navigator.pop(dialogContext);
               await _respondToInvitation(notification, club, false);
             },
-            child: const Text(
-              'Decline',
+            child: Text(
+              AppLocalizations.of(context).notificationsScreenDecline,
               style: TextStyle(color: Color(0xFFEF5350)),
             ),
           ),
@@ -771,7 +773,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Accept'),
+            child: Text(AppLocalizations.of(context).commonAccept),
           ),
         ],
       ),
@@ -794,7 +796,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final userName = AuthService.userDisplayName;
 
       if (userId == null) {
-        throw 'Not authenticated';
+        throw AppLocalizations.of(context).notificationsScreenNotAuthenticated;
       }
 
       if (accept) {
@@ -805,7 +807,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         await _notifyClubAdmins(
           club: club,
           type: NotificationType.invitationAccepted,
-          title: 'Invitation Accepted',
+          title: AppLocalizations.of(context).notificationsInvitationAccepted,
           body: '$userName has accepted the invitation to join ${club.name}.',
         );
 
@@ -829,7 +831,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         await _notifyClubAdmins(
           club: club,
           type: NotificationType.invitationDeclined,
-          title: 'Invitation Declined',
+          title: AppLocalizations.of(context).notificationsInvitationDeclined,
           body: '$userName has declined the invitation to join ${club.name}.',
         );
 
@@ -838,7 +840,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invitation declined')),
+            SnackBar(content: Text(AppLocalizations.of(context).notificationsInvitationDeclinedMsg)),
           );
         }
       }
@@ -847,7 +849,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric(e.toString()))),
         );
       }
     }
@@ -897,7 +899,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _navigateToEventFromNotification(ClubNotification notification) async {
     if (notification.eventId == null || notification.clubId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event not found')),
+        SnackBar(content: Text(AppLocalizations.of(context).notificationsEventNotFound)),
       );
       return;
     }
@@ -923,7 +925,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (club == null || event == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Event not found')),
+            SnackBar(content: Text(AppLocalizations.of(context).notificationsEventNotFound)),
           );
         }
         return;
@@ -947,7 +949,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading event: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).notificationsErrorLoadingEvent(e.toString()))),
         );
       }
     }
@@ -957,7 +959,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _navigateToClub(String clubId) async {
     if (clubId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Club not found')),
+        SnackBar(content: Text(AppLocalizations.of(context).notificationsClubNotFound)),
       );
       return;
     }
@@ -980,7 +982,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (club == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Club not found')),
+            SnackBar(content: Text(AppLocalizations.of(context).notificationsClubNotFound)),
           );
         }
         return;
@@ -999,9 +1001,154 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (mounted) Navigator.pop(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load club: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context).notificationsFailedLoadClub(e.toString()))),
         );
       }
+    }
+  }
+
+  /// Extract event/member name from stored English title for legacy notifications
+  /// that don't have metadata in their data map.
+  String _extractNameFromTitle(String title, NotificationType type) {
+    switch (type) {
+      case NotificationType.eventCreated:
+        // "New Event: {name}"
+        if (title.startsWith('New Event: ')) return title.substring(11);
+        break;
+      case NotificationType.eventUpdated:
+        // "Event Updated: {name}"
+        if (title.startsWith('Event Updated: ')) return title.substring(15);
+        break;
+      case NotificationType.eventCancelled:
+        // "Event Cancelled: {name}"
+        if (title.startsWith('Event Cancelled: ')) return title.substring(17);
+        break;
+      case NotificationType.eventStarting:
+        // "{name} starts in 1 hour!"
+        if (title.endsWith(' starts in 1 hour!')) {
+          return title.substring(0, title.length - 18);
+        }
+        break;
+      case NotificationType.eventStarted:
+        // "{name} is now LIVE!"
+        if (title.endsWith(' is now LIVE!')) {
+          return title.substring(0, title.length - 13);
+        }
+        break;
+      case NotificationType.seatAvailable:
+        // "Seat is open: {name}"
+        if (title.startsWith('Seat is open: ')) return title.substring(14);
+        break;
+      case NotificationType.memberRSVP:
+        // "RSVP: {name}"
+        if (title.startsWith('RSVP: ')) return title.substring(6);
+        break;
+      default:
+        break;
+    }
+    return '';
+  }
+
+  /// Resolve localized notification title based on type and stored metadata.
+  /// For legacy notifications without metadata, extracts names from stored English title.
+  String _resolveTitle(ClubNotification notification) {
+    final l10n = AppLocalizations.of(context);
+    final data = notification.data;
+    var eventName = data['eventName'] as String? ?? '';
+    var memberName = data['memberName'] as String? ?? '';
+
+    // For legacy notifications: extract name from stored English title
+    if (eventName.isEmpty && memberName.isEmpty) {
+      final extracted = _extractNameFromTitle(notification.title, notification.type);
+      if (extracted.isNotEmpty) {
+        if (notification.type == NotificationType.memberRSVP) {
+          memberName = extracted;
+        } else {
+          eventName = extracted;
+        }
+      }
+    }
+
+    switch (notification.type) {
+      case NotificationType.eventCreated:
+        return eventName.isNotEmpty ? l10n.notifEventCreatedTitle(eventName) : notification.title;
+      case NotificationType.eventUpdated:
+        return eventName.isNotEmpty ? l10n.notifEventUpdatedTitle(eventName) : notification.title;
+      case NotificationType.eventCancelled:
+        return eventName.isNotEmpty ? l10n.notifEventCancelledTitle(eventName) : notification.title;
+      case NotificationType.eventStarting:
+        return eventName.isNotEmpty ? l10n.notifEventStartingTitle(eventName) : notification.title;
+      case NotificationType.eventStarted:
+        return eventName.isNotEmpty ? l10n.notifEventStartedTitle(eventName) : notification.title;
+      case NotificationType.seatAvailable:
+        return eventName.isNotEmpty ? l10n.notifSeatAvailableTitle(eventName) : notification.title;
+      case NotificationType.memberRSVP:
+        return memberName.isNotEmpty ? l10n.notifMemberRsvpTitle(memberName) : notification.title;
+      case NotificationType.newClubRequest:
+        return l10n.notifNewClubRequestTitle;
+      case NotificationType.clubApproved:
+        return l10n.notifClubApprovedTitle;
+      case NotificationType.clubRejected:
+        return l10n.notifClubRejectedTitle;
+      case NotificationType.memberInvited:
+        return l10n.notifMemberInvitedTitle;
+      case NotificationType.invitationAccepted:
+        return l10n.notifInvitationAcceptedTitle;
+      case NotificationType.invitationDeclined:
+        return l10n.notifInvitationDeclinedTitle;
+      case NotificationType.newSupportRequest:
+        return l10n.notifSupportRequestTitle;
+      case NotificationType.supportRequestUpdated:
+        return l10n.notifSupportUpdatedTitle;
+    }
+  }
+
+  /// Resolve localized notification body based on type and stored metadata.
+  /// Falls back to the stored English body for backward compatibility.
+  String _resolveBody(ClubNotification notification) {
+    final l10n = AppLocalizations.of(context);
+    final data = notification.data;
+    final clubName = notification.clubName.isNotEmpty ? notification.clubName : 'Club';
+    final eventName = data['eventName'] as String? ?? '';
+    final memberName = data['memberName'] as String? ?? '';
+    final rsvpStatus = data['rsvpStatus'] as String? ?? '';
+    final date = data['date'] as String? ?? '';
+
+    switch (notification.type) {
+      case NotificationType.eventCreated:
+        return date.isNotEmpty ? l10n.notifEventCreatedBody(date) : notification.body;
+      case NotificationType.eventUpdated:
+        final changeDesc = data['changeDescription'] as String?;
+        if (changeDesc != null && changeDesc.isNotEmpty) return changeDesc;
+        return l10n.notifEventUpdatedBody(clubName);
+      case NotificationType.eventCancelled:
+        return date.isNotEmpty ? l10n.notifEventCancelledBody(clubName, date) : notification.body;
+      case NotificationType.eventStarting:
+        return l10n.notifEventStartingBody(clubName);
+      case NotificationType.eventStarted:
+        return l10n.notifEventStartedBody(clubName);
+      case NotificationType.seatAvailable:
+        return l10n.notifSeatAvailableBody(clubName);
+      case NotificationType.memberRSVP:
+        return (memberName.isNotEmpty && eventName.isNotEmpty)
+            ? l10n.notifMemberRsvpBody(memberName, rsvpStatus, eventName)
+            : notification.body;
+      case NotificationType.newClubRequest:
+        return l10n.notifNewClubRequestBody;
+      case NotificationType.clubApproved:
+        return l10n.notifClubApprovedBody;
+      case NotificationType.clubRejected:
+        return l10n.notifClubRejectedBody;
+      case NotificationType.memberInvited:
+        return l10n.notifMemberInvitedBody;
+      case NotificationType.invitationAccepted:
+        return memberName.isNotEmpty ? l10n.notifInvitationAcceptedBody(memberName) : notification.body;
+      case NotificationType.invitationDeclined:
+        return memberName.isNotEmpty ? l10n.notifInvitationDeclinedBody(memberName) : notification.body;
+      case NotificationType.newSupportRequest:
+        return l10n.notifSupportRequestBody;
+      case NotificationType.supportRequestUpdated:
+        return l10n.notifSupportUpdatedBody;
     }
   }
 
@@ -1040,7 +1187,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               children: [
                 // Title (Figma node 350:4946): Medium 17px, white, line-height 1.44
                 Text(
-                  notification.title,
+                  _resolveTitle(notification),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     fontWeight: FontWeight.w500,
@@ -1051,7 +1198,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 const SizedBox(height: 3),
                 // Body (Figma node 350:4947): Regular 13px, #B3B4B6, line-height 1.44
                 Text(
-                  notification.body,
+                  _resolveBody(notification),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
@@ -1081,7 +1228,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   borderRadius: BorderRadius.circular(86),
                 ),
                 child: Text(
-                  'Mark as read',
+                  AppLocalizations.of(context).notificationsScreenMarkAsRead,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,

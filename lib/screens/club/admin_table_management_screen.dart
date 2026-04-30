@@ -15,6 +15,7 @@ import '../../services/club_service.dart';
 import '../../services/waitlist_service.dart';
 import '../../services/event_service.dart';
 import '../../widgets/poker_table_widget.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Full-screen elliptic table view for admin seat management
 /// Uses the same visual design as seat_setup_screen.dart
@@ -140,7 +141,7 @@ class _AdminTableManagementScreenState
       final playerId = a.playerId;
       if (playerId == null) continue;
       final table = byTableId[a.tableId];
-      final tableLabel = table != null ? 'Table ${table.tableNumber}' : 'Another table';
+      final tableLabel = table != null ? AppLocalizations.of(context).adminTableTableNumberLabel(table.tableNumber) : AppLocalizations.of(context).adminTableTableFallback;
       result[playerId] = '$tableLabel · Seat ${a.seatNumber}';
     }
     return result;
@@ -305,21 +306,21 @@ class _AdminTableManagementScreenState
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF161618),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Close ${_table?.name ?? 'Table'}?', style: const TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context).adminEventTablesCloseConfirm(_table?.name ?? 'Table'), style: const TextStyle(color: Colors.white)),
         content: Text(
           occupiedCount > 0
-              ? 'This will move $occupiedCount player${occupiedCount > 1 ? 's' : ''} to the waitlist and remove the table from this event.'
-              : 'This will remove the table from this event.',
+              ? AppLocalizations.of(context).adminTableThisWillMoveMsg(occupiedCount)
+              : AppLocalizations.of(context).adminTableThisWillRemoveMsg,
           style: const TextStyle(color: Color(0xFF9A9A9A)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Close Table', style: TextStyle(color: PokerFriendColors.red)),
+            child: Text(AppLocalizations.of(context).adminEventTablesCloseButton, style: const TextStyle(color: PokerFriendColors.red)),
           ),
         ],
       ),
@@ -339,9 +340,10 @@ class _AdminTableManagementScreenState
       );
 
       if (mounted) {
+        final tableName = _table?.name ?? AppLocalizations.of(context).adminTableTableFallback;
         final message = movedCount > 0
-            ? '${_table?.name ?? 'Table'} closed. $movedCount player${movedCount > 1 ? 's' : ''} moved to waitlist.'
-            : '${_table?.name ?? 'Table'} closed.';
+            ? AppLocalizations.of(context).adminTableClosedWithWaitlistMsg(tableName, movedCount)
+            : AppLocalizations.of(context).adminTableClosedMsg(tableName);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
@@ -353,7 +355,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -461,8 +463,8 @@ class _AdminTableManagementScreenState
               padding: const EdgeInsets.symmetric(horizontal: 2),
               child: Text(
                 isOccupied || isPending
-                    ? playerName.isNotEmpty ? playerName : 'Player'
-                    : 'Empty',
+                    ? playerName.isNotEmpty ? playerName : AppLocalizations.of(context).clubCashGamePlayer
+                    : AppLocalizations.of(context).adminTableEmptyLabel,
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -517,7 +519,7 @@ class _AdminTableManagementScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${_waitlist.length} in waitlist',
+                    AppLocalizations.of(context).adminTableWaitlistInCount(_waitlist.length),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
@@ -525,7 +527,7 @@ class _AdminTableManagementScreenState
                     ),
                   ),
                   Text(
-                    'Next: ${_waitlist.first.userDisplayName}',
+                    AppLocalizations.of(context).adminTableWaitlistNextName(_waitlist.first.userDisplayName),
                     style: const TextStyle(
                       color: Color(0xFF9A9A9A),
                       fontSize: 12,
@@ -616,7 +618,7 @@ class _AdminTableManagementScreenState
       if (mounted && notified != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Notified ${notified.userDisplayName}'),
+            content: Text(AppLocalizations.of(context).adminTableNotifiedName(notified.userDisplayName)),
             backgroundColor: PokerFriendColors.purple,
           ),
         );
@@ -624,7 +626,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -644,21 +646,21 @@ class _AdminTableManagementScreenState
           style: const TextStyle(color: Colors.white),
         ),
         content: Text(
-          'Waiting for approval to join seat #$seatNumber',
+          AppLocalizations.of(context).adminTableWaitingForApproval(seatNumber),
           style: const TextStyle(color: Color(0xFF9A9A9A)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'reject'),
-            child: const Text('Reject', style: TextStyle(color: PokerFriendColors.red)),
+            child: Text(AppLocalizations.of(context).adminTableReject, style: const TextStyle(color: PokerFriendColors.red)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'approve'),
-            child: const Text('Approve', style: TextStyle(color: PokerFriendColors.green)),
+            child: Text(AppLocalizations.of(context).adminTableApprove, style: const TextStyle(color: PokerFriendColors.green)),
           ),
         ],
       ),
@@ -684,15 +686,15 @@ class _AdminTableManagementScreenState
           assignment.playerName ?? 'Player',
           style: const TextStyle(color: Colors.white, fontSize: 20),
         ),
-        content: Text('Seat #$seatNumber', style: const TextStyle(color: Color(0xFF9A9A9A))),
+        content: Text(AppLocalizations.of(context).adminTableSeatNumber(seatNumber), style: const TextStyle(color: Color(0xFF9A9A9A))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'remove'),
-            child: const Text('Remove', style: TextStyle(color: PokerFriendColors.red)),
+            child: Text(AppLocalizations.of(context).adminTableRemove, style: const TextStyle(color: PokerFriendColors.red)),
           ),
         ],
       ),
@@ -714,7 +716,7 @@ class _AdminTableManagementScreenState
 
     if (emptySeats.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No empty seats available'), backgroundColor: Colors.orange),
+        SnackBar(content: Text(AppLocalizations.of(context).adminTableNoEmptySeats), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -724,11 +726,11 @@ class _AdminTableManagementScreenState
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF161618),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Seat ${entry.userDisplayName}', style: const TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context).adminTableSeatPlayerName(entry.userDisplayName), style: const TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Select a seat:', style: TextStyle(color: Color(0xFF9A9A9A))),
+            Text(AppLocalizations.of(context).adminTableSelectSeat, style: const TextStyle(color: Color(0xFF9A9A9A))),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,
@@ -763,7 +765,7 @@ class _AdminTableManagementScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
           ),
         ],
       ),
@@ -820,7 +822,7 @@ class _AdminTableManagementScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${entry.userDisplayName} seated'),
+            content: Text(AppLocalizations.of(context).adminTablePlayerSeated(entry.userDisplayName)),
             backgroundColor: PokerFriendColors.green,
           ),
         );
@@ -828,7 +830,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -836,7 +838,7 @@ class _AdminTableManagementScreenState
 
   Future<void> _seatMember(ClubMember member, int seatNumber) async {
     try {
-      final memberName = member.displayName ?? 'Player';
+      final memberName = member.displayName ?? AppLocalizations.of(context).clubCashGamePlayer;
 
       // Defensive guard: if the stream was stale and the disabled-row UI slipped,
       // still block double-booking at the write path.
@@ -845,7 +847,7 @@ class _AdminTableManagementScreenState
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('$memberName is already seated at $existingSeat'),
+              content: Text(AppLocalizations.of(context).adminTableAlreadySeated(memberName, existingSeat)),
               backgroundColor: Colors.orange,
             ),
           );
@@ -865,13 +867,13 @@ class _AdminTableManagementScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$memberName seated'), backgroundColor: PokerFriendColors.green),
+          SnackBar(content: Text(AppLocalizations.of(context).adminTablePlayerSeated(memberName)), backgroundColor: PokerFriendColors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -888,13 +890,13 @@ class _AdminTableManagementScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$name seated'), backgroundColor: PokerFriendColors.green),
+          SnackBar(content: Text(AppLocalizations.of(context).adminTablePlayerSeated(name)), backgroundColor: PokerFriendColors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -918,7 +920,7 @@ class _AdminTableManagementScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${assignment.playerName} approved'),
+            content: Text(AppLocalizations.of(context).adminTablePlayerApproved(assignment.playerName ?? '')),
             backgroundColor: PokerFriendColors.green,
           ),
         );
@@ -926,7 +928,7 @@ class _AdminTableManagementScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -942,13 +944,13 @@ class _AdminTableManagementScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Player rejected'), backgroundColor: Colors.orange),
+          SnackBar(content: Text(AppLocalizations.of(context).adminTablePlayerRejected), backgroundColor: Colors.orange),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -964,13 +966,13 @@ class _AdminTableManagementScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Player removed'), backgroundColor: Colors.orange),
+          SnackBar(content: Text(AppLocalizations.of(context).adminTablePlayerRemoved), backgroundColor: Colors.orange),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: PokerFriendColors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).commonErrorGeneric('$e')), backgroundColor: PokerFriendColors.red),
         );
       }
     }
@@ -1031,9 +1033,9 @@ class _SeatPlayerSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'Seat Player',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              Text(
+                AppLocalizations.of(context).adminTableSeatPlayer,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ],
           ),
@@ -1044,8 +1046,8 @@ class _SeatPlayerSheet extends StatelessWidget {
               context: context,
               icon: Icons.people,
               iconColor: PokerFriendColors.purple,
-              title: 'From Waitlist',
-              subtitle: '${waitlist.first.userDisplayName} is next',
+              title: AppLocalizations.of(context).adminTableFromWaitlist,
+              subtitle: AppLocalizations.of(context).adminTableWaitlistNextIs(waitlist.first.userDisplayName),
               onTap: () {
                 Navigator.pop(context);
                 onSeatFromWaitlist(waitlist.first);
@@ -1058,8 +1060,8 @@ class _SeatPlayerSheet extends StatelessWidget {
             context: context,
             icon: Icons.person_search,
             iconColor: PokerFriendColors.blue,
-            title: 'Club Member',
-            subtitle: 'Search existing members',
+            title: AppLocalizations.of(context).adminTableClubMember,
+            subtitle: AppLocalizations.of(context).adminTableSearchMembers,
             onTap: () => _showMemberSearch(context),
           ),
           const SizedBox(height: 12),
@@ -1068,8 +1070,8 @@ class _SeatPlayerSheet extends StatelessWidget {
             context: context,
             icon: Icons.person_add,
             iconColor: PokerFriendColors.green,
-            title: 'Walk-up Player',
-            subtitle: 'Add by name',
+            title: AppLocalizations.of(context).adminTableWalkUpPlayer,
+            subtitle: AppLocalizations.of(context).adminTableAddByName,
             onTap: () => _showWalkUpDialog(context),
           ),
           const SizedBox(height: 24),
@@ -1156,12 +1158,12 @@ class _SeatPlayerSheet extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF161618),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Walk-up Player', style: TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context).adminTableWalkUpPlayer, style: const TextStyle(color: Colors.white)),
         content: TextField(
           controller: controller,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
-            hintText: 'Player name',
+            hintText: AppLocalizations.of(context).adminTablePlayerName,
             hintStyle: const TextStyle(color: Color(0xFF4A4A4E)),
             filled: true,
             fillColor: const Color(0xFF2A2A2E),
@@ -1175,7 +1177,7 @@ class _SeatPlayerSheet extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF9A9A9A))),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Color(0xFF9A9A9A))),
           ),
           TextButton(
             onPressed: () {
@@ -1185,7 +1187,7 @@ class _SeatPlayerSheet extends StatelessWidget {
                 onAddWalkUp(name);
               }
             },
-            child: const Text('Add', style: TextStyle(color: PokerFriendColors.green)),
+            child: Text(AppLocalizations.of(context).clubCashGameAdd, style: const TextStyle(color: PokerFriendColors.green)),
           ),
         ],
       ),
@@ -1232,16 +1234,16 @@ class _MemberSearchSheetState extends State<_MemberSearchSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Select Member',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+          Text(
+            AppLocalizations.of(context).adminTableSelectMember,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           const SizedBox(height: 16),
           TextField(
             onChanged: (v) => setState(() => _searchQuery = v),
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              hintText: 'Search...',
+              hintText: AppLocalizations.of(context).adminTableSearch,
               hintStyle: const TextStyle(color: Color(0xFF4A4A4E)),
               prefixIcon: const Icon(Icons.search, color: Color(0xFF4A4A4E)),
               filled: true,
@@ -1258,7 +1260,7 @@ class _MemberSearchSheetState extends State<_MemberSearchSheet> {
               itemCount: filtered.length,
               itemBuilder: (context, index) {
                 final member = filtered[index];
-                final name = member.displayName ?? 'Player';
+                final name = member.displayName ?? AppLocalizations.of(context).clubCashGamePlayer;
                 final seatedAt = widget.seatedInfoByUserId[member.userId];
                 final isSeated = seatedAt != null;
                 return Opacity(
@@ -1327,9 +1329,9 @@ class _WaitlistSheet extends StatelessWidget {
             children: [
               const Icon(Icons.people, color: PokerFriendColors.purple),
               const SizedBox(width: 12),
-              const Text(
-                'Waitlist',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              Text(
+                AppLocalizations.of(context).clubCashGameWaitlistTitle,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const Spacer(),
               Container(
@@ -1396,9 +1398,9 @@ class _WaitlistSheet extends StatelessWidget {
                           style: const TextStyle(color: Colors.white, fontSize: 15),
                         ),
                         if (isNotified)
-                          const Text(
-                            'Notified',
-                            style: TextStyle(color: Color(0xFFF59E0B), fontSize: 11),
+                          Text(
+                            AppLocalizations.of(context).adminEventTablesNotified,
+                            style: const TextStyle(color: Color(0xFFF59E0B), fontSize: 11),
                           ),
                       ],
                     ),
@@ -1414,9 +1416,9 @@ class _WaitlistSheet extends StatelessWidget {
                           color: PokerFriendColors.purple.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          'Notify',
-                          style: TextStyle(
+                        child: Text(
+                          AppLocalizations.of(context).adminEventTablesNotify,
+                          style: const TextStyle(
                             color: PokerFriendColors.purple,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -1433,9 +1435,9 @@ class _WaitlistSheet extends StatelessWidget {
                         color: PokerFriendColors.green.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
-                        'Seat',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context).adminEventTablesSeat,
+                        style: const TextStyle(
                           color: PokerFriendColors.green,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,

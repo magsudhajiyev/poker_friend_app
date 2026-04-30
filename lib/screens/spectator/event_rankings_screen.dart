@@ -7,6 +7,7 @@ import '../../services/event_service.dart';
 import '../../services/table_service.dart';
 import '../../services/dealer_service.dart';
 import '../../utils/number_formatter.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Screen for spectators to view live rankings during an event
 class EventRankingsScreen extends StatefulWidget {
@@ -198,7 +199,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Live Rankings',
+                      AppLocalizations.of(context).liveRankingsTitle,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 18,
                         color: Colors.white,
@@ -245,6 +246,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
   }
 
   Widget _buildStatsRow() {
+    final l10n = AppLocalizations.of(context);
     final data = _rankingsData!;
     final activePlayers = data.rankings.where((r) => !r.isEliminated).length;
 
@@ -258,13 +260,13 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildStatItem(
-            label: 'Players',
+            label: l10n.leaderboardPlayers,
             value: '$activePlayers / ${data.totalPlayers}',
             color: const Color(0xFF89F1EC),
           ),
           Container(width: 1, height: 32, color: Colors.white.withOpacity(0.06)),
           _buildStatItem(
-            label: 'Total Chips',
+            label: l10n.leaderboardTotalChips,
             value: formatCompactNumber(data.totalChips),
             color: const Color(0xFF89F1EC),
           ),
@@ -355,12 +357,14 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
       items.add(
         Padding(
           padding: const EdgeInsets.only(top: 16, bottom: 10),
-          child: Text(
-            'Eliminated players',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 15,
-              color: Colors.white.withOpacity(0.5),
-              fontWeight: FontWeight.w500,
+          child: Builder(
+            builder: (context) => Text(
+              AppLocalizations.of(context).liveRankingsEliminated,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                color: Colors.white.withOpacity(0.5),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ),
@@ -549,6 +553,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -568,7 +573,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Waiting for Players',
+            l10n.liveRankingsWaiting,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               color: Colors.white,
@@ -579,7 +584,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Rankings will appear once players get seated',
+              l10n.liveRankingsWaitingHint,
               textAlign: TextAlign.center,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 14,
@@ -593,6 +598,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
   }
 
   Widget _buildErrorState() {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -612,7 +618,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Error Loading Rankings',
+            l10n.liveRankingsError,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               color: Colors.white,
@@ -641,7 +647,7 @@ class _EventRankingsScreenState extends State<EventRankingsScreen> {
                 borderRadius: BorderRadius.circular(60),
               ),
               child: Text(
-                'Try Again',
+                l10n.liveRankingsTryAgain,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.black,
                   fontWeight: FontWeight.w600,

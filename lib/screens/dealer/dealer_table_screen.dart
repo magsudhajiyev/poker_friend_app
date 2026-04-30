@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../config/app_config.dart';
 import '../../design_system/poker_friend_theme.dart';
 import '../../models/club.dart';
@@ -415,7 +416,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         )) {
       final upgradeTapped = await FreeTierLimits.showHandsLimitDialog(
         context,
-        dismissLabel: 'End session',
+        dismissLabel: AppLocalizations.of(context).pokerHandEndSession,
       );
       if (!mounted) return;
       // Only end the session on dismiss. If the user tapped Upgrade,
@@ -503,7 +504,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showError('Failed to start hand: ${e.toString()}');
+      _showError(AppLocalizations.of(context).dealerTableFailedStartHand(e.toString()));
     }
   }
 
@@ -1069,9 +1070,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
         // Step 6: Emit WebSocket event
         final winnerName = _sessionManager!.getPlayerName(primaryWinnerId);
+        final l10n = AppLocalizations.of(context);
         final summary = isMainPotChopped
-            ? 'Chop: ${mainPotWinners.map((id) => _sessionManager!.getPlayerName(id)).join(', ')} split ${_formatAmount(totalDistributed)}'
-            : '$winnerName wins ${_formatAmount(totalDistributed)}';
+            ? l10n.dealerTableChopSummary(mainPotWinners.map((id) => _sessionManager!.getPlayerName(id)).join(', '), _formatAmount(totalDistributed))
+            : l10n.dealerTableWins(winnerName, _formatAmount(totalDistributed));
         _wsService.emitHandCompleted(
           tableId: widget.table.id,
           sessionId: _dealerSession.id,
@@ -1099,7 +1101,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         setState(() {
           _isCompletingHand = false;
         });
-        _showError('Failed to complete hand: ${e.toString()}');
+        _showError(AppLocalizations.of(context).dealerTableFailedCompleteHand(e.toString()));
       }
     }
   }
@@ -1142,16 +1144,17 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
       // Emit WebSocket event
       final winnerName = _sessionManager!.getPlayerName(winnerId);
+      final winSummary = AppLocalizations.of(context).dealerTableWins(winnerName, _formatAmount(_gameState!.currentPot));
       _wsService.emitHandCompleted(
         tableId: widget.table.id,
         sessionId: _dealerSession.id,
         handId: _dealerSession.currentHandId ?? '',
         winnerSeat: winnerId,
         potAmount: _gameState!.currentPot,
-        summary: '$winnerName wins ${_formatAmount(_gameState!.currentPot)}',
+        summary: winSummary,
       );
 
-      _showSuccess('$winnerName wins ${_formatAmount(_gameState!.currentPot)}');
+      _showSuccess(winSummary);
 
       // Check for busted players BEFORE startNewHand() deactivates them
       // This allows the rebuy/remove dialog to appear while player is still marked active
@@ -1174,7 +1177,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       setState(() {
         _isCompletingHand = false;
       });
-      _showError('Failed to complete hand: ${e.toString()}');
+      _showError(AppLocalizations.of(context).dealerTableFailedCompleteHand(e.toString()));
     }
   }
 
@@ -1224,16 +1227,17 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
       // Emit WebSocket event
       final winnerNames = winnerIds.map((id) => _sessionManager!.getPlayerName(id)).join(', ');
+      final chopSummary = AppLocalizations.of(context).dealerTableChopSummary(winnerNames, _formatAmount(_gameState!.currentPot));
       _wsService.emitHandCompleted(
         tableId: widget.table.id,
         sessionId: _dealerSession.id,
         handId: _dealerSession.currentHandId ?? '',
         winnerSeat: winnerIds.first,
         potAmount: _gameState!.currentPot,
-        summary: 'Chop: $winnerNames split ${_formatAmount(_gameState!.currentPot)}',
+        summary: chopSummary,
       );
 
-      _showSuccess('Pot chopped between $winnerNames');
+      _showSuccess(AppLocalizations.of(context).dealerTablePotChopped(winnerNames));
 
       // Check for busted players BEFORE startNewHand() deactivates them
       // This allows the rebuy/remove dialog to appear while player is still marked active
@@ -1256,7 +1260,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       setState(() {
         _isCompletingHand = false;
       });
-      _showError('Failed to complete hand: ${e.toString()}');
+      _showError(AppLocalizations.of(context).dealerTableFailedCompleteHand(e.toString()));
     }
   }
 
@@ -1379,7 +1383,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           finishPosition: null, // Clear previous finish position
         );
 
-        _showSuccess('$playerName rebuys for ${_rebuyStack.toStringAsFixed(0)}');
+        _showSuccess(AppLocalizations.of(context).dealerTableRebuysFor(playerName, _rebuyStack.toStringAsFixed(0)));
       } else {
         // Calculate finish position: active players + busted players being processed
         // If multiple players bust on same hand, they all get same position
@@ -1433,7 +1437,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           finishPosition: finishPosition,
         );
 
-        _showSuccess('$playerName finishes in ${_getOrdinal(finishPosition)} place');
+        _showSuccess(AppLocalizations.of(context).dealerTableFinishesIn(playerName, _getOrdinal(finishPosition)));
       }
     }
 
@@ -1476,7 +1480,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               const SizedBox(height: 16),
               // Title
               Text(
-                '$playerName Busted!',
+                AppLocalizations.of(context).dealerTablePlayerBusted(playerName),
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 19,
@@ -1487,7 +1491,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               const SizedBox(height: 8),
               // Description
               Text(
-                'Seat $seatNumber has no chips remaining.\nRebuy amount: ${_rebuyStack.toStringAsFixed(0)}',
+                AppLocalizations.of(context).dealerTableNoChipsRemaining(seatNumber, _rebuyStack.toStringAsFixed(0)),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFFD3FFFD),
@@ -1510,7 +1514,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      'Remove Player',
+                      AppLocalizations.of(context).dealerTableRemovePlayer,
                       style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 17,
@@ -1535,7 +1539,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      'Rebuy',
+                      AppLocalizations.of(context).dealerTableRebuy,
                       style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 17,
@@ -1557,20 +1561,23 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   Future<void> _endSession() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
         backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text('End Session?', style: TextStyle(color: Colors.white)),
-        content: const Text('Are you sure you want to end this session?',
-            style: TextStyle(color: Colors.white70)),
+        title: Text(l10n.dealerTableEndSessionTitle, style: const TextStyle(color: Colors.white)),
+        content: Text(l10n.dealerTableEndSessionBody,
+            style: const TextStyle(color: Colors.white70)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.commonCancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('End'),
+            child: Text(l10n.dealerTableEnd),
           ),
         ],
-      ),
+      );
+      },
     );
 
     if (confirmed == true) {
@@ -1627,7 +1634,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Dealer Change',
+                      AppLocalizations.of(context).dealerTableDealerChange,
                       style: GoogleFonts.ibmPlexSans(
                         color: Colors.white,
                         fontSize: 19,
@@ -1640,7 +1647,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'The session will be paused and another dealer can scan the table QR code to continue where you left off.',
+                AppLocalizations.of(context).dealerTableDealerChangeBody,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFFD3FFFD),
                   fontSize: 14,
@@ -1650,7 +1657,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                'All players, blinds, and game state will be preserved.',
+                AppLocalizations.of(context).dealerTableDealerChangePreserve,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFFD3FFFD),
                   fontSize: 14,
@@ -1660,7 +1667,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                'You can also resume this session yourself later.',
+                AppLocalizations.of(context).dealerTableDealerChangeResume,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFFD3FFFD),
                   fontSize: 14,
@@ -1678,7 +1685,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         alignment: Alignment.center,
                         child: Text(
-                          'Cancel',
+                          AppLocalizations.of(context).commonCancel,
                           style: GoogleFonts.ibmPlexSans(
                             color: Colors.white,
                             fontSize: 17,
@@ -1699,7 +1706,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         borderRadius: BorderRadius.circular(60),
                       ),
                       child: Text(
-                        'Hand Off',
+                        AppLocalizations.of(context).dealerTableHandOff,
                         style: GoogleFonts.ibmPlexSans(
                           color: Colors.black,
                           fontSize: 17,
@@ -1730,15 +1737,15 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       // Navigate back to dealer home
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Session paused. Another dealer can now take over.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).dealerTableSessionPaused),
             backgroundColor: Colors.orange,
           ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
-      _showError('Failed to pause session: $e');
+      _showError(AppLocalizations.of(context).dealerTablePauseFailed(e.toString()));
     }
   }
 
@@ -1769,10 +1776,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       _sessionStarted = false;
     }
 
-    final title = status == EventStatus.cancelled ? 'Event Cancelled' : 'Event Finished';
+    final l10n = AppLocalizations.of(context);
+    final title = status == EventStatus.cancelled ? l10n.dealerTableEventCancelled : l10n.dealerTableEventFinished;
     final message = status == EventStatus.cancelled
-        ? 'The club admin has cancelled this event. All sessions have been saved.'
-        : 'The club admin has finished this event. All sessions have been saved.';
+        ? l10n.dealerTableEventCancelledBody
+        : l10n.dealerTableEventFinishedBody;
 
     if (!mounted) return;
 
@@ -1790,7 +1798,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               // Pop until first route (club home) to avoid going back to event_detail_screen
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
-            child: const Text('OK'),
+            child: Text(l10n.commonOk),
           ),
         ],
       ),
@@ -1810,12 +1818,14 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
         backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text('Session Ended', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'This session has been ended. All data has been saved.',
-          style: TextStyle(color: Colors.white70),
+        title: Text(l10n.dealerTableSessionEnded, style: const TextStyle(color: Colors.white)),
+        content: Text(
+          l10n.dealerTableSessionEndedBody,
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
@@ -1823,10 +1833,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Exit dealer screen
             },
-            child: const Text('OK'),
+            child: Text(l10n.commonOk),
           ),
         ],
-      ),
+      );
+      },
     );
   }
 
@@ -1887,7 +1898,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         alignment: Alignment.center,
-                        child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+                        child: Text(AppLocalizations.of(context).commonCancel, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ),
@@ -1900,7 +1911,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         color: const Color(0xFF89F1EC),
                         borderRadius: BorderRadius.circular(60),
                       ),
-                      child: Text('Confirm', style: GoogleFonts.ibmPlexSans(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600)),
+                      child: Text(AppLocalizations.of(context).commonConfirm, style: GoogleFonts.ibmPlexSans(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
@@ -1936,7 +1947,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Leave dealer table?',
+                AppLocalizations.of(context).dealerTableLeaveTitle,
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 19,
@@ -1946,8 +1957,8 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               const SizedBox(height: 8),
               Text(
                 _isHandActive
-                    ? 'A hand is currently in progress. Leaving now may disrupt logging.'
-                    : 'The session stays live. You can return any time.',
+                    ? AppLocalizations.of(context).dealerTableLeaveActiveHand
+                    : AppLocalizations.of(context).dealerTableLeaveInactive,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFFD3FFFD),
                   fontSize: 15,
@@ -1965,7 +1976,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         alignment: Alignment.center,
                         child: Text(
-                          'Cancel',
+                          AppLocalizations.of(context).commonCancel,
                           style: GoogleFonts.ibmPlexSans(
                             color: Colors.white,
                             fontSize: 17,
@@ -1985,7 +1996,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         borderRadius: BorderRadius.circular(60),
                       ),
                       child: Text(
-                        'Leave',
+                        AppLocalizations.of(context).liveSessionLeave,
                         style: GoogleFonts.ibmPlexSans(
                           color: Colors.black,
                           fontSize: 17,
@@ -2030,7 +2041,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   void _showAutoCorrection(String detected, String corrected) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Auto-corrected "$detected" → "$corrected"'),
+        content: Text(AppLocalizations.of(context).dealerTableAutoCorrection(detected, corrected)),
         backgroundColor: Colors.amber.shade700,
         duration: const Duration(seconds: 2),
       ),
@@ -2072,7 +2083,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Approve ${pending.playerName ?? 'Player'}?',
+                AppLocalizations.of(context).dealerTableApprovePlayer(pending.playerName ?? 'Player'),
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 20,
@@ -2089,7 +2100,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   fontSize: 17,
                 ),
                 decoration: InputDecoration(
-                  labelText: 'Starting Chip Stack',
+                  labelText: AppLocalizations.of(context).dealerTableStartingChipStack,
                   labelStyle: GoogleFonts.ibmPlexSans(
                     color: Colors.white,
                     fontSize: 13,
@@ -2124,7 +2135,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(110)),
                   ),
-                  child: Text('Approve', style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
+                  child: Text(AppLocalizations.of(context).commonConfirm, style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
                 ),
               ),
               const SizedBox(height: 14),
@@ -2140,7 +2151,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(110)),
                       ),
-                      child: Text('Cancel', style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
+                      child: Text(AppLocalizations.of(context).commonCancel, style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
                     ),
                   ),
                   const SizedBox(width: 11),
@@ -2154,9 +2165,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                             seatNumber: pending.seatNumber,
                           );
                           if (dialogContext.mounted) Navigator.pop(dialogContext);
-                          _showSuccess('${pending.playerName} rejected');
+                          _showSuccess(AppLocalizations.of(context).dealerTablePlayerRejected(pending.playerName ?? 'Player'));
                         } catch (e) {
-                          _showError('Failed to reject: ${e.toString()}');
+                          _showError(AppLocalizations.of(context).dealerTableRejectFailed(e.toString()));
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -2165,7 +2176,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(110)),
                       ),
-                      child: Text('Reject', style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
+                      child: Text(AppLocalizations.of(context).supportRequestsReject, style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
                     ),
                   ),
                 ],
@@ -2217,9 +2228,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           }
         }
 
-        _showSuccess('${pending.playerName} joined with ${_formatAmount(chipStack)}');
+        _showSuccess(AppLocalizations.of(context).dealerTablePlayerJoined(pending.playerName ?? 'Player', _formatAmount(chipStack)));
       } catch (e) {
-        _showError('Failed to approve: ${e.toString()}');
+        _showError(AppLocalizations.of(context).dealerTableApproveFailed(e.toString()));
       }
     }
   }
@@ -2232,7 +2243,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E2E),
         title: Text(
-          playerName ?? 'Seat $seatNumber',
+          playerName ?? AppLocalizations.of(context).dealerTableSeatNumber(seatNumber),
           style: const TextStyle(color: Colors.white),
         ),
         content: Column(
@@ -2240,7 +2251,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Seat $seatNumber',
+              AppLocalizations.of(context).dealerTableSeatNumber(seatNumber),
               style: const TextStyle(color: Colors.white54, fontSize: 14),
             ),
             const SizedBox(height: 16),
@@ -2249,7 +2260,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                labelText: 'Chip Stack',
+                labelText: AppLocalizations.of(context).dealerTableChipStack,
                 labelStyle: const TextStyle(color: Colors.white54),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.1),
@@ -2265,7 +2276,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.pop(context, 'remove'),
                     icon: const Icon(Icons.person_remove, color: Colors.red),
-                    label: const Text('Remove', style: TextStyle(color: Colors.red)),
+                    label: Text(AppLocalizations.of(context).dealerTableRemovePlayer, style: const TextStyle(color: Colors.red)),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.red),
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -2277,7 +2288,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.pop(context, 'save:${stackController.text}'),
                     icon: const Icon(Icons.save),
-                    label: const Text('Save'),
+                    label: Text(AppLocalizations.of(context).dealerTableSave),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -2291,7 +2302,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
         ],
       ),
@@ -2314,9 +2325,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           _gameState!.setPlayerStack(seatNumber, newStack);
           _sessionManager!.setPlayerStack(seatNumber, newStack);
           setState(() {});
-          _showSuccess('Updated ${playerName ?? 'player'} stack to ${_formatAmount(newStack)}');
+          _showSuccess(AppLocalizations.of(context).dealerTableUpdatedStackMsg(playerName ?? 'player', _formatAmount(newStack)));
         } catch (e) {
-          _showError('Failed to update stack: ${e.toString()}');
+          _showError(AppLocalizations.of(context).dealerTableFailedUpdateStackMsg(e.toString()));
         }
       }
     }
@@ -2347,7 +2358,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             children: [
               // Title
               Text(
-                'Seat $seatNumber',
+                AppLocalizations.of(context).dealerTableSeatNumber(seatNumber),
                 style: GoogleFonts.ibmPlexSans(
                   color: Colors.white,
                   fontSize: 19,
@@ -2377,7 +2388,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Add Player',
+                            AppLocalizations.of(context).dealerTableAddPlayerActionLabel,
                             style: GoogleFonts.ibmPlexSans(
                               color: Colors.white,
                               fontSize: 16,
@@ -2385,7 +2396,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                             ),
                           ),
                           Text(
-                            'Seat another player here',
+                            AppLocalizations.of(context).dealerTableSeatAnotherPlayer,
                             style: GoogleFonts.ibmPlexSans(
                               color: const Color(0xFF8C8C8C),
                               fontSize: 13,
@@ -2422,7 +2433,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Sit Here',
+                            AppLocalizations.of(context).dealerTableSitHereLabel,
                             style: GoogleFonts.ibmPlexSans(
                               color: Colors.white,
                               fontSize: 16,
@@ -2430,7 +2441,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                             ),
                           ),
                           Text(
-                            'Join the game as dealer-player',
+                            AppLocalizations.of(context).dealerTableJoinAsDealerPlayer,
                             style: GoogleFonts.ibmPlexSans(
                               color: const Color(0xFF8C8C8C),
                               fontSize: 13,
@@ -2452,7 +2463,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     alignment: Alignment.center,
                     child: Text(
-                      'Cancel',
+                      AppLocalizations.of(context).commonCancel,
                       style: GoogleFonts.ibmPlexSans(
                         color: const Color(0xFF8C8C8C),
                         fontSize: 17,
@@ -2533,9 +2544,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       }
 
       setState(() {});
-      _showSuccess('You are now playing at Seat $seatNumber');
+      _showSuccess(AppLocalizations.of(context).dealerTableSittingAtSeatMsg(seatNumber));
     } catch (e) {
-      _showError('Failed to sit at table: ${e.toString()}');
+      _showError(AppLocalizations.of(context).dealerTableFailedSitMsg(e.toString()));
     }
   }
 
@@ -2548,7 +2559,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: PokerFriendColors.dark3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Enter Starting Stack', style: TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context).dealerTableEnterStartingStack, style: const TextStyle(color: Colors.white)),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -2573,7 +2584,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: Text(AppLocalizations.of(context).commonCancel, style: const TextStyle(color: Colors.white54)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -2586,7 +2597,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               backgroundColor: PokerFriendColors.green,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('OK', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context).commonOk, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -2670,9 +2681,9 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         _sessionManager!.setPlayerStack(seatNumber, stack);
 
         setState(() {});
-        _showSuccess('$playerName added to Seat $seatNumber');
+        _showSuccess(AppLocalizations.of(context).dealerTablePlayerAdded(playerName, seatNumber));
       } catch (e) {
-        _showError('Failed to add player: ${e.toString()}');
+        _showError(AppLocalizations.of(context).dealerTableFailedAddPlayerMsg(e.toString()));
       }
     }
   }
@@ -2722,15 +2733,15 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       }
 
       setState(() {});
-      _showSuccess('${playerName ?? 'Player'} removed from Seat $seatNumber');
+      _showSuccess(AppLocalizations.of(context).dealerTableRemovedFromSeat(playerName ?? 'Player', seatNumber));
     } catch (e) {
-      _showError('Failed to remove player: ${e.toString()}');
+      _showError(AppLocalizations.of(context).dealerTableFailedRemoveMsg(e.toString()));
     }
   }
 
   void _showPendingJoinsDialog() {
     if (_pendingJoins.isEmpty) {
-      _showSuccess('No pending join requests');
+      _showSuccess(AppLocalizations.of(context).dealerTableNoPendingRequests);
       return;
     }
 
@@ -2738,7 +2749,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E2E),
-        title: const Text('Pending Join Requests', style: TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context).dealerTablePendingJoinRequests, style: const TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: _pendingJoins.map((pending) {
@@ -2763,7 +2774,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   Navigator.pop(context);
                   _showApproveJoinDialog(pending);
                 },
-                child: const Text('Review'),
+                child: Text(AppLocalizations.of(context).dealerTableReview),
               ),
             );
           }).toList(),
@@ -2771,7 +2782,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(AppLocalizations.of(context).commonClose),
           ),
         ],
       ),
@@ -2968,7 +2979,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'BLINDS',
+                          AppLocalizations.of(context).dealerTableBlindsLabel,
                           style: GoogleFonts.ibmPlexSans(
                             color: const Color(0xFF4B9A96),
                             fontSize: 13,
@@ -3081,7 +3092,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Update Blinds',
+                AppLocalizations.of(context).individualUpdateBlinds,
                 style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
@@ -3097,7 +3108,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       ),
                       child: Column(
                         children: [
-                          Text('Small Blind', style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
+                          Text(AppLocalizations.of(context).dealerTableSmallBlind, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
                           const SizedBox(height: 8),
                           TextField(
                             controller: smallBlindController,
@@ -3128,7 +3139,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       ),
                       child: Column(
                         children: [
-                          Text('Big Blind', style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
+                          Text(AppLocalizations.of(context).dealerTableBigBlind, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
                           const SizedBox(height: 8),
                           TextField(
                             controller: bigBlindController,
@@ -3152,7 +3163,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'New blinds will apply from the next hand.',
+                AppLocalizations.of(context).dealerTableNewBlindsNote,
                 style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 12, fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 24),
@@ -3164,7 +3175,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         alignment: Alignment.center,
-                        child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+                        child: Text(AppLocalizations.of(context).commonCancel, style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ),
@@ -3176,13 +3187,13 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
 
                       if (newSmallBlind >= newBigBlind) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Small blind must be less than big blind'), backgroundColor: Colors.red),
+                          SnackBar(content: Text(AppLocalizations.of(context).dealerTableSmallMustBeLess), backgroundColor: Colors.red),
                         );
                         return;
                       }
                       if (newSmallBlind <= 0 || newBigBlind <= 0) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Blinds must be greater than 0'), backgroundColor: Colors.red),
+                          SnackBar(content: Text(AppLocalizations.of(context).dealerTableBlindsMustBePositive), backgroundColor: Colors.red),
                         );
                         return;
                       }
@@ -3194,7 +3205,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                         color: const Color(0xFF89F1EC),
                         borderRadius: BorderRadius.circular(60),
                       ),
-                      child: Text('Update', style: GoogleFonts.ibmPlexSans(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600)),
+                      child: Text(AppLocalizations.of(context).commonUpdate, style: GoogleFonts.ibmPlexSans(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
@@ -3237,7 +3248,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Blinds updated to $newSmallBlind/$newBigBlind'),
+              content: Text(AppLocalizations.of(context).dealerTableBlindsUpdated('$newSmallBlind', '$newBigBlind')),
               backgroundColor: Colors.green,
             ),
           );
@@ -3260,7 +3271,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to update blinds: $e'),
+              content: Text(AppLocalizations.of(context).dealerTableFailedUpdateBlinds('$e')),
               backgroundColor: Colors.red,
             ),
           );
@@ -3295,7 +3306,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Text(
-                    'ANTE ${_formatAmount(_bigBlind)}',
+                    AppLocalizations.of(context).dealerTableAnteLabel(_formatAmount(_bigBlind)),
                     style: GoogleFonts.ibmPlexSans(
                       color: Colors.white,
                       fontSize: 10,
@@ -3316,7 +3327,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 ),
               ),
               Text(
-                'POT',
+                AppLocalizations.of(context).dealerTablePotLabel,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFF5EB7B3),
                   fontSize: 18,
@@ -3459,7 +3470,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to move button: $e'),
+            content: Text(AppLocalizations.of(context).dealerTableFailedMoveButton('$e')),
             backgroundColor: Colors.red,
           ),
         );
@@ -3543,7 +3554,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            'PENDING',
+            AppLocalizations.of(context).dealerTablePending,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.orange,
               fontSize: 10,
@@ -3603,7 +3614,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               borderRadius: BorderRadius.circular(30),
             ),
             child: Text(
-              'CHECK',
+              AppLocalizations.of(context).dealerTableCheckLabel,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 9,
@@ -3641,7 +3652,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       displayName,
                       style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500, height: 1.44),
                     ),
-                    Text('PENDING', style: GoogleFonts.ibmPlexSans(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.w600, height: 1.44)),
+                    Text(AppLocalizations.of(context).dealerTablePending, style: GoogleFonts.ibmPlexSans(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.w600, height: 1.44)),
                   ] else if (isOccupied) ...[
                     Text(
                       displayName,
@@ -3670,7 +3681,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
                       decoration: BoxDecoration(color: const Color(0xFF3BA55D), borderRadius: BorderRadius.circular(30)),
                       child: Text(
-                        'CHECK',
+                        AppLocalizations.of(context).dealerTableCheckLabel,
                         style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600, height: 1.44),
                         textAlign: TextAlign.center,
                       ),
@@ -3884,7 +3895,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '$playerName to act (${_formatAmount(playerStack)})',
+                AppLocalizations.of(context).dealerTablePlayerToAct(playerName, _formatAmount(playerStack)),
                 style: GoogleFonts.ibmPlexSans(color: const Color(0xFF89F1EC), fontSize: 14, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
@@ -3905,14 +3916,14 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 const SizedBox(width: 8),
                 if (canBet)
                   _buildActionButton('BET', const Color(0xFF1B4341), const Color(0xFF89F1EC), () async {
-                    final amount = await _showAmountDialog('Bet amount');
+                    final amount = await _showAmountDialog(AppLocalizations.of(context).dealerTableBetAmountDialog);
                     if (amount != null && amount > 0) {
                       await _performAction(PlayerAction.bet, amount: amount);
                     }
                   })
                 else if (canRaise)
                   _buildActionButton('RAISE', const Color(0xFF1B4341), const Color(0xFF89F1EC), () async {
-                    final amount = await _showAmountDialog('Raise to');
+                    final amount = await _showAmountDialog(AppLocalizations.of(context).dealerTableRaiseToDialog);
                     if (amount != null && amount > 0) {
                       await _performAction(PlayerAction.raise, amount: amount);
                     }
@@ -3963,7 +3974,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 Row(
                   children: [
                     Text(
-                      isPaused ? 'Paused' : 'Listening',
+                      isPaused ? AppLocalizations.of(context).dealerTablePausedLabel : AppLocalizations.of(context).dealerTableListeningLabel,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -4006,7 +4017,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               _voiceCubit?.toggleHold();
               setState(() {});
             },
-            tooltip: isPaused ? 'Resume Voice' : 'Pause Voice',
+            tooltip: isPaused ? AppLocalizations.of(context).dealerTableResumeVoiceTooltip : AppLocalizations.of(context).dealerTablePauseVoiceTooltip,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
@@ -4083,7 +4094,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Voice off',
+                AppLocalizations.of(context).dealerTableVoiceOffLabel,
                 style: const TextStyle(
                   color: Colors.white54,
                   fontWeight: FontWeight.bold,
@@ -4122,19 +4133,19 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
-                      'Calibrating...',
-                      style: TextStyle(
+                      AppLocalizations.of(context).dealerTableCalibratingLabel,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
-                      'Please announce: "Table [number], dealer [name]"',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                      AppLocalizations.of(context).dealerTableCalibrationPrompt,
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ],
                 ),
@@ -4143,7 +4154,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white70),
                 onPressed: _stopContinuousListening,
-                tooltip: 'Cancel',
+                tooltip: AppLocalizations.of(context).commonCancel,
               ),
             ],
           ),
@@ -4190,19 +4201,19 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  'Connection Lost',
-                  style: TextStyle(
+                  AppLocalizations.of(context).dealerTableConnectionLost,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'Attempting to reconnect...',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                  AppLocalizations.of(context).dealerTableReconnecting,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -4214,7 +4225,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               backgroundColor: Colors.white,
               foregroundColor: Colors.red.shade800,
             ),
-            child: const Text('Reconnect'),
+            child: Text(AppLocalizations.of(context).dealerTableReconnect),
           ),
         ],
       ),
@@ -4256,21 +4267,21 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   _lockedDealerName = parts[1];
                   _lockedTableName = parts[2];
                 });
-                _showSuccess('Dealer locked: ${parts[1]} at table ${parts[2]}');
+                _showSuccess(AppLocalizations.of(context).dealerTableDealerLockedMsg(parts[1], parts[2]));
               }
             } else if (status == 'calibration_failed:no_speakers') {
-              _showError('No speakers detected - please speak clearly');
+              _showError(AppLocalizations.of(context).dealerTableNoSpeakersMsg);
             } else if (status == 'calibration_failed:content_mismatch') {
-              _showError('Please say: "Table [number], dealer [name]"');
+              _showError(AppLocalizations.of(context).dealerTableSayTableDealerMsg);
             } else if (status == 'connection_lost') {
-              _showError('Connection lost - attempting to recover...');
+              _showError(AppLocalizations.of(context).dealerTableConnectionLostRecovery);
             } else if (status == 'grace_period_expired') {
-              _showError('Connection timeout - recalibration required');
+              _showError(AppLocalizations.of(context).dealerTableConnectionTimeout);
             } else if (status == 'connection_recovered') {
-              _showSuccess('Connection recovered!');
+              _showSuccess(AppLocalizations.of(context).dealerTableConnectionRecovered);
             } else if (status.startsWith('action_held:')) {
               final transcript = status.substring('action_held:'.length);
-              _showAutoCorrection('Action held', transcript);
+              _showAutoCorrection(AppLocalizations.of(context).dealerTableActionHeldMsg, transcript);
             }
           }
         },
@@ -4288,10 +4299,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       }
 
       if (_voiceCubit?.state.status == VoiceStatus.error) {
-        _showError('Failed to start streaming - check server connection and microphone');
+        _showError(AppLocalizations.of(context).dealerTableFailedStartStreaming);
       }
     } catch (e) {
-      _showError('Failed to start voice: $e');
+      _showError(AppLocalizations.of(context).dealerTableFailedStartVoice('$e'));
       if (mounted) {
         setState(() {
           _isVoiceMode = false;
@@ -4350,7 +4361,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     final occupiedSeats = _gameState!.getActivePlayers().length;
     final canStart = occupiedSeats >= 2 && !_isLoading;
     final hasDealtHand = _gameState!.handNumber > 1;
-    final buttonLabel = hasDealtHand ? 'Start New Hand' : 'Start Session';
+    final buttonLabel = hasDealtHand ? AppLocalizations.of(context).dealerTableStartNewHand : AppLocalizations.of(context).dealerTableStartSessionBtn;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -4417,7 +4428,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   const Icon(Icons.add, color: Color(0xFFD3FFFD), size: 24),
                   const SizedBox(width: 8),
                   Text(
-                    'Add Test Players',
+                    AppLocalizations.of(context).dealerTableAddTestPlayers,
                     style: GoogleFonts.ibmPlexSans(
                       color: const Color(0xFFD3FFFD),
                       fontSize: 17,
@@ -4433,7 +4444,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
           if (occupiedSeats < 2) ...[
             const SizedBox(height: 8),
             Text(
-              'Need at least 2 players to start',
+              AppLocalizations.of(context).dealerTableNeedTwoPlayers,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFFBD8F2D),
                 fontSize: 14,
@@ -4498,7 +4509,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     }
 
     setState(() {});
-    _showSuccess('Added ${9 - _seatAssignments.length} test players');
+    _showSuccess(AppLocalizations.of(context).dealerTableAddedTestPlayers(9 - _seatAssignments.length));
   }
 
   // ============== UNDO/ROLLBACK FUNCTIONALITY ==============
@@ -4554,7 +4565,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
         setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Rolled back to ${_gameState!.currentRound.name}'),
+            content: Text(AppLocalizations.of(context).dealerTableRolledBack(_gameState!.currentRound.name)),
             duration: const Duration(seconds: 2),
             backgroundColor: Colors.orange,
           ),
@@ -4658,7 +4669,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     final playerName = _sessionManager!.getPlayerName(seatNumber);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Undone: $playerName ${lastAction.action.name}'),
+        content: Text(AppLocalizations.of(context).dealerTableUndoneAction(playerName ?? '', lastAction.action.name)),
         duration: const Duration(seconds: 2),
         backgroundColor: Colors.orange,
       ),
@@ -4934,18 +4945,18 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text(
-          'Reset Hand?',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.of(context).dealerTableResetHandTitle,
+          style: const TextStyle(color: Colors.white),
         ),
-        content: const Text(
-          'All actions have been undone. Would you like to start a new hand?',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          AppLocalizations.of(context).dealerTableResetHandBody,
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Keep Current'),
+            child: Text(AppLocalizations.of(context).dealerTableKeepCurrent),
           ),
           ElevatedButton(
             onPressed: () {
@@ -4953,7 +4964,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
               _abortAndRestartHand();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            child: const Text('New Hand'),
+            child: Text(AppLocalizations.of(context).dealerTableNewHand),
           ),
         ],
       ),
@@ -4988,7 +4999,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
     // Update cubit with hand-ended state
     _voiceCubit?.updateGameState(_gameState, _isHandActive);
 
-    _showSuccess('Hand reset - ready for new hand');
+    _showSuccess(AppLocalizations.of(context).dealerTableHandReset);
   }
 }
 
@@ -5094,7 +5105,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
             if (!isOccupied) ...[
               const SizedBox(height: 4),
               Text(
-                'Scan to join this seat',
+                AppLocalizations.of(context).dealerTableScanToJoin,
                 style: GoogleFonts.ibmPlexSans(
                   color: const Color(0xFFD3FFFD),
                   fontSize: 13,
@@ -5139,7 +5150,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: 'Occupied · ',
+                                  text: AppLocalizations.of(context).dealerTableOccupiedDot,
                                   style: GoogleFonts.ibmPlexSans(
                                     color: const Color(0xFF8C8C8C),
                                     fontSize: 14,
@@ -5164,7 +5175,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
             const SizedBox(height: 20),
             // Seat selector
             Text(
-              'SELECT SEAT',
+              AppLocalizations.of(context).dealerTableSelectSeatLabel,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF8C8C8C),
                 fontSize: 11,
@@ -5248,7 +5259,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Empty',
+                  AppLocalizations.of(context).dealerTableEmptyLabel,
                   style: GoogleFonts.ibmPlexSans(
                     color: const Color(0xFF8C8C8C),
                     fontSize: 12,
@@ -5261,7 +5272,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Occupied',
+                  AppLocalizations.of(context).dealerTableOccupiedLabel,
                   style: GoogleFonts.ibmPlexSans(
                     color: const Color(0xFF8C8C8C),
                     fontSize: 12,
@@ -5274,7 +5285,7 @@ class _QRCodesDialogState extends State<_QRCodesDialog> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Selected',
+                  AppLocalizations.of(context).dealerTableSelectedLabel,
                   style: GoogleFonts.ibmPlexSans(
                     color: const Color(0xFF8C8C8C),
                     fontSize: 12,
@@ -5381,7 +5392,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
     return AlertDialog(
       backgroundColor: const Color(0xFF1E1E2E),
       title: Text(
-        'Add Player to Seat ${widget.seatNumber}',
+        AppLocalizations.of(context).dealerTableAddPlayerToSeat(widget.seatNumber),
         style: const TextStyle(color: Colors.white),
       ),
       content: SizedBox(
@@ -5407,7 +5418,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                         ),
                       ),
                       child: Text(
-                        'Search User',
+                        AppLocalizations.of(context).dealerTableSearchUser,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: !_useManualEntry ? Colors.amber : Colors.white54,
@@ -5434,7 +5445,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                         ),
                       ),
                       child: Text(
-                        'Manual Entry',
+                        AppLocalizations.of(context).dealerTableManualEntry,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: _useManualEntry ? Colors.amber : Colors.white54,
@@ -5457,12 +5468,12 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                 enabled: _selectedUser == null,
                 onChanged: _selectedUser == null ? _onSearchChanged : null,
                 decoration: InputDecoration(
-                  labelText: 'Search by Name',
+                  labelText: AppLocalizations.of(context).dealerTableSearchByName,
                   labelStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.1),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  hintText: 'Type to search users...',
+                  hintText: AppLocalizations.of(context).dealerTableTypeToSearch,
                   hintStyle: const TextStyle(color: Colors.white30),
                   prefixIcon: const Icon(Icons.search, color: Colors.white54),
                   suffixIcon: _selectedUser != null
@@ -5564,10 +5575,10 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                     color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      'No users found. Try manual entry.',
-                      style: TextStyle(color: Colors.white54),
+                      AppLocalizations.of(context).dealerTableNoUsersFound,
+                      style: const TextStyle(color: Colors.white54),
                     ),
                   ),
                 ),
@@ -5579,12 +5590,12 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                 style: const TextStyle(color: Colors.white),
                 autofocus: true,
                 decoration: InputDecoration(
-                  labelText: 'Player Name',
+                  labelText: AppLocalizations.of(context).dealerTablePlayerNameLabel,
                   labelStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.1),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  hintText: 'Enter player name',
+                  hintText: AppLocalizations.of(context).dealerTableEnterPlayerName,
                   hintStyle: const TextStyle(color: Colors.white30),
                 ),
               ),
@@ -5598,7 +5609,7 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                labelText: 'Starting Chip Stack',
+                labelText: AppLocalizations.of(context).dealerTableStartingChipStack,
                 labelStyle: const TextStyle(color: Colors.white54),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.1),
@@ -5613,11 +5624,11 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context).commonCancel),
         ),
         ElevatedButton(
           onPressed: _canSubmit() ? _submit : null,
-          child: const Text('Add Player'),
+          child: Text(AppLocalizations.of(context).dealerTableAddPlayer),
         ),
       ],
     );

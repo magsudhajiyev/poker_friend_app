@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/qr_service.dart';
 import 'qr_join_screen.dart';
 
@@ -52,7 +53,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
       final qrData = QRService.parseAndValidate(code);
 
       if (qrData == null) {
-        _showError('Invalid QR code. Please scan a valid poker table QR code.');
+        _showError(AppLocalizations.of(context).qrScanInvalidCode);
         return;
       }
 
@@ -66,7 +67,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
         );
       }
     } catch (e) {
-      _showError('Error processing QR code: ${e.toString()}');
+      _showError(AppLocalizations.of(context).qrScanError(e.toString()));
     } finally {
       if (mounted) {
         setState(() {
@@ -97,7 +98,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Scan Table QR'),
+        title: Text(AppLocalizations.of(context).qrScanTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -144,8 +145,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    'Point your camera at the QR code on the table to join',
+                  child: Text(
+                    AppLocalizations.of(context).qrScanInstructions,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,

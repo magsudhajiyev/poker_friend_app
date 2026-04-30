@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../services/invitation_service.dart';
+import '../l10n/app_localizations.dart';
 
 /// Screen for redeeming an invitation code to join a club
 class RedeemInvitationScreen extends StatefulWidget {
@@ -78,6 +79,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: PokerFriendColors.dark1,
       appBar: AppBar(
@@ -87,9 +89,9 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Redeem Invitation',
-          style: TextStyle(
+        title: Text(
+          l10n.redeemInvitationTitle,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -104,6 +106,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
   }
 
   Widget _buildInputState() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -124,9 +127,9 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
             color: PokerFriendColors.purple,
           ),
         ),
-        const Text(
-          'Enter Invitation Code',
-          style: TextStyle(
+        Text(
+          l10n.redeemEnterCode,
+          style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -135,7 +138,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Enter the 8-character code you received from a club admin to join their club.',
+          l10n.redeemCodeDescription,
           style: TextStyle(
             fontSize: 14,
             color: PokerFriendColors.dark9,
@@ -206,9 +209,9 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                       color: Colors.white,
                     ),
                   )
-                : const Text(
-                    'Join Club',
-                    style: TextStyle(
+                : Text(
+                    l10n.redeemJoinClub,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -220,6 +223,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
   }
 
   Widget _buildSuccessState() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -237,9 +241,9 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
           ),
         ),
         const SizedBox(height: 32),
-        const Text(
-          'Welcome!',
-          style: TextStyle(
+        Text(
+          l10n.redeemWelcome,
+          style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -247,7 +251,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'You have joined $_clubName as $_role',
+          l10n.redeemJoinedAs(clubName: _clubName ?? '', role: _role ?? ''),
           style: TextStyle(
             fontSize: 16,
             color: PokerFriendColors.dark9,
@@ -269,9 +273,9 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text(
-              'Continue',
-              style: TextStyle(
+            child: Text(
+              l10n.redeemContinue,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),

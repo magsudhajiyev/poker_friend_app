@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import 'individual_session_tracking_screen.dart';
 import 'logging_mode_selection_screen.dart';
@@ -162,7 +163,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                       ),
                       // Title
                       Text(
-                        'Session Setup',
+                        AppLocalizations.of(context).individualSetupSessionSetup,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           color: Colors.white,
@@ -216,7 +217,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Session Name',
+                                  AppLocalizations.of(context).individualSetupSessionNameLabel,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 17,
                                     color: Color(0xFF62E3BC),
@@ -235,7 +236,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                     height: 1.44,
                                   ),
                                   decoration: InputDecoration(
-                                    hintText: 'e.g., "Friday Night Poker"',
+                                    hintText: AppLocalizations.of(context).individualSetupSessionNameHint,
                                     hintStyle: GoogleFonts.ibmPlexSans(
                                       color: Colors.white.withOpacity(0.4),
                                       fontSize: 17,
@@ -287,7 +288,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Game Type',
+                                  AppLocalizations.of(context).individualSetupGameTypeLabel,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 17,
                                     color: Color(0xFF62E3BC),
@@ -301,7 +302,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                   children: [
                                     Expanded(
                                       child: _buildGameTypeToggle(
-                                        title: 'Cash Game',
+                                        title: AppLocalizations.of(context).individualSetupCashGame,
                                         isSelected: gameType == GameType.cash,
                                         onTap: () => setState(() {
                                           gameType = GameType.cash;
@@ -312,7 +313,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                     SizedBox(width: 12),
                                     Expanded(
                                       child: _buildGameTypeToggle(
-                                        title: 'Tournament',
+                                        title: AppLocalizations.of(context).individualSetupTournament,
                                         isSelected: gameType == GameType.tournament,
                                         onTap: () => setState(() {
                                           gameType = GameType.tournament;
@@ -340,7 +341,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Buy-in Amount',
+                                  AppLocalizations.of(context).individualSetupBuyInAmountLabel,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 17,
                                     color: Color(0xFF62E3BC),
@@ -360,7 +361,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                     height: 1.44,
                                   ),
                                   decoration: InputDecoration(
-                                    hintText: 'Enter amount',
+                                    hintText: AppLocalizations.of(context).individualSetupEnterAmount,
                                     hintStyle: GoogleFonts.ibmPlexSans(
                                       color: Colors.white.withOpacity(0.4),
                                       fontSize: 17,
@@ -418,7 +419,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                       SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
-                                          'In cash games your starting stack equals your buy-in amount.',
+                                          AppLocalizations.of(context).individualSetupCashGameNote,
                                           style: GoogleFonts.ibmPlexSans(
                                             color: Colors.white.withOpacity(0.6),
                                             fontSize: 14,
@@ -453,7 +454,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Starting Stack',
+                                      AppLocalizations.of(context).individualSetupStartingStackLabel,
                                       style: GoogleFonts.ibmPlexSans(
                                         fontSize: 17,
                                         color: Color(0xFF62E3BC),
@@ -473,7 +474,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                         height: 1.44,
                                       ),
                                       decoration: InputDecoration(
-                                        hintText: 'Enter chip stack',
+                                        hintText: AppLocalizations.of(context).individualSetupEnterChipStack,
                                         hintStyle: GoogleFonts.ibmPlexSans(
                                           color: Colors.white.withOpacity(0.4),
                                           fontSize: 17,
@@ -510,7 +511,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                     if (hasStackError) ...[
                                       SizedBox(height: 8),
                                       Text(
-                                        'Starting stack must be at least equal to the Big Blind ($bigBlind)',
+                                        AppLocalizations.of(context).individualSetupStackValidation(bigBlind),
                                         style: GoogleFonts.ibmPlexSans(
                                           fontSize: 12,
                                           color: errorBorderColor,
@@ -530,9 +531,9 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                             children: [
                               Expanded(
                                 child: _buildBlindCard(
-                                  title: 'Small Blind',
+                                  title: AppLocalizations.of(context).individualSetupSmallBlind,
                                   value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
-                                  onTap: () => _showBlindInputDialog('Small Blind', smallBlind, (value) {
+                                  onTap: () => _showBlindInputDialog(AppLocalizations.of(context).individualSetupSmallBlind, smallBlind, (value) {
                                     setState(() {
                                       smallBlind = value;
                                       _smallBlindController.text = smallBlind.toString();
@@ -543,9 +544,9 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               SizedBox(width: 12),
                               Expanded(
                                 child: _buildBlindCard(
-                                  title: 'Big Blind',
+                                  title: AppLocalizations.of(context).individualSetupBigBlind,
                                   value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
-                                  onTap: () => _showBlindInputDialog('Big Blind', bigBlind, (value) {
+                                  onTap: () => _showBlindInputDialog(AppLocalizations.of(context).individualSetupBigBlind, bigBlind, (value) {
                                     setState(() {
                                       bigBlind = value;
                                       _bigBlindController.text = bigBlind.toString();
@@ -570,7 +571,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'BB Ante',
+                                    AppLocalizations.of(context).setupBbAnte,
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 17,
                                       color: Colors.white,
@@ -632,7 +633,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               padding: EdgeInsets.symmetric(vertical: 16),
                               child: Center(
                                 child: Text(
-                                  'Start Session',
+                                  AppLocalizations.of(context).individualSetupStartSessionBtn,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 17,
                                     color: isFormValid ? Colors.black : Colors.white.withOpacity(0.4),
@@ -773,7 +774,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
               fontWeight: FontWeight.w400,
             ),
             decoration: InputDecoration(
-              hintText: 'Enter value',
+              hintText: AppLocalizations.of(context).individualSetupEnterValue,
               hintStyle: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withOpacity(0.4),
                 fontSize: 17,

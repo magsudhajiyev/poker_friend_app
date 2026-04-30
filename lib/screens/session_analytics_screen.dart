@@ -15,6 +15,7 @@ import '../services/subscription_service.dart';
 import '../services/app_data_cache.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'paywall_screen.dart';
+import '../l10n/app_localizations.dart';
 
 
 class SessionAnalyticsScreen extends StatefulWidget {
@@ -59,14 +60,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         backgroundColor: const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Delete Session?',
+          AppLocalizations.of(ctx).sessionAnalyticsDeleteTitle,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
-          'This will permanently delete this session including all hand history, stack chart data, and AI analysis reports. This action cannot be undone.',
+          AppLocalizations.of(ctx).sessionAnalyticsDeleteMessage,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white.withValues(alpha: 0.8),
           ),
@@ -75,14 +76,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(ctx).commonCancel,
               style: GoogleFonts.ibmPlexSans(color: Colors.white54),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Delete',
+              AppLocalizations.of(ctx).commonDelete,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFFFF6B6B),
                 fontWeight: FontWeight.w600,
@@ -110,7 +111,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Session deleted',
+              AppLocalizations.of(context).sessionAnalyticsDeleted,
               style: GoogleFonts.ibmPlexSans(color: Colors.white),
             ),
             backgroundColor: const Color(0xFF1A1A2E),
@@ -123,7 +124,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Failed to delete session',
+              AppLocalizations.of(context).sessionAnalyticsFailedToDelete,
               style: GoogleFonts.ibmPlexSans(color: Colors.white),
             ),
             backgroundColor: const Color(0xFFFF6B6B),
@@ -149,8 +150,8 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     if (email == null || email.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No email address found. Please sign in with an email account.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).sessionAnalyticsNoEmailFound),
             backgroundColor: Colors.red,
           ),
         );
@@ -166,14 +167,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         backgroundColor: const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Export Session',
+          AppLocalizations.of(ctx).sessionAnalyticsExportSession,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
-          'Export ${_hands.length} hands to $email?',
+          AppLocalizations.of(ctx).sessionAnalyticsExportConfirm(_hands.length, email),
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white.withValues(alpha: 0.8),
           ),
@@ -182,14 +183,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
-              'Cancel',
+              AppLocalizations.of(ctx).commonCancel,
               style: GoogleFonts.ibmPlexSans(color: Colors.white54),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Export',
+              AppLocalizations.of(ctx).sessionAnalyticsExport,
               style: GoogleFonts.ibmPlexSans(
                 color: const Color(0xFF89F1EC),
                 fontWeight: FontWeight.w600,
@@ -215,7 +216,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Export sent to $email'),
+            content: Text(AppLocalizations.of(context).sessionAnalyticsExportSent(email)),
             backgroundColor: Colors.green,
           ),
         );
@@ -224,7 +225,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Export failed: $e'),
+            content: Text(AppLocalizations.of(context).sessionAnalyticsExportFailed(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -371,14 +372,15 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           return '${minutes}m';
         }
       } catch (e) {
-        return 'N/A';
+        return AppLocalizations.of(context).commonNotAvailable;
       }
     }
-    return 'N/A';
+    return AppLocalizations.of(context).commonNotAvailable;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -440,7 +442,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Session Analytics',
+                              l10n.sessionAnalyticsTitle,
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 24,
                                 color: Colors.white,
@@ -451,7 +453,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${_hands.length} hands logged',
+                              l10n.sessionAnalyticsHandsLogged(_hands.length),
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 15,
                                 color: Colors.white.withOpacity(0.6),
@@ -546,6 +548,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   }
 
   Widget _buildSessionOverview() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF131616),
@@ -557,7 +560,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         children: [
           // Session name
           Text(
-            widget.sessionData['sessionName'] ?? 'Poker Session',
+            widget.sessionData['sessionName'] ?? l10n.sessionAnalyticsPokerSession,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -569,9 +572,9 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           // Metrics grid
           Row(
             children: [
-              Expanded(child: _buildMetricTile('Total Invested', _formatTotalInvested(_totalInvested))),
+              Expanded(child: _buildMetricTile(l10n.sessionAnalyticsTotalInvested, _formatTotalInvested(_totalInvested))),
               const SizedBox(width: 10),
-              Expanded(child: _buildMetricTile('Final Stack', _formatCurrency(_finalStack))),
+              Expanded(child: _buildMetricTile(l10n.sessionAnalyticsFinalStack, _formatCurrency(_finalStack))),
             ],
           ),
           const SizedBox(height: 10),
@@ -579,7 +582,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             children: [
               Expanded(
                 child: _buildMetricTile(
-                  _isCashGame() ? 'Profit/Loss' : 'Avg Growth',
+                  _isCashGame() ? l10n.sessionAnalyticsProfitLoss : l10n.sessionAnalyticsAvgGrowth,
                   _isCashGame()
                       ? '${_profitLoss >= 0 ? '+' : ''}${_formatCurrency(_profitLoss)}'
                       : '${_profitLoss >= 0 ? '+' : ''}${_profitLoss.toStringAsFixed(2)}',
@@ -587,7 +590,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(child: _buildMetricTile('Duration', _formatDuration())),
+              Expanded(child: _buildMetricTile(l10n.sessionAnalyticsDuration, _formatDuration())),
             ],
           ),
           const SizedBox(height: 16),
@@ -602,7 +605,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Rebuys',
+                  l10n.sessionAnalyticsRebuys,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
@@ -660,6 +663,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   }
 
   Widget _buildStackChart() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF131616),
@@ -673,7 +677,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Stack Chart',
+                  l10n.sessionAnalyticsStackChart,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
@@ -722,6 +726,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   }
 
   Widget _buildLineChart() {
+    final l10n = AppLocalizations.of(context);
     List<FlSpot> spots = [];
 
     if (_stackHistory.isNotEmpty) {
@@ -803,13 +808,13 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                     String label;
                     switch (changeType) {
                       case 'initial':
-                        label = 'Start';
+                        label = l10n.sessionAnalyticsStart;
                         break;
                       case 'rebuy':
-                        label = 'Rebuy';
+                        label = l10n.sessionAnalyticsRebuy;
                         break;
                       case 'final':
-                        label = 'End';
+                        label = l10n.sessionAnalyticsEnd;
                         break;
                       default:
                         label = '#${entry['handNumber'] ?? idx}';
@@ -979,6 +984,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
   }
 
   Widget _buildNoDataChart() {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -990,7 +996,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'No Stack History Available',
+            l10n.sessionAnalyticsNoStackHistory,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white.withOpacity(0.4),
               fontSize: 15,
@@ -999,7 +1005,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Stack changes will be tracked in future sessions',
+            l10n.sessionAnalyticsStackTrackedFuture,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white.withOpacity(0.25),
               fontSize: 13,
@@ -1022,7 +1028,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         ),
         child: Center(
           child: Text(
-            'View Logged Hands',
+            AppLocalizations.of(context).sessionAnalyticsViewLoggedHands,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -1042,7 +1048,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         builder: (context) => SessionHandsScreen(
           session: {
             'id': widget.sessionId,
-            'sessionName': widget.sessionData['sessionName'] ?? 'Poker Session',
+            'sessionName': widget.sessionData['sessionName'] ?? AppLocalizations.of(context).sessionAnalyticsPokerSession,
             ...widget.sessionData,
           },
         ),
