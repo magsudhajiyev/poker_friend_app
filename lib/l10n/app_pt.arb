@@ -4508,5 +4508,27 @@
   "supportSubjectLabel": "ASSUNTO",
   "supportSubmitButton": "Enviar",
   "supportSubmitted": "Solicitação de suporte enviada com sucesso",
-  "supportTitle": "Ajuda e Suporte"
+  "supportTitle": "Ajuda e Suporte",
+  "bankrollSheetTitle": "Adicionar resultado",
+  "bankrollSheetEditSection": "Editar bankroll",
+  "bankrollSheetGoalLabel": "Meta de bankroll",
+  "bankrollSheetCurrentLabel": "Bankroll atual",
+  "bankrollSheetGoalUpdated": "Meta atualizada",
+  "bankrollSheetBankrollUpdated": "Bankroll atualizado",
+  "sessionEndResultTitle": "Resultado da sessão",
+  "sessionEndTournamentTitle": "Resultado do torneio",
+  "sessionEndProfit": "Lucro",
+  "sessionEndLoss": "Prejuízo",
+  "sessionEndApply": "Aplicar",
+  "sessionEndSkip": "Pular",
+  "sessionEndFinishingPosition": "Posição final",
+  "sessionEndFieldSize": "Total de participantes",
+  "sessionEndPrizeWon": "Prêmio ganho",
+  "sessionEndTotalInvested": "Total investido",
+  "sessionEndCalculatedProfit": "Lucro calculado: {amount}",
+  "@sessionEndCalculatedProfit": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  }
 }

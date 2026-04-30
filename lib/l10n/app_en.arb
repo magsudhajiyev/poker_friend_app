@@ -4028,5 +4028,28 @@
   "homeEventTypeTournament": "Tournament",
   "homeEventTypeCashGame": "Cash Game",
   "homeEventTypeHomeGame": "Home Game",
-  "homeEventTypeOnline": "Online"
+  "homeEventTypeOnline": "Online",
+
+  "bankrollSheetTitle": "Add Result",
+  "bankrollSheetEditSection": "Edit Bankroll",
+  "bankrollSheetGoalLabel": "Bankroll Goal",
+  "bankrollSheetCurrentLabel": "Current Bankroll",
+  "bankrollSheetGoalUpdated": "Goal updated",
+  "bankrollSheetBankrollUpdated": "Bankroll updated",
+  "sessionEndResultTitle": "Session Result",
+  "sessionEndTournamentTitle": "Tournament Result",
+  "sessionEndProfit": "Profit",
+  "sessionEndLoss": "Loss",
+  "sessionEndApply": "Apply",
+  "sessionEndSkip": "Skip",
+  "sessionEndFinishingPosition": "Finishing Position",
+  "sessionEndFieldSize": "Total Entries",
+  "sessionEndPrizeWon": "Prize Won",
+  "sessionEndTotalInvested": "Total Invested",
+  "sessionEndCalculatedProfit": "Calculated Profit: {amount}",
+  "@sessionEndCalculatedProfit": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  }
 }

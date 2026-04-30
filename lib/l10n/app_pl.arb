@@ -4323,5 +4323,27 @@
   "supportSubjectLabel": "TEMAT",
   "supportSubmitButton": "Prześlij",
   "supportSubmitted": "Prośba o wsparcie została pomyślnie przesłana",
-  "supportTitle": "Pomoc i wsparcie"
+  "supportTitle": "Pomoc i wsparcie",
+  "bankrollSheetTitle": "Dodaj wynik",
+  "bankrollSheetEditSection": "Edytuj bankroll",
+  "bankrollSheetGoalLabel": "Cel bankrollu",
+  "bankrollSheetCurrentLabel": "Aktualny bankroll",
+  "bankrollSheetGoalUpdated": "Cel zaktualizowany",
+  "bankrollSheetBankrollUpdated": "Bankroll zaktualizowany",
+  "sessionEndResultTitle": "Wynik sesji",
+  "sessionEndTournamentTitle": "Wynik turnieju",
+  "sessionEndProfit": "Zysk",
+  "sessionEndLoss": "Strata",
+  "sessionEndApply": "Zastosuj",
+  "sessionEndSkip": "Pomiń",
+  "sessionEndFinishingPosition": "Pozycja końcowa",
+  "sessionEndFieldSize": "Liczba uczestników",
+  "sessionEndPrizeWon": "Wygrana nagroda",
+  "sessionEndTotalInvested": "Łączna inwestycja",
+  "sessionEndCalculatedProfit": "Obliczony zysk: {amount}",
+  "@sessionEndCalculatedProfit": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  }
 }

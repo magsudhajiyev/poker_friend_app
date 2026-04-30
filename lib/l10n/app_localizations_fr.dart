@@ -7152,4 +7152,57 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeEventTypeOnline => 'En ligne';
+
+  @override
+  String get bankrollSheetTitle => 'Ajouter un résultat';
+
+  @override
+  String get bankrollSheetEditSection => 'Modifier le bankroll';
+
+  @override
+  String get bankrollSheetGoalLabel => 'Objectif de bankroll';
+
+  @override
+  String get bankrollSheetCurrentLabel => 'Bankroll actuel';
+
+  @override
+  String get bankrollSheetGoalUpdated => 'Objectif mis à jour';
+
+  @override
+  String get bankrollSheetBankrollUpdated => 'Bankroll mis à jour';
+
+  @override
+  String get sessionEndResultTitle => 'Résultat de session';
+
+  @override
+  String get sessionEndTournamentTitle => 'Résultat du tournoi';
+
+  @override
+  String get sessionEndProfit => 'Profit';
+
+  @override
+  String get sessionEndLoss => 'Perte';
+
+  @override
+  String get sessionEndApply => 'Appliquer';
+
+  @override
+  String get sessionEndSkip => 'Passer';
+
+  @override
+  String get sessionEndFinishingPosition => 'Position finale';
+
+  @override
+  String get sessionEndFieldSize => 'Nombre de participants';
+
+  @override
+  String get sessionEndPrizeWon => 'Prix remporté';
+
+  @override
+  String get sessionEndTotalInvested => 'Total investi';
+
+  @override
+  String sessionEndCalculatedProfit(String amount) {
+    return 'Profit calculé : $amount';
+  }
 }

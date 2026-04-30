@@ -110,6 +110,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? _loadError;
   bool _isBankrollHidden = false;
 
+  // Bankroll card flip animation
+  late AnimationController _flipController;
+  late Animation<double> _flipAnimation;
+  bool _isBankrollFlipped = false;
+  final _resultController = TextEditingController();
+  final _editGoalController = TextEditingController();
+  final _editBankrollController = TextEditingController();
+  String _manualGameType = 'cash';
+  bool _showEditFields = false;
+
 
   // Context menu state
   String? _selectedEventId;
@@ -119,6 +129,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
+    _flipController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _flipController, curve: Curves.easeInOutBack),
+    );
 
     _progressAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -1142,6 +1160,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _seatSubscription?.cancel();
     _clubNotificationSubscription?.cancel();
     _progressAnimationController.dispose();
+    _flipController.dispose();
+    _resultController.dispose();
+    _editGoalController.dispose();
+    _editBankrollController.dispose();
     super.dispose();
   }
 
@@ -1922,14 +1944,88 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  void _flipBankrollCard() {
+    if (_isBankrollFlipped) {
+      _flipController.reverse();
+    } else {
+      _editGoalController.text = bankrollGoal > 0 ? bankrollGoal.toStringAsFixed(0) : '';
+      _editBankrollController.text = currentBankroll > 0 ? currentBankroll.toStringAsFixed(0) : '';
+      _resultController.clear();
+      _showEditFields = false;
+      _flipController.forward();
+    }
+    setState(() => _isBankrollFlipped = !_isBankrollFlipped);
+  }
+
+  Future<void> _submitBankrollResult() async {
+    final l10n = AppLocalizations.of(context);
+    final result = double.tryParse(_resultController.text);
+    if (result == null || result == 0.0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.profilePleaseEnterValidAmount),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    await BankrollService.addToBankroll(result);
+    await SessionResultService.addSessionResult(
+      amount: result,
+      gameType: _manualGameType,
+    );
+    AppDataCache.markHomeDirty();
+
+    _resultController.clear();
+    _flipBankrollCard();
+    _loadData();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.profileSessionResultAdded),
+          backgroundColor: const Color(0xFF62E3BC),
+        ),
+      );
+    }
+  }
+
   Widget _buildBankrollCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: AnimatedBuilder(
+        animation: _flipAnimation,
+        builder: (context, child) {
+          final angle = _flipAnimation.value * 3.14159;
+          final isFront = _flipAnimation.value < 0.5;
+
+          return Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001) // perspective
+              ..rotateY(angle),
+            child: isFront
+                ? _buildBankrollFront()
+                : Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()..rotateY(3.14159),
+                    child: _buildBankrollBack(),
+                  ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBankrollFront() {
     final remaining = bankrollGoal - currentBankroll;
     final progress = bankrollGoal > 0
         ? (currentBankroll / bankrollGoal).clamp(0.0, 1.0)
         : 0.0;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    return GestureDetector(
+      onTap: _flipBankrollCard,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
@@ -1951,55 +2047,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             color: const Color(0xFF121F24),
             child: Stack(
               children: [
-                // Background image
                 Positioned(
-                  top: -8,
-                  left: -8,
-                  right: -8,
-                  bottom: -8,
-                  child: Image.asset(
-                    'assets/bankroll_background.png',
-                    fit: BoxFit.fill,
-                  ),
+                  top: -8, left: -8, right: -8, bottom: -8,
+                  child: Image.asset('assets/bankroll_background.png', fit: BoxFit.fill),
                 ),
-                // Content
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top section: Bankroll label + eye icon
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             AppLocalizations.of(context).homeBankroll,
                             style: GoogleFonts.ibmPlexSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w300,
-                              color: Colors.white,
-                              height: 1.64,
+                              fontSize: 13, fontWeight: FontWeight.w300,
+                              color: Colors.white, height: 1.64,
                             ),
                           ),
                           GestureDetector(
                             onTap: () async {
                               final prefs = await SharedPreferences.getInstance();
-                              setState(() {
-                                _isBankrollHidden = !_isBankrollHidden;
-                              });
+                              setState(() => _isBankrollHidden = !_isBankrollHidden);
                               await prefs.setBool('bankroll_hidden', _isBankrollHidden);
                             },
                             child: SizedBox(
-                              width: 24,
-                              height: 24,
+                              width: 24, height: 24,
                               child: Padding(
                                 padding: const EdgeInsets.all(3),
                                 child: FittedBox(
                                   child: Icon(
-                                    _isBankrollHidden
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
+                                    _isBankrollHidden ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                                     color: Colors.white,
                                   ),
                                 ),
@@ -2009,11 +2089,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ],
                       ),
                       const SizedBox(height: 28),
-                      // Amount + progress section
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Bankroll amount
                           ImageFiltered(
                             imageFilter: _isBankrollHidden
                                 ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
@@ -2022,32 +2100,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                AppLocalizations.of(context).homeBankrollOfGoal('\$${currentBankroll.toInt()}', '\$${bankrollGoal.toInt()}'),
+                                AppLocalizations.of(context).homeBankrollOfGoal(
+                                  '\$${currentBankroll.toInt()}', '\$${bankrollGoal.toInt()}',
+                                ),
                                 style: GoogleFonts.familjenGrotesk(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                  height: 1.0,
+                                  fontSize: 40, fontWeight: FontWeight.w600,
+                                  color: Colors.white, height: 1.0,
                                 ),
                                 maxLines: 1,
                               ),
                             ),
                           ),
                           const SizedBox(height: 12),
-                          // Progress card
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
-                            decoration: _isBankrollHidden
-                                ? null
-                                : BoxDecoration(
-                                    color: const Color(0x0AD3FFFD),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: const Color(0x0AD3FFFD),
-                                      width: 1,
-                                    ),
-                                  ),
+                            decoration: _isBankrollHidden ? null : BoxDecoration(
+                              color: const Color(0x0AD3FFFD),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0x0AD3FFFD), width: 1),
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -2058,57 +2130,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   child: Text(
                                     AppLocalizations.of(context).homeAmountLeft('\$${remaining.toInt()}'),
                                     style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.white,
-                                      height: 1.44,
+                                      fontSize: 13, fontWeight: FontWeight.w500,
+                                      color: Colors.white, height: 1.44,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                // Progress bar
                                 ImageFiltered(
                                   imageFilter: _isBankrollHidden
                                       ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
                                       : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
                                   child: SizedBox(
-                                  height: 4,
-                                  child: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final fillWidth = constraints.maxWidth * progress;
-                                      return Stack(
-                                        clipBehavior: Clip.none,
-                                        alignment: Alignment.centerLeft,
-                                        children: [
-                                          // Track
-                                          Container(
-                                            height: 4,
-                                            decoration: BoxDecoration(
-                                              color: Colors.black,
-                                              borderRadius: BorderRadius.circular(9999),
+                                    height: 4,
+                                    child: LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final fillWidth = constraints.maxWidth * progress;
+                                        return Stack(
+                                          clipBehavior: Clip.none,
+                                          alignment: Alignment.centerLeft,
+                                          children: [
+                                            Container(
+                                              height: 4,
+                                              decoration: BoxDecoration(
+                                                color: Colors.black,
+                                                borderRadius: BorderRadius.circular(9999),
+                                              ),
                                             ),
-                                          ),
-                                          // Fill
-                                          AnimatedContainer(
-                                            duration: const Duration(milliseconds: 300),
-                                            width: fillWidth,
-                                            height: 4,
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFF89F1EC),
-                                              borderRadius: BorderRadius.circular(9999),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: const Color(0xFF54E98A).withValues(alpha: 0.4),
-                                                  blurRadius: 10,
-                                                ),
-                                              ],
+                                            AnimatedContainer(
+                                              duration: const Duration(milliseconds: 300),
+                                              width: fillWidth,
+                                              height: 4,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF89F1EC),
+                                                borderRadius: BorderRadius.circular(9999),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: const Color(0xFF54E98A).withValues(alpha: 0.4),
+                                                    blurRadius: 10,
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      );
-                                    },
+                                          ],
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
                                 ),
                               ],
                             ),
@@ -2122,6 +2189,278 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBankrollBack() {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF2A605D), width: 1),
+        boxShadow: const [
+          BoxShadow(color: Color(0x40000000), blurRadius: 4, offset: Offset(0, 4)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(23),
+        child: Container(
+          color: const Color(0xFF121F24),
+          child: Stack(
+            children: [
+              Positioned(
+                top: -8, left: -8, right: -8, bottom: -8,
+                child: Opacity(
+                  opacity: 0.4,
+                  child: Image.asset('assets/bankroll_background.png', fit: BoxFit.fill),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header: title + close
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.bankrollSheetTitle,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15, fontWeight: FontWeight.w600,
+                            color: Colors.white, letterSpacing: -0.3,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _flipBankrollCard,
+                          child: Container(
+                            width: 28, height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close, size: 16, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Game type toggle
+                    StatefulBuilder(
+                      builder: (context, setToggleState) {
+                        return Container(
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            children: [
+                              _buildBackToggle(l10n.profileCash, 'cash', _manualGameType, (v) {
+                                setToggleState(() => _manualGameType = v);
+                              }),
+                              _buildBackToggle(l10n.profileTournament, 'tournament', _manualGameType, (v) {
+                                setToggleState(() => _manualGameType = v);
+                              }),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Amount input
+                    Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _resultController,
+                        keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
+                        style: GoogleFonts.robotoMono(
+                          fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          hintText: l10n.profileSessionResultHint,
+                          hintStyle: GoogleFonts.ibmPlexSans(
+                            fontSize: 13, color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Submit button
+                    GestureDetector(
+                      onTap: _submitBankrollResult,
+                      child: Container(
+                        width: double.infinity,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF89F1EC),
+                          borderRadius: BorderRadius.circular(60),
+                        ),
+                        child: Center(
+                          child: Text(
+                            l10n.profileAddResult,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15, fontWeight: FontWeight.w600,
+                              color: Colors.black, letterSpacing: -0.3,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Edit goal/bankroll expandable
+                    GestureDetector(
+                      onTap: () => setState(() => _showEditFields = !_showEditFields),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            l10n.bankrollSheetEditSection,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 12, fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            _showEditFields ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                            size: 14, color: Colors.white.withValues(alpha: 0.4),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    if (_showEditFields) ...[
+                      const SizedBox(height: 8),
+                      _buildMiniEditRow(l10n.bankrollSheetGoalLabel, _editGoalController, () async {
+                        final val = double.tryParse(_editGoalController.text) ?? 0.0;
+                        if (val > 0) {
+                          await BankrollService.setBankrollGoal(val);
+                          _loadData();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.bankrollSheetGoalUpdated), backgroundColor: const Color(0xFF89F1EC)),
+                            );
+                          }
+                        }
+                      }),
+                      const SizedBox(height: 6),
+                      _buildMiniEditRow(l10n.bankrollSheetCurrentLabel, _editBankrollController, () async {
+                        final val = double.tryParse(_editBankrollController.text) ?? 0.0;
+                        if (val >= 0) {
+                          await BankrollService.setCurrentBankroll(val);
+                          _loadData();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.bankrollSheetBankrollUpdated), backgroundColor: const Color(0xFF89F1EC)),
+                            );
+                          }
+                        }
+                      }),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackToggle(String label, String value, String selected, ValueChanged<String> onChanged) {
+    final isSelected = selected == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onChanged(value),
+        child: Container(
+          height: 32,
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF89F1EC).withValues(alpha: 0.15) : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            border: isSelected ? Border.all(color: const Color(0xFF89F1EC).withValues(alpha: 0.4), width: 1) : null,
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 12, fontWeight: FontWeight.w500,
+                color: isSelected ? const Color(0xFF89F1EC) : Colors.white.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniEditRow(String label, TextEditingController controller, VoidCallback onSubmit) {
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12, fontWeight: FontWeight.w400,
+              color: Colors.white.withValues(alpha: 0.5),
+            ),
+          ),
+          const Spacer(),
+          SizedBox(
+            width: 80,
+            child: TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              textAlign: TextAlign.right,
+              style: GoogleFonts.robotoMono(
+                fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white,
+              ),
+              decoration: InputDecoration(
+                prefixText: '\$ ',
+                prefixStyle: GoogleFonts.robotoMono(
+                  fontSize: 14, color: Colors.white.withValues(alpha: 0.3),
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+              onSubmitted: (_) => onSubmit(),
+            ),
+          ),
+          GestureDetector(
+            onTap: onSubmit,
+            child: Container(
+              width: 24, height: 24,
+              margin: const EdgeInsets.only(left: 4, right: 6),
+              decoration: const BoxDecoration(
+                color: Color(0xFF89F1EC),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check, size: 14, color: Color(0xFF1A4A4A)),
+            ),
+          ),
+        ],
       ),
     );
   }

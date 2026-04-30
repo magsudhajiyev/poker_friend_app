@@ -4508,5 +4508,27 @@
   "supportSubjectLabel": "BETREFF",
   "supportSubmitButton": "Einreichen",
   "supportSubmitted": "Support-Anfrage erfolgreich eingereicht",
-  "supportTitle": "Hilfe & Support"
+  "supportTitle": "Hilfe & Support",
+  "bankrollSheetTitle": "Ergebnis hinzufügen",
+  "bankrollSheetEditSection": "Bankroll bearbeiten",
+  "bankrollSheetGoalLabel": "Bankroll-Ziel",
+  "bankrollSheetCurrentLabel": "Aktuelles Bankroll",
+  "bankrollSheetGoalUpdated": "Ziel aktualisiert",
+  "bankrollSheetBankrollUpdated": "Bankroll aktualisiert",
+  "sessionEndResultTitle": "Session-Ergebnis",
+  "sessionEndTournamentTitle": "Turnier-Ergebnis",
+  "sessionEndProfit": "Gewinn",
+  "sessionEndLoss": "Verlust",
+  "sessionEndApply": "Anwenden",
+  "sessionEndSkip": "Überspringen",
+  "sessionEndFinishingPosition": "Platzierung",
+  "sessionEndFieldSize": "Teilnehmerzahl",
+  "sessionEndPrizeWon": "Gewonnenes Preisgeld",
+  "sessionEndTotalInvested": "Gesamtinvestition",
+  "sessionEndCalculatedProfit": "Berechneter Gewinn: {amount}",
+  "@sessionEndCalculatedProfit": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  }
 }

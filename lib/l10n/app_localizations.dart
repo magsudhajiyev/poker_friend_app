@@ -12404,6 +12404,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Online'**
   String get homeEventTypeOnline;
+
+  /// No description provided for @bankrollSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Result'**
+  String get bankrollSheetTitle;
+
+  /// No description provided for @bankrollSheetEditSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Bankroll'**
+  String get bankrollSheetEditSection;
+
+  /// No description provided for @bankrollSheetGoalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bankroll Goal'**
+  String get bankrollSheetGoalLabel;
+
+  /// No description provided for @bankrollSheetCurrentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Bankroll'**
+  String get bankrollSheetCurrentLabel;
+
+  /// No description provided for @bankrollSheetGoalUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal updated'**
+  String get bankrollSheetGoalUpdated;
+
+  /// No description provided for @bankrollSheetBankrollUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Bankroll updated'**
+  String get bankrollSheetBankrollUpdated;
+
+  /// No description provided for @sessionEndResultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Result'**
+  String get sessionEndResultTitle;
+
+  /// No description provided for @sessionEndTournamentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tournament Result'**
+  String get sessionEndTournamentTitle;
+
+  /// No description provided for @sessionEndProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit'**
+  String get sessionEndProfit;
+
+  /// No description provided for @sessionEndLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Loss'**
+  String get sessionEndLoss;
+
+  /// No description provided for @sessionEndApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get sessionEndApply;
+
+  /// No description provided for @sessionEndSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get sessionEndSkip;
+
+  /// No description provided for @sessionEndFinishingPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing Position'**
+  String get sessionEndFinishingPosition;
+
+  /// No description provided for @sessionEndFieldSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Entries'**
+  String get sessionEndFieldSize;
+
+  /// No description provided for @sessionEndPrizeWon.
+  ///
+  /// In en, this message translates to:
+  /// **'Prize Won'**
+  String get sessionEndPrizeWon;
+
+  /// No description provided for @sessionEndTotalInvested.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Invested'**
+  String get sessionEndTotalInvested;
+
+  /// No description provided for @sessionEndCalculatedProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated Profit: {amount}'**
+  String sessionEndCalculatedProfit(String amount);
 }
 
 class _AppLocalizationsDelegate

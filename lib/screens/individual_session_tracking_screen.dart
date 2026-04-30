@@ -10,6 +10,7 @@ import '../services/auth_service.dart';
 import 'poker_hand_screen.dart';
 import 'quick_stack_update_screen.dart';
 import '../design_system/components/drawer_dots.dart';
+import '../widgets/session_end_bankroll_sheet.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
@@ -1038,7 +1039,24 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         } catch (e) {}
       }
 
-      Navigator.popUntil(context, (route) => route.isFirst);
+      // Show bankroll update prompt
+      if (mounted) {
+        final profit = _currentStack - _totalBuyIn;
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => SessionEndBankrollSheet(
+            gameType: widget.gameType,
+            profitLoss: profit,
+            totalBuyIn: _totalBuyIn,
+          ),
+        );
+      }
+
+      if (mounted) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
     }
   }
 

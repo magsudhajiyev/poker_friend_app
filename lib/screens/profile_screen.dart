@@ -3,9 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
-import '../services/bankroll_service.dart';
 import '../services/display_identity_service.dart';
-import '../services/session_result_service.dart';
 import '../services/subscription_service.dart';
 import '../services/username_service.dart';
 import '../screens/settings_screen.dart';
@@ -20,14 +18,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _goalController = TextEditingController();
-  final _bankrollController = TextEditingController();
-  final _sessionResultController = TextEditingController();
-
-  double currentBankroll = 0.0;
-  double bankrollGoal = 0.0;
   bool isLoading = true;
-  String _selectedGameType = 'tournament'; // Default to tournament as shown in Figma
   String? _username;
   bool _useNicknameInGame = false;
 
@@ -37,27 +28,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadData();
   }
 
-  @override
-  void dispose() {
-    _goalController.dispose();
-    _bankrollController.dispose();
-    _sessionResultController.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadData() async {
     try {
-      final bankroll = await BankrollService.getCurrentBankroll();
-      final goal = await BankrollService.getBankrollGoal();
       final username = await UsernameService.getUsername();
       final useNickname = await UsernameService.getUseNicknameInGame();
 
       if (mounted) {
         setState(() {
-          currentBankroll = bankroll;
-          bankrollGoal = goal;
-          _goalController.text = goal.toStringAsFixed(0);
-          _bankrollController.text = bankroll.toStringAsFixed(0);
           _username = username;
           _useNicknameInGame = useNickname;
           isLoading = false;
@@ -69,98 +46,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           isLoading = false;
         });
       }
-    }
-  }
-
-  Future<void> _updateGoal() async {
-    final l10n = AppLocalizations.of(context);
-    try {
-      final newGoal = double.tryParse(_goalController.text) ?? 0.0;
-      if (newGoal > 0) {
-        await BankrollService.setBankrollGoal(newGoal);
-        setState(() {
-          bankrollGoal = newGoal;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.profileGoalUpdatedSuccess),
-            backgroundColor: Color(0xFF89F1EC),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.profileErrorUpdatingGoal),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _updateBankroll() async {
-    final l10n = AppLocalizations.of(context);
-    try {
-      final newBankroll = double.tryParse(_bankrollController.text) ?? 0.0;
-      if (newBankroll >= 0) {
-        await BankrollService.setCurrentBankroll(newBankroll);
-        setState(() {
-          currentBankroll = newBankroll;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.profileBankrollUpdatedSuccess),
-            backgroundColor: Color(0xFF89F1EC),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.profileErrorUpdatingBankroll),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _addSessionResult() async {
-    final l10n = AppLocalizations.of(context);
-    try {
-      final result = double.tryParse(_sessionResultController.text) ?? 0.0;
-
-      if (result == 0.0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.profilePleaseEnterValidAmount),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-
-      await BankrollService.addToBankroll(result);
-      await SessionResultService.addSessionResult(
-        amount: result,
-        gameType: _selectedGameType,
-      );
-
-      await _loadData();
-      _sessionResultController.clear();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.profileSessionResultAdded),
-          backgroundColor: Color(0xFF62E3BC),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.profileErrorAddingResult),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
@@ -226,16 +111,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Username card
                 _buildUsernameCard(),
                 SizedBox(height: 36),
-
-                // Cards
-                _buildBankrollGoalCard(),
-                SizedBox(height: 16),
-
-                _buildCurrentBankrollCard(),
-                SizedBox(height: 16),
-
-                _buildSessionResultCard(),
-                SizedBox(height: 16),
 
                 // Dev tools — only visible to super admin
                 if (_isDevUser) ...[
@@ -508,246 +383,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ],
-      ),
-    );
-  }
-
-  Widget _buildBankrollGoalCard() {
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Color(0xFF101115),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.profileBankrollGoal,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 14),
-
-          // Input field
-          _buildInputField(_goalController, '${bankrollGoal.toStringAsFixed(0)}'),
-          SizedBox(height: 24),
-
-          // Button
-          _buildActionButton(l10n.profileUpdateGoal, _updateGoal),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCurrentBankrollCard() {
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Color(0xFF101115),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.profileCurrentBankroll,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 14),
-
-          _buildInputField(_bankrollController, '${currentBankroll.toStringAsFixed(0)}'),
-          SizedBox(height: 24),
-
-          _buildActionButton(l10n.profileUpdateBankroll, _updateBankroll),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSessionResultCard() {
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Color(0xFF101115),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.profileAddSessionResult,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            l10n.profileSessionResultHint,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF8C8C8C),
-            ),
-          ),
-          SizedBox(height: 14),
-
-          // Cash/Tournament toggle
-          _buildGameTypeToggle(),
-          SizedBox(height: 14),
-
-          _buildInputField(_sessionResultController, '0'),
-          SizedBox(height: 24),
-
-          _buildActionButton(l10n.profileAddResult, _addSessionResult),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGameTypeToggle() {
-    return Container(
-      height: 38,
-      decoration: BoxDecoration(
-        color: Color(0xFF35373C),
-        borderRadius: BorderRadius.circular(19),
-      ),
-      child: Row(
-        children: [
-          // Cash option
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedGameType = 'cash'),
-              child: Container(
-                height: 38,
-                decoration: BoxDecoration(
-                  color: _selectedGameType == 'cash' ? Color(0xFF02050B) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(19),
-                  border: _selectedGameType == 'cash'
-                      ? Border.all(color: Color(0xFF73D4CF), width: 1)
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    AppLocalizations.of(context).profileCash,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: _selectedGameType == 'cash' ? Colors.white : Color(0xFF8C8C8C),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Tournament option
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedGameType = 'tournament'),
-              child: Container(
-                height: 38,
-                decoration: BoxDecoration(
-                  color: _selectedGameType == 'tournament' ? Color(0xFF02050B) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(19),
-                  border: _selectedGameType == 'tournament'
-                      ? Border.all(color: Color(0xFF73D4CF), width: 1)
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    AppLocalizations.of(context).profileTournament,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: _selectedGameType == 'tournament' ? Colors.white : Color(0xFF8C8C8C),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInputField(TextEditingController controller, String hint) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Color(0xFF4E5054),
-          width: 1,
-        ),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.numberWithOptions(signed: true, decimal: true),
-        style: GoogleFonts.ibmPlexSans(
-          fontSize: 17,
-          fontWeight: FontWeight.w500,
-          color: Colors.white,
-        ),
-        decoration: InputDecoration(
-          prefixIcon: Padding(
-            padding: EdgeInsets.only(left: 16, right: 4),
-            child: Text(
-              '\$',
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 17,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF8C8C8C),
-              ),
-            ),
-          ),
-          prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
-          hintText: hint,
-          hintStyle: GoogleFonts.ibmPlexSans(
-            fontSize: 17,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF8C8C8C),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          border: InputBorder.none,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButton(String label, VoidCallback onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        decoration: BoxDecoration(
-          color: Color(0xFF89F1EC),
-          borderRadius: BorderRadius.circular(110),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-              letterSpacing: -0.5,
-            ),
-          ),
-        ),
       ),
     );
   }

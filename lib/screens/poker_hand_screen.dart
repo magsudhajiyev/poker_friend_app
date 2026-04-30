@@ -10,6 +10,7 @@ import '../l10n/app_localizations.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/design_system.dart';
 import '../widgets/drawing_painter.dart';
+import '../widgets/session_end_bankroll_sheet.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/board_cards_dialog.dart';
 import '../widgets/all_in_board_cards_dialog.dart';
@@ -720,6 +721,25 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         await sessionManager.endSession();
 
         // Check if widget is still mounted before using context
+        if (!mounted) return;
+
+        // Show bankroll update prompt
+        final stackHistory = sessionManager.stackHistory;
+        if (stackHistory.isNotEmpty) {
+          final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
+          final profit = lastStack - sessionManager.totalBuyIn;
+          await showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => SessionEndBankrollSheet(
+              gameType: sessionManager.gameType,
+              profitLoss: profit,
+              totalBuyIn: sessionManager.totalBuyIn,
+            ),
+          );
+        }
+
         if (!mounted) return;
 
         // Navigate back to main screen

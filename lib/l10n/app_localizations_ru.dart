@@ -7092,4 +7092,57 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homeEventTypeOnline => 'Онлайн';
+
+  @override
+  String get bankrollSheetTitle => 'Добавить результат';
+
+  @override
+  String get bankrollSheetEditSection => 'Редактировать банкролл';
+
+  @override
+  String get bankrollSheetGoalLabel => 'Цель банкролла';
+
+  @override
+  String get bankrollSheetCurrentLabel => 'Текущий банкролл';
+
+  @override
+  String get bankrollSheetGoalUpdated => 'Цель обновлена';
+
+  @override
+  String get bankrollSheetBankrollUpdated => 'Банкролл обновлён';
+
+  @override
+  String get sessionEndResultTitle => 'Результат сессии';
+
+  @override
+  String get sessionEndTournamentTitle => 'Результат турнира';
+
+  @override
+  String get sessionEndProfit => 'Прибыль';
+
+  @override
+  String get sessionEndLoss => 'Убыток';
+
+  @override
+  String get sessionEndApply => 'Применить';
+
+  @override
+  String get sessionEndSkip => 'Пропустить';
+
+  @override
+  String get sessionEndFinishingPosition => 'Итоговая позиция';
+
+  @override
+  String get sessionEndFieldSize => 'Количество участников';
+
+  @override
+  String get sessionEndPrizeWon => 'Выигранный приз';
+
+  @override
+  String get sessionEndTotalInvested => 'Общая инвестиция';
+
+  @override
+  String sessionEndCalculatedProfit(String amount) {
+    return 'Рассчитанная прибыль: $amount';
+  }
 }
