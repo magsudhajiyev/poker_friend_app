@@ -94,14 +94,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                _buildLanguageOption(l10n.settingsLanguageSystem, null, currentCode),
-                _buildLanguageOption('English', 'en', currentCode),
-                _buildLanguageOption('Deutsch', 'de', currentCode),
-                _buildLanguageOption('Español', 'es', currentCode),
-                _buildLanguageOption('Français', 'fr', currentCode),
-                _buildLanguageOption('Polski', 'pl', currentCode),
-                _buildLanguageOption('Português', 'pt', currentCode),
-                _buildLanguageOption('Русский', 'ru', currentCode),
+                _buildLanguageOption(l10n.settingsLanguageSystem, null, currentCode, flag: '🌐'),
+                _buildLanguageOption('English', 'en', currentCode, flag: '🇺🇸'),
+                _buildLanguageOption('Deutsch', 'de', currentCode, flag: '🇩🇪'),
+                _buildLanguageOption('Español', 'es', currentCode, flag: '🇪🇸'),
+                _buildLanguageOption('Français', 'fr', currentCode, flag: '🇫🇷'),
+                _buildLanguageOption('Polski', 'pl', currentCode, flag: '🇵🇱'),
+                _buildLanguageOption('Português', 'pt', currentCode, flag: '🇧🇷'),
+                _buildLanguageOption('Русский', 'ru', currentCode, flag: '🇷🇺'),
               ],
             ),
           ),
@@ -110,7 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildLanguageOption(String label, String? code, String? currentCode) {
+  Widget _buildLanguageOption(String label, String? code, String? currentCode, {String? flag}) {
     final isSelected = code == currentCode;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -123,6 +123,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 14),
         child: Row(
           children: [
+            if (flag != null) ...[
+              Text(flag, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 12),
+            ],
             Expanded(
               child: Text(
                 label,
