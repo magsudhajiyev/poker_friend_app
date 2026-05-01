@@ -1995,26 +1995,34 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildBankrollCard() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: AnimatedBuilder(
-        animation: _flipAnimation,
-        builder: (context, child) {
-          final angle = _flipAnimation.value * 3.14159;
-          final isFront = _flipAnimation.value < 0.5;
-
-          return Transform(
-            alignment: Alignment.center,
-            transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.001) // perspective
-              ..rotateY(angle),
-            child: isFront
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: AnimatedBuilder(
+          animation: _flipAnimation,
+          builder: (context, child) {
+            final angle = _flipAnimation.value * 3.14159;
+            final isFront = _flipAnimation.value < 0.5;
+            final content = isFront
                 ? _buildBankrollFront()
                 : Transform(
                     alignment: Alignment.center,
                     transform: Matrix4.identity()..rotateY(3.14159),
                     child: _buildBankrollBack(),
-                  ),
-          );
-        },
+                  );
+
+            // Apply rotation as paint-only (no layout impact) so
+            // AnimatedSize can measure the real child height.
+            return Transform(
+              alignment: Alignment.center,
+              filterQuality: FilterQuality.none,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateY(angle),
+              child: content,
+            );
+          },
+        ),
       ),
     );
   }
@@ -2199,29 +2207,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
+        color: const Color(0xFF121F24),
         border: Border.all(color: const Color(0xFF2A605D), width: 1),
         boxShadow: const [
           BoxShadow(color: Color(0x40000000), blurRadius: 4, offset: Offset(0, 4)),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(23),
-        child: Container(
-          color: const Color(0xFF121F24),
-          child: Stack(
+      padding: EdgeInsets.fromLTRB(16, 14, 16, _showEditFields ? 4 : 14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
             children: [
-              Positioned(
-                top: -8, left: -8, right: -8, bottom: -8,
-                child: Opacity(
-                  opacity: 0.4,
-                  child: Image.asset('assets/bankroll_background.png', fit: BoxFit.fill),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
                     // Header: title + close
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2278,9 +2273,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
-                        ),
                       ),
                       child: TextField(
                         controller: _resultController,
@@ -2347,7 +2339,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
 
                     if (_showEditFields) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
+                      Container(height: 1, color: Colors.white.withValues(alpha: 0.08)),
                       _buildMiniEditRow(l10n.bankrollSheetGoalLabel, _editGoalController, () async {
                         final val = double.tryParse(_editGoalController.text) ?? 0.0;
                         if (val > 0) {
@@ -2360,7 +2353,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           }
                         }
                       }),
-                      const SizedBox(height: 6),
+                      Container(height: 1, color: Colors.white.withValues(alpha: 0.08)),
                       _buildMiniEditRow(l10n.bankrollSheetCurrentLabel, _editBankrollController, () async {
                         final val = double.tryParse(_editBankrollController.text) ?? 0.0;
                         if (val >= 0) {
@@ -2376,13 +2369,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ],
                   ],
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+          );
+      }
 
   Widget _buildBackToggle(String label, String value, String selected, ValueChanged<String> onChanged) {
     final isSelected = selected == value;
@@ -2411,19 +2399,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildMiniEditRow(String label, TextEditingController controller, VoidCallback onSubmit) {
-    return Container(
-      height: 36,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          const SizedBox(width: 10),
           Text(
             label,
             style: GoogleFonts.ibmPlexSans(
-              fontSize: 12, fontWeight: FontWeight.w400,
+              fontSize: 13, fontWeight: FontWeight.w400,
               color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
@@ -2443,6 +2426,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   fontSize: 14, color: Colors.white.withValues(alpha: 0.3),
                 ),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                filled: false,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
               ),
@@ -2453,7 +2439,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onTap: onSubmit,
             child: Container(
               width: 24, height: 24,
-              margin: const EdgeInsets.only(left: 4, right: 6),
+              margin: const EdgeInsets.only(left: 4),
               decoration: const BoxDecoration(
                 color: Color(0xFF89F1EC),
                 shape: BoxShape.circle,
