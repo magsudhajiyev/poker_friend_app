@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
@@ -2503,14 +2504,162 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                     )
-                  : CustomPaint(
-                      painter: EarningsChartPainter(earningsChartData),
-                      size: Size.infinite,
-                    ),
+                  : _buildEarningsLineChart(),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEarningsLineChart() {
+    // Build cumulative data
+    final tournamentSpots = <FlSpot>[];
+    final cashSpots = <FlSpot>[];
+    double tournamentTotal = 0;
+    double cashTotal = 0;
+
+    for (int i = 0; i < earningsChartData.length; i++) {
+      final point = earningsChartData[i];
+      tournamentTotal += (point['tournament'] as num?)?.toDouble() ?? 0.0;
+      cashTotal += (point['cash'] as num?)?.toDouble() ?? 0.0;
+      tournamentSpots.add(FlSpot(i.toDouble(), tournamentTotal));
+      cashSpots.add(FlSpot(i.toDouble(), cashTotal));
+    }
+
+    // Y bounds
+    double rawMinY = 0, rawMaxY = 0;
+    for (final s in [...tournamentSpots, ...cashSpots]) {
+      if (s.y < rawMinY) rawMinY = s.y;
+      if (s.y > rawMaxY) rawMaxY = s.y;
+    }
+    if (rawMaxY <= 0) rawMaxY = 50;
+    if (rawMinY >= 0) rawMinY = -50;
+    final yPad = (rawMaxY - rawMinY) * 0.1;
+    final minY = rawMinY - yPad;
+    final maxY = rawMaxY + yPad;
+    final yRange = maxY - minY;
+    final yInterval = yRange / 4;
+
+    // X-axis date labels: first, middle, last — deduplicated
+    final candidateIndices = earningsChartData.length <= 3
+        ? List.generate(earningsChartData.length, (i) => i)
+        : [0, earningsChartData.length ~/ 2, earningsChartData.length - 1];
+    final shownDates = <String>{};
+    final labelSet = <int>{};
+    for (final i in candidateIndices) {
+      final date = earningsChartData[i]['date'] ?? '';
+      if (!shownDates.contains(date)) {
+        shownDates.add(date);
+        labelSet.add(i);
+      }
+    }
+
+    return LineChart(
+      LineChartData(
+        clipData: const FlClipData.all(),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: yInterval,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: Colors.white.withValues(alpha: 0.06),
+            strokeWidth: 1,
+          ),
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: yInterval,
+              reservedSize: 45,
+              getTitlesWidget: (value, meta) {
+                if (meta.axisPosition == 0 || meta.axisPosition == meta.parentAxisSize) {
+                  return const SizedBox.shrink();
+                }
+                return Text(
+                  '\$${value.toInt()}',
+                  style: GoogleFonts.robotoMono(
+                    color: Colors.white.withValues(alpha: 0.35),
+                    fontSize: 10,
+                  ),
+                );
+              },
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                if (value != value.roundToDouble()) return const SizedBox.shrink();
+                final idx = value.toInt();
+                if (!labelSet.contains(idx)) return const SizedBox.shrink();
+                if (idx < 0 || idx >= earningsChartData.length) return const SizedBox.shrink();
+                return SideTitleWidget(
+                  axisSide: meta.axisSide,
+                  space: 4,
+                  child: Text(
+                    earningsChartData[idx]['date'] ?? '',
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white.withValues(alpha: 0.35),
+                      fontSize: 10,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        minX: -0.5,
+        maxX: (earningsChartData.length - 1).toDouble() + 0.5,
+        minY: minY,
+        maxY: maxY,
+        lineTouchData: const LineTouchData(enabled: false),
+        lineBarsData: [
+          // Tournament line
+          LineChartBarData(
+            spots: tournamentSpots,
+            isCurved: true,
+            curveSmoothness: 0.3,
+            color: const Color(0xFF00C3FF),
+            barWidth: 1.5,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
+                radius: 3,
+                color: const Color(0xFF00C3FF),
+                strokeWidth: 0,
+              ),
+            ),
+            belowBarData: BarAreaData(show: false),
+          ),
+          // Cash line
+          LineChartBarData(
+            spots: cashSpots,
+            isCurved: true,
+            curveSmoothness: 0.3,
+            color: const Color(0xFF44EC49),
+            barWidth: 1.5,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
+                radius: 3,
+                color: const Color(0xFF44EC49),
+                strokeWidth: 0,
+              ),
+            ),
+            belowBarData: BarAreaData(show: false),
+          ),
+        ],
+      ),
     );
   }
 
@@ -4451,208 +4600,3 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-// Custom painter for earnings chart (poker tracker style line chart)
-class EarningsChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
-
-  EarningsChartPainter(this.data);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (data.isEmpty) return;
-
-    // Chart area with right-side Y-axis labels
-    final chartArea = Rect.fromLTWH(16, 10, size.width - 70, size.height - 40);
-
-    // Calculate cumulative earnings for both tournament and cash
-    final tournamentCumulative = <double>[];
-    final cashCumulative = <double>[];
-    double tournamentTotal = 0;
-    double cashTotal = 0;
-    double maxValue = 0;
-    double minValue = 0;
-
-    for (var point in data) {
-      final tournament = (point['tournament'] as num?)?.toDouble() ?? 0.0;
-      final cash = (point['cash'] as num?)?.toDouble() ?? 0.0;
-
-      tournamentTotal += tournament;
-      cashTotal += cash;
-
-      tournamentCumulative.add(tournamentTotal);
-      cashCumulative.add(cashTotal);
-
-      maxValue = math.max(maxValue, math.max(tournamentTotal, cashTotal));
-      minValue = math.min(minValue, math.min(tournamentTotal, cashTotal));
-    }
-
-    // Ensure we always show $0 line and have some padding
-    if (maxValue <= 0) maxValue = 50;
-    if (minValue >= 0) minValue = -50;
-
-    // Round to nice values
-    maxValue = ((maxValue / 50).ceil() * 50).toDouble();
-    minValue = ((minValue / 50).floor() * 50).toDouble();
-
-    final valueRange = maxValue - minValue;
-    final zeroY = chartArea.bottom - ((0 - minValue) / valueRange) * chartArea.height;
-
-    // Draw horizontal grid lines
-    final gridPaint = Paint()
-      ..color = Colors.white.withOpacity(0.08)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    final numGridLines = 5;
-    for (int i = 0; i <= numGridLines; i++) {
-      final y = chartArea.bottom - (i / numGridLines) * chartArea.height;
-      canvas.drawLine(
-        Offset(chartArea.left, y),
-        Offset(chartArea.right, y),
-        gridPaint,
-      );
-    }
-
-    // Draw zero line (more prominent)
-    final zeroPaint = Paint()
-      ..color = Colors.white.withOpacity(0.25)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(
-      Offset(chartArea.left, zeroY),
-      Offset(chartArea.right, zeroY),
-      zeroPaint,
-    );
-
-    // Draw Y-axis labels on RIGHT side
-    final textPainter = TextPainter(
-      textDirection: ui.TextDirection.ltr,
-    );
-
-    for (int i = 0; i <= numGridLines; i++) {
-      final value = minValue + (i * valueRange / numGridLines);
-      textPainter.text = TextSpan(
-        text: '\$${value.toInt()}',
-        style: GoogleFonts.ibmPlexSans(
-          color: Colors.white.withOpacity(0.5),
-          fontSize: 10,
-          fontWeight: FontWeight.w400,
-        ),
-      );
-      textPainter.layout();
-
-      final y = chartArea.bottom - (i / numGridLines) * chartArea.height;
-      textPainter.paint(
-        canvas,
-        Offset(chartArea.right + 8, y - textPainter.height / 2),
-      );
-    }
-
-    // Calculate point spacing
-    final pointSpacing = data.length > 1
-        ? chartArea.width / (data.length - 1)
-        : chartArea.width;
-
-    // Calculate tournament line points
-    final tournamentPoints = <Offset>[];
-    for (int i = 0; i < tournamentCumulative.length; i++) {
-      final x = data.length == 1
-          ? chartArea.left + chartArea.width / 2
-          : chartArea.left + (i * pointSpacing);
-      final y = chartArea.bottom - ((tournamentCumulative[i] - minValue) / valueRange) * chartArea.height;
-      tournamentPoints.add(Offset(x, y));
-    }
-
-    // Calculate cash line points
-    final cashPoints = <Offset>[];
-    for (int i = 0; i < cashCumulative.length; i++) {
-      final x = data.length == 1
-          ? chartArea.left + chartArea.width / 2
-          : chartArea.left + (i * pointSpacing);
-      final y = chartArea.bottom - ((cashCumulative[i] - minValue) / valueRange) * chartArea.height;
-      cashPoints.add(Offset(x, y));
-    }
-
-    // Draw tournament line (cyan blue - matches design system)
-    if (tournamentPoints.length > 1) {
-      final tournamentPaint = Paint()
-        ..color = const Color(0xFF00C3FF) // AppColors.tournamentBlue
-        ..strokeWidth = 1.5
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round;
-
-      final path = _buildSmoothPath(tournamentPoints);
-      canvas.drawPath(path, tournamentPaint);
-    } else if (tournamentPoints.length == 1) {
-      final dotPaint = Paint()
-        ..color = const Color(0xFF00C3FF)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(tournamentPoints.first, 3, dotPaint);
-    }
-
-    // Draw cash line (green - matches design system)
-    if (cashPoints.length > 1) {
-      final cashPaint = Paint()
-        ..color = const Color(0xFF44EC49) // AppColors.cashGameGreen
-        ..strokeWidth = 1.5
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round;
-
-      final path = _buildSmoothPath(cashPoints);
-      canvas.drawPath(path, cashPaint);
-    } else if (cashPoints.length == 1) {
-      final dotPaint = Paint()
-        ..color = const Color(0xFF44EC49)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(cashPoints.first, 3, dotPaint);
-    }
-
-    // Draw X-axis labels (first, middle, last)
-    if (data.isNotEmpty) {
-      final labelIndices = data.length <= 3
-          ? List.generate(data.length, (i) => i)
-          : [0, data.length ~/ 2, data.length - 1];
-
-      for (final i in labelIndices) {
-        textPainter.text = TextSpan(
-          text: data[i]['date'],
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 10,
-            fontWeight: FontWeight.w400,
-          ),
-        );
-        textPainter.layout();
-
-        final x = data.length == 1
-            ? chartArea.left + chartArea.width / 2
-            : chartArea.left + (i * pointSpacing);
-        final labelX = (x - textPainter.width / 2).clamp(
-          chartArea.left,
-          chartArea.right - textPainter.width,
-        );
-        textPainter.paint(canvas, Offset(labelX, chartArea.bottom + 6));
-      }
-    }
-  }
-
-  /// Build a smooth cubic Bezier path through the given points.
-  Path _buildSmoothPath(List<Offset> points) {
-    final path = Path();
-    path.moveTo(points.first.dx, points.first.dy);
-
-    for (int i = 1; i < points.length; i++) {
-      final prev = points[i - 1];
-      final curr = points[i];
-      final cpx = (prev.dx + curr.dx) / 2;
-      path.cubicTo(cpx, prev.dy, cpx, curr.dy, curr.dx, curr.dy);
-    }
-
-    return path;
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}

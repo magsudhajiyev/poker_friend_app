@@ -334,7 +334,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
                         decoration: BoxDecoration(
                           color: position == 'BTN'
                               ? const Color(0xFF62E3BC).withValues(alpha: 0.15)
-                              : Colors.white.withValues(alpha: 0.08),
+                              : const Color(0xFFFF5252).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -342,7 +342,7 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
                           style: GoogleFonts.ibmPlexSans(
                             color: position == 'BTN'
                                 ? const Color(0xFF62E3BC)
-                                : const Color(0xFF8C8C8C),
+                                : const Color(0xFFFF5252),
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),

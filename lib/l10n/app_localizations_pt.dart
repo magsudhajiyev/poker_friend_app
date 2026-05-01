@@ -1168,6 +1168,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get individualSetTotal => 'Definir Total';
 
   @override
+  String get individualNoteLabel => 'Nota (opcional)';
+
+  @override
+  String get individualNoteHint => 'p.ex. Ganhei um grande pote com AA';
+
+  @override
   String get individualUpdateBlinds => 'Atualizar Blinds';
 
   @override
@@ -1240,6 +1246,29 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get individualProceedWithRebuy => 'Prosseguir com Rebuy';
+
+  @override
+  String get individualAddOn => 'Add-on';
+
+  @override
+  String get individualAddOnDescription =>
+      'Insira o valor do add-on para aumentar seu investimento total';
+
+  @override
+  String get individualAddOnAmount => 'Valor do Add-on';
+
+  @override
+  String get individualAddOnConfirm => 'Adicionar';
+
+  @override
+  String get individualAddOnDescriptionTournament =>
+      'Insira o preço do add-on e as fichas recebidas';
+
+  @override
+  String get individualAddOnPrice => 'Preço do Add-on';
+
+  @override
+  String get individualAddOnChips => 'Fichas recebidas';
 
   @override
   String get individualRebuy => 'Rebuy';
@@ -2549,7 +2578,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get loggingModeFullFeature4 => 'Analise de sessao';
 
   @override
-  String get loggingModeIndividualTitle => 'Modo de Registro Individual';
+  String get loggingModeIndividualTitle => 'Modo de Sessão Rápida';
 
   @override
   String get loggingModeIndividualSubtitle => 'Rastreamento de mao individual';

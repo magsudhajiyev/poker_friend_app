@@ -67,34 +67,37 @@ class FormDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * heightFraction,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(borderRadius),
-          topRight: Radius.circular(borderRadius),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: Container(
+        height: MediaQuery.of(context).size.height * heightFraction,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(borderRadius),
+            topRight: Radius.circular(borderRadius),
+          ),
+          border: showBorderDecoration
+              ? Border.all(color: const Color(0xFF262626))
+              : null,
+          boxShadow: showBorderDecoration
+              ? const [
+                  BoxShadow(
+                    color: Color(0xFF2E5A59),
+                    blurRadius: 64,
+                    offset: Offset(0, -6),
+                  ),
+                ]
+              : null,
         ),
-        border: showBorderDecoration
-            ? Border.all(color: const Color(0xFF262626))
-            : null,
-        boxShadow: showBorderDecoration
-            ? const [
-                BoxShadow(
-                  color: Color(0xFF2E5A59),
-                  blurRadius: 64,
-                  offset: Offset(0, -6),
-                ),
-              ]
-            : null,
-      ),
-      child: Column(
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-            child: SizedBox(
-              height: 68,
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
+              child: SizedBox(
+                height: 68,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -160,19 +163,15 @@ class FormDrawer extends StatelessWidget {
               ),
             ),
           ),
-          // Scrollable body with keyboard inset handling
+          // Scrollable body
           Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 22),
-                child: body,
-              ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 22),
+              child: body,
             ),
           ),
         ],
+      ),
       ),
     );
   }

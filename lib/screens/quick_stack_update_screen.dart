@@ -578,66 +578,72 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
   Future<void> _showStackEditDialog(int playerId) async {
     final l10n = AppLocalizations.of(context);
     final currentBB = _getBBValue(playerId);
-    final currentChips = _getChipAmount(playerId);
     final controller = TextEditingController(text: currentBB.toInt().toString());
 
     final result = await showDialog<double>(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: _cardColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.quickStackEditStack,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  controller: controller,
-                  autofocus: true,
-                  keyboardType: TextInputType.number,
-                  style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17),
-                  decoration: InputDecoration(
-                    labelText: l10n.quickStackStackInBb,
-                    labelStyle: GoogleFonts.ibmPlexSans(
-                      color: Colors.white.withValues(alpha: 0.5),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final typedBB = double.tryParse(controller.text) ?? currentBB;
+          final liveChips = (typedBB * widget.bigBlind).toInt();
+          final chipDisplay = widget.gameType == GameType.cash ? '\$$liveChips' : '$liveChips';
+
+          return Dialog(
+            backgroundColor: _cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.quickStackEditStack,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
                     ),
-                    suffixText: 'BB',
-                    suffixStyle: GoogleFonts.ibmPlexSans(
-                      color: Colors.white.withValues(alpha: 0.5),
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                l10n.quickStackCurrentValue(
-                  '${currentBB.toInt()}',
-                  widget.gameType == GameType.cash ? '\$$currentChips' : '$currentChips',
-                ),
-                style: GoogleFonts.ibmPlexSans(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 13,
-                ),
-              ),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: controller,
+                      autofocus: true,
+                      keyboardType: TextInputType.number,
+                      style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17),
+                      onChanged: (_) => setDialogState(() {}),
+                      decoration: InputDecoration(
+                        labelText: l10n.quickStackStackInBb,
+                        labelStyle: GoogleFonts.ibmPlexSans(
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
+                        suffixText: 'BB',
+                        suffixStyle: GoogleFonts.ibmPlexSans(
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    l10n.quickStackCurrentValue(
+                      '${typedBB.toInt()}',
+                      chipDisplay,
+                    ),
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 13,
+                    ),
+                  ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -692,6 +698,8 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
             ],
           ),
         ),
+      );
+        },
       ),
     );
 
@@ -1022,7 +1030,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
         color: _cardColor,
         borderRadius: BorderRadius.circular(14),
         border: isButton
-            ? Border.all(color: _mint.withValues(alpha: 0.35), width: 1.5)
+            ? Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.35), width: 1.5)
             : null,
       ),
       child: Column(
@@ -1056,11 +1064,11 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                   height: 30,
                   decoration: BoxDecoration(
                     color: isButton
-                        ? _mint.withValues(alpha: 0.15)
+                        ? const Color(0xFFFFD700).withValues(alpha: 0.15)
                         : Colors.white.withValues(alpha: 0.05),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isButton ? _mint : Colors.white.withValues(alpha: 0.15),
+                      color: isButton ? const Color(0xFFFFD700) : Colors.white.withValues(alpha: 0.15),
                       width: 1.5,
                     ),
                   ),
@@ -1070,7 +1078,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: isButton ? _mint : Colors.white.withValues(alpha: 0.3),
+                        color: isButton ? const Color(0xFFFFD700) : Colors.white.withValues(alpha: 0.3),
                       ),
                     ),
                   ),
@@ -1091,15 +1099,15 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: isButton
-                              ? _mint.withValues(alpha: 0.12)
-                              : Colors.white.withValues(alpha: 0.06),
+                              ? const Color(0xFFFFD700).withValues(alpha: 0.12)
+                              : const Color(0xFFFF5252).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           positionLabel,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 11,
-                            color: isButton ? _mint : Colors.white.withValues(alpha: 0.5),
+                            color: isButton ? const Color(0xFFFFD700) : const Color(0xFFFF5252),
                             fontWeight: FontWeight.w600,
                           ),
                         ),

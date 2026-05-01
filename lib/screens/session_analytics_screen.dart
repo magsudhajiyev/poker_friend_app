@@ -466,12 +466,12 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                       ),
                       const SizedBox(width: 12),
                       GestureDetector(
-                        onTap: _isExporting ? null : _handleSessionExport,
+                        onTap: _isExporting || _hands.isEmpty ? null : _handleSessionExport,
                         child: Container(
                           width: 44,
                           height: 44,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF101115),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF101115),
                             shape: BoxShape.circle,
                           ),
                           child: _isExporting
@@ -484,8 +484,11 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                                         Color(0xFF89F1EC)),
                                   ),
                                 )
-                              : const Icon(Icons.ios_share,
-                                  color: Colors.white, size: 20),
+                              : Icon(Icons.ios_share,
+                                  color: _hands.isEmpty
+                                      ? Colors.white.withValues(alpha: 0.25)
+                                      : Colors.white,
+                                  size: 20),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -816,6 +819,10 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                       case 'final':
                         label = l10n.sessionAnalyticsEnd;
                         break;
+                      case 'manual_increase':
+                      case 'manual_decrease':
+                        label = '📝';
+                        break;
                       default:
                         label = '#${entry['handNumber'] ?? idx}';
                     }
@@ -871,6 +878,9 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                       final entry = _stackHistory[index];
                       final handNumber = entry['handNumber'] as int?;
                       final changeType = entry['changeType'] ?? '';
+                      final note = entry['note'] as String?;
+
+                      String detail = stackValue;
 
                       if (changeType != 'initial' && changeType != 'rebuy' && changeType != 'final' && handNumber != null && handNumber > 0) {
                         final hand = _findHandByNumber(handNumber);
@@ -880,13 +890,19 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                         final card2 = holeCards?['card2'] as String?;
                         final hasCards = card1 != null && card1.isNotEmpty && card2 != null && card2.isNotEmpty;
 
-                        String detail = stackValue;
                         if (position != null && position.isNotEmpty) {
                           detail += '  ·  $position';
                         }
                         if (hasCards) {
                           detail += '\n$card1 $card2';
                         }
+                      }
+
+                      if (note != null && note.isNotEmpty) {
+                        detail += '\n📝 $note';
+                      }
+
+                      if (detail != stackValue) {
                         return LineTooltipItem(
                           detail,
                           GoogleFonts.ibmPlexSans(

@@ -2208,6 +2208,18 @@ abstract class AppLocalizations {
   /// **'Set Total'**
   String get individualSetTotal;
 
+  /// No description provided for @individualNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get individualNoteLabel;
+
+  /// No description provided for @individualNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Won big pot with AA'**
+  String get individualNoteHint;
+
   /// No description provided for @individualUpdateBlinds.
   ///
   /// In en, this message translates to:
@@ -2345,6 +2357,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Proceed with Rebuy'**
   String get individualProceedWithRebuy;
+
+  /// No description provided for @individualAddOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add-on'**
+  String get individualAddOn;
+
+  /// No description provided for @individualAddOnDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter add-on amount to increase your total investment'**
+  String get individualAddOnDescription;
+
+  /// No description provided for @individualAddOnAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add-on Amount'**
+  String get individualAddOnAmount;
+
+  /// No description provided for @individualAddOnConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get individualAddOnConfirm;
+
+  /// No description provided for @individualAddOnDescriptionTournament.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter add-on price and chips received'**
+  String get individualAddOnDescriptionTournament;
+
+  /// No description provided for @individualAddOnPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add-on Price'**
+  String get individualAddOnPrice;
+
+  /// No description provided for @individualAddOnChips.
+  ///
+  /// In en, this message translates to:
+  /// **'Chips Received'**
+  String get individualAddOnChips;
 
   /// No description provided for @individualRebuy.
   ///
@@ -4625,7 +4679,7 @@ abstract class AppLocalizations {
   /// No description provided for @loggingModeIndividualTitle.
   ///
   /// In en, this message translates to:
-  /// **'Individual Logging Mode'**
+  /// **'Quick Session Logging Mode'**
   String get loggingModeIndividualTitle;
 
   /// No description provided for @loggingModeIndividualSubtitle.

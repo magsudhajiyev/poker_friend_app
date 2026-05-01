@@ -1162,6 +1162,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get individualSetTotal => 'Ustaw wartosc';
 
   @override
+  String get individualNoteLabel => 'Notatka (opcjonalnie)';
+
+  @override
+  String get individualNoteHint => 'np. Wygrałem duży pot z AA';
+
+  @override
   String get individualUpdateBlinds => 'Zaktualizuj blindy';
 
   @override
@@ -1234,6 +1240,29 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get individualProceedWithRebuy => 'Kontynuuj Rebuy';
+
+  @override
+  String get individualAddOn => 'Dolewka';
+
+  @override
+  String get individualAddOnDescription =>
+      'Wprowadź kwotę dolewki, aby zwiększyć całkowitą inwestycję';
+
+  @override
+  String get individualAddOnAmount => 'Kwota Dolewki';
+
+  @override
+  String get individualAddOnConfirm => 'Dodaj';
+
+  @override
+  String get individualAddOnDescriptionTournament =>
+      'Wprowadź cenę dolewki i otrzymane żetony';
+
+  @override
+  String get individualAddOnPrice => 'Cena dolewki';
+
+  @override
+  String get individualAddOnChips => 'Otrzymane żetony';
 
   @override
   String get individualRebuy => 'Rebuy';
@@ -2533,7 +2562,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get loggingModeFullFeature4 => 'Analityka sesji';
 
   @override
-  String get loggingModeIndividualTitle => 'Tryb indywidualny';
+  String get loggingModeIndividualTitle => 'Tryb szybkiej sesji';
 
   @override
   String get loggingModeIndividualSubtitle => 'Sledzenie pojedynczego rozdania';

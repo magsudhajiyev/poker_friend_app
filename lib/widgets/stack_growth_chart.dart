@@ -117,9 +117,18 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
     final scrollMin = -0.5;
     final scrollMax = (totalMaxX - viewWindow).clamp(scrollMin, double.infinity);
 
+    // Check if selected entry has a long note that needs scrollable overlay
+    final bool showNoteOverlay = widget.selectedIndex != null &&
+        widget.selectedIndex! >= 0 &&
+        widget.selectedIndex! < data.length &&
+        _hasLongNote(data[widget.selectedIndex!]);
+
     return SizedBox(
       height: widget.height,
-      child: GestureDetector(
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          GestureDetector(
         onHorizontalDragUpdate: spots.length > widget.visiblePoints
             ? (details) {
                 // Convert drag pixels to chart units
@@ -249,7 +258,12 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
                       final entry = data[index];
                       final handNumber = entry['handNumber'] as int?;
                       final changeType = entry['changeType'] ?? '';
+                      final note = entry['note'] as String?;
 
+                      // Build detail string
+                      String detail = stackValue;
+
+                      // Hand info (position + hole cards)
                       if (changeType != 'initial' &&
                           changeType != 'rebuy' &&
                           changeType != 'final' &&
@@ -257,8 +271,9 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
                           handNumber > 0 &&
                           widget.completedHands != null) {
                         HandRecord? hand;
-                        if (index > 0 && index <= widget.completedHands!.length) {
-                          hand = widget.completedHands![index - 1];
+                        final handIdx = handNumber - 1;
+                        if (handIdx >= 0 && handIdx < widget.completedHands!.length) {
+                          hand = widget.completedHands![handIdx];
                         }
                         final position = hand?.heroPositionName;
                         final holeCards = hand?.ourHoleCards;
@@ -267,22 +282,27 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
                         final hasCards = card1 != null && card1.isNotEmpty &&
                             card2 != null && card2.isNotEmpty;
 
-                        String detail = stackValue;
                         if (position != null && position.isNotEmpty) {
                           detail += '  ·  $position';
                         }
                         if (hasCards) {
                           detail += '\n$card1 $card2';
                         }
-                        return LineTooltipItem(
-                          detail,
-                          GoogleFonts.ibmPlexSans(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        );
                       }
+
+                      // Append note
+                      if (note != null && note.isNotEmpty) {
+                        detail += '\n📝 $note';
+                      }
+
+                      return LineTooltipItem(
+                        detail,
+                        GoogleFonts.ibmPlexSans(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
                     }
 
                     return LineTooltipItem(
@@ -295,11 +315,15 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
                     );
                   }).toList();
                 },
+                fitInsideHorizontally: true,
+                fitInsideVertically: true,
+                maxContentWidth: 200,
               ),
             ),
             showingTooltipIndicators: widget.selectedIndex != null &&
                     widget.selectedIndex! >= 0 &&
-                    widget.selectedIndex! < spots.length
+                    widget.selectedIndex! < spots.length &&
+                    !showNoteOverlay
                 ? [
                     ShowingTooltipIndicators([
                       LineBarSpot(
@@ -338,6 +362,97 @@ class _StackGrowthChartState extends State<StackGrowthChart> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+          ),
+          // Scrollable note overlay
+          if (showNoteOverlay)
+            Positioned(
+              top: 4,
+              left: 16,
+              right: 16,
+              child: _buildNoteOverlay(data[widget.selectedIndex!]),
+            ),
+        ],
+      ),
+    );
+  }
+
+  bool _hasLongNote(Map<String, dynamic> entry) {
+    final note = entry['note'] as String?;
+    return note != null && note.length > 30;
+  }
+
+  Widget _buildNoteOverlay(Map<String, dynamic> entry) {
+    final stackValue = _formatAxisValue((entry['stackSize'] as num?)?.toDouble() ?? 0.0);
+    final note = entry['note'] as String? ?? '';
+    final handNumber = entry['handNumber'] as int?;
+    final changeType = entry['changeType'] ?? '';
+
+    String header = stackValue;
+
+    // Hand info
+    if (changeType != 'initial' &&
+        changeType != 'rebuy' &&
+        changeType != 'final' &&
+        handNumber != null &&
+        handNumber > 0 &&
+        widget.completedHands != null) {
+      final handIdx = handNumber - 1;
+      if (handIdx >= 0 && handIdx < widget.completedHands!.length) {
+        final hand = widget.completedHands![handIdx];
+        final position = hand.heroPositionName;
+        if (position != null && position.isNotEmpty) {
+          header += '  ·  $position';
+        }
+        final c1 = hand.ourHoleCards?.card1;
+        final c2 = hand.ourHoleCards?.card2;
+        if (c1 != null && c1.isNotEmpty && c2 != null && c2.isNotEmpty) {
+          header += '  ·  $c1 $c2';
+        }
+      }
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (widget.onDotTapped != null) widget.onDotTapped!(null);
+      },
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 120),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C2926),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(12),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                header,
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                note,
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
                 ),
               ),
             ],

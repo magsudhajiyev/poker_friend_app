@@ -1156,6 +1156,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get individualSetTotal => 'Установить итог';
 
   @override
+  String get individualNoteLabel => 'Примечание (необязательно)';
+
+  @override
+  String get individualNoteHint => 'например выиграл большой банк с AA';
+
+  @override
   String get individualUpdateBlinds => 'Обновить Blinds';
 
   @override
@@ -1228,6 +1234,29 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get individualProceedWithRebuy => 'Продолжить Rebuy';
+
+  @override
+  String get individualAddOn => 'Доп. покупка';
+
+  @override
+  String get individualAddOnDescription =>
+      'Введите сумму доп. покупки, чтобы увеличить общую инвестицию';
+
+  @override
+  String get individualAddOnAmount => 'Сумма Доп. покупки';
+
+  @override
+  String get individualAddOnConfirm => 'Добавить';
+
+  @override
+  String get individualAddOnDescriptionTournament =>
+      'Введите цену доп. покупки и полученные фишки';
+
+  @override
+  String get individualAddOnPrice => 'Цена доп. покупки';
+
+  @override
+  String get individualAddOnChips => 'Полученные фишки';
 
   @override
   String get individualRebuy => 'Rebuy';
@@ -2531,7 +2560,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get loggingModeFullFeature4 => 'Аналитика сессии';
 
   @override
-  String get loggingModeIndividualTitle => 'Индивидуальная запись';
+  String get loggingModeIndividualTitle => 'Быстрая сессия';
 
   @override
   String get loggingModeIndividualSubtitle => 'Запись отдельных раздач';

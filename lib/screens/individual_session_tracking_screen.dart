@@ -10,6 +10,7 @@ import '../services/auth_service.dart';
 import 'poker_hand_screen.dart';
 import 'quick_stack_update_screen.dart';
 import '../design_system/components/drawer_dots.dart';
+import '../design_system/components/form_drawer.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
@@ -94,6 +95,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   // Display mode (persisted via SharedPreferences)
   bool _showBBMode = false;
   static const _bbModeKey = 'session_bb_mode';
+
+  // Completed hands (for chart tooltips with hole cards, position)
+  List<HandRecord> _completedHands = [];
 
   // Chart state
   bool _statsExpanded = false;
@@ -329,214 +333,177 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   Future<void> _showUpdateStackDialog() async {
     final l10n = AppLocalizations.of(context);
     final newStackController = TextEditingController(text: _currentStack.toString());
-    final changeAmountController = TextEditingController();
+    final noteController = TextEditingController();
+    Map<String, dynamic>? result;
 
-    final newStack = await showDialog<double>(
+    await FormDrawer.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF131616),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
-        title: Text(
-          l10n.individualUpdateCurrentStack,
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+      title: l10n.individualUpdateCurrentStack,
+      heightFraction: 0.55,
+      onSave: () {
+        final value = double.tryParse(newStackController.text);
+        if (value != null) {
+          result = {
+            'stack': value,
+            'note': noteController.text.trim(),
+          };
+          Navigator.pop(context);
+        }
+      },
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF131616),
+            borderRadius: BorderRadius.circular(18),
           ),
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Current Stack Display
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              // Current Stack display
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       l10n.individualCurrentStack,
                       style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 14,
+                        fontSize: 17,
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontWeight: FontWeight.w400,
+                        height: 1.44,
                       ),
                     ),
                     Text(
-                      _formatStackValue(_currentStack),
+                      widget.gameType == GameType.cash
+                          ? '\$${_currentStack.toStringAsFixed(2)}'
+                          : _currentStack.toStringAsFixed(0),
                       style: GoogleFonts.ibmPlexSans(
                         color: const Color(0xFF89F1EC),
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 20),
-
-              Text(
-                l10n.individualSetNewTotal,
-                style: GoogleFonts.ibmPlexSans(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              // Separator
+              Container(
+                height: 21,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                alignment: Alignment.center,
+                child: Container(height: 1, color: const Color(0xFF3A3A3C)),
+              ),
+              // New Total field
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
+                child: TextField(
+                  controller: newStackController,
+                  autofocus: true,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: l10n.individualEnterNewTotalStack,
+                    hintStyle: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w400,
+                      height: 1.44,
+                    ),
+                    prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
+                    prefixStyle: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: newStackController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
-                decoration: InputDecoration(
-                  hintText: l10n.individualEnterNewTotalStack,
-                  hintStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.3)),
-                  prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
-                  prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                ),
+              // Separator
+              Container(
+                height: 21,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                alignment: Alignment.center,
+                child: Container(height: 1, color: const Color(0xFF3A3A3C)),
               ),
-
-              const SizedBox(height: 20),
-
-              Text(
-                l10n.individualAddSubtractAmount,
-                style: GoogleFonts.ibmPlexSans(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              // Note field
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: TextField(
+                  controller: noteController,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                    height: 1.44,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: l10n.individualNoteHint,
+                    hintStyle: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w400,
+                      height: 1.44,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                  maxLines: 3,
+                  minLines: 2,
+                  maxLength: 100,
+                  buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: TextField(
-                      controller: changeAmountController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
-                      decoration: InputDecoration(
-                        hintText: l10n.individualAmount,
-                        hintStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.3)),
-                        prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
-                        prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Plus Button
-                  GestureDetector(
-                    onTap: () {
-                      final amount = double.tryParse(changeAmountController.text);
-                      if (amount != null && amount > 0) {
-                        final newTotal = _currentStack + amount;
-                        Navigator.pop(context, newTotal);
-                      }
-                    },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF89F1EC),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.add, color: Colors.black, size: 22),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Minus Button
-                  GestureDetector(
-                    onTap: () {
-                      final amount = double.tryParse(changeAmountController.text);
-                      if (amount != null && amount > 0) {
-                        final newTotal = _currentStack - amount;
-                        if (newTotal >= 0) {
-                          Navigator.pop(context, newTotal);
-                        }
-                      }
-                    },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.remove, color: Colors.white, size: 22),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.commonCancel,
-              style: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              final value = double.tryParse(newStackController.text);
-              Navigator.pop(context, value);
-            },
-            child: Text(
-              l10n.individualSetTotal,
-              style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF89F1EC),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
     );
 
-    if (newStack != null && newStack >= 0) {
-      final previousStack = _currentStack;
-      final stackChange = newStack - previousStack;
+    if (result != null) {
+      final newStack = result!['stack'] as double;
+      final note = result!['note'] as String;
+      if (newStack >= 0) {
+        final previousStack = _currentStack;
+        final stackChange = newStack - previousStack;
 
-      setState(() {
-        _currentStack = newStack;
-        _stackHistory.add({
-          'timestamp': DateTime.now().toIso8601String(),
-          'stackSize': newStack,
-          'changeType': stackChange >= 0 ? 'manual_increase' : 'manual_decrease',
-          'changeAmount': stackChange.abs(),
+        setState(() {
+          _currentStack = newStack;
+          final entry = <String, dynamic>{
+            'timestamp': DateTime.now().toIso8601String(),
+            'stackSize': newStack,
+            'changeType': stackChange >= 0 ? 'manual_increase' : 'manual_decrease',
+            'changeAmount': stackChange.abs(),
+          };
+          if (note.isNotEmpty) {
+            entry['note'] = note;
+          }
+          _stackHistory.add(entry);
         });
-      });
 
-      if (_sessionId != null) {
-        FirebaseService.updateIndividualSession(
-          sessionId: _sessionId!,
-          currentStack: _currentStack,
-          stackHistory: _stackHistory,
-        ).catchError((e) {});
+        if (_sessionId != null) {
+          FirebaseService.updateIndividualSession(
+            sessionId: _sessionId!,
+            currentStack: _currentStack,
+            stackHistory: _stackHistory,
+          ).catchError((e) {});
+        }
       }
     }
   }
@@ -599,6 +566,38 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Text(
                                 l10n.individualRebuy,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                  height: 1.44,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      height: 1,
+                      color: Colors.white.withValues(alpha: 0.06),
+                    ),
+                    // Add-on row
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showAddOnDialog();
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.attach_money, color: Color(0xFF89F1EC), size: 16),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                l10n.individualAddOn,
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
@@ -860,6 +859,12 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           }
         });
 
+        // Collect hand record for chart tooltips
+        final handRecord = result['handRecord'] as HandRecord?;
+        if (handRecord != null) {
+          _completedHands.add(handRecord);
+        }
+
         _stackHistory.add({
           'timestamp': DateTime.now().toIso8601String(),
           'stackSize': _currentStack,
@@ -894,6 +899,138 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             ).show(context);
           });
         }
+      }
+    }
+  }
+
+  Future<void> _handleBackNavigation() async {
+    final l10n = AppLocalizations.of(context);
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF161618),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            l10n.handLeaveSession,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 20,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            _handsLogged > 0
+                ? l10n.pokerHandActiveSessionMsg(_handsLogged)
+                : l10n.individualStopSessionMessage,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          actions: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, 'save'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    l10n.handSaveAndExit,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      color: const Color(0xFF89F1EC),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, 'discard'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    l10n.handDiscardAndExit,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      color: const Color(0xFFFF4444),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, null),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    l10n.commonCancel,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == 'save') {
+      // Show bankroll sheet BEFORE ending session
+      if (!mounted) return;
+      final profit = _currentStack - _totalBuyIn;
+      final applied = await SessionEndBankrollSheet.show(
+        context: context,
+        gameType: widget.gameType,
+        profitLoss: profit,
+        totalBuyIn: _totalBuyIn,
+      );
+
+      // User hit X — resume session
+      if (applied != true) return;
+
+      // User applied — end session
+      if (_sessionId != null) {
+        try {
+          await FirebaseService.endSession(_sessionId!);
+          await FirebaseService.updateIndividualSession(
+            sessionId: _sessionId!,
+            sessionStatus: 'completed',
+            currentStack: _currentStack,
+            handsLogged: _handsLogged,
+            biggestPot: _biggestPot,
+            stackHistory: _stackHistory,
+            totalBuyIn: _totalBuyIn,
+          );
+        } catch (e) {}
+      }
+
+      if (mounted) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+    } else if (result == 'discard') {
+      // Delete session and exit
+      if (_sessionId != null) {
+        try {
+          await FirebaseService.deleteSession(_sessionId!);
+        } catch (e) {}
+      }
+      if (mounted) {
+        Navigator.popUntil(context, (route) => route.isFirst);
       }
     }
   }
@@ -1024,6 +1161,22 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     );
 
     if (confirm == true) {
+      // Show bankroll update prompt BEFORE ending session
+      // X (close) = cancel, resume session
+      // Checkmark (save) = apply result, end session
+      if (!mounted) return;
+      final profit = _currentStack - _totalBuyIn;
+      final applied = await SessionEndBankrollSheet.show(
+        context: context,
+        gameType: widget.gameType,
+        profitLoss: profit,
+        totalBuyIn: _totalBuyIn,
+      );
+
+      // User hit X — resume session, don't end
+      if (applied != true) return;
+
+      // User applied — end session
       if (_sessionId != null) {
         try {
           await FirebaseService.endSession(_sessionId!);
@@ -1037,21 +1190,6 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             totalBuyIn: _totalBuyIn,
           );
         } catch (e) {}
-      }
-
-      // Show bankroll update prompt
-      if (mounted) {
-        final profit = _currentStack - _totalBuyIn;
-        await showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (_) => SessionEndBankrollSheet(
-            gameType: widget.gameType,
-            profitLoss: profit,
-            totalBuyIn: _totalBuyIn,
-          ),
-        );
       }
 
       if (mounted) {
@@ -1134,6 +1272,159 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         ],
       ),
     );
+  }
+
+  Future<void> _showAddOnDialog() async {
+    final l10n = AppLocalizations.of(context);
+    final isTournament = widget.gameType == GameType.tournament;
+    final priceController = TextEditingController();
+    final chipsController = TextEditingController();
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF131616),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.attach_money, color: Color(0xFF89F1EC), size: 24),
+            const SizedBox(width: 12),
+            Text(
+              l10n.individualAddOn,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                isTournament
+                    ? l10n.individualAddOnDescriptionTournament
+                    : l10n.individualAddOnDescription,
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: priceController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                autofocus: true,
+                style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
+                decoration: InputDecoration(
+                  labelText: isTournament ? l10n.individualAddOnPrice : l10n.individualAddOnAmount,
+                  labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withValues(alpha: 0.5)),
+                  prefixText: '\$ ',
+                  prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+              if (isTournament) ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: chipsController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
+                  decoration: InputDecoration(
+                    labelText: l10n.individualAddOnChips,
+                    labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withValues(alpha: 0.5)),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              l10n.commonCancel,
+              style: GoogleFonts.ibmPlexSans(color: Colors.white.withValues(alpha: 0.5)),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              final price = double.tryParse(priceController.text);
+              if (price == null || price <= 0) return;
+              if (isTournament) {
+                final chips = double.tryParse(chipsController.text);
+                if (chips == null || chips <= 0) return;
+                Navigator.pop(context, {'price': price, 'chips': chips});
+              } else {
+                Navigator.pop(context, {'price': price, 'chips': price});
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF89F1EC),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                l10n.individualAddOnConfirm,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      final price = result['price'] as double;
+      final chips = result['chips'] as double;
+      final noteText = widget.gameType == GameType.tournament
+          ? 'Add-on: ${chips.toInt()} chips (\$${price.toInt()})'
+          : 'Add-on: \$${price.toInt()}';
+
+      setState(() {
+        _totalBuyIn += price;
+        _currentStack += chips;
+        _stackHistory.add({
+          'timestamp': DateTime.now().toIso8601String(),
+          'stackSize': _currentStack,
+          'changeType': 'manual_increase',
+          'changeAmount': chips,
+          'note': noteText,
+        });
+      });
+
+      if (_sessionId != null) {
+        FirebaseService.updateIndividualSession(
+          sessionId: _sessionId!,
+          currentStack: _currentStack,
+          totalBuyIn: _totalBuyIn,
+          stackHistory: _stackHistory,
+        ).catchError((e) {});
+      }
+    }
   }
 
   Future<void> _showRebuyDialog() async {
@@ -1386,7 +1677,14 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     final profitLoss = _currentStack - _initialStack;
     final isProfit = _currentStack > _initialStack;
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          await _handleBackNavigation();
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
@@ -1467,10 +1765,21 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                             ],
                           ),
                         ),
-                        // Settings dots
-                        SizedBox(
+                        // Add menu button
+                        GestureDetector(
                           key: _dotsKey,
-                          child: DrawerDots(onTap: () => _showOptionsMenu()),
+                          onTap: () => widget.gameType == GameType.cash
+                              ? _showAddOnDialog()
+                              : _showOptionsMenu(),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.add, color: Colors.white, size: 18),
+                          ),
                         ),
                       ],
                     ),
@@ -1606,10 +1915,10 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   const SizedBox(height: 16),
 
                   // Stack Chart
-                  if (widget.liveStackHistory != null && widget.liveStackHistory!.isNotEmpty)
+                  if (_stackHistory.length > 1)
                     _buildStackChartCard(),
 
-                  if (widget.liveStackHistory != null && widget.liveStackHistory!.isNotEmpty)
+                  if (_stackHistory.length > 1)
                     const SizedBox(height: 16),
 
                   // Session Info (collapsible)
@@ -1721,6 +2030,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -1740,7 +2050,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   Widget _buildStackChartCard() {
     final l10n = AppLocalizations.of(context);
-    final history = widget.liveStackHistory!;
+    final history = _stackHistory;
     final hasData = history.length >= 2;
 
     return Container(
@@ -1770,7 +2080,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                     StackGrowthChartFullScreen.show(
                       context: context,
                       stackHistory: history,
-                      completedHands: widget.completedHands,
+                      completedHands: _completedHands,
                       startingStack: widget.startingStack,
                       formatValue: _chartFormatValue,
                       profitLoss: _currentStack - _initialStack,
@@ -1800,7 +2110,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
           if (hasData)
             StackGrowthChart(
               stackHistory: history,
-              completedHands: widget.completedHands,
+              completedHands: _completedHands,
               startingStack: widget.startingStack,
               formatValue: _chartFormatValue,
               height: 200,

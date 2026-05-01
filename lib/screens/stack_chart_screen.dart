@@ -404,6 +404,10 @@ class _StackChartScreenState extends State<StackChartScreen> {
                   case 'final':
                     label = AppLocalizations.of(context).stackChartScreenEnd;
                     break;
+                  case 'manual_increase':
+                  case 'manual_decrease':
+                    label = '📝';
+                    break;
                   default:
                     label = '#${entry['handNumber'] ?? idx}';
                 }
@@ -473,6 +477,9 @@ class _StackChartScreenState extends State<StackChartScreen> {
                   final entry = widget.stackHistory[index];
                   final handNumber = entry['handNumber'] as int?;
                   final changeType = entry['changeType'] ?? '';
+                  final note = entry['note'] as String?;
+
+                  String detail = stackValue;
 
                   if (changeType != 'initial' &&
                       changeType != 'rebuy' &&
@@ -489,13 +496,19 @@ class _StackChartScreenState extends State<StackChartScreen> {
                         card2 != null &&
                         card2.isNotEmpty;
 
-                    String detail = stackValue;
                     if (position != null && position.isNotEmpty) {
                       detail += '  ·  $position';
                     }
                     if (hasCards) {
                       detail += '\n$card1 $card2';
                     }
+                  }
+
+                  if (note != null && note.isNotEmpty) {
+                    detail += '\n📝 $note';
+                  }
+
+                  if (detail != stackValue) {
                     return LineTooltipItem(
                       detail,
                       GoogleFonts.ibmPlexSans(

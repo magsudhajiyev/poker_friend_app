@@ -1172,6 +1172,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get individualSetTotal => 'Gesamt setzen';
 
   @override
+  String get individualNoteLabel => 'Notiz (optional)';
+
+  @override
+  String get individualNoteHint => 'z.B. Großen Pot mit AA gewonnen';
+
+  @override
   String get individualUpdateBlinds => 'Blinds aktualisieren';
 
   @override
@@ -1244,6 +1250,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get individualProceedWithRebuy => 'Rebuy durchführen';
+
+  @override
+  String get individualAddOn => 'Add-on';
+
+  @override
+  String get individualAddOnDescription =>
+      'Geben Sie den Add-on-Betrag ein, um Ihre Gesamtinvestition zu erhöhen';
+
+  @override
+  String get individualAddOnAmount => 'Add-on-Betrag';
+
+  @override
+  String get individualAddOnConfirm => 'Hinzufügen';
+
+  @override
+  String get individualAddOnDescriptionTournament =>
+      'Add-on-Preis und erhaltene Chips eingeben';
+
+  @override
+  String get individualAddOnPrice => 'Add-on-Preis';
+
+  @override
+  String get individualAddOnChips => 'Erhaltene Chips';
 
   @override
   String get individualRebuy => 'Rebuy';
@@ -2551,7 +2580,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get loggingModeFullFeature4 => 'Session-Analyse';
 
   @override
-  String get loggingModeIndividualTitle => 'Einzelhand-Logging';
+  String get loggingModeIndividualTitle => 'Schnellsitzungsmodus';
 
   @override
   String get loggingModeIndividualSubtitle => 'Einzelne Hand tracken';

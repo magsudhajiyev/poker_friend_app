@@ -728,15 +728,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (stackHistory.isNotEmpty) {
           final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
           final profit = lastStack - sessionManager.totalBuyIn;
-          await showModalBottomSheet(
+          await SessionEndBankrollSheet.show(
             context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (_) => SessionEndBankrollSheet(
-              gameType: sessionManager.gameType,
-              profitLoss: profit,
-              totalBuyIn: sessionManager.totalBuyIn,
-            ),
+            gameType: sessionManager.gameType,
+            profitLoss: profit,
+            totalBuyIn: sessionManager.totalBuyIn,
           );
         }
 
@@ -5210,6 +5206,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           'smallBlind': sessionManager.smallBlind,
           'bigBlind': sessionManager.bigBlind,
           'hasBBante': gameState.hasBBante,
+          'handRecord': sessionManager.completedHands.isNotEmpty ? sessionManager.completedHands.last : null,
         });
         return;
       }
@@ -5358,6 +5355,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         'smallBlind': sessionManager.smallBlind,
         'bigBlind': sessionManager.bigBlind,
         'hasBBante': gameState.hasBBante,
+        'handRecord': sessionManager.completedHands.isNotEmpty ? sessionManager.completedHands.last : null,
       });
       return;
     }
@@ -5664,6 +5662,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         'smallBlind': sessionManager.smallBlind,
         'bigBlind': sessionManager.bigBlind,
         'hasBBante': gameState.hasBBante,
+        'handRecord': sessionManager.completedHands.isNotEmpty ? sessionManager.completedHands.last : null,
       });
       return;
     }
@@ -6180,6 +6179,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         'smallBlind': sessionManager.smallBlind,
         'bigBlind': sessionManager.bigBlind,
         'hasBBante': gameState.hasBBante,
+        'handRecord': sessionManager.completedHands.isNotEmpty ? sessionManager.completedHands.last : null,
       });
       return;
     }
