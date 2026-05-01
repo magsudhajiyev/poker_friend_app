@@ -540,6 +540,7 @@ user_notifications/{notificationId}/
 2. **Final stack lost**: Call `addFinalStackEntry()` before `endSession()`
 3. **Duplicate sessions**: Only ONE code path should create poker_sessions records
 4. **Non-player sessions**: Check `participantIds` before updating stats for live sessions
+5. **Missing buyInAmount**: Individual sessions must save BOTH `buyInAmount` AND `totalBuyIn` — analytics reads `buyInAmount` for display, `totalBuyIn` for calculations
 
 ### UI Bugs
 1. **FAB hit testing**: Stack clipBehavior is visual only — add GestureDetector within Row bounds

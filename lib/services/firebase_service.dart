@@ -74,7 +74,8 @@ class FirebaseService {
         sessionData.addAll({
           'startingStack': startingStack ?? 0.0,
           'currentStack': startingStack ?? 0.0,
-          'totalBuyIn': totalBuyIn ?? 0.0, // Add totalBuyIn for individual sessions
+          'buyInAmount': totalBuyIn ?? 0.0, // Money paid for buy-in
+          'totalBuyIn': totalBuyIn ?? 0.0, // Total money invested (starts with buy-in)
           'handsLogged': 0,
           'biggestPot': 0.0,
           'sessionStatus': 'active',

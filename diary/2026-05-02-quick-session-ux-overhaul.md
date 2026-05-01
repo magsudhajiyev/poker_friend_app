@@ -49,7 +49,14 @@ Major UX improvements to individual (now "Quick Session") logging mode, session 
 - Controller disposal in static `show()` methods: delay disposal with `Future.delayed(500ms)` to survive closing animation
 - Session end flow: always show result sheet before ending session so user can cancel
 
-## Files Modified (25 files)
+### Tournament Total Invested Bug
+- **Symptom**: Session Analytics showed $0.00 for Total Invested on all tournament individual sessions
+- **Root cause**: `FirebaseService.createSession` saved `totalBuyIn` for individual sessions but NOT `buyInAmount`. Tournament analytics branch read `buyInAmount` → got null → defaulted to 0.0
+- **Fix 1**: Analytics tournament branch reads `totalBuyIn` first, falls back to `buyInAmount`
+- **Fix 2**: `createSession` now saves `buyInAmount` for individual sessions (consistency with full logging)
+- **Pattern**: Always check that field names match between write (createSession/updateSession) and read (analytics screen). Individual vs full logging sessions historically saved different field sets.
+
+## Files Modified (25+ files)
 - `lib/design_system/components/form_drawer.dart`
 - `lib/screens/home_screen.dart`
 - `lib/screens/individual_session_tracking_screen.dart`

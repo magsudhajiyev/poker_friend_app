@@ -309,7 +309,9 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
       _totalInvested = (sessionTotalBuyIn > calculatedTotal) ? sessionTotalBuyIn : calculatedTotal;
       _profitLoss = _finalStack - _totalInvested;
     } else {
-      _totalInvested = widget.sessionData['buyInAmount']?.toDouble() ?? 0.0;
+      _totalInvested = widget.sessionData['totalBuyIn']?.toDouble()
+          ?? widget.sessionData['buyInAmount']?.toDouble()
+          ?? 0.0;
       _profitLoss = widget.sessionData['averageGrowth']?.toDouble() ?? 0.0;
 
       if (_profitLoss == 0.0 && _stackHistory.length > 1) {
