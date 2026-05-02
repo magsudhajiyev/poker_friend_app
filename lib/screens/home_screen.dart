@@ -4551,9 +4551,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final aggressionFactor = (playerStats['aggressionFactor'] as num?)?.toDouble() ?? 0.0;
     final wtsd = (playerStats['wtsd'] as num?)?.toDouble();
     final wsd = (playerStats['wsd'] as num?)?.toDouble();
-    final handsPlayed = (playerStats['handsPlayed'] as num?)?.toInt();
-
-    print('🎯 PLAY_STYLE: vpip=$vpip, pfr=$pfr, 3bet=$threeBet, AF=$aggressionFactor, handsPlayed=$handsPlayed, statsKeys=${playerStats.keys.toList()}');
+    final handsPlayed = (playerStats['totalHands'] as num?)?.toInt() ??
+        (playerStats['handsPlayed'] as num?)?.toInt();
 
     final result = PlayStyleDetector.detectPlayStyle(
       vpip: vpip,

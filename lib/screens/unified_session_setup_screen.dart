@@ -220,20 +220,17 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       }
     }
 
-    showModalBottomSheet(
+    SeatConfigSheet.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => SeatConfigSheet(
-          seatNumber: seatNumber,
-          initialName: _seatNames[seatNumber] ?? '',
-          initialStack: _seatStacks[seatNumber] ?? defaultStack,
-          isHero: _heroSeat == seatNumber,
-          isActive: isActive,
-          defaultStack: defaultStack > 0 ? defaultStack : 100,
-          heroName: _heroName,
-          seatedPlayers: seatedPlayers,
-          onSave: ({
+      seatNumber: seatNumber,
+      initialName: _seatNames[seatNumber] ?? '',
+      initialStack: _seatStacks[seatNumber] ?? defaultStack,
+      isHero: _heroSeat == seatNumber,
+      isActive: isActive,
+      defaultStack: defaultStack > 0 ? defaultStack : 100,
+      heroName: _heroName,
+      seatedPlayers: seatedPlayers,
+      onSave: ({
             required String name,
             required double stack,
             required bool isHero,
@@ -278,7 +275,6 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
               }
             });
           },
-        ),
     );
   }
 

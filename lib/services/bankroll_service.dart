@@ -214,15 +214,9 @@ class BankrollService {
 
       final avgWeeklyEarnings = totalProfit / (sessions.length > 0 ? (sessions.length / 2.0) : 1.0);
 
-      final vpip = userStats.totalHands > 0
-          ? (userStats.vpipCount / userStats.totalHands) * 100
-          : 0.0;
-      final pfr = userStats.totalHands > 0
-          ? (userStats.pfrCount / userStats.totalHands) * 100
-          : 0.0;
-      final threeBet = userStats.totalHands > 0
-          ? (userStats.threeBetCount / userStats.totalHands) * 100
-          : 0.0;
+      final vpip = userStats.vpipPercentage;
+      final pfr = userStats.pfrPercentage;
+      final threeBet = userStats.threeBetPercentage;
 
       final aggressiveActions = userStats.pfrCount.toDouble();
       final passiveActions = (userStats.vpipCount - userStats.pfrCount).toDouble();
@@ -241,6 +235,7 @@ class BankrollService {
         'threeBet': threeBet,
         'aggressionFactor': aggressionFactor,
         'handsPlayed': userStats.handsPlayed,
+        'totalHands': userStats.totalHands,
       };
     } catch (e) {
       print('Error getting player statistics: $e');
