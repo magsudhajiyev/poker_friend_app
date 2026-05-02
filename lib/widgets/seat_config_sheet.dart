@@ -16,6 +16,7 @@ class SeatConfigSheet extends StatefulWidget {
   final double defaultStack;
   final String heroName;
   final Map<String, int> seatedPlayers; // lowercase name → seat
+  final bool isCash;
   final void Function({
     required String name,
     required double stack,
@@ -33,6 +34,7 @@ class SeatConfigSheet extends StatefulWidget {
     required this.defaultStack,
     this.heroName = '',
     this.seatedPlayers = const {},
+    this.isCash = true,
     required this.onSave,
   }) : super(key: key);
 
@@ -47,6 +49,7 @@ class SeatConfigSheet extends StatefulWidget {
     required double defaultStack,
     String heroName = '',
     Map<String, int> seatedPlayers = const {},
+    bool isCash = true,
     required void Function({
       required String name,
       required double stack,
@@ -75,6 +78,7 @@ class SeatConfigSheet extends StatefulWidget {
         defaultStack: defaultStack,
         heroName: heroName,
         seatedPlayers: seatedPlayers,
+        isCash: isCash,
         onSave: onSave,
       ),
     );
@@ -97,6 +101,7 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
       defaultStack: widget.defaultStack,
       heroName: widget.heroName,
       seatedPlayers: widget.seatedPlayers,
+      isCash: widget.isCash,
       onSave: widget.onSave,
     );
   }
@@ -112,6 +117,7 @@ class _SeatConfigBody extends StatefulWidget {
   final double defaultStack;
   final String heroName;
   final Map<String, int> seatedPlayers;
+  final bool isCash;
   final void Function({
     required String name,
     required double stack,
@@ -129,6 +135,7 @@ class _SeatConfigBody extends StatefulWidget {
     required this.defaultStack,
     this.heroName = '',
     this.seatedPlayers = const {},
+    this.isCash = true,
     required this.onSave,
   }) : super(key: key);
 
@@ -527,7 +534,7 @@ class _SeatConfigBodyState extends State<_SeatConfigBody> {
             ),
             decoration: _inputDecoration(
               widget.defaultStack.toStringAsFixed(0),
-              prefixText: '\$ ',
+              prefixText: widget.isCash ? '\$ ' : null,
             ),
           ),
           const SizedBox(height: 20),

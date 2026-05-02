@@ -230,6 +230,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       defaultStack: defaultStack > 0 ? defaultStack : 100,
       heroName: _heroName,
       seatedPlayers: seatedPlayers,
+      isCash: _gameType == GameType.cash,
       onSave: ({
             required String name,
             required double stack,
