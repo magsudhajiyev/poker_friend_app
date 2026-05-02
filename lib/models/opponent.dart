@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 /// Represents an opponent player with their stats and playing style
 class Opponent {
@@ -141,6 +142,27 @@ extension OpponentColorExtension on OpponentColor {
         return 'Pink';
       case OpponentColor.indigo:
         return 'Indigo';
+    }
+  }
+
+  Color get flutterColor {
+    switch (this) {
+      case OpponentColor.red:
+        return Colors.red;
+      case OpponentColor.blue:
+        return Colors.blue;
+      case OpponentColor.green:
+        return Colors.green;
+      case OpponentColor.orange:
+        return Colors.orange;
+      case OpponentColor.purple:
+        return Colors.purple;
+      case OpponentColor.teal:
+        return Colors.teal;
+      case OpponentColor.pink:
+        return Colors.pink;
+      case OpponentColor.indigo:
+        return Colors.indigo;
     }
   }
 }

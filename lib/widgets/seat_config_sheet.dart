@@ -390,8 +390,8 @@ class _SeatConfigSheetState extends State<SeatConfigSheet> {
                                       Container(
                                         width: 8,
                                         height: 8,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF89F1EC),
+                                        decoration: BoxDecoration(
+                                          color: opponent.color.flutterColor,
                                           shape: BoxShape.circle,
                                         ),
                                       ),
