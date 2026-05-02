@@ -355,7 +355,6 @@ class _TableManagementBodyState extends State<_TableManagementBody> {
                     confidence: confidence,
                     isHero: false,
                     isInteractive: widget.gameState.currentRound == BettingRound.preflop,
-                    hideLabels: true,
                     formatCurrency: widget.gameState.formatCurrency,
                     onRangeSelected: (StackRange range) {
                       final newStack = StackBucketHelper.midpointBB(range) * bigBlind;

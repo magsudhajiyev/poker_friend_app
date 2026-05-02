@@ -4329,7 +4329,6 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   // Confirmation dialog for rebuy when user has existing stack
   Future<bool?> _showRebuyConfirmationDialog(double currentStack) async {
     final l10n = AppLocalizations.of(context);
-    // Format stack value based on game type
     String formatStackValue(double value) {
       return widget.gameType == GameType.cash
           ? '\$${value.toStringAsFixed(2)}'
@@ -4340,140 +4339,111 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-            child: Container(
-              constraints: BoxConstraints(maxWidth: 340),
-              decoration: BoxDecoration(
-                color: AppColors.glassyCardColor(),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppColors.whiteBorder(),
-                  width: 1,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFF262626)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0xFF2E5A59),
+                blurRadius: 64,
+                offset: Offset(0, -6),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  l10n.handConfirmRebuy,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    letterSpacing: -0.43,
+                  ),
                 ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header
-                  Container(
-                    padding: EdgeInsets.all(24),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
+                const SizedBox(height: 16),
+                Text(
+                  l10n.pokerHandCurrentlyHaveRemaining(formatStackValue(currentStack)),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: Colors.white.withValues(alpha: 0.6),
+                    height: 1.44,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.handRebuyReplaceStack,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(110),
+                            border: Border.all(
+                              color: const Color(0xFFD3FFFD),
+                            ),
                           ),
-                          child: Icon(
-                            Icons.warning_amber_rounded,
-                            color: Colors.orange,
-                            size: 20,
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          l10n.handConfirmRebuy,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Content
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.pokerHandCurrentlyHaveRemaining(formatStackValue(currentStack)),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 15,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          l10n.handRebuyReplaceStack,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 24),
-                        // Actions
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppColors.whiteBorder()),
-                                ),
-                                child: TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
-                                  child: Text(
-                                    l10n.commonCancel,
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.6),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
+                          child: Center(
+                            child: Text(
+                              l10n.commonCancel,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFFD3FFFD),
+                                letterSpacing: -0.5,
                               ),
                             ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Container(
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    l10n.handProceed,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF89F1EC),
+                            borderRadius: BorderRadius.circular(110),
+                          ),
+                          child: Center(
+                            child: Text(
+                              l10n.handProceed,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                                letterSpacing: -0.5,
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -4498,263 +4468,45 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final rebuyAmountController = TextEditingController();
     final stackSizeController = TextEditingController();
 
-    showDialog(
+    final bodyKey = GlobalKey<_RebuyBodyState>();
+
+    FormDrawer.show(
       context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: 340),
-                decoration: BoxDecoration(
-                  color: AppColors.glassyCardColor(),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColors.whiteBorder(),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header
-                    Container(
-                      padding: EdgeInsets.all(24),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppColors.accentGreen.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.add_circle_outline,
-                              color: AppColors.accentGreen,
-                              size: 20,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            l10n.handRebuy,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Content
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.handEnterRebuyDetails,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
-                              fontSize: 14,
-                            ),
-                          ),
-                          SizedBox(height: 20),
-
-                          // Rebuy Amount Input
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.whiteBorder()),
-                            ),
-                            child: TextField(
-                              controller: rebuyAmountController,
-                              keyboardType: TextInputType.numberWithOptions(decimal: true),
-                              style: TextStyle(color: Colors.white, fontSize: 16),
-                              decoration: InputDecoration(
-                                labelText: l10n.handRebuyAmount,
-                                labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                                prefixText: '\$ ',
-                                prefixStyle: TextStyle(color: Colors.white, fontSize: 16),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: 16),
-
-                          // Stack Size Input
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.whiteBorder()),
-                            ),
-                            child: TextField(
-                              controller: stackSizeController,
-                              keyboardType: TextInputType.numberWithOptions(decimal: true),
-                              style: TextStyle(color: Colors.white, fontSize: 16),
-                              decoration: InputDecoration(
-                                labelText: l10n.handNewStackSize,
-                                labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                                hintText: l10n.handChipCountAfterRebuy,
-                                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: 20),
-
-                          // Current session info
-                          Container(
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.whiteBorder()),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.handSessionInfo,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  l10n.handTotalInvested(sessionManager.totalBuyIn.toStringAsFixed(2)),
-                                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
-                                ),
-                                Text(
-                                  l10n.handRebuysCount(sessionManager.getRebuyCount()),
-                                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          SizedBox(height: 24),
-
-                          // Actions
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: AppColors.whiteBorder()),
-                                  ),
-                                  child: TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                    },
-                                    child: Text(
-                                      l10n.commonCancel,
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.6),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Container(
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [AppColors.gradientGreenEnd, AppColors.gradientGreenStart],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      final rebuyAmount = double.tryParse(rebuyAmountController.text);
-                                      final stackSize = double.tryParse(stackSizeController.text);
-
-                                      if (rebuyAmount != null && stackSize != null && rebuyAmount > 0 && stackSize > 0) {
-                                        // Add rebuy to session manager
-                                        sessionManager.addRebuy(
-                                          amount: rebuyAmount,
-                                          stack: stackSize,
-                                        );
-
-                                        // Update the player's current stack in game state
-                                        final ourSeat = sessionManager.ourSeatNumber;
-                                        if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
-                                          setState(() {
-                                            gameState.players[ourSeat - 1].currentStack = stackSize;
-                                          });
-                                        }
-
-                                        Navigator.pop(context);
-
-                                        // Show confirmation
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(AppLocalizations.of(context).pokerHandRebuyAdded(rebuyAmount.toStringAsFixed(2), stackSize.toStringAsFixed(0))),
-                                            backgroundColor: AppColors.gradientGreenEnd,
-                                          ),
-                                        );
-                                      } else {
-                                        // Show error
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(l10n.handPleaseEnterValidAmounts),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.transparent,
-                                      shadowColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      l10n.handAddRebuy,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
+      title: l10n.handRebuy,
+      heightFraction: 0.55,
+      onSave: () {
+        bodyKey.currentState?._save();
       },
+      body: _RebuyBody(
+        key: bodyKey,
+        rebuyAmountController: rebuyAmountController,
+        stackSizeController: stackSizeController,
+        sessionManager: sessionManager,
+        gameState: gameState,
+        onSaved: (rebuyAmount, stackSize) {
+          // Add rebuy to session manager
+          sessionManager.addRebuy(
+            amount: rebuyAmount,
+            stack: stackSize,
+          );
+
+          // Update the player's current stack in game state
+          final ourSeat = sessionManager.ourSeatNumber;
+          if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
+            setState(() {
+              gameState.players[ourSeat - 1].currentStack = stackSize;
+            });
+          }
+
+          // Show confirmation
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context).pokerHandRebuyAdded(rebuyAmount.toStringAsFixed(2), stackSize.toStringAsFixed(0))),
+              backgroundColor: AppColors.gradientGreenEnd,
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -6445,3 +6197,167 @@ class _BustedPlayerDialogState extends State<_BustedPlayerDialog> {
   }
 }
 
+class _RebuyBody extends StatefulWidget {
+  final TextEditingController rebuyAmountController;
+  final TextEditingController stackSizeController;
+  final PokerSessionManager sessionManager;
+  final PokerGameState gameState;
+  final void Function(double rebuyAmount, double stackSize) onSaved;
+
+  const _RebuyBody({
+    super.key,
+    required this.rebuyAmountController,
+    required this.stackSizeController,
+    required this.sessionManager,
+    required this.gameState,
+    required this.onSaved,
+  });
+
+  @override
+  State<_RebuyBody> createState() => _RebuyBodyState();
+}
+
+class _RebuyBodyState extends State<_RebuyBody> {
+  void _save() {
+    final rebuyAmount = double.tryParse(widget.rebuyAmountController.text);
+    final stackSize = double.tryParse(widget.stackSizeController.text);
+
+    if (rebuyAmount != null && stackSize != null && rebuyAmount > 0 && stackSize > 0) {
+      Navigator.pop(context);
+      widget.onSaved(rebuyAmount, stackSize);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).handPleaseEnterValidAmounts),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.handEnterRebuyDetails,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              color: Colors.white.withValues(alpha: 0.6),
+              fontWeight: FontWeight.w400,
+              height: 1.44,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Rebuy Amount Input
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF101115),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: TextField(
+              controller: widget.rebuyAmountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                color: Colors.white,
+                fontWeight: FontWeight.w400,
+              ),
+              decoration: InputDecoration(
+                labelText: l10n.handRebuyAmount,
+                labelStyle: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  color: const Color(0xFF8C8C8C),
+                ),
+                prefixText: '\$ ',
+                prefixStyle: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  color: Colors.white,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Stack Size Input
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF101115),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: TextField(
+              controller: widget.stackSizeController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                color: Colors.white,
+                fontWeight: FontWeight.w400,
+              ),
+              decoration: InputDecoration(
+                labelText: l10n.handNewStackSize,
+                labelStyle: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  color: const Color(0xFF8C8C8C),
+                ),
+                hintText: l10n.handChipCountAfterRebuy,
+                hintStyle: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Session info
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF101115),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.handSessionInfo,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    color: const Color(0xFF8C8C8C),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.handTotalInvested(widget.sessionManager.totalBuyIn.toStringAsFixed(2)),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.handRebuysCount(widget.sessionManager.getRebuyCount()),
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

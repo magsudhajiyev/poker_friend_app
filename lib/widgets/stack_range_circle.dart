@@ -12,7 +12,6 @@ class StackRangeCircle extends StatefulWidget {
   final StackConfidence confidence;
   final bool isHero;
   final bool isInteractive;
-  final bool hideLabels;
   final void Function(StackRange range) onRangeSelected;
   final String Function(double) formatCurrency;
 
@@ -23,7 +22,6 @@ class StackRangeCircle extends StatefulWidget {
     required this.confidence,
     required this.isHero,
     required this.isInteractive,
-    this.hideLabels = false,
     required this.onRangeSelected,
     required this.formatCurrency,
   });
@@ -42,7 +40,7 @@ class _StackRangeCircleState extends State<StackRangeCircle> {
   static const double _expandedSize = 160.0;
 
   static const int _segmentCount = 7;
-  static const double _gapDeg = 5.0;
+  static const double _gapDeg = 3.0;
   static const double _segmentDeg = (360.0 - _gapDeg * _segmentCount) / _segmentCount;
   static final double _segmentRad = _segmentDeg * pi / 180;
   static final double _gapRad = _gapDeg * pi / 180;
@@ -98,7 +96,6 @@ class _StackRangeCircleState extends State<StackRangeCircle> {
         currentRange: _currentRange,
         hoveredNotifier: _hoveredNotifier,
         confidence: widget.confidence,
-        hideLabels: widget.hideLabels,
       ),
     );
     overlay.insert(_overlayEntry!);
@@ -175,7 +172,7 @@ class _StackRangeCircleState extends State<StackRangeCircle> {
             label,
             style: GoogleFonts.robotoMono(
               fontSize: 11,
-              color: _opacityColor(widget.confidence),
+              color: _activeLilac.withValues(alpha: _confidenceAlpha(widget.confidence)),
               fontWeight: FontWeight.w500,
               fontStyle: widget.confidence == StackConfidence.low
                   ? FontStyle.italic
@@ -188,22 +185,34 @@ class _StackRangeCircleState extends State<StackRangeCircle> {
     );
   }
 
-  Color _opacityColor(StackConfidence confidence) {
+  double _confidenceAlpha(StackConfidence confidence) {
     switch (confidence) {
-      case StackConfidence.high:   return Colors.white;
-      case StackConfidence.medium: return Colors.white.withValues(alpha: 0.65);
-      case StackConfidence.low:    return Colors.white.withValues(alpha: 0.4);
+      case StackConfidence.high:   return 1.0;
+      case StackConfidence.medium: return 0.65;
+      case StackConfidence.low:    return 0.4;
     }
   }
 }
 
-/// Compact ring painter — small, no labels, just colored arcs.
+// Shared donut ring palette
+const Color _activeLilac = Color(0xFFD4A5F0);
+const List<Color> _inactiveShades = [
+  Color(0xFF3D3548),
+  Color(0xFF4A4255),
+  Color(0xFF3A3345),
+  Color(0xFF484058),
+  Color(0xFF3D3548),
+  Color(0xFF4A4255),
+  Color(0xFF3A3345),
+];
+
+/// Compact ring painter — thick donut, lilac active segment.
 class _CompactRingPainter extends CustomPainter {
   final StackRange currentRange;
   final StackConfidence confidence;
 
   static const int _segmentCount = 7;
-  static const double _gapDeg = 5.0;
+  static const double _gapDeg = 3.0;
   static const double _segmentDeg = (360.0 - _gapDeg * _segmentCount) / _segmentCount;
   static final double _segmentRad = _segmentDeg * pi / 180;
   static final double _gapRad = _gapDeg * pi / 180;
@@ -217,7 +226,7 @@ class _CompactRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    const strokeWidth = 3.0;
+    final strokeWidth = size.width * 0.22;
     final radius = (size.width / 2) - strokeWidth / 2;
     final rect = Rect.fromCircle(center: center, radius: radius);
 
@@ -227,28 +236,16 @@ class _CompactRingPainter extends CustomPainter {
       final isActive = range == currentRange;
 
       final color = isActive
-          ? _colorForRange(range).withValues(alpha: _opacityForConfidence())
-          : Colors.white.withValues(alpha: 0.12);
+          ? _activeLilac.withValues(alpha: _opacityForConfidence())
+          : _inactiveShades[i];
 
       final paint = Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = isActive ? 3.5 : 2.5
-        ..strokeCap = StrokeCap.round;
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.butt;
 
       canvas.drawArc(rect, startAngle, _segmentRad, false, paint);
-    }
-  }
-
-  Color _colorForRange(StackRange range) {
-    switch (range) {
-      case StackRange.short:     return const Color(0xFFE36262);
-      case StackRange.belowAvg:  return const Color(0xFFE3C862);
-      case StackRange.average:   return const Color(0xFF62E3BC);
-      case StackRange.deep:      return const Color(0xFF62B8E3);
-      case StackRange.veryDeep:  return const Color(0xFF8C62E3);
-      case StackRange.ultraDeep: return const Color(0xFFE362B8);
-      case StackRange.massive:   return const Color(0xFFE3A262);
     }
   }
 
@@ -273,7 +270,6 @@ class _ExpandedRangeOverlay extends StatefulWidget {
   final StackRange currentRange;
   final ValueNotifier<StackRange> hoveredNotifier;
   final StackConfidence confidence;
-  final bool hideLabels;
 
   const _ExpandedRangeOverlay({
     required this.center,
@@ -281,7 +277,6 @@ class _ExpandedRangeOverlay extends StatefulWidget {
     required this.currentRange,
     required this.hoveredNotifier,
     required this.confidence,
-    this.hideLabels = false,
   });
 
   @override
@@ -331,7 +326,7 @@ class _ExpandedRangeOverlayState extends State<_ExpandedRangeOverlay>
           children: [
             // Semi-transparent background
             Positioned.fill(
-              child: Container(color: Colors.black.withValues(alpha: 0.7)),
+              child: Container(color: Colors.black.withValues(alpha: 0.85)),
             ),
             // The ring selector
             Positioned(
@@ -349,7 +344,6 @@ class _ExpandedRangeOverlayState extends State<_ExpandedRangeOverlay>
                         currentRange: widget.currentRange,
                         hoveredRange: hovered,
                         confidence: widget.confidence,
-                        hideLabels: widget.hideLabels,
                       ),
                       child: Center(
                         child: Text(
@@ -375,15 +369,14 @@ class _ExpandedRangeOverlayState extends State<_ExpandedRangeOverlay>
   }
 }
 
-/// Expanded ring painter with optional labels.
+/// Expanded ring painter — thick donut, lilac hovered segment.
 class _ExpandedRingPainter extends CustomPainter {
   final StackRange currentRange;
   final StackRange hoveredRange;
   final StackConfidence confidence;
-  final bool hideLabels;
 
   static const int _segmentCount = 7;
-  static const double _gapDeg = 5.0;
+  static const double _gapDeg = 3.0;
   static const double _segmentDeg = (360.0 - _gapDeg * _segmentCount) / _segmentCount;
   static final double _segmentRad = _segmentDeg * pi / 180;
   static final double _gapRad = _gapDeg * pi / 180;
@@ -393,13 +386,12 @@ class _ExpandedRingPainter extends CustomPainter {
     required this.currentRange,
     required this.hoveredRange,
     required this.confidence,
-    this.hideLabels = false,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    const strokeWidth = 18.0;
+    const strokeWidth = 24.0;
     final radius = (size.width / 2) - strokeWidth / 2 - 4;
     final rect = Rect.fromCircle(center: center, radius: radius);
 
@@ -407,75 +399,23 @@ class _ExpandedRingPainter extends CustomPainter {
       final range = StackRange.values[i];
       final startAngle = _startAngle + i * (_segmentRad + _gapRad);
       final isHovered = range == hoveredRange;
-      final isActive = range == currentRange;
 
-      Color segmentColor;
-      if (isHovered) {
-        segmentColor = _colorForRange(range);
-      } else if (isActive) {
-        segmentColor = _colorForRange(range).withValues(alpha: 0.5);
-      } else {
-        segmentColor = Colors.white.withValues(alpha: 0.15);
-      }
+      final color = isHovered ? _activeLilac : _inactiveShades[i];
 
       final paint = Paint()
-        ..color = segmentColor
+        ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = isHovered ? 22.0 : strokeWidth
-        ..strokeCap = StrokeCap.round;
+        ..strokeWidth = isHovered ? 28.0 : strokeWidth
+        ..strokeCap = StrokeCap.butt;
 
       canvas.drawArc(rect, startAngle, _segmentRad, false, paint);
     }
 
-    if (!hideLabels) {
-      _drawLabels(canvas, center, radius + strokeWidth / 2 + 14);
-    }
-  }
-
-  void _drawLabels(Canvas canvas, Offset center, double labelRadius) {
-    for (int i = 0; i < _segmentCount; i++) {
-      final range = StackRange.values[i];
-      final midAngle = _startAngle + i * (_segmentRad + _gapRad) + _segmentRad / 2;
-      final labelPos = Offset(
-        center.dx + labelRadius * cos(midAngle),
-        center.dy + labelRadius * sin(midAngle),
-      );
-
-      final isHovered = range == hoveredRange;
-      final tp = TextPainter(
-        text: TextSpan(
-          text: StackBucketHelper.rangeLabel(range),
-          style: TextStyle(
-            color: isHovered
-                ? _colorForRange(range)
-                : Colors.white.withValues(alpha: 0.5),
-            fontSize: isHovered ? 13 : 11,
-            fontWeight: isHovered ? FontWeight.w700 : FontWeight.w400,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-
-      tp.paint(canvas, labelPos - Offset(tp.width / 2, tp.height / 2));
-    }
-  }
-
-  Color _colorForRange(StackRange range) {
-    switch (range) {
-      case StackRange.short:     return const Color(0xFFE36262);
-      case StackRange.belowAvg:  return const Color(0xFFE3C862);
-      case StackRange.average:   return const Color(0xFF62E3BC);
-      case StackRange.deep:      return const Color(0xFF62B8E3);
-      case StackRange.veryDeep:  return const Color(0xFF8C62E3);
-      case StackRange.ultraDeep: return const Color(0xFFE362B8);
-      case StackRange.massive:   return const Color(0xFFE3A262);
-    }
   }
 
   @override
   bool shouldRepaint(_ExpandedRingPainter old) =>
       old.currentRange != currentRange ||
       old.hoveredRange != hoveredRange ||
-      old.confidence != confidence ||
-      old.hideLabels != hideLabels;
+      old.confidence != confidence;
 }
