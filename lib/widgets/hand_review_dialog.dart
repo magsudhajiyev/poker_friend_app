@@ -79,19 +79,22 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFF1B1E24), width: 1),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildHeader(),
-              Padding(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeader(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              child: _buildHoleCardsSection(),
+            ),
+            const SizedBox(height: 16),
+            Flexible(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHoleCardsSection(),
-                    const SizedBox(height: 16),
                     _buildTagsSection(),
                     const SizedBox(height: 16),
                     _buildNotesSection(),
@@ -100,8 +103,8 @@ class _HandReviewDialogState extends State<HandReviewDialog> {
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

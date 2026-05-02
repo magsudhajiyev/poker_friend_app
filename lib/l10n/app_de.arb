@@ -384,6 +384,7 @@
   "handPot": "Pot",
   "handStack": "Stack",
   "handToAct": "Am Zug",
+  "handToActYou": "Du",
   "handStopSessionTitle": "Session beenden?",
   "handStopSessionMessage": "Möchtest du diese Session wirklich beenden? Alle Hände werden gespeichert.",
   "handStop": "Beenden",

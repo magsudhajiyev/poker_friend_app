@@ -221,6 +221,7 @@
   "handPot": "Банк",
   "handStack": "Стек",
   "handToAct": "Ход",
+  "handToActYou": "Вы",
   "handStopSessionTitle": "Завершить сессию?",
   "handStopSessionMessage": "Вы уверены, что хотите завершить эту сессию? Все руки будут сохранены.",
   "handStop": "Завершить",

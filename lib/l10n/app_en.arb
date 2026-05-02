@@ -344,6 +344,7 @@
   "handPot": "Pot",
   "handStack": "Stack",
   "handToAct": "To Act",
+  "handToActYou": "You",
   "handStopSessionTitle": "Stop Session?",
   "handStopSessionMessage": "Are you sure you want to stop this session? All hands will be saved.",
   "handStop": "Stop",

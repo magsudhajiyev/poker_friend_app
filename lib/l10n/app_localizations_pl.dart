@@ -730,6 +730,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get handToAct => 'Ruch';
 
   @override
+  String get handToActYou => 'Ty';
+
+  @override
   String get handStopSessionTitle => 'Zakończyć sesję?';
 
   @override

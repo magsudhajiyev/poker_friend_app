@@ -15,6 +15,7 @@ class FormDrawer extends StatelessWidget {
   final Color backgroundColor;
   final double borderRadius;
   final bool showBorderDecoration;
+  final bool scrollable;
   final Key? saveButtonKey;
 
   const FormDrawer({
@@ -27,6 +28,7 @@ class FormDrawer extends StatelessWidget {
     this.backgroundColor = Colors.black,
     this.borderRadius = 32,
     this.showBorderDecoration = true,
+    this.scrollable = true,
     this.saveButtonKey,
   });
 
@@ -43,6 +45,7 @@ class FormDrawer extends StatelessWidget {
     bool showBorderDecoration = true,
     bool isDismissible = true,
     bool enableDrag = true,
+    bool scrollable = true,
     Key? saveButtonKey,
   }) {
     return showModalBottomSheet<T>(
@@ -60,6 +63,7 @@ class FormDrawer extends StatelessWidget {
         backgroundColor: backgroundColor,
         borderRadius: borderRadius,
         showBorderDecoration: showBorderDecoration,
+        scrollable: scrollable,
         saveButtonKey: saveButtonKey,
       ),
     );
@@ -163,12 +167,17 @@ class FormDrawer extends StatelessWidget {
               ),
             ),
           ),
-          // Scrollable body
+          // Body
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 22),
-              child: body,
-            ),
+            child: scrollable
+                ? SingleChildScrollView(
+                    padding: const EdgeInsets.only(top: 22),
+                    child: body,
+                  )
+                : Padding(
+                    padding: const EdgeInsets.only(top: 22),
+                    child: body,
+                  ),
           ),
         ],
       ),

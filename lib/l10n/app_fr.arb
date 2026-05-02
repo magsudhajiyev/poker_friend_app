@@ -384,6 +384,7 @@
   "handPot": "Pot",
   "handStack": "Stack",
   "handToAct": "À jouer",
+  "handToActYou": "Vous",
   "handStopSessionTitle": "Arrêter la session ?",
   "handStopSessionMessage": "Êtes-vous sûr de vouloir arrêter cette session ? Toutes les mains seront sauvegardées.",
   "handStop": "Arrêter",

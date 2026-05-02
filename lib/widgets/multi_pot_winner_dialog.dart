@@ -13,6 +13,7 @@ class MultiPotWinnerDialog extends StatefulWidget {
   final GameType gameType;
   final int buttonPosition;
   final int playerCount;
+  final int? heroSeat;
 
   const MultiPotWinnerDialog({
     super.key,
@@ -22,6 +23,7 @@ class MultiPotWinnerDialog extends StatefulWidget {
     required this.buttonPosition,
     required this.playerCount,
     this.gameType = GameType.cash,
+    this.heroSeat,
   });
 
   /// Show as a bottom sheet and return the result
@@ -33,6 +35,7 @@ class MultiPotWinnerDialog extends StatefulWidget {
     required int buttonPosition,
     required int playerCount,
     GameType gameType = GameType.cash,
+    int? heroSeat,
   }) {
     return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
@@ -46,6 +49,7 @@ class MultiPotWinnerDialog extends StatefulWidget {
         buttonPosition: buttonPosition,
         playerCount: playerCount,
         gameType: gameType,
+        heroSeat: heroSeat,
       ),
     );
   }
@@ -72,6 +76,14 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
       choppedWinners[i] = <int>{};
       isChoppedPot[i] = false;
     }
+  }
+
+  String _getPlayerName(int playerId) {
+    final l10n = AppLocalizations.of(context);
+    if (widget.heroSeat != null && playerId == widget.heroSeat) {
+      return l10n.handToActYou;
+    }
+    return widget.playerIdToName[playerId] ?? l10n.multiPotPlayerFallback('$playerId');
   }
 
   String _formatCurrency(double amount) {
@@ -365,7 +377,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
     // Auto-awarded simplified view
     if (isAutoAwarded && potIndex > 0) {
       final autoAwardWinner = singleWinners[potIndex]!;
-      final winnerName = widget.playerIdToName[autoAwardWinner] ?? l10n.multiPotPlayerFallback('$autoAwardWinner');
+      final winnerName = _getPlayerName(autoAwardWinner);
       final isMainPotWinner = singleWinners[0] == autoAwardWinner;
       final awardReason = isMainPotWinner ? l10n.multiPotMainPotWinner : l10n.multiPotEligibleFromPrevious;
 
@@ -501,7 +513,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
 
           // Player list
           ...eligiblePlayers.map((playerId) {
-            final playerName = widget.playerIdToName[playerId] ?? l10n.multiPotPlayerFallback('$playerId');
+            final playerName = _getPlayerName(playerId);
             if (isChopped) {
               return _buildPlayerCheckbox(potIndex, playerId, playerName);
             } else {

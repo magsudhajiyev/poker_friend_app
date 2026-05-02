@@ -384,6 +384,7 @@
   "handPot": "Pot",
   "handStack": "Stack",
   "handToAct": "Para Agir",
+  "handToActYou": "Você",
   "handStopSessionTitle": "Encerrar Sessao?",
   "handStopSessionMessage": "Tem certeza de que deseja encerrar esta sessao? Todas as maos serao salvas.",
   "handStop": "Encerrar",

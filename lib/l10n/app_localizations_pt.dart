@@ -736,6 +736,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get handToAct => 'Para Agir';
 
   @override
+  String get handToActYou => 'Você';
+
+  @override
   String get handStopSessionTitle => 'Encerrar Sessao?';
 
   @override

@@ -729,6 +729,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get handToAct => 'Ход';
 
   @override
+  String get handToActYou => 'Вы';
+
+  @override
   String get handStopSessionTitle => 'Завершить сессию?';
 
   @override

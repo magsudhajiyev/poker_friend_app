@@ -1323,6 +1323,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       if (gameState.currentPlayer < 1 || gameState.currentPlayer > gameState.numberOfPlayers) {
         return 'Unknown';
       }
+      if (gameState.currentPlayer == sessionManager.ourSeatNumber) {
+        return AppLocalizations.of(context).handToActYou;
+      }
       return sessionManager.getPlayerNameWithPosition(gameState.currentPlayer);
     } catch (e) {
       return 'Unknown';
@@ -1516,39 +1519,30 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           ],
                         ),
                       ),
-                      // Action buttons - 44px circles
+                      // Action buttons
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Next street auto-advances via _autoAdvanceWithIndicator()
-                          // Next Hand (skip) button — hidden in individual/quick session mode
-                          if (!widget.isIndividualSession) ...[
-                            GestureDetector(
-                              onTap: _skipCurrentAction,
-                              child: Container(
-                                height: 36,
-                                padding: const EdgeInsets.symmetric(horizontal: 14),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF101115),
-                                  borderRadius: BorderRadius.circular(110),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.15),
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    l10n.handNextHand,
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 13,
-                                      color: Colors.white.withValues(alpha: 0.8),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                          // Session Details info button
+                          GestureDetector(
+                            onTap: () => _showSessionDetails(),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF101115),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.info_outline,
+                                  color: Colors.white,
+                                  size: 20,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                          ],
+                          ),
+                          const SizedBox(width: 8),
                           // Menu button
                           _buildMenuButton(context),
                         ],
@@ -1674,43 +1668,52 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             ),
                           ),
                           const SizedBox(width: 6),
-                          // Session Details info button
-                          GestureDetector(
-                            onTap: () => _showSessionDetails(),
-                            child: Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.info_outline,
-                                color: Color(0xFF8C8C8C),
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
                           // Blinds pill — tappable to edit
                           GestureDetector(
                             onTap: () => _showBlindsEditDialog(),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              height: 34,
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: Text(
-                                '${gameState.smallBlind}/${gameState.bigBlind}',
-                                style: GoogleFonts.robotoMono(
-                                  fontSize: 12,
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                  fontWeight: FontWeight.w500,
+                              child: Center(
+                                child: Text(
+                                  '${gameState.smallBlind}/${gameState.bigBlind}',
+                                  style: GoogleFonts.robotoMono(
+                                    fontSize: 12,
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
+                          const SizedBox(width: 6),
+                          // Next Hand (skip) button — hidden in individual/quick session mode
+                          if (!widget.isIndividualSession)
+                            GestureDetector(
+                              onTap: _skipCurrentAction,
+                              child: Container(
+                                height: 34,
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(110),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    l10n.handNextHand,
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 13,
+                                      color: Colors.white.withValues(alpha: 0.8),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -3904,6 +3907,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         gameType: widget.gameType,
         buttonPosition: gameState.buttonPosition,
         playerCount: gameState.numberOfPlayers,
+        heroSeat: sessionManager.ourSeatNumber,
       );
     } else {
       await LoggerService.debug('  Showing regular winner selection dialog (${sidePots.length} pot)');
@@ -3917,6 +3921,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           gameType: widget.gameType,
           buttonPosition: gameState.buttonPosition,
           playerCount: gameState.numberOfPlayers,
+          heroSeat: sessionManager.ourSeatNumber,
         ),
       );
     }
@@ -5437,6 +5442,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           gameType: widget.gameType,
           buttonPosition: gameState.buttonPosition,
           playerCount: gameState.numberOfPlayers,
+          heroSeat: sessionManager.ourSeatNumber,
         );
       } else {
         await LoggerService.debug('  Showing regular winner selection dialog (${sidePots.length} pot)');
@@ -5451,6 +5457,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             gameType: widget.gameType, // Pass game type
             buttonPosition: gameState.buttonPosition,
             playerCount: gameState.numberOfPlayers,
+            heroSeat: sessionManager.ourSeatNumber,
           ),
         );
       }

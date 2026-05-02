@@ -11,6 +11,7 @@ class WinnerSelectionDialog extends StatefulWidget {
   final GameType gameType;
   final int buttonPosition;
   final int playerCount;
+  final int? heroSeat;
 
   const WinnerSelectionDialog({
     super.key,
@@ -20,6 +21,7 @@ class WinnerSelectionDialog extends StatefulWidget {
     required this.buttonPosition,
     required this.playerCount,
     this.gameType = GameType.cash,
+    this.heroSeat,
   });
 
   @override
@@ -86,6 +88,10 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
   }
 
   String _getPlayerDisplayName(int playerId) {
+    if (widget.heroSeat != null && playerId == widget.heroSeat) {
+      return AppLocalizations.of(context).handToActYou;
+    }
+
     final playerIndex = widget.activePlayers.indexOf(playerId);
 
     if (playerIndex >= 0 && playerIndex < widget.playerNames.length) {

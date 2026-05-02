@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
+import '../design_system/components/form_drawer.dart';
 import '../models/poker_game_state.dart';
 import '../models/hand_state_machine.dart';
 import '../models/stack_bucket.dart';
@@ -30,11 +31,17 @@ class TableManagementSheet extends StatefulWidget {
     required int heroSeat,
     required VoidCallback onChanged,
   }) {
-    return showModalBottomSheet(
+    final l10n = AppLocalizations.of(context);
+    final bodyKey = GlobalKey<_TableManagementBodyState>();
+
+    return FormDrawer.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => TableManagementSheet(
+      title: l10n.tableManagementSectionTitle,
+      heightFraction: 0.7,
+      scrollable: false,
+      onSave: () => Navigator.pop(context),
+      body: _TableManagementBody(
+        key: bodyKey,
         gameState: gameState,
         sessionManager: sessionManager,
         heroSeat: heroSeat,
@@ -48,6 +55,38 @@ class TableManagementSheet extends StatefulWidget {
 }
 
 class _TableManagementSheetState extends State<TableManagementSheet> {
+  @override
+  Widget build(BuildContext context) {
+    // Legacy build — callers should use TableManagementSheet.show() instead
+    return _TableManagementBody(
+      gameState: widget.gameState,
+      sessionManager: widget.sessionManager,
+      heroSeat: widget.heroSeat,
+      onChanged: widget.onChanged,
+    );
+  }
+}
+
+/// The body content, used inside FormDrawer.
+class _TableManagementBody extends StatefulWidget {
+  final PokerGameState gameState;
+  final PokerSessionManager sessionManager;
+  final int heroSeat;
+  final VoidCallback onChanged;
+
+  const _TableManagementBody({
+    super.key,
+    required this.gameState,
+    required this.sessionManager,
+    required this.heroSeat,
+    required this.onChanged,
+  });
+
+  @override
+  State<_TableManagementBody> createState() => _TableManagementBodyState();
+}
+
+class _TableManagementBodyState extends State<_TableManagementBody> {
   int get _heroSeat => widget.sessionManager.ourSeatNumber ?? widget.heroSeat;
 
   @override
@@ -56,154 +95,113 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
     final btnPos = widget.gameState.buttonPosition;
     final activeSeats = widget.sessionManager.activeSeats.toList()..sort();
 
-    return GestureDetector(
-      onTap: () => Navigator.pop(context),
-      behavior: HitTestBehavior.opaque,
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.55,
-        minChildSize: 0.3,
-        maxChildSize: 0.8,
-        builder: (context, scrollController) {
-          return GestureDetector(
-            onTap: () {}, // Absorb taps on the sheet itself
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFF1A1A1E),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: Column(
-            mainAxisSize: MainAxisSize.min,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Players count + dealer button selector
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
             children: [
-              // Drag handle
-              Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              // Title
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    Text(
-                      l10n.tableManagementSectionTitle,
-                      style: GoogleFonts.ibmPlexSans(
-                        color: const Color(0xFF87ED81),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      l10n.tableManagementPlayersCount(widget.gameState.getActivePlayers().length),
-                      style: GoogleFonts.ibmPlexSans(
-                        color: const Color(0xFF8C8C8C),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Button position selector
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                child: Row(
-                  children: [
-                    Text(
-                      l10n.tableManagementDealerButton,
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const Spacer(),
-                    // BTN seat chips — only active seats
-                    SizedBox(
-                      height: 32,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: activeSeats.map((seat) {
-                          final isBTN = seat == btnPos;
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 4),
-                            child: GestureDetector(
-                              onTap: () {
-                                widget.gameState.buttonPosition = seat;
-                                // Sync session manager blind positions with recalculated game state
-                                widget.sessionManager.actualSBSeat = widget.gameState.effectiveSBPosition;
-                                widget.sessionManager.actualBBSeat = widget.gameState.effectiveBBPosition;
-                                widget.sessionManager.buttonPosition = seat;
-                                widget.onChanged();
-                                setState(() {});
-                              },
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: isBTN
-                                      ? const Color(0xFF62E3BC).withValues(alpha: 0.2)
-                                      : Colors.white.withValues(alpha: 0.06),
-                                  shape: BoxShape.circle,
-                                  border: isBTN
-                                      ? Border.all(color: const Color(0xFF62E3BC), width: 1.5)
-                                      : null,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '$seat',
-                                    style: GoogleFonts.ibmPlexSans(
-                                      color: isBTN ? const Color(0xFF62E3BC) : const Color(0xFF8C8C8C),
-                                      fontSize: 12,
-                                      fontWeight: isBTN ? FontWeight.w700 : FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(color: Color(0xFF1C1F21), height: 1),
-              // Seat list
-              Expanded(
-                child: ListView.separated(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: widget.gameState.numberOfPlayers,
-                  separatorBuilder: (_, __) => const Divider(
-                    color: Color(0xFF1C1F21),
-                    height: 1,
-                    indent: 16,
-                    endIndent: 16,
-                  ),
-                  itemBuilder: (context, index) {
-                    final seat = index + 1;
-                    final isActive = widget.sessionManager.activeSeats.contains(seat);
-                    final isHero = seat == _heroSeat;
-
-                    if (!isActive) {
-                      return _buildEmptySeat(seat);
-                    }
-                    return _buildActiveSeat(seat, isHero);
-                  },
+              Text(
+                l10n.tableManagementPlayersCount(widget.gameState.getActivePlayers().length),
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF8C8C8C),
+                  fontSize: 12,
                 ),
               ),
             ],
           ),
         ),
-        );
-        },
-      ),
+        const SizedBox(height: 8),
+        // Button position selector
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Row(
+            children: [
+              Text(
+                l10n.tableManagementDealerButton,
+                style: GoogleFonts.ibmPlexSans(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              // BTN seat chips — only active seats
+              SizedBox(
+                height: 32,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: activeSeats.map((seat) {
+                    final isBTN = seat == btnPos;
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: GestureDetector(
+                        onTap: () {
+                          widget.gameState.buttonPosition = seat;
+                          widget.sessionManager.actualSBSeat = widget.gameState.effectiveSBPosition;
+                          widget.sessionManager.actualBBSeat = widget.gameState.effectiveBBPosition;
+                          widget.sessionManager.buttonPosition = seat;
+                          widget.onChanged();
+                          setState(() {});
+                        },
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: isBTN
+                                ? const Color(0xFF62E3BC).withValues(alpha: 0.2)
+                                : Colors.white.withValues(alpha: 0.06),
+                            shape: BoxShape.circle,
+                            border: isBTN
+                                ? Border.all(color: const Color(0xFF62E3BC), width: 1.5)
+                                : null,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '$seat',
+                              style: GoogleFonts.ibmPlexSans(
+                                color: isBTN ? const Color(0xFF62E3BC) : const Color(0xFF8C8C8C),
+                                fontSize: 12,
+                                fontWeight: isBTN ? FontWeight.w700 : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(color: Color(0xFF1C1F21), height: 1),
+        // Seat list
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: widget.gameState.numberOfPlayers,
+            separatorBuilder: (_, __) => const Divider(
+              color: Color(0xFF1C1F21),
+              height: 1,
+              indent: 16,
+              endIndent: 16,
+            ),
+            itemBuilder: (context, index) {
+              final seat = index + 1;
+              final isActive = widget.sessionManager.activeSeats.contains(seat);
+              final isHero = seat == _heroSeat;
+
+              if (!isActive) {
+                return _buildEmptySeat(seat);
+              }
+              return _buildActiveSeat(seat, isHero);
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -255,14 +253,12 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
     final activeSeatsList = widget.sessionManager.activeSeats.toList()..sort();
     final activeCount = activeSeatsList.length;
 
-    // BTN check must come first — button always takes priority
     if (seat == btnPos) return 'BTN';
     if (seat == widget.sessionManager.actualBBSeat) return 'BB';
     if (seat == widget.sessionManager.actualSBSeat) return 'SB';
 
     if (activeCount <= 3) return '';
 
-    // Calculate position relative to button using active players
     return PokerPositions.getPositionNameForActivePlayers(seat, btnPos, activeSeatsList);
   }
 
@@ -438,7 +434,6 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
         : 0.0;
     final heroName = widget.sessionManager.playerNames[_heroSeat] ?? '';
 
-    // Build a map of name→seat for currently seated players
     final seatedPlayers = <String, int>{};
     for (final entry in widget.sessionManager.playerNames.entries) {
       if (widget.sessionManager.activeSeats.contains(entry.key)) {
@@ -446,28 +441,32 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
       }
     }
 
-    showModalBottomSheet(
+    final l10n = AppLocalizations.of(context);
+    final addBodyKey = GlobalKey<_AddPlayerBodyState>();
+
+    FormDrawer.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _AddPlayerSheet(
+      title: l10n.tableManagementAddPlayerSeatTitle(seat),
+      heightFraction: 0.55,
+      onSave: () {
+        addBodyKey.currentState?._submit();
+      },
+      body: _AddPlayerBody(
+        key: addBodyKey,
         seat: seat,
         defaultStack: defaultStack,
         heroName: heroName,
         seatedPlayers: seatedPlayers,
         onAdd: (String name, double stack, bool isMe) {
           if (isMe) {
-            // Move hero from old seat to this seat
             final oldHeroSeat = _heroSeat;
             final heroStack = widget.gameState.getPlayerStack(oldHeroSeat);
 
-            // Clear old hero seat
             widget.sessionManager.activeSeats.remove(oldHeroSeat);
             widget.sessionManager.playerNames.remove(oldHeroSeat);
             widget.sessionManager.playerStacks.remove(oldHeroSeat);
             widget.gameState.setPlayerActive(oldHeroSeat, false);
 
-            // Set new hero seat
             widget.sessionManager.ourSeatNumber = seat;
             widget.sessionManager.playerNames[seat] = heroName.isNotEmpty ? heroName : name;
             widget.sessionManager.playerStacks[seat] = heroStack > 0 ? heroStack : stack;
@@ -475,7 +474,6 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
             widget.gameState.setPlayerActive(seat, true);
             widget.gameState.setPlayerStack(seat, heroStack > 0 ? heroStack : stack);
           } else {
-            // Check if this player is already seated elsewhere — reseat them
             final existingSeat = seatedPlayers[name.toLowerCase()];
             if (existingSeat != null && existingSeat != seat) {
               widget.sessionManager.activeSeats.remove(existingSeat);
@@ -637,14 +635,16 @@ class _TableManagementSheetState extends State<TableManagementSheet> {
   }
 }
 
-class _AddPlayerSheet extends StatefulWidget {
+/// Body content for add player sheet, used inside FormDrawer.
+class _AddPlayerBody extends StatefulWidget {
   final int seat;
   final double defaultStack;
   final String heroName;
-  final Map<String, int> seatedPlayers; // lowercase name → seat
+  final Map<String, int> seatedPlayers;
   final void Function(String name, double stack, bool isMe) onAdd;
 
-  const _AddPlayerSheet({
+  const _AddPlayerBody({
+    super.key,
     required this.seat,
     required this.defaultStack,
     required this.onAdd,
@@ -653,10 +653,10 @@ class _AddPlayerSheet extends StatefulWidget {
   });
 
   @override
-  State<_AddPlayerSheet> createState() => _AddPlayerSheetState();
+  State<_AddPlayerBody> createState() => _AddPlayerBodyState();
 }
 
-class _AddPlayerSheetState extends State<_AddPlayerSheet> {
+class _AddPlayerBodyState extends State<_AddPlayerBody> {
   late TextEditingController _nameController;
   late TextEditingController _stackController;
   final FocusNode _stackFocus = FocusNode();
@@ -763,329 +763,253 @@ class _AddPlayerSheetState extends State<_AddPlayerSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 150),
-      padding: EdgeInsets.only(bottom: bottomInset),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.55,
-        ),
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1A1E),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // "This is me" toggle
+          GestureDetector(
+            onTap: () => setState(() => _isMe = !_isMe),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
+                color: _isMe
+                    ? const Color(0xFF62E3BC).withValues(alpha: 0.15)
+                    : const Color(0xFF1C1C1E),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _isMe
+                      ? const Color(0xFF62E3BC)
+                      : const Color(0xFF35373C),
+                  width: _isMe ? 1.5 : 1,
+                ),
               ),
-            ),
-            // Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  Icon(
+                    _isMe ? Icons.person : Icons.person_outline,
+                    color: _isMe
+                        ? const Color(0xFF62E3BC)
+                        : const Color(0xFF8C8C8C),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
                   Text(
-                    l10n.tableManagementAddPlayerSeatTitle(widget.seat),
+                    l10n.tableManagementThisIsMe,
                     style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: _isMe
+                          ? const Color(0xFF62E3BC)
+                          : const Color(0xFF8C8C8C),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-            const Divider(color: Color(0xFF1C1F21), height: 1),
-            // Content
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          const SizedBox(height: 14),
+
+          // Name field (hidden when "This is me")
+          if (!_isMe) ...[
+            Text(
+              l10n.tableManagementNameLabel,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                color: const Color(0xFF8C8C8C),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _nameController,
+              autofocus: true,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                hintText: l10n.tableManagementSearchOrEnterName,
+                hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
+                filled: true,
+                fillColor: const Color(0xFF1C1C1E),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF35373C)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF35373C)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF89F1EC)),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              ),
+            ),
+
+            // Opponent search results + save as opponent
+            if (_filteredOpponents.isNotEmpty || _showSaveAsOpponent)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                constraints: const BoxConstraints(maxHeight: 180),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1C1C1E),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF2A2A2E)),
+                ),
+                child: ListView(
+                  padding: const EdgeInsets.all(6),
+                  shrinkWrap: true,
                   children: [
-                    // "This is me" toggle
-                    GestureDetector(
-                      onTap: () => setState(() => _isMe = !_isMe),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: _isMe
-                              ? const Color(0xFF62E3BC).withValues(alpha: 0.15)
-                              : const Color(0xFF101115),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _isMe
-                                ? const Color(0xFF62E3BC)
-                                : const Color(0xFF35373C),
-                            width: _isMe ? 1.5 : 1,
+                    ..._filteredOpponents.map((opponent) {
+                      final seatedAt = widget.seatedPlayers[opponent.name.toLowerCase()];
+                      return GestureDetector(
+                        onTap: () => _selectOpponent(opponent),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          margin: const EdgeInsets.only(bottom: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF131616),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: opponent.color.flutterColor,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                opponent.name,
+                                style: GoogleFonts.ibmPlexSans(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              if (seatedAt != null) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    l10n.tableManagementSeatLabel(seatedAt!),
+                                    style: GoogleFonts.ibmPlexSans(
+                                      color: const Color(0xFF8C8C8C),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _isMe ? Icons.person : Icons.person_outline,
-                              color: _isMe
-                                  ? const Color(0xFF62E3BC)
-                                  : const Color(0xFF8C8C8C),
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              l10n.tableManagementThisIsMe,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 14,
-                                color: _isMe
-                                    ? const Color(0xFF62E3BC)
-                                    : const Color(0xFF8C8C8C),
-                                fontWeight: FontWeight.w500,
+                      );
+                    }),
+                    if (_showSaveAsOpponent)
+                      GestureDetector(
+                        onTap: _saveAsNewOpponent,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          margin: const EdgeInsets.only(bottom: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF131616),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.person_add_outlined,
+                                color: Color(0xFF62E3BC),
+                                size: 16,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Name field (hidden when "This is me")
-                    if (!_isMe) ...[
-                    Text(
-                      l10n.tableManagementNameLabel,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 13,
-                        color: const Color(0xFF8C8C8C),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _nameController,
-                      autofocus: true,
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                      textCapitalization: TextCapitalization.words,
-                      decoration: InputDecoration(
-                        hintText: l10n.tableManagementSearchOrEnterName,
-                        hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
-                        filled: true,
-                        fillColor: const Color(0xFF101115),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF35373C)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF35373C)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF62E3BC)),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      ),
-                    ),
-
-                    // Opponent search results + save as opponent
-                    if (_filteredOpponents.isNotEmpty || _showSaveAsOpponent)
-                      Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        constraints: const BoxConstraints(maxHeight: 180),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF101115),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF35373C)),
-                        ),
-                        child: ListView(
-                          padding: const EdgeInsets.all(6),
-                          shrinkWrap: true,
-                          children: [
-                            ..._filteredOpponents.map((opponent) {
-                              final seatedAt = widget.seatedPlayers[opponent.name.toLowerCase()];
-                              return GestureDetector(
-                                onTap: () => _selectOpponent(opponent),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  margin: const EdgeInsets.only(bottom: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF1A1A1E),
-                                    borderRadius: BorderRadius.circular(8),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  l10n.tableManagementSaveAsOpponent(_nameController.text.trim()),
+                                  style: GoogleFonts.ibmPlexSans(
+                                    color: const Color(0xFF62E3BC),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF89F1EC),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        opponent.name,
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                      if (seatedAt != null) ...[
-                                        const SizedBox(width: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withValues(alpha: 0.08),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            l10n.tableManagementSeatLabel(seatedAt!),
-                                            style: GoogleFonts.ibmPlexSans(
-                                              color: const Color(0xFF8C8C8C),
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }),
-                            if (_showSaveAsOpponent)
-                              GestureDetector(
-                                onTap: _saveAsNewOpponent,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  margin: const EdgeInsets.only(bottom: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF1A1A1E),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.person_add_outlined,
-                                        color: Color(0xFF62E3BC),
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          l10n.tableManagementSaveAsOpponent(_nameController.text.trim()),
-                                          style: GoogleFonts.ibmPlexSans(
-                                            color: const Color(0xFF62E3BC),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                          ],
-                        ),
-                      ),
-
-                    const SizedBox(height: 16),
-
-                    // Stack field
-                    Text(
-                      l10n.tableManagementStartingStack,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 13,
-                        color: const Color(0xFF8C8C8C),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _stackController,
-                      focusNode: _stackFocus,
-                      keyboardType: TextInputType.number,
-                      style: GoogleFonts.ibmPlexSans(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
-                        hintText: widget.defaultStack > 0 ? widget.defaultStack.toStringAsFixed(0) : l10n.tableManagementStackAmountHint,
-                        hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
-                        filled: true,
-                        fillColor: const Color(0xFF101115),
-                        suffixIcon: _stackController.text.isNotEmpty
-                            ? GestureDetector(
-                                onTap: () {
-                                  _stackController.clear();
-                                  setState(() {});
-                                },
-                                child: const Icon(Icons.close, color: Color(0xFF8C8C8C), size: 18),
-                              )
-                            : null,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF35373C)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF35373C)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF62E3BC)),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      ),
-                    ),
-
-                    ], // end if (!_isMe)
-
-                    const SizedBox(height: 20),
-
-                    // Add button
-                    GestureDetector(
-                      onTap: _submit,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF62E3BC),
-                          borderRadius: BorderRadius.circular(60),
-                        ),
-                        child: Center(
-                          child: Text(
-                            _isMe ? l10n.tableManagementMoveMeHere : l10n.tableManagementAddPlayer,
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 17,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.43,
-                            ),
+                            ],
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
+
+            const SizedBox(height: 16),
+
+            // Stack field
+            Text(
+              l10n.tableManagementStartingStack,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                color: const Color(0xFF8C8C8C),
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ],
-        ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _stackController,
+              focusNode: _stackFocus,
+              keyboardType: TextInputType.number,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: widget.defaultStack > 0 ? widget.defaultStack.toStringAsFixed(0) : l10n.tableManagementStackAmountHint,
+                hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
+                filled: true,
+                fillColor: const Color(0xFF1C1C1E),
+                suffixIcon: _stackController.text.isNotEmpty
+                    ? GestureDetector(
+                        onTap: () {
+                          _stackController.clear();
+                          setState(() {});
+                        },
+                        child: const Icon(Icons.close, color: Color(0xFF8C8C8C), size: 18),
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF35373C)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF35373C)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF89F1EC)),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              ),
+            ),
+          ], // end if (!_isMe)
+        ],
       ),
     );
   }

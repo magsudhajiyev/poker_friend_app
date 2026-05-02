@@ -742,6 +742,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get handToAct => 'À jouer';
 
   @override
+  String get handToActYou => 'Vous';
+
+  @override
   String get handStopSessionTitle => 'Arrêter la session ?';
 
   @override

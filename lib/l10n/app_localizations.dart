@@ -1434,6 +1434,12 @@ abstract class AppLocalizations {
   /// **'To Act'**
   String get handToAct;
 
+  /// No description provided for @handToActYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get handToActYou;
+
   /// No description provided for @handStopSessionTitle.
   ///
   /// In en, this message translates to:

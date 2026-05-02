@@ -221,6 +221,7 @@
   "handPot": "Pula",
   "handStack": "Stack",
   "handToAct": "Ruch",
+  "handToActYou": "Ty",
   "handStopSessionTitle": "Zakończyć sesję?",
   "handStopSessionMessage": "Czy na pewno chcesz zakończyć tę sesję? Wszystkie ręce zostaną zapisane.",
   "handStop": "Zakończ",

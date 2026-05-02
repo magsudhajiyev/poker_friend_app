@@ -384,6 +384,7 @@
   "handPot": "Pot",
   "handStack": "Stack",
   "handToAct": "Por actuar",
+  "handToActYou": "Tú",
   "handStopSessionTitle": "¿Detener sesión?",
   "handStopSessionMessage": "¿Estás seguro de que deseas detener esta sesión? Todas las manos serán guardadas.",
   "handStop": "Detener",
