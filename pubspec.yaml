@@ -69,7 +69,7 @@ flutter:
     - icons/
     - icons/flat_icons/
     - icons/figma_icons/
-    - logo.png
+    - assets/logo.png
 
 flutter_launcher_icons:
   android: true
@@ -77,13 +77,13 @@ flutter_launcher_icons:
   remove_alpha_ios: true
   web:
     generate: true
-    image_path: "logo.png"
+    image_path: "assets/logo.png"
   windows:
     generate: true
-    image_path: "logo.png"
+    image_path: "assets/logo.png"
   macos:
     generate: true
-    image_path: "logo.png"
-  image_path: "logo.png"
+    image_path: "assets/logo.png"
+  image_path: "assets/logo.png"
   min_sdk_android: 21
 

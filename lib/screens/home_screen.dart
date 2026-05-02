@@ -1200,6 +1200,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       StatsVerificationService.verifyAllStats();
 
+      // Pull bankroll from Firestore into SharedPreferences (handles reinstall)
+      await BankrollService.syncFromFirestore();
+
       final bankroll = await BankrollService.getCurrentBankroll()
           .timeout(const Duration(seconds: 10), onTimeout: () => 0.0);
       final goal = await BankrollService.getBankrollGoal()
@@ -4549,6 +4552,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final wtsd = (playerStats['wtsd'] as num?)?.toDouble();
     final wsd = (playerStats['wsd'] as num?)?.toDouble();
     final handsPlayed = (playerStats['handsPlayed'] as num?)?.toInt();
+
+    print('🎯 PLAY_STYLE: vpip=$vpip, pfr=$pfr, 3bet=$threeBet, AF=$aggressionFactor, handsPlayed=$handsPlayed, statsKeys=${playerStats.keys.toList()}');
 
     final result = PlayStyleDetector.detectPlayStyle(
       vpip: vpip,

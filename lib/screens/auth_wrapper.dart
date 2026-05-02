@@ -203,7 +203,7 @@ class _AuthWrapperState extends State<AuthWrapper> with SingleTickerProviderStat
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Image.asset(
-              'logo.png',
+              'assets/logo.png',
               width: 100,
               height: 100,
               fit: BoxFit.contain,

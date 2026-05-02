@@ -59,24 +59,6 @@ class _IntroScreenState extends State<IntroScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
                   child: Row(
                     children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: AppColors.whiteOverlay(opacity: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'P',
-                            style: AppTypography.pageTitle().copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
                       Text(
                         l10n.onboardingFinalTable,
                         style: AppTypography.pageSubtitle(),
@@ -110,17 +92,14 @@ class _IntroScreenState extends State<IntroScreen> {
                       _buildSlide(
                         title: l10n.onboardingTrackTitle,
                         subtitle: l10n.onboardingTrackSubtitle,
-                        icon: Icons.style_rounded,
                       ),
                       _buildSlide(
                         title: l10n.onboardingKnowTitle,
                         subtitle: l10n.onboardingKnowSubtitle,
-                        icon: Icons.insights_rounded,
                       ),
                       _buildSlide(
                         title: l10n.onboardingClubsTitle,
                         subtitle: l10n.onboardingClubsSubtitle,
-                        icon: Icons.groups_rounded,
                       ),
                       _buildAuthPage(),
                     ],
@@ -160,7 +139,6 @@ class _IntroScreenState extends State<IntroScreen> {
   Widget _buildSlide({
     required String title,
     required String subtitle,
-    required IconData icon,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -168,16 +146,6 @@ class _IntroScreenState extends State<IntroScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Spacer(flex: 2),
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: const Color(0xFF89F1EC).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(icon, color: const Color(0xFF89F1EC), size: 32),
-          ),
-          const SizedBox(height: 24),
           Text(
             title,
             style: AppTypography.pageTitleLarge().copyWith(

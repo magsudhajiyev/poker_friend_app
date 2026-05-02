@@ -9,6 +9,63 @@ import 'app_data_cache.dart';
 class BankrollService {
   static const String _goalKey = 'bankroll_goal';
   static const String _currentBankrollKey = 'current_bankroll';
+  static const String _syncedKey = 'bankroll_synced_from_firestore';
+
+  /// Called on login / app start. Pulls bankroll from Firestore into
+  /// SharedPreferences so the rest of the app can read locally.
+  /// Only overwrites local values if Firestore has data.
+  static Future<void> syncFromFirestore() async {
+    try {
+      final userId = AuthService.userId;
+      if (userId == null) return;
+
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      if (!doc.exists) return;
+      final data = doc.data();
+      if (data == null) return;
+
+      final prefs = await SharedPreferences.getInstance();
+
+      // Only overwrite local if Firestore has the fields
+      if (data.containsKey('bankrollGoal')) {
+        final goal = (data['bankrollGoal'] as num).toDouble();
+        await prefs.setDouble(_goalKey, goal);
+      }
+      if (data.containsKey('currentBankroll')) {
+        final bankroll = (data['currentBankroll'] as num).toDouble();
+        await prefs.setDouble(_currentBankrollKey, bankroll);
+      }
+
+      await prefs.setBool(_syncedKey, true);
+      AppDataCache.markHomeDirty();
+    } catch (e) {
+      print('Error syncing bankroll from Firestore: $e');
+    }
+  }
+
+  /// Persist bankroll values to Firestore (fire-and-forget).
+  static Future<void> _syncToFirestore({double? goal, double? bankroll}) async {
+    try {
+      final userId = AuthService.userId;
+      if (userId == null) return;
+
+      final updates = <String, dynamic>{};
+      if (goal != null) updates['bankrollGoal'] = goal;
+      if (bankroll != null) updates['currentBankroll'] = bankroll;
+      if (updates.isEmpty) return;
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .set(updates, SetOptions(merge: true));
+    } catch (e) {
+      print('Error syncing bankroll to Firestore: $e');
+    }
+  }
 
   // Get bankroll goal
   static Future<double> getBankrollGoal() async {
@@ -27,6 +84,7 @@ class BankrollService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_goalKey, goal);
       AppDataCache.markHomeDirty();
+      _syncToFirestore(goal: goal);
     } catch (e) {
       print('Error setting bankroll goal: $e');
     }
@@ -49,6 +107,7 @@ class BankrollService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_currentBankrollKey, amount);
       AppDataCache.markHomeDirty();
+      _syncToFirestore(bankroll: amount);
     } catch (e) {
       print('Error setting current bankroll: $e');
     }
@@ -70,7 +129,6 @@ class BankrollService {
       final current = await getCurrentBankroll();
       final goal = await getBankrollGoal();
       final progress = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
-      print('💰 DEBUG: Current: $current, Goal: $goal, Progress: $progress');
       return progress;
     } catch (e) {
       print('Error calculating bankroll progress: $e');
@@ -128,7 +186,6 @@ class BankrollService {
       }
 
       // Calculate win rate from user stats (hands won / hands played)
-      // Win rate should only count hands where we voluntarily put money in
       final handsPlayed = userStats.handsPlayed;
       final wonHands = userStats.wonHands;
       final winRate = handsPlayed > 0 ? ((wonHands / handsPlayed) * 100).clamp(0.0, 100.0) : 0.0;
@@ -157,10 +214,6 @@ class BankrollService {
 
       final avgWeeklyEarnings = totalProfit / (sessions.length > 0 ? (sessions.length / 2.0) : 1.0);
 
-      // Calculate VPIP, PFR, 3-bet percentages for play style detection
-      // IMPORTANT: Denominator must be totalHands (all hands dealt), NOT handsPlayed
-      // VPIP = "Voluntarily Put money In Pot" - percentage of ALL dealt hands where player VPIP'd
-      // Using handsPlayed would give inflated values (e.g., 100% if player only records VPIP hands)
       final vpip = userStats.totalHands > 0
           ? (userStats.vpipCount / userStats.totalHands) * 100
           : 0.0;
@@ -171,14 +224,11 @@ class BankrollService {
           ? (userStats.threeBetCount / userStats.totalHands) * 100
           : 0.0;
 
-      // Calculate aggression factor
-      // AF = aggressive actions (bet/raise) / passive actions (call)
-      // Approximate: PFR count represents aggressive actions, (VPIP - PFR) represents calls
       final aggressiveActions = userStats.pfrCount.toDouble();
       final passiveActions = (userStats.vpipCount - userStats.pfrCount).toDouble();
       final aggressionFactor = passiveActions > 0
           ? aggressiveActions / passiveActions
-          : (aggressiveActions > 0 ? 5.0 : 0.0); // If only aggressive, set high AF
+          : (aggressiveActions > 0 ? 5.0 : 0.0);
 
       return {
         'totalSessions': userStats.totalSessions,

@@ -99,7 +99,7 @@ class _GlobalLoadingSpinnerState extends State<GlobalLoadingSpinner>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(widget.size / 2),
                             child: Image.asset(
-                              'logo.png',
+                              'assets/logo.png',
                               width: widget.size,
                               height: widget.size,
                               fit: BoxFit.contain,
