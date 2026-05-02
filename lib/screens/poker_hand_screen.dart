@@ -1521,32 +1521,34 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           // Next street auto-advances via _autoAdvanceWithIndicator()
-                          // Next Hand (skip) button
-                          GestureDetector(
-                            onTap: _skipCurrentAction,
-                            child: Container(
-                              height: 36,
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF101115),
-                                borderRadius: BorderRadius.circular(110),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.15),
+                          // Next Hand (skip) button — hidden in individual/quick session mode
+                          if (!widget.isIndividualSession) ...[
+                            GestureDetector(
+                              onTap: _skipCurrentAction,
+                              child: Container(
+                                height: 36,
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF101115),
+                                  borderRadius: BorderRadius.circular(110),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                  ),
                                 ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  l10n.handNextHand,
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 13,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                    fontWeight: FontWeight.w500,
+                                child: Center(
+                                  child: Text(
+                                    l10n.handNextHand,
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 13,
+                                      color: Colors.white.withValues(alpha: 0.8),
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
+                            const SizedBox(width: 8),
+                          ],
                           // Menu button
                           _buildMenuButton(context),
                         ],
@@ -3726,6 +3728,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   /// Whether to show the "Next Hand" button: hero has folded and
   /// there are 2+ active (non-folded) players still in the hand.
   bool _canShowNextHand() {
+    if (widget.isIndividualSession) return false;
     final heroSeat = sessionManager.ourSeatNumber;
     if (heroSeat == null) return false;
     final heroPlayer = gameState.players[heroSeat - 1];
