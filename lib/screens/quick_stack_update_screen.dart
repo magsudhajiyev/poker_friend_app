@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/currency_service.dart';
 import '../utils/poker_positions.dart';
 import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
@@ -586,7 +587,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
         builder: (context, setDialogState) {
           final typedBB = double.tryParse(controller.text) ?? currentBB;
           final liveChips = (typedBB * widget.bigBlind).toInt();
-          final chipDisplay = widget.gameType == GameType.cash ? '\$$liveChips' : '$liveChips';
+          final chipDisplay = widget.gameType == GameType.cash ? CurrencyService.formatCash(liveChips.toDouble()) : '$liveChips';
 
           return Dialog(
             backgroundColor: _cardColor,
@@ -857,7 +858,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                                 Text(
                                   l10n.quickStackBlinds(
                                     widget.gameType == GameType.cash
-                                        ? '\$${widget.smallBlind}/\$${widget.bigBlind}'
+                                        ? '${CurrencyService.formatCash(widget.smallBlind.toDouble())}/${CurrencyService.formatCash(widget.bigBlind.toDouble())}'
                                         : '${widget.smallBlind}/${widget.bigBlind}',
                                   ),
                                   style: GoogleFonts.ibmPlexSans(
@@ -1153,7 +1154,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                           ),
                         ),
                         Text(
-                          isCashGame ? '\$$chipAmount' : '$chipAmount',
+                          isCashGame ? CurrencyService.formatCash(chipAmount.toDouble()) : '$chipAmount',
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 12,
                             color: Colors.white.withValues(alpha: 0.4),

@@ -8,6 +8,7 @@ import '../../models/club.dart';
 import '../../models/club_event.dart';
 import '../../models/dealer_session.dart';
 import '../../models/qr_table_data.dart';
+import '../../services/currency_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/qr_service.dart';
 import '../../services/dealer_service.dart';
@@ -405,8 +406,15 @@ class _DealerQRScanScreenState extends State<DealerQRScanScreen> {
                 borderRadius: BorderRadius.circular(14),
                 borderSide: const BorderSide(color: Color(0xFF89F1EC)),
               ),
-              prefixText: showDollarSign ? '\$' : null,
+              prefixText: showDollarSign ? CurrencyService.prefixText : null,
               prefixStyle: GoogleFonts.ibmPlexSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF8C8C8C),
+                height: 1.44,
+              ),
+              suffixText: showDollarSign ? CurrencyService.suffixText : null,
+              suffixStyle: GoogleFonts.ibmPlexSans(
                 fontSize: 17,
                 fontWeight: FontWeight.w500,
                 color: const Color(0xFF8C8C8C),

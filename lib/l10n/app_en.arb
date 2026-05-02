@@ -50,6 +50,7 @@
   "settingsLanguage": "Language",
   "settingsLanguageSubtitle": "Choose app language",
   "settingsLanguageSystem": "System Default",
+  "settingsCurrency": "Currency",
   "settingsKnowledgeBase": "KNOWLEDGE BASE",
   "settingsGuidedTour": "Guided Tour",
   "settingsGuidedTourSubtitle": "Replay onboarding tours",

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../services/currency_service.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
 import '../services/calendar_event_service.dart';
@@ -1356,7 +1357,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
-                          '\$ ${event.buyIn.toStringAsFixed(0)}',
+                          CurrencyService.formatCash(event.buyIn),
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
                             fontWeight: FontWeight.w500,

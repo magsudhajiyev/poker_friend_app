@@ -29,6 +29,7 @@ import '../player/player_session_screen.dart';
 import 'final_standings_screen.dart';
 import '../../design_system/components/cards/error_state_card.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/currency_service.dart';
 
 /// Event detail screen with RSVP functionality
 class EventDetailScreen extends StatefulWidget {
@@ -645,7 +646,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     icon: Icons.attach_money,
                                     title: AppLocalizations.of(context).eventDetailBuyIn,
                                     content: Text(
-                                      '\$${_event.buyInAmount?.toStringAsFixed(0)}',
+                                      CurrencyService.formatCash((_event.buyInAmount ?? 0).toDouble()),
                                       style: GoogleFonts.ibmPlexSans(
                                         color: const Color(0xFF89F1EC),
                                         fontSize: 20,

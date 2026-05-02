@@ -6,6 +6,7 @@ import '../models/game_types.dart';
 import '../services/bankroll_service.dart';
 import '../services/session_result_service.dart';
 import '../services/app_data_cache.dart';
+import '../services/currency_service.dart';
 
 /// Shows session-end bankroll sheet using FormDrawer.
 /// Cash: editable pre-filled profit + total invested.
@@ -180,8 +181,16 @@ class _CashBodyState extends State<_CashBody> {
                       ),
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
-                        prefixText: '\$',
+                        prefixText: CurrencyService.prefixText,
                         prefixStyle: GoogleFonts.robotoMono(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                          color: isPositive
+                              ? const Color(0xFF62E3BC)
+                              : const Color(0xFFD55A41),
+                        ),
+                        suffixText: CurrencyService.suffixText,
+                        suffixStyle: GoogleFonts.robotoMono(
                           fontSize: 28,
                           fontWeight: FontWeight.w600,
                           color: isPositive
@@ -198,7 +207,7 @@ class _CashBodyState extends State<_CashBody> {
                     ),
                   ),
                   Text(
-                    '\$${widget.totalBuyIn.toStringAsFixed(0)}',
+                    CurrencyService.formatCash(widget.totalBuyIn),
                     style: GoogleFonts.robotoMono(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
@@ -282,7 +291,8 @@ class _TournamentBodyState extends State<_TournamentBody> {
             _buildField(
               label: l10n.sessionEndPrizeWon,
               controller: widget.prizeController,
-              prefix: '\$',
+              prefix: CurrencyService.prefixText,
+              suffix: CurrencyService.suffixText,
             ),
             _buildDivider(),
             // Total invested (read-only)
@@ -300,7 +310,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
                     ),
                   ),
                   Text(
-                    '\$${widget.totalBuyIn.toStringAsFixed(0)}',
+                    CurrencyService.formatCash(widget.totalBuyIn),
                     style: GoogleFonts.robotoMono(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
@@ -329,7 +339,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
                       ),
                     ),
                     Text(
-                      '\$${_calculatedProfit!.toStringAsFixed(0)}',
+                      CurrencyService.formatCash(_calculatedProfit!),
                       style: GoogleFonts.robotoMono(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -352,6 +362,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
     required String label,
     required TextEditingController controller,
     String? prefix,
+    String? suffix,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -382,6 +393,12 @@ class _TournamentBodyState extends State<_TournamentBody> {
               decoration: InputDecoration(
                 prefixText: prefix,
                 prefixStyle: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF8C8C8C),
+                ),
+                suffixText: suffix,
+                suffixStyle: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
                   color: const Color(0xFF8C8C8C),

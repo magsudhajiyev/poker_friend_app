@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import '../services/currency_service.dart';
 
 /// Format large numbers with K/M suffixes for compact display
 /// - 1,100,000 → "1.1M"
@@ -28,9 +29,9 @@ String formatCompactNumber(num number) {
   return NumberFormat('#,###').format(number);
 }
 
-/// Format with $ prefix for cash/currency display
-/// - 240,000 → "$240K"
-/// - 1,100,000 → "$1.1M"
+/// Format with currency symbol for cash display
+/// - 240,000 → "$240K" or "240Kzł"
+/// - 1,100,000 → "$1.1M" or "1.1Mzł"
 String formatCompactCurrency(num number) {
-  return '\$${formatCompactNumber(number)}';
+  return CurrencyService.formatCompact(number);
 }

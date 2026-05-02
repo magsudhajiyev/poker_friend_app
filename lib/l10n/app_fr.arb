@@ -48,6 +48,7 @@
   "settingsLanguage": "Langue",
   "settingsLanguageSubtitle": "Choisir la langue de l'application",
   "settingsLanguageSystem": "Par défaut du système",
+  "settingsCurrency": "Devise",
   "settingsKnowledgeBase": "BASE DE CONNAISSANCES",
   "settingsGuidedTour": "Visite guidée",
   "settingsGuidedTourSubtitle": "Rejouer les tutoriels d'introduction",

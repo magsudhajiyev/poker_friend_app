@@ -1,4 +1,5 @@
 import 'dart:math';
+import '../services/currency_service.dart';
 import '../utils/poker_positions.dart';
 import 'stack_bucket.dart';
 
@@ -1343,9 +1344,9 @@ class PokerGameState {
 
   String formatCurrency(double amount) {
     if (isCashGame) {
-      return '\$${amount.toStringAsFixed(2)}';
+      return CurrencyService.formatCash(amount);
     } else {
-      return '${amount.toInt()}';
+      return CurrencyService.formatChips(amount);
     }
   }
 
@@ -1852,7 +1853,7 @@ class SidePotCalculator {
     for (int i = 0; i < sidePots.length; i++) {
       SidePot pot = sidePots[i];
       String potName = i == 0 ? "Main pot" : "Side pot ${i}";
-      descriptions.add("$potName: \$${pot.amount.toStringAsFixed(2)} (Players: ${pot.eligiblePlayers.join(', ')})");
+      descriptions.add("$potName: ${CurrencyService.formatCash(pot.amount)} (Players: ${pot.eligiblePlayers.join(', ')})");
     }
 
     return descriptions.join('\n');

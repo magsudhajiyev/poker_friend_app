@@ -134,6 +134,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsLanguageSystem => 'Domyślny systemowy';
 
   @override
+  String get settingsCurrency => 'Waluta';
+
+  @override
   String get settingsKnowledgeBase => 'BAZA WIEDZY';
 
   @override

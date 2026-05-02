@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
+import '../services/currency_service.dart';
 
 /// Default number of data points visible in the viewport.
 const _defaultVisiblePoints = 7;
@@ -580,11 +581,11 @@ class _StackGrowthChartFullScreenState
 
   String _formatPL() {
     final pl = widget.profitLoss;
-    final prefix = pl >= 0 ? '+' : '';
+    final sign = pl >= 0 ? '+' : '-';
     if (widget.isCashGame) {
-      return '$prefix\$${pl.toStringAsFixed(2)}';
+      return '$sign${CurrencyService.formatCash(pl.abs())}';
     }
-    return '$prefix${pl.toStringAsFixed(0)}';
+    return '${pl >= 0 ? '+' : ''}${pl.toStringAsFixed(0)}';
   }
 
   @override

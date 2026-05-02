@@ -17,6 +17,7 @@ import 'services/event_service.dart';
 import 'services/subscription_service.dart';
 import 'services/app_data_cache.dart';
 import 'services/locale_service.dart';
+import 'services/currency_service.dart';
 import 'config/env_config.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
@@ -62,6 +63,13 @@ void main() async {
     await LocaleService.init();
   } catch (e) {
     print('Locale service init failed: $e');
+  }
+
+  // Load saved currency preference
+  try {
+    await CurrencyService.init();
+  } catch (e) {
+    print('Currency service init failed: $e');
   }
 
   // Launch app FIRST, then init services in background.

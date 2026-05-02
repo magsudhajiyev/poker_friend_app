@@ -7,6 +7,8 @@ import '../design_system/components/backgrounds/gradient_background.dart';
 import '../services/club_request_service.dart';
 import '../services/support_request_service.dart';
 import '../services/locale_service.dart';
+import '../services/currency_service.dart';
+import '../models/currency.dart';
 import '../onboarding/onboarding_state.dart';
 import 'admin/club_requests_screen.dart';
 import 'admin/support_requests_screen.dart';
@@ -107,6 +109,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showCurrencyPicker(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final currentCode = CurrencyService.code;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF101115),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        final maxHeight = MediaQuery.of(context).size.height * 0.7;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.settingsCurrency,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Flexible(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: Currency.all.map((c) => _buildCurrencyOption(c, currentCode)).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCurrencyOption(Currency currency, String currentCode) {
+    final isSelected = currency.code == currentCode;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        CurrencyService.setCurrency(currency.code);
+        Navigator.pop(context);
+        setState(() {});
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 40,
+              child: Text(
+                currency.symbol,
+                style: GoogleFonts.robotoMono(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected ? const Color(0xFF89F1EC) : Colors.white.withOpacity(0.6),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '${currency.name} (${currency.code})',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected ? const Color(0xFF89F1EC) : Colors.white,
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(Icons.check_rounded, color: Color(0xFF89F1EC), size: 22),
+              ),
+            Text(currency.flag, style: const TextStyle(fontSize: 20)),
+          ],
+        ),
+      ),
     );
   }
 
@@ -211,6 +306,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           title: l10n.settingsLanguage,
                           subtitle: _currentLocaleName(),
                           onTap: () => _showLanguagePicker(context),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildNavigationRow(
+                          icon: Icons.attach_money_rounded,
+                          iconColor: const Color(0xFF89F1EC),
+                          title: l10n.settingsCurrency,
+                          subtitle: '${CurrencyService.current.name} (${CurrencyService.symbol})',
+                          onTap: () => _showCurrencyPicker(context),
                         ),
                       ],
                     ),

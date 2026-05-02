@@ -48,6 +48,7 @@
   "settingsLanguage": "Sprache",
   "settingsLanguageSubtitle": "App-Sprache auswählen",
   "settingsLanguageSystem": "Systemstandard",
+  "settingsCurrency": "Währung",
   "settingsKnowledgeBase": "WISSENSDATENBANK",
   "settingsGuidedTour": "Geführte Tour",
   "settingsGuidedTourSubtitle": "Onboarding-Touren wiederholen",

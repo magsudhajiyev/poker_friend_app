@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/components/form_drawer.dart';
+import '../services/currency_service.dart';
 import '../services/opponent_service.dart';
 import '../models/opponent.dart';
 
@@ -243,7 +244,7 @@ class _SeatConfigBodyState extends State<_SeatConfigBody> {
     super.dispose();
   }
 
-  InputDecoration _inputDecoration(String hint, {String? prefixText}) {
+  InputDecoration _inputDecoration(String hint, {String? prefixText, String? suffixText}) {
     return InputDecoration(
       hintText: hint,
       hintStyle: GoogleFonts.ibmPlexSans(
@@ -254,6 +255,13 @@ class _SeatConfigBodyState extends State<_SeatConfigBody> {
       ),
       prefixText: prefixText,
       prefixStyle: GoogleFonts.ibmPlexSans(
+        color: Colors.white,
+        fontSize: 17,
+        fontWeight: FontWeight.w400,
+        height: 1.44,
+      ),
+      suffixText: suffixText,
+      suffixStyle: GoogleFonts.ibmPlexSans(
         color: Colors.white,
         fontSize: 17,
         fontWeight: FontWeight.w400,
@@ -534,7 +542,8 @@ class _SeatConfigBodyState extends State<_SeatConfigBody> {
             ),
             decoration: _inputDecoration(
               widget.defaultStack.toStringAsFixed(0),
-              prefixText: widget.isCash ? '\$ ' : null,
+              prefixText: widget.isCash ? CurrencyService.prefixText : null,
+              suffixText: widget.isCash ? CurrencyService.suffixText : null,
             ),
           ),
           const SizedBox(height: 20),

@@ -9,6 +9,7 @@ import '../utils/poker_positions.dart';
 import 'hand_actions_screen.dart';
 import '../services/app_data_cache.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../services/currency_service.dart';
 
 class OpponentHandsScreen extends StatefulWidget {
   final Opponent opponent;
@@ -711,7 +712,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                 const Spacer(),
                 // Pot
                 Text(
-                  l10n.opponentHandsPot('${isCash ? '\$' : ''}${potAmount.toStringAsFixed(0)}'),
+                  l10n.opponentHandsPot(isCash ? CurrencyService.formatCash(potAmount) : potAmount.toStringAsFixed(0)),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     color: _mint,

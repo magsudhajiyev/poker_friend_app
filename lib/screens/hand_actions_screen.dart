@@ -14,6 +14,7 @@ import 'package:share_plus/share_plus.dart';
 import '../services/opponent_stats_service.dart';
 import '../l10n/app_localizations.dart';
 import 'paywall_screen.dart';
+import '../services/currency_service.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -1556,7 +1557,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final isCashGame = gameType == 'cash';
 
     if (isCashGame) {
-      return l10n.handActionsPotAmount('\$${amount.toStringAsFixed(2)}');
+      return l10n.handActionsPotAmount(CurrencyService.formatCash(amount));
     } else {
       return l10n.handActionsPotAmount('${amount.toInt()}');
     }

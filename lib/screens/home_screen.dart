@@ -28,6 +28,7 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/session_result_service.dart';
 import '../services/play_style_detector.dart';
+import '../services/currency_service.dart';
 import '../services/stats_verification_service.dart';
 import '../screens/auth_screen.dart';
 import '../widgets/loading_screen.dart';
@@ -566,7 +567,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildActiveSessionItem(BuildContext context, SeatAssignment seat) {
     final chipStackStr = seat.chipStack != null
-        ? '\$${seat.chipStack!.toStringAsFixed(0)}'
+        ? CurrencyService.formatCash(seat.chipStack!)
         : AppLocalizations.of(context).profileNotSet;
 
     return InkWell(
@@ -2113,7 +2114,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 AppLocalizations.of(context).homeBankrollOfGoal(
-                                  '\$${currentBankroll.toInt()}', '\$${bankrollGoal.toInt()}',
+                                  CurrencyService.formatCashRounded(currentBankroll), CurrencyService.formatCashRounded(bankrollGoal),
                                 ),
                                 style: GoogleFonts.familjenGrotesk(
                                   fontSize: 40, fontWeight: FontWeight.w600,
@@ -2140,7 +2141,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
                                       : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
                                   child: Text(
-                                    AppLocalizations.of(context).homeAmountLeft('\$${remaining.toInt()}'),
+                                    AppLocalizations.of(context).homeAmountLeft(CurrencyService.formatCashRounded(remaining.toDouble())),
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 13, fontWeight: FontWeight.w500,
                                       color: Colors.white, height: 1.44,
@@ -2424,7 +2425,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white,
               ),
               decoration: InputDecoration(
-                prefixText: '\$ ',
+                prefixText: CurrencyService.prefixText,
+                suffixText: CurrencyService.suffixText,
                 prefixStyle: GoogleFonts.robotoMono(
                   fontSize: 14, color: Colors.white.withValues(alpha: 0.3),
                 ),
@@ -2462,7 +2464,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         // Header row with title and avg badge
         SectionHeadline(
           title: AppLocalizations.of(context).homeEarnings,
-          badgeText: AppLocalizations.of(context).homeAvgAmount('\$${avgEarnings.toStringAsFixed(0)}'),
+          badgeText: AppLocalizations.of(context).homeAvgAmount(CurrencyService.formatCash(avgEarnings)),
         ),
         const SizedBox(height: 12),
         // Legend
@@ -2570,7 +2572,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   return const SizedBox.shrink();
                 }
                 return Text(
-                  '\$${value.toInt()}',
+                  CurrencyService.formatCash(value),
                   style: GoogleFonts.robotoMono(
                     color: Colors.white.withValues(alpha: 0.35),
                     fontSize: 10,
@@ -2834,8 +2836,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final playerCount = session['playerCount'] ?? 0;
     final isTournament = (session['gameType'] ?? 'cash').toLowerCase() == 'tournament';
     final blindsText = isTournament
-        ? '\$${session['buyInAmount'] ?? session['totalBuyIn'] ?? 0}'
-        : '\$${session['smallBlind'] ?? 0}/\$${session['bigBlind'] ?? 0}';
+        ? CurrencyService.formatCash((session['buyInAmount'] ?? session['totalBuyIn'] ?? 0).toDouble())
+        : '${CurrencyService.formatCash((session['smallBlind'] ?? 0).toDouble())}/${CurrencyService.formatCash((session['bigBlind'] ?? 0).toDouble())}';
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -2948,7 +2950,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (event['buyIn'] != null) {
       final buyInValue = event['buyIn'];
       if (buyInValue is num) {
-        buyIn = '\$${buyInValue.toStringAsFixed(0)}';
+        buyIn = CurrencyService.formatCash(buyInValue.toDouble());
       } else {
         buyIn = buyInValue.toString();
       }
@@ -3077,7 +3079,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (event['buyIn'] != null) {
       final buyInValue = event['buyIn'];
       if (buyInValue is num) {
-        buyIn = '\$${buyInValue.toStringAsFixed(0)}';
+        buyIn = CurrencyService.formatCash(buyInValue.toDouble());
       } else {
         buyIn = buyInValue.toString();
       }

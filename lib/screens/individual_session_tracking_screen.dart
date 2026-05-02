@@ -19,6 +19,7 @@ import '../design_system/components/app_toggle.dart';
 import '../models/hand_state_machine.dart';
 import '../widgets/stack_growth_chart.dart';
 import '../l10n/app_localizations.dart';
+import '../services/currency_service.dart';
 
 class IndividualSessionTrackingScreen extends StatefulWidget {
   final String sessionName;
@@ -323,7 +324,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       return '${bbValue.toStringAsFixed(1)} BB';
     } else {
       return widget.gameType == GameType.cash
-          ? '\$${value.toStringAsFixed(2)}'
+          ? CurrencyService.formatCash(value)
           : value.toStringAsFixed(0);
     }
   }
@@ -377,7 +378,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                     ),
                     Text(
                       widget.gameType == GameType.cash
-                          ? '\$${_currentStack.toStringAsFixed(2)}'
+                          ? CurrencyService.formatCash(_currentStack)
                           : _currentStack.toStringAsFixed(0),
                       style: GoogleFonts.ibmPlexSans(
                         color: const Color(0xFF89F1EC),
@@ -416,7 +417,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                       fontWeight: FontWeight.w400,
                       height: 1.44,
                     ),
-                    prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
+                    prefixText: widget.gameType == GameType.cash ? CurrencyService.prefixText : '',
+                    suffixText: widget.gameType == GameType.cash ? CurrencyService.suffixText : null,
                     prefixStyle: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       color: Colors.white,
@@ -1324,7 +1326,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 decoration: InputDecoration(
                   labelText: isTournament ? l10n.individualAddOnPrice : l10n.individualAddOnAmount,
                   labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withValues(alpha: 0.5)),
-                  prefixText: '\$ ',
+                  prefixText: CurrencyService.prefixText,
+                  suffixText: CurrencyService.suffixText,
                   prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.05),
@@ -1401,8 +1404,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       final price = result['price'] as double;
       final chips = result['chips'] as double;
       final noteText = widget.gameType == GameType.tournament
-          ? 'Add-on: ${chips.toInt()} chips (\$${price.toInt()})'
-          : 'Add-on: \$${price.toInt()}';
+          ? 'Add-on: ${chips.toInt()} chips (${CurrencyService.formatCash(price)})'
+          : 'Add-on: ${CurrencyService.formatCash(price)}';
 
       setState(() {
         _totalBuyIn += price;
@@ -1481,7 +1484,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                 decoration: InputDecoration(
                   labelText: l10n.individualRebuyAmount,
                   labelStyle: GoogleFonts.ibmPlexSans(color: Colors.white.withOpacity(0.5)),
-                  prefixText: '\$ ',
+                  prefixText: CurrencyService.prefixText,
+                  suffixText: CurrencyService.suffixText,
                   prefixStyle: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 16),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.05),
@@ -1889,7 +1893,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                           child: Row(
                             children: [
                               Text(
-                                '${profitLoss >= 0 ? '+' : ''}${widget.gameType == GameType.cash ? '\$' : ''}${profitLoss.toStringAsFixed(widget.gameType == GameType.cash ? 2 : 0)}',
+                                widget.gameType == GameType.cash
+                                    ? '${profitLoss >= 0 ? '+' : '-'}${CurrencyService.formatCash(profitLoss.abs())}'
+                                    : '${profitLoss >= 0 ? '+' : ''}${profitLoss.toStringAsFixed(0)}',
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 18,
                                   color: isProfit ? const Color(0xFF89F1EC) : (profitLoss < 0 ? Colors.red : Colors.white),
@@ -1965,14 +1971,14 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                                   children: [
                                     const SizedBox(height: 16),
                                     _buildStatRow(l10n.individualStartingStack, widget.gameType == GameType.cash
-                                        ? '\$${widget.startingStack.toStringAsFixed(2)}'
+                                        ? CurrencyService.formatCash(widget.startingStack)
                                         : widget.startingStack.toStringAsFixed(0)),
                                     _buildDivider(),
-                                    _buildStatRow(l10n.individualInitialBuyIn, '\$${widget.buyInAmount.toStringAsFixed(2)}'),
+                                    _buildStatRow(l10n.individualInitialBuyIn, CurrencyService.formatCash(widget.buyInAmount)),
                                     _buildDivider(),
                                     _buildStatRow(l10n.individualRebuys, '${_rebuys.length}'),
                                     _buildDivider(),
-                                    _buildStatRow(l10n.individualTotalInvested, '\$${_totalBuyIn.toStringAsFixed(2)}'),
+                                    _buildStatRow(l10n.individualTotalInvested, CurrencyService.formatCash(_totalBuyIn)),
                                     _buildDivider(),
                                     _buildClickableStatRow(l10n.individualBlindsLabel, '$_currentSmallBlind/$_currentBigBlind', _showUpdateBlindsDialog),
                                     _buildDivider(),
@@ -2043,7 +2049,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
 
   String _chartFormatValue(double value) {
     if (widget.gameType == GameType.cash) {
-      return '\$${value.toStringAsFixed(2)}';
+      return CurrencyService.formatCash(value);
     }
     return value.toStringAsFixed(0);
   }

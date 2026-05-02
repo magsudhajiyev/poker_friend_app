@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import '../widgets/global_bottom_nav_bar.dart';
 import '../l10n/app_localizations.dart';
+import '../services/currency_service.dart';
 
 /// Event detail screen matching Figma node 158:2943
 /// Shows event title, date/time, details card, and delete button
@@ -162,7 +163,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 _buildSeparator(),
                                 _buildListRow(l10n.calendarEventLocation, _location.isNotEmpty ? _location : '-'),
                                 _buildSeparator(),
-                                _buildListRow(l10n.calendarEventBuyIn, _buyIn > 0 ? '\$${_buyIn.toStringAsFixed(0)}' : '-'),
+                                _buildListRow(l10n.calendarEventBuyIn, _buyIn > 0 ? CurrencyService.formatCash(_buyIn) : '-'),
                               ],
                             );
                           },

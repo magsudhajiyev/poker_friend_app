@@ -30,6 +30,7 @@ import '../../features/dealer_voice/cubit/dealer_voice_state.dart';
 import '../../utils/poker_positions.dart';
 import '../../widgets/poker_table_widget.dart';
 import '../../utils/number_formatter.dart';
+import '../../services/currency_service.dart';
 import '../../widgets/board_cards_dialog.dart';
 import '../../widgets/all_in_board_cards_dialog.dart';
 import '../../widgets/winner_selection_dialog.dart';
@@ -1882,8 +1883,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4E5054))),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4E5054))),
                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF89F1EC))),
-                  prefixText: _isTournament ? null : '\$',
+                  prefixText: _isTournament ? null : CurrencyService.prefixText,
+                  suffixText: _isTournament ? null : CurrencyService.suffixText,
                   prefixStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 17),
+                  suffixStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C), fontSize: 17),
                   hintText: '0',
                   hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF4E5054), fontSize: 17),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2265,8 +2268,10 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.1),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                prefixText: '\$',
+                prefixText: CurrencyService.prefixText,
+                suffixText: CurrencyService.suffixText,
                 prefixStyle: const TextStyle(color: Colors.white),
+                suffixStyle: const TextStyle(color: Colors.white),
               ),
             ),
             const SizedBox(height: 24),
@@ -2935,11 +2940,11 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
   }
 
   Widget _buildGameInfo() {
-    // For small amounts show decimal (e.g. $0.00), for larger use compact form (e.g. $1.2k)
+    // For small amounts show decimal, for larger use compact form
     final pot = _gameState!.currentPot;
     final isCash = _dealerSession.gameType == 'cash';
     final potDisplay = pot < 10000
-        ? (isCash ? '\$${pot.toStringAsFixed(2)}' : pot.toStringAsFixed(0))
+        ? (isCash ? CurrencyService.formatCash(pot) : pot.toStringAsFixed(0))
         : _formatAmount(pot);
     return Container(
       color: const Color(0xFF101115),
@@ -5614,8 +5619,10 @@ class _UserSearchDialogState extends State<_UserSearchDialog> {
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.1),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                prefixText: '\$',
+                prefixText: CurrencyService.prefixText,
+                suffixText: CurrencyService.suffixText,
                 prefixStyle: const TextStyle(color: Colors.white),
+                suffixStyle: const TextStyle(color: Colors.white),
               ),
             ),
           ],

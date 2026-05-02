@@ -21,6 +21,7 @@ import '../../services/seat_service.dart';
 import '../../design_system/components/cards/error_state_card.dart';
 import '../../services/app_data_cache.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/currency_service.dart';
 import '../../widgets/global_bottom_nav_bar.dart';
 import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
@@ -1084,7 +1085,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
     if (event.gameType == 'cash' && event.stakes != null && event.stakes!.isNotEmpty) {
       buyInDisplay = event.stakes!;
     } else if (event.buyInAmount != null && event.buyInAmount! > 0) {
-      buyInDisplay = '\$${event.buyInAmount!.toStringAsFixed(0)}';
+      buyInDisplay = CurrencyService.formatCash(event.buyInAmount!.toDouble());
     }
 
     // Player count label

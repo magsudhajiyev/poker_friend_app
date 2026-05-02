@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
+import '../services/currency_service.dart';
 
 class WinnerSelectionDialog extends StatefulWidget {
   final List<int> activePlayers;
@@ -33,12 +34,10 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
   Set<int> selectedWinners = <int>{};
   bool isChoppedPot = false;
 
-  String _formatCurrency(double amount) {
-    if (widget.gameType == GameType.cash) {
-      return '\$${amount.toStringAsFixed(2)}';
-    } else {
-      return '${amount.toInt()}';
-    }
+  String _formatAmount(double amount) {
+    return widget.gameType == GameType.cash
+        ? CurrencyService.formatCash(amount)
+        : CurrencyService.formatChips(amount);
   }
 
   double _getSharePerWinner() {
@@ -389,7 +388,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                                       ),
                                     ),
                                     Text(
-                                      _formatCurrency(entry.value),
+                                      _formatAmount(entry.value),
                                       style: GoogleFonts.ibmPlexSans(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,

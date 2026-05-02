@@ -48,6 +48,7 @@
   "settingsLanguage": "Idioma",
   "settingsLanguageSubtitle": "Elegir idioma de la app",
   "settingsLanguageSystem": "Predeterminado del sistema",
+  "settingsCurrency": "Moneda",
   "settingsKnowledgeBase": "BASE DE CONOCIMIENTO",
   "settingsGuidedTour": "Tour guiado",
   "settingsGuidedTourSubtitle": "Repetir tours de introducción",

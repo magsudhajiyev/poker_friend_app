@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
+import '../services/currency_service.dart';
 import 'individual_session_tracking_screen.dart';
 
 class IndividualHandSetupScreen extends StatefulWidget {
@@ -161,7 +162,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                   children: [
                     _buildSettingCard(
                       title: AppLocalizations.of(context).individualHandSetupSmallBlind,
-                      value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
+                      value: gameType == GameType.cash ? CurrencyService.formatCash(smallBlind.toDouble()) : '$smallBlind',
                       icon: Icons.monetization_on,
                       onDecrement: () {
                         if (smallBlind > 1) {
@@ -180,7 +181,7 @@ class _IndividualHandSetupScreenState extends State<IndividualHandSetupScreen> {
                     ),
                     _buildSettingCard(
                       title: AppLocalizations.of(context).individualHandSetupBigBlind,
-                      value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
+                      value: gameType == GameType.cash ? CurrencyService.formatCash(bigBlind.toDouble()) : '$bigBlind',
                       icon: Icons.monetization_on_outlined,
                       onDecrement: () {
                         if (bigBlind > smallBlind) {

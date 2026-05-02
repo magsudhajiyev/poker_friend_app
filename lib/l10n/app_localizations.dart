@@ -354,6 +354,12 @@ abstract class AppLocalizations {
   /// **'System Default'**
   String get settingsLanguageSystem;
 
+  /// No description provided for @settingsCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get settingsCurrency;
+
   /// No description provided for @settingsKnowledgeBase.
   ///
   /// In en, this message translates to:

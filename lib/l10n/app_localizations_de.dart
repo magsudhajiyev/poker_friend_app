@@ -134,6 +134,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsLanguageSystem => 'Systemstandard';
 
   @override
+  String get settingsCurrency => 'Währung';
+
+  @override
   String get settingsKnowledgeBase => 'WISSENSDATENBANK';
 
   @override

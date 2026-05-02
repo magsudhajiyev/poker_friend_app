@@ -8,6 +8,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../l10n/app_localizations.dart';
 import '../services/session_result_service.dart';
 import '../design_system/constants/colors.dart';
+import '../services/currency_service.dart';
 
 /// Full-screen landscape earnings chart with zoom/pan
 /// Shows all-time cumulative earnings for tournament and cash games
@@ -319,7 +320,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
-        '${isNegative ? "-" : ""}\$${amount.abs().toStringAsFixed(0)}',
+        '${isNegative ? "-" : ""}${CurrencyService.formatCash(amount.abs())}',
         style: GoogleFonts.ibmPlexSans(
           fontSize: 16,
           color: color,
@@ -488,7 +489,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
                     dateLabel = '${data[idx]['dateLabel']}  ·  ';
                   }
                   return LineTooltipItem(
-                    '$dateLabel$label: \$${value.toStringAsFixed(0)}',
+                    '$dateLabel$label: ${CurrencyService.formatCash(value)}',
                     GoogleFonts.ibmPlexSans(
                       color: color,
                       fontSize: 12,
@@ -580,8 +581,8 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
 
   String _formatYAxisValue(double value) {
     if (value.abs() >= 1000) {
-      return '\$${(value / 1000).toStringAsFixed(1)}k';
+      return CurrencyService.formatCompact(value);
     }
-    return '\$${value.toInt()}';
+    return CurrencyService.formatCash(value);
   }
 }

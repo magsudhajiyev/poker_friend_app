@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
+import '../services/currency_service.dart';
 import '../widgets/modern_setting_row.dart';
 import '../models/game_types.dart';
 import 'poker_hand_screen.dart';
@@ -102,7 +103,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   children: [
                     _buildSettingCard(
                       title: l10n.introSmallBlind,
-                      value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
+                      value: gameType == GameType.cash ? CurrencyService.formatCash(smallBlind.toDouble()) : '$smallBlind',
                       iconPath: 'icons/small_blind.png',
                       onDecrement: () {
                         if (smallBlind > 1) {
@@ -120,7 +121,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     ),
                     _buildSettingCard(
                       title: l10n.introBigBlind,
-                      value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
+                      value: gameType == GameType.cash ? CurrencyService.formatCash(bigBlind.toDouble()) : '$bigBlind',
                       iconPath: 'icons/big_blind.png',
                       onDecrement: () {
                         if (bigBlind > 1) {

@@ -135,6 +135,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsLanguageSystem => 'Системный';
 
   @override
+  String get settingsCurrency => 'Валюта';
+
+  @override
   String get settingsKnowledgeBase => 'БАЗА ЗНАНИЙ';
 
   @override

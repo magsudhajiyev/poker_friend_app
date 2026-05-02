@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import '../services/currency_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1825,7 +1826,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'wins ${_settlingPotAmount != null ? '${widget.gameType == GameType.cash ? '\$' : ''}${_settlingPotAmount!.toStringAsFixed(0)}' : l10n.handWinsThePot}',
+                                    'wins ${_settlingPotAmount != null ? (widget.gameType == GameType.cash ? CurrencyService.formatCash(_settlingPotAmount!) : _settlingPotAmount!.toStringAsFixed(0)) : l10n.handWinsThePot}',
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 16,
                                       color: Colors.white.withValues(alpha: 0.7),
@@ -2452,7 +2453,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   String _formatPotAmount(double amount) {
     if (sessionManager.gameType == GameType.cash) {
-      return '\$${amount.toStringAsFixed(0)}';
+      return CurrencyService.formatCash(amount);
     }
     return amount.toStringAsFixed(0);
   }
@@ -2907,8 +2908,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       SizedBox(height: 4),
                       Text(
                         l10n.pokerHandBetRange(
-                          widget.gameType == GameType.cash ? '\$${effectiveMinBet.toStringAsFixed(2)}' : effectiveMinBet.toInt().toString(),
-                          widget.gameType == GameType.cash ? '\$${maxBet.toStringAsFixed(2)}' : maxBet.toInt().toString(),
+                          widget.gameType == GameType.cash ? CurrencyService.formatCash(effectiveMinBet) : effectiveMinBet.toInt().toString(),
+                          widget.gameType == GameType.cash ? CurrencyService.formatCash(maxBet) : maxBet.toInt().toString(),
                         ),
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 13,
@@ -2940,8 +2941,14 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         fontWeight: FontWeight.w600,
                       ),
                       decoration: InputDecoration(
-                        prefixText: widget.gameType == GameType.cash ? '\$ ' : '',
+                        prefixText: widget.gameType == GameType.cash ? CurrencyService.prefixText : null,
+                        suffixText: widget.gameType == GameType.cash ? CurrencyService.suffixText : null,
                         prefixStyle: GoogleFonts.ibmPlexSans(
+                          color: const Color(0xFF8C8C8C),
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        suffixStyle: GoogleFonts.ibmPlexSans(
                           color: const Color(0xFF8C8C8C),
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
@@ -4333,7 +4340,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final l10n = AppLocalizations.of(context);
     String formatStackValue(double value) {
       return widget.gameType == GameType.cash
-          ? '\$${value.toStringAsFixed(2)}'
+          ? CurrencyService.formatCash(value)
           : value.toStringAsFixed(0);
     }
 
@@ -4903,7 +4910,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Save pot amount BEFORE distributing
     final potAmount = gameState.currentPot;
-    await LoggerService.debug('  Pot amount: \$${potAmount.toStringAsFixed(2)}');
+    await LoggerService.debug('  Pot amount: ${CurrencyService.formatCash(potAmount)}');
 
     // Get the remaining active player
     List<int> activePlayers = _getActivePlayers();
@@ -5136,7 +5143,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     // Save the pot amount BEFORE showing any dialogs
     final potAmount = gameState.currentPot;
-    await LoggerService.debug('  Pot amount: \$${potAmount.toStringAsFixed(2)}');
+    await LoggerService.debug('  Pot amount: ${CurrencyService.formatCash(potAmount)}');
 
     // First, show winner selection dialog - ALWAYS show it
     List<int> activePlayers = _getActivePlayers();
@@ -5982,7 +5989,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   String _formatCurrency(double amount) {
     if (widget.gameType == GameType.cash) {
-      return '\$${amount.toStringAsFixed(2)}';
+      return CurrencyService.formatCash(amount);
     } else {
       return '${amount.toInt()}';
     }
@@ -6276,8 +6283,13 @@ class _RebuyBodyState extends State<_RebuyBody> {
                   fontSize: 15,
                   color: const Color(0xFF8C8C8C),
                 ),
-                prefixText: '\$ ',
+                prefixText: CurrencyService.prefixText,
+                suffixText: CurrencyService.suffixText,
                 prefixStyle: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  color: Colors.white,
+                ),
+                suffixStyle: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   color: Colors.white,
                 ),

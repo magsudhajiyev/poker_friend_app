@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../services/currency_service.dart';
 import '../l10n/app_localizations.dart';
 import '../services/firebase_service.dart';
 import '../services/dealer_service.dart';
@@ -449,7 +450,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 const Spacer(),
                 // Pot
                 Text(
-                  '${AppLocalizations.of(context).sessionHandsPot} ${isCash ? '\$' : ''}${potAmount is double ? potAmount.toStringAsFixed(0) : potAmount}',
+                  '${AppLocalizations.of(context).sessionHandsPot} ${isCash ? CurrencyService.formatCash((potAmount is double ? potAmount : (potAmount as num).toDouble())) : '${potAmount is double ? potAmount.toStringAsFixed(0) : potAmount}'}',
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     color: _mint,

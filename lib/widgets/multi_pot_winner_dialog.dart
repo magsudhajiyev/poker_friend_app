@@ -5,6 +5,7 @@ import '../design_system/components/app_toggle.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../models/poker_game_state.dart';
+import '../services/currency_service.dart';
 
 class MultiPotWinnerDialog extends StatefulWidget {
   final List<SidePot> sidePots;
@@ -86,12 +87,10 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
     return widget.playerIdToName[playerId] ?? l10n.multiPotPlayerFallback('$playerId');
   }
 
-  String _formatCurrency(double amount) {
-    if (widget.gameType == GameType.cash) {
-      return '\$${amount.toStringAsFixed(2)}';
-    } else {
-      return '${amount.toInt()}';
-    }
+  String _formatAmount(double amount) {
+    return widget.gameType == GameType.cash
+        ? CurrencyService.formatCash(amount)
+        : CurrencyService.formatChips(amount);
   }
 
   int _getPositionOrder(int playerId) {
@@ -346,7 +345,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
               // Show share amount if chopped
               if (choppedWinners[potIndex]!.length > 1)
                 Text(
-                  _formatCurrency(
+                  _formatAmount(
                     _calculateIndividualShares(
                       potIndex,
                       widget.sidePots[potIndex].amount,
@@ -404,7 +403,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                   ),
                 ),
                 Text(
-                  _formatCurrency(sidePot.amount),
+                  _formatAmount(sidePot.amount),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     color: Colors.white,
@@ -451,7 +450,7 @@ class _MultiPotWinnerDialogState extends State<MultiPotWinnerDialog> {
                 ),
               ),
               Text(
-                _formatCurrency(sidePot.amount),
+                _formatAmount(sidePot.amount),
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
                   color: Colors.white,

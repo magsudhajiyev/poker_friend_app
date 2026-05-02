@@ -134,6 +134,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsLanguageSystem => 'Padrao do Sistema';
 
   @override
+  String get settingsCurrency => 'Moeda';
+
+  @override
   String get settingsKnowledgeBase => 'BASE DE CONHECIMENTO';
 
   @override

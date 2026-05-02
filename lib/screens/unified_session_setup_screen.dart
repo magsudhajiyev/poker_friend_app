@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
@@ -293,7 +294,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     return Image.asset(path, width: size, height: size, color: color);
   }
 
-  InputDecoration _inputDecoration(String hint, {String? prefixText}) {
+  InputDecoration _inputDecoration(String hint, {String? prefixText, String? suffixText}) {
     return InputDecoration(
       hintText: hint,
       hintStyle: GoogleFonts.ibmPlexSans(
@@ -304,6 +305,13 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       ),
       prefixText: prefixText,
       prefixStyle: GoogleFonts.ibmPlexSans(
+        color: Colors.white,
+        fontSize: 17,
+        fontWeight: FontWeight.w400,
+        height: 1.44,
+      ),
+      suffixText: suffixText,
+      suffixStyle: GoogleFonts.ibmPlexSans(
         color: Colors.white,
         fontSize: 17,
         fontWeight: FontWeight.w400,
@@ -507,7 +515,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                             Expanded(
                               child: _buildBlindCard(l10n.setupSmallBlind,
                                   _gameType == GameType.cash
-                                      ? '\$$_smallBlind'
+                                      ? '${CurrencyService.symbol}$_smallBlind'
                                       : '$_smallBlind', () {
                                 _showBlindDialog(l10n.setupSmallBlind, _smallBlind,
                                     (v) {
@@ -519,7 +527,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                             Expanded(
                               child: _buildBlindCard(l10n.setupBigBlind,
                                   _gameType == GameType.cash
-                                      ? '\$$_bigBlind'
+                                      ? '${CurrencyService.symbol}$_bigBlind'
                                       : '$_bigBlind', () {
                                 _showBlindDialog(l10n.setupBigBlind, _bigBlind, (v) {
                                   setState(() => _bigBlind = v);
@@ -545,7 +553,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                                         decimal: true),
                                 style: _textFieldStyle,
                                 decoration:
-                                    _inputDecoration(l10n.setupEnterAmount, prefixText: '\$ '),
+                                    _inputDecoration(l10n.setupEnterAmount, prefixText: CurrencyService.prefixText, suffixText: CurrencyService.suffixText),
                                 onChanged: (_) => setState(() {}),
                               ),
                               if (_gameType == GameType.cash) ...[

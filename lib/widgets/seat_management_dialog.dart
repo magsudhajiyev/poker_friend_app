@@ -3,6 +3,7 @@ import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import '../utils/poker_positions.dart';
 import '../services/auth_service.dart';
+import '../services/currency_service.dart';
 import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
 import '../models/opponent.dart';
@@ -890,8 +891,10 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                                               labelStyle: TextStyle(color: Color(0xFF9A9A9A)),
                                               hintText: widget.isCashGame ? '100.00' : '1500',
                                               hintStyle: TextStyle(color: Color(0xFF9A9A9A)),
-                                              prefixText: widget.isCashGame ? '\$ ' : '',
+                                              prefixText: widget.isCashGame ? CurrencyService.prefixText : '',
+                                              suffixText: widget.isCashGame ? CurrencyService.suffixText : null,
                                               prefixStyle: TextStyle(color: Color(0xFF9A9A9A)),
+                                              suffixStyle: TextStyle(color: Color(0xFF9A9A9A)),
                                               border: InputBorder.none,
                                               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                             ),

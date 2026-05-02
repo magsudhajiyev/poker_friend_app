@@ -15,6 +15,7 @@ import '../design_system/constants/typography.dart';
 import '../services/app_data_cache.dart';
 import '../screens/paywall_screen.dart';
 import 'session_analytics_screen.dart';
+import '../services/currency_service.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -496,7 +497,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     final playerCount = session['playerCount'] ?? 0;
     final isTournament = (session['gameType'] ?? 'cash').toLowerCase() == 'tournament';
     final secondPillText = isTournament
-        ? '\$${session['buyInAmount'] ?? session['totalBuyIn'] ?? 0}'
+        ? CurrencyService.formatCash((session['buyInAmount'] ?? session['totalBuyIn'] ?? 0).toDouble())
         : _formatBlinds(session);
 
     final sessionName = session['sessionName'] != null && session['sessionName'].isNotEmpty
@@ -993,7 +994,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     String formatAmount(double amount) {
       if (amount <= 0) return '--';
       if (isCashGame) {
-        return '\$${amount.toStringAsFixed(2)}';
+        return CurrencyService.formatCash(amount);
       } else {
         return '${amount.toInt()}';
       }
@@ -1063,7 +1064,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
 
     String formatAmount(double amount) {
       if (isCashGame) {
-        return '\$${amount.toStringAsFixed(2)}';
+        return CurrencyService.formatCash(amount);
       } else {
         return '${amount.toInt()}';
       }
@@ -1173,7 +1174,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
     final isCashGame = gameTypeStr == 'cash';
 
     if (isCashGame) {
-      return '\$$smallBlind/\$$bigBlind';
+      return '${CurrencyService.formatCash(smallBlind.toDouble())}/${CurrencyService.formatCash(bigBlind.toDouble())}';
     } else {
       return '$smallBlind/$bigBlind';
     }

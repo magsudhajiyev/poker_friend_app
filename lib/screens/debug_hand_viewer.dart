@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import '../l10n/app_localizations.dart';
 import '../services/firebase_service.dart';
+import '../services/currency_service.dart';
 
 /// Debug screen to fetch and analyze specific hands from Firebase
 /// This helps diagnose position calculation bugs
@@ -182,7 +183,7 @@ class _DebugHandViewerScreenState extends State<DebugHandViewerScreen> {
 
         _log('   ${i + 1}. [${street.toString().toUpperCase()}] '
               'Seat $playerSeat ($playerPosition) - $playerName: '
-              '$actionType${amount != null ? ' \$$amount' : ''}\n');
+              '$actionType${amount != null ? ' ${CurrencyService.symbol}$amount' : ''}\n');
       }
       _log('\n');
     }
@@ -210,11 +211,11 @@ class _DebugHandViewerScreenState extends State<DebugHandViewerScreen> {
 
     // Pot amounts
     _log('💵 Pot Amounts:\n');
-    if (hand['preflopPot'] != null) _log('   Preflop: \$${hand['preflopPot']}\n');
-    if (hand['flopPot'] != null) _log('   Flop: \$${hand['flopPot']}\n');
-    if (hand['turnPot'] != null) _log('   Turn: \$${hand['turnPot']}\n');
-    if (hand['riverPot'] != null) _log('   River: \$${hand['riverPot']}\n');
-    if (hand['potAmount'] != null) _log('   Final: \$${hand['potAmount']}\n');
+    if (hand['preflopPot'] != null) _log('   Preflop: ${CurrencyService.symbol}${hand['preflopPot']}\n');
+    if (hand['flopPot'] != null) _log('   Flop: ${CurrencyService.symbol}${hand['flopPot']}\n');
+    if (hand['turnPot'] != null) _log('   Turn: ${CurrencyService.symbol}${hand['turnPot']}\n');
+    if (hand['riverPot'] != null) _log('   River: ${CurrencyService.symbol}${hand['riverPot']}\n');
+    if (hand['potAmount'] != null) _log('   Final: ${CurrencyService.symbol}${hand['potAmount']}\n');
     _log('\n');
 
     // Raw JSON

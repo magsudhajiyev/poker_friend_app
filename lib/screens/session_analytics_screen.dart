@@ -16,6 +16,7 @@ import '../services/app_data_cache.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'paywall_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../services/currency_service.dart';
 
 
 class SessionAnalyticsScreen extends StatefulWidget {
@@ -348,14 +349,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
   String _formatCurrency(double amount) {
     if (_isCashGame()) {
-      return '\$${amount.toStringAsFixed(2)}';
+      return CurrencyService.formatCash(amount);
     } else {
       return amount.toStringAsFixed(0);
     }
   }
 
   String _formatTotalInvested(double amount) {
-    return '\$${amount.toStringAsFixed(2)}';
+    return CurrencyService.formatCash(amount);
   }
 
   String _formatDuration() {

@@ -10,6 +10,7 @@ import '../models/hand_state_machine.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
+import '../services/currency_service.dart';
 
 class IndividualSessionSetupScreen extends StatefulWidget {
   final LoggingMode? loggingMode;
@@ -368,8 +369,15 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                       fontWeight: FontWeight.w400,
                                       height: 1.44,
                                     ),
-                                    prefixText: '\$ ',
+                                    prefixText: CurrencyService.prefixText,
+                                    suffixText: CurrencyService.suffixText,
                                     prefixStyle: GoogleFonts.ibmPlexSans(
+                                      color: Colors.white,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.44,
+                                    ),
+                                    suffixStyle: GoogleFonts.ibmPlexSans(
                                       color: Colors.white,
                                       fontSize: 17,
                                       fontWeight: FontWeight.w400,
@@ -532,7 +540,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               Expanded(
                                 child: _buildBlindCard(
                                   title: AppLocalizations.of(context).individualSetupSmallBlind,
-                                  value: gameType == GameType.cash ? '\$$smallBlind' : '$smallBlind',
+                                  value: gameType == GameType.cash ? '${CurrencyService.symbol}$smallBlind' : '$smallBlind',
                                   onTap: () => _showBlindInputDialog(AppLocalizations.of(context).individualSetupSmallBlind, smallBlind, (value) {
                                     setState(() {
                                       smallBlind = value;
@@ -545,7 +553,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                               Expanded(
                                 child: _buildBlindCard(
                                   title: AppLocalizations.of(context).individualSetupBigBlind,
-                                  value: gameType == GameType.cash ? '\$$bigBlind' : '$bigBlind',
+                                  value: gameType == GameType.cash ? '${CurrencyService.symbol}$bigBlind' : '$bigBlind',
                                   onTap: () => _showBlindInputDialog(AppLocalizations.of(context).individualSetupBigBlind, bigBlind, (value) {
                                     setState(() {
                                       bigBlind = value;

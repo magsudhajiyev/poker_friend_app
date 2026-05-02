@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../l10n/app_localizations.dart';
+import '../services/currency_service.dart';
 import '../models/game_types.dart';
 import 'hand_actions_screen.dart';
 
@@ -72,11 +73,11 @@ class _StackChartScreenState extends State<StackChartScreen> {
     return gameType == 'cash' || gameType == GameType.cash.name;
   }
 
-  String _formatCurrency(double amount) {
+  String _formatAmount(double amount) {
     if (_isCashGame()) {
-      return '\$${amount.toStringAsFixed(2)}';
+      return CurrencyService.formatCash(amount);
     } else {
-      return amount.toStringAsFixed(0);
+      return CurrencyService.formatChips(amount);
     }
   }
 
@@ -258,8 +259,8 @@ class _StackChartScreenState extends State<StackChartScreen> {
           _buildInfoPill(
             _isCashGame() ? AppLocalizations.of(context).stackChartScreenProfitLoss : AppLocalizations.of(context).stackChartScreenStack,
             _isCashGame()
-                ? '${widget.profitLoss >= 0 ? '+' : ''}${_formatCurrency(widget.profitLoss)}'
-                : _formatCurrency(widget.stackHistory.isNotEmpty
+                ? '${widget.profitLoss >= 0 ? '+' : ''}${_formatAmount(widget.profitLoss)}'
+                : _formatAmount(widget.stackHistory.isNotEmpty
                     ? widget.stackHistory.last['stackSize']?.toDouble() ?? 0.0
                     : 0.0),
             lineColor,
@@ -373,7 +374,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
               reservedSize: 60,
               getTitlesWidget: (double value, TitleMeta meta) {
                 return Text(
-                  _formatCurrency(value),
+                  _formatAmount(value),
                   style: GoogleFonts.robotoMono(
                     color: Colors.white.withValues(alpha: 0.35),
                     fontSize: 10,
@@ -471,7 +472,7 @@ class _StackChartScreenState extends State<StackChartScreen> {
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
                 final index = spot.x.toInt();
-                final stackValue = _formatCurrency(spot.y);
+                final stackValue = _formatAmount(spot.y);
 
                 if (index >= 0 && index < widget.stackHistory.length) {
                   final entry = widget.stackHistory[index];

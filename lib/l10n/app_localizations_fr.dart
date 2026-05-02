@@ -135,6 +135,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsLanguageSystem => 'Par défaut du système';
 
   @override
+  String get settingsCurrency => 'Devise';
+
+  @override
   String get settingsKnowledgeBase => 'BASE DE CONNAISSANCES';
 
   @override
