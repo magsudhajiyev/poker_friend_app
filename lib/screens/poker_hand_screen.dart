@@ -2015,15 +2015,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     ],
                   ),
                 )
-              : Row(
+              : IntrinsicHeight(
                   key: _potInfoKey,
-                  children: [
-                    Expanded(child: _buildInfoCard(l10n.handPot, gameState.formatCurrency(gameState.currentPot))),
-                    SizedBox(width: 8),
-                    Expanded(child: _buildStackInfoCard()),
-                    SizedBox(width: 8),
-                    Expanded(child: _buildInfoCard(l10n.handToAct, _getCurrentPlayerNameSafely())),
-                  ],
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: _buildInfoCard(l10n.handPot, gameState.formatCurrency(gameState.currentPot))),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildStackInfoCard()),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildInfoCard(l10n.handToAct, _getCurrentPlayerNameSafely())),
+                    ],
+                  ),
                 ),
           ),
 
@@ -2352,7 +2355,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   Widget _buildInfoCard(String label, String value) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       decoration: BoxDecoration(
         color: const Color(0xFF101115),
         borderRadius: BorderRadius.circular(8),
@@ -2364,19 +2367,18 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             label,
             style: GoogleFonts.ibmPlexSans(
               color: const Color(0xFF8C8C8C),
-              fontSize: 17,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
-              height: 1.44,
             ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 4),
           Text(
             value,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w500,
-              height: 1.44,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
