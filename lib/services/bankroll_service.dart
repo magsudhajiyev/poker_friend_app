@@ -84,7 +84,7 @@ class BankrollService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_goalKey, goal);
       AppDataCache.markHomeDirty();
-      _syncToFirestore(goal: goal);
+      await _syncToFirestore(goal: goal);
     } catch (e) {
       print('Error setting bankroll goal: $e');
     }
@@ -107,7 +107,7 @@ class BankrollService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_currentBankrollKey, amount);
       AppDataCache.markHomeDirty();
-      _syncToFirestore(bankroll: amount);
+      await _syncToFirestore(bankroll: amount);
     } catch (e) {
       print('Error setting current bankroll: $e');
     }
