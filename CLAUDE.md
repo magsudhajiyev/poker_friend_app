@@ -173,6 +173,21 @@ Additional: Win Rate = wonHands / handsPlayed, AF = pfrCount / (vpipCount - pfrC
 
 Position-specific breakdowns tracked for: handsPlayed, vpipCount, pfrCount, threeBetCount
 
+#### Session Financial Statistics (from `session_results`)
+Statistics screen shows 3 sections — **General**, **Cash**, **Tournament** — computed on-the-fly from `session_results` documents:
+
+**General**: Sessions, Total Time, Avg Session (from `user_stats`), Total Buy-In, Total Cash-Out, Net Profit, Hourly Rate
+**Cash**: Sessions, Total Buy-In, Total Cash-Out, Net Profit, Hourly Rate
+**Tournament**: Sessions, Total Buy-In, Total Cash-Out, Net Profit, Hourly Rate, ITM%, Avg Finish, Best Finish, ROI%, Final Tables (≤9), Avg Buy-In, Avg Field Size
+
+Key formulas:
+- Cash-Out (cash): buyIn + profit | Cash-Out (tournament): prizeWon
+- Hourly Rate: netProfit / (totalMinutes / 60)
+- ROI%: (cashOut - buyIn) / buyIn × 100
+- ITM%: prizeWon > 0 count / tournament sessions × 100
+
+Records without `buyInAmount` (old data) are excluded from financial stats.
+
 ### 4. Play Style Detection (`lib/services/play_style_detector.dart`)
 Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
 - **Maniac**: VPIP≥40%, PFR≥20%, gap≤15%, 3-bet≥12%, AF≥4
@@ -473,6 +488,11 @@ clubs/{clubId}/
   events/{eventId}/ - status, tableIds, startTime, gameType, isPublic
     final_standings/results - ranked player list
   notifications/{notificationId}/
+
+session_results/{resultId}/
+  userId, userEmail, amount (net profit), gameType ('cash'|'tournament'),
+  timestamp, createdAt, buyInAmount?, prizeWon?, finishedPlace?, fieldSize?,
+  durationMinutes?
 
 dealers/{userId}/
   accountType: 'player'|'dealer'|'admin', clubIds[]

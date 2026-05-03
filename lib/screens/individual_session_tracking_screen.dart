@@ -995,11 +995,15 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       // Show bankroll sheet BEFORE ending session
       if (!mounted) return;
       final profit = _currentStack - _totalBuyIn;
+      final duration = _sessionStartTime != null
+          ? DateTime.now().difference(_sessionStartTime!).inMinutes
+          : null;
       final applied = await SessionEndBankrollSheet.show(
         context: context,
         gameType: widget.gameType,
         profitLoss: profit,
         totalBuyIn: _totalBuyIn,
+        durationMinutes: duration,
       );
 
       // User hit X — resume session
@@ -1168,11 +1172,15 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       // Checkmark (save) = apply result, end session
       if (!mounted) return;
       final profit = _currentStack - _totalBuyIn;
+      final duration2 = _sessionStartTime != null
+          ? DateTime.now().difference(_sessionStartTime!).inMinutes
+          : null;
       final applied = await SessionEndBankrollSheet.show(
         context: context,
         gameType: widget.gameType,
         profitLoss: profit,
         totalBuyIn: _totalBuyIn,
+        durationMinutes: duration2,
       );
 
       // User hit X — resume session, don't end

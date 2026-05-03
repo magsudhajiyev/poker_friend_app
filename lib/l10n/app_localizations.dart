@@ -312,6 +312,90 @@ abstract class AppLocalizations {
   /// **'Play sessions to see time statistics'**
   String get statsPlayToSee;
 
+  /// No description provided for @statsGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get statsGeneral;
+
+  /// No description provided for @statsCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get statsCash;
+
+  /// No description provided for @statsTournament.
+  ///
+  /// In en, this message translates to:
+  /// **'Tournament'**
+  String get statsTournament;
+
+  /// No description provided for @statsTotalBuyIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Buy-In'**
+  String get statsTotalBuyIn;
+
+  /// No description provided for @statsTotalCashOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Cash-Out'**
+  String get statsTotalCashOut;
+
+  /// No description provided for @statsNetProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Profit'**
+  String get statsNetProfit;
+
+  /// No description provided for @statsItm.
+  ///
+  /// In en, this message translates to:
+  /// **'ITM%'**
+  String get statsItm;
+
+  /// No description provided for @statsAvgFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg Finish'**
+  String get statsAvgFinish;
+
+  /// No description provided for @statsBestFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Finish'**
+  String get statsBestFinish;
+
+  /// No description provided for @statsRoi.
+  ///
+  /// In en, this message translates to:
+  /// **'ROI%'**
+  String get statsRoi;
+
+  /// No description provided for @statsFinalTables.
+  ///
+  /// In en, this message translates to:
+  /// **'Final Tables'**
+  String get statsFinalTables;
+
+  /// No description provided for @statsAvgBuyIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg Buy-In'**
+  String get statsAvgBuyIn;
+
+  /// No description provided for @statsAvgFieldSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg Field Size'**
+  String get statsAvgFieldSize;
+
+  /// No description provided for @statsHourlyRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly Rate'**
+  String get statsHourlyRate;
+
   /// No description provided for @statsLoadingMessage.
   ///
   /// In en, this message translates to:

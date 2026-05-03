@@ -111,6 +111,48 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statsPlayToSee => 'Spiele Sessions, um die Zeitstatistik zu sehen';
 
   @override
+  String get statsGeneral => 'Allgemein';
+
+  @override
+  String get statsCash => 'Cash';
+
+  @override
+  String get statsTournament => 'Turnier';
+
+  @override
+  String get statsTotalBuyIn => 'Gesamt Buy-In';
+
+  @override
+  String get statsTotalCashOut => 'Gesamt Cash-Out';
+
+  @override
+  String get statsNetProfit => 'Nettogewinn';
+
+  @override
+  String get statsItm => 'ITM%';
+
+  @override
+  String get statsAvgFinish => 'Ø Platzierung';
+
+  @override
+  String get statsBestFinish => 'Beste Platzierung';
+
+  @override
+  String get statsRoi => 'ROI%';
+
+  @override
+  String get statsFinalTables => 'Finaltische';
+
+  @override
+  String get statsAvgBuyIn => 'Ø Buy-In';
+
+  @override
+  String get statsAvgFieldSize => 'Ø Teilnehmer';
+
+  @override
+  String get statsHourlyRate => 'Stundensatz';
+
+  @override
   String get statsLoadingMessage => 'Statistiken werden geladen...';
 
   @override

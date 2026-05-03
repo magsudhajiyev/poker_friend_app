@@ -111,6 +111,48 @@ class AppLocalizationsPt extends AppLocalizations {
   String get statsPlayToSee => 'Jogue sessoes para ver estatisticas de tempo';
 
   @override
+  String get statsGeneral => 'Geral';
+
+  @override
+  String get statsCash => 'Cash';
+
+  @override
+  String get statsTournament => 'Torneio';
+
+  @override
+  String get statsTotalBuyIn => 'Buy-In Total';
+
+  @override
+  String get statsTotalCashOut => 'Cash-Out Total';
+
+  @override
+  String get statsNetProfit => 'Lucro Líquido';
+
+  @override
+  String get statsItm => 'ITM%';
+
+  @override
+  String get statsAvgFinish => 'Posição Média';
+
+  @override
+  String get statsBestFinish => 'Melhor Posição';
+
+  @override
+  String get statsRoi => 'ROI%';
+
+  @override
+  String get statsFinalTables => 'Mesas Finais';
+
+  @override
+  String get statsAvgBuyIn => 'Buy-In Médio';
+
+  @override
+  String get statsAvgFieldSize => 'Tamanho Médio';
+
+  @override
+  String get statsHourlyRate => 'Taxa Horária';
+
+  @override
   String get statsLoadingMessage => 'Carregando estatisticas...';
 
   @override

@@ -19,6 +19,7 @@ class SessionEndBankrollSheet {
     required GameType gameType,
     double? profitLoss,
     required double totalBuyIn,
+    int? durationMinutes,
   }) async {
     final isCash = gameType == GameType.cash;
     final l10n = AppLocalizations.of(context);
@@ -53,8 +54,14 @@ class SessionEndBankrollSheet {
         await SessionResultService.addSessionResult(
           amount: profit,
           gameType: isCash ? 'cash' : 'tournament',
+          buyInAmount: totalBuyIn,
+          prizeWon: isCash ? null : (double.tryParse(prizeController.text) ?? 0.0),
+          finishedPlace: isCash ? null : int.tryParse(positionController.text),
+          fieldSize: isCash ? null : int.tryParse(fieldSizeController.text),
+          durationMinutes: durationMinutes,
         );
         AppDataCache.markHomeDirty();
+        AppDataCache.markStatsDirty();
         applied = true;
 
         if (context.mounted) {

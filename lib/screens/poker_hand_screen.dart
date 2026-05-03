@@ -729,11 +729,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (stackHistory.isNotEmpty) {
           final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
           final profit = lastStack - sessionManager.totalBuyIn;
+          final sessionDuration = sessionManager.sessionStartTime != null
+              ? DateTime.now().difference(sessionManager.sessionStartTime!).inMinutes
+              : null;
           await SessionEndBankrollSheet.show(
             context: context,
             gameType: sessionManager.gameType,
             profitLoss: profit,
             totalBuyIn: sessionManager.totalBuyIn,
+            durationMinutes: sessionDuration,
           );
         }
 

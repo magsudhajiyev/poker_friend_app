@@ -9,6 +9,11 @@ class SessionResultService {
   static Future<void> addSessionResult({
     required double amount,
     required String gameType, // 'cash' or 'tournament'
+    double? buyInAmount,
+    double? prizeWon,
+    int? finishedPlace,
+    int? fieldSize,
+    int? durationMinutes,
   }) async {
     try {
       final userId = AuthService.currentUser?.uid;
@@ -17,16 +22,24 @@ class SessionResultService {
         throw Exception('User not logged in');
       }
 
-      await _firestore.collection(_sessionResultsCollection).add({
+      final data = <String, dynamic>{
         'userId': userId,
         'userEmail': userEmail,
         'amount': amount,
         'gameType': gameType,
         'timestamp': FieldValue.serverTimestamp(),
         'createdAt': DateTime.now().toIso8601String(),
-      });
+      };
 
-      print('✅ Session result added: \$$amount ($gameType)');
+      if (buyInAmount != null) data['buyInAmount'] = buyInAmount;
+      if (prizeWon != null) data['prizeWon'] = prizeWon;
+      if (finishedPlace != null) data['finishedPlace'] = finishedPlace;
+      if (fieldSize != null) data['fieldSize'] = fieldSize;
+      if (durationMinutes != null) data['durationMinutes'] = durationMinutes;
+
+      await _firestore.collection(_sessionResultsCollection).add(data);
+
+      print('✅ Session result added: $amount ($gameType)');
     } catch (e) {
       print('Error adding session result: $e');
       rethrow;

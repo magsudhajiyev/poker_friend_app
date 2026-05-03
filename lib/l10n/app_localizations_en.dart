@@ -111,6 +111,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsPlayToSee => 'Play sessions to see time statistics';
 
   @override
+  String get statsGeneral => 'General';
+
+  @override
+  String get statsCash => 'Cash';
+
+  @override
+  String get statsTournament => 'Tournament';
+
+  @override
+  String get statsTotalBuyIn => 'Total Buy-In';
+
+  @override
+  String get statsTotalCashOut => 'Total Cash-Out';
+
+  @override
+  String get statsNetProfit => 'Net Profit';
+
+  @override
+  String get statsItm => 'ITM%';
+
+  @override
+  String get statsAvgFinish => 'Avg Finish';
+
+  @override
+  String get statsBestFinish => 'Best Finish';
+
+  @override
+  String get statsRoi => 'ROI%';
+
+  @override
+  String get statsFinalTables => 'Final Tables';
+
+  @override
+  String get statsAvgBuyIn => 'Avg Buy-In';
+
+  @override
+  String get statsAvgFieldSize => 'Avg Field Size';
+
+  @override
+  String get statsHourlyRate => 'Hourly Rate';
+
+  @override
   String get statsLoadingMessage => 'Loading statistics...';
 
   @override

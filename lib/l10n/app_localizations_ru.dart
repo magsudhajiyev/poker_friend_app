@@ -112,6 +112,48 @@ class AppLocalizationsRu extends AppLocalizations {
       'Играйте сессии, чтобы увидеть статистику времени';
 
   @override
+  String get statsGeneral => 'Общее';
+
+  @override
+  String get statsCash => 'Кэш';
+
+  @override
+  String get statsTournament => 'Турнир';
+
+  @override
+  String get statsTotalBuyIn => 'Общий Buy-In';
+
+  @override
+  String get statsTotalCashOut => 'Общий Cash-Out';
+
+  @override
+  String get statsNetProfit => 'Чистая прибыль';
+
+  @override
+  String get statsItm => 'ITM%';
+
+  @override
+  String get statsAvgFinish => 'Ср. место';
+
+  @override
+  String get statsBestFinish => 'Лучшее место';
+
+  @override
+  String get statsRoi => 'ROI%';
+
+  @override
+  String get statsFinalTables => 'Финальные столы';
+
+  @override
+  String get statsAvgBuyIn => 'Ср. Buy-In';
+
+  @override
+  String get statsAvgFieldSize => 'Ср. кол-во игроков';
+
+  @override
+  String get statsHourlyRate => 'Почасовая ставка';
+
+  @override
   String get statsLoadingMessage => 'Загрузка статистики...';
 
   @override
