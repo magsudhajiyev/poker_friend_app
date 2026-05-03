@@ -65,9 +65,15 @@ class CurrencyService {
   }
 
   /// Format bankroll display: compact (K/M) for values > 9999, rounded otherwise.
+  /// Always includes space between number and symbol.
   static String formatBankroll(double amount) {
-    if (amount.abs() > 9999) return formatCompact(amount);
-    return formatCashRounded(amount);
+    final num = amount.abs() > 9999
+        ? formatCompactNumber(amount)
+        : amount.toStringAsFixed(0);
+    if (current.position == SymbolPosition.prefix) {
+      return '${current.symbol} $num';
+    }
+    return '$num ${current.symbol}';
   }
 
   /// Format compact with symbol: "$240K" or "240Kzł"
