@@ -256,6 +256,19 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
                               return;
                             }
                             try {
+                              final sMessenger = ScaffoldMessenger.of(context);
+                              final sL10n = AppLocalizations.of(context);
+                              final existingOpp = await OpponentService.findOpponentByName(name);
+                              if (existingOpp != null) {
+                                Navigator.pop(context);
+                                sMessenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(sL10n.opponentAlreadyExists(name)),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
                               final opponent = OpponentService.createNewOpponent(name: name);
                               await OpponentService.saveOpponent(opponent);
                               await _loadOpponents(); // Refresh the list

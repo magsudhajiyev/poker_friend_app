@@ -719,9 +719,20 @@ class _AddPlayerBodyState extends State<_AddPlayerBody> {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
     try {
+      final messenger = ScaffoldMessenger.of(context);
+      final existing = await OpponentService.findOpponentByName(name);
+      if (existing != null) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).opponentAlreadyExists(name)),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
       final newOpponent = OpponentService.createNewOpponent(name: name);
-      await OpponentService.saveOpponent(newOpponent);
-      _allOpponents.add(newOpponent);
+      final saved = await OpponentService.saveOpponent(newOpponent);
+      _allOpponents.add(saved);
       setState(() {
         _showSaveAsOpponent = false;
         _filteredOpponents = [];

@@ -2415,8 +2415,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
           const Spacer(),
-          SizedBox(
-            width: 80,
+          Container(
+            width: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 0.5),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: TextField(
               controller: controller,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),

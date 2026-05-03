@@ -763,6 +763,17 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                               setDialogState(() {});
 
                               try {
+                                final sMessenger = ScaffoldMessenger.of(context);
+                                final existingOpp = await OpponentService.findOpponentByName(tempName);
+                                if (existingOpp != null) {
+                                  sMessenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(AppLocalizations.of(context).opponentAlreadyExists(tempName)),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  return;
+                                }
                                 final opponent = OpponentService.createNewOpponent(name: tempName);
                                 await OpponentService.saveOpponent(opponent);
                                 // Invalidate MyOpponentsScreen cache so it shows the new opponent

@@ -1204,6 +1204,8 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
     final notesController = TextEditingController(text: _opponent.notes ?? '');
     OpponentColor selectedColor = _opponent.color;
     final colorPickerKey = GlobalKey();
+    String? nameError;
+    StateSetter? _setSheetState;
 
     // Color name mapping
     String getColorName(OpponentColor color) {
@@ -1338,6 +1340,17 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       final name = nameController.text.trim();
       if (name.isEmpty) return;
 
+      // Block rename to an existing opponent's name
+      if (name.toLowerCase() != _opponent.name.toLowerCase()) {
+        final existing = await OpponentService.findOpponentByName(name);
+        if (existing != null && existing.id != _opponent.id) {
+          nameError = l10n.opponentAlreadyExists(name);
+          _setSheetState?.call(() {});
+          return;
+        }
+      }
+      nameError = null;
+
       try {
         final updatedOpponent = _opponent.copyWith(
           name: name,
@@ -1377,6 +1390,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       onSave: saveOpponent,
       body: StatefulBuilder(
         builder: (context, setSheetState) {
+          _setSheetState = setSheetState;
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Container(
@@ -1415,6 +1429,21 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                       ),
                     ),
                   ),
+                  if (nameError != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 4),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          nameError!,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 12,
+                            color: const Color(0xFFE85A5A),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
                   // Separator
                   Container(
                     height: 21,

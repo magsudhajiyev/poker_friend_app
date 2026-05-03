@@ -464,6 +464,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get opponentsAddedSuccess => 'Соперник добавлен';
 
   @override
+  String opponentAlreadyExists(String name) {
+    return 'Оппонент с именем \"$name\" уже существует';
+  }
+
+  @override
   String get opponentsUpdatedSuccess => 'Соперник обновлён';
 
   @override

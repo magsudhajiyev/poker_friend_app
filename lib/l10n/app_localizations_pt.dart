@@ -470,6 +470,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get opponentsAddedSuccess => 'Oponente adicionado com sucesso';
 
   @override
+  String opponentAlreadyExists(String name) {
+    return 'Um oponente chamado \"$name\" já existe';
+  }
+
+  @override
   String get opponentsUpdatedSuccess => 'Oponente atualizado com sucesso';
 
   @override

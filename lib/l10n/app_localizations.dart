@@ -960,6 +960,12 @@ abstract class AppLocalizations {
   /// **'Opponent added successfully'**
   String get opponentsAddedSuccess;
 
+  /// No description provided for @opponentAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'An opponent named \"{name}\" already exists'**
+  String opponentAlreadyExists(String name);
+
   /// No description provided for @opponentsUpdatedSuccess.
   ///
   /// In en, this message translates to:

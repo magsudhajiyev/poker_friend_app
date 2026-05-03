@@ -475,6 +475,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get opponentsAddedSuccess => 'Adversaire ajouté avec succès';
 
   @override
+  String opponentAlreadyExists(String name) {
+    return 'Un adversaire nommé \"$name\" existe déjà';
+  }
+
+  @override
   String get opponentsUpdatedSuccess => 'Adversaire mis à jour avec succès';
 
   @override

@@ -200,6 +200,14 @@
   "opponentsNotesHint": "Notes (Optional)",
   "opponentsPickColor": "Pick a color",
   "opponentsAddedSuccess": "Opponent added successfully",
+  "opponentAlreadyExists": "An opponent named \"{name}\" already exists",
+  "@opponentAlreadyExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "opponentsUpdatedSuccess": "Opponent updated successfully",
   "opponentsDeleteConfirmTitle": "Delete opponent?",
   "opponentsDeleteConfirmMessage": "Are you sure you want to delete \"{name}\"?\nThis action cannot be undone",

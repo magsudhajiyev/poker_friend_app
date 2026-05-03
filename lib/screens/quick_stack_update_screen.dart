@@ -182,17 +182,23 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
       return;
     }
 
-    final now = DateTime.now();
-    final opponent = Opponent(
-      id: 'opp_${now.millisecondsSinceEpoch}',
-      name: name.trim(),
-      createdAt: now,
-      lastSeenAt: now,
-    );
-    await OpponentService.saveOpponent(opponent);
-    // Add to local list so it appears immediately
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    final existing = await OpponentService.findOpponentByName(name.trim());
+    if (existing != null) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.opponentAlreadyExists(name.trim())),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final newOpp = OpponentService.createNewOpponent(name: name.trim());
+    final saved = await OpponentService.saveOpponent(newOpp);
     setState(() {
-      opponents.add(opponent);
+      opponents.add(saved);
     });
   }
 

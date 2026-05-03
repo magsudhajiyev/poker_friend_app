@@ -464,6 +464,11 @@ class AppLocalizationsPl extends AppLocalizations {
   String get opponentsAddedSuccess => 'Przeciwnik dodany pomyślnie';
 
   @override
+  String opponentAlreadyExists(String name) {
+    return 'Przeciwnik o imieniu \"$name\" już istnieje';
+  }
+
+  @override
   String get opponentsUpdatedSuccess => 'Przeciwnik zaktualizowany pomyślnie';
 
   @override

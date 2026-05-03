@@ -138,6 +138,7 @@
   "opponentsNotesHint": "Заметки (необязательно)",
   "opponentsPickColor": "Выберите цвет",
   "opponentsAddedSuccess": "Соперник добавлен",
+  "opponentAlreadyExists": "Оппонент с именем \"{name}\" уже существует",
   "opponentsUpdatedSuccess": "Соперник обновлён",
   "opponentsDeleteConfirmTitle": "Удалить соперника?",
   "opponentsDeleteConfirmMessage": "Вы уверены, что хотите удалить \"{name}\"?\nЭто действие нельзя отменить",

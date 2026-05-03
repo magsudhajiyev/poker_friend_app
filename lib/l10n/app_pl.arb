@@ -138,6 +138,7 @@
   "opponentsNotesHint": "Notatki (opcjonalne)",
   "opponentsPickColor": "Wybierz kolor",
   "opponentsAddedSuccess": "Przeciwnik dodany pomyślnie",
+  "opponentAlreadyExists": "Przeciwnik o imieniu \"{name}\" już istnieje",
   "opponentsUpdatedSuccess": "Przeciwnik zaktualizowany pomyślnie",
   "opponentsDeleteConfirmTitle": "Usunąć przeciwnika?",
   "opponentsDeleteConfirmMessage": "Czy na pewno chcesz usunąć \"{name}\"?\nTej operacji nie można cofnąć",

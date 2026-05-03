@@ -23,20 +23,29 @@ class OpponentService {
   /// Get current user ID
   static String? get _userId => _auth.currentUser?.uid;
 
-  /// Save or update opponent in both Firebase and local storage
-  static Future<void> saveOpponent(Opponent opponent) async {
+  /// Save or update opponent in both Firebase and local storage.
+  /// Returns the saved opponent (may be an existing one if duplicate name detected).
+  static Future<Opponent> saveOpponent(Opponent opponent) async {
+    // Duplicate check: case-insensitive name match (skip if same ID = update)
+    final existing = await findOpponentByName(opponent.name);
+    if (existing != null && existing.id != opponent.id) {
+      return existing; // Silently return existing opponent
+    }
+
     try {
-      // Save to Firebase first
-      await _saveOpponentToFirebase(opponent);
-      print('✅ Opponent saved to Firebase: ${opponent.name}');
+      final newId = await _saveOpponentToFirebase(opponent);
+      // If ID changed (was temp), clean up old local entry and update ID
+      if (newId != opponent.id) {
+        await _deleteOpponentFromLocal(opponent.id);
+        opponent = opponent.copyWith(id: newId);
+      }
     } catch (e) {
       print('⚠️ Firebase save failed, using local storage: $e');
     }
-    
-    // Always save to local storage as backup
+
     await _saveOpponentToLocal(opponent);
     AppDataCache.markOpponentsDirty();
-    print('✅ Opponent saved locally: ${opponent.name}');
+    return opponent;
   }
 
   /// Get all opponents from Firebase with fallback to local storage
@@ -129,21 +138,41 @@ class OpponentService {
 
   // === Firebase Operations ===
 
-  static Future<void> _saveOpponentToFirebase(Opponent opponent) async {
+  /// Returns the Firestore document ID (may differ from opponent.id for temp IDs).
+  static Future<String> _saveOpponentToFirebase(Opponent opponent) async {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
 
     final data = opponent.toFirestore();
-    data['userId'] = userId; // Add user ID for querying
+    data['userId'] = userId;
 
-    if (opponent.id.isNotEmpty && !opponent.id.startsWith('local_')) {
+    if (opponent.id.isNotEmpty && !_isTempId(opponent.id)) {
       // Update existing Firebase document
       await _opponentsCollection.doc(opponent.id).set(data, SetOptions(merge: true));
+      return opponent.id;
     } else {
-      // Create new Firebase document (for both empty IDs and local IDs)
+      // Create new Firebase document (temp or empty ID)
       final docRef = await _opponentsCollection.add(data);
-      // Note: The local storage will keep the local ID, Firebase gets its own ID
-      // This is intentional - they can have different IDs as they serve different purposes
+      return docRef.id;
+    }
+  }
+
+  /// Check if an ID is a temporary local ID.
+  static bool _isTempId(String id) =>
+      id.startsWith('local_') || id.startsWith('opp_');
+
+  /// Sync any locally-stored opponents with temp IDs to Firestore.
+  /// Call on app startup after auth is confirmed (fire-and-forget).
+  static Future<void> syncTempOpponents() async {
+    try {
+      final locals = await _getOpponentsFromLocal();
+      for (final opp in locals) {
+        if (_isTempId(opp.id)) {
+          await saveOpponent(opp);
+        }
+      }
+    } catch (e) {
+      print('⚠️ Temp opponent sync failed: $e');
     }
   }
 

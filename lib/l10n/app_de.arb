@@ -215,6 +215,7 @@
   "opponentsNotesHint": "Notizen (Optional)",
   "opponentsPickColor": "Farbe wählen",
   "opponentsAddedSuccess": "Gegner erfolgreich hinzugefügt",
+  "opponentAlreadyExists": "Ein Gegner namens \"{name}\" existiert bereits",
   "opponentsUpdatedSuccess": "Gegner erfolgreich aktualisiert",
   "opponentsDeleteConfirmTitle": "Gegner löschen?",
   "opponentsDeleteConfirmMessage": "Möchtest du \"{name}\" wirklich löschen?\nDiese Aktion kann nicht rückgängig gemacht werden",

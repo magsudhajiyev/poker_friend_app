@@ -81,6 +81,7 @@ class Opponent {
   /// Create a copy with updated values
   /// Use clearNotes: true to explicitly set notes to null
   Opponent copyWith({
+    String? id,
     String? name,
     String? notes,
     bool clearNotes = false,
@@ -88,7 +89,7 @@ class Opponent {
     OpponentColor? color,
   }) {
     return Opponent(
-      id: id,
+      id: id ?? this.id,
       name: name ?? this.name,
       notes: clearNotes ? null : (notes ?? this.notes),
       createdAt: createdAt,

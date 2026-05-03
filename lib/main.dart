@@ -18,6 +18,7 @@ import 'services/subscription_service.dart';
 import 'services/app_data_cache.dart';
 import 'services/locale_service.dart';
 import 'services/currency_service.dart';
+import 'services/opponent_service.dart';
 import 'config/env_config.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
@@ -102,6 +103,7 @@ Future<void> _initServicesInBackground() async {
     await FCMService.initialize();
     if (AuthService.isSignedIn) {
       unawaited(_setupFcmForLoggedInUser());
+      unawaited(OpponentService.syncTempOpponents());
     }
   } catch (e) {
     print('FCM initialization failed: $e');

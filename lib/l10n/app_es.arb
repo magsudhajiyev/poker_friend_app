@@ -215,6 +215,7 @@
   "opponentsNotesHint": "Notas (Opcional)",
   "opponentsPickColor": "Elige un color",
   "opponentsAddedSuccess": "Oponente agregado exitosamente",
+  "opponentAlreadyExists": "Ya existe un oponente llamado \"{name}\"",
   "opponentsUpdatedSuccess": "Oponente actualizado exitosamente",
   "opponentsDeleteConfirmTitle": "¿Eliminar oponente?",
   "opponentsDeleteConfirmMessage": "¿Estás seguro de que deseas eliminar a \"{name}\"?\nEsta acción no se puede deshacer",

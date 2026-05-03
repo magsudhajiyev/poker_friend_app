@@ -836,6 +836,8 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
     final notesController = TextEditingController(text: opponent?.notes ?? '');
     OpponentColor selectedColor = opponent?.color ?? OpponentColor.blue;
     final colorPickerKey = GlobalKey();
+    String? nameError;
+    StateSetter? _setSheetState;
 
     // Color name mapping
     String getColorName(OpponentColor color) {
@@ -970,7 +972,27 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
       final name = nameController.text.trim();
       if (name.isEmpty) return;
 
+      // Block rename to an existing opponent's name
+      if (isEditing && name.toLowerCase() != opponent!.name.toLowerCase()) {
+        final existing = await OpponentService.findOpponentByName(name);
+        if (existing != null && existing.id != opponent!.id) {
+          nameError = l10n.opponentAlreadyExists(name);
+          _setSheetState?.call(() {});
+          return;
+        }
+      }
 
+      // Block creating a new opponent with a name that already exists
+      if (!isEditing) {
+        final existing = await OpponentService.findOpponentByName(name);
+        if (existing != null) {
+          nameError = l10n.opponentAlreadyExists(name);
+          _setSheetState?.call(() {});
+          return;
+        }
+      }
+
+      nameError = null;
 
       try {
         final newOpponent = isEditing
@@ -1018,6 +1040,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
       onSave: saveOpponent,
       body: StatefulBuilder(
         builder: (context, setSheetState) {
+          _setSheetState = setSheetState;
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Container(
@@ -1056,6 +1079,21 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                       ),
                     ),
                   ),
+                  if (nameError != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 4),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          nameError!,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 12,
+                            color: const Color(0xFFE85A5A),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
                   // Separator
                   Container(
                     height: 21,
