@@ -347,14 +347,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       _avgFieldSize = totalFieldSize / fieldSizeCount;
     }
 
-    // Hourly rates
-    if (_generalTotalMinutes > 0) {
+    // Hourly rates — only computed when duration data is sufficient.
+    // durationMinutes was added recently, so old session_results lack it.
+    // Require ≥60 min of tracked duration to avoid absurd rates from tiny samples.
+    if (_generalTotalMinutes >= 60) {
       _generalHourlyRate = _generalNetProfit / (_generalTotalMinutes / 60);
     }
-    if (_cashTotalMinutes > 0) {
+    if (_cashTotalMinutes >= 60) {
       _cashHourlyRate = _cashNetProfit / (_cashTotalMinutes / 60);
     }
-    if (_tournamentTotalMinutes > 0) {
+    if (_tournamentTotalMinutes >= 60) {
       _tournamentHourlyRate = _tournamentNetProfit / (_tournamentTotalMinutes / 60);
     }
   }
