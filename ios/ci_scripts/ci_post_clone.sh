@@ -2,7 +2,8 @@
 set -e
 
 # Xcode Cloud post-clone script
-# Installs Flutter and runs pod install so Pods xcfilelists are available for the build.
+# Installs Flutter, runs pub get (which regenerates Generated.xcconfig with
+# the correct FLUTTER_ROOT), and runs pod install for Pods xcfilelists.
 
 FLUTTER_VERSION="3.38.10"
 
@@ -28,8 +29,14 @@ export PATH="$REPO_ROOT/flutter/bin:$PATH"
 echo "=== Flutter version ==="
 flutter --version
 
+echo "=== Precache iOS artifacts ==="
+flutter precache --ios
+
 echo "=== Flutter pub get ==="
 flutter pub get
+
+echo "=== Verify Generated.xcconfig ==="
+cat "$REPO_ROOT/ios/Flutter/Generated.xcconfig"
 
 echo "=== Pod install ==="
 cd "$REPO_ROOT/ios"
