@@ -34,6 +34,12 @@ class Currency {
     Currency(code: 'MXN', symbol: 'MX\$', name: 'Mexican Peso', flag: '🇲🇽'),
     Currency(code: 'TRY', symbol: '₺', name: 'Turkish Lira', flag: '🇹🇷', position: SymbolPosition.suffix),
     Currency(code: 'CZK', symbol: 'Kč', name: 'Czech Koruna', flag: '🇨🇿', decimalPlaces: 0, position: SymbolPosition.suffix),
+    Currency(code: 'NOK', symbol: 'kr', name: 'Norwegian Krone', flag: '🇳🇴', position: SymbolPosition.suffix),
+    Currency(code: 'DKK', symbol: 'kr', name: 'Danish Krone', flag: '🇩🇰', position: SymbolPosition.suffix),
+    Currency(code: 'CHF', symbol: 'CHF', name: 'Swiss Franc', flag: '🇨🇭', position: SymbolPosition.suffix),
+    Currency(code: 'ILS', symbol: '₪', name: 'Israeli Shekel', flag: '🇮🇱'),
+    Currency(code: 'UAH', symbol: '₴', name: 'Ukrainian Hryvnia', flag: '🇺🇦'),
+    Currency(code: 'ARS', symbol: 'ARS', name: 'Argentine Peso', flag: '🇦🇷', decimalPlaces: 0),
   ];
 
   static Currency fromCode(String code) {

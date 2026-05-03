@@ -64,6 +64,12 @@ class CurrencyService {
     return '${amount.toInt()}';
   }
 
+  /// Format bankroll display: compact (K/M) for values > 9999, rounded otherwise.
+  static String formatBankroll(double amount) {
+    if (amount.abs() > 9999) return formatCompact(amount);
+    return formatCashRounded(amount);
+  }
+
   /// Format compact with symbol: "$240K" or "240Kzł"
   static String formatCompact(num amount) {
     final compact = formatCompactNumber(amount);

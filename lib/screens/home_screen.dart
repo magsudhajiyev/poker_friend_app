@@ -2114,7 +2114,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 AppLocalizations.of(context).homeBankrollOfGoal(
-                                  CurrencyService.formatCashRounded(currentBankroll), CurrencyService.formatCashRounded(bankrollGoal),
+                                  CurrencyService.formatBankroll(currentBankroll), CurrencyService.formatBankroll(bankrollGoal),
                                 ),
                                 style: GoogleFonts.familjenGrotesk(
                                   fontSize: 40, fontWeight: FontWeight.w600,
@@ -2141,7 +2141,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
                                       : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
                                   child: Text(
-                                    AppLocalizations.of(context).homeAmountLeft(CurrencyService.formatCashRounded(remaining.toDouble())),
+                                    AppLocalizations.of(context).homeAmountLeft(CurrencyService.formatBankroll(remaining.toDouble())),
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 13, fontWeight: FontWeight.w500,
                                       color: Colors.white, height: 1.44,
