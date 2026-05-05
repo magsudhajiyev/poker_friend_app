@@ -12,9 +12,11 @@ import '../services/currency_service.dart';
 /// Cash: editable pre-filled profit + total invested.
 /// Tournament: position, field size, prize, total invested, calculated profit.
 ///
-/// Returns `true` if applied, `false`/`null` if skipped.
+/// Returns a result map if applied, `null` if skipped.
+/// Map keys: `profitLoss` (double), `finishedPlace` (int?),
+/// `fieldSize` (int?), `prizeWon` (double?).
 class SessionEndBankrollSheet {
-  static Future<bool?> show({
+  static Future<Map<String, dynamic>?> show({
     required BuildContext context,
     required GameType gameType,
     double? profitLoss,
@@ -33,7 +35,7 @@ class SessionEndBankrollSheet {
     final fieldSizeController = TextEditingController();
     final prizeController = TextEditingController();
 
-    bool applied = false;
+    Map<String, dynamic>? result;
 
     await FormDrawer.show(
       context: context,
@@ -62,7 +64,13 @@ class SessionEndBankrollSheet {
         );
         AppDataCache.markHomeDirty();
         AppDataCache.markStatsDirty();
-        applied = true;
+
+        result = {
+          'profitLoss': profit,
+          'finishedPlace': isCash ? null : int.tryParse(positionController.text),
+          'fieldSize': isCash ? null : int.tryParse(fieldSizeController.text),
+          'prizeWon': isCash ? null : (double.tryParse(prizeController.text) ?? 0.0),
+        };
 
         if (context.mounted) {
           Navigator.pop(context);
@@ -92,7 +100,7 @@ class SessionEndBankrollSheet {
       prizeController.dispose();
     });
 
-    return applied ? true : null;
+    return result;
   }
 }
 
@@ -220,8 +228,8 @@ class _CashBodyState extends State<_CashBody> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: isPositive
-                                    ? const Color(0xFF62E3BC).withOpacity(0.6)
-                                    : const Color(0xFFD55A41).withOpacity(0.6),
+                                    ? const Color(0xFF62E3BC).withValues(alpha: 0.6)
+                                    : const Color(0xFFD55A41).withValues(alpha: 0.6),
                               ),
                             ),
                           ),

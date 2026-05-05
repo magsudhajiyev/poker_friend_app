@@ -23,6 +23,7 @@ import 'seat_setup_screen.dart';
 import '../widgets/action_button_grid.dart';
 import '../widgets/table_management_sheet.dart';
 import '../widgets/raise_snap_overlay.dart';
+import '../widgets/session_summary_card.dart';
 import '../widgets/winner_selection_dialog.dart';
 import '../widgets/multi_pot_winner_dialog.dart';
 import '../models/poker_game_state.dart';
@@ -1214,6 +1215,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
         await sessionManager.endSession();
 
+        if (!mounted) return;
+        await _showSessionSummary();
         if (!mounted) return;
         Navigator.of(context).popUntil((route) => route.isFirst);
       } catch (e) {
@@ -5098,6 +5101,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       }
       await sessionManager.endSession();
       if (!mounted) return;
+      await _showSessionSummary();
+      if (!mounted) return;
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       if (!mounted) return;
@@ -5108,6 +5113,29 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         ),
       );
     }
+  }
+
+  Future<void> _showSessionSummary() async {
+    final ourSeat = sessionManager.ourSeatNumber;
+    final finalStack = ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length
+        ? gameState.players[ourSeat - 1].currentStack
+        : 0.0;
+    final duration = sessionManager.sessionStartTime != null
+        ? DateTime.now().difference(sessionManager.sessionStartTime!).inMinutes
+        : 0;
+
+    await SessionSummaryCard.show(
+      context: context,
+      data: SessionSummaryData(
+        sessionName: widget.sessionName ?? sessionManager.sessionName ?? 'Session',
+        gameType: widget.gameType,
+        profitLoss: finalStack - sessionManager.totalBuyIn,
+        totalBuyIn: sessionManager.totalBuyIn,
+        handsPlayed: sessionManager.completedHands.length,
+        biggestPot: sessionManager.biggestPot,
+        durationMinutes: duration,
+      ),
+    );
   }
 
   void _showCardSelectionForNextHand() async {

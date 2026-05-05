@@ -13,6 +13,7 @@ import 'quick_stack_update_screen.dart';
 import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/form_drawer.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
+import '../widgets/session_summary_card.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
@@ -137,6 +138,11 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     _currentSmallBlind = widget.smallBlind;
     _currentBigBlind = widget.bigBlind;
     _currentHasBBante = widget.hasBBante;
+
+    // Initialize completed hands from passed-in data (active session)
+    if (widget.completedHands != null && widget.completedHands!.isNotEmpty) {
+      _completedHands = List<HandRecord>.from(widget.completedHands!);
+    }
 
     if (_sessionId == null) {
       _initializeSession();
@@ -993,7 +999,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       final duration = _sessionStartTime != null
           ? DateTime.now().difference(_sessionStartTime!).inMinutes
           : null;
-      final applied = await SessionEndBankrollSheet.show(
+      final bankrollResult = await SessionEndBankrollSheet.show(
         context: context,
         gameType: widget.gameType,
         profitLoss: profit,
@@ -1002,7 +1008,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       );
 
       // User hit X — resume session
-      if (applied != true) return;
+      if (bankrollResult == null) return;
 
       // User applied — end session
       if (_sessionId != null) {
@@ -1018,6 +1024,25 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             totalBuyIn: _totalBuyIn,
           );
         } catch (e) {}
+      }
+
+      // Show session summary card
+      if (mounted) {
+        await SessionSummaryCard.show(
+          context: context,
+          data: SessionSummaryData(
+            sessionName: widget.sessionName ?? 'Session',
+            gameType: widget.gameType,
+            profitLoss: bankrollResult['profitLoss'] as double? ?? profit,
+            totalBuyIn: _totalBuyIn,
+            handsPlayed: _handsLogged,
+            biggestPot: _biggestPot,
+            durationMinutes: duration ?? 0,
+            finishedPlace: bankrollResult['finishedPlace'] as int?,
+            fieldSize: bankrollResult['fieldSize'] as int?,
+            prizeWon: bankrollResult['prizeWon'] as double?,
+          ),
+        );
       }
 
       if (mounted) {
@@ -1170,7 +1195,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       final duration2 = _sessionStartTime != null
           ? DateTime.now().difference(_sessionStartTime!).inMinutes
           : null;
-      final applied = await SessionEndBankrollSheet.show(
+      final bankrollResult = await SessionEndBankrollSheet.show(
         context: context,
         gameType: widget.gameType,
         profitLoss: profit,
@@ -1179,7 +1204,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       );
 
       // User hit X — resume session, don't end
-      if (applied != true) return;
+      if (bankrollResult == null) return;
 
       // User applied — end session
       if (_sessionId != null) {
@@ -1195,6 +1220,25 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             totalBuyIn: _totalBuyIn,
           );
         } catch (e) {}
+      }
+
+      // Show session summary card
+      if (mounted) {
+        await SessionSummaryCard.show(
+          context: context,
+          data: SessionSummaryData(
+            sessionName: widget.sessionName ?? 'Session',
+            gameType: widget.gameType,
+            profitLoss: bankrollResult['profitLoss'] as double? ?? profit,
+            totalBuyIn: _totalBuyIn,
+            handsPlayed: _handsLogged,
+            biggestPot: _biggestPot,
+            durationMinutes: duration2 ?? 0,
+            finishedPlace: bankrollResult['finishedPlace'] as int?,
+            fieldSize: bankrollResult['fieldSize'] as int?,
+            prizeWon: bankrollResult['prizeWon'] as double?,
+          ),
+        );
       }
 
       if (mounted) {
