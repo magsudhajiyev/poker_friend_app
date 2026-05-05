@@ -51,6 +51,7 @@
   "statsAvgBuyIn": "Avg Buy-In",
   "statsAvgFieldSize": "Avg Field Size",
   "statsHourlyRate": "Hourly Rate",
+  "statsHourlyRateNotAvailable": "Available after 60 min of tracking",
   "statsLoadingMessage": "Loading statistics...",
   "statsFetchingMessage": "Fetching user stats...",
   "statsFailedToLoad": "Failed to load statistics: {error}",
@@ -270,6 +271,7 @@
   "homeWinRate": "Win Rate",
   "homeHours": "Hours",
   "homePlayStyle": "Play Style",
+  "homePlayStyleTooltip": "Your play style will be detected after logging 50 preflop hands.",
   "homeBankroll": "Bankroll",
   "homeBankrollOfGoal": "{current} of {goal}",
   "@homeBankrollOfGoal": {

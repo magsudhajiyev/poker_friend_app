@@ -153,6 +153,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get statsHourlyRate => 'Taxa Horária';
 
   @override
+  String get statsHourlyRateNotAvailable =>
+      'Disponível após 60 min de rastreamento';
+
+  @override
   String get statsLoadingMessage => 'Carregando estatisticas...';
 
   @override
@@ -618,6 +622,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get homePlayStyle => 'Estilo de Jogo';
+
+  @override
+  String get homePlayStyleTooltip =>
+      'Seu estilo de jogo será detectado após registrar 50 mãos preflop.';
 
   @override
   String get homeBankroll => 'Bankroll';

@@ -396,6 +396,12 @@ abstract class AppLocalizations {
   /// **'Hourly Rate'**
   String get statsHourlyRate;
 
+  /// No description provided for @statsHourlyRateNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available after 60 min of tracking'**
+  String get statsHourlyRateNotAvailable;
+
   /// No description provided for @statsLoadingMessage.
   ///
   /// In en, this message translates to:
@@ -1235,6 +1241,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Play Style'**
   String get homePlayStyle;
+
+  /// No description provided for @homePlayStyleTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Your play style will be detected after logging 50 preflop hands.'**
+  String get homePlayStyleTooltip;
 
   /// No description provided for @homeBankroll.
   ///

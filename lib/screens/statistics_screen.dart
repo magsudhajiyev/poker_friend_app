@@ -778,9 +778,35 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildHourlyRateRow(String label, double rate, int totalMinutes) {
-    final na = AppLocalizations.of(context).commonNotAvailable;
-    if (totalMinutes == 0) {
-      return _buildStatListItem(label, na);
+    final l10n = AppLocalizations.of(context);
+    if (totalMinutes < 60) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15, fontWeight: FontWeight.w400,
+                color: Colors.white.withOpacity(0.8), height: 1.0,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Flexible(
+              child: Text(
+                l10n.statsHourlyRateNotAvailable,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 12, fontWeight: FontWeight.w400,
+                  color: const Color(0xFF9A9B9E), height: 1.2,
+                ),
+                textAlign: TextAlign.right,
+              ),
+            ),
+          ],
+        ),
+      );
     }
     final isPositive = rate >= 0;
     final prefix = isPositive ? '+' : '';

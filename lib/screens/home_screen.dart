@@ -1901,10 +1901,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: _buildStatCell(
-                      AppLocalizations.of(context).homePlayStyle,
-                      _getPlayStyleName(),
-                    ),
+                    child: _buildPlayStyleCell(),
                   ),
                 ],
               ),
@@ -4548,6 +4545,74 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPlayStyleCell() {
+    final l10n = AppLocalizations.of(context);
+    final styleName = _getPlayStyleName();
+    final isUnknown = styleName.contains('/50');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF101115),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      clipBehavior: Clip.none,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.homePlayStyle,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF9A9B9E),
+                  height: 1.44,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                styleName,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  height: 0.75,
+                ),
+              ),
+            ],
+          ),
+          if (isUnknown)
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Tooltip(
+                message: l10n.homePlayStyleTooltip,
+                triggerMode: TooltipTriggerMode.tap,
+                preferBelow: false,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1C2926),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                textStyle: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  color: Colors.white,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: const Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: Color(0xFF9A9B9E),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 

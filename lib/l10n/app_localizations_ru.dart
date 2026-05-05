@@ -154,6 +154,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statsHourlyRate => 'Почасовая ставка';
 
   @override
+  String get statsHourlyRateNotAvailable =>
+      'Доступно после 60 мин отслеживания';
+
+  @override
   String get statsLoadingMessage => 'Загрузка статистики...';
 
   @override
@@ -611,6 +615,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homePlayStyle => 'Стиль игры';
+
+  @override
+  String get homePlayStyleTooltip =>
+      'Ваш стиль игры будет определён после логирования 50 рук на префлопе.';
 
   @override
   String get homeBankroll => 'Банкролл';

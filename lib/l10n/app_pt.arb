@@ -48,6 +48,7 @@
   "statsAvgBuyIn": "Buy-In Médio",
   "statsAvgFieldSize": "Tamanho Médio",
   "statsHourlyRate": "Taxa Horária",
+  "statsHourlyRateNotAvailable": "Disponível após 60 min de rastreamento",
   "statsLoadingMessage": "Carregando estatisticas...",
   "statsFetchingMessage": "Buscando estatisticas do usuario...",
   "statsFailedToLoad": "Falha ao carregar estatisticas: {error}",
@@ -282,6 +283,7 @@
   "homeWinRate": "Win Rate",
   "homeHours": "Horas",
   "homePlayStyle": "Estilo de Jogo",
+  "homePlayStyleTooltip": "Seu estilo de jogo será detectado após registrar 50 mãos preflop.",
   "homeBankroll": "Bankroll",
   "homeBankrollOfGoal": "{current} de {goal}",
   "@homeBankrollOfGoal": {
