@@ -855,15 +855,22 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
               touchSpotThreshold: 40,
               touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
                 if (event is FlTapUpEvent) {
+                  final tappedOnSpot = response != null && response.lineBarSpots != null && response.lineBarSpots!.isNotEmpty;
+                  final tappedIndex = tappedOnSpot ? response!.lineBarSpots!.first.x.toInt() : null;
+
                   if (_touchedSpotIndex != null) {
-                    // Tooltip is showing — any tap navigates to that hand
-                    final idx = _touchedSpotIndex!;
-                    setState(() => _touchedSpotIndex = null);
-                    _navigateToHandFromChart(idx);
+                    if (tappedIndex == _touchedSpotIndex) {
+                      // Tapped on the tooltip spot — navigate to hand
+                      final idx = _touchedSpotIndex!;
+                      setState(() => _touchedSpotIndex = null);
+                      _navigateToHandFromChart(idx);
+                    } else {
+                      // Tapped elsewhere — dismiss tooltip
+                      setState(() => _touchedSpotIndex = null);
+                    }
                     return;
                   }
-                  if (response != null && response.lineBarSpots != null && response.lineBarSpots!.isNotEmpty) {
-                    final tappedIndex = response.lineBarSpots!.first.x.toInt();
+                  if (tappedOnSpot) {
                     setState(() => _touchedSpotIndex = tappedIndex);
                   }
                 }

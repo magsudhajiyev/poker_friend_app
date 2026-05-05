@@ -5134,6 +5134,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         handsPlayed: sessionManager.completedHands.length,
         biggestPot: sessionManager.biggestPot,
         durationMinutes: duration,
+        biggestPotWonCards: sessionManager.biggestPotWonCards,
+        biggestPotLostCards: sessionManager.biggestPotLostCards,
       ),
     );
   }

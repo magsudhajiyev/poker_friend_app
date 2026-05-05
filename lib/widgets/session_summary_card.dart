@@ -22,6 +22,8 @@ class SessionSummaryData {
   final int? finishedPlace; // tournament only
   final int? fieldSize; // tournament only
   final double? prizeWon; // tournament only
+  final String? biggestPotWonCards; // e.g. "A♠ K♥"
+  final String? biggestPotLostCards; // e.g. "Q♦ J♣"
 
   const SessionSummaryData({
     required this.sessionName,
@@ -34,6 +36,8 @@ class SessionSummaryData {
     this.finishedPlace,
     this.fieldSize,
     this.prizeWon,
+    this.biggestPotWonCards,
+    this.biggestPotLostCards,
   });
 
   bool get isCash => gameType == GameType.cash;
@@ -76,7 +80,10 @@ class SessionSummaryCard extends StatefulWidget {
         );
       },
       pageBuilder: (context, anim, secondaryAnim) {
-        return SessionSummaryCard(data: data);
+        return Material(
+          type: MaterialType.transparency,
+          child: SessionSummaryCard(data: data),
+        );
       },
     );
   }
@@ -236,7 +243,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.asset(
-                  'assets/ft_logo.png',
+                  'assets/logo.png',
                   width: 28,
                   height: 28,
                 ),
@@ -333,18 +340,29 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
 
           // Stats grid
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildStatItem('Hands Played', '${data.handsPlayed}'),
-              const SizedBox(width: 16),
-              _buildStatItem('Buy-in', CurrencyService.formatCash(data.totalBuyIn)),
+              _buildStatItemCentered('Hands', '${data.handsPlayed}'),
+              const SizedBox(width: 40),
+              _buildStatItemCentered('Biggest Pot', data.isCash
+                  ? CurrencyService.formatCash(data.biggestPot)
+                  : data.biggestPot.toStringAsFixed(0)),
             ],
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              _buildStatItem('Biggest Pot', CurrencyService.formatCash(data.biggestPot)),
-            ],
-          ),
+          if (data.biggestPotWonCards != null || data.biggestPotLostCards != null) ...[
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (data.biggestPotWonCards != null)
+                  _buildStatItemCentered('Best Hand', data.biggestPotWonCards!),
+                if (data.biggestPotWonCards != null && data.biggestPotLostCards != null)
+                  const SizedBox(width: 40),
+                if (data.biggestPotLostCards != null)
+                  _buildStatItemCentered('Worst Hand', data.biggestPotLostCards!),
+              ],
+            ),
+          ],
           const SizedBox(height: 20),
 
           // Footer
@@ -437,30 +455,27 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.4),
-            ),
+  Widget _buildStatItemCentered(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.4),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: GoogleFonts.robotoMono(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.robotoMono(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

@@ -412,6 +412,11 @@ class PokerSessionManager {
 
   // Biggest pot tracking
   double biggestPot = 0.0;
+  // Biggest pot won/lost with hole cards
+  double biggestPotWon = 0.0;
+  String? biggestPotWonCards; // e.g. "A♠ K♥"
+  double biggestPotLost = 0.0;
+  String? biggestPotLostCards; // e.g. "Q♦ J♣"
 
   // Table change tracking (cash games)
   int currentTableNumber = 1;
@@ -674,6 +679,22 @@ class PokerSessionManager {
     }
   }
 
+  void _trackBiggestPotWonLost(double? potAmount, int? winnerId) {
+    if (potAmount == null || potAmount <= 0 || currentHand == null) return;
+    final cards = currentHand!.ourHoleCards;
+    final cardsStr = (cards != null && cards.isComplete)
+        ? '${cards.card1} ${cards.card2}'
+        : null;
+    final heroWon = ourSeatNumber != null && winnerId == ourSeatNumber;
+    if (heroWon && potAmount > biggestPotWon) {
+      biggestPotWon = potAmount;
+      biggestPotWonCards = cardsStr;
+    } else if (!heroWon && potAmount > biggestPotLost) {
+      biggestPotLost = potAmount;
+      biggestPotLostCards = cardsStr;
+    }
+  }
+
   // Complete the current hand
   void completeCurrentHand({double? potAmount, int? winnerId, double? currentStack, PokerGameState? gameState}) {
     if (currentHand == null) return;
@@ -689,6 +710,9 @@ class PokerSessionManager {
     if (winnerId != null) {
       currentHand!.winnerId = winnerId;
     }
+
+    // Track biggest pot won/lost with hole cards
+    _trackBiggestPotWonLost(potAmount, winnerId);
 
     // Apply street-by-street pot data from game state (unified for manual + dealer)
     if (gameState != null) {
@@ -746,6 +770,10 @@ class PokerSessionManager {
     // For chopped pots, we'll store the first winner in winnerId for compatibility
     // and store additional chop data in a custom field
     currentHand!.winnerId = winnerIds.first;
+
+    // Track biggest pot won/lost with hole cards (hero wins if in winnerIds)
+    final heroWon = ourSeatNumber != null && winnerIds.contains(ourSeatNumber);
+    _trackBiggestPotWonLost(potAmount, heroWon ? ourSeatNumber : null);
 
     // Add chop data to the hand record
     currentHand!.isChoppedPot = true;
