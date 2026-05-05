@@ -172,47 +172,63 @@ class _CashBodyState extends State<_CashBody> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: widget.amountController,
-                      autofocus: true,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        signed: true,
-                        decimal: true,
-                      ),
-                      style: GoogleFonts.robotoMono(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                        color: isPositive
-                            ? const Color(0xFF62E3BC)
-                            : const Color(0xFFD55A41),
-                      ),
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
-                        prefixText: CurrencyService.prefixText,
-                        prefixStyle: GoogleFonts.robotoMono(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w600,
-                          color: isPositive
-                              ? const Color(0xFF62E3BC)
-                              : const Color(0xFFD55A41),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        IntrinsicWidth(
+                          child: TextField(
+                            controller: widget.amountController,
+                            autofocus: true,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              signed: true,
+                              decimal: true,
+                            ),
+                            style: GoogleFonts.robotoMono(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w600,
+                              color: isPositive
+                                  ? const Color(0xFF62E3BC)
+                                  : const Color(0xFFD55A41),
+                            ),
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              prefixText: CurrencyService.prefixText,
+                              prefixStyle: GoogleFonts.robotoMono(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w600,
+                                color: isPositive
+                                    ? const Color(0xFF62E3BC)
+                                    : const Color(0xFFD55A41),
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                              filled: false,
+                            ),
+                          ),
                         ),
-                        suffixText: CurrencyService.suffixText,
-                        suffixStyle: GoogleFonts.robotoMono(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w600,
-                          color: isPositive
-                              ? const Color(0xFF62E3BC)
-                              : const Color(0xFFD55A41),
-                        ),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                        isDense: true,
-                        filled: false,
-                      ),
+                        if (CurrencyService.suffixText != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 2),
+                            child: Text(
+                              CurrencyService.suffixText!,
+                              style: GoogleFonts.robotoMono(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: isPositive
+                                    ? const Color(0xFF62E3BC).withOpacity(0.6)
+                                    : const Color(0xFFD55A41).withOpacity(0.6),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Text(
                     CurrencyService.formatCash(widget.totalBuyIn),
                     style: GoogleFonts.robotoMono(
