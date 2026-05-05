@@ -1327,6 +1327,45 @@ class PokerSessionManager {
     }
   }
 
+  /// Atomically move the hero from their current seat to [newSeat].
+  /// Deactivates the old seat (unless [keepOldSeatActive] is true, e.g. when
+  /// another player is taking the old seat) and activates the new one.
+  /// [gameState] is updated in sync if provided.
+  void reseatHero({
+    required int newSeat,
+    required PokerGameState? gameState,
+    String? heroName,
+    double? heroStack,
+    bool keepOldSeatActive = false,
+  }) {
+    final oldSeat = ourSeatNumber;
+    if (oldSeat == newSeat) return;
+
+    // Determine hero's current stack/name before clearing old seat
+    final currentStack = heroStack ??
+        (oldSeat != null ? (playerStacks[oldSeat] ?? 0.0) : 0.0);
+    final currentName = heroName ??
+        (oldSeat != null ? (playerNames[oldSeat] ?? 'You') : 'You');
+
+    // --- Deactivate old seat ---
+    if (oldSeat != null && !keepOldSeatActive) {
+      activeSeats.remove(oldSeat);
+      playerNames.remove(oldSeat);
+      playerStacks.remove(oldSeat);
+      gameState?.setPlayerActive(oldSeat, false);
+    }
+
+    // --- Activate new seat ---
+    ourSeatNumber = newSeat;
+    activeSeats.add(newSeat);
+    playerNames[newSeat] = currentName;
+    playerStacks[newSeat] = currentStack;
+    if (gameState != null) {
+      gameState.setPlayerActive(newSeat, true);
+      gameState.setPlayerStack(newSeat, currentStack);
+    }
+  }
+
   /// Set playerIds map for dealer-assisted mode (seat → Firebase userId)
   void setPlayerIds(Map<int, String> ids) {
     playerIds = Map.from(ids);

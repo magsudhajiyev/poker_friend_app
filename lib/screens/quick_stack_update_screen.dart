@@ -5,6 +5,7 @@ import '../utils/poker_positions.dart';
 import '../services/free_tier_limits.dart';
 import '../services/opponent_service.dart';
 import '../services/auth_service.dart';
+import '../services/display_identity_service.dart';
 import '../models/opponent.dart';
 import '../models/game_types.dart';
 import '../l10n/app_localizations.dart';
@@ -95,8 +96,9 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
     if (widget.userName != null && widget.userCurrentStack != null) {
       // Find which seat has the user's name
       int? userSeat;
+      final userNameLower = widget.userName!.toLowerCase();
       for (var entry in customPlayerNames.entries) {
-        if (entry.value == widget.userName) {
+        if (entry.value.toLowerCase() == userNameLower) {
           userSeat = entry.key;
           break;
         }
@@ -206,14 +208,8 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
     final l10n = AppLocalizations.of(context);
     String searchQuery = '';
 
-    // Get user's name
-    String userName = 'You';
-    try {
-      final user = AuthService.currentUser;
-      if (user != null && user.displayName?.isNotEmpty == true) {
-        userName = user.displayName!;
-      }
-    } catch (e) {}
+    // Get user's display name (respects nickname preference)
+    final userName = DisplayIdentityService.cachedDisplayIdentity;
 
     final selected = await showDialog<String>(
       context: context,
@@ -534,7 +530,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
           // CRITICAL: If user selected themselves, automatically set their stack
           if (widget.userName != null &&
               widget.userCurrentStack != null &&
-              selected == widget.userName) {
+              selected.toLowerCase() == widget.userName!.toLowerCase()) {
             // Convert user's chip stack to BB (slider max will adjust dynamically)
             playerStacksInBB[playerId] = widget.userCurrentStack! / widget.bigBlind;
           }

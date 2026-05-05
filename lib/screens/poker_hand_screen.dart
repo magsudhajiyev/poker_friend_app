@@ -33,6 +33,7 @@ import '../widgets/stack_range_circle.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
+import '../services/display_identity_service.dart';
 import '../services/logger_service.dart';
 import '../services/free_tier_limits.dart';
 import '../services/subscription_service.dart';
@@ -105,6 +106,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   bool _allInHandCompleted = false;
   bool _showStreetCompleteIndicator = false;
   bool _isSettlingBetweenHands = false; // Brief pause after hand completes
+  bool _isNavigatingAway = false; // Guard against double-tap back
   String? _settlingWinnerName; // Winner name for settling overlay
   double? _settlingPotAmount; // Pot amount for settling overlay
   // Swipe gesture state
@@ -224,19 +226,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // CRITICAL: Set our seat number
     sessionManager.ourSeatNumber = seat;
 
-    // Set our player name (get from auth service or use "You") - only if not already set
+    // Set our player name - only if not already set
     String? existingName = sessionManager.getPlayerName(seat);
 
     if (existingName == null || existingName.isEmpty || existingName.startsWith('Player ')) {
-      String ourName = "You"; // Default name
-      try {
-        final user = AuthService.currentUser;
-        if (user != null && user.displayName?.isNotEmpty == true) {
-          ourName = user.displayName!;
-        }
-      } catch (e) {
-        // Use default if auth fails
-      }
+      final ourName = DisplayIdentityService.cachedDisplayIdentity;
       sessionManager.setPlayerName(seat, ourName);
     }
 
@@ -322,22 +316,15 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     // This skips the table selection UI entirely
 
     // Get user's name to identify which seat they selected for themselves
-    String ourName = "You"; // Default name
-    try {
-      final user = AuthService.currentUser;
-      if (user != null && user.displayName?.isNotEmpty == true) {
-        ourName = user.displayName!;
-      }
-    } catch (e) {
-      // Use default if auth fails
-    }
+    final ourName = DisplayIdentityService.cachedDisplayIdentity;
 
     // CRITICAL: Find which seat the user selected for themselves in Quick Stack Update
     // Look through playerNames to find if user's name was assigned to any seat
     int? ourSeatFromNames;
     if (playerNames != null) {
+      final ourNameLower = ourName.toLowerCase();
       for (var entry in playerNames.entries) {
-        if (entry.value == ourName) {
+        if (entry.value.toLowerCase() == ourNameLower) {
           ourSeatFromNames = entry.key;
           break;
         }
@@ -795,6 +782,16 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       // Store previous active player count BEFORE making changes
       final previousActiveCount = gameState.getActivePlayers().length;
 
+      // Update hero seat if it was changed in Manage Players screen.
+      // SeatSetupScreen already updated activeSeats/playerNames/playerStacks
+      // on sessionManager directly, but never sets ourSeatNumber.
+      if (result != null && result['seat'] != null) {
+        final newHeroSeat = result['seat'] as int;
+        if (newHeroSeat != sessionManager.ourSeatNumber) {
+          sessionManager.ourSeatNumber = newHeroSeat;
+        }
+      }
+
       // Update button position if it was changed
       if (result != null && result['buttonPosition'] != null) {
         final newButtonPosition = result['buttonPosition'] as int;
@@ -1180,6 +1177,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   /// Handles navigation attempt with confirmation if needed
   Future<void> _handleNavigationAttempt({bool isBackButton = false}) async {
+    if (_isNavigatingAway) return; // Prevent double-tap back
+    _isNavigatingAway = true;
+
     if (!_hasUnsavedSessionData()) {
       // No data logged - delete the empty session from Firebase/local storage
       final sessionId = sessionManager.sessionId;
@@ -1198,6 +1198,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
     if (result == null) {
       // User cancelled, stay on screen
+      _isNavigatingAway = false;
       return;
     }
 
@@ -1216,6 +1217,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (!mounted) return;
         Navigator.of(context).popUntil((route) => route.isFirst);
       } catch (e) {
+        _isNavigatingAway = false;
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

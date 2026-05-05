@@ -386,12 +386,6 @@ class _TableManagementBodyState extends State<_TableManagementBody> {
             ),
             const SizedBox(width: 4),
             _buildActionButton(
-              icon: Icons.add_shopping_cart,
-              tooltip: l10n.tableManagementRebuy,
-              onTap: () => _showRebuyDialog(seat, stack),
-            ),
-            const SizedBox(width: 4),
-            _buildActionButton(
               icon: Icons.logout,
               tooltip: l10n.tableManagementRemove,
               onTap: () => _removePlayer(seat),
@@ -427,6 +421,65 @@ class _TableManagementBodyState extends State<_TableManagementBody> {
     );
   }
 
+  /// Check if button is on an empty seat and offer to move it.
+  void _checkButtonOnEmptySeat() {
+    final btnPos = widget.gameState.buttonPosition;
+    final isActive = widget.sessionManager.activeSeats.contains(btnPos);
+    if (isActive) return;
+
+    // Find nearest active seat clockwise
+    int? nearestActive;
+    for (int i = 1; i <= 9; i++) {
+      final candidate = ((btnPos - 1 + i) % 9) + 1;
+      if (widget.sessionManager.activeSeats.contains(candidate)) {
+        nearestActive = candidate;
+        break;
+      }
+    }
+    if (nearestActive == null) return;
+
+    final moveTo = nearestActive;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1E),
+        title: Text(
+          'Button on Empty Seat',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'The dealer button is on Seat $btnPos which is empty. Move it to Seat $moveTo?',
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF8C8C8C),
+            fontSize: 15,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Keep', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+          ),
+          TextButton(
+            onPressed: () {
+              widget.gameState.buttonPosition = moveTo;
+              widget.sessionManager.buttonPosition = moveTo;
+              widget.sessionManager.actualSBSeat = widget.gameState.effectiveSBPosition;
+              widget.sessionManager.actualBBSeat = widget.gameState.effectiveBBPosition;
+              widget.onChanged();
+              setState(() {});
+              Navigator.pop(ctx);
+            },
+            child: Text('Move', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddPlayerDialog(int seat) {
     final defaultStack = widget.sessionManager.bigBlind > 0
         ? (widget.sessionManager.bigBlind * 100).toDouble()
@@ -458,20 +511,13 @@ class _TableManagementBodyState extends State<_TableManagementBody> {
         seatedPlayers: seatedPlayers,
         onAdd: (String name, double stack, bool isMe) {
           if (isMe) {
-            final oldHeroSeat = _heroSeat;
-            final heroStack = widget.gameState.getPlayerStack(oldHeroSeat);
-
-            widget.sessionManager.activeSeats.remove(oldHeroSeat);
-            widget.sessionManager.playerNames.remove(oldHeroSeat);
-            widget.sessionManager.playerStacks.remove(oldHeroSeat);
-            widget.gameState.setPlayerActive(oldHeroSeat, false);
-
-            widget.sessionManager.ourSeatNumber = seat;
-            widget.sessionManager.playerNames[seat] = heroName.isNotEmpty ? heroName : name;
-            widget.sessionManager.playerStacks[seat] = heroStack > 0 ? heroStack : stack;
-            widget.sessionManager.activeSeats.add(seat);
-            widget.gameState.setPlayerActive(seat, true);
-            widget.gameState.setPlayerStack(seat, heroStack > 0 ? heroStack : stack);
+            final heroStack = widget.gameState.getPlayerStack(_heroSeat);
+            widget.sessionManager.reseatHero(
+              newSeat: seat,
+              gameState: widget.gameState,
+              heroName: heroName.isNotEmpty ? heroName : name,
+              heroStack: heroStack > 0 ? heroStack : stack,
+            );
           } else {
             final existingSeat = seatedPlayers[name.toLowerCase()];
             if (existingSeat != null && existingSeat != seat) {
@@ -490,6 +536,7 @@ class _TableManagementBodyState extends State<_TableManagementBody> {
           }
           widget.onChanged();
           setState(() {});
+          _checkButtonOnEmptySeat();
         },
       ),
     );
@@ -546,57 +593,6 @@ class _TableManagementBodyState extends State<_TableManagementBody> {
     );
   }
 
-  void _showRebuyDialog(int seat, double currentStack) {
-    final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1E),
-        title: Text(
-          l10n.tableManagementRebuyTitle,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
-          decoration: InputDecoration(
-            hintText: l10n.tableManagementRebuyAmountHint,
-            hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
-            enabledBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Color(0xFF62E3BC)),
-            ),
-            focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Color(0xFF62E3BC), width: 2),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.commonCancel, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
-          ),
-          TextButton(
-            onPressed: () {
-              final rebuyAmount = double.tryParse(controller.text);
-              if (rebuyAmount != null && rebuyAmount > 0) {
-                final newStack = currentStack + rebuyAmount;
-                widget.gameState.setPlayerStack(seat, newStack);
-                widget.sessionManager.playerStacks[seat] = newStack;
-                widget.onChanged();
-                setState(() {});
-              }
-              Navigator.pop(ctx);
-            },
-            child: Text(l10n.tableManagementAdd, style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _removePlayer(int seat) {
     final l10n = AppLocalizations.of(context);
@@ -625,6 +621,7 @@ class _TableManagementBodyState extends State<_TableManagementBody> {
               widget.onChanged();
               setState(() {});
               Navigator.pop(ctx);
+              _checkButtonOnEmptySeat();
             },
             child: Text(l10n.tableManagementRemove, style: GoogleFonts.ibmPlexSans(color: const Color(0xFFE36262))),
           ),
@@ -755,8 +752,9 @@ class _AddPlayerBodyState extends State<_AddPlayerBody> {
     final stack = double.tryParse(_stackController.text) ?? widget.defaultStack;
     if (_isMe) {
       widget.onAdd(name, stack, true);
-    } else if (name.isNotEmpty && stack > 0) {
-      widget.onAdd(name, stack, false);
+    } else {
+      final effectiveName = name.isNotEmpty ? name : 'Player ${widget.seat}';
+      widget.onAdd(effectiveName, stack, false);
     }
     Navigator.pop(context);
   }

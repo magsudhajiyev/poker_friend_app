@@ -7,6 +7,7 @@ import '../models/game_types.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/auth_service.dart';
+import '../services/display_identity_service.dart';
 import 'poker_hand_screen.dart';
 import 'quick_stack_update_screen.dart';
 import '../design_system/components/drawer_dots.dart';
@@ -750,13 +751,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       return;
     }
 
-    String userName = 'You';
-    try {
-      final user = AuthService.currentUser;
-      if (user != null && user.displayName?.isNotEmpty == true) {
-        userName = user.displayName!;
-      }
-    } catch (e) {}
+    final userName = DisplayIdentityService.cachedDisplayIdentity;
 
     final stackResult = await Navigator.push<Map<String, dynamic>>(
       context,

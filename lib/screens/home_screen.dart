@@ -4571,7 +4571,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       handsPlayed: handsPlayed,
     );
 
-    return PlayStyleDetector.getStyleAbbreviation(result['style'] ?? 'Balanced');
+    final style = result['style'] ?? 'Balanced';
+    if (style == 'Unknown') {
+      final count = handsPlayed ?? 0;
+      return '$count/50';
+    }
+    return PlayStyleDetector.getStyleAbbreviation(style);
   }
 
   String _getPlayStyleIcon() {

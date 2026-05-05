@@ -1150,7 +1150,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
     }
   }
 
-  void _saveChanges() {
+  Future<void> _saveChanges() async {
     if (widget.isInitialSetup && selectedSeat == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1159,6 +1159,15 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         ),
       );
       return;
+    }
+
+    // Check if button is on an empty seat
+    final btnPos = selectedButtonPosition ?? widget.buttonPosition ?? 1;
+    final btnSeatActive = seatActive[btnPos] ?? false;
+    if (!btnSeatActive) {
+      final moved = await _showButtonOnEmptySeatWarning(btnPos);
+      if (!mounted) return;
+      if (moved == null) return; // User cancelled
     }
 
     Map<int, double> playerStacks = {};
@@ -1212,5 +1221,63 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         'isCashGame': widget.isCashGame,
       });
     }
+  }
+
+  /// Shows a warning dialog when the button is on an empty seat.
+  /// Returns the new button seat if auto-moved, or non-null if user chose to keep it.
+  /// Returns null if user cancelled.
+  Future<int?> _showButtonOnEmptySeatWarning(int currentBtnSeat) async {
+    // Find nearest active seat clockwise
+    int? nearestActive;
+    for (int i = 1; i <= 9; i++) {
+      final candidate = ((currentBtnSeat - 1 + i) % 9) + 1;
+      if (seatActive[candidate] ?? false) {
+        nearestActive = candidate;
+        break;
+      }
+    }
+
+    if (nearestActive == null) return currentBtnSeat; // No active seats at all
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1E),
+        title: Text(
+          'Button on Empty Seat',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'The dealer button is on Seat $currentBtnSeat which is empty. Move it to Seat $nearestActive?',
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF8C8C8C),
+            fontSize: 15,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Keep', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Move', style: GoogleFonts.ibmPlexSans(color: const Color(0xFF62E3BC))),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null) return null; // Dismissed
+    if (result == true) {
+      setState(() {
+        selectedButtonPosition = nearestActive;
+      });
+      return nearestActive;
+    }
+    return currentBtnSeat; // User chose to keep
   }
 }
