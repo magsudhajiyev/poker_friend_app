@@ -825,6 +825,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get handDiscardAndExit => 'Verwerfen & Beenden';
 
   @override
+  String get handInProgress => 'Hand in Progress';
+
+  @override
+  String get handDiscardCurrentHand =>
+      'You have an active hand being logged. Discard it and go back?';
+
+  @override
+  String get handDiscardHand => 'Discard Hand';
+
+  @override
   String get handAdjustStack => 'Stack anpassen';
 
   @override
@@ -6988,26 +6998,55 @@ class AppLocalizationsDe extends AppLocalizations {
   String get guidedOpenThePotTitle => 'Pot eröffnen';
 
   @override
-  String get guidedBetOnceBody => 'Einmal tippen zum Setzen.';
+  String get guidedBetOnceBody => 'Dieser Spieler setzt.';
 
   @override
   String get guidedFoldTitle => 'Fold';
 
   @override
-  String get guidedFoldBody =>
-      'Dieser Spieler foldet. Zeichne eine Linie zum Folden.';
+  String get guidedFoldBody => 'Dieser Spieler foldet.';
 
   @override
   String get guidedCallTitle => 'Call';
 
   @override
-  String get guidedCallBody => 'Dieser Spieler callt. Zeichne einen Kreis.';
+  String get guidedCallBody => 'Dieser Spieler callt.';
 
   @override
   String get guidedCheckTitle => 'Check';
 
   @override
-  String get guidedCheckBody => 'Dieser Spieler checkt. Doppelt tippen.';
+  String get guidedCheckBody => 'Dieser Spieler checkt.';
+
+  @override
+  String get guidedGestureFold => 'Nach links wischen ←';
+
+  @override
+  String get guidedGestureCheck => 'Tippen';
+
+  @override
+  String get guidedGestureCall => 'Tippen';
+
+  @override
+  String get guidedGestureBet => 'Nach oben wischen ↑';
+
+  @override
+  String get guidedGestureRaise => 'Nach oben wischen ↑';
+
+  @override
+  String get guidedActionFold => 'Fold';
+
+  @override
+  String get guidedActionCheck => 'Check';
+
+  @override
+  String get guidedActionCall => 'Call';
+
+  @override
+  String get guidedActionBet => 'Bet';
+
+  @override
+  String get guidedActionRaise => 'Raise';
 
   @override
   String get guidedDealFlopTitle => 'Flop aufdecken';

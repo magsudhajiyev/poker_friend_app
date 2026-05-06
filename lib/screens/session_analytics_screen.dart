@@ -447,7 +447,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                             Text(
                               l10n.sessionAnalyticsTitle,
                               style: GoogleFonts.ibmPlexSans(
-                                fontSize: 24,
+                                fontSize: 20,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: -0.5,

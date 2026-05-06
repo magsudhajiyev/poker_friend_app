@@ -1602,6 +1602,24 @@ abstract class AppLocalizations {
   /// **'Discard & Exit'**
   String get handDiscardAndExit;
 
+  /// No description provided for @handInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand in Progress'**
+  String get handInProgress;
+
+  /// No description provided for @handDiscardCurrentHand.
+  ///
+  /// In en, this message translates to:
+  /// **'You have an active hand being logged. Discard it and go back?'**
+  String get handDiscardCurrentHand;
+
+  /// No description provided for @handDiscardHand.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard Hand'**
+  String get handDiscardHand;
+
   /// No description provided for @handAdjustStack.
   ///
   /// In en, this message translates to:
@@ -12156,7 +12174,7 @@ abstract class AppLocalizations {
   /// No description provided for @guidedBetOnceBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap once to bet.'**
+  /// **'This player bets.'**
   String get guidedBetOnceBody;
 
   /// No description provided for @guidedFoldTitle.
@@ -12168,7 +12186,7 @@ abstract class AppLocalizations {
   /// No description provided for @guidedFoldBody.
   ///
   /// In en, this message translates to:
-  /// **'This player folds. Draw a line to fold.'**
+  /// **'This player folds.'**
   String get guidedFoldBody;
 
   /// No description provided for @guidedCallTitle.
@@ -12180,7 +12198,7 @@ abstract class AppLocalizations {
   /// No description provided for @guidedCallBody.
   ///
   /// In en, this message translates to:
-  /// **'This player calls. Draw a circle.'**
+  /// **'This player calls.'**
   String get guidedCallBody;
 
   /// No description provided for @guidedCheckTitle.
@@ -12192,8 +12210,68 @@ abstract class AppLocalizations {
   /// No description provided for @guidedCheckBody.
   ///
   /// In en, this message translates to:
-  /// **'This player checks. Double tap.'**
+  /// **'This player checks.'**
   String get guidedCheckBody;
+
+  /// No description provided for @guidedGestureFold.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left ←'**
+  String get guidedGestureFold;
+
+  /// No description provided for @guidedGestureCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap'**
+  String get guidedGestureCheck;
+
+  /// No description provided for @guidedGestureCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap'**
+  String get guidedGestureCall;
+
+  /// No description provided for @guidedGestureBet.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe up ↑'**
+  String get guidedGestureBet;
+
+  /// No description provided for @guidedGestureRaise.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe up ↑'**
+  String get guidedGestureRaise;
+
+  /// No description provided for @guidedActionFold.
+  ///
+  /// In en, this message translates to:
+  /// **'Fold'**
+  String get guidedActionFold;
+
+  /// No description provided for @guidedActionCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get guidedActionCheck;
+
+  /// No description provided for @guidedActionCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get guidedActionCall;
+
+  /// No description provided for @guidedActionBet.
+  ///
+  /// In en, this message translates to:
+  /// **'Bet'**
+  String get guidedActionBet;
+
+  /// No description provided for @guidedActionRaise.
+  ///
+  /// In en, this message translates to:
+  /// **'Raise'**
+  String get guidedActionRaise;
 
   /// No description provided for @guidedDealFlopTitle.
   ///

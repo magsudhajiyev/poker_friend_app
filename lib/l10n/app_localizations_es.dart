@@ -825,6 +825,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get handDiscardAndExit => 'Descartar y salir';
 
   @override
+  String get handInProgress => 'Hand in Progress';
+
+  @override
+  String get handDiscardCurrentHand =>
+      'You have an active hand being logged. Discard it and go back?';
+
+  @override
+  String get handDiscardHand => 'Discard Hand';
+
+  @override
   String get handAdjustStack => 'Ajustar Stack';
 
   @override
@@ -6981,26 +6991,55 @@ class AppLocalizationsEs extends AppLocalizations {
   String get guidedOpenThePotTitle => 'Abrir el pot';
 
   @override
-  String get guidedBetOnceBody => 'Toca una vez para apostar.';
+  String get guidedBetOnceBody => 'Este jugador apuesta.';
 
   @override
   String get guidedFoldTitle => 'Fold';
 
   @override
-  String get guidedFoldBody =>
-      'Este jugador hace Fold. Dibuja una línea para foldear.';
+  String get guidedFoldBody => 'Este jugador hace Fold.';
 
   @override
   String get guidedCallTitle => 'Call';
 
   @override
-  String get guidedCallBody => 'Este jugador hace Call. Dibuja un círculo.';
+  String get guidedCallBody => 'Este jugador hace Call.';
 
   @override
   String get guidedCheckTitle => 'Check';
 
   @override
-  String get guidedCheckBody => 'Este jugador hace Check. Toca dos veces.';
+  String get guidedCheckBody => 'Este jugador hace Check.';
+
+  @override
+  String get guidedGestureFold => 'Deslizar izquierda ←';
+
+  @override
+  String get guidedGestureCheck => 'Tocar';
+
+  @override
+  String get guidedGestureCall => 'Tocar';
+
+  @override
+  String get guidedGestureBet => 'Deslizar arriba ↑';
+
+  @override
+  String get guidedGestureRaise => 'Deslizar arriba ↑';
+
+  @override
+  String get guidedActionFold => 'Fold';
+
+  @override
+  String get guidedActionCheck => 'Check';
+
+  @override
+  String get guidedActionCall => 'Call';
+
+  @override
+  String get guidedActionBet => 'Bet';
+
+  @override
+  String get guidedActionRaise => 'Raise';
 
   @override
   String get guidedDealFlopTitle => 'Repartir el Flop';

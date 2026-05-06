@@ -173,7 +173,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         !OnboardingState.individualTrackingTourPending) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
       IndividualTrackingTour(
         updateStackButtonKey: _updateStackBtnKey,

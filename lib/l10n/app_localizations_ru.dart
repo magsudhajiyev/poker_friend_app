@@ -818,6 +818,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get handDiscardAndExit => 'Отменить и выйти';
 
   @override
+  String get handInProgress => 'Hand in Progress';
+
+  @override
+  String get handDiscardCurrentHand =>
+      'You have an active hand being logged. Discard it and go back?';
+
+  @override
+  String get handDiscardHand => 'Discard Hand';
+
+  @override
   String get handAdjustStack => 'Изменить стек';
 
   @override
@@ -6948,26 +6958,55 @@ class AppLocalizationsRu extends AppLocalizations {
   String get guidedOpenThePotTitle => 'Открыть банк';
 
   @override
-  String get guidedBetOnceBody => 'Нажмите один раз, чтобы сделать ставку.';
+  String get guidedBetOnceBody => 'Этот игрок ставит.';
 
   @override
   String get guidedFoldTitle => 'Fold';
 
   @override
-  String get guidedFoldBody =>
-      'Этот игрок сбрасывает карты. Нарисуйте линию для fold.';
+  String get guidedFoldBody => 'Этот игрок сбрасывает карты.';
 
   @override
   String get guidedCallTitle => 'Call';
 
   @override
-  String get guidedCallBody => 'Этот игрок делает call. Нарисуйте круг.';
+  String get guidedCallBody => 'Этот игрок делает call.';
 
   @override
   String get guidedCheckTitle => 'Check';
 
   @override
-  String get guidedCheckBody => 'Этот игрок делает check. Нажмите дважды.';
+  String get guidedCheckBody => 'Этот игрок делает check.';
+
+  @override
+  String get guidedGestureFold => 'Свайп влево ←';
+
+  @override
+  String get guidedGestureCheck => 'Нажать';
+
+  @override
+  String get guidedGestureCall => 'Нажать';
+
+  @override
+  String get guidedGestureBet => 'Свайп вверх ↑';
+
+  @override
+  String get guidedGestureRaise => 'Свайп вверх ↑';
+
+  @override
+  String get guidedActionFold => 'Fold';
+
+  @override
+  String get guidedActionCheck => 'Check';
+
+  @override
+  String get guidedActionCall => 'Call';
+
+  @override
+  String get guidedActionBet => 'Bet';
+
+  @override
+  String get guidedActionRaise => 'Raise';
 
   @override
   String get guidedDealFlopTitle => 'Сдать Flop';

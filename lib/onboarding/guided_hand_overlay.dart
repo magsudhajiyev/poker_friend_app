@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
@@ -10,28 +11,37 @@ import 'onboarding_tour.dart'; // buildTooltip
 
 
 // ---------------------------------------------------------------------------
-// Gesture hint strings
+// Gesture hint strings (localized)
 // ---------------------------------------------------------------------------
-const _gestureHints = <PlayerAction, String>{
-  PlayerAction.fold: 'Draw a line ╱',
-  PlayerAction.check: 'Tap twice',
-  PlayerAction.call: 'Draw ○',
-  PlayerAction.bet: 'Tap once',
-  PlayerAction.raise: 'Tap once',
-};
-
-String _actionLabel(PlayerAction a) {
+String _gestureHint(AppLocalizations l10n, PlayerAction a) {
   switch (a) {
     case PlayerAction.fold:
-      return 'Fold';
+      return l10n.guidedGestureFold;
     case PlayerAction.check:
-      return 'Check';
+      return l10n.guidedGestureCheck;
     case PlayerAction.call:
-      return 'Call';
+      return l10n.guidedGestureCall;
     case PlayerAction.bet:
-      return 'Bet';
+      return l10n.guidedGestureBet;
     case PlayerAction.raise:
-      return 'Raise';
+      return l10n.guidedGestureRaise;
+    case PlayerAction.none:
+      return '';
+  }
+}
+
+String _actionLabel(AppLocalizations l10n, PlayerAction a) {
+  switch (a) {
+    case PlayerAction.fold:
+      return l10n.guidedActionFold;
+    case PlayerAction.check:
+      return l10n.guidedActionCheck;
+    case PlayerAction.call:
+      return l10n.guidedActionCall;
+    case PlayerAction.bet:
+      return l10n.guidedActionBet;
+    case PlayerAction.raise:
+      return l10n.guidedActionRaise;
     case PlayerAction.none:
       return '';
   }
@@ -232,9 +242,10 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             TargetContent(
               align: ContentAlign.left,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Gesture Guide',
-                  body: 'Tap this icon anytime to see all gesture controls.',
+                  title: l10n.guidedGestureGuideTitle,
+                  body: l10n.guidedGestureGuideBody,
                   onNext: () => controller.next(),
                   context: context,
                   isLast: true,
@@ -293,9 +304,10 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
           TargetContent(
             align: ContentAlign.bottom,
             builder: (context, controller) {
+              final l10n = AppLocalizations.of(context);
               return buildTooltip(
-                title: 'Skip Button',
-                body: 'If you skip a hand, this button moves the dealer button to the next player. Keep in mind that stacks will be out of sync — you can update them in Manage Players.',
+                title: l10n.guidedSkipButtonTitle,
+                body: l10n.guidedSkipButtonBody,
                 onNext: () => controller.next(),
                 context: context,
                 isLast: true,
@@ -486,9 +498,10 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Game Menu',
-                  body: 'This menu has useful options. Let\'s take a look at one important setting.',
+                  title: l10n.guidedGameMenuTitle,
+                  body: l10n.guidedGameMenuBody,
                   onNext: () => controller.next(),
                   context: context,
                 );
@@ -510,9 +523,9 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(40),
-              border: Border.all(color: Colors.white54),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
-            child: Text('Skip', style: AppTypography.bodySmall(color: Colors.white70)),
+            child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15)),
           ),
         ),
         onSkip: () {
@@ -556,9 +569,10 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Game Settings',
-                  body: 'Here you can change blinds mid-session — useful for tournaments when levels go up.',
+                  title: l10n.guidedGameSettingsTitle,
+                  body: l10n.guidedGameSettingsBody,
                   onNext: () => controller.next(),
                   context: context,
                   isLast: true,
@@ -581,9 +595,9 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(40),
-              border: Border.all(color: Colors.white54),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
-            child: Text('Skip', style: AppTypography.bodySmall(color: Colors.white70)),
+            child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15)),
           ),
         ),
         onSkip: () {
@@ -630,9 +644,10 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'End Your Session',
-                  body: 'Tap this menu and select "Stop Session" to save your results.',
+                  title: l10n.guidedEndSessionTitle,
+                  body: l10n.guidedEndSessionBody,
                   onNext: () => controller.next(),
                   context: context,
                   isLast: true,
@@ -655,9 +670,9 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(40),
-              border: Border.all(color: Colors.white54),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
-            child: Text('Skip', style: AppTypography.bodySmall(color: Colors.white70)),
+            child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15)),
           ),
         ),
         onSkip: () {
@@ -701,24 +716,25 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
   /// Build the instruction card content for the current phase.
   _InstructionData _buildInstruction() {
+    final l10n = AppLocalizations.of(context);
     final phase = OnboardingState.guidedHandPhase;
 
     switch (phase) {
       case GuidedPhase.scriptedAction:
-        return _buildScriptedInstruction();
+        return _buildScriptedInstruction(l10n);
       case GuidedPhase.heroTurn:
-        return _buildHeroInstruction();
+        return _buildHeroInstruction(l10n);
       case GuidedPhase.boardCards:
-        return _buildBoardCardsInstruction();
+        return _buildBoardCardsInstruction(l10n);
       case GuidedPhase.holeCards:
-        return const _InstructionData(
-          title: 'Review Hand',
-          body: 'Enter your hole cards and any notes.',
+        return _InstructionData(
+          title: l10n.guidedReviewHandTitle,
+          body: l10n.guidedReviewHandBody,
         );
       case GuidedPhase.handComplete:
-        return const _InstructionData(
-          title: 'Hand Complete!',
-          body: 'Great job! You just logged your first hand.',
+        return _InstructionData(
+          title: l10n.guidedHandCompleteTitle,
+          body: l10n.guidedHandCompleteBody,
           isHighlight: true,
         );
       default:
@@ -726,9 +742,9 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     }
   }
 
-  _InstructionData _buildScriptedInstruction() {
+  _InstructionData _buildScriptedInstruction(AppLocalizations l10n) {
     final action = OnboardingState.nextScriptedAction ?? PlayerAction.fold;
-    final hint = _gestureHints[action] ?? '';
+    final hint = _gestureHint(l10n, action);
 
     String title;
     String body;
@@ -736,20 +752,20 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     switch (action) {
       case PlayerAction.raise:
       case PlayerAction.bet:
-        title = _preflopOpenerDone ? 'Bet' : 'Open the Pot';
-        body = 'Tap once to bet.';
+        title = _preflopOpenerDone ? l10n.guidedActionBet : l10n.guidedOpenThePotTitle;
+        body = l10n.guidedBetOnceBody;
         break;
       case PlayerAction.fold:
-        title = 'Fold';
-        body = 'This player folds. Draw a line to fold.';
+        title = l10n.guidedFoldTitle;
+        body = l10n.guidedFoldBody;
         break;
       case PlayerAction.call:
-        title = 'Call';
-        body = 'This player calls. Draw a circle.';
+        title = l10n.guidedCallTitle;
+        body = l10n.guidedCallBody;
         break;
       case PlayerAction.check:
-        title = 'Check';
-        body = 'This player checks. Double tap.';
+        title = l10n.guidedCheckTitle;
+        body = l10n.guidedCheckBody;
         break;
       default:
         title = '';
@@ -763,7 +779,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     );
   }
 
-  _InstructionData _buildHeroInstruction() {
+  _InstructionData _buildHeroInstruction(AppLocalizations l10n) {
     // Collect valid actions
     final validActions = <PlayerAction>[];
     for (final a in [
@@ -780,34 +796,34 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
     // Build the body with gesture hints for each valid action
     final parts = validActions.map((a) {
-      final hint = _gestureHints[a] ?? '';
-      return '${_actionLabel(a)} ($hint)';
+      final hint = _gestureHint(l10n, a);
+      return '${_actionLabel(l10n, a)} ($hint)';
     }).toList();
 
     return _InstructionData(
-      title: 'Your Turn!',
+      title: l10n.guidedYourTurn,
       body: parts.join('  ·  '),
       isHighlight: true,
     );
   }
 
-  _InstructionData _buildBoardCardsInstruction() {
+  _InstructionData _buildBoardCardsInstruction(AppLocalizations l10n) {
     final round = widget.currentRound;
     switch (round) {
       case BettingRound.flop:
-        return const _InstructionData(
-          title: 'Deal the Flop',
-          body: 'Select 3 cards for the flop.',
+        return _InstructionData(
+          title: l10n.guidedDealFlopTitle,
+          body: l10n.guidedDealFlopBody,
         );
       case BettingRound.turn:
-        return const _InstructionData(
-          title: 'Deal the Turn',
-          body: 'Select 1 card for the turn.',
+        return _InstructionData(
+          title: l10n.guidedDealTurnTitle,
+          body: l10n.guidedDealTurnBody,
         );
       case BettingRound.river:
-        return const _InstructionData(
-          title: 'Deal the River',
-          body: 'Select 1 card for the river.',
+        return _InstructionData(
+          title: l10n.guidedDealRiverTitle,
+          body: l10n.guidedDealRiverBody,
         );
       default:
         return const _InstructionData(title: '', body: '');
@@ -845,19 +861,19 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
             child: Container(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF161618),
+                color: const Color(0xFF101115),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isHero
-                      ? AppColors.buttonPrimary.withOpacity(0.6)
-                      : AppColors.buttonPrimary.withOpacity(0.3),
+                      ? AppColors.buttonPrimary.withValues(alpha: 0.6)
+                      : AppColors.buttonPrimary.withValues(alpha: 0.3),
                   width: isHero ? 1.5 : 1,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: isHero
-                        ? AppColors.buttonPrimary.withOpacity(0.15)
-                        : Colors.black.withOpacity(0.5),
+                        ? AppColors.buttonPrimary.withValues(alpha: 0.15)
+                        : Colors.black.withValues(alpha: 0.5),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -875,7 +891,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                           instruction.title,
                           style: GoogleFonts.ibmPlexSans(
                             color: isHero ? AppColors.buttonPrimary : Colors.white,
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -886,12 +902,12 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(40),
-                            border: Border.all(color: Colors.white38),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                           ),
                           child: Text(
-                            'Skip',
+                            AppLocalizations.of(context).guidedSkip,
                             style: AppTypography.bodySmall(color: Colors.white60)
-                                .copyWith(fontSize: 12),
+                                .copyWith(fontSize: 14),
                           ),
                         ),
                       ),
@@ -902,9 +918,9 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                   Text(
                     instruction.body,
                     style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 13,
-                      height: 1.4,
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 15,
+                      height: 1.5,
                     ),
                   ),
                   if (instruction.gestureHint.isNotEmpty) ...[
@@ -912,14 +928,14 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.buttonPrimary.withOpacity(0.15),
+                        color: AppColors.buttonPrimary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         instruction.gestureHint,
                         style: GoogleFonts.ibmPlexSans(
                           color: AppColors.buttonPrimary,
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -931,7 +947,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
                     borderRadius: BorderRadius.circular(2),
                     child: LinearProgressIndicator(
                       value: _actionsCompleted.clamp(0, 12) / 12,
-                      backgroundColor: Colors.white.withOpacity(0.1),
+                      backgroundColor: Colors.white.withValues(alpha: 0.1),
                       valueColor: const AlwaysStoppedAnimation<Color>(
                         AppColors.buttonPrimary,
                       ),

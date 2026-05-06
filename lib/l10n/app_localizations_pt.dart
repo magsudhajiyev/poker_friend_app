@@ -825,6 +825,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get handDiscardAndExit => 'Descartar e Sair';
 
   @override
+  String get handInProgress => 'Hand in Progress';
+
+  @override
+  String get handDiscardCurrentHand =>
+      'You have an active hand being logged. Discard it and go back?';
+
+  @override
+  String get handDiscardHand => 'Discard Hand';
+
+  @override
   String get handAdjustStack => 'Ajustar Stack';
 
   @override
@@ -6977,26 +6987,55 @@ class AppLocalizationsPt extends AppLocalizations {
   String get guidedOpenThePotTitle => 'Abrir o Pot';
 
   @override
-  String get guidedBetOnceBody => 'Toque uma vez para apostar.';
+  String get guidedBetOnceBody => 'Este jogador aposta.';
 
   @override
   String get guidedFoldTitle => 'Fold';
 
   @override
-  String get guidedFoldBody =>
-      'Este jogador faz fold. Desenhe uma linha para foldar.';
+  String get guidedFoldBody => 'Este jogador faz fold.';
 
   @override
   String get guidedCallTitle => 'Call';
 
   @override
-  String get guidedCallBody => 'Este jogador faz call. Desenhe um círculo.';
+  String get guidedCallBody => 'Este jogador faz call.';
 
   @override
   String get guidedCheckTitle => 'Check';
 
   @override
-  String get guidedCheckBody => 'Este jogador faz check. Toque duas vezes.';
+  String get guidedCheckBody => 'Este jogador faz check.';
+
+  @override
+  String get guidedGestureFold => 'Deslizar para esquerda ←';
+
+  @override
+  String get guidedGestureCheck => 'Tocar';
+
+  @override
+  String get guidedGestureCall => 'Tocar';
+
+  @override
+  String get guidedGestureBet => 'Deslizar para cima ↑';
+
+  @override
+  String get guidedGestureRaise => 'Deslizar para cima ↑';
+
+  @override
+  String get guidedActionFold => 'Fold';
+
+  @override
+  String get guidedActionCheck => 'Check';
+
+  @override
+  String get guidedActionCall => 'Call';
+
+  @override
+  String get guidedActionBet => 'Bet';
+
+  @override
+  String get guidedActionRaise => 'Raise';
 
   @override
   String get guidedDealFlopTitle => 'Distribuir o Flop';

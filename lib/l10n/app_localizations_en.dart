@@ -817,6 +817,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get handDiscardAndExit => 'Discard & Exit';
 
   @override
+  String get handInProgress => 'Hand in Progress';
+
+  @override
+  String get handDiscardCurrentHand =>
+      'You have an active hand being logged. Discard it and go back?';
+
+  @override
+  String get handDiscardHand => 'Discard Hand';
+
+  @override
   String get handAdjustStack => 'Adjust Stack';
 
   @override
@@ -6928,25 +6938,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guidedOpenThePotTitle => 'Open the Pot';
 
   @override
-  String get guidedBetOnceBody => 'Tap once to bet.';
+  String get guidedBetOnceBody => 'This player bets.';
 
   @override
   String get guidedFoldTitle => 'Fold';
 
   @override
-  String get guidedFoldBody => 'This player folds. Draw a line to fold.';
+  String get guidedFoldBody => 'This player folds.';
 
   @override
   String get guidedCallTitle => 'Call';
 
   @override
-  String get guidedCallBody => 'This player calls. Draw a circle.';
+  String get guidedCallBody => 'This player calls.';
 
   @override
   String get guidedCheckTitle => 'Check';
 
   @override
-  String get guidedCheckBody => 'This player checks. Double tap.';
+  String get guidedCheckBody => 'This player checks.';
+
+  @override
+  String get guidedGestureFold => 'Swipe left ←';
+
+  @override
+  String get guidedGestureCheck => 'Tap';
+
+  @override
+  String get guidedGestureCall => 'Tap';
+
+  @override
+  String get guidedGestureBet => 'Swipe up ↑';
+
+  @override
+  String get guidedGestureRaise => 'Swipe up ↑';
+
+  @override
+  String get guidedActionFold => 'Fold';
+
+  @override
+  String get guidedActionCheck => 'Check';
+
+  @override
+  String get guidedActionCall => 'Call';
+
+  @override
+  String get guidedActionBet => 'Bet';
+
+  @override
+  String get guidedActionRaise => 'Raise';
 
   @override
   String get guidedDealFlopTitle => 'Deal the Flop';

@@ -29,11 +29,11 @@ TutorialCoachMark _createCoachMark({
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(40),
-          border: Border.all(color: Colors.white54),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         ),
         child: Text(
           l10n.onboardingSkipTour,
-          style: AppTypography.bodySmall(color: Colors.white70),
+          style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15),
         ),
       ),
     ),
@@ -53,16 +53,16 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
     padding: const EdgeInsets.all(28),
     margin: const EdgeInsets.symmetric(horizontal: 24),
     decoration: BoxDecoration(
-      color: const Color(0xFF161618),
+      color: const Color(0xFF101115),
       borderRadius: BorderRadius.circular(20),
       border: Border.all(
-        color: AppColors.buttonPrimary.withOpacity(0.3),
+        color: AppColors.buttonPrimary.withValues(alpha: 0.15),
         width: 1,
       ),
       boxShadow: [
         BoxShadow(
-          color: AppColors.buttonPrimary.withOpacity(0.1),
-          blurRadius: 24,
+          color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+          blurRadius: 20,
           offset: const Offset(0, 4),
         ),
       ],
@@ -72,15 +72,15 @@ Widget buildWelcomeCard({required VoidCallback onNext, required BuildContext con
       children: [
         Text(
           l10n.onboardingWelcomeTitle,
-          style: AppTypography.pageTitle().copyWith(fontSize: 22),
+          style: AppTypography.pageTitle().copyWith(fontSize: 24),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
         Text(
           l10n.onboardingWelcomeBody,
           style: AppTypography.bodySmall(
-            color: Colors.white.withOpacity(0.7),
-          ).copyWith(height: 1.4),
+            color: Colors.white.withValues(alpha: 0.8),
+          ).copyWith(fontSize: 15, height: 1.5),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
@@ -120,9 +120,18 @@ Widget buildTooltip({
     padding: const EdgeInsets.all(24),
     margin: const EdgeInsets.symmetric(horizontal: 24),
     decoration: BoxDecoration(
-      color: const Color(0xFF232326),
+      color: const Color(0xFF101115),
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFF3A3A3C)),
+      border: Border.all(
+        color: AppColors.buttonPrimary.withValues(alpha: 0.15),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+          blurRadius: 20,
+          offset: const Offset(0, 4),
+        ),
+      ],
     ),
     child: Column(
       mainAxisSize: MainAxisSize.min,
@@ -131,6 +140,7 @@ Widget buildTooltip({
         Text(
           title,
           style: AppTypography.bodyLarge(color: Colors.white).copyWith(
+            fontSize: 19,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -138,18 +148,25 @@ Widget buildTooltip({
         Text(
           body,
           style: AppTypography.bodySmall(
-            color: Colors.white.withOpacity(0.7),
-          ).copyWith(height: 1.4),
+            color: Colors.white.withValues(alpha: 0.8),
+          ).copyWith(fontSize: 15, height: 1.5),
         ),
         const SizedBox(height: 16),
         Align(
           alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: onNext,
-            child: Text(
-              isLast ? l10n.onboardingGotIt : l10n.onboardingNext,
-              style: AppTypography.bodyLarge(color: AppColors.buttonPrimary)
-                  .copyWith(fontWeight: FontWeight.w600),
+          child: GestureDetector(
+            onTap: onNext,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Text(
+                isLast ? l10n.onboardingGotIt : l10n.onboardingNext,
+                style: AppTypography.bodyLarge(color: AppColors.buttonPrimary)
+                    .copyWith(fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         ),
@@ -751,16 +768,16 @@ class _OnboardingCompleteDialog extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 32),
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          color: const Color(0xFF161618),
+          color: const Color(0xFF101115),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppColors.buttonPrimary.withOpacity(0.3),
+            color: AppColors.buttonPrimary.withValues(alpha: 0.15),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.buttonPrimary.withOpacity(0.1),
-              blurRadius: 24,
+              color: AppColors.buttonPrimary.withValues(alpha: 0.08),
+              blurRadius: 20,
               offset: const Offset(0, 4),
             ),
           ],
@@ -773,15 +790,15 @@ class _OnboardingCompleteDialog extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               l10n.onboardingAllSetTitle,
-              style: AppTypography.pageTitle().copyWith(fontSize: 22, decoration: TextDecoration.none),
+              style: AppTypography.pageTitle().copyWith(fontSize: 24, decoration: TextDecoration.none),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               l10n.onboardingAllSetBody,
               style: AppTypography.bodySmall(
-                color: Colors.white.withOpacity(0.7),
-              ).copyWith(height: 1.4, decoration: TextDecoration.none),
+                color: Colors.white.withValues(alpha: 0.8),
+              ).copyWith(fontSize: 15, height: 1.5, decoration: TextDecoration.none),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -837,17 +854,16 @@ class IndividualTrackingTour {
         TargetFocus(
           identify: 'update_stack_btn',
           keyTarget: updateStackButtonKey,
-          shape: ShapeLightFocus.RRect,
-          radius: 60,
-          paddingFocus: 8,
+          shape: ShapeLightFocus.Circle,
+          paddingFocus: 6,
           contents: [
             TargetContent(
-              align: ContentAlign.top,
+              align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Update Stack',
-                  body:
-                      'Use this to manually update your chip count at any point without logging a full hand.',
+                  title: l10n.onboardingUpdateStackTitle,
+                  body: l10n.onboardingUpdateStackBody,
                   onNext: () => controller.next(),
                   context: context,
                 );
@@ -870,10 +886,10 @@ class IndividualTrackingTour {
             TargetContent(
               align: ContentAlign.top,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Log a Hand',
-                  body:
-                      'Tap here to set up the table and log a hand. Let\'s try it now!',
+                  title: l10n.onboardingLogAHandTitle,
+                  body: l10n.onboardingLogAHandBody,
                   onNext: () => controller.next(),
                   context: context,
                   isLast: true,
@@ -939,10 +955,10 @@ class QuickStackUpdateTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Mark Seat Open',
-                  body:
-                      'Tap the checkmark to toggle a seat between occupied and empty. Empty seats are skipped in the hand.',
+                  title: l10n.onboardingMarkSeatOpenTitle,
+                  body: l10n.onboardingMarkSeatOpenBody,
                   onNext: () => controller.next(),
                   context: context,
                 );
@@ -964,10 +980,10 @@ class QuickStackUpdateTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Dealer Button',
-                  body:
-                      'Tap "D" to assign the dealer button to any seat. This controls blind positions and action order.',
+                  title: l10n.onboardingDealerButtonQsuTitle,
+                  body: l10n.onboardingDealerButtonQsuBody,
                   onNext: () => controller.next(),
                   context: context,
                 );
@@ -990,10 +1006,10 @@ class QuickStackUpdateTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Assign a Player',
-                  body:
-                      'Tap a player\'s name to seat yourself or a saved opponent. Your stack is auto-applied when you seat yourself.',
+                  title: l10n.onboardingAssignPlayerTitle,
+                  body: l10n.onboardingAssignPlayerBody,
                   onNext: () => controller.next(),
                   context: context,
                 );
@@ -1016,10 +1032,10 @@ class QuickStackUpdateTour {
             TargetContent(
               align: ContentAlign.top,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'Adjust Stack',
-                  body:
-                      'Drag the slider to set an opponent\'s stack in BBs. Tap the stack value to type an exact amount.',
+                  title: l10n.onboardingAdjustStackTitle,
+                  body: l10n.onboardingAdjustStackBody,
                   onNext: () => controller.next(),
                   context: context,
                   isLast: true,
@@ -1075,10 +1091,10 @@ class IndividualStopSessionTour {
             TargetContent(
               align: ContentAlign.bottom,
               builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: 'End Your Session',
-                  body:
-                      'Tap the red Stop button to save your session results and return to the home screen.',
+                  title: l10n.onboardingEndSessionTitle,
+                  body: l10n.onboardingEndSessionBody,
                   onNext: () => controller.next(),
                   context: context,
                   isLast: true,

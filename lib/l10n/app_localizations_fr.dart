@@ -830,6 +830,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get handDiscardAndExit => 'Ignorer et quitter';
 
   @override
+  String get handInProgress => 'Hand in Progress';
+
+  @override
+  String get handDiscardCurrentHand =>
+      'You have an active hand being logged. Discard it and go back?';
+
+  @override
+  String get handDiscardHand => 'Discard Hand';
+
+  @override
   String get handAdjustStack => 'Ajuster le Stack';
 
   @override
@@ -7007,26 +7017,55 @@ class AppLocalizationsFr extends AppLocalizations {
   String get guidedOpenThePotTitle => 'Ouvrir le pot';
 
   @override
-  String get guidedBetOnceBody => 'Appuyez une fois pour miser.';
+  String get guidedBetOnceBody => 'Ce joueur mise.';
 
   @override
   String get guidedFoldTitle => 'Fold';
 
   @override
-  String get guidedFoldBody =>
-      'Ce joueur se couche. Dessinez une ligne pour se coucher.';
+  String get guidedFoldBody => 'Ce joueur se couche.';
 
   @override
   String get guidedCallTitle => 'Call';
 
   @override
-  String get guidedCallBody => 'Ce joueur suit. Dessinez un cercle.';
+  String get guidedCallBody => 'Ce joueur suit.';
 
   @override
   String get guidedCheckTitle => 'Check';
 
   @override
-  String get guidedCheckBody => 'Ce joueur check. Appuyez deux fois.';
+  String get guidedCheckBody => 'Ce joueur check.';
+
+  @override
+  String get guidedGestureFold => 'Glisser à gauche ←';
+
+  @override
+  String get guidedGestureCheck => 'Appuyer';
+
+  @override
+  String get guidedGestureCall => 'Appuyer';
+
+  @override
+  String get guidedGestureBet => 'Glisser vers le haut ↑';
+
+  @override
+  String get guidedGestureRaise => 'Glisser vers le haut ↑';
+
+  @override
+  String get guidedActionFold => 'Fold';
+
+  @override
+  String get guidedActionCheck => 'Check';
+
+  @override
+  String get guidedActionCall => 'Call';
+
+  @override
+  String get guidedActionBet => 'Bet';
+
+  @override
+  String get guidedActionRaise => 'Raise';
 
   @override
   String get guidedDealFlopTitle => 'Distribuer le Flop';

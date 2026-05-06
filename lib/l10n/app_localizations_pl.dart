@@ -818,6 +818,16 @@ class AppLocalizationsPl extends AppLocalizations {
   String get handDiscardAndExit => 'Odrzuć i wyjdź';
 
   @override
+  String get handInProgress => 'Hand in Progress';
+
+  @override
+  String get handDiscardCurrentHand =>
+      'You have an active hand being logged. Discard it and go back?';
+
+  @override
+  String get handDiscardHand => 'Discard Hand';
+
+  @override
   String get handAdjustStack => 'Dostosuj stack';
 
   @override
@@ -6955,25 +6965,55 @@ class AppLocalizationsPl extends AppLocalizations {
   String get guidedOpenThePotTitle => 'Otwórz pulę';
 
   @override
-  String get guidedBetOnceBody => 'Dotknij raz, aby postawić.';
+  String get guidedBetOnceBody => 'Ten gracz stawia.';
 
   @override
   String get guidedFoldTitle => 'Fold';
 
   @override
-  String get guidedFoldBody => 'Ten gracz pasuje. Narysuj linię, aby spasować.';
+  String get guidedFoldBody => 'Ten gracz pasuje.';
 
   @override
   String get guidedCallTitle => 'Call';
 
   @override
-  String get guidedCallBody => 'Ten gracz wywołuje. Narysuj okrąg.';
+  String get guidedCallBody => 'Ten gracz wywołuje.';
 
   @override
   String get guidedCheckTitle => 'Check';
 
   @override
-  String get guidedCheckBody => 'Ten gracz sprawdza. Dotknij dwukrotnie.';
+  String get guidedCheckBody => 'Ten gracz sprawdza.';
+
+  @override
+  String get guidedGestureFold => 'Przesuń w lewo ←';
+
+  @override
+  String get guidedGestureCheck => 'Dotknij';
+
+  @override
+  String get guidedGestureCall => 'Dotknij';
+
+  @override
+  String get guidedGestureBet => 'Przesuń w górę ↑';
+
+  @override
+  String get guidedGestureRaise => 'Przesuń w górę ↑';
+
+  @override
+  String get guidedActionFold => 'Fold';
+
+  @override
+  String get guidedActionCheck => 'Check';
+
+  @override
+  String get guidedActionCall => 'Call';
+
+  @override
+  String get guidedActionBet => 'Bet';
+
+  @override
+  String get guidedActionRaise => 'Raise';
 
   @override
   String get guidedDealFlopTitle => 'Rozdaj Flop';
