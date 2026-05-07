@@ -178,7 +178,7 @@ class GlobalBottomNavBar extends StatelessWidget {
           children: [
             SizedBox(
               width: 32,
-              height: 32,
+              height: 31,
               child: Center(
                 child: SvgPicture.asset(
                   iconPath,
