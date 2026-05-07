@@ -557,6 +557,7 @@ class _TableManagementBodyState extends State<_TableManagementBody> {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.done,
           autofocus: true,
           style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 18),
           decoration: InputDecoration(
@@ -836,6 +837,7 @@ class _AddPlayerBodyState extends State<_AddPlayerBody> {
             TextField(
               controller: _nameController,
               autofocus: true,
+              textInputAction: TextInputAction.done,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 16,
@@ -982,6 +984,7 @@ class _AddPlayerBodyState extends State<_AddPlayerBody> {
               controller: _stackController,
               focusNode: _stackFocus,
               keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 16,

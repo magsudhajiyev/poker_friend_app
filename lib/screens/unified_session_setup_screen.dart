@@ -460,6 +460,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                               const SizedBox(height: 12),
                               TextField(
                                 controller: _sessionNameController,
+                                textInputAction: TextInputAction.done,
                                 style: _textFieldStyle,
                                 decoration: _inputDecoration(
                                     l10n.setupSessionNameHint),
@@ -551,6 +552,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
                                         decimal: true),
+                                textInputAction: TextInputAction.done,
                                 style: _textFieldStyle,
                                 decoration:
                                     _inputDecoration(l10n.setupEnterAmount, prefixText: CurrencyService.prefixText, suffixText: CurrencyService.suffixText),
@@ -602,6 +604,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
                                             decimal: true),
+                                    textInputAction: TextInputAction.done,
                                     style: _textFieldStyle,
                                     decoration: InputDecoration(
                                       hintText: l10n.setupEnterChipStack,
@@ -1053,6 +1056,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.done,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 17,

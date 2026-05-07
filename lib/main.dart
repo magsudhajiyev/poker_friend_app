@@ -354,6 +354,13 @@ class PokerTrackerApp extends StatelessWidget {
             return null;
           },
           debugShowCheckedModeBanner: false,
+          builder: (context, child) {
+            // Global tap-to-dismiss keyboard on any screen
+            return GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: child,
+            );
+          },
         );
       },
     );

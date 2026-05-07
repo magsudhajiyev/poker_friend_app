@@ -408,6 +408,7 @@
   "opponentDetailDeleteOpponent": "Удалить оппонента",
   "opponentDetailStatistics": "Статистика",
   "opponentDetailNoStatisticsAvailable": "Статистика недоступна",
+  "opponentDetailStatsDisclaimer": "Статистика основана только на совместно сыгранных раздачах. VPIP не отслеживается, так как незафиксированные фолды исказили бы его.",
   "opponentDetailAggressionFreq": "Aggression %",
   "opponentDetailShowdownPercent": "Showdown %",
   "opponentDetailHandHistory": "История раздач",

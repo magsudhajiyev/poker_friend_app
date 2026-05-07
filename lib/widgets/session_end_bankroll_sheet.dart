@@ -193,6 +193,7 @@ class _CashBodyState extends State<_CashBody> {
                               signed: true,
                               decimal: true,
                             ),
+                            textInputAction: TextInputAction.done,
                             style: GoogleFonts.robotoMono(
                               fontSize: 28,
                               fontWeight: FontWeight.w600,
@@ -415,6 +416,7 @@ class _TournamentBodyState extends State<_TournamentBody> {
             child: TextField(
               controller: controller,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              textInputAction: TextInputAction.done,
               textAlign: TextAlign.right,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 17,

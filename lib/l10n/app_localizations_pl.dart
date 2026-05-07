@@ -1129,6 +1129,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get opponentDetailNoStatisticsAvailable => 'Brak dostepnych statystyk';
 
   @override
+  String get opponentDetailStatsDisclaimer =>
+      'Statystyki oparte sa tylko na wspolnie rozegranych rozdaniach. VPIP nie jest sledzony, poniewaz nieobserwowane foldy zawyzylyby go.';
+
+  @override
   String get opponentDetailAggressionFreq => 'Aggression %';
 
   @override

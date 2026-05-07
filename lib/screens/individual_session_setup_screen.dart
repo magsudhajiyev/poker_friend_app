@@ -230,6 +230,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                 SizedBox(height: 12),
                                 TextField(
                                   controller: _sessionNameController,
+                                  textInputAction: TextInputAction.done,
                                   style: GoogleFonts.ibmPlexSans(
                                     color: Colors.white,
                                     fontSize: 17,
@@ -355,6 +356,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                 TextField(
                                   controller: _buyInController,
                                   keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                  textInputAction: TextInputAction.done,
                                   style: GoogleFonts.ibmPlexSans(
                                     color: Colors.white,
                                     fontSize: 17,
@@ -475,6 +477,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
                                     TextField(
                                       controller: _startingStackController,
                                       keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                      textInputAction: TextInputAction.done,
                                       style: GoogleFonts.ibmPlexSans(
                                         color: Colors.white,
                                         fontSize: 17,
@@ -776,6 +779,7 @@ class _IndividualSessionSetupScreenState extends State<IndividualSessionSetupScr
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 17,

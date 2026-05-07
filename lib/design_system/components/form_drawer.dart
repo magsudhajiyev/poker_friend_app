@@ -72,10 +72,18 @@ class FormDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return Padding(
+    final topPadding = MediaQuery.of(context).padding.top;
+    final screenHeight = MediaQuery.of(context).size.height;
+    // Desired height but capped so drawer + keyboard don't exceed safe area
+    final desiredHeight = screenHeight * heightFraction;
+    final maxAvailable = screenHeight - bottomInset - topPadding;
+    final drawerHeight = desiredHeight > maxAvailable ? maxAvailable : desiredHeight;
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
-        height: MediaQuery.of(context).size.height * heightFraction,
+        height: drawerHeight,
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.only(
@@ -180,6 +188,7 @@ class FormDrawer extends StatelessWidget {
                   ),
           ),
         ],
+      ),
       ),
       ),
     );

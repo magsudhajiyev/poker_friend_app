@@ -408,6 +408,7 @@
   "opponentDetailDeleteOpponent": "Usun przeciwnika",
   "opponentDetailStatistics": "Statystyki",
   "opponentDetailNoStatisticsAvailable": "Brak dostepnych statystyk",
+  "opponentDetailStatsDisclaimer": "Statystyki oparte sa tylko na wspolnie rozegranych rozdaniach. VPIP nie jest sledzony, poniewaz nieobserwowane foldy zawyzylyby go.",
   "opponentDetailAggressionFreq": "Aggression %",
   "opponentDetailShowdownPercent": "Showdown %",
   "opponentDetailHandHistory": "Historia rozdan",

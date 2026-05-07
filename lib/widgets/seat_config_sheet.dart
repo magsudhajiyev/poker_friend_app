@@ -412,6 +412,7 @@ class _SeatConfigBodyState extends State<_SeatConfigBody> {
           const SizedBox(height: 6),
           TextField(
             controller: _nameController,
+            textInputAction: TextInputAction.done,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 17,
@@ -545,6 +546,7 @@ class _SeatConfigBodyState extends State<_SeatConfigBody> {
             controller: _stackController,
             keyboardType: const TextInputType.numberWithOptions(
                 decimal: true),
+            textInputAction: TextInputAction.done,
             style: GoogleFonts.ibmPlexSans(
               color: Colors.white,
               fontSize: 17,

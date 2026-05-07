@@ -281,6 +281,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
 
                   // Search bar — plain TextField, no outer Container
                   TextField(
+                    textInputAction: TextInputAction.done,
                     style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 15),
                     decoration: InputDecoration(
                       hintText: l10n.quickStackSearchHint,
@@ -620,6 +621,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
                       controller: controller,
                       autofocus: true,
                       keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
                       style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 17),
                       onChanged: (_) => setDialogState(() {}),
                       decoration: InputDecoration(

@@ -1137,6 +1137,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Sin estadísticas disponibles';
 
   @override
+  String get opponentDetailStatsDisclaimer =>
+      'Las estadísticas se basan solo en manos registradas juntos. VPIP no se rastrea ya que los folds no observados lo inflarían.';
+
+  @override
   String get opponentDetailAggressionFreq => 'Aggression %';
 
   @override

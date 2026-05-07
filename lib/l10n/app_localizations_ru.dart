@@ -1126,6 +1126,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get opponentDetailNoStatisticsAvailable => 'Статистика недоступна';
 
   @override
+  String get opponentDetailStatsDisclaimer =>
+      'Статистика основана только на совместно сыгранных раздачах. VPIP не отслеживается, так как незафиксированные фолды исказили бы его.';
+
+  @override
   String get opponentDetailAggressionFreq => 'Aggression %';
 
   @override

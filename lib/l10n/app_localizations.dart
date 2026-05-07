@@ -2154,6 +2154,12 @@ abstract class AppLocalizations {
   /// **'No statistics available'**
   String get opponentDetailNoStatisticsAvailable;
 
+  /// No description provided for @opponentDetailStatsDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats are based only on hands you logged together. VPIP is not tracked as unobserved folds would inflate it.'**
+  String get opponentDetailStatsDisclaimer;
+
   /// No description provided for @opponentDetailAggressionFreq.
   ///
   /// In en, this message translates to:

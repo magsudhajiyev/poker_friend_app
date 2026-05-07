@@ -701,7 +701,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
                   Padding(
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                      DateFormat('MMM dd, h:mm a').format(_opponent.lastSeenAt),
+                      DateFormat('MMM dd, yyyy').format(_opponent.lastSeenAt),
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         color: Color(0xFFE6E6E7),
@@ -939,6 +939,16 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
               fontWeight: FontWeight.w600,
               color: Colors.white,
               height: 1.2,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            l10n.opponentDetailStatsDisclaimer,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: Colors.white.withValues(alpha: 0.45),
+              height: 1.4,
             ),
           ),
           SizedBox(height: 16),

@@ -592,6 +592,7 @@
   "opponentDetailDeleteOpponent": "Excluir Oponente",
   "opponentDetailStatistics": "Estatisticas",
   "opponentDetailNoStatisticsAvailable": "Nenhuma estatistica disponivel",
+  "opponentDetailStatsDisclaimer": "As estatísticas são baseadas apenas nas mãos registradas juntos. VPIP não é rastreado pois folds não observados o inflariam.",
   "opponentDetailAggressionFreq": "Aggression %",
   "opponentDetailShowdownPercent": "Showdown %",
   "opponentDetailHandHistory": "Historico de Maos",

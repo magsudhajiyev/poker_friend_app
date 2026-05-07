@@ -665,7 +665,7 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        DateFormat('MMM dd, yyyy  HH:mm').format(startTime),
+                        DateFormat('MMM dd, yyyy').format(startTime),
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           color: Colors.white.withValues(alpha: 0.4),

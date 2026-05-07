@@ -28,16 +28,14 @@ class GlobalBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // The FAB overflows 30px above the navbar. We include that space in the
     // widget's own height so the Scaffold doesn't clip it.
+    const double navHeight = 14 + 51 + 18; // topPad + content + bottomPad
     return SizedBox(
-      height: 30 + 14 + 51 + 18, // fabOverflow + topPad + content + bottomPad
+      height: navHeight,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Navbar background — positioned at the bottom, below the FAB overflow area
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
+          // Navbar background
+          Positioned.fill(
             child: Container(
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -103,9 +101,9 @@ class GlobalBottomNavBar extends StatelessWidget {
             ),
           ),
 
-          // Center FAB button — top of the SizedBox, centered horizontally
+          // Center FAB button — overflows above the navbar
           Positioned(
-            top: 0,
+            top: -30,
             left: 0,
             right: 0,
             child: Center(

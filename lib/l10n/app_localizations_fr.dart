@@ -1143,6 +1143,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune statistique disponible';
 
   @override
+  String get opponentDetailStatsDisclaimer =>
+      'Les stats sont basées uniquement sur les mains jouées ensemble. Le VPIP n\'est pas suivi car les folds non observés le fausseraient.';
+
+  @override
   String get opponentDetailAggressionFreq => 'Aggression %';
 
   @override

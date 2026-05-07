@@ -1056,6 +1056,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                     padding: EdgeInsets.fromLTRB(10, 10, 8, 10),
                     child: TextField(
                       controller: nameController,
+                      textInputAction: TextInputAction.done,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         color: Colors.white,
