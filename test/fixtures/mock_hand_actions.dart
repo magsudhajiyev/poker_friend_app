@@ -87,25 +87,28 @@ class MockHandActions {
     return actions;
   }
 
-  /// Standard 3-bet pot: P3 raises, P4 3-bets
+  /// Standard 3-bet pot: P3 opens (1st), P4 raises (2nd), P5 3-bets (3rd)
   static List<Map<String, dynamic>> threeBetPot({
-    int raiserSeat = 3,
-    int threeBetterSeat = 4,
+    int openerSeat = 3,
+    int raiserSeat = 4,
+    int threeBetterSeat = 5,
   }) {
     return [
       ...blindsOnly(),
-      raise(raiserSeat, 6.0, position: 'UTG'),
-      raise(threeBetterSeat, 18.0, position: 'MP'),
+      raise(openerSeat, 6.0, position: 'UTG'),
+      raise(raiserSeat, 18.0, position: 'MP'),
+      raise(threeBetterSeat, 50.0, position: 'CO'),
     ];
   }
 
-  /// Hero faces 3-bet: Hero raises, villain 3-bets
+  /// Hero faces 3-bet: P3 opens (1st), Hero raises (2nd), P3 3-bets (3rd)
   static List<Map<String, dynamic>> heroFaces3Bet({required int heroSeat}) {
     final villainSeat = heroSeat == 3 ? 4 : 3;
     return [
       ...blindsOnly(),
-      raise(heroSeat, 6.0),
-      raise(villainSeat, 18.0),
+      raise(villainSeat, 6.0),   // 1st raise (open)
+      raise(heroSeat, 18.0),    // 2nd raise (hero)
+      raise(villainSeat, 50.0), // 3rd raise = 3-bet
     ];
   }
 
@@ -114,9 +117,10 @@ class MockHandActions {
     final villainSeat = heroSeat == 3 ? 4 : 3;
     return [
       ...blindsOnly(),
-      raise(heroSeat, 6.0),
-      raise(villainSeat, 18.0),
-      fold(heroSeat),
+      raise(villainSeat, 6.0),   // 1st raise
+      raise(heroSeat, 18.0),    // 2nd raise
+      raise(villainSeat, 50.0), // 3rd raise = 3-bet
+      fold(heroSeat),            // Hero folds to 3-bet
     ];
   }
 
@@ -125,9 +129,10 @@ class MockHandActions {
     final villainSeat = heroSeat == 3 ? 4 : 3;
     return [
       ...blindsOnly(),
-      raise(heroSeat, 6.0),
-      raise(villainSeat, 18.0),
-      call(heroSeat, 12.0),
+      raise(villainSeat, 6.0),   // 1st raise
+      raise(heroSeat, 18.0),    // 2nd raise
+      raise(villainSeat, 50.0), // 3rd raise = 3-bet
+      call(heroSeat, 32.0),     // Hero calls the 3-bet
     ];
   }
 

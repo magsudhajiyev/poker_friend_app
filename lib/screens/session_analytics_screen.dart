@@ -7,7 +7,7 @@ import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/dealer_service.dart';
 import 'session_hands_screen.dart';
-import 'hand_actions_screen.dart';
+import 'hand_actions_page_view.dart';
 import 'stack_chart_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../services/session_export_service.dart';
@@ -1050,10 +1050,15 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
 
     setState(() => _touchedSpotIndex = null);
     final ourSeat = widget.sessionData['ourSeatNumber'] as int?;
+    final index = _hands.indexOf(hand);
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => HandActionsScreen(hand: hand, ourSeat: ourSeat),
+        builder: (context) => HandActionsPageView(
+          hands: _hands,
+          initialIndex: index < 0 ? 0 : index,
+          ourSeat: ourSeat,
+        ),
       ),
     );
   }

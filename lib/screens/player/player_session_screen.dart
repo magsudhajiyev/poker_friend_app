@@ -14,7 +14,7 @@ import '../../utils/number_formatter.dart';
 import '../../widgets/hole_cards_dialog.dart';
 import '../../models/club_event.dart';
 import '../../l10n/app_localizations.dart';
-import '../hand_actions_screen.dart';
+import '../hand_actions_page_view.dart';
 import '../spectator/event_rankings_screen.dart';
 
 /// Player session screen for participating in dealer-assisted sessions.
@@ -1836,11 +1836,15 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
     if (!mounted) return;
 
+    final hands = List<Map<String, dynamic>>.from(_handHistory);
+    final index = hands.indexWhere((h) => h['id'] == handWithPlayerData['id']);
+    if (index >= 0) hands[index] = handWithPlayerData;
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => HandActionsScreen(
-          hand: handWithPlayerData,
+        builder: (context) => HandActionsPageView(
+          hands: hands,
+          initialIndex: index < 0 ? 0 : index,
           ourSeat: widget.seatNumber,
         ),
       ),

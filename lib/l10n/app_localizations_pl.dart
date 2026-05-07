@@ -1129,7 +1129,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get opponentDetailNoStatisticsAvailable => 'Brak dostepnych statystyk';
 
   @override
-  String get opponentDetailAggressionFreq => 'Czest. agresji';
+  String get opponentDetailAggressionFreq => 'Aggression %';
 
   @override
   String get opponentDetailShowdownPercent => 'Showdown %';

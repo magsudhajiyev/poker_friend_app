@@ -243,7 +243,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.asset(
-                  'assets/logo.png',
+                  'assets/logo_chat.png',
                   width: 28,
                   height: 28,
                 ),

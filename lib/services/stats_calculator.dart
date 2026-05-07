@@ -33,19 +33,17 @@ class StatsCalculator {
     return type == 'bet' || type == 'raise' || type == 'all-in';
   }
 
-  /// Detect if a player made a 3-bet (re-raised AFTER seeing an opponent's raise)
+  /// Detect if a player made a 3-bet (the 3rd raise preflop).
   ///
-  /// A 3-bet is when:
-  /// 1. An opponent raises preflop FIRST
-  /// 2. The player then raises (re-raises) after seeing that raise
+  /// In poker, preflop raises are counted as:
+  ///   1st raise = open raise
+  ///   2nd raise = re-raise
+  ///   3rd raise = 3-bet
+  ///   4th raise = 4-bet, etc.
   ///
-  /// Important: If the player was the ORIGINAL raiser and then raises again
-  /// after opponent's 3-bet, that's a 4-bet, NOT a 3-bet.
-  ///
-  /// A player can only make ONE 3-bet per hand (by definition).
+  /// A player 3-bet if they made the raise that was the 3rd raise in the hand.
   static bool didPlayerThreeBet(List<Map<String, dynamic>> actions, int playerSeatNumber) {
-    bool sawOpponentRaise = false;
-    bool playerAlreadyRaised = false;
+    int raiseCount = 0;
 
     for (final action in actions) {
       final street = action['street']?.toString().toLowerCase() ?? '';
@@ -54,54 +52,31 @@ class StatsCalculator {
       final playerId = action['player'] as int?;
       final actionType = action['action']?.toString().toLowerCase() ?? '';
 
-      // Only look at raise actions (includes all-in)
       if (!isRaiseAction(actionType)) continue;
 
-      if (playerId == playerSeatNumber) {
-        if (sawOpponentRaise && !playerAlreadyRaised) {
-          // Player raised AFTER seeing opponent raise, and hadn't raised before = 3-bet
-          return true;
-        }
-        // Track that player has raised (could be open-raise or 4-bet+)
-        playerAlreadyRaised = true;
-      } else {
-        // Opponent raised
-        sawOpponentRaise = true;
+      raiseCount++;
+
+      // The 3rd raise is the 3-bet
+      if (raiseCount == 3 && playerId == playerSeatNumber) {
+        return true;
       }
+
+      // Past 3rd raise, no point continuing
+      if (raiseCount >= 3) break;
     }
     return false;
   }
 
-  /// Check if player had opportunity to 3-bet (faced a raise pre-flop)
+  /// Check if player had opportunity to 3-bet (exactly 2 raises already
+  /// happened in the hand, and player can make the 3rd).
+  ///
+  /// This covers two scenarios:
+  /// 1. Player hasn't raised yet — 2 raises by others, player can 3-bet
+  /// 2. Player opened (1st raise) — someone else raised (2nd), player can 3-bet
+  ///
+  /// Only counts when totalRaiseCount == 2 (not 3+, which would be 4-bet opp).
   static bool hadThreeBetOpportunity(List<Map<String, dynamic>> actions, int playerSeatNumber) {
-    bool sawRaiseBeforePlayerActs = false;
-    bool playerActedAfterRaise = false;
-
-    for (final action in actions) {
-      final street = action['street']?.toString().toLowerCase() ?? '';
-      if (street != 'preflop') continue;
-
-      final playerId = action['player'] as int?;
-      final actionType = action['action']?.toString().toLowerCase() ?? '';
-
-      if (isRaiseAction(actionType) && playerId != playerSeatNumber) {
-        sawRaiseBeforePlayerActs = true;
-      }
-
-      // If player acted after seeing a raise, they had 3-bet opportunity
-      if (playerId == playerSeatNumber && sawRaiseBeforePlayerActs) {
-        playerActedAfterRaise = true;
-        break;
-      }
-    }
-
-    return playerActedAfterRaise;
-  }
-
-  /// Check if player raised pre-flop and then faced a 3-bet
-  static bool facedThreeBet(List<Map<String, dynamic>> actions, int playerSeatNumber) {
-    bool playerRaised = false;
-    bool facedReRaise = false;
+    int totalRaiseCount = 0;
 
     for (final action in actions) {
       final street = action['street']?.toString().toLowerCase() ?? '';
@@ -111,23 +86,31 @@ class StatsCalculator {
       final actionType = action['action']?.toString().toLowerCase() ?? '';
 
       if (isRaiseAction(actionType)) {
-        if (playerId == playerSeatNumber) {
-          playerRaised = true;
-        } else if (playerRaised) {
-          // Someone re-raised after player raised
-          facedReRaise = true;
-          break;
+        // If this IS the player's action AND exactly 2 raises already happened,
+        // they had the opportunity and took it (3-bet)
+        if (playerId == playerSeatNumber && totalRaiseCount == 2) {
+          return true;
+        }
+        totalRaiseCount++;
+      } else if (playerId == playerSeatNumber) {
+        // Non-raise action by player — if exactly 2 raises already happened,
+        // they had 3-bet opportunity but declined (called/folded)
+        if (totalRaiseCount == 2) {
+          return true;
         }
       }
     }
 
-    return facedReRaise;
+    return false;
   }
 
-  /// Check if player folded to a 3-bet (raised, faced re-raise, then folded)
-  static bool didFoldTo3Bet(List<Map<String, dynamic>> actions, int playerSeatNumber) {
+  /// Check if player raised pre-flop and then faced a 3-bet (the 3rd raise).
+  ///
+  /// The player must have raised at some point, and then the 3rd raise
+  /// in the hand happened (by someone else), leaving the player to act.
+  static bool facedThreeBet(List<Map<String, dynamic>> actions, int playerSeatNumber) {
+    int raiseCount = 0;
     bool playerRaised = false;
-    bool facedReRaise = false;
 
     for (final action in actions) {
       final street = action['street']?.toString().toLowerCase() ?? '';
@@ -137,15 +120,44 @@ class StatsCalculator {
       final actionType = action['action']?.toString().toLowerCase() ?? '';
 
       if (isRaiseAction(actionType)) {
+        raiseCount++;
         if (playerId == playerSeatNumber) {
           playerRaised = true;
-        } else if (playerRaised) {
-          facedReRaise = true;
+        } else if (playerRaised && raiseCount >= 3) {
+          // The 3rd+ raise happened after player raised
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /// Check if player folded to a 3-bet (raised earlier, then the 3rd raise
+  /// happened, and the player folded).
+  static bool didFoldTo3Bet(List<Map<String, dynamic>> actions, int playerSeatNumber) {
+    int raiseCount = 0;
+    bool playerRaised = false;
+    bool faced3Bet = false;
+
+    for (final action in actions) {
+      final street = action['street']?.toString().toLowerCase() ?? '';
+      if (street != 'preflop') continue;
+
+      final playerId = action['player'] as int?;
+      final actionType = action['action']?.toString().toLowerCase() ?? '';
+
+      if (isRaiseAction(actionType)) {
+        raiseCount++;
+        if (playerId == playerSeatNumber) {
+          playerRaised = true;
+        } else if (playerRaised && raiseCount >= 3) {
+          faced3Bet = true;
         }
       }
 
       // Check if player folded after facing 3-bet
-      if (actionType == 'fold' && playerId == playerSeatNumber && facedReRaise) {
+      if (actionType == 'fold' && playerId == playerSeatNumber && faced3Bet) {
         return true;
       }
     }
@@ -354,7 +366,9 @@ class StatsCalculator {
     return foldCount > 0 && !anyNonFoldPreflop;
   }
 
-  /// Check if player is in Big Blind position
+  /// Check if player is in Big Blind position.
+  /// Also checks other players' actions for BB position info (handles walk
+  /// hands where BB never acts and has no action in the list).
   static bool isBigBlind(List<Map<String, dynamic>> actions, int playerSeatNumber) {
     for (final action in actions) {
       final playerId = action['player'] as int?;
@@ -364,12 +378,28 @@ class StatsCalculator {
         return true;
       }
 
-      // Also check position field
+      // Check position field on this player's actions
       final position = action['playerPosition']?.toString().toUpperCase() ?? '';
       if (playerId == playerSeatNumber && position == 'BB') {
         return true;
       }
     }
     return false;
+  }
+
+  /// Find the BB seat number from action list.
+  /// Useful for walk hands where BB may not have any actions recorded.
+  static int? findBigBlindSeat(List<Map<String, dynamic>> actions) {
+    for (final action in actions) {
+      final actionType = action['action']?.toString().toLowerCase() ?? '';
+      if (actionType == 'big blind') {
+        return action['player'] as int?;
+      }
+      final position = action['playerPosition']?.toString().toUpperCase() ?? '';
+      if (position == 'BB') {
+        return action['player'] as int?;
+      }
+    }
+    return null;
   }
 }

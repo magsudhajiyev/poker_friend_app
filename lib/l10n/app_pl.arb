@@ -408,7 +408,7 @@
   "opponentDetailDeleteOpponent": "Usun przeciwnika",
   "opponentDetailStatistics": "Statystyki",
   "opponentDetailNoStatisticsAvailable": "Brak dostepnych statystyk",
-  "opponentDetailAggressionFreq": "Czest. agresji",
+  "opponentDetailAggressionFreq": "Aggression %",
   "opponentDetailShowdownPercent": "Showdown %",
   "opponentDetailHandHistory": "Historia rozdan",
   "opponentDetailViewAllHands": "Zobacz wszystkie rozdania z tym przeciwnikiem",

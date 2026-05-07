@@ -122,7 +122,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 children: [
                   // Logo
                   Image.asset(
-                    'assets/logo.png',
+                    'assets/logo_chat.png',
                     width: 100,
                     height: 100,
                   ),

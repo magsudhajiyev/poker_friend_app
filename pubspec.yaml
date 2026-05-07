@@ -69,7 +69,7 @@ flutter:
     - icons/
     - icons/flat_icons/
     - icons/figma_icons/
-    - assets/logo.png
+    - assets/logo_chat.png
 
 flutter_launcher_icons:
   android: true
@@ -77,13 +77,13 @@ flutter_launcher_icons:
   remove_alpha_ios: true
   web:
     generate: true
-    image_path: "assets/logo.png"
+    image_path: "assets/logo_chat.png"
   windows:
     generate: true
-    image_path: "assets/logo.png"
+    image_path: "assets/logo_chat.png"
   macos:
     generate: true
-    image_path: "assets/logo.png"
-  image_path: "assets/logo.png"
+    image_path: "assets/logo_chat.png"
+  image_path: "assets/logo_chat.png"
   min_sdk_android: 21
 

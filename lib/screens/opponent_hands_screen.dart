@@ -6,7 +6,7 @@ import '../models/opponent.dart';
 import '../services/local_storage_service.dart';
 import '../services/firebase_service.dart';
 import '../utils/poker_positions.dart';
-import 'hand_actions_screen.dart';
+import 'hand_actions_page_view.dart';
 import '../services/app_data_cache.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../services/currency_service.dart';
@@ -609,10 +609,15 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
 
     return GestureDetector(
       onTap: () {
+        final allHands = _allFilteredHands ?? [hand];
+        final index = allHands.indexOf(hand);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => HandActionsScreen(hand: hand),
+            builder: (context) => HandActionsPageView(
+              hands: allHands,
+              initialIndex: index < 0 ? 0 : index,
+            ),
           ),
         );
       },

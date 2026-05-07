@@ -912,6 +912,9 @@ class FirebaseService {
     double? totalBuyIn,
     List<Map<String, dynamic>>? stackHistory,
     double? averageGrowth,
+    int? finishedPlace,
+    int? fieldSize,
+    double? prizeWon,
   }) async {
     try {
       final userId = AuthService.userId;
@@ -953,6 +956,15 @@ class FirebaseService {
       }
       if (averageGrowth != null) {
         updateData['averageGrowth'] = averageGrowth;
+      }
+      if (finishedPlace != null) {
+        updateData['finishedPlace'] = finishedPlace;
+      }
+      if (fieldSize != null) {
+        updateData['fieldSize'] = fieldSize;
+      }
+      if (prizeWon != null) {
+        updateData['prizeWon'] = prizeWon;
       }
 
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
@@ -1077,6 +1089,9 @@ class FirebaseService {
       // Group actions by opponent ID to batch updates
       Map<String, Map<String, int>> opponentDeltas = {};
       Set<String> handParticipants = {}; // Track which opponents participated in this hand
+      // Per-hand boolean flags for VPIP/PFR (must be 0 or 1 per hand, not per action)
+      Map<String, bool> opponentDidVpip = {};
+      Map<String, bool> opponentDidPfr = {};
 
       // Process each action to determine stat deltas
       for (final action in actions) {
@@ -1143,29 +1158,46 @@ class FirebaseService {
           case 'call':
             deltas['callDelta'] = (deltas['callDelta'] ?? 0) + 1;
             deltas['passiveDelta'] = (deltas['passiveDelta'] ?? 0) + 1;
-            // VPIP if putting money in voluntarily (not blind)
-            if (!StatsCalculator.isBlindAction(action)) {
-              deltas['vpipDelta'] = (deltas['vpipDelta'] ?? 0) + 1;
+            // VPIP: only preflop voluntary actions, once per hand
+            if (isPreflop && !StatsCalculator.isBlindAction(action)) {
+              opponentDidVpip[opponentId] = true;
             }
             break;
           case 'bet':
             deltas['betDelta'] = (deltas['betDelta'] ?? 0) + 1;
             deltas['aggressionDelta'] = (deltas['aggressionDelta'] ?? 0) + 1;
-            deltas['vpipDelta'] = (deltas['vpipDelta'] ?? 0) + 1;
+            // VPIP: only preflop, once per hand
+            if (isPreflop) {
+              opponentDidVpip[opponentId] = true;
+              opponentDidPfr[opponentId] = true;
+            }
             break;
           case 'raise':
+          case 'all-in':
             deltas['raiseDelta'] = (deltas['raiseDelta'] ?? 0) + 1;
             deltas['aggressionDelta'] = (deltas['aggressionDelta'] ?? 0) + 1;
-            deltas['vpipDelta'] = (deltas['vpipDelta'] ?? 0) + 1;
-            // PFR if preflop raise
+            // VPIP + PFR: only preflop, once per hand
             if (isPreflop) {
-              deltas['pfrDelta'] = (deltas['pfrDelta'] ?? 0) + 1;
+              opponentDidVpip[opponentId] = true;
+              opponentDidPfr[opponentId] = true;
             }
             break;
         }
 
         // Note: 3-bet detection is done per-hand, not per-action
         // We'll check this after processing all actions for this opponent
+      }
+
+      // Apply per-hand VPIP/PFR flags to deltas (0 or 1 per hand)
+      for (final opponentId in handParticipants) {
+        if (opponentDeltas.containsKey(opponentId)) {
+          if (opponentDidVpip[opponentId] == true) {
+            opponentDeltas[opponentId]!['vpipDelta'] = 1;
+          }
+          if (opponentDidPfr[opponentId] == true) {
+            opponentDeltas[opponentId]!['pfrDelta'] = 1;
+          }
+        }
       }
 
       // Set hand delta to 1 for each opponent that participated in this hand
@@ -1254,20 +1286,37 @@ class FirebaseService {
       }
 
       // Walk Detection: Everyone folded to BB
+      // In walks, the BB may not have any actions recorded (hand ends before
+      // they act), so we use findBigBlindSeat to identify them from blind posts.
       final isWalk = StatsCalculator.isWalkHand(actions);
       if (isWalk) {
-        // Find BB player and increment their walks count
-        for (final opponentId in handParticipants) {
-          final opponent = savedOpponents.where((o) => o.id == opponentId).firstOrNull;
-          if (opponent == null) continue;
+        final bbSeat = StatsCalculator.findBigBlindSeat(actions);
+        if (bbSeat != null) {
+          // Find opponent at BB seat
+          final bbName = playerNames[bbSeat];
+          if (bbName != null && savedOpponentNames.contains(bbName)) {
+            final bbOpponent = savedOpponents.firstWhere((o) => o.name == bbName);
+            final bbId = bbOpponent.id;
 
-          final opponentSeat = playerNames.entries
-              .where((e) => e.value == opponent.name)
-              .map((e) => e.key)
-              .firstOrNull;
-
-          if (opponentSeat != null && StatsCalculator.isBigBlind(actions, opponentSeat)) {
-            opponentDeltas[opponentId]!['walksCountDelta'] = 1;
+            // Ensure opponent has deltas initialized and is in handParticipants
+            // (BB may not appear in actions in a walk hand)
+            if (!handParticipants.contains(bbId)) {
+              handParticipants.add(bbId);
+              opponentDeltas[bbId] ??= {
+                'handsDelta': 0, 'vpipDelta': 0, 'pfrDelta': 0,
+                'aggressionDelta': 0, 'passiveDelta': 0,
+                'foldDelta': 0, 'checkDelta': 0, 'callDelta': 0,
+                'betDelta': 0, 'raiseDelta': 0,
+                'threeBetDelta': 0, 'cbetDelta': 0, 'fold3betDelta': 0,
+                'walksCountDelta': 0, 'threeBetOpportunityDelta': 0,
+                'facing3BetCountDelta': 0, 'cbetOpportunityDelta': 0,
+                'stealCountDelta': 0, 'stealOpportunityDelta': 0,
+                'checkRaiseFlopCountDelta': 0, 'checkRaiseFlopOpportunityDelta': 0,
+                'showdownDelta': 0,
+              };
+              opponentDeltas[bbId]!['handsDelta'] = 1;
+            }
+            opponentDeltas[bbId]!['walksCountDelta'] = 1;
           }
         }
       }
@@ -1351,20 +1400,20 @@ class FirebaseService {
         if (playerId != heroSeatNumber) continue;
 
         // didPlay = any voluntary action (not just blind posts)
-        // This includes: call, bet, raise, check on any street
-        if (actionType == 'call' || actionType == 'bet' || actionType == 'raise' || actionType == 'check') {
+        // This includes: call, bet, raise, all-in, check on any street
+        if (actionType == 'call' || actionType == 'bet' || actionType == 'raise' || actionType == 'all-in' || actionType == 'check') {
           didPlay = true;
         }
 
         // VPIP and PFR only apply to preflop
         if (street == 'preflop') {
-          if (actionType == 'bet' || actionType == 'call' || actionType == 'raise') {
+          if (actionType == 'bet' || actionType == 'call' || actionType == 'raise' || actionType == 'all-in') {
             // VPIP = voluntarily put money in (excludes blind posts)
             if (!StatsCalculator.isBlindAction(action)) {
               didVpip = true;
             }
             // PFR = preflop raise
-            if (actionType == 'bet' || actionType == 'raise') {
+            if (actionType == 'bet' || actionType == 'raise' || actionType == 'all-in') {
               didPfr = true;
             }
           }

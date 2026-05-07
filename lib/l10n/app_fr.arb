@@ -592,7 +592,7 @@
   "opponentDetailDeleteOpponent": "Supprimer l'adversaire",
   "opponentDetailStatistics": "Statistiques",
   "opponentDetailNoStatisticsAvailable": "Aucune statistique disponible",
-  "opponentDetailAggressionFreq": "Fréq. d'agression",
+  "opponentDetailAggressionFreq": "Aggression %",
   "opponentDetailShowdownPercent": "% Showdown",
   "opponentDetailHandHistory": "Historique des mains",
   "opponentDetailViewAllHands": "Voir toutes les mains jouées avec cet adversaire",

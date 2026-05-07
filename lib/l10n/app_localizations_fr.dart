@@ -1143,7 +1143,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune statistique disponible';
 
   @override
-  String get opponentDetailAggressionFreq => 'Fréq. d\'agression';
+  String get opponentDetailAggressionFreq => 'Aggression %';
 
   @override
   String get opponentDetailShowdownPercent => '% Showdown';

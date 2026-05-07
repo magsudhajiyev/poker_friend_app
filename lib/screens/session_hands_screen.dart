@@ -8,7 +8,7 @@ import '../services/dealer_service.dart';
 import '../services/auth_service.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
-import 'hand_actions_screen.dart';
+import 'hand_actions_page_view.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 
 class SessionHandsScreen extends StatefulWidget {
@@ -287,7 +287,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Image.asset(
-                  'assets/logo.png',
+                  'assets/logo_chat.png',
                   width: 60,
                   height: 60,
                   fit: BoxFit.cover,
@@ -573,10 +573,15 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
 
   void _navigateToHandActions(Map<String, dynamic> hand) async {
     final ourSeat = widget.session['ourSeat'] as int?;
+    final index = hands.indexOf(hand);
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => HandActionsScreen(hand: hand, ourSeat: ourSeat),
+        builder: (context) => HandActionsPageView(
+          hands: hands,
+          initialIndex: index < 0 ? 0 : index,
+          ourSeat: ourSeat,
+        ),
       ),
     );
     // Refresh data when returning (in case star was toggled)

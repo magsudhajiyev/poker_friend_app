@@ -538,7 +538,7 @@
   "opponentDetailDeleteOpponent": "Delete Opponent",
   "opponentDetailStatistics": "Statistics",
   "opponentDetailNoStatisticsAvailable": "No statistics available",
-  "opponentDetailAggressionFreq": "Aggression Freq",
+  "opponentDetailAggressionFreq": "Aggression %",
   "opponentDetailShowdownPercent": "Showdown %",
   "opponentDetailHandHistory": "Hand History",
   "opponentDetailViewAllHands": "View all hands played with this opponent",

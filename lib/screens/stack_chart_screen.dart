@@ -5,7 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../l10n/app_localizations.dart';
 import '../services/currency_service.dart';
 import '../models/game_types.dart';
-import 'hand_actions_screen.dart';
+import 'hand_actions_page_view.dart';
 
 /// Full-screen landscape stack chart with tap-to-view hand details
 class StackChartScreen extends StatefulWidget {
@@ -151,10 +151,15 @@ class _StackChartScreenState extends State<StackChartScreen> {
     // Restore portrait for hand details screen
     _restorePortraitMode();
     final ourSeat = widget.sessionData['ourSeatNumber'] as int?;
+    final index = widget.hands.indexOf(hand);
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => HandActionsScreen(hand: hand, ourSeat: ourSeat),
+        builder: (context) => HandActionsPageView(
+          hands: widget.hands,
+          initialIndex: index < 0 ? 0 : index,
+          ourSeat: ourSeat,
+        ),
       ),
     ).then((_) {
       // Re-apply landscape when returning from hand details

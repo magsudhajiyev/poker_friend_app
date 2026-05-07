@@ -408,7 +408,7 @@
   "opponentDetailDeleteOpponent": "Удалить оппонента",
   "opponentDetailStatistics": "Статистика",
   "opponentDetailNoStatisticsAvailable": "Статистика недоступна",
-  "opponentDetailAggressionFreq": "Aggression Freq",
+  "opponentDetailAggressionFreq": "Aggression %",
   "opponentDetailShowdownPercent": "Showdown %",
   "opponentDetailHandHistory": "История раздач",
   "opponentDetailViewAllHands": "Просмотреть все раздачи с этим оппонентом",

@@ -1125,7 +1125,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opponentDetailNoStatisticsAvailable => 'No statistics available';
 
   @override
-  String get opponentDetailAggressionFreq => 'Aggression Freq';
+  String get opponentDetailAggressionFreq => 'Aggression %';
 
   @override
   String get opponentDetailShowdownPercent => 'Showdown %';

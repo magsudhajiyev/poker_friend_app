@@ -2157,7 +2157,7 @@ abstract class AppLocalizations {
   /// No description provided for @opponentDetailAggressionFreq.
   ///
   /// In en, this message translates to:
-  /// **'Aggression Freq'**
+  /// **'Aggression %'**
   String get opponentDetailAggressionFreq;
 
   /// No description provided for @opponentDetailShowdownPercent.
