@@ -3726,6 +3726,12 @@ abstract class AppLocalizations {
   /// **'Final Stack'**
   String get sessionAnalyticsFinalStack;
 
+  /// No description provided for @sessionAnalyticsCashout.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashout'**
+  String get sessionAnalyticsCashout;
+
   /// No description provided for @sessionAnalyticsProfitLoss.
   ///
   /// In en, this message translates to:
@@ -3738,6 +3744,18 @@ abstract class AppLocalizations {
   /// **'Avg Growth'**
   String get sessionAnalyticsAvgGrowth;
 
+  /// No description provided for @sessionAnalyticsHourlyRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly Rate'**
+  String get sessionAnalyticsHourlyRate;
+
+  /// No description provided for @sessionAnalyticsFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get sessionAnalyticsFinished;
+
   /// No description provided for @sessionAnalyticsDuration.
   ///
   /// In en, this message translates to:
@@ -3749,6 +3767,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rebuys'**
   String get sessionAnalyticsRebuys;
+
+  /// No description provided for @sessionAnalyticsAddons.
+  ///
+  /// In en, this message translates to:
+  /// **'Add-ons'**
+  String get sessionAnalyticsAddons;
 
   /// No description provided for @sessionAnalyticsStackChart.
   ///

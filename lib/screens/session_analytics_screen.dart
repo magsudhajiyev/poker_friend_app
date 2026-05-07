@@ -381,6 +381,41 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     return AppLocalizations.of(context).commonNotAvailable;
   }
 
+  String _formatHourlyRate() {
+    final startTime = widget.sessionData['startTime'];
+    final endTime = widget.sessionData['endTime'];
+    if (startTime == null || endTime == null) return AppLocalizations.of(context).commonNotAvailable;
+    try {
+      final start = DateTime.parse(startTime);
+      final end = DateTime.parse(endTime);
+      final minutes = end.difference(start).inMinutes;
+      if (minutes < 60) return AppLocalizations.of(context).commonNotAvailable;
+      final hourly = _profitLoss / (minutes / 60);
+      final prefix = hourly >= 0 ? '+' : '';
+      return '$prefix${CurrencyService.formatCash(hourly)}/h';
+    } catch (e) {
+      return AppLocalizations.of(context).commonNotAvailable;
+    }
+  }
+
+  String _formatFinished() {
+    final place = widget.sessionData['finishedPlace'];
+    final field = widget.sessionData['fieldSize'];
+    if (place != null && field != null) {
+      return '$place / $field';
+    } else if (place != null) {
+      return '$place';
+    }
+    return AppLocalizations.of(context).commonNotAvailable;
+  }
+
+  double _getTournamentCashout() {
+    final prize = widget.sessionData['prizeWon']?.toDouble();
+    if (prize != null && prize > 0) return prize;
+    // Fallback: use final stack for sessions saved before prizeWon was tracked
+    return _finalStack;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -580,38 +615,52 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             children: [
               Expanded(child: _buildMetricTile(l10n.sessionAnalyticsTotalInvested, _formatTotalInvested(_totalInvested))),
               const SizedBox(width: 10),
-              Expanded(child: _buildMetricTile(l10n.sessionAnalyticsFinalStack, _formatCurrency(_finalStack))),
+              Expanded(child: _buildMetricTile(
+                l10n.sessionAnalyticsCashout,
+                _isCashGame()
+                  ? _formatCurrency(_finalStack)
+                  : CurrencyService.formatCash(_getTournamentCashout()),
+              )),
             ],
           ),
           const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
-                child: _buildMetricTile(
-                  _isCashGame() ? l10n.sessionAnalyticsProfitLoss : l10n.sessionAnalyticsAvgGrowth,
-                  _isCashGame()
-                      ? '${_profitLoss >= 0 ? '+' : ''}${_formatCurrency(_profitLoss)}'
-                      : '${_profitLoss >= 0 ? '+' : ''}${_profitLoss.toStringAsFixed(2)}',
-                  valueColor: _profitLoss >= 0 ? const Color(0xFF89F1EC) : const Color(0xFFFF6B6B),
-                ),
+                child: _isCashGame()
+                  ? _buildMetricTile(
+                      l10n.sessionAnalyticsHourlyRate,
+                      _formatHourlyRate(),
+                    )
+                  : _buildMetricTile(
+                      l10n.sessionAnalyticsFinished,
+                      _formatFinished(),
+                    ),
               ),
               const SizedBox(width: 10),
-              Expanded(child: _buildMetricTile(l10n.sessionAnalyticsDuration, _formatDuration())),
+              Expanded(child: Builder(builder: (_) {
+                final pl = _isCashGame() ? _profitLoss : _getTournamentCashout() - _totalInvested;
+                return _buildMetricTile(
+                  l10n.sessionAnalyticsProfitLoss,
+                  '${pl >= 0 ? '+' : ''}${CurrencyService.formatCash(pl)}',
+                  valueColor: pl >= 0 ? const Color(0xFF89F1EC) : const Color(0xFFFF6B6B),
+                );
+              })),
             ],
           ),
           const SizedBox(height: 16),
-          // Rebuys row
           Container(
             height: 1,
             color: Colors.white.withOpacity(0.1),
           ),
+          // Rebuys (tournament) / Add-ons (cash)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  l10n.sessionAnalyticsRebuys,
+                  _isCashGame() ? l10n.sessionAnalyticsAddons : l10n.sessionAnalyticsRebuys,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,

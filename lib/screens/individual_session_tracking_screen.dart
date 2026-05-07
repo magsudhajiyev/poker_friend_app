@@ -128,12 +128,17 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     _totalBuyIn = widget.buyInAmount;
     _previousStack = _currentStack;
 
-    _stackHistory.add({
-      'timestamp': DateTime.now().toIso8601String(),
-      'stackSize': _currentStack,
-      'changeType': 'initial',
-      'changeAmount': widget.buyInAmount,
-    });
+    // Use live stack history from active session, or start fresh
+    if (widget.isFromActiveSession && widget.liveStackHistory != null && widget.liveStackHistory!.isNotEmpty) {
+      _stackHistory = List<Map<String, dynamic>>.from(widget.liveStackHistory!);
+    } else {
+      _stackHistory.add({
+        'timestamp': DateTime.now().toIso8601String(),
+        'stackSize': _currentStack,
+        'changeType': 'initial',
+        'changeAmount': widget.buyInAmount,
+      });
+    }
 
     _currentSmallBlind = widget.smallBlind;
     _currentBigBlind = widget.bigBlind;
@@ -261,7 +266,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
               _rebuys = List<Map<String, dynamic>>.from(sessionData['rebuys']);
             }
 
-            if (sessionData['stackHistory'] != null) {
+            if (!widget.isFromActiveSession && sessionData['stackHistory'] != null) {
               _stackHistory = List<Map<String, dynamic>>.from(sessionData['stackHistory']);
             }
 
@@ -745,6 +750,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
       final Map<String, dynamic> result = {
         'updatedStack': _currentStack,
         'totalBuyIn': _totalBuyIn,
+        'stackHistory': _stackHistory,
       };
 
       if (_blindsWereChanged) {
@@ -1022,6 +1028,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             biggestPot: _biggestPot,
             stackHistory: _stackHistory,
             totalBuyIn: _totalBuyIn,
+            finishedPlace: bankrollResult['finishedPlace'] as int?,
+            fieldSize: bankrollResult['fieldSize'] as int?,
+            prizeWon: bankrollResult['prizeWon'] as double?,
           );
         } catch (e) {}
       }
@@ -1218,6 +1227,9 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             biggestPot: _biggestPot,
             stackHistory: _stackHistory,
             totalBuyIn: _totalBuyIn,
+            finishedPlace: bankrollResult['finishedPlace'] as int?,
+            fieldSize: bankrollResult['fieldSize'] as int?,
+            prizeWon: bankrollResult['prizeWon'] as double?,
           );
         } catch (e) {}
       }

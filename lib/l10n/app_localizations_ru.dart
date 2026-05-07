@@ -2011,16 +2011,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionAnalyticsFinalStack => 'Финальный Stack';
 
   @override
+  String get sessionAnalyticsCashout => 'Выплата';
+
+  @override
   String get sessionAnalyticsProfitLoss => 'Прибыль/Убыток';
 
   @override
   String get sessionAnalyticsAvgGrowth => 'Средний рост';
 
   @override
+  String get sessionAnalyticsHourlyRate => 'Часовая ставка';
+
+  @override
+  String get sessionAnalyticsFinished => 'Место';
+
+  @override
   String get sessionAnalyticsDuration => 'Продолжительность';
 
   @override
   String get sessionAnalyticsRebuys => 'Rebuys';
+
+  @override
+  String get sessionAnalyticsAddons => 'Add-ons';
 
   @override
   String get sessionAnalyticsStackChart => 'График Stack';

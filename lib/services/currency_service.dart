@@ -45,18 +45,18 @@ class CurrencyService {
     final decimal = current.decimalPlaces;
     final formatted = amount.toStringAsFixed(decimal);
     if (current.position == SymbolPosition.prefix) {
-      return '${current.symbol}$formatted';
+      return '${current.symbol} $formatted';
     }
-    return '$formatted${current.symbol}';
+    return '$formatted ${current.symbol}';
   }
 
   /// Format cash amount with no decimals: "$25" or "25zł"
   static String formatCashRounded(double amount) {
     final formatted = amount.toStringAsFixed(0);
     if (current.position == SymbolPosition.prefix) {
-      return '${current.symbol}$formatted';
+      return '${current.symbol} $formatted';
     }
-    return '$formatted${current.symbol}';
+    return '$formatted ${current.symbol}';
   }
 
   /// Format tournament chips — no symbol, no decimals: "1500"
@@ -76,12 +76,12 @@ class CurrencyService {
     return '$num ${current.symbol}';
   }
 
-  /// Format compact with symbol: "$240K" or "240Kzł"
+  /// Format compact with symbol: "$ 240K" or "240K zł"
   static String formatCompact(num amount) {
     final compact = formatCompactNumber(amount);
     if (current.position == SymbolPosition.prefix) {
-      return '${current.symbol}$compact';
+      return '${current.symbol} $compact';
     }
-    return '$compact${current.symbol}';
+    return '$compact ${current.symbol}';
   }
 }

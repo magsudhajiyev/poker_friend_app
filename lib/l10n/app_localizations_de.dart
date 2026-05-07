@@ -2029,16 +2029,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sessionAnalyticsFinalStack => 'Finaler Stack';
 
   @override
+  String get sessionAnalyticsCashout => 'Auszahlung';
+
+  @override
   String get sessionAnalyticsProfitLoss => 'Gewinn/Verlust';
 
   @override
   String get sessionAnalyticsAvgGrowth => 'Ø Wachstum';
 
   @override
+  String get sessionAnalyticsHourlyRate => 'Stundenrate';
+
+  @override
+  String get sessionAnalyticsFinished => 'Platzierung';
+
+  @override
   String get sessionAnalyticsDuration => 'Dauer';
 
   @override
   String get sessionAnalyticsRebuys => 'Rebuys';
+
+  @override
+  String get sessionAnalyticsAddons => 'Add-ons';
 
   @override
   String get sessionAnalyticsStackChart => 'Stack-Diagramm';

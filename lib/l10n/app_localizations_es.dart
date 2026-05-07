@@ -2025,16 +2025,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sessionAnalyticsFinalStack => 'Stack final';
 
   @override
+  String get sessionAnalyticsCashout => 'Cobro';
+
+  @override
   String get sessionAnalyticsProfitLoss => 'Ganancia/Pérdida';
 
   @override
   String get sessionAnalyticsAvgGrowth => 'Crecimiento prom.';
 
   @override
+  String get sessionAnalyticsHourlyRate => 'Tarifa por hora';
+
+  @override
+  String get sessionAnalyticsFinished => 'Posición';
+
+  @override
   String get sessionAnalyticsDuration => 'Duración';
 
   @override
   String get sessionAnalyticsRebuys => 'Rebuys';
+
+  @override
+  String get sessionAnalyticsAddons => 'Add-ons';
 
   @override
   String get sessionAnalyticsStackChart => 'Gráfico de Stack';

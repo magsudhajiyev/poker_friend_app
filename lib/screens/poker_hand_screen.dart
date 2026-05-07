@@ -720,13 +720,30 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           final sessionDuration = sessionManager.sessionStartTime != null
               ? DateTime.now().difference(sessionManager.sessionStartTime!).inMinutes
               : null;
-          await SessionEndBankrollSheet.show(
+          final bankrollResult = await SessionEndBankrollSheet.show(
             context: context,
             gameType: sessionManager.gameType,
             profitLoss: profit,
             totalBuyIn: sessionManager.totalBuyIn,
             durationMinutes: sessionDuration,
           );
+
+          // Save tournament finish data to session document
+          if (bankrollResult != null) {
+            final fPlace = bankrollResult['finishedPlace'] as int?;
+            final fSize = bankrollResult['fieldSize'] as int?;
+            final fPrize = bankrollResult['prizeWon'] as double?;
+            if (fPlace != null || fSize != null || fPrize != null) {
+              try {
+                await FirebaseService.updateIndividualSession(
+                  sessionId: sessionManager.sessionId!,
+                  finishedPlace: fPlace,
+                  fieldSize: fSize,
+                  prizeWon: fPrize,
+                );
+              } catch (_) {}
+            }
+          }
         }
 
         if (!mounted) return;
@@ -1096,6 +1113,69 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     return hasCompletedHands || hasCurrentHandActions;
   }
 
+  /// Quick session mode: confirm discarding the current in-progress hand.
+  Future<bool?> _showDiscardHandDialog() async {
+    final l10n = AppLocalizations.of(context);
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF161618),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            l10n.handInProgress,
+            style: AppTypography.pageTitle().copyWith(fontSize: 20),
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            l10n.handDiscardCurrentHand,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall(
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          actions: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    l10n.handDiscardHand,
+                    style: AppTypography.bodyLarge(
+                      color: const Color(0xFFFF4444),
+                    ).copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    l10n.commonCancel,
+                    style: AppTypography.bodyLarge(
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Shows confirmation dialog when user tries to navigate away from active session
   /// Returns: 'save' to save and exit, 'discard' to exit without saving, null to cancel
   Future<String?> _showNavigationConfirmationDialog() async {
@@ -1181,6 +1261,24 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     if (_isNavigatingAway) return; // Prevent double-tap back
     _isNavigatingAway = true;
 
+    // Quick session mode: just confirm discarding the current hand, then pop back
+    if (widget.isIndividualSession) {
+      final hasActions = sessionManager.currentHand != null &&
+          sessionManager.currentHand!.actions.isNotEmpty;
+      if (!hasActions) {
+        // No actions logged in this hand — just go back
+        if (isBackButton && mounted) Navigator.pop(context);
+        _isNavigatingAway = false;
+        return;
+      }
+      final discard = await _showDiscardHandDialog();
+      if (discard == true && mounted) {
+        Navigator.pop(context);
+      }
+      _isNavigatingAway = false;
+      return;
+    }
+
     if (!_hasUnsavedSessionData()) {
       // No data logged - delete the empty session from Firebase/local storage
       final sessionId = sessionManager.sessionId;
@@ -1204,7 +1302,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     }
 
     if (result == 'save') {
-      // Save session and exit
+      // Save session and exit — same flow as _stopSession()
       try {
         // Capture final stack before ending session
         final ourSeat = sessionManager.ourSeatNumber;
@@ -1214,6 +1312,42 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         }
 
         await sessionManager.endSession();
+
+        if (!mounted) return;
+
+        // Show bankroll/session end sheet (finish position, field size, etc.)
+        final stackHistory = sessionManager.stackHistory;
+        if (stackHistory.isNotEmpty) {
+          final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
+          final profit = lastStack - sessionManager.totalBuyIn;
+          final sessionDuration = sessionManager.sessionStartTime != null
+              ? DateTime.now().difference(sessionManager.sessionStartTime!).inMinutes
+              : null;
+          final bankrollResult = await SessionEndBankrollSheet.show(
+            context: context,
+            gameType: sessionManager.gameType,
+            profitLoss: profit,
+            totalBuyIn: sessionManager.totalBuyIn,
+            durationMinutes: sessionDuration,
+          );
+
+          // Save tournament finish data to session document
+          if (bankrollResult != null) {
+            final fPlace = bankrollResult['finishedPlace'] as int?;
+            final fSize = bankrollResult['fieldSize'] as int?;
+            final fPrize = bankrollResult['prizeWon'] as double?;
+            if (fPlace != null || fSize != null || fPrize != null) {
+              try {
+                await FirebaseService.updateIndividualSession(
+                  sessionId: sessionManager.sessionId!,
+                  finishedPlace: fPlace,
+                  fieldSize: fSize,
+                  prizeWon: fPrize,
+                );
+              } catch (_) {}
+            }
+          }
+        }
 
         if (!mounted) return;
         await _showSessionSummary();
@@ -1383,17 +1517,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         bottomNavigationBar: GlobalBottomNavBar(
           currentScreen: '',
           onNavigationAttempt: () async {
-            if (!_hasUnsavedSessionData()) {
-              // No data logged - delete the empty session from Firebase/local storage
-              final sessionId = sessionManager.sessionId;
-              if (sessionId != null) {
-                await FirebaseService.deleteSession(sessionId);
-                await LocalStorageService.deleteSession(sessionId);
-              }
-              sessionManager.sessionState = SessionState.ended;
-              return true; // Allow navigation
-            }
-
+            // Always confirm — session locks the app to prevent cheating
             final result = await _showNavigationConfirmationDialog();
 
             if (result == 'save') {
@@ -1404,7 +1528,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                   sessionManager.addFinalStackEntry(finalStack);
                 }
                 await sessionManager.endSession();
-                return true; // Allow navigation after save
+                return true;
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1414,20 +1538,19 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     ),
                   );
                 }
-                return false; // Block navigation on error
+                return false;
               }
             } else if (result == 'discard') {
-              // Discard - delete the session from Firebase and local storage
               final sessionId = sessionManager.sessionId;
               if (sessionId != null) {
                 await FirebaseService.deleteSession(sessionId);
                 await LocalStorageService.deleteSession(sessionId);
               }
               sessionManager.sessionState = SessionState.ended;
-              return true; // Allow navigation after discard
+              return true;
             }
 
-            return false; // Cancel - block navigation
+            return false; // Cancel — stay in session
           },
         ),
         body: Stack(
@@ -4318,6 +4441,12 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             sessionManager.totalBuyIn = updatedTotalBuyIn;
           });
         }
+      }
+
+      // Sync stack history back from session details (rebuys, add-ons, notes)
+      if (result['stackHistory'] != null) {
+        final returnedHistory = List<Map<String, dynamic>>.from(result['stackHistory']);
+        sessionManager.stackHistory = returnedHistory;
       }
 
       // Update blinds if they were changed
