@@ -52,14 +52,13 @@ String _actionLabel(AppLocalizations l10n, PlayerAction a) {
 /// Reactive design: instructions adapt to the user's choices when it's their
 /// turn, and script opponent actions to keep the hand moving logically.
 class GuidedHandOverlay extends StatefulWidget {
-  final GlobalKey menuButtonKey;
   final GlobalKey gestureInfoKey;
   final GlobalKey? skipButtonKey;
-  final GlobalKey? settingsMenuItemKey;
-  /// Callback to programmatically open the 3-dot menu overlay.
-  final VoidCallback? onOpenMenu;
-  /// Callback to programmatically close the 3-dot menu overlay.
-  final VoidCallback? onCloseMenu;
+  final GlobalKey? stackRingKey;
+  final GlobalKey? tableButtonKey;
+  final GlobalKey? blindsPillKey;
+  final GlobalKey? nextHandButtonKey;
+  final GlobalKey? sessionInfoButtonKey;
   final int? heroSeat;
   final int currentPlayerSeat;
   final bool Function(PlayerAction) isValidAction;
@@ -75,12 +74,13 @@ class GuidedHandOverlay extends StatefulWidget {
 
   const GuidedHandOverlay({
     super.key,
-    required this.menuButtonKey,
     required this.gestureInfoKey,
     this.skipButtonKey,
-    this.settingsMenuItemKey,
-    this.onOpenMenu,
-    this.onCloseMenu,
+    this.stackRingKey,
+    this.tableButtonKey,
+    this.blindsPillKey,
+    this.nextHandButtonKey,
+    this.sessionInfoButtonKey,
     this.heroSeat,
     this.currentPlayerSeat = 0,
     required this.isValidAction,
@@ -100,6 +100,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
   bool _gestureInfoShown = false;
   bool _preflopOpenerDone = false;
+  bool _stackRingTourShown = false;
   int _actionsCompleted = 0; // count of guided actions done
 
   @override
@@ -177,8 +178,8 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       _setPhase(GuidedPhase.handComplete);
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted && OnboardingState.guidedHandPhase == GuidedPhase.handComplete) {
-          _setPhase(GuidedPhase.menuSettings);
-          _showMenuSettingsCoachMark();
+          _setPhase(GuidedPhase.tableButton);
+          _showTableButtonCoachMark();
         }
       });
     }
@@ -187,6 +188,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   /// Called when the hand completes (auto or via winner dialog).
   void onHandComplete() {
     if (!OnboardingState.isGuidedHandActive) return;
+    _actionsCompleted = 12; // Fill progress bar to 100%
     if (OnboardingState.guidedHandPhase.index < GuidedPhase.holeCards.index) {
       _setPhase(GuidedPhase.holeCards);
     }
@@ -335,12 +337,91 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
     coach.show(context: context);
   }
 
+  // ---------------------------------------------------------------------------
+  // Stack Range Ring Coach Mark
+  // ---------------------------------------------------------------------------
+
+  void _showStackRingCoachMark(VoidCallback onDone) {
+    final ringKey = widget.stackRingKey;
+    if (ringKey == null) {
+      onDone();
+      return;
+    }
+
+    // Hide the floating overlay while coach mark is visible
+    _animController.reverse();
+
+    // Wait for widget tree to rebuild (current player may have just changed,
+    // so StackRangeCircle might not be in the tree yet).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        if (ringKey.currentContext == null) {
+          // Key still not rendered — allow retry on next scriptedAction
+          _animController.forward();
+          onDone();
+          return;
+        }
+
+        _stackRingTourShown = true;
+
+        final l10n = AppLocalizations.of(context);
+        final targets = <TargetFocus>[
+          TargetFocus(
+            identify: 'stack_ring',
+            keyTarget: ringKey,
+            shape: ShapeLightFocus.Circle,
+            paddingFocus: 20,
+            contents: [
+              TargetContent(
+                align: ContentAlign.top,
+                builder: (context, controller) {
+                  return buildTooltip(
+                    title: l10n.guidedStackRingTitle,
+                    body: l10n.guidedStackRingBody,
+                    onNext: () => controller.next(),
+                    context: context,
+                    isLast: true,
+                  );
+                },
+              ),
+            ],
+          ),
+        ];
+
+        final coach = TutorialCoachMark(
+          targets: targets,
+          colorShadow: Colors.black,
+          opacityShadow: 0.85,
+          paddingFocus: 12,
+          hideSkip: true,
+          onFinish: () {
+            _animController.forward();
+            onDone();
+          },
+          onSkip: () {
+            _animController.forward();
+            onDone();
+            return true;
+          },
+        );
+        coach.show(context: context);
+      });
+    });
+  }
+
   void _beginScriptedHand() {
     if (!mounted) return;
-    // First action: UTG opens — scripted raise
-    OnboardingState.nextScriptedAction = PlayerAction.raise;
-    _setPhase(GuidedPhase.scriptedAction);
     _animController.forward();
+
+    if (_isHeroTurn) {
+      // Hero is first to act — let them decide
+      _setPhase(GuidedPhase.heroTurn);
+    } else {
+      // Scripted opponent opens with a raise
+      OnboardingState.nextScriptedAction = PlayerAction.raise;
+      _setPhase(GuidedPhase.scriptedAction);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -391,10 +472,10 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
       // Remaining players fold
       OnboardingState.nextScriptedAction = PlayerAction.fold;
       _setPhase(GuidedPhase.scriptedAction);
-    } else if (action == PlayerAction.raise) {
-      // Opener calls the raise, remaining fold
-      // Next action should be call (for opener) or fold (for others)
-      // The game engine will route to the correct next player
+    } else if (action == PlayerAction.raise || action == PlayerAction.bet) {
+      // Hero opened/raised — mark opener done so opponents don't get "Open the Pot"
+      _preflopOpenerDone = true;
+      // Next opponent calls, remaining fold
       OnboardingState.nextScriptedAction = PlayerAction.call;
       _setPhase(GuidedPhase.scriptedAction);
     }
@@ -465,163 +546,11 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   }
 
   // ---------------------------------------------------------------------------
-  // Menu Settings Coach Mark (two steps: highlight 3-dots, then Settings item)
+  // Table Button Coach Mark (after hand complete, before menu settings)
   // ---------------------------------------------------------------------------
 
-  void _showMenuSettingsCoachMark() {
-    // Individual mode: skip menu/settings step — not relevant
-    if (OnboardingState.isIndividualMode) {
-      _setPhase(GuidedPhase.endSession);
-      _showEndSessionCoachMark();
-      return;
-    }
-
-    _animController.reverse();
-
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (!mounted) return;
-      if (widget.menuButtonKey.currentContext == null) {
-        // Skip straight to end session if menu key not available
-        _setPhase(GuidedPhase.endSession);
-        _showEndSessionCoachMark();
-        return;
-      }
-
-      // Step 1: Highlight the 3-dot menu button
-      final targets = <TargetFocus>[
-        TargetFocus(
-          identify: 'menu_for_settings',
-          keyTarget: widget.menuButtonKey,
-          shape: ShapeLightFocus.Circle,
-          paddingFocus: 12,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.guidedGameMenuTitle,
-                  body: l10n.guidedGameMenuBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                );
-              },
-            ),
-          ],
-        ),
-      ];
-
-      final coach = TutorialCoachMark(
-        targets: targets,
-        colorShadow: Colors.black,
-        opacityShadow: 0.85,
-        paddingFocus: 12,
-        hideSkip: false,
-        skipWidget: Padding(
-          padding: const EdgeInsets.only(right: 16, bottom: 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(40),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-            ),
-            child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15)),
-          ),
-        ),
-        onSkip: () {
-          _finishOnboarding();
-          return true;
-        },
-        onFinish: () {
-          // Open the menu overlay, then highlight the Settings item
-          _showSettingsItemCoachMark();
-        },
-      );
-      coach.show(context: context);
-    });
-  }
-
-  void _showSettingsItemCoachMark() {
-    // Programmatically open the menu
-    widget.onOpenMenu?.call();
-
-    // Wait for the menu overlay to render and the settings key to attach
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (!mounted) return;
-
-      final settingsKey = widget.settingsMenuItemKey;
-      if (settingsKey == null || settingsKey.currentContext == null) {
-        // Settings key not available — skip to end session
-        widget.onCloseMenu?.call();
-        _setPhase(GuidedPhase.endSession);
-        _showEndSessionCoachMark();
-        return;
-      }
-
-      final targets = <TargetFocus>[
-        TargetFocus(
-          identify: 'settings_menu_item',
-          keyTarget: settingsKey,
-          shape: ShapeLightFocus.RRect,
-          radius: 8,
-          paddingFocus: 4,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
-                final l10n = AppLocalizations.of(context);
-                return buildTooltip(
-                  title: l10n.guidedGameSettingsTitle,
-                  body: l10n.guidedGameSettingsBody,
-                  onNext: () => controller.next(),
-                  context: context,
-                  isLast: true,
-                );
-              },
-            ),
-          ],
-        ),
-      ];
-
-      final coach = TutorialCoachMark(
-        targets: targets,
-        colorShadow: Colors.black,
-        opacityShadow: 0.85,
-        paddingFocus: 12,
-        hideSkip: false,
-        skipWidget: Padding(
-          padding: const EdgeInsets.only(right: 16, bottom: 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(40),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-            ),
-            child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15)),
-          ),
-        ),
-        onSkip: () {
-          widget.onCloseMenu?.call();
-          _finishOnboarding();
-          return true;
-        },
-        onFinish: () {
-          // Close the menu and move to end session coach mark
-          widget.onCloseMenu?.call();
-          _setPhase(GuidedPhase.endSession);
-          _showEndSessionCoachMark();
-        },
-      );
-      coach.show(context: context);
-    });
-  }
-
-  // ---------------------------------------------------------------------------
-  // End Session Coach Mark
-  // ---------------------------------------------------------------------------
-
-  void _showEndSessionCoachMark() {
-    // Individual mode: skip end-session here — handled on tracking screen
+  void _showTableButtonCoachMark() {
+    // Individual mode: skip — not relevant
     if (OnboardingState.isIndividualMode) {
       OnboardingState.guidedHandPhase = GuidedPhase.done;
       widget.onSkipOrFinish?.call();
@@ -632,12 +561,18 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
     Future.delayed(const Duration(milliseconds: 400), () {
       if (!mounted) return;
-      if (widget.menuButtonKey.currentContext == null) return;
+
+      final tableKey = widget.tableButtonKey;
+      if (tableKey == null || tableKey.currentContext == null) {
+        _setPhase(GuidedPhase.blindsPill);
+        _showBlindsPillCoachMark();
+        return;
+      }
 
       final targets = <TargetFocus>[
         TargetFocus(
-          identify: 'end_session_menu',
-          keyTarget: widget.menuButtonKey,
+          identify: 'table_button',
+          keyTarget: tableKey,
           shape: ShapeLightFocus.Circle,
           paddingFocus: 12,
           contents: [
@@ -646,8 +581,186 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
               builder: (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
-                  title: l10n.guidedEndSessionTitle,
-                  body: l10n.guidedEndSessionBody,
+                  title: l10n.guidedTableButtonTitle,
+                  body: l10n.guidedTableButtonBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      ];
+
+      final coach = TutorialCoachMark(
+        targets: targets,
+        colorShadow: Colors.black,
+        opacityShadow: 0.85,
+        paddingFocus: 12,
+        hideSkip: false,
+        skipWidget: _buildSkipWidget(),
+        onSkip: () {
+          _finishOnboarding();
+          return true;
+        },
+        onFinish: () {
+          _setPhase(GuidedPhase.blindsPill);
+          _showBlindsPillCoachMark();
+        },
+      );
+      coach.show(context: context);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Blinds Pill Coach Mark
+  // ---------------------------------------------------------------------------
+
+  void _showBlindsPillCoachMark() {
+    _animController.reverse();
+
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+
+      final blindsKey = widget.blindsPillKey;
+      if (blindsKey == null || blindsKey.currentContext == null) {
+        _setPhase(GuidedPhase.nextHandButton);
+        _showNextHandButtonCoachMark();
+        return;
+      }
+
+      final targets = <TargetFocus>[
+        TargetFocus(
+          identify: 'blinds_pill',
+          keyTarget: blindsKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 20,
+          paddingFocus: 8,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.guidedBlindsPillTitle,
+                  body: l10n.guidedBlindsPillBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      ];
+
+      final coach = TutorialCoachMark(
+        targets: targets,
+        colorShadow: Colors.black,
+        opacityShadow: 0.85,
+        paddingFocus: 12,
+        hideSkip: false,
+        skipWidget: _buildSkipWidget(),
+        onSkip: () {
+          _finishOnboarding();
+          return true;
+        },
+        onFinish: () {
+          _setPhase(GuidedPhase.nextHandButton);
+          _showNextHandButtonCoachMark();
+        },
+      );
+      coach.show(context: context);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Next Hand Button Coach Mark
+  // ---------------------------------------------------------------------------
+
+  void _showNextHandButtonCoachMark() {
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+
+      final nextKey = widget.nextHandButtonKey;
+      if (nextKey == null || nextKey.currentContext == null) {
+        _setPhase(GuidedPhase.gestureInfoTap);
+        _showSessionInfoCoachMark();
+        return;
+      }
+
+      final targets = <TargetFocus>[
+        TargetFocus(
+          identify: 'next_hand_button',
+          keyTarget: nextKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 17,
+          paddingFocus: 8,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.guidedNextHandTitle,
+                  body: l10n.guidedNextHandBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      ];
+
+      final coach = TutorialCoachMark(
+        targets: targets,
+        colorShadow: Colors.black,
+        opacityShadow: 0.85,
+        paddingFocus: 12,
+        hideSkip: false,
+        skipWidget: _buildSkipWidget(),
+        onSkip: () {
+          _finishOnboarding();
+          return true;
+        },
+        onFinish: () {
+          _setPhase(GuidedPhase.gestureInfoTap);
+          _showSessionInfoCoachMark();
+        },
+      );
+      coach.show(context: context);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Session Info Button Coach Mark — spotlight the ⓘ next to the 3-dot menu
+  // ---------------------------------------------------------------------------
+
+  void _showSessionInfoCoachMark() {
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+
+      final infoKey = widget.sessionInfoButtonKey;
+      if (infoKey == null || infoKey.currentContext == null) {
+        OnboardingState.guidedHandPhase = GuidedPhase.done;
+        OnboardingState.advanceTo(5);
+        return;
+      }
+
+      final targets = <TargetFocus>[
+        TargetFocus(
+          identify: 'session_info_button',
+          keyTarget: infoKey,
+          shape: ShapeLightFocus.Circle,
+          paddingFocus: 12,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                final l10n = AppLocalizations.of(context);
+                return buildTooltip(
+                  title: l10n.guidedSessionInfoTitle,
+                  body: l10n.guidedSessionInfoBody,
                   onNext: () => controller.next(),
                   context: context,
                   isLast: true,
@@ -664,24 +777,16 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
         opacityShadow: 0.85,
         paddingFocus: 12,
         hideSkip: false,
-        skipWidget: Padding(
-          padding: const EdgeInsets.only(right: 16, bottom: 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(40),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-            ),
-            child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15)),
-          ),
-        ),
+        skipWidget: _buildSkipWidget(),
         onSkip: () {
           _finishOnboarding();
           return true;
         },
         onFinish: () {
+          // Set flag so IndividualSessionTrackingScreen runs its tour
+          OnboardingState.sessionDetailsTourPending = true;
           OnboardingState.guidedHandPhase = GuidedPhase.done;
-          OnboardingState.advanceTo(5);
+          widget.onSkipOrFinish?.call();
         },
       );
       coach.show(context: context);
@@ -692,7 +797,37 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
   // Helpers
   // ---------------------------------------------------------------------------
 
+  Widget _buildSkipWidget() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 16, bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(40),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        ),
+        child: Text(AppLocalizations.of(context).guidedSkip, style: AppTypography.bodySmall(color: Colors.white70).copyWith(fontSize: 15)),
+      ),
+    );
+  }
+
   void _setPhase(GuidedPhase phase) {
+    if (!mounted) return;
+
+    // Show stack ring coach mark the first time a non-hero player is about to act
+    if (phase == GuidedPhase.scriptedAction &&
+        !_stackRingTourShown &&
+        widget.currentRound == BettingRound.preflop) {
+      _showStackRingCoachMark(() {
+        _doSetPhase(phase);
+      });
+      return;
+    }
+
+    _doSetPhase(phase);
+  }
+
+  void _doSetPhase(GuidedPhase phase) {
     if (!mounted) return;
     OnboardingState.guidedHandPhase = phase;
     if (phase == GuidedPhase.done) {
@@ -840,7 +975,7 @@ class GuidedHandOverlayState extends State<GuidedHandOverlay>
 
     final phase = OnboardingState.guidedHandPhase;
     // These phases are handled via coach marks, not the floating overlay
-    if (phase == GuidedPhase.gestureInfo || phase == GuidedPhase.menuSettings || phase == GuidedPhase.endSession) {
+    if (phase == GuidedPhase.gestureInfo || phase == GuidedPhase.tableButton || phase == GuidedPhase.blindsPill || phase == GuidedPhase.nextHandButton || phase == GuidedPhase.gestureInfoTap) {
       return const SizedBox.shrink();
     }
 

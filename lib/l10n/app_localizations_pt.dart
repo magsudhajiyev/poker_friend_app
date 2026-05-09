@@ -6829,14 +6829,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingSessionSetupBody =>
-      'Preencha os detalhes da sessão — nome, buy-in, blinds — e toque em Iniciar Jogo.';
+      'Aqui pode definir o nome da sessão, tipo de jogo, blinds, buy-in e stack inicial.';
 
   @override
   String get onboardingTableSetupTitle => 'Configurar Sua Mesa';
 
   @override
   String get onboardingTableSetupBody =>
-      'Toque em qualquer assento para configurar os jogadores. Vamos percorrer o diálogo do assento a seguir.';
+      'Agora, preencha os detalhes da sessão e configure a mesa. Toque num assento para se posicionar e aos seus oponentes, e arraste o botão do dealer (D) para definir a posição do botão. Toque no ícone ✓ no canto superior direito quando estiver pronto.';
 
   @override
   String get onboardingSeatOpenTitle => 'Assento Aberto';
@@ -7057,7 +7057,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get guidedDealFlopTitle => 'Distribuir o Flop';
 
   @override
-  String get guidedDealFlopBody => 'Selecione 3 cartas para o Flop.';
+  String get guidedDealFlopBody =>
+      'Arraste um valor para um naipe para selecionar uma carta. Toque em uma carta selecionada para removê-la. Escolha 3 cartas para o flop.';
 
   @override
   String get guidedDealTurnTitle => 'Distribuir o Turn';
@@ -7070,6 +7071,82 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get guidedDealRiverBody => 'Selecione 1 carta para o River.';
+
+  @override
+  String get guidedStackRingTitle => 'Faixa de Stack';
+
+  @override
+  String get guidedStackRingBody =>
+      'Pressione e segure o anel, gire o dedo para selecionar uma faixa de stack e solte. Isso ajuda a configurar os stacks dos oponentes antes do flop.';
+
+  @override
+  String get guidedTableButtonTitle => 'Gerenciar Mesa';
+
+  @override
+  String get guidedTableButtonBody =>
+      'Toque neste botão para gerenciar jogadores, atualizar stacks, trocar assentos ou mover o botão do dealer.';
+
+  @override
+  String get guidedBlindsPillTitle => 'Blinds';
+
+  @override
+  String get guidedBlindsPillBody =>
+      'Toque aqui para atualizar os níveis de blinds a qualquer momento — útil quando os níveis do torneio aumentam.';
+
+  @override
+  String get guidedNextHandTitle => 'Próxima Mão';
+
+  @override
+  String get guidedNextHandBody =>
+      'Toque para pular para a próxima mão. Move o botão do dealer, rastreia seu stack automaticamente e deduz os blinds.';
+
+  @override
+  String get guidedInfoButtonTitle => 'Guia de Gestos';
+
+  @override
+  String get guidedInfoButtonBody =>
+      'Toque neste botão a qualquer momento para ver todos os controles gestuais disponíveis para registrar ações.';
+
+  @override
+  String get guidedSessionInfoTitle => 'Detalhes da Sessão';
+
+  @override
+  String get guidedSessionInfoBody =>
+      'Toque neste botão para ver os detalhes da sua sessão, gráfico de stack e histórico de mãos. Toque agora!';
+
+  @override
+  String get guidedAddOnTitle => 'Add-Ons e Rebuys';
+
+  @override
+  String get guidedAddOnBody => 'Gerencie seus add-ons e rebuys aqui.';
+
+  @override
+  String get guidedUpdateStackTitle => 'Atualizar Stack';
+
+  @override
+  String get guidedUpdateStackBody =>
+      'Atualize seu stack manualmente e faça anotações rápidas. Elas aparecerão no seu gráfico de stack.';
+
+  @override
+  String get guidedStackChartTitle => 'Gráfico de Stack';
+
+  @override
+  String get guidedStackChartBody =>
+      'Toque em qualquer ponto para ver como está indo seu jogo.';
+
+  @override
+  String get guidedStopSessionTitle => 'Parar Sessão';
+
+  @override
+  String get guidedStopSessionBody =>
+      'Encerre sua sessão a qualquer momento quando terminar.';
+
+  @override
+  String get guidedTourCompleteTitle => 'Tour concluído!';
+
+  @override
+  String get guidedTourCompleteBody =>
+      'Tudo pronto! Você pode encontrar os dados da sua sessão na aba Sessões a qualquer momento.';
 
   @override
   String get kbStatsTitle => 'Suas Estatísticas';

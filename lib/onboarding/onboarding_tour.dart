@@ -356,11 +356,13 @@ class LoggingModeTour {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 2 — Session Setup Tour
+// Phase 2 — Session Setup Tour (highlights session form fields)
 // ---------------------------------------------------------------------------
 
 class SessionSetupTour {
-  SessionSetupTour();
+  final VoidCallback? onFinished;
+
+  SessionSetupTour({this.onFinished});
 
   void show(BuildContext context) {
     if (!OnboardingState.isOnboardingActive ||
@@ -368,7 +370,7 @@ class SessionSetupTour {
 
     final targets = <TargetFocus>[];
 
-    // No-spotlight instruction card
+    // No-spotlight instruction card centered on screen
     targets.add(
       TargetFocus(
         identify: 'session_setup',
@@ -394,7 +396,6 @@ class SessionSetupTour {
                 body: l10n.onboardingSessionSetupBody,
                 onNext: () => controller.next(),
                 context: context,
-                isLast: true,
               );
             },
           ),
@@ -406,9 +407,13 @@ class SessionSetupTour {
       targets: targets,
       context: context,
       onFinish: () {
-        OnboardingState.advanceTo(3);
         if (OnboardingState.isIndividualMode) {
+          OnboardingState.advanceTo(3);
           OnboardingState.individualTrackingTourPending = true;
+        } else {
+          // Mark table tour pending and notify the screen
+          OnboardingState.tableTourPending = true;
+          onFinished?.call();
         }
       },
     );
@@ -417,7 +422,7 @@ class SessionSetupTour {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 3 — Seat Setup Tour
+// Phase 3 — Table Setup Tour (highlights poker table)
 // ---------------------------------------------------------------------------
 
 class SeatSetupTour {
@@ -441,7 +446,8 @@ class SeatSetupTour {
           paddingFocus: 0,
           contents: [
             TargetContent(
-              align: ContentAlign.bottom,
+              align: ContentAlign.custom,
+              customPosition: CustomTargetContentPosition(top: 80),
               builder: (context, controller) {
                 final l10n = AppLocalizations.of(context);
                 return buildTooltip(
@@ -464,8 +470,7 @@ class SeatSetupTour {
       targets: targets,
       context: context,
       onFinish: () {
-        // Stay at phase 3 — seat dialog tour still needs to run
-        OnboardingState.seatDialogTourPending = true;
+        OnboardingState.advanceTo(4);
       },
     );
     coach.show(context: context);

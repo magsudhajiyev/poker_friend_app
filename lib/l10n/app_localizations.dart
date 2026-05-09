@@ -11898,13 +11898,13 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingSessionSetupTitle.
   ///
   /// In en, this message translates to:
-  /// **'Session Setup'**
+  /// **'Session Details'**
   String get onboardingSessionSetupTitle;
 
   /// No description provided for @onboardingSessionSetupBody.
   ///
   /// In en, this message translates to:
-  /// **'Fill in your session details — name, buy-in, blinds — then tap Start Game.'**
+  /// **'Here you can set your session name, game type, blinds, buy-in amount, and starting stack.'**
   String get onboardingSessionSetupBody;
 
   /// No description provided for @onboardingTableSetupTitle.
@@ -11916,7 +11916,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingTableSetupBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap any seat to set up players. Let\'s walk through the seat dialog next.'**
+  /// **'Now, fill in the session details and set up the table. Tap a seat to place yourself and your opponents, and drag the dealer button (D) to set the button position. Tap the ✓ icon on the top right corner when you are ready.'**
   String get onboardingTableSetupBody;
 
   /// No description provided for @onboardingSeatOpenTitle.
@@ -12312,7 +12312,7 @@ abstract class AppLocalizations {
   /// No description provided for @guidedDealFlopBody.
   ///
   /// In en, this message translates to:
-  /// **'Select 3 cards for the flop.'**
+  /// **'Drag a rank to a suit to select a card. Tap a selected card to remove it. Pick 3 cards for the flop.'**
   String get guidedDealFlopBody;
 
   /// No description provided for @guidedDealTurnTitle.
@@ -12338,6 +12338,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select 1 card for the river.'**
   String get guidedDealRiverBody;
+
+  /// No description provided for @guidedStackRingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stack Range'**
+  String get guidedStackRingTitle;
+
+  /// No description provided for @guidedStackRingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Press and hold the ring, rotate your finger to select a stack range, then release. This helps you set up opponents\' stacks before the flop.'**
+  String get guidedStackRingBody;
+
+  /// No description provided for @guidedTableButtonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Table'**
+  String get guidedTableButtonTitle;
+
+  /// No description provided for @guidedTableButtonBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap this button to manage players, update stacks, change seating, or move the dealer button.'**
+  String get guidedTableButtonBody;
+
+  /// No description provided for @guidedBlindsPillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blinds'**
+  String get guidedBlindsPillTitle;
+
+  /// No description provided for @guidedBlindsPillBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap here to update the blind levels anytime — useful when tournament levels go up.'**
+  String get guidedBlindsPillBody;
+
+  /// No description provided for @guidedNextHandTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Hand'**
+  String get guidedNextHandTitle;
+
+  /// No description provided for @guidedNextHandBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap this to skip to the next hand. It moves the dealer button, auto-tracks your stack, and deducts blinds automatically.'**
+  String get guidedNextHandBody;
+
+  /// No description provided for @guidedInfoButtonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gesture Guide'**
+  String get guidedInfoButtonTitle;
+
+  /// No description provided for @guidedInfoButtonBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap this button anytime to see all available gesture controls for logging actions.'**
+  String get guidedInfoButtonBody;
+
+  /// No description provided for @guidedSessionInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Details'**
+  String get guidedSessionInfoTitle;
+
+  /// No description provided for @guidedSessionInfoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap this button to view your session details, stack chart, and hand history. Go ahead and tap it now!'**
+  String get guidedSessionInfoBody;
+
+  /// No description provided for @guidedAddOnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add-Ons & Rebuys'**
+  String get guidedAddOnTitle;
+
+  /// No description provided for @guidedAddOnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your add-ons and rebuys here.'**
+  String get guidedAddOnBody;
+
+  /// No description provided for @guidedUpdateStackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Stack'**
+  String get guidedUpdateStackTitle;
+
+  /// No description provided for @guidedUpdateStackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your stack manually and take quick notes. They will appear on your stack chart.'**
+  String get guidedUpdateStackBody;
+
+  /// No description provided for @guidedStackChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stack Chart'**
+  String get guidedStackChartTitle;
+
+  /// No description provided for @guidedStackChartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap any point to see how your game is going.'**
+  String get guidedStackChartBody;
+
+  /// No description provided for @guidedStopSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Session'**
+  String get guidedStopSessionTitle;
+
+  /// No description provided for @guidedStopSessionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish your session anytime you are done.'**
+  String get guidedStopSessionBody;
+
+  /// No description provided for @guidedTourCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour Complete!'**
+  String get guidedTourCompleteTitle;
+
+  /// No description provided for @guidedTourCompleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all set! You can find your session data under the Sessions tab anytime.'**
+  String get guidedTourCompleteBody;
 
   /// No description provided for @kbStatsTitle.
   ///

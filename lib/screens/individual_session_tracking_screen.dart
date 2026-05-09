@@ -14,8 +14,10 @@ import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/form_drawer.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
 import '../widgets/session_summary_card.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../onboarding/onboarding_state.dart';
 import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_prefs.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import '../design_system/components/app_toggle.dart';
 import '../models/hand_state_machine.dart';
@@ -113,6 +115,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
   final GlobalKey _updateStackBtnKey = GlobalKey(debugLabel: 'updateStackBtn');
   final GlobalKey _logHandBtnKey = GlobalKey(debugLabel: 'logHandBtn');
   final GlobalKey _stopSessionBtnKey = GlobalKey(debugLabel: 'stopSessionBtn');
+  final GlobalKey _stackChartKey = GlobalKey(debugLabel: 'stackChart');
 
   // Quick stack update tracking
   int _lastButtonPosition = 1;
@@ -158,6 +161,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     _loadBBMode();
     _startTimer();
     _scheduleIndividualTrackingTour();
+    _scheduleSessionDetailsTour();
   }
 
   Future<void> _loadBBMode() async {
@@ -185,6 +189,143 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         logHandButtonKey: _logHandBtnKey,
       ).show(context);
     });
+  }
+
+  void _scheduleSessionDetailsTour() {
+    if (!OnboardingState.isOnboardingActive ||
+        !OnboardingState.sessionDetailsTourPending) return;
+    OnboardingState.sessionDetailsTourPending = false;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      _showSessionDetailsTour();
+    });
+  }
+
+  void _showSessionDetailsTour() {
+    final l10n = AppLocalizations.of(context);
+
+    final targets = <TargetFocus>[
+      // 1. + button (add-ons & rebuys)
+      TargetFocus(
+        identify: 'add_on_button',
+        keyTarget: _dotsKey,
+        shape: ShapeLightFocus.Circle,
+        paddingFocus: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: l10n.guidedAddOnTitle,
+                body: l10n.guidedAddOnBody,
+                onNext: () => controller.next(),
+                context: context,
+              );
+            },
+          ),
+        ],
+      ),
+      // 2. Update button on stack card
+      TargetFocus(
+        identify: 'update_stack_button',
+        keyTarget: _updateStackBtnKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 20,
+        paddingFocus: 4,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: l10n.guidedUpdateStackTitle,
+                body: l10n.guidedUpdateStackBody,
+                onNext: () => controller.next(),
+                context: context,
+              );
+            },
+          ),
+        ],
+      ),
+      // 3. Stack chart
+      if (_stackChartKey.currentContext != null)
+        TargetFocus(
+          identify: 'stack_chart',
+          keyTarget: _stackChartKey,
+          shape: ShapeLightFocus.RRect,
+          radius: 18,
+          paddingFocus: 4,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return buildTooltip(
+                  title: l10n.guidedStackChartTitle,
+                  body: l10n.guidedStackChartBody,
+                  onNext: () => controller.next(),
+                  context: context,
+                );
+              },
+            ),
+          ],
+        ),
+      // 4. Stop session button — dismiss tour, user stops session on their own
+      TargetFocus(
+        identify: 'stop_session_button',
+        keyTarget: _stopSessionBtnKey,
+        shape: ShapeLightFocus.Circle,
+        paddingFocus: 12,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return buildTooltip(
+                title: l10n.guidedStopSessionTitle,
+                body: l10n.guidedStopSessionBody,
+                onNext: () => controller.next(),
+                context: context,
+                isLast: true,
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final coach = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      opacityShadow: 0.85,
+      paddingFocus: 12,
+      hideSkip: false,
+      skipWidget: Padding(
+        padding: const EdgeInsets.only(right: 16, bottom: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(40),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+          ),
+          child: Text(
+            l10n.onboardingSkipTour,
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white70,
+              fontSize: 15,
+            ),
+          ),
+        ),
+      ),
+      onFinish: () {
+        // Tour overlay dismissed — onboarding stays active until user stops session
+      },
+      onSkip: () {
+        OnboardingState.cancel();
+        OnboardingPrefs.markOnboardingSeen();
+        return true;
+      },
+    );
+    coach.show(context: context);
   }
 
   Future<void> _initializeSession() async {
@@ -1234,6 +1375,8 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         } catch (e) {}
       }
 
+      final isOnboarding = OnboardingState.isOnboardingActive;
+
       // Show session summary card
       if (mounted) {
         await SessionSummaryCard.show(
@@ -1253,10 +1396,99 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         );
       }
 
+      // Show tour-complete dialog after session summary during onboarding
+      if (isOnboarding && mounted) {
+        OnboardingState.complete();
+        await _showOnboardingCompleteDialog();
+      }
+
       if (mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
       }
     }
+  }
+
+  Future<void> _showOnboardingCompleteDialog() async {
+    final l10n = AppLocalizations.of(context);
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 309,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF101115),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF1B1E24)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black,
+                  blurRadius: 114,
+                  offset: Offset(20, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: Color(0xFF62E3BC),
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.guidedTourCompleteTitle,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.guidedTourCompleteBody,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF8C8C8C),
+                    fontSize: 15,
+                    height: 1.44,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(60),
+                    ),
+                    child: Center(
+                      child: Text(
+                        l10n.commonDone,
+                        style: GoogleFonts.ibmPlexSans(
+                          color: Colors.black,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<bool?> _showRebuyConfirmationDialog() async {
@@ -2119,6 +2351,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
     final hasData = history.length >= 2;
 
     return Container(
+      key: _stackChartKey,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFF131616),

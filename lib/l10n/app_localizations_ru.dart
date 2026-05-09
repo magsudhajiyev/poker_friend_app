@@ -6801,14 +6801,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingSessionSetupBody =>
-      'Заполните данные сессии — название, бай-ин, блайнды — и нажмите «Начать игру».';
+      'Здесь вы можете указать название сессии, тип игры, блайнды, бай-ин и начальный стек.';
 
   @override
   String get onboardingTableSetupTitle => 'Настройка стола';
 
   @override
   String get onboardingTableSetupBody =>
-      'Нажмите на любое место, чтобы настроить игроков. Давайте пройдём через диалог места далее.';
+      'Теперь заполните данные сессии и настройте стол. Нажмите на место, чтобы разместить себя и оппонентов, и перетащите кнопку дилера (D), чтобы установить позицию баттона. Нажмите на значок ✓ в правом верхнем углу, когда будете готовы.';
 
   @override
   String get onboardingSeatOpenTitle => 'Свободное место';
@@ -7028,7 +7028,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get guidedDealFlopTitle => 'Сдать Flop';
 
   @override
-  String get guidedDealFlopBody => 'Выберите 3 карты для Flop.';
+  String get guidedDealFlopBody =>
+      'Перетащите ранг на масть, чтобы выбрать карту. Нажмите на выбранную карту, чтобы удалить её. Выберите 3 карты для флопа.';
 
   @override
   String get guidedDealTurnTitle => 'Сдать Turn';
@@ -7041,6 +7042,82 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get guidedDealRiverBody => 'Выберите 1 карту для River.';
+
+  @override
+  String get guidedStackRingTitle => 'Диапазон Стека';
+
+  @override
+  String get guidedStackRingBody =>
+      'Нажмите и удерживайте кольцо, поверните палец, чтобы выбрать диапазон стека, затем отпустите. Это помогает настроить стеки соперников до флопа.';
+
+  @override
+  String get guidedTableButtonTitle => 'Управление Столом';
+
+  @override
+  String get guidedTableButtonBody =>
+      'Нажмите на эту кнопку, чтобы управлять игроками, обновить стеки, изменить рассадку или переместить кнопку дилера.';
+
+  @override
+  String get guidedBlindsPillTitle => 'Блайнды';
+
+  @override
+  String get guidedBlindsPillBody =>
+      'Нажмите здесь, чтобы обновить уровни блайндов в любое время — полезно, когда уровни турнира растут.';
+
+  @override
+  String get guidedNextHandTitle => 'Следующая Рука';
+
+  @override
+  String get guidedNextHandBody =>
+      'Нажмите, чтобы перейти к следующей руке. Перемещает кнопку дилера, автоматически отслеживает ваш стек и вычитает блайнды.';
+
+  @override
+  String get guidedInfoButtonTitle => 'Гид по Жестам';
+
+  @override
+  String get guidedInfoButtonBody =>
+      'Нажмите на эту кнопку в любое время, чтобы увидеть все доступные жесты для логирования действий.';
+
+  @override
+  String get guidedSessionInfoTitle => 'Детали Сессии';
+
+  @override
+  String get guidedSessionInfoBody =>
+      'Нажмите на эту кнопку, чтобы увидеть детали сессии, график стека и историю рук. Нажмите сейчас!';
+
+  @override
+  String get guidedAddOnTitle => 'Аdd-оны и ребаи';
+
+  @override
+  String get guidedAddOnBody => 'Управляйте своими add-онами и ребаями здесь.';
+
+  @override
+  String get guidedUpdateStackTitle => 'Обновить стек';
+
+  @override
+  String get guidedUpdateStackBody =>
+      'Обновите свой стек вручную и делайте быстрые заметки. Они появятся на графике стека.';
+
+  @override
+  String get guidedStackChartTitle => 'График стека';
+
+  @override
+  String get guidedStackChartBody =>
+      'Нажмите на любую точку, чтобы увидеть, как идёт ваша игра.';
+
+  @override
+  String get guidedStopSessionTitle => 'Завершить сессию';
+
+  @override
+  String get guidedStopSessionBody =>
+      'Завершите сессию в любой момент, когда закончите играть.';
+
+  @override
+  String get guidedTourCompleteTitle => 'Тур завершён!';
+
+  @override
+  String get guidedTourCompleteBody =>
+      'Всё готово! Данные вашей сессии всегда доступны во вкладке Сессии.';
 
   @override
   String get kbStatsTitle => 'Ваша статистика';

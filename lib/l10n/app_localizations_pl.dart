@@ -6808,14 +6808,14 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get onboardingSessionSetupBody =>
-      'Wypełnij dane sesji — nazwę, buy-in, blindy — a następnie dotknij Rozpocznij grę.';
+      'Tutaj możesz ustawić nazwę sesji, typ gry, blindy, buy-in i stack początkowy.';
 
   @override
   String get onboardingTableSetupTitle => 'Skonfiguruj swój stół';
 
   @override
   String get onboardingTableSetupBody =>
-      'Dotknij dowolnego miejsca, aby skonfigurować graczy. Przejdźmy przez okno dialogowe miejsca.';
+      'Teraz wypełnij dane sesji i skonfiguruj stół. Dotknij miejsca, aby usadzić siebie i przeciwników, i przeciągnij przycisk dealera (D), aby ustawić pozycję buttona. Dotknij ikony ✓ w prawym górnym rogu, gdy będziesz gotowy.';
 
   @override
   String get onboardingSeatOpenTitle => 'Wolne miejsce';
@@ -7035,7 +7035,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get guidedDealFlopTitle => 'Rozdaj Flop';
 
   @override
-  String get guidedDealFlopBody => 'Wybierz 3 karty na Flop.';
+  String get guidedDealFlopBody =>
+      'Przeciągnij rangę na kolor, aby wybrać kartę. Dotknij wybranej karty, aby ją usunąć. Wybierz 3 karty na flop.';
 
   @override
   String get guidedDealTurnTitle => 'Rozdaj Turn';
@@ -7048,6 +7049,82 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get guidedDealRiverBody => 'Wybierz 1 kartę na River.';
+
+  @override
+  String get guidedStackRingTitle => 'Zakres Stacka';
+
+  @override
+  String get guidedStackRingBody =>
+      'Naciśnij i przytrzymaj pierścień, obróć palec, aby wybrać zakres stacka, a następnie puść. Pomaga to ustawić stacki przeciwników przed flopem.';
+
+  @override
+  String get guidedTableButtonTitle => 'Zarządzaj Stołem';
+
+  @override
+  String get guidedTableButtonBody =>
+      'Dotknij tego przycisku, aby zarządzać graczami, aktualizować stacki, zmieniać miejsca lub przesunąć przycisk dealera.';
+
+  @override
+  String get guidedBlindsPillTitle => 'Blindy';
+
+  @override
+  String get guidedBlindsPillBody =>
+      'Dotknij tutaj, aby zaktualizować poziomy blindów w dowolnym momencie — przydatne, gdy rosną poziomy turniejowe.';
+
+  @override
+  String get guidedNextHandTitle => 'Następna Ręka';
+
+  @override
+  String get guidedNextHandBody =>
+      'Dotknij, aby przejść do następnej ręki. Przesunie przycisk dealera, automatycznie śledzi twój stack i potrąca blindy.';
+
+  @override
+  String get guidedInfoButtonTitle => 'Przewodnik po Gestach';
+
+  @override
+  String get guidedInfoButtonBody =>
+      'Dotknij tego przycisku w dowolnym momencie, aby zobaczyć wszystkie dostępne gesty do logowania akcji.';
+
+  @override
+  String get guidedSessionInfoTitle => 'Szczegóły Sesji';
+
+  @override
+  String get guidedSessionInfoBody =>
+      'Dotknij tego przycisku, aby zobaczyć szczegóły sesji, wykres stacka i historię rąk. Dotknij teraz!';
+
+  @override
+  String get guidedAddOnTitle => 'Add-Ony i Rebuys';
+
+  @override
+  String get guidedAddOnBody => 'Zarządzaj swoimi add-onami i rebuyami tutaj.';
+
+  @override
+  String get guidedUpdateStackTitle => 'Zaktualizuj Stack';
+
+  @override
+  String get guidedUpdateStackBody =>
+      'Zaktualizuj swój stack ręcznie i rób szybkie notatki. Pojawią się na wykresie stacka.';
+
+  @override
+  String get guidedStackChartTitle => 'Wykres Stacka';
+
+  @override
+  String get guidedStackChartBody =>
+      'Dotknij dowolnego punktu, aby zobaczyć, jak idzie twoja gra.';
+
+  @override
+  String get guidedStopSessionTitle => 'Zakończ Sesję';
+
+  @override
+  String get guidedStopSessionBody =>
+      'Zakończ sesję w dowolnym momencie, gdy skończysz grać.';
+
+  @override
+  String get guidedTourCompleteTitle => 'Tour zakończony!';
+
+  @override
+  String get guidedTourCompleteBody =>
+      'Wszystko gotowe! Dane sesji znajdziesz w zakładce Sesje w dowolnym momencie.';
 
   @override
   String get kbStatsTitle => 'Twoje statystyki';

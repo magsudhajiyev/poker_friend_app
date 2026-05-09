@@ -6860,14 +6860,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingSessionSetupBody =>
-      'Remplissez les détails de votre session — nom, buy-in, blindes — puis appuyez sur Démarrer la partie.';
+      'Ici vous pouvez définir le nom de session, le type de jeu, les blindes, le buy-in et le stack de départ.';
 
   @override
   String get onboardingTableSetupTitle => 'Configurer votre table';
 
   @override
   String get onboardingTableSetupBody =>
-      'Appuyez sur n\'importe quel siège pour configurer les joueurs. Voyons ensuite le dialogue de siège.';
+      'Maintenant, remplissez les détails de la session et configurez la table. Appuyez sur un siège pour vous placer ainsi que vos adversaires, et glissez le bouton du dealer (D) pour définir la position du bouton. Appuyez sur l\'icône ✓ en haut à droite quand vous êtes prêt.';
 
   @override
   String get onboardingSeatOpenTitle => 'Siège libre';
@@ -7087,7 +7087,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get guidedDealFlopTitle => 'Distribuer le Flop';
 
   @override
-  String get guidedDealFlopBody => 'Sélectionnez 3 cartes pour le Flop.';
+  String get guidedDealFlopBody =>
+      'Glissez un rang vers une couleur pour sélectionner une carte. Appuyez sur une carte sélectionnée pour la retirer. Choisissez 3 cartes pour le flop.';
 
   @override
   String get guidedDealTurnTitle => 'Distribuer le Turn';
@@ -7100,6 +7101,82 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get guidedDealRiverBody => 'Sélectionnez 1 carte pour le River.';
+
+  @override
+  String get guidedStackRingTitle => 'Plage de Stack';
+
+  @override
+  String get guidedStackRingBody =>
+      'Appuyez et maintenez l\'anneau, faites pivoter votre doigt pour sélectionner une plage de stack, puis relâchez. Cela vous aide à configurer les stacks de vos adversaires avant le flop.';
+
+  @override
+  String get guidedTableButtonTitle => 'Gérer la Table';
+
+  @override
+  String get guidedTableButtonBody =>
+      'Appuyez sur ce bouton pour gérer les joueurs, mettre à jour les stacks, changer les places ou déplacer le bouton du dealer.';
+
+  @override
+  String get guidedBlindsPillTitle => 'Blinds';
+
+  @override
+  String get guidedBlindsPillBody =>
+      'Appuyez ici pour mettre à jour les niveaux de blinds à tout moment — utile quand les niveaux du tournoi augmentent.';
+
+  @override
+  String get guidedNextHandTitle => 'Main Suivante';
+
+  @override
+  String get guidedNextHandBody =>
+      'Appuyez pour passer à la main suivante. Le bouton du dealer se déplace, votre stack est suivi automatiquement et les blinds sont déduits.';
+
+  @override
+  String get guidedInfoButtonTitle => 'Guide des Gestes';
+
+  @override
+  String get guidedInfoButtonBody =>
+      'Appuyez sur ce bouton à tout moment pour voir tous les contrôles gestuels disponibles pour enregistrer les actions.';
+
+  @override
+  String get guidedSessionInfoTitle => 'Détails de Session';
+
+  @override
+  String get guidedSessionInfoBody =>
+      'Appuyez sur ce bouton pour voir les détails de votre session, votre graphique de stack et l\'historique des mains. Appuyez maintenant !';
+
+  @override
+  String get guidedAddOnTitle => 'Add-Ons et Rebuys';
+
+  @override
+  String get guidedAddOnBody => 'Gérez vos add-ons et rebuys ici.';
+
+  @override
+  String get guidedUpdateStackTitle => 'Mettre à jour le Stack';
+
+  @override
+  String get guidedUpdateStackBody =>
+      'Mettez à jour votre stack manuellement et prenez des notes rapides. Elles apparaîtront dans votre graphique de stack.';
+
+  @override
+  String get guidedStackChartTitle => 'Graphique de Stack';
+
+  @override
+  String get guidedStackChartBody =>
+      'Touchez n\'importe quel point pour voir comment se déroule votre partie.';
+
+  @override
+  String get guidedStopSessionTitle => 'Arrêter la Session';
+
+  @override
+  String get guidedStopSessionBody =>
+      'Terminez votre session à tout moment quand vous avez fini.';
+
+  @override
+  String get guidedTourCompleteTitle => 'Tour terminé !';
+
+  @override
+  String get guidedTourCompleteBody =>
+      'Tout est prêt ! Vous pouvez retrouver vos données de session dans l\'onglet Sessions à tout moment.';
 
   @override
   String get kbStatsTitle => 'Vos statistiques';

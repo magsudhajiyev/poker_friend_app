@@ -9,6 +9,9 @@ import '../models/hand_state_machine.dart';
 import '../services/display_identity_service.dart';
 import '../widgets/poker_table_widget.dart';
 import '../widgets/seat_config_sheet.dart';
+import '../onboarding/onboarding_state.dart';
+import '../onboarding/onboarding_tour.dart';
+import '../onboarding/onboarding_progress_bar.dart';
 import 'poker_hand_screen.dart';
 
 /// Unified session setup screen that merges session config + seat setup
@@ -23,6 +26,10 @@ class UnifiedSessionSetupScreen extends StatefulWidget {
 }
 
 class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
+  // ─── Onboarding ─────────────────────────────────────────────────
+  final GlobalKey _tableSectionKey = GlobalKey(debugLabel: 'tableSection');
+  final ScrollController _scrollController = ScrollController();
+
   // ─── Form controllers ────────────────────────────────────────────
   final TextEditingController _sessionNameController = TextEditingController();
   final TextEditingController _buyInController = TextEditingController();
@@ -70,6 +77,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     _initSeats();
     _loadHeroName();
     // Intentionally NOT loading saved defaults — start fresh each time
+    _scheduleOnboardingTour();
   }
 
   void _initSeats() {
@@ -112,6 +120,40 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     if (mounted) setState(() => _heroName = name);
   }
 
+  void _scheduleOnboardingTour() {
+    if (!OnboardingState.isOnboardingActive ||
+        OnboardingState.currentPhase != 2) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+      SessionSetupTour(
+        onFinished: _showTableTourIfPending,
+      ).show(context);
+    });
+  }
+
+  void _showTableTourIfPending() {
+    if (!OnboardingState.isOnboardingActive ||
+        !OnboardingState.tableTourPending) return;
+
+    OnboardingState.tableTourPending = false;
+    OnboardingState.advanceTo(3);
+
+    // Scroll down to table section, then show the tour
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Scroll to bottom to reveal the table
+      await _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOut,
+      );
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted || _tableSectionKey.currentContext == null) return;
+      SeatSetupTour(tableKey: _tableSectionKey).show(context);
+    });
+  }
+
   Future<void> _saveDefaults() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
@@ -128,6 +170,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     _sessionNameController.dispose();
     _buyInController.dispose();
     _startingStackController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -442,286 +485,303 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                   ),
                 ),
 
+                // Onboarding progress bar
+                if (OnboardingState.isOnboardingActive)
+                  const OnboardingProgressBar(),
+
                 // Scrollable content
                 Expanded(
                   child: SingleChildScrollView(
+                    controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 8),
 
-                        // ── Session Name ──────────────────────────
-                        _buildCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildCardTitle(l10n.setupSessionName),
-                              const SizedBox(height: 12),
-                              TextField(
-                                controller: _sessionNameController,
-                                textInputAction: TextInputAction.done,
-                                style: _textFieldStyle,
-                                decoration: _inputDecoration(
-                                    l10n.setupSessionNameHint),
-                                onChanged: (_) => setState(() {}),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // ── Game Type ─────────────────────────────
-                        _buildCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildCardTitle(l10n.setupGameType),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildToggle(
-                                      l10n.setupCashGame,
-                                      _gameType == GameType.cash,
-                                      () => setState(() {
-                                        _gameType = GameType.cash;
-                                        _updateBlindsForGameType();
-                                      }),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _buildToggle(
-                                      l10n.setupTournament,
-                                      _gameType == GameType.tournament,
-                                      () => setState(() {
-                                        _gameType = GameType.tournament;
-                                        _updateBlindsForGameType();
-                                      }),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // ── Blinds Row ────────────────────────────
-                        Row(
+                        // ── SESSION FORM SECTION ──
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: _buildBlindCard(l10n.setupSmallBlind,
-                                  _gameType == GameType.cash
-                                      ? '${CurrencyService.symbol}$_smallBlind'
-                                      : '$_smallBlind', () {
-                                _showBlindDialog(l10n.setupSmallBlind, _smallBlind,
-                                    (v) {
-                                  setState(() => _smallBlind = v);
-                                });
-                              }),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildBlindCard(l10n.setupBigBlind,
-                                  _gameType == GameType.cash
-                                      ? '${CurrencyService.symbol}$_bigBlind'
-                                      : '$_bigBlind', () {
-                                _showBlindDialog(l10n.setupBigBlind, _bigBlind, (v) {
-                                  setState(() => _bigBlind = v);
-                                });
-                              }),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // ── Buy-in ────────────────────────────────
-                        _buildCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildCardTitle(l10n.setupBuyInAmount),
-                              const SizedBox(height: 12),
-                              TextField(
-                                controller: _buyInController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
-                                textInputAction: TextInputAction.done,
-                                style: _textFieldStyle,
-                                decoration:
-                                    _inputDecoration(l10n.setupEnterAmount, prefixText: CurrencyService.prefixText, suffixText: CurrencyService.suffixText),
-                                onChanged: (_) => setState(() {}),
-                              ),
-                              if (_gameType == GameType.cash) ...[
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    _buildIcon(
-                                      'icons/figma_icons/info.svg',
-                                      16,
-                                      const Color(0xFF89F1EC),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        l10n.setupStartingStackEqualsBuyIn,
-                                        style: GoogleFonts.ibmPlexSans(
-                                          color: Colors.white.withOpacity(0.5),
-                                          fontSize: 13,
-                                          height: 1.4,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                        // ── Starting Stack (tournament only) ──────
-                        if (_gameType == GameType.tournament) ...[
-                          const SizedBox(height: 12),
-                          Builder(builder: (context) {
-                            final stack = double.tryParse(
-                                _startingStackController.text);
-                            final hasError =
-                                stack != null && stack < _bigBlind;
-                            return _buildCard(
+                            // ── Session Name ──────────────────────────
+                            _buildCard(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _buildCardTitle(l10n.setupStartingStack),
+                                  _buildCardTitle(l10n.setupSessionName),
                                   const SizedBox(height: 12),
                                   TextField(
-                                    controller: _startingStackController,
+                                    controller: _sessionNameController,
+                                    textInputAction: TextInputAction.done,
+                                    style: _textFieldStyle,
+                                    decoration: _inputDecoration(
+                                        l10n.setupSessionNameHint),
+                                    onChanged: (_) => setState(() {}),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // ── Game Type ─────────────────────────────
+                            _buildCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildCardTitle(l10n.setupGameType),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildToggle(
+                                          l10n.setupCashGame,
+                                          _gameType == GameType.cash,
+                                          () => setState(() {
+                                            _gameType = GameType.cash;
+                                            _updateBlindsForGameType();
+                                          }),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _buildToggle(
+                                          l10n.setupTournament,
+                                          _gameType == GameType.tournament,
+                                          () => setState(() {
+                                            _gameType = GameType.tournament;
+                                            _updateBlindsForGameType();
+                                          }),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // ── Blinds Row ────────────────────────────
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildBlindCard(l10n.setupSmallBlind,
+                                      _gameType == GameType.cash
+                                          ? '${CurrencyService.symbol}$_smallBlind'
+                                          : '$_smallBlind', () {
+                                    _showBlindDialog(l10n.setupSmallBlind, _smallBlind,
+                                        (v) {
+                                      setState(() => _smallBlind = v);
+                                    });
+                                  }),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildBlindCard(l10n.setupBigBlind,
+                                      _gameType == GameType.cash
+                                          ? '${CurrencyService.symbol}$_bigBlind'
+                                          : '$_bigBlind', () {
+                                    _showBlindDialog(l10n.setupBigBlind, _bigBlind, (v) {
+                                      setState(() => _bigBlind = v);
+                                    });
+                                  }),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // ── Buy-in ────────────────────────────────
+                            _buildCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildCardTitle(l10n.setupBuyInAmount),
+                                  const SizedBox(height: 12),
+                                  TextField(
+                                    controller: _buyInController,
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
                                             decimal: true),
                                     textInputAction: TextInputAction.done,
                                     style: _textFieldStyle,
-                                    decoration: InputDecoration(
-                                      hintText: l10n.setupEnterChipStack,
-                                      hintStyle: GoogleFonts.ibmPlexSans(
-                                        color: Colors.white.withOpacity(0.4),
-                                        fontSize: 17,
-                                        height: 1.44,
-                                      ),
-                                      filled: true,
-                                      fillColor: const Color(0xFF1C1C1E),
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: hasError
-                                              ? const Color(0xFFFF4444)
-                                              : const Color(0xFF1B262D)
-                                                  .withOpacity(0.6),
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: hasError
-                                              ? const Color(0xFFFF4444)
-                                              : const Color(0xFF1B262D)
-                                                  .withOpacity(0.6),
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: hasError
-                                              ? const Color(0xFFFF4444)
-                                              : const Color(0xFF89F1EC),
-                                        ),
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 14),
-                                    ),
+                                    decoration:
+                                        _inputDecoration(l10n.setupEnterAmount, prefixText: CurrencyService.prefixText, suffixText: CurrencyService.suffixText),
                                     onChanged: (_) => setState(() {}),
                                   ),
-                                  if (hasError) ...[
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Must be at least the Big Blind ($_bigBlind)',
-                                      style: GoogleFonts.ibmPlexSans(
-                                        fontSize: 12,
-                                        color: const Color(0xFFFF4444),
-                                      ),
+                                  if (_gameType == GameType.cash) ...[
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        _buildIcon(
+                                          'icons/figma_icons/info.svg',
+                                          16,
+                                          const Color(0xFF89F1EC),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            l10n.setupStartingStackEqualsBuyIn,
+                                            style: GoogleFonts.ibmPlexSans(
+                                              color: Colors.white.withOpacity(0.5),
+                                              fontSize: 13,
+                                              height: 1.4,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ],
                               ),
-                            );
-                          }),
-                        ],
-
-                        // ── BB Ante (tournament only) ─────────────
-                        if (_gameType == GameType.tournament) ...[
-                          const SizedBox(height: 12),
-                          _buildCard(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  l10n.setupBbAnte,
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 17,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.44,
-                                  ),
-                                ),
-                                _buildSwitch(
-                                  _hasBBante,
-                                  (v) => setState(() => _hasBBante = v),
-                                ),
-                              ],
                             ),
-                          ),
-                        ],
+
+                            // ── Starting Stack (tournament only) ──────
+                            if (_gameType == GameType.tournament) ...[
+                              const SizedBox(height: 12),
+                              Builder(builder: (context) {
+                                final stack = double.tryParse(
+                                    _startingStackController.text);
+                                final hasError =
+                                    stack != null && stack < _bigBlind;
+                                return _buildCard(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildCardTitle(l10n.setupStartingStack),
+                                      const SizedBox(height: 12),
+                                      TextField(
+                                        controller: _startingStackController,
+                                        keyboardType:
+                                            const TextInputType.numberWithOptions(
+                                                decimal: true),
+                                        textInputAction: TextInputAction.done,
+                                        style: _textFieldStyle,
+                                        decoration: InputDecoration(
+                                          hintText: l10n.setupEnterChipStack,
+                                          hintStyle: GoogleFonts.ibmPlexSans(
+                                            color: Colors.white.withOpacity(0.4),
+                                            fontSize: 17,
+                                            height: 1.44,
+                                          ),
+                                          filled: true,
+                                          fillColor: const Color(0xFF1C1C1E),
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                              color: hasError
+                                                  ? const Color(0xFFFF4444)
+                                                  : const Color(0xFF1B262D)
+                                                      .withOpacity(0.6),
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                              color: hasError
+                                                  ? const Color(0xFFFF4444)
+                                                  : const Color(0xFF1B262D)
+                                                      .withOpacity(0.6),
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                              color: hasError
+                                                  ? const Color(0xFFFF4444)
+                                                  : const Color(0xFF89F1EC),
+                                            ),
+                                          ),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 16, vertical: 14),
+                                        ),
+                                        onChanged: (_) => setState(() {}),
+                                      ),
+                                      if (hasError) ...[
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Must be at least the Big Blind ($_bigBlind)',
+                                          style: GoogleFonts.ibmPlexSans(
+                                            fontSize: 12,
+                                            color: const Color(0xFFFF4444),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ],
+
+                            // ── BB Ante (tournament only) ─────────────
+                            if (_gameType == GameType.tournament) ...[
+                              const SizedBox(height: 12),
+                              _buildCard(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      l10n.setupBbAnte,
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 17,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.44,
+                                      ),
+                                    ),
+                                    _buildSwitch(
+                                      _hasBBante,
+                                      (v) => setState(() => _hasBBante = v),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
 
                         const SizedBox(height: 20),
 
-                        // ── SECTION: Table Setup ──────────────────
-                        _buildSectionHeader(l10n.setupTableSection),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.setupTableInstructions,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 13,
-                            color: Colors.white.withOpacity(0.5),
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
+                        // ── SECTION: Table Setup (keyed for onboarding) ──
+                        Column(
+                          key: _tableSectionKey,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionHeader(l10n.setupTableSection),
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.setupTableInstructions,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 13,
+                                color: Colors.white.withOpacity(0.5),
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
 
-                        // ── Poker Table ───────────────────────────
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.38,
-                          child: PokerTableWidget(
-                            activeSeatMap: _seatActive,
-                            seatLabels: _buildSeatLabels(),
-                            buttonPosition: _buttonPosition,
-                            showDealerButton: true,
-                            isDealerButtonDraggable: true,
-                            onDealerButtonMoved: (newSeat) {
-                              setState(() => _buttonPosition = newSeat);
-                            },
-                            seatBuilder: (seatNumber, isActive) {
-                              return _buildSeatWidget(seatNumber);
-                            },
-                          ),
+                            // ── Poker Table ───────────────────────────
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.38,
+                              child: PokerTableWidget(
+                                activeSeatMap: _seatActive,
+                                seatLabels: _buildSeatLabels(),
+                                buttonPosition: _buttonPosition,
+                                showDealerButton: true,
+                                isDealerButtonDraggable: true,
+                                onDealerButtonMoved: (newSeat) {
+                                  setState(() => _buttonPosition = newSeat);
+                                },
+                                seatBuilder: (seatNumber, isActive) {
+                                  return _buildSeatWidget(seatNumber);
+                                },
+                              ),
+                            ),
+                          ],
                         ),
 
                         const SizedBox(height: 20),

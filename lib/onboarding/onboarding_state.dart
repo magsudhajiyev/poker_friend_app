@@ -11,8 +11,10 @@ enum GuidedPhase {
   boardCards,      // Waiting for board cards dialog
   holeCards,       // Hole cards dialog
   handComplete,    // "Hand Complete!"
-  menuSettings,    // Coach mark: open menu → highlight Settings (change blinds)
-  endSession,      // Coach mark on 3-dot menu → Stop Session
+  tableButton,     // Coach mark: spotlight table button (manage players, settings)
+  blindsPill,      // Coach mark: spotlight blinds pill (tap to update blinds)
+  nextHandButton,  // Coach mark: spotlight next hand button
+  gestureInfoTap,  // Coach mark: spotlight i button — ask user to tap it
   done,
 }
 
@@ -37,6 +39,9 @@ class OnboardingState {
   /// Whether the button token tour needs to run after the seat dialog closes.
   static bool buttonTokenTourPending = false;
 
+  /// Whether the table section tour needs to run (after session details OK in unified setup).
+  static bool tableTourPending = false;
+
   /// Whether the user chose individual logging mode in phase 1.
   static bool isIndividualMode = false;
 
@@ -48,6 +53,9 @@ class OnboardingState {
 
   /// Whether the individual mode stop-session tour is pending.
   static bool individualStopSessionTourPending = false;
+
+  /// Whether the session details tour needs to run (after tapping ⓘ in full session mode).
+  static bool sessionDetailsTourPending = false;
 
   // ---------------------------------------------------------------------------
   // Phase 4 — Guided hand state
@@ -73,9 +81,11 @@ class OnboardingState {
     isIndividualMode = false;
     seatDialogTourPending = false;
     buttonTokenTourPending = false;
+    tableTourPending = false;
     individualTrackingTourPending = false;
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
+    sessionDetailsTourPending = false;
     _resetGuidedHand();
     _notify();
   }
@@ -92,6 +102,7 @@ class OnboardingState {
     individualTrackingTourPending = false;
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
+    sessionDetailsTourPending = false;
     guidedHandPhase = GuidedPhase.done;
     _notify();
   }
@@ -102,9 +113,11 @@ class OnboardingState {
     isIndividualMode = false;
     seatDialogTourPending = false;
     buttonTokenTourPending = false;
+    tableTourPending = false;
     individualTrackingTourPending = false;
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
+    sessionDetailsTourPending = false;
     guidedHandPhase = GuidedPhase.done;
     _notify();
   }
@@ -121,6 +134,7 @@ class OnboardingState {
     _isReplay = true;
     seatDialogTourPending = false;
     buttonTokenTourPending = false;
+    tableTourPending = false;
     individualTrackingTourPending = false;
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
@@ -137,6 +151,7 @@ class OnboardingState {
     individualTrackingTourPending = false;
     quickStackUpdateTourPending = false;
     individualStopSessionTourPending = false;
+    sessionDetailsTourPending = false;
     guidedHandPhase = GuidedPhase.done;
     _notify();
   }
@@ -148,7 +163,19 @@ class OnboardingState {
     heroFolded = false;
   }
 
-  static double get progress => (currentPhase + 1) / totalPhases;
+  /// Maps internal phase to display step.
+  /// Replay skips phase 0 (Home), so offset by 1 less.
+  /// Phases 2+3 are merged into one step (unified setup screen).
+  static int get displayStep {
+    final offset = _isReplay ? 0 : 1; // replay starts at phase 1 = step 1
+    if (currentPhase <= 2) return currentPhase + offset; // 0→1, 1→2, 2→3 (normal) | 1→1, 2→2 (replay)
+    if (currentPhase == 3) return 2 + offset;            // same step as phase 2
+    return currentPhase - 1 + offset;                    // 4→4, 5→5 (normal) | 4→3, 5→4 (replay)
+  }
+
+  static int get displayTotalSteps => _isReplay ? 4 : 5;
+
+  static double get progress => displayStep / displayTotalSteps;
 
   static bool get isGuidedHandActive =>
       isOnboardingActive && currentPhase == 4 && guidedHandPhase != GuidedPhase.done;

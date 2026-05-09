@@ -16,8 +16,8 @@ class OnboardingProgressBar extends StatelessWidget {
       builder: (context, _, __) {
         if (!OnboardingState.isOnboardingActive) return const SizedBox.shrink();
 
-        final phase = OnboardingState.currentPhase;
-        final total = OnboardingState.totalPhases;
+        final step = OnboardingState.displayStep;
+        final total = OnboardingState.displayTotalSteps;
         final progress = OnboardingState.progress;
 
         return Padding(
@@ -45,7 +45,7 @@ class OnboardingProgressBar extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                AppLocalizations.of(context).onboardingStepOf(phase + 1, total),
+                AppLocalizations.of(context).onboardingStepOf(step, total),
                 style: AppTypography.bodySmall(
                   color: Colors.white.withOpacity(0.54),
                 ).copyWith(fontSize: 11),

@@ -6841,14 +6841,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingSessionSetupBody =>
-      'Fülle deine Session-Details aus – Name, Buy-in, Blinds – und tippe dann auf „Spiel starten“.';
+      'Hier kannst du Sitzungsname, Spieltyp, Blinds, Buy-in und Startstack festlegen.';
 
   @override
   String get onboardingTableSetupTitle => 'Tisch einrichten';
 
   @override
   String get onboardingTableSetupBody =>
-      'Tippe auf einen beliebigen Sitz, um Spieler einzurichten. Gehen wir als Nächstes den Sitz-Dialog durch.';
+      'Fülle jetzt die Sitzungsdetails aus und richte den Tisch ein. Tippe auf einen Sitz, um dich und deine Gegner zu platzieren, und ziehe den Dealer-Button (D), um die Button-Position festzulegen. Tippe auf das ✓-Symbol oben rechts, wenn du bereit bist.';
 
   @override
   String get onboardingSeatOpenTitle => 'Sitz frei';
@@ -7068,7 +7068,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get guidedDealFlopTitle => 'Flop aufdecken';
 
   @override
-  String get guidedDealFlopBody => 'Wähle 3 Karten für den Flop.';
+  String get guidedDealFlopBody =>
+      'Ziehe einen Rang auf eine Farbe, um eine Karte auszuwählen. Tippe auf eine ausgewählte Karte, um sie zu entfernen. Wähle 3 Karten für den Flop.';
 
   @override
   String get guidedDealTurnTitle => 'Turn aufdecken';
@@ -7081,6 +7082,82 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get guidedDealRiverBody => 'Wähle 1 Karte für den River.';
+
+  @override
+  String get guidedStackRingTitle => 'Stack-Bereich';
+
+  @override
+  String get guidedStackRingBody =>
+      'Halte den Ring gedrückt, drehe deinen Finger, um einen Stack-Bereich auszuwählen, und lasse dann los. So kannst du die Stacks deiner Gegner vor dem Flop einrichten.';
+
+  @override
+  String get guidedTableButtonTitle => 'Tisch verwalten';
+
+  @override
+  String get guidedTableButtonBody =>
+      'Tippe auf diesen Button, um Spieler zu verwalten, Stacks zu aktualisieren, Sitzplätze zu ändern oder den Dealer-Button zu verschieben.';
+
+  @override
+  String get guidedBlindsPillTitle => 'Blinds';
+
+  @override
+  String get guidedBlindsPillBody =>
+      'Tippe hier, um die Blind-Stufen jederzeit zu ändern — nützlich, wenn die Turnier-Levels steigen.';
+
+  @override
+  String get guidedNextHandTitle => 'Nächste Hand';
+
+  @override
+  String get guidedNextHandBody =>
+      'Tippe hier, um zur nächsten Hand zu springen. Der Dealer-Button wird verschoben, dein Stack wird automatisch verfolgt und die Blinds werden abgezogen.';
+
+  @override
+  String get guidedInfoButtonTitle => 'Gesten-Guide';
+
+  @override
+  String get guidedInfoButtonBody =>
+      'Tippe jederzeit auf diesen Button, um alle verfügbaren Gesten zum Loggen von Aktionen zu sehen.';
+
+  @override
+  String get guidedSessionInfoTitle => 'Sitzungsdetails';
+
+  @override
+  String get guidedSessionInfoBody =>
+      'Tippe auf diesen Button, um deine Sitzungsdetails, Stack-Chart und Handverlauf zu sehen. Tippe jetzt darauf!';
+
+  @override
+  String get guidedAddOnTitle => 'Add-Ons & Rebuys';
+
+  @override
+  String get guidedAddOnBody => 'Verwalte deine Add-Ons und Rebuys hier.';
+
+  @override
+  String get guidedUpdateStackTitle => 'Stack aktualisieren';
+
+  @override
+  String get guidedUpdateStackBody =>
+      'Aktualisiere deinen Stack manuell und mache kurze Notizen. Sie erscheinen in deinem Stack-Chart.';
+
+  @override
+  String get guidedStackChartTitle => 'Stack-Chart';
+
+  @override
+  String get guidedStackChartBody =>
+      'Tippe auf einen Punkt, um zu sehen, wie dein Spiel läuft.';
+
+  @override
+  String get guidedStopSessionTitle => 'Session beenden';
+
+  @override
+  String get guidedStopSessionBody =>
+      'Beende deine Session jederzeit, wenn du fertig bist.';
+
+  @override
+  String get guidedTourCompleteTitle => 'Tour abgeschlossen!';
+
+  @override
+  String get guidedTourCompleteBody =>
+      'Alles bereit! Du findest deine Sessiondaten jederzeit im Sessions-Tab.';
 
   @override
   String get kbStatsTitle => 'Deine Statistiken';

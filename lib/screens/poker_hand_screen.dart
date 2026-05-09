@@ -154,6 +154,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   final GlobalKey<GuidedHandOverlayState> _guidedOverlayKey = GlobalKey();
   final GlobalKey _gestureInfoKey = GlobalKey(debugLabel: 'gestureInfo');
   final GlobalKey _skipButtonKey = GlobalKey(debugLabel: 'skipButton');
+  final GlobalKey _stackRingKey = GlobalKey(debugLabel: 'stackRing');
+  final GlobalKey _tableButtonKey = GlobalKey(debugLabel: 'tableButton');
+  final GlobalKey _blindsPillKey = GlobalKey(debugLabel: 'blindsPill');
+  final GlobalKey _nextHandButtonKey = GlobalKey(debugLabel: 'nextHandButton');
+  final GlobalKey _sessionInfoButtonKey = GlobalKey(debugLabel: 'sessionInfoButton');
 
   @override
   void initState() {
@@ -1658,6 +1663,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         children: [
                           // Session Details info button
                           GestureDetector(
+                            key: _sessionInfoButtonKey,
                             onTap: () => _showSessionDetails(),
                             child: Container(
                               width: 44,
@@ -1777,6 +1783,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         children: [
                           // Table icon
                           GestureDetector(
+                            key: _tableButtonKey,
                             onTap: () {
                               TableManagementSheet.show(
                                 context: context,
@@ -1803,6 +1810,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           const SizedBox(width: 6),
                           // Blinds pill — tappable to edit
                           GestureDetector(
+                            key: _blindsPillKey,
                             onTap: () => _showBlindsEditDialog(),
                             child: Container(
                               height: 34,
@@ -1827,6 +1835,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           // Next Hand (skip) button — hidden in individual/quick session mode
                           if (!widget.isIndividualSession)
                             GestureDetector(
+                              key: _nextHandButtonKey,
                               onTap: _skipCurrentAction,
                               child: Container(
                                 height: 34,
@@ -2171,11 +2180,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         // Guided hand overlay (onboarding phase 4)
         GuidedHandOverlay(
           key: _guidedOverlayKey,
-          menuButtonKey: _menuButtonKey,
           gestureInfoKey: _gestureInfoKey,
           skipButtonKey: _skipButtonKey,
-          onOpenMenu: () => setState(() => _showMenuOverlay = true),
-          onCloseMenu: () => setState(() => _showMenuOverlay = false),
+          stackRingKey: _stackRingKey,
+          tableButtonKey: _tableButtonKey,
+          blindsPillKey: _blindsPillKey,
+          nextHandButtonKey: _nextHandButtonKey,
+          sessionInfoButtonKey: _sessionInfoButtonKey,
           heroSeat: sessionManager.ourSeatNumber,
           currentPlayerSeat: gameState.currentPlayer,
           isValidAction: gameState.isValidAction,
@@ -2465,6 +2476,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             )
           else
             StackRangeCircle(
+              key: _stackRingKey,
               currentStack: gameState.getPlayerStack(currentPlayer),
               bigBlind: sessionManager.bigBlind,
               confidence: confidence,
