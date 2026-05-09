@@ -16,16 +16,11 @@ class HandSharingService {
     bool hideHoleCards = false,
     String? sessionName,
   }) async {
-    try {
-      final shareId = _generateShareId();
-      final doc = _buildSharedDocument(hand, shareId,
-          hideHoleCards: hideHoleCards, sessionName: sessionName);
-      await _firestore.collection(_collection).doc(shareId).set(doc);
-      return '$_baseUrl/$shareId';
-    } catch (e) {
-      print('Error sharing hand: $e');
-      return null;
-    }
+    final shareId = _generateShareId();
+    final doc = _buildSharedDocument(hand, shareId,
+        hideHoleCards: hideHoleCards, sessionName: sessionName);
+    await _firestore.collection(_collection).doc(shareId).set(doc);
+    return '$_baseUrl/$shareId';
   }
 
   static String _generateShareId() {

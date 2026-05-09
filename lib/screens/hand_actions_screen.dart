@@ -157,19 +157,23 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         sessionName: sessionName,
       );
       if (url != null && mounted) {
+        final box = context.findRenderObject() as RenderBox?;
+        final origin = box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null;
         await Share.share(
           '${AppLocalizations.of(context).handActionsShareMessage}\n$url',
           subject: AppLocalizations.of(context).handActionsShareSubject('${widget.hand['handNumber']}'),
-        );
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).handActionsFailedToShareHand)),
+          sharePositionOrigin: origin,
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).handActionsFailedToShareHand)),
+          SnackBar(
+            content: Text('${AppLocalizations.of(context).handActionsFailedToShareHand}: $e'),
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {
@@ -249,7 +253,15 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         }
       }
 
-      await PokerStarsExportService.exportAndShare(widget.hand, sessionData);
+      final box = context.findRenderObject() as RenderBox?;
+      final origin = box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
+      await PokerStarsExportService.exportAndShare(
+        widget.hand,
+        sessionData,
+        sharePositionOrigin: origin,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

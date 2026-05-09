@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -976,6 +977,7 @@ class PokerStarsExportService {
     Map<String, dynamic> hand,
     Map<String, dynamic> session, {
     String? fileName,
+    Rect? sharePositionOrigin,
   }) async {
     final text = exportHand(hand, session);
     if (text.isEmpty) return;
@@ -989,6 +991,7 @@ class PokerStarsExportService {
     await Share.shareXFiles(
       [XFile(file.path)],
       subject: 'PokerStars Hand History',
+      sharePositionOrigin: sharePositionOrigin,
     );
   }
 
@@ -997,6 +1000,7 @@ class PokerStarsExportService {
     Map<String, dynamic> session,
     List<Map<String, dynamic>> hands, {
     String? fileName,
+    Rect? sharePositionOrigin,
   }) async {
     final text = exportSession(session, hands);
     if (text.isEmpty) return;
@@ -1011,6 +1015,7 @@ class PokerStarsExportService {
     await Share.shareXFiles(
       [XFile(file.path)],
       subject: 'PokerStars Hand History',
+      sharePositionOrigin: sharePositionOrigin,
     );
   }
 }
