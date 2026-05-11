@@ -488,6 +488,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+
   Widget _buildSettingsCard() {
     final l10n = AppLocalizations.of(context);
     return Container(

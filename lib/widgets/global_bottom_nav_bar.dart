@@ -112,6 +112,7 @@ class GlobalBottomNavBar extends StatelessWidget {
             top: 0,
             left: 0,
             right: 0,
+            height: fabOverflow + 62, // full FAB height to claim hit area
             child: Center(
               child: _buildCenterFab(context),
             ),
@@ -217,6 +218,7 @@ class GlobalBottomNavBar extends StatelessWidget {
   /// Center FAB button
   Widget _buildCenterFab(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () async {
         if (onNavigationAttempt != null) {
           final shouldProceed = await onNavigationAttempt!();

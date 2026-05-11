@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -238,26 +239,10 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header: logo + app name
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  'assets/logo_chat.png',
-                  width: 28,
-                  height: 28,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'Final Table',
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
+          SvgPicture.asset(
+            'assets/logo.svg',
+            width: 28,
+            height: 28,
           ),
           const SizedBox(height: 20),
 

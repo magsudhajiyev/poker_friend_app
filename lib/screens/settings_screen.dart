@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/components/app_toggle.dart';
@@ -460,6 +461,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                             );
+                          },
+                        ),
+                      ],
+                    ),
+
+                    // Legal Section
+                    const SizedBox(height: 28),
+                    _buildSectionHeader(l10n.settingsLegal),
+                    const SizedBox(height: 12),
+                    _buildSettingsCard(
+                      children: [
+                        _buildNavigationRow(
+                          icon: Icons.description_outlined,
+                          iconColor: const Color(0xFF89F1EC),
+                          title: l10n.settingsTermsOfService,
+                          subtitle: l10n.settingsTermsOfServiceSubtitle,
+                          onTap: () {
+                            launchUrl(Uri.parse('https://www.finaltable.io/terms'));
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        _buildNavigationRow(
+                          icon: Icons.privacy_tip_outlined,
+                          iconColor: const Color(0xFF89F1EC),
+                          title: l10n.settingsPrivacyPolicy,
+                          subtitle: l10n.settingsPrivacyPolicySubtitle,
+                          onTap: () {
+                            launchUrl(Uri.parse('https://www.finaltable.io/privacy'));
                           },
                         ),
                       ],

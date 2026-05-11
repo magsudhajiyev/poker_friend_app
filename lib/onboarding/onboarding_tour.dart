@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/typography.dart';
@@ -770,59 +771,72 @@ class _OnboardingCompleteDialog extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Center(
       child: Container(
+        width: 309,
         margin: const EdgeInsets.symmetric(horizontal: 32),
-        padding: const EdgeInsets.all(28),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: const Color(0xFF101115),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: AppColors.buttonPrimary.withValues(alpha: 0.15),
-            width: 1,
-          ),
-          boxShadow: [
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF1B1E24)),
+          boxShadow: const [
             BoxShadow(
-              color: AppColors.buttonPrimary.withValues(alpha: 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
+              color: Colors.black,
+              blurRadius: 114,
+              offset: Offset(20, 4),
             ),
           ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.celebration_rounded,
-                color: Color(0xFF89F1EC), size: 48),
+            const Icon(
+              Icons.check_circle_outline,
+              color: Color(0xFF62E3BC),
+              size: 48,
+            ),
             const SizedBox(height: 16),
             Text(
-              l10n.onboardingAllSetTitle,
-              style: AppTypography.pageTitle().copyWith(fontSize: 24, decoration: TextDecoration.none),
+              l10n.guidedTourCompleteTitle,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+                decoration: TextDecoration.none,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              l10n.onboardingAllSetBody,
-              style: AppTypography.bodySmall(
-                color: Colors.white.withValues(alpha: 0.8),
-              ).copyWith(fontSize: 15, height: 1.5, decoration: TextDecoration.none),
+              l10n.guidedTourCompleteBody,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
+                fontSize: 15,
+                height: 1.44,
+                decoration: TextDecoration.none,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: onDone,
-                style: TextButton.styleFrom(
-                  backgroundColor: AppColors.buttonPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            GestureDetector(
+              onTap: onDone,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(60),
                 ),
-                child: Text(
-                  l10n.onboardingLetsPlay,
-                  style:
-                      AppTypography.bodyLarge(color: Colors.black).copyWith(
-                    fontWeight: FontWeight.w600,
+                child: Center(
+                  child: Text(
+                    l10n.commonDone,
+                    style: GoogleFonts.ibmPlexSans(
+                      color: Colors.black,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.5,
+                      decoration: TextDecoration.none,
+                    ),
                   ),
                 ),
               ),

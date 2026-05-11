@@ -2461,7 +2461,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           if (isHero)
             Text(
               _getCurrentPlayerStackSafely(),
