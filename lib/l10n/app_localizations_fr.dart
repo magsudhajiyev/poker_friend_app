@@ -219,6 +219,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsClubsEventsSubtitle => 'Comment fonctionne le jeu en club';
 
   @override
+  String get settingsLegal => 'JURIDIQUE';
+
+  @override
+  String get settingsTermsOfService => 'Conditions d\'utilisation';
+
+  @override
+  String get settingsTermsOfServiceSubtitle =>
+      'Voir nos conditions d\'utilisation';
+
+  @override
+  String get settingsPrivacyPolicy => 'Politique de confidentialité';
+
+  @override
+  String get settingsPrivacyPolicySubtitle =>
+      'Voir notre politique de confidentialité';
+
+  @override
   String get settingsAdmin => 'ADMIN';
 
   @override

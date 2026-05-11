@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/currency_service.dart';
@@ -284,21 +285,11 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 color: const Color(0xFF131616),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(
-                  'assets/logo_chat.png',
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.casino_outlined,
-                      color: Colors.white.withOpacity(0.3),
-                      size: 40,
-                    );
-                  },
-                ),
+              child: SvgPicture.asset(
+                'assets/logo.svg',
+                width: 60,
+                height: 60,
+                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(height: 24),

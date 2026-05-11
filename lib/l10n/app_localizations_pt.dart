@@ -219,6 +219,22 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsClubsEventsSubtitle => 'Como funciona o jogo em clube';
 
   @override
+  String get settingsLegal => 'LEGAL';
+
+  @override
+  String get settingsTermsOfService => 'Termos de serviço';
+
+  @override
+  String get settingsTermsOfServiceSubtitle => 'Ver nossos termos de serviço';
+
+  @override
+  String get settingsPrivacyPolicy => 'Política de privacidade';
+
+  @override
+  String get settingsPrivacyPolicySubtitle =>
+      'Ver nossa política de privacidade';
+
+  @override
   String get settingsAdmin => 'ADMIN';
 
   @override

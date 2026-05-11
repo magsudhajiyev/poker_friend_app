@@ -516,6 +516,36 @@ abstract class AppLocalizations {
   /// **'How club play works'**
   String get settingsClubsEventsSubtitle;
 
+  /// No description provided for @settingsLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'LEGAL'**
+  String get settingsLegal;
+
+  /// No description provided for @settingsTermsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get settingsTermsOfService;
+
+  /// No description provided for @settingsTermsOfServiceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View our terms of service'**
+  String get settingsTermsOfServiceSubtitle;
+
+  /// No description provided for @settingsPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get settingsPrivacyPolicy;
+
+  /// No description provided for @settingsPrivacyPolicySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View our privacy policy'**
+  String get settingsPrivacyPolicySubtitle;
+
   /// No description provided for @settingsAdmin.
   ///
   /// In en, this message translates to:

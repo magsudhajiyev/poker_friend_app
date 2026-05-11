@@ -1,5 +1,7 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
 import '../design_system/constants/typography.dart';
@@ -412,12 +414,18 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                   TextSpan(text: l10n.authExpBySigningUp),
                   TextSpan(
                     text: l10n.authExpTermsOfService,
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, decoration: TextDecoration.underline),
+                    recognizer: TapGestureRecognizer()..onTap = () {
+                      launchUrl(Uri.parse('https://www.finaltable.io/terms'));
+                    },
                   ),
                   TextSpan(text: l10n.authExpAnd),
                   TextSpan(
                     text: l10n.authExpPrivacyPolicy,
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, decoration: TextDecoration.underline),
+                    recognizer: TapGestureRecognizer()..onTap = () {
+                      launchUrl(Uri.parse('https://www.finaltable.io/privacy'));
+                    },
                   ),
                 ],
               ),

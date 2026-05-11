@@ -219,6 +219,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsClubsEventsSubtitle => 'Как работает клубная игра';
 
   @override
+  String get settingsLegal => 'ПРАВОВАЯ ИНФОРМАЦИЯ';
+
+  @override
+  String get settingsTermsOfService => 'Условия использования';
+
+  @override
+  String get settingsTermsOfServiceSubtitle =>
+      'Посмотреть условия использования';
+
+  @override
+  String get settingsPrivacyPolicy => 'Политика конфиденциальности';
+
+  @override
+  String get settingsPrivacyPolicySubtitle =>
+      'Посмотреть политику конфиденциальности';
+
+  @override
   String get settingsAdmin => 'АДМИН';
 
   @override

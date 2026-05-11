@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
@@ -17,29 +18,22 @@ class AuthWrapper extends StatefulWidget {
   State<AuthWrapper> createState() => _AuthWrapperState();
 }
 
-class _AuthWrapperState extends State<AuthWrapper> with SingleTickerProviderStateMixin {
+class _AuthWrapperState extends State<AuthWrapper> {
   bool _loggedUnexpectedLogout = false;
   bool _wasSignedIn = false;  // Track if user was ever signed in during this session
   bool _waitingForRecovery = false;  // Track if we're waiting for auth to recover
   bool _authTimedOut = false;  // Track if auth stream took too long to resolve
   Future<bool>? _usernameSetupFuture;  // Stored future to prevent re-creation on stream rebuilds
   Timer? _authTimeoutTimer;
-  late AnimationController _spinController;
-
   @override
   void initState() {
     super.initState();
-    _spinController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat();
     _startAuthTimeout();
   }
 
   @override
   void dispose() {
     _authTimeoutTimer?.cancel();
-    _spinController.dispose();
     super.dispose();
   }
 
@@ -189,26 +183,11 @@ class _AuthWrapperState extends State<AuthWrapper> with SingleTickerProviderStat
     return Scaffold(
       backgroundColor: const Color(0xFF02050B),
       body: Center(
-        child: AnimatedBuilder(
-          animation: _spinController,
-          builder: (context, child) {
-            return Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.001)
-                ..rotateY(_spinController.value * 6.28318),
-              child: child,
-            );
-          },
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Image.asset(
-              'assets/logo_chat.png',
-              width: 100,
-              height: 100,
-              fit: BoxFit.contain,
-            ),
-          ),
+        child: SvgPicture.asset(
+          'assets/logo.svg',
+          width: 100,
+          height: 100,
+          fit: BoxFit.contain,
         ),
       ),
     );

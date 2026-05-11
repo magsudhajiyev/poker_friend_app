@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/decorations.dart';
@@ -349,7 +350,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             _FooterLink(
               label: l10n.paywallTerms,
               onTap: () {
-                // TODO: link to ToS page (Week 2 task)
+                launchUrl(Uri.parse('https://www.finaltable.io/terms'));
               },
             ),
             Text(
@@ -361,7 +362,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             _FooterLink(
               label: l10n.paywallPrivacy,
               onTap: () {
-                // TODO: link to privacy policy page (Week 2 task)
+                launchUrl(Uri.parse('https://www.finaltable.io/privacy'));
               },
             ),
           ],

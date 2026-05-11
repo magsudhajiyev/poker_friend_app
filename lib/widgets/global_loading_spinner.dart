@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 
 class GlobalLoadingSpinner extends StatefulWidget {
@@ -18,50 +19,27 @@ class GlobalLoadingSpinner extends StatefulWidget {
 }
 
 class _GlobalLoadingSpinnerState extends State<GlobalLoadingSpinner>
-    with TickerProviderStateMixin {
-  late AnimationController _rotationController;
-  late AnimationController _pulseController;
-  late Animation<double> _rotationAnimation;
-  late Animation<double> _pulseAnimation;
+    with SingleTickerProviderStateMixin {
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-
-    _rotationController = AnimationController(
-      duration: const Duration(seconds: 2),
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeIn,
     );
-
-    _rotationAnimation = Tween<double>(
-      begin: 0,
-      end: 2,
-    ).animate(CurvedAnimation(
-      parent: _rotationController,
-      curve: Curves.linear,
-    ));
-
-    _pulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
-
-    _rotationController.repeat();
-    _pulseController.repeat(reverse: true);
+    _fadeController.forward();
   }
 
   @override
   void dispose() {
-    _rotationController.dispose();
-    _pulseController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
@@ -73,60 +51,14 @@ class _GlobalLoadingSpinnerState extends State<GlobalLoadingSpinner>
         mainAxisSize: MainAxisSize.min,
         children: [
           if (widget.showLogo) ...[
-            AnimatedBuilder(
-              animation: _rotationAnimation,
-              builder: (context, child) {
-                return AnimatedBuilder(
-                  animation: _pulseAnimation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _pulseAnimation.value,
-                      child: Transform.rotate(
-                        angle: _rotationAnimation.value * 3.14159,
-                        child: Container(
-                          width: widget.size,
-                          height: widget.size,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(widget.size / 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0xFF5AC95A).withOpacity(0.3),
-                                blurRadius: 20,
-                                spreadRadius: 5,
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(widget.size / 2),
-                            child: Image.asset(
-                              'assets/logo_chat.png',
-                              width: widget.size,
-                              height: widget.size,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                // Fallback to a simple poker chip if logo fails to load
-                                return Container(
-                                  width: widget.size,
-                                  height: widget.size,
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFF5AC95A),
-                                    borderRadius: BorderRadius.circular(widget.size / 2),
-                                  ),
-                                  child: Icon(
-                                    Icons.casino,
-                                    color: Colors.white,
-                                    size: widget.size * 0.5,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: SvgPicture.asset(
+                'assets/logo.svg',
+                width: widget.size,
+                height: widget.size,
+                fit: BoxFit.contain,
+              ),
             ),
             const SizedBox(height: 24),
           ] else ...[
