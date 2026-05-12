@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/account_type.dart';
+import 'app_data_cache.dart';
 import 'fcm_service.dart';
 import 'username_service.dart';
 import 'display_identity_service.dart';
@@ -217,6 +219,18 @@ class AuthService {
       clearAccountTypeCache();  // Clear cached account type
       UsernameService.clearCache();
       DisplayIdentityService.clearCache();
+      AppDataCache.clearAll();  // Clear all in-memory cached data
+
+      // Clear user-data SharedPreferences keys that aren't user-scoped
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('bankroll_goal');
+        await prefs.remove('current_bankroll');
+        await prefs.remove('bankroll_synced_from_firestore');
+        await prefs.remove('bankroll_hidden');
+        await prefs.remove('beta_ai_analysis_count');
+      } catch (_) {}
+
       await _auth.signOut();
       // Sign out of Google so account picker appears next time
       try { await _googleSignIn.signOut(); } catch (_) {}
@@ -429,6 +443,20 @@ class AuthService {
   // Delete current user account
   static Future<void> deleteAccount() async {
     try {
+      // Clear all caches before deleting
+      clearAccountTypeCache();
+      UsernameService.clearCache();
+      DisplayIdentityService.clearCache();
+      AppDataCache.clearAll();
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('bankroll_goal');
+        await prefs.remove('current_bankroll');
+        await prefs.remove('bankroll_synced_from_firestore');
+        await prefs.remove('bankroll_hidden');
+        await prefs.remove('beta_ai_analysis_count');
+      } catch (_) {}
+
       await currentUser?.delete();
       debugPrint('User account deleted');
     } on FirebaseAuthException catch (e) {

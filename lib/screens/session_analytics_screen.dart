@@ -1049,7 +1049,6 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     if (hand == null) return;
 
     setState(() => _touchedSpotIndex = null);
-    final ourSeat = widget.sessionData['ourSeatNumber'] as int?;
     final index = _hands.indexOf(hand);
     Navigator.push(
       context,
@@ -1057,7 +1056,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
         builder: (context) => HandActionsPageView(
           hands: _hands,
           initialIndex: index < 0 ? 0 : index,
-          ourSeat: ourSeat,
+          ourSeat: null, // Use per-hand heroSeatNumber instead of stale session-level seat
         ),
       ),
     );

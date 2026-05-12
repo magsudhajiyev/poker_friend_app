@@ -7,10 +7,13 @@ import '../services/auth_service.dart';
 import '../services/display_identity_service.dart';
 import '../services/subscription_service.dart';
 import '../services/username_service.dart';
+import '../models/hand_state_machine.dart';
+import '../models/game_types.dart';
 import '../screens/settings_screen.dart';
 import '../screens/paywall_screen.dart';
 import '../screens/intro_screen.dart';
 import '../screens/username_setup_screen.dart';
+import '../screens/poker_hand_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -489,7 +492,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ],
+          SizedBox(height: 16),
+          GestureDetector(
+            onTap: () => _launchQuickDebugSession(),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Color(0xFFFF6B6B).withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Color(0xFFFF6B6B).withAlpha(60)),
+              ),
+              child: Center(
+                child: Text(
+                  'Quick Debug Session (7P Cash 1/2)',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFFF6B6B),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _launchQuickDebugSession() {
+    final sessionManager = PokerSessionManager(
+      smallBlind: 1,
+      bigBlind: 2,
+      playerCount: 9,
+      gameType: GameType.cash,
+      sessionName: 'Debug Session',
+      initialBuyIn: 200,
+      startingStack: 200,
+    );
+
+    // 7 players in seats 1-7, hero at seat 1
+    const playerNames = ['Hero', 'Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Frank'];
+    for (int i = 0; i < 7; i++) {
+      final seat = i + 1;
+      sessionManager.addPlayer(seat, playerNames[i]);
+      sessionManager.setPlayerStack(seat, 200);
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PokerHandScreen(
+          smallBlind: 1,
+          bigBlind: 2,
+          numberOfPlayers: 9,
+          gameType: GameType.cash,
+          hasBBante: false,
+          ante: 0,
+          sessionName: 'Debug Session',
+          buyInAmount: 200,
+          startingStack: 200,
+          initialSeat: 1,
+          initialButtonPosition: 1,
+          sessionManager: sessionManager,
+        ),
       ),
     );
   }

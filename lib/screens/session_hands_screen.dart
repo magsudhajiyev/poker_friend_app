@@ -563,7 +563,6 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
   }
 
   void _navigateToHandActions(Map<String, dynamic> hand) async {
-    final ourSeat = widget.session['ourSeat'] as int?;
     final index = hands.indexOf(hand);
     await Navigator.push(
       context,
@@ -571,7 +570,7 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
         builder: (context) => HandActionsPageView(
           hands: hands,
           initialIndex: index < 0 ? 0 : index,
-          ourSeat: ourSeat,
+          ourSeat: null, // Use per-hand heroSeatNumber instead of stale session-level seat
         ),
       ),
     );

@@ -4002,6 +4002,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
       // Now show winner selection
       _showWinnerSelectionForAllIn();
+    } else {
+      // User cancelled — clear bettingRoundComplete so undo is available
+      gameState.bettingRoundComplete = false;
+      setState(() {});
     }
   }
 

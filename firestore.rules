@@ -140,5 +140,19 @@ service cloud.firestore {
       allow create: if isAuthenticated();
       allow update, delete: if false;
     }
+
+    // Usernames index - authenticated read (availability check), write via transaction only
+    match /usernames/{username} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Nickname claims from web reservations - authenticated read, no client writes
+    match /nickname_claims/{claimId} {
+      allow read: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow create, delete: if false;
+    }
   }
 }

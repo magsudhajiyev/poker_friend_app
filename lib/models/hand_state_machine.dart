@@ -1336,6 +1336,7 @@ class PokerSessionManager {
     // Reset to initial state when seat is deactivated
     playerNames[seatNumber] = 'Player $seatNumber';
     playerStacks.remove(seatNumber);
+    playerIds.remove(seatNumber);
   }
 
   void addPlayer(int seatNumber, String name) {

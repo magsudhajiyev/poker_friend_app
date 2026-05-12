@@ -31,14 +31,18 @@ class BankrollService {
 
       final prefs = await SharedPreferences.getInstance();
 
-      // Only overwrite local if Firestore has the fields
+      // Always clear stale values first, then write current user's data
       if (data.containsKey('bankrollGoal')) {
         final goal = (data['bankrollGoal'] as num).toDouble();
         await prefs.setDouble(_goalKey, goal);
+      } else {
+        await prefs.remove(_goalKey);
       }
       if (data.containsKey('currentBankroll')) {
         final bankroll = (data['currentBankroll'] as num).toDouble();
         await prefs.setDouble(_currentBankrollKey, bankroll);
+      } else {
+        await prefs.remove(_currentBankrollKey);
       }
 
       await prefs.setBool(_syncedKey, true);
