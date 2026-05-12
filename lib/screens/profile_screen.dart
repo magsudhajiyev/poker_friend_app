@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../l10n/app_localizations.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import '../services/display_identity_service.dart';
 import '../services/subscription_service.dart';
@@ -21,6 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool isLoading = true;
   String? _username;
   bool _useNicknameInGame = false;
+  bool _isAdmin = false;
 
   @override
   void initState() {
@@ -33,10 +35,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final username = await UsernameService.getUsername();
       final useNickname = await UsernameService.getUseNicknameInGame();
 
+      // Check admin role from Firestore
+      bool isAdmin = false;
+      final uid = AuthService.userId;
+      if (uid != null) {
+        try {
+          final doc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .get();
+          isAdmin = doc.data()?['role'] == 'admin';
+        } catch (_) {}
+      }
+
       if (mounted) {
         setState(() {
           _username = username;
           _useNicknameInGame = useNickname;
+          _isAdmin = isAdmin;
           isLoading = false;
         });
       }
@@ -112,8 +128,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildUsernameCard(),
                 SizedBox(height: 36),
 
-                // Dev tools — only visible to super admin
-                if (_isDevUser) ...[
+                // Dev tools — only visible to admin role
+                if (_isAdmin) ...[
                   _buildDevToolsCard(),
                   SizedBox(height: 16),
                 ],
@@ -387,16 +403,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // TODO: TEMPORARY — remove before release
-  static const _devUserIds = <String>{
-    // Add your Firebase UID here (check AuthService.userId at runtime)
-  };
-
-  bool get _isDevUser {
-    final uid = AuthService.userId;
-    // Show dev tools if UID is in the allowlist, OR if the list is empty (dev convenience)
-    return uid != null && (_devUserIds.isEmpty || _devUserIds.contains(uid));
-  }
 
   Widget _buildDevToolsCard() {
     final override = SubscriptionService.debugPremiumOverride;

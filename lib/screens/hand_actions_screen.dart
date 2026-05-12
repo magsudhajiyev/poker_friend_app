@@ -5,6 +5,8 @@ import '../utils/poker_positions.dart';
 import '../utils/number_formatter.dart';
 import '../models/game_types.dart';
 import '../services/ai_analyzer_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
 import '../services/firebase_service.dart';
 import '../services/subscription_service.dart';
 import '../services/pokerstars_export_service.dart';
@@ -15,6 +17,7 @@ import '../services/opponent_stats_service.dart';
 import '../l10n/app_localizations.dart';
 import 'paywall_screen.dart';
 import '../services/currency_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HandActionsScreen extends StatefulWidget {
   final Map<String, dynamic> hand;
@@ -1712,14 +1715,76 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
+  static const int _maxBetaAnalyses = 2;
+  static const String _betaAnalysisCountKey = 'beta_ai_analysis_count';
+
   Future<void> _handleAnalyzeButtonTap(bool isPremium) async {
+    // Skip beta limit for admin users
+    bool isAdmin = false;
+    final uid = AuthService.userId;
+    if (uid != null) {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+        isAdmin = doc.data()?['role'] == 'admin';
+      } catch (_) {}
+    }
+
+    // Beta limit: max 2 AI analyses total (admins exempt)
+    final prefs = await SharedPreferences.getInstance();
+    final usedCount = prefs.getInt(_betaAnalysisCountKey) ?? 0;
+    if (!isAdmin && usedCount >= _maxBetaAnalyses) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFF131616),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            title: Text(
+              'Beta Limit Reached',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              'You\'ve used all $usedCount of $_maxBetaAnalyses AI analyses available during the beta. This feature will be fully available at launch.',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'OK',
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF89F1EC),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
     if (isPremium) {
       _analyzeHand();
+      if (!isAdmin) await prefs.setInt(_betaAnalysisCountKey, usedCount + 1);
     } else {
       final purchased = await PaywallScreen.show(context, featureName: 'AI Hand Analysis');
       if (purchased == true && mounted) {
         setState(() {});
         _analyzeHand();
+        if (!isAdmin) await prefs.setInt(_betaAnalysisCountKey, usedCount + 1);
       }
     }
   }

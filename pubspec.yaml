@@ -53,6 +53,7 @@ dependencies:
   purchases_flutter: ^8.1.0  # RevenueCat for subscription management
   flutter_svg: ^2.0.10+1  # SVG icon rendering
   tutorial_coach_mark: ^1.2.11  # Onboarding tour
+  url_launcher: ^6.2.5  # Open URLs in browser (T&C, privacy policy)
 
 dependency_overrides:
   # Fix Linux plugin incompatibility (not needed for iOS/Android/macOS development)
