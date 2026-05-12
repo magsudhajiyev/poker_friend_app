@@ -491,7 +491,7 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              l10n.sessionAnalyticsHandsLogged(_hands.length),
+                              l10n.sessionAnalyticsHandsLogged(widget.sessionData['handsLogged'] ?? widget.sessionData['totalHands'] ?? _hands.length),
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 15,
                                 color: Colors.white.withOpacity(0.6),
