@@ -138,21 +138,52 @@ service cloud.firestore {
     match /shared_hands/{shareId} {
       allow read: if true;
       allow create: if isAuthenticated();
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if true;  // Admin dashboard (no auth)
     }
 
-    // Usernames index - authenticated read (availability check), write via transaction only
+    // ── Public + Admin collections (web landing page & dashboard, no Firebase Auth) ──
+
+    // Usernames index - public read (web availability check), app writes via auth
     match /usernames/{username} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow create: if isAuthenticated();
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Nickname claims from web reservations - authenticated read, no client writes
+    // Nickname claims - public read/create (web reservation), full access for admin dashboard
     match /nickname_claims/{claimId} {
-      allow read: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow create, delete: if false;
+      allow read, write: if true;
+    }
+
+    // Waitlist - public read/create (landing page signup), full access for admin dashboard
+    match /waitlist/{docId} {
+      allow read, write: if true;
+    }
+
+    // Contact form submissions - public create (contact form), full access for admin
+    match /contact_submissions/{docId} {
+      allow read, write: if true;
+    }
+
+    // Email templates - admin dashboard only (no Firebase Auth)
+    match /email_templates/{docId} {
+      allow read, write: if true;
+    }
+
+    // Email logs - admin dashboard only
+    match /email_logs/{docId} {
+      allow read, write: if true;
+    }
+
+    // Inbox replies - admin dashboard only
+    match /inbox_replies/{docId} {
+      allow read, write: if true;
+    }
+
+    // Inbox status (read/archive/delete state) - admin dashboard only
+    match /inbox_status/{docId} {
+      allow read, write: if true;
     }
   }
 }
