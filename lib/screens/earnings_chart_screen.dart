@@ -128,7 +128,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading earnings data: $e');
+      debugPrint('Error loading earnings data: $e');
       setState(() {
         _isLoading = false;
       });

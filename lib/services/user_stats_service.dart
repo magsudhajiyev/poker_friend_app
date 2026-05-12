@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_stats.dart';
 import '../services/firebase_service.dart';
@@ -19,7 +20,7 @@ class UserStatsService {
 
       return null;
     } catch (e) {
-      print('Error getting user stats: $e');
+      debugPrint('Error getting user stats: $e');
       return null;
     }
   }
@@ -35,7 +36,7 @@ class UserStatsService {
         await docRef.set(stats.toFirestore());
       }
     } catch (e) {
-      print('Error initializing user stats: $e');
+      debugPrint('Error initializing user stats: $e');
     }
   }
 
@@ -102,7 +103,7 @@ class UserStatsService {
         transaction.update(docRef, updates);
       });
     } catch (e) {
-      print('Error updating user stats atomically: $e');
+      debugPrint('Error updating user stats atomically: $e');
       rethrow;
     }
   }
@@ -126,7 +127,7 @@ class UserStatsService {
       try {
         sessions = await FirebaseService.getAllSessions();
       } catch (e) {
-        print('Error fetching sessions: $e');
+        debugPrint('Error fetching sessions: $e');
         return;
       }
 
@@ -146,7 +147,7 @@ class UserStatsService {
         try {
           hands = await FirebaseService.getSessionHands(session['id']);
         } catch (e) {
-          print('Error fetching hands for session ${session['id']}: $e');
+          debugPrint('Error fetching hands for session ${session['id']}: $e');
           continue;
         }
 
@@ -229,7 +230,7 @@ class UserStatsService {
 
 
     } catch (e) {
-      print('Error during user stats migration: $e');
+      debugPrint('Error during user stats migration: $e');
       rethrow;
     }
   }
@@ -245,7 +246,7 @@ class UserStatsService {
   /// Use this when stats are corrupted (e.g., from double-counting bugs)
   static Future<Map<String, dynamic>> recalculateUserStats(String userId) async {
     try {
-      print('🔄 Starting stats recalculation for user: $userId');
+      debugPrint('🔄 Starting stats recalculation for user: $userId');
 
       // Initialize counters
       int handsPlayed = 0;
@@ -262,12 +263,12 @@ class UserStatsService {
       try {
         sessions = await FirebaseService.getAllSessions();
       } catch (e) {
-        print('❌ Error fetching sessions: $e');
+        debugPrint('❌ Error fetching sessions: $e');
         return {'success': false, 'error': 'Failed to fetch sessions: $e'};
       }
 
       totalSessions = sessions.length;
-      print('📊 Found ${sessions.length} sessions to process');
+      debugPrint('📊 Found ${sessions.length} sessions to process');
 
       // Process each session
       for (var session in sessions) {
@@ -294,7 +295,7 @@ class UserStatsService {
 
             totalPlayTimeMinutes += endTime.difference(startTime).inMinutes;
           } catch (e) {
-            print('⚠️ Error parsing session times for $sessionId: $e');
+            debugPrint('⚠️ Error parsing session times for $sessionId: $e');
           }
         }
 
@@ -303,13 +304,13 @@ class UserStatsService {
         try {
           hands = await FirebaseService.getSessionHands(sessionId);
         } catch (e) {
-          print('⚠️ Error fetching hands for session $sessionId: $e');
+          debugPrint('⚠️ Error fetching hands for session $sessionId: $e');
           continue;
         }
 
         final ourSeatNumber = session['ourSeatNumber'] as int?;
         if (ourSeatNumber == null) {
-          print('⚠️ No seat number for session $sessionId, skipping');
+          debugPrint('⚠️ No seat number for session $sessionId, skipping');
           continue;
         }
 
@@ -380,14 +381,14 @@ class UserStatsService {
 
       await _firestore.collection('user_stats').doc(userId).set(userStats.toFirestore());
 
-      print('✅ Stats recalculation complete');
-      print('   Total Hands: $totalHands');
-      print('   Hands Played: $handsPlayed');
-      print('   VPIP Count: $vpipCount');
-      print('   PFR Count: $pfrCount');
-      print('   3-Bet Count: $threeBetCount');
-      print('   Won Hands: $wonHands');
-      print('   Sessions: $totalSessions');
+      debugPrint('✅ Stats recalculation complete');
+      debugPrint('   Total Hands: $totalHands');
+      debugPrint('   Hands Played: $handsPlayed');
+      debugPrint('   VPIP Count: $vpipCount');
+      debugPrint('   PFR Count: $pfrCount');
+      debugPrint('   3-Bet Count: $threeBetCount');
+      debugPrint('   Won Hands: $wonHands');
+      debugPrint('   Sessions: $totalSessions');
 
       return {
         'success': true,
@@ -401,7 +402,7 @@ class UserStatsService {
         'totalPlayTimeMinutes': totalPlayTimeMinutes,
       };
     } catch (e) {
-      print('❌ Error during stats recalculation: $e');
+      debugPrint('❌ Error during stats recalculation: $e');
       return {'success': false, 'error': 'Recalculation failed: $e'};
     }
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/club_invitation.dart';
@@ -60,7 +61,7 @@ class InvitationService {
     );
 
     if (!emailSent) {
-      print('Warning: Invitation created but email failed to send');
+      debugPrint('Warning: Invitation created but email failed to send');
     }
 
     return ClubInvitation(
@@ -106,7 +107,7 @@ class InvitationService {
 
       return invitations;
     } catch (e) {
-      print('Error getting pending invitations: $e');
+      debugPrint('Error getting pending invitations: $e');
       return [];
     }
   }
@@ -131,7 +132,7 @@ class InvitationService {
           .map((doc) => ClubInvitation.fromFirestore(doc, clubId: clubId))
           .toList();
     } catch (e) {
-      print('Error getting club invitations: $e');
+      debugPrint('Error getting club invitations: $e');
       return [];
     }
   }

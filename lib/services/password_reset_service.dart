@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -55,14 +56,14 @@ class PasswordResetService {
       );
 
       if (!sent) {
-        print('PasswordResetService: Failed to send email');
+        debugPrint('PasswordResetService: Failed to send email');
         return false;
       }
 
-      print('PasswordResetService: Reset code sent to $normalizedEmail');
+      debugPrint('PasswordResetService: Reset code sent to $normalizedEmail');
       return true;
     } catch (e) {
-      print('PasswordResetService: Error sending reset code: $e');
+      debugPrint('PasswordResetService: Error sending reset code: $e');
       return false;
     }
   }
@@ -83,7 +84,7 @@ class PasswordResetService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        print('PasswordResetService: No matching code found');
+        debugPrint('PasswordResetService: No matching code found');
         return false;
       }
 
@@ -92,16 +93,16 @@ class PasswordResetService {
       final expiresAt = data['expiresAt'] as Timestamp;
 
       if (expiresAt.compareTo(now) < 0) {
-        print('PasswordResetService: Code expired');
+        debugPrint('PasswordResetService: Code expired');
         return false;
       }
 
       // Mark as verified
       await doc.reference.update({'verified': true});
-      print('PasswordResetService: Code verified for $normalizedEmail');
+      debugPrint('PasswordResetService: Code verified for $normalizedEmail');
       return true;
     } catch (e) {
-      print('PasswordResetService: Error verifying code: $e');
+      debugPrint('PasswordResetService: Error verifying code: $e');
       return false;
     }
   }
@@ -158,7 +159,7 @@ class PasswordResetService {
       await _auth.signOut();
       await _googleSignIn.signOut();
 
-      print('PasswordResetService: Password updated for $normalizedEmail');
+      debugPrint('PasswordResetService: Password updated for $normalizedEmail');
     } on FirebaseAuthException catch (e) {
       // Sign out on failure too
       await _auth.signOut().catchError((_) {});

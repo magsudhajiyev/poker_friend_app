@@ -75,7 +75,7 @@ class _TableSelectionDialogState extends State<TableSelectionDialog> {
         });
       }
     } catch (e) {
-      print('Error loading tables: $e');
+      debugPrint('Error loading tables: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

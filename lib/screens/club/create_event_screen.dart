@@ -303,7 +303,7 @@ class _CreateEventDrawerState extends State<CreateEventDrawer> {
       if (mounted) {
         setState(() => _isSubmitting = false);
       }
-      print('Error creating/updating event: $e');
+      debugPrint('Error creating/updating event: $e');
     }
   }
 

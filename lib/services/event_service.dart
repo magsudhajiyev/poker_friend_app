@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
@@ -151,10 +152,10 @@ class EventService {
 
       if (response.statusCode != 200) {
         // Log but don't fail - Firestore is the source of truth
-        print('Failed to register event with backend: ${response.body}');
+        debugPrint('Failed to register event with backend: ${response.body}');
       }
     } catch (e) {
-      print('Error registering event with backend: $e');
+      debugPrint('Error registering event with backend: $e');
     }
   }
 
@@ -170,7 +171,7 @@ class EventService {
 
       return snapshot.docs.map((doc) => ClubEvent.fromFirestore(doc)).toList();
     } catch (e) {
-      print('Error getting club events: $e');
+      debugPrint('Error getting club events: $e');
       return [];
     }
   }
@@ -194,7 +195,7 @@ class EventService {
 
       return events;
     } catch (e) {
-      print('Error getting active events: $e');
+      debugPrint('Error getting active events: $e');
       return [];
     }
   }
@@ -215,7 +216,7 @@ class EventService {
 
       return null;
     } catch (e) {
-      print('Error getting active event for table: $e');
+      debugPrint('Error getting active event for table: $e');
       return null;
     }
   }
@@ -241,7 +242,7 @@ class EventService {
 
       return events;
     } catch (e) {
-      print('Error getting upcoming events: $e');
+      debugPrint('Error getting upcoming events: $e');
       return [];
     }
   }
@@ -268,7 +269,7 @@ class EventService {
       // Apply limit
       return events.take(limit).toList();
     } catch (e) {
-      print('Error getting past events: $e');
+      debugPrint('Error getting past events: $e');
       return [];
     }
   }
@@ -322,7 +323,7 @@ class EventService {
     try {
       currentRankings = await _getCurrentRankingsFromTables(clubId, eventId);
     } catch (e) {
-      print('Error getting rankings for final standings: $e');
+      debugPrint('Error getting rankings for final standings: $e');
     }
 
     // Merge poker_sessions records for all participants before ending sessions.
@@ -359,11 +360,11 @@ class EventService {
             endTime: endTime,
           );
         } catch (e) {
-          print('Error merging sessions for ${entry.value}: $e');
+          debugPrint('Error merging sessions for ${entry.value}: $e');
         }
       }
     } catch (e) {
-      print('Error merging player session records: $e');
+      debugPrint('Error merging player session records: $e');
     }
 
     // End all active dealer sessions for this event
@@ -424,7 +425,7 @@ class EventService {
           }
         }
       } catch (e) {
-        print('Error getting seats for table $tableId: $e');
+        debugPrint('Error getting seats for table $tableId: $e');
       }
     }
 
@@ -533,7 +534,7 @@ class EventService {
           .doc('results')
           .set(finalStandings.toMap());
     } catch (e) {
-      print('Error saving final standings: $e');
+      debugPrint('Error saving final standings: $e');
     }
   }
 
@@ -554,7 +555,7 @@ class EventService {
       }
       return null;
     } catch (e) {
-      print('Error getting final standings: $e');
+      debugPrint('Error getting final standings: $e');
       return null;
     }
   }
@@ -571,7 +572,7 @@ class EventService {
 
       return snapshot.docs.isNotEmpty;
     } catch (e) {
-      print('Error checking active sessions: $e');
+      debugPrint('Error checking active sessions: $e');
       return false;
     }
   }
@@ -625,7 +626,7 @@ class EventService {
         }
       }
     } catch (e) {
-      print('Error ending event dealer sessions: $e');
+      debugPrint('Error ending event dealer sessions: $e');
     }
   }
 
@@ -644,7 +645,7 @@ class EventService {
       }
       return null;
     } catch (e) {
-      print('Error getting event: $e');
+      debugPrint('Error getting event: $e');
       return null;
     }
   }
@@ -728,7 +729,7 @@ class EventService {
         body: jsonEncode(backendUpdates),
       );
     } catch (e) {
-      print('Error updating event on backend: $e');
+      debugPrint('Error updating event on backend: $e');
     }
   }
 
@@ -820,7 +821,7 @@ class EventService {
         Uri.parse('${AppConfig.serverUrl}/api/v1/events/$eventId'),
       );
     } catch (e) {
-      print('Error deleting event from backend: $e');
+      debugPrint('Error deleting event from backend: $e');
     }
   }
 
@@ -837,7 +838,7 @@ class EventService {
       }
       return null;
     } catch (e) {
-      print('Error getting rankings: $e');
+      debugPrint('Error getting rankings: $e');
       return null;
     }
   }
@@ -861,7 +862,7 @@ class EventService {
       }
       return null;
     } catch (e) {
-      print('Error getting public rankings: $e');
+      debugPrint('Error getting public rankings: $e');
       return null;
     }
   }
@@ -884,7 +885,7 @@ class EventService {
       }
       return null;
     } catch (e) {
-      print('Error syncing players: $e');
+      debugPrint('Error syncing players: $e');
       return null;
     }
   }
@@ -907,7 +908,7 @@ class EventService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Error updating player stack: $e');
+      debugPrint('Error updating player stack: $e');
       return false;
     }
   }
@@ -1035,7 +1036,7 @@ class EventService {
         lastUpdated: DateTime.now(),
       );
     } catch (e) {
-      print('Error getting rankings from Firestore: $e');
+      debugPrint('Error getting rankings from Firestore: $e');
       return null;
     }
   }

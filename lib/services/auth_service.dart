@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -56,13 +57,13 @@ class AuthService {
         email: email,
         password: password,
       );
-      print('User signed in: ${credential.user?.email}');
+      debugPrint('User signed in: ${credential.user?.email}');
 
       // Ensure user document exists (backfill for users registered before this feature)
       if (credential.user != null) {
-        print('Calling ensureUserDocument after sign in...');
+        debugPrint('Calling ensureUserDocument after sign in...');
         await ensureUserDocument();
-        print('ensureUserDocument completed');
+        debugPrint('ensureUserDocument completed');
 
         // FCM setup runs in background - don't block sign-in
         unawaited(_setupFcmInBackground());
@@ -70,7 +71,7 @@ class AuthService {
 
       return credential;
     } on FirebaseAuthException catch (e) {
-      print('Sign in error: ${e.message}');
+      debugPrint('Sign in error: ${e.message}');
 
       // If sign-in fails, check if this email uses Google-only sign-in
       if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
@@ -87,7 +88,7 @@ class AuthService {
 
       throw _getAuthException(e);
     } catch (e) {
-      print('Unexpected error during sign in: $e');
+      debugPrint('Unexpected error during sign in: $e');
       if (e is String) rethrow; // Re-throw our custom message
       throw 'An unexpected error occurred. Please try again.';
     }
@@ -115,20 +116,20 @@ class AuthService {
         unawaited(_setupFcmInBackground());
       }
 
-      print('User registered: ${credential.user?.email}');
+      debugPrint('User registered: ${credential.user?.email}');
       return credential;
     } on FirebaseAuthException catch (e) {
-      print('Registration error: ${e.message}');
+      debugPrint('Registration error: ${e.message}');
       throw _getAuthException(e);
     } catch (e) {
-      print('Unexpected error during registration: $e');
+      debugPrint('Unexpected error during registration: $e');
       throw 'An unexpected error occurred. Please try again.';
     }
   }
 
   // Create or update user document in Firestore
   static Future<void> _createUserDocument(String uid, String displayName, String email) async {
-    print('Creating user document: uid=$uid, displayName=$displayName, email=$email');
+    debugPrint('Creating user document: uid=$uid, displayName=$displayName, email=$email');
     try {
       await _firestore.collection('users').doc(uid).set({
         'uid': uid,
@@ -139,9 +140,9 @@ class AuthService {
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      print('User document created successfully for $uid');
+      debugPrint('User document created successfully for $uid');
     } catch (e) {
-      print('Error creating user document: $e');
+      debugPrint('Error creating user document: $e');
       // Don't throw - user registration should still succeed
     }
   }
@@ -149,15 +150,15 @@ class AuthService {
   // Ensure current user has a document (for existing users who registered before this feature)
   static Future<void> ensureUserDocument() async {
     final user = currentUser;
-    print('ensureUserDocument called, user=${user?.uid}, displayName=${user?.displayName}');
+    debugPrint('ensureUserDocument called, user=${user?.uid}, displayName=${user?.displayName}');
     if (user == null) {
-      print('ensureUserDocument: No current user, returning');
+      debugPrint('ensureUserDocument: No current user, returning');
       return;
     }
 
     try {
       final doc = await _firestore.collection('users').doc(user.uid).get();
-      print('ensureUserDocument: Document exists=${doc.exists}');
+      debugPrint('ensureUserDocument: Document exists=${doc.exists}');
       if (!doc.exists) {
         await _createUserDocument(
           user.uid,
@@ -165,10 +166,10 @@ class AuthService {
           user.email ?? '',
         );
       } else {
-        print('ensureUserDocument: Document already exists, skipping creation');
+        debugPrint('ensureUserDocument: Document already exists, skipping creation');
       }
     } catch (e) {
-      print('ensureUserDocument error: $e');
+      debugPrint('ensureUserDocument error: $e');
     }
   }
 
@@ -197,7 +198,7 @@ class AuthService {
         };
       }).toList();
     } catch (e) {
-      print('Error searching users: $e');
+      debugPrint('Error searching users: $e');
       return [];
     }
   }
@@ -205,8 +206,8 @@ class AuthService {
   // Sign out
   static Future<void> signOut() async {
     try {
-      print('📍 LOGOUT: signOut() called');
-      print('📍 LOGOUT: Stack trace: ${StackTrace.current}');
+      debugPrint('📍 LOGOUT: signOut() called');
+      debugPrint('📍 LOGOUT: Stack trace: ${StackTrace.current}');
 
       _isExplicitLogout = true;  // Mark as explicit logout
 
@@ -219,10 +220,10 @@ class AuthService {
       await _auth.signOut();
       // Sign out of Google so account picker appears next time
       try { await _googleSignIn.signOut(); } catch (_) {}
-      print('User signed out');
+      debugPrint('User signed out');
     } catch (e) {
       _isExplicitLogout = false;  // Reset on error
-      print('Sign out error: $e');
+      debugPrint('Sign out error: $e');
       throw 'Failed to sign out. Please try again.';
     }
   }
@@ -353,7 +354,7 @@ class AuthService {
       }
       await FCMService.subscribeToUserClubs();
     } catch (e) {
-      print('FCM setup failed (background): $e');
+      debugPrint('FCM setup failed (background): $e');
     }
   }
 
@@ -363,7 +364,7 @@ class AuthService {
       await FCMService.unsubscribeFromAllClubs();
       await FCMService.removeToken();
     } catch (e) {
-      print('FCM cleanup failed (background): $e');
+      debugPrint('FCM cleanup failed (background): $e');
     }
   }
   
@@ -371,12 +372,12 @@ class AuthService {
   static Future<void> sendPasswordReset(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      print('Password reset email sent to: $email');
+      debugPrint('Password reset email sent to: $email');
     } on FirebaseAuthException catch (e) {
-      print('Password reset error: ${e.message}');
+      debugPrint('Password reset error: ${e.message}');
       throw _getAuthException(e);
     } catch (e) {
-      print('Unexpected error during password reset: $e');
+      debugPrint('Unexpected error during password reset: $e');
       throw 'An unexpected error occurred. Please try again.';
     }
   }
@@ -429,12 +430,12 @@ class AuthService {
   static Future<void> deleteAccount() async {
     try {
       await currentUser?.delete();
-      print('User account deleted');
+      debugPrint('User account deleted');
     } on FirebaseAuthException catch (e) {
-      print('Account deletion error: ${e.message}');
+      debugPrint('Account deletion error: ${e.message}');
       throw _getAuthException(e);
     } catch (e) {
-      print('Unexpected error during account deletion: $e');
+      debugPrint('Unexpected error during account deletion: $e');
       throw 'Failed to delete account. Please try again.';
     }
   }
@@ -445,9 +446,9 @@ class AuthService {
       await currentUser?.updateDisplayName(displayName);
       await currentUser?.updatePhotoURL(photoURL);
       await currentUser?.reload();
-      print('Profile updated successfully');
+      debugPrint('Profile updated successfully');
     } catch (e) {
-      print('Profile update error: $e');
+      debugPrint('Profile update error: $e');
       throw 'Failed to update profile. Please try again.';
     }
   }
@@ -459,9 +460,9 @@ class AuthService {
   static Future<void> sendEmailVerification() async {
     try {
       await currentUser?.sendEmailVerification();
-      print('Email verification sent');
+      debugPrint('Email verification sent');
     } catch (e) {
-      print('Email verification error: $e');
+      debugPrint('Email verification error: $e');
       throw 'Failed to send verification email. Please try again.';
     }
   }
@@ -493,7 +494,7 @@ class AuthService {
       _cachedAccountTypeUserId = uid;
       return _cachedAccountType!;
     } catch (e) {
-      print('Error getting account type: $e');
+      debugPrint('Error getting account type: $e');
       return AccountType.player;
     }
   }
@@ -536,7 +537,7 @@ class AuthService {
       }
       return [];
     } catch (e) {
-      print('Error getting dealer club IDs: $e');
+      debugPrint('Error getting dealer club IDs: $e');
       return [];
     }
   }

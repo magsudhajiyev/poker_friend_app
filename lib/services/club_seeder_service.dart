@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/club.dart';
 import '../models/club_member.dart';
@@ -11,7 +12,8 @@ class ClubSeederService {
   /// Seed the database with initial clubs and members
   /// This should only be run once
   static Future<void> seedClubs() async {
-    print('Starting club seeding...');
+    if (!kDebugMode) return;
+    debugPrint('Starting club seeding...');
 
     // Club names to create
     final clubNames = ['Poczekalia', 'House of Cards', 'Gringster Room'];
@@ -25,9 +27,9 @@ class ClubSeederService {
       final user = await _findUserByDisplayName(username);
       if (user != null) {
         users.add(user);
-        print('Found user: ${user['displayName']} (${user['uid']})');
+        debugPrint('Found user: ${user['displayName']} (${user['uid']})');
       } else {
-        print('User not found: $username');
+        debugPrint('User not found: $username');
       }
     }
 
@@ -44,12 +46,12 @@ class ClubSeederService {
           'displayName': currentUserName,
           'email': currentUserEmail ?? '',
         });
-        print('Added current user: $currentUserName ($currentUserId)');
+        debugPrint('Added current user: $currentUserName ($currentUserId)');
       }
     }
 
     if (users.isEmpty) {
-      print('No users found to associate with clubs. Aborting.');
+      debugPrint('No users found to associate with clubs. Aborting.');
       return;
     }
 
@@ -58,7 +60,7 @@ class ClubSeederService {
       // Check if club already exists
       final existingClub = await _findClubByName(clubName);
       if (existingClub != null) {
-        print('Club "$clubName" already exists (${existingClub.id}), skipping creation.');
+        debugPrint('Club "$clubName" already exists (${existingClub.id}), skipping creation.');
 
         // Still add members if not already added
         for (final user in users) {
@@ -69,7 +71,7 @@ class ClubSeederService {
 
       // Create the club
       final club = await _createClub(clubName);
-      print('Created club: ${club.name} (${club.id})');
+      debugPrint('Created club: ${club.name} (${club.id})');
 
       // Add users as members
       for (final user in users) {
@@ -80,11 +82,11 @@ class ClubSeederService {
           email: user['email'],
           role: ClubRole.player,
         );
-        print('  Added ${user['displayName']} as player to ${club.name}');
+        debugPrint('  Added ${user['displayName']} as player to ${club.name}');
       }
     }
 
-    print('Club seeding complete!');
+    debugPrint('Club seeding complete!');
   }
 
   /// Find a user by display name (case-insensitive, tries multiple approaches)
@@ -124,7 +126,7 @@ class ClubSeederService {
           final data = doc.data();
           final name = (data['displayName'] as String?)?.toLowerCase() ?? '';
           if (name.contains(displayName.toLowerCase())) {
-            print('  Found user by prefix: ${data['displayName']}');
+            debugPrint('  Found user by prefix: ${data['displayName']}');
             return {
               'uid': data['uid'] ?? doc.id,
               'displayName': data['displayName'] ?? displayName,
@@ -144,7 +146,7 @@ class ClubSeederService {
 
       if (snapshot.docs.isNotEmpty) {
         final data = snapshot.docs.first.data();
-        print('  Found user by email: ${data['email']}');
+        debugPrint('  Found user by email: ${data['email']}');
         return {
           'uid': data['uid'] ?? snapshot.docs.first.id,
           'displayName': data['displayName'] ?? displayName,
@@ -154,7 +156,7 @@ class ClubSeederService {
 
       return null;
     } catch (e) {
-      print('Error finding user: $e');
+      debugPrint('Error finding user: $e');
       return null;
     }
   }
@@ -173,7 +175,7 @@ class ClubSeederService {
       }
       return null;
     } catch (e) {
-      print('Error finding club: $e');
+      debugPrint('Error finding club: $e');
       return null;
     }
   }
@@ -224,14 +226,14 @@ class ClubSeederService {
           email: user['email'],
           role: ClubRole.player,
         );
-        print('  Added ${user['displayName']} as player');
+        debugPrint('  Added ${user['displayName']} as player');
       } else {
         // Member exists in club, but make sure dealers document has this club
         await _ensureDealerHasClub(user['uid']!, clubId);
-        print('  ${user['displayName']} already a member, ensured dealers doc updated');
+        debugPrint('  ${user['displayName']} already a member, ensured dealers doc updated');
       }
     } catch (e) {
-      print('Error adding member: $e');
+      debugPrint('Error adding member: $e');
     }
   }
 
@@ -255,24 +257,25 @@ class ClubSeederService {
         });
       }
     } catch (e) {
-      print('Error ensuring dealer has club: $e');
+      debugPrint('Error ensuring dealer has club: $e');
     }
   }
 
   /// Promote current user to admin for a specific club
   /// Returns true if successful, false otherwise
   static Future<bool> promoteCurrentUserToAdmin(String clubName) async {
+    if (!kDebugMode) return false;
     try {
       final userId = AuthService.userId;
       if (userId == null) {
-        print('User not authenticated');
+        debugPrint('User not authenticated');
         return false;
       }
 
       // Find the club by name
       final club = await _findClubByName(clubName);
       if (club == null) {
-        print('Club "$clubName" not found');
+        debugPrint('Club "$clubName" not found');
         return false;
       }
 
@@ -286,7 +289,7 @@ class ClubSeederService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        print('User is not a member of "$clubName"');
+        debugPrint('User is not a member of "$clubName"');
         return false;
       }
 
@@ -295,10 +298,10 @@ class ClubSeederService {
         'role': ClubRole.admin.value,
       });
 
-      print('Successfully promoted user to admin of "$clubName"');
+      debugPrint('Successfully promoted user to admin of "$clubName"');
       return true;
     } catch (e) {
-      print('Error promoting user to admin: $e');
+      debugPrint('Error promoting user to admin: $e');
       return false;
     }
   }
@@ -306,17 +309,18 @@ class ClubSeederService {
   /// Make current user owner of a specific club (for testing only)
   /// This also updates the club's ownerId field
   static Future<bool> makeCurrentUserOwner(String clubName) async {
+    if (!kDebugMode) return false;
     try {
       final userId = AuthService.userId;
       if (userId == null) {
-        print('User not authenticated');
+        debugPrint('User not authenticated');
         return false;
       }
 
       // Find the club by name
       final club = await _findClubByName(clubName);
       if (club == null) {
-        print('Club "$clubName" not found');
+        debugPrint('Club "$clubName" not found');
         return false;
       }
 
@@ -330,7 +334,7 @@ class ClubSeederService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        print('User is not a member of "$clubName"');
+        debugPrint('User is not a member of "$clubName"');
         return false;
       }
 
@@ -344,10 +348,10 @@ class ClubSeederService {
         'ownerId': userId,
       });
 
-      print('Successfully made user owner of "$clubName"');
+      debugPrint('Successfully made user owner of "$clubName"');
       return true;
     } catch (e) {
-      print('Error making user owner: $e');
+      debugPrint('Error making user owner: $e');
       return false;
     }
   }

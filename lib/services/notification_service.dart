@@ -39,15 +39,15 @@ class NotificationService {
       );
 
       _initialized = true;
-      print('✅ Notification service initialized');
+      debugPrint('✅ Notification service initialized');
     } catch (e) {
-      print('❌ Error initializing notifications: $e');
+      debugPrint('❌ Error initializing notifications: $e');
     }
   }
 
   /// Handle notification tap
   static void _onNotificationTapped(NotificationResponse response) {
-    print('📲 Notification tapped: ${response.payload}');
+    debugPrint('📲 Notification tapped: ${response.payload}');
     // You can handle navigation here based on payload
   }
 
@@ -74,7 +74,7 @@ class NotificationService {
       }
       return true;
     } catch (e) {
-      print('❌ Error requesting permissions: $e');
+      debugPrint('❌ Error requesting permissions: $e');
       return false;
     }
   }
@@ -88,21 +88,21 @@ class NotificationService {
   }) async {
     try {
       if (!_initialized) {
-        print('⚠️ Notification service not initialized, initializing now...');
+        debugPrint('⚠️ Notification service not initialized, initializing now...');
         await initialize();
       }
 
       final now = DateTime.now();
-      print('📅 Event: $eventTitle');
-      print('📅 Event Date: $eventDate');
-      print('⏰ Current Time: $now');
+      debugPrint('📅 Event: $eventTitle');
+      debugPrint('📅 Event Date: $eventDate');
+      debugPrint('⏰ Current Time: $now');
 
       // Calculate notification times
       final twentyFourHoursBefore = eventDate.subtract(Duration(hours: 24));
       final oneHourBefore = eventDate.subtract(Duration(hours: 1));
 
-      print('⏰ 24h notification time: $twentyFourHoursBefore');
-      print('⏰ 1h notification time: $oneHourBefore');
+      debugPrint('⏰ 24h notification time: $twentyFourHoursBefore');
+      debugPrint('⏰ 1h notification time: $oneHourBefore');
 
       // Schedule 24-hour notification if it's in the future
       if (twentyFourHoursBefore.isAfter(now)) {
@@ -113,9 +113,9 @@ class NotificationService {
           scheduledDate: twentyFourHoursBefore,
           payload: 'event_$eventId',
         );
-        print('✅ Scheduled 24-hour notification for: $eventTitle at $twentyFourHoursBefore');
+        debugPrint('✅ Scheduled 24-hour notification for: $eventTitle at $twentyFourHoursBefore');
       } else {
-        print('⏭️ Skipping 24-hour notification (time has passed)');
+        debugPrint('⏭️ Skipping 24-hour notification (time has passed)');
       }
 
       // Schedule 1-hour notification if it's in the future
@@ -127,20 +127,20 @@ class NotificationService {
           scheduledDate: oneHourBefore,
           payload: 'event_$eventId',
         );
-        print('✅ Scheduled 1-hour notification for: $eventTitle at $oneHourBefore');
+        debugPrint('✅ Scheduled 1-hour notification for: $eventTitle at $oneHourBefore');
       } else {
-        print('⏭️ Skipping 1-hour notification (time has passed)');
+        debugPrint('⏭️ Skipping 1-hour notification (time has passed)');
       }
 
       // Log all pending notifications
       final pending = await getPendingNotifications();
-      print('📋 Total pending notifications: ${pending.length}');
+      debugPrint('📋 Total pending notifications: ${pending.length}');
       for (final notif in pending) {
-        print('  - ID: ${notif.id}, Title: ${notif.title}, Body: ${notif.body}');
+        debugPrint('  - ID: ${notif.id}, Title: ${notif.title}, Body: ${notif.body}');
       }
     } catch (e) {
-      print('❌ Error scheduling event notifications: $e');
-      print('Stack trace: ${StackTrace.current}');
+      debugPrint('❌ Error scheduling event notifications: $e');
+      debugPrint('Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -181,7 +181,7 @@ class NotificationService {
         payload: payload,
       );
     } catch (e) {
-      print('❌ Error scheduling notification: $e');
+      debugPrint('❌ Error scheduling notification: $e');
       rethrow;
     }
   }
@@ -191,9 +191,9 @@ class NotificationService {
     try {
       await _notifications.cancel(_get24HourNotificationId(eventId));
       await _notifications.cancel(_get1HourNotificationId(eventId));
-      print('✅ Cancelled notifications for event: $eventId');
+      debugPrint('✅ Cancelled notifications for event: $eventId');
     } catch (e) {
-      print('❌ Error cancelling notifications: $e');
+      debugPrint('❌ Error cancelling notifications: $e');
     }
   }
 
@@ -201,9 +201,9 @@ class NotificationService {
   static Future<void> cancelAllNotifications() async {
     try {
       await _notifications.cancelAll();
-      print('✅ Cancelled all notifications');
+      debugPrint('✅ Cancelled all notifications');
     } catch (e) {
-      print('❌ Error cancelling all notifications: $e');
+      debugPrint('❌ Error cancelling all notifications: $e');
     }
   }
 
@@ -212,7 +212,7 @@ class NotificationService {
     try {
       return await _notifications.pendingNotificationRequests();
     } catch (e) {
-      print('❌ Error getting pending notifications: $e');
+      debugPrint('❌ Error getting pending notifications: $e');
       return [];
     }
   }
@@ -245,7 +245,7 @@ class NotificationService {
         payload: 'onboarding_reminder',
       );
     } catch (e) {
-      print('Error scheduling onboarding reminder: $e');
+      debugPrint('Error scheduling onboarding reminder: $e');
     }
   }
 
@@ -254,7 +254,7 @@ class NotificationService {
     try {
       await _notifications.cancel(_onboardingReminderId);
     } catch (e) {
-      print('Error cancelling onboarding reminder: $e');
+      debugPrint('Error cancelling onboarding reminder: $e');
     }
   }
 
@@ -288,9 +288,9 @@ class NotificationService {
           ),
         ),
       );
-      print('✅ Test notification sent!');
+      debugPrint('✅ Test notification sent!');
     } catch (e) {
-      print('❌ Error showing test notification: $e');
+      debugPrint('❌ Error showing test notification: $e');
     }
   }
 }

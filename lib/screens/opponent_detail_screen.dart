@@ -49,7 +49,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         _isLoadingStats = false;
       });
     } catch (e) {
-      print('Error loading statistics: $e');
+      debugPrint('Error loading statistics: $e');
       setState(() {
         _isLoadingStats = false;
       });
@@ -61,15 +61,15 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
       final optimizedStats = await OpponentStatsService.getOpponentStats(_opponent.id);
 
       if (optimizedStats != null) {
-        print('✅ Using optimized stats for $opponentName (${optimizedStats.handsPlayed} hands)');
+        debugPrint('✅ Using optimized stats for $opponentName (${optimizedStats.handsPlayed} hands)');
         final legacyMap = optimizedStats.toLegacyStatsMap();
         return legacyMap;
       } else {
-        print('⚠️ No optimized stats found for $opponentName - calculating from hand data');
+        debugPrint('⚠️ No optimized stats found for $opponentName - calculating from hand data');
         return await _calculateLegacyOpponentStatistics(opponentName);
       }
     } catch (e) {
-      print('❌ Error loading optimized stats: $e');
+      debugPrint('❌ Error loading optimized stats: $e');
       return _getEmptyStatsMap();
     }
   }
@@ -220,7 +220,7 @@ class _OpponentDetailScreenState extends State<OpponentDetailScreen> {
         'checkRaiseFlopOpportunity': checkRaiseFlopOpportunity,
       };
     } catch (e) {
-      print('❌ Error calculating legacy stats: $e');
+      debugPrint('❌ Error calculating legacy stats: $e');
       return _getEmptyStatsMap();
     }
   }

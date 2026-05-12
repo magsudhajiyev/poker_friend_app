@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/club.dart';
 import '../models/club_member.dart';
@@ -23,7 +24,7 @@ class ClubRequestService {
       final doc = await _firestore.collection(_adminsCollection).doc(userId).get();
       return doc.exists;
     } catch (e) {
-      print('Error checking app admin status: $e');
+      debugPrint('Error checking app admin status: $e');
       return false;
     }
   }
@@ -46,7 +47,7 @@ class ClubRequestService {
       }
       return admins;
     } catch (e) {
-      print('Error getting app admins: $e');
+      debugPrint('Error getting app admins: $e');
       return [];
     }
   }
@@ -62,7 +63,7 @@ class ClubRequestService {
   }) async {
     try {
       final admins = await _getAppAdmins();
-      print('Notifying ${admins.length} app admins about new club request');
+      debugPrint('Notifying ${admins.length} app admins about new club request');
 
       for (final admin in admins) {
         // Send in-app notification (which triggers FCM via Cloud Function)
@@ -91,7 +92,7 @@ class ClubRequestService {
         }
       }
     } catch (e) {
-      print('Error notifying app admins: $e');
+      debugPrint('Error notifying app admins: $e');
       // Don't throw - request was still created successfully
     }
   }
@@ -168,7 +169,7 @@ class ClubRequestService {
       final snapshot = await query.get();
       return snapshot.docs.map((doc) => ClubRequest.fromFirestore(doc)).toList();
     } catch (e) {
-      print('Error getting club requests: $e');
+      debugPrint('Error getting club requests: $e');
       return [];
     }
   }
@@ -199,7 +200,7 @@ class ClubRequestService {
           .get();
       return snapshot.count ?? 0;
     } catch (e) {
-      print('Error getting pending count: $e');
+      debugPrint('Error getting pending count: $e');
       return 0;
     }
   }
@@ -223,7 +224,7 @@ class ClubRequestService {
       }
       return null;
     } catch (e) {
-      print('Error finding user by email: $e');
+      debugPrint('Error finding user by email: $e');
       return null;
     }
   }
@@ -410,7 +411,7 @@ class ClubRequestService {
 
       return snapshot.docs.map((doc) => ClubRequest.fromFirestore(doc)).toList();
     } catch (e) {
-      print('Error getting my requests: $e');
+      debugPrint('Error getting my requests: $e');
       return [];
     }
   }
@@ -428,7 +429,7 @@ class ClubRequestService {
       }
       return null;
     } catch (e) {
-      print('Error getting request: $e');
+      debugPrint('Error getting request: $e');
       return null;
     }
   }

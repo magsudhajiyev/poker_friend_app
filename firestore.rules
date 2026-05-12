@@ -21,15 +21,52 @@ service cloud.firestore {
     match /user_notifications/{notificationId} {
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      // Cloud Functions create notifications, so no client create allowed
       allow create: if false;
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Users collection
+    // Users collection - anyone can read (for display names), only owner can write
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow write: if isOwner(userId);
+    }
+
+    // User stats - only owner can read/write
+    match /user_stats/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Poker sessions - only owner can read/write
+    match /poker_sessions/{sessionId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid ||
+         (resource.data.participantIds != null && request.auth.uid in resource.data.participantIds));
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      // Hands subcollection inherits session access
+      match /poker_hands/{handId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // Session results - only owner can read/write
+    match /session_results/{resultId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Opponents - only owner can read/write
+    match /opponents/{opponentId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Opponent stats - authenticated users (linked to opponents via app logic)
+    match /opponent_stats/{opponentId} {
+      allow read, write: if isAuthenticated();
     }
 
     // Dealers collection
@@ -38,21 +75,60 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
 
-    // Clubs collection
+    // Dealer sessions - participants can read, creator can write
+    match /dealer_sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && resource.data.dealerId == request.auth.uid;
+
+      match /hands/{handId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // Seat assignments - authenticated read, owner write
+    match /seat_assignments/{assignmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() &&
+        (resource.data.playerId == request.auth.uid || resource.data.dealerId == request.auth.uid);
+    }
+
+    // Clubs - readable by all authenticated, writable by members
     match /clubs/{clubId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
 
       // Club members subcollection
       match /members/{memberId} {
         allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isAuthenticated() &&
+          (memberId == request.auth.uid ||
+           get(/databases/$(database)/documents/clubs/$(clubId)).data.ownerId == request.auth.uid);
+      }
+
+      // Club tables
+      match /tables/{tableId} {
+        allow read: if isAuthenticated();
         allow write: if isAuthenticated();
+      }
+
+      // Club events
+      match /events/{eventId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated();
+
+        match /final_standings/{standingId} {
+          allow read: if isAuthenticated();
+          allow write: if isAuthenticated();
+        }
       }
 
       // Club notifications subcollection
       match /notifications/{notificationId} {
         allow read: if isAuthenticated();
-        // Only Cloud Functions should create notifications
         allow create: if isAuthenticated();
         allow update, delete: if false;
       }
@@ -63,12 +139,6 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isAuthenticated();
       allow update, delete: if false;
-    }
-
-    // Allow authenticated users to read/write their own data in other collections
-    // This is a permissive rule - tighten as needed for production
-    match /{document=**} {
-      allow read, write: if isAuthenticated();
     }
   }
 }

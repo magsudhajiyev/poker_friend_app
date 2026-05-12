@@ -524,6 +524,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             label: l10n.profileLogOut,
             onTap: _showSignOutConfirmation,
           ),
+          SizedBox(height: 16),
+
+          // Delete account
+          _buildMenuItem(
+            icon: Icons.delete_forever,
+            label: 'Delete Account',
+            onTap: _showDeleteAccountConfirmation,
+            color: const Color(0xFFFF6B6B),
+          ),
         ],
       ),
     );
@@ -533,21 +542,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    Color? color,
   }) {
+    final itemColor = color ?? Colors.white.withOpacity(0.9);
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
         height: 40,
         child: Row(
           children: [
-            Icon(icon, color: Colors.white.withOpacity(0.9), size: 24),
+            Icon(icon, color: itemColor, size: 24),
             SizedBox(width: 6),
             Text(
               label,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 17,
                 fontWeight: FontWeight.w400,
-                color: Colors.white.withOpacity(0.9),
+                color: itemColor,
               ),
             ),
           ],
@@ -705,5 +716,119 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  void _showDeleteAccountConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'Delete Account',
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFFFF6B6B),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'This will permanently delete your account and all associated data (sessions, hands, stats, opponents). This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteAccount();
+            },
+            child: Text(
+              'Delete',
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFFFF6B6B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteAccount() async {
+    final uid = AuthService.userId;
+    if (uid == null) return;
+
+    try {
+      final firestore = FirebaseFirestore.instance;
+
+      // Delete user data from Firestore
+      await firestore.collection('users').doc(uid).delete();
+      await firestore.collection('user_stats').doc(uid).delete();
+
+      // Delete session results
+      final results = await firestore
+          .collection('session_results')
+          .where('userId', isEqualTo: uid)
+          .get();
+      for (final doc in results.docs) {
+        await doc.reference.delete();
+      }
+
+      // Delete opponents
+      final opponents = await firestore
+          .collection('opponents')
+          .where('userId', isEqualTo: uid)
+          .get();
+      for (final doc in opponents.docs) {
+        await doc.reference.delete();
+        // Also delete opponent stats
+        await firestore.collection('opponent_stats').doc(doc.id).delete();
+      }
+
+      // Delete poker sessions (and their subcollections are orphaned but harmless)
+      final sessions = await firestore
+          .collection('poker_sessions')
+          .where('userId', isEqualTo: uid)
+          .get();
+      for (final doc in sessions.docs) {
+        await doc.reference.delete();
+      }
+
+      // Delete Firebase Auth account
+      await AuthService.deleteAccount();
+
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => IntroScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete account: $e'),
+            backgroundColor: const Color(0xFFFF6B6B),
+          ),
+        );
+      }
+    }
   }
 }

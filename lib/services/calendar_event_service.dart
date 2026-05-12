@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth_service.dart';
 import 'notification_service.dart';
@@ -34,7 +35,7 @@ class CalendarEventService {
       };
 
       final eventRef = await _firestore.collection(_eventsCollection).add(eventData);
-      print('Event created with ID: ${eventRef.id}');
+      debugPrint('Event created with ID: ${eventRef.id}');
 
       // Schedule notifications for this event
       await NotificationService.scheduleEventNotifications(
@@ -46,7 +47,7 @@ class CalendarEventService {
 
       return eventRef.id;
     } catch (e) {
-      print('Error creating event: $e');
+      debugPrint('Error creating event: $e');
       rethrow;
     }
   }
@@ -61,9 +62,9 @@ class CalendarEventService {
       await NotificationService.cancelEventNotifications(eventId);
 
       await _firestore.collection(_eventsCollection).doc(eventId).delete();
-      print('Event deleted: $eventId');
+      debugPrint('Event deleted: $eventId');
     } catch (e) {
-      print('Error deleting event by ID: $e');
+      debugPrint('Error deleting event by ID: $e');
       rethrow;
     }
   }
@@ -73,23 +74,23 @@ class CalendarEventService {
     try {
       final userId = AuthService.userId;
       if (userId == null) {
-        print('❌ User not authenticated');
+        debugPrint('❌ User not authenticated');
         throw 'User not authenticated';
       }
 
-      print('📅 Loading all events for user: $userId');
+      debugPrint('📅 Loading all events for user: $userId');
 
       final querySnapshot = await _firestore
           .collection(_eventsCollection)
           .where('userId', isEqualTo: userId)
           .get();
 
-      print('📊 Found ${querySnapshot.docs.length} events in database');
+      debugPrint('📊 Found ${querySnapshot.docs.length} events in database');
 
       final events = querySnapshot.docs.map((doc) {
         final data = doc.data();
         final dateTimestamp = data['date'] as Timestamp?;
-        print('  - Event: ${data['title']} | Date: ${dateTimestamp?.toDate()}');
+        debugPrint('  - Event: ${data['title']} | Date: ${dateTimestamp?.toDate()}');
         return {
           'id': doc.id,
           'title': data['title'],
@@ -105,10 +106,10 @@ class CalendarEventService {
       // Sort by date
       events.sort((a, b) => DateTime.parse(a['date']).compareTo(DateTime.parse(b['date'])));
 
-      print('📅 Returning ${events.length} events');
+      debugPrint('📅 Returning ${events.length} events');
       return events;
     } catch (e) {
-      print('❌ Error getting user events: $e');
+      debugPrint('❌ Error getting user events: $e');
       return [];
     }
   }
@@ -118,11 +119,11 @@ class CalendarEventService {
     try {
       final userId = AuthService.userId;
       if (userId == null) {
-        print('❌ User not authenticated');
+        debugPrint('❌ User not authenticated');
         throw 'User not authenticated';
       }
 
-      print('📅 Loading upcoming events for user: $userId');
+      debugPrint('📅 Loading upcoming events for user: $userId');
 
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
@@ -133,7 +134,7 @@ class CalendarEventService {
           .where('userId', isEqualTo: userId)
           .get();
 
-      print('📊 Found ${querySnapshot.docs.length} total events');
+      debugPrint('📊 Found ${querySnapshot.docs.length} total events');
 
       // Filter and sort in memory
       final events = querySnapshot.docs
@@ -148,11 +149,11 @@ class CalendarEventService {
 
             // Only include today or future events
             if (eventDateOnly.isBefore(today)) {
-              print('⏭️ Skipping past event: ${data['title']} on $eventDateOnly');
+              debugPrint('⏭️ Skipping past event: ${data['title']} on $eventDateOnly');
               return null;
             }
 
-            print('✅ Including event: ${data['title']} on $eventDateOnly');
+            debugPrint('✅ Including event: ${data['title']} on $eventDateOnly');
 
             return {
               'id': doc.id,
@@ -172,10 +173,10 @@ class CalendarEventService {
       // Sort by date
       events.sort((a, b) => DateTime.parse(a['date']).compareTo(DateTime.parse(b['date'])));
 
-      print('📅 Returning ${events.length} upcoming events');
+      debugPrint('📅 Returning ${events.length} upcoming events');
       return events;
     } catch (e) {
-      print('❌ Error getting upcoming events: $e');
+      debugPrint('❌ Error getting upcoming events: $e');
       return [];
     }
   }
@@ -202,7 +203,7 @@ class CalendarEventService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      print('Event updated: $eventId');
+      debugPrint('Event updated: $eventId');
 
       // Cancel old notifications and schedule new ones
       await NotificationService.cancelEventNotifications(eventId);
@@ -213,7 +214,7 @@ class CalendarEventService {
         eventDate: date,
       );
     } catch (e) {
-      print('Error updating event: $e');
+      debugPrint('Error updating event: $e');
       rethrow;
     }
   }
@@ -228,9 +229,9 @@ class CalendarEventService {
       await NotificationService.cancelEventNotifications(eventId);
 
       await _firestore.collection(_eventsCollection).doc(eventId).delete();
-      print('Event deleted: $eventId');
+      debugPrint('Event deleted: $eventId');
     } catch (e) {
-      print('Error deleting event: $e');
+      debugPrint('Error deleting event: $e');
       rethrow;
     }
   }

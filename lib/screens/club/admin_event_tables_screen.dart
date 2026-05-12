@@ -97,7 +97,7 @@ class _AdminEventTablesScreenState extends State<AdminEventTablesScreen> {
         _setupSeatListeners();
       }
     } catch (e) {
-      print('Error loading data: $e');
+      debugPrint('Error loading data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

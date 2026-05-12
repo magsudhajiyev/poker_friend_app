@@ -232,7 +232,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         });
       }
     } catch (e) {
-      // print('Error checking dealer status: $e');
+      // debugPrint('Error checking dealer status: $e');
     }
   }
 
@@ -269,7 +269,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      // print('Error loading event data: $e');
+      // debugPrint('Error loading event data: $e');
       setState(() {
         _loadError = e.toString();
         _isLoading = false;

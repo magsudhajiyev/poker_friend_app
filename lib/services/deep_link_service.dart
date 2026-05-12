@@ -41,52 +41,52 @@ class DeepLinkService {
       // Handle initial link (cold start - app opened via deep link)
       final initialLink = await _appLinks.getInitialLink();
       if (initialLink != null) {
-        print('DeepLinkService: Initial link received - $initialLink');
+        debugPrint('DeepLinkService: Initial link received - $initialLink');
         await _handleDeepLink(initialLink);
       }
 
       // Handle subsequent links (warm start - app already running)
       _appLinks.uriLinkStream.listen(
         (uri) {
-          print('DeepLinkService: Stream link received - $uri');
+          debugPrint('DeepLinkService: Stream link received - $uri');
           _handleDeepLink(uri);
         },
         onError: (error) {
-          print('DeepLinkService: Stream error - $error');
+          debugPrint('DeepLinkService: Stream error - $error');
         },
       );
 
-      print('DeepLinkService: Initialized successfully');
+      debugPrint('DeepLinkService: Initialized successfully');
     } catch (e) {
-      print('DeepLinkService: Initialization error - $e');
+      debugPrint('DeepLinkService: Initialization error - $e');
     }
   }
 
   /// Parse and handle incoming deep link
   static Future<void> _handleDeepLink(Uri uri) async {
-    print('DeepLinkService: Handling deep link - $uri');
+    debugPrint('DeepLinkService: Handling deep link - $uri');
 
     // Expected format: pkr://invite/{clubId}/{invitationId}
     if (uri.scheme != 'pkr') {
-      print('DeepLinkService: Unknown scheme - ${uri.scheme}');
+      debugPrint('DeepLinkService: Unknown scheme - ${uri.scheme}');
       return;
     }
 
     if (uri.host != 'invite') {
-      print('DeepLinkService: Unknown host - ${uri.host}');
+      debugPrint('DeepLinkService: Unknown host - ${uri.host}');
       return;
     }
 
     final pathSegments = uri.pathSegments;
     if (pathSegments.length < 2) {
-      print('DeepLinkService: Invalid path - missing clubId or invitationId');
+      debugPrint('DeepLinkService: Invalid path - missing clubId or invitationId');
       return;
     }
 
     final clubId = pathSegments[0];
     final invitationId = pathSegments[1];
 
-    print('DeepLinkService: Parsed invitation - clubId: $clubId, invitationId: $invitationId');
+    debugPrint('DeepLinkService: Parsed invitation - clubId: $clubId, invitationId: $invitationId');
 
     // Check if user is logged in
     if (AuthService.userId == null) {
@@ -95,7 +95,7 @@ class DeepLinkService {
         'clubId': clubId,
         'invitationId': invitationId,
       };
-      print('DeepLinkService: User not logged in - storing pending invitation');
+      debugPrint('DeepLinkService: User not logged in - storing pending invitation');
       return;
     }
 
@@ -105,7 +105,7 @@ class DeepLinkService {
   /// Accept an invitation and notify the app
   static Future<void> _acceptInvitation(String clubId, String invitationId) async {
     try {
-      print('DeepLinkService: Accepting invitation - $invitationId');
+      debugPrint('DeepLinkService: Accepting invitation - $invitationId');
 
       // Accept the invitation
       await InvitationService.acceptInvitation(
@@ -117,13 +117,13 @@ class DeepLinkService {
       final club = await ClubService.getClub(clubId);
       final clubName = club?.name ?? 'the club';
 
-      print('DeepLinkService: Invitation accepted - now a dealer on $clubName');
+      debugPrint('DeepLinkService: Invitation accepted - now a dealer on $clubName');
 
       // Notify the app to show success message
       _onInvitationAccepted?.call(clubId, clubName);
 
     } catch (e) {
-      print('DeepLinkService: Error accepting invitation - $e');
+      debugPrint('DeepLinkService: Error accepting invitation - $e');
       // Could show error snackbar here if we have context
     }
   }
@@ -133,7 +133,7 @@ class DeepLinkService {
   /// Call this in auth_wrapper.dart after authentication completes
   static Future<void> processPendingInvitation() async {
     if (_pendingInvitation == null) {
-      print('DeepLinkService: No pending invitation');
+      debugPrint('DeepLinkService: No pending invitation');
       return;
     }
 
@@ -141,7 +141,7 @@ class DeepLinkService {
     final invitationId = _pendingInvitation!['invitationId']!;
     _pendingInvitation = null;
 
-    print('DeepLinkService: Processing pending invitation - $invitationId');
+    debugPrint('DeepLinkService: Processing pending invitation - $invitationId');
     await _acceptInvitation(clubId, invitationId);
   }
 

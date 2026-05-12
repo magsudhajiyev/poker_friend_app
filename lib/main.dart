@@ -40,7 +40,7 @@ void main() async {
   try {
     await EnvConfig.load();
   } catch (e) {
-    print('Environment config load failed: $e');
+    debugPrint('Environment config load failed: $e');
   }
 
   // Firebase must init before runApp (AuthWrapper depends on it)
@@ -48,35 +48,35 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    print('Firebase initialized successfully');
+    debugPrint('Firebase initialized successfully');
 
     FirebaseFirestore.instance.settings = const Settings(
       persistenceEnabled: true,
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
-    print('Firestore offline persistence enabled');
+    debugPrint('Firestore offline persistence enabled');
   } catch (e) {
-    print('Firebase initialization failed: $e');
+    debugPrint('Firebase initialization failed: $e');
   }
 
   // Load saved locale preference
   try {
     await LocaleService.init();
   } catch (e) {
-    print('Locale service init failed: $e');
+    debugPrint('Locale service init failed: $e');
   }
 
   // Load saved currency preference
   try {
     await CurrencyService.init();
   } catch (e) {
-    print('Currency service init failed: $e');
+    debugPrint('Currency service init failed: $e');
   }
 
   // Launch app FIRST, then init services in background.
   // This prevents a black screen if any service hangs when offline.
   runApp(const PokerTrackerApp());
-  print('📍 MAIN: runApp() called');
+  debugPrint('📍 MAIN: runApp() called');
 
   // Initialize remaining services in background (non-blocking)
   unawaited(_initServicesInBackground());
@@ -89,9 +89,9 @@ Future<void> _initServicesInBackground() async {
   try {
     await NotificationService.initialize();
     await NotificationService.requestPermissions();
-    print('Local notification service initialized successfully');
+    debugPrint('Local notification service initialized successfully');
   } catch (e) {
-    print('Local notification initialization failed: $e');
+    debugPrint('Local notification initialization failed: $e');
   }
 
   // FCM push notifications
@@ -106,27 +106,27 @@ Future<void> _initServicesInBackground() async {
       unawaited(OpponentService.syncTempOpponents());
     }
   } catch (e) {
-    print('FCM initialization failed: $e');
+    debugPrint('FCM initialization failed: $e');
   }
 
   // Logger
   try {
     await LoggerService.initialize();
     await LoggerService.info('App started - Logger initialized');
-    print('Logger service initialized successfully');
+    debugPrint('Logger service initialized successfully');
   } catch (e) {
-    print('Logger initialization failed: $e');
+    debugPrint('Logger initialization failed: $e');
   }
 
   // RevenueCat subscriptions
   try {
     await SubscriptionService.initialize();
-    print('Subscription service initialized successfully');
+    debugPrint('Subscription service initialized successfully');
 
     // Setup subscription status change listener for cache invalidation
     _setupSubscriptionStatusListener();
   } catch (e) {
-    print('Subscription service initialization failed: $e');
+    debugPrint('Subscription service initialization failed: $e');
   }
 
   // Deep links
@@ -137,9 +137,9 @@ Future<void> _initServicesInBackground() async {
         _showInvitationAcceptedNotification(clubName);
       },
     );
-    print('Deep link service initialized successfully');
+    debugPrint('Deep link service initialized successfully');
   } catch (e) {
-    print('Deep link initialization failed: $e');
+    debugPrint('Deep link initialization failed: $e');
   }
 
   // Process pending notification after services are ready
@@ -193,11 +193,11 @@ void _setupSubscriptionStatusListener() {
       // Mark home dirty to refresh recent sessions display
       AppDataCache.markHomeDirty();
 
-      print('Subscription status changed to ${isPremium ? 'Premium' : 'Free'} - cache invalidated');
+      debugPrint('Subscription status changed to ${isPremium ? 'Premium' : 'Free'} - cache invalidated');
     });
-    print('Subscription status listener setup successfully');
+    debugPrint('Subscription status listener setup successfully');
   } catch (e) {
-    print('Failed to setup subscription status listener: $e');
+    debugPrint('Failed to setup subscription status listener: $e');
   }
 }
 

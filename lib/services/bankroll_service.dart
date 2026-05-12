@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firebase_service.dart';
@@ -43,7 +44,7 @@ class BankrollService {
       await prefs.setBool(_syncedKey, true);
       AppDataCache.markHomeDirty();
     } catch (e) {
-      print('Error syncing bankroll from Firestore: $e');
+      debugPrint('Error syncing bankroll from Firestore: $e');
     }
   }
 
@@ -63,7 +64,7 @@ class BankrollService {
           .doc(userId)
           .set(updates, SetOptions(merge: true));
     } catch (e) {
-      print('Error syncing bankroll to Firestore: $e');
+      debugPrint('Error syncing bankroll to Firestore: $e');
     }
   }
 
@@ -73,7 +74,7 @@ class BankrollService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getDouble(_goalKey) ?? 0.0;
     } catch (e) {
-      print('Error getting bankroll goal: $e');
+      debugPrint('Error getting bankroll goal: $e');
       return 0.0;
     }
   }
@@ -86,7 +87,7 @@ class BankrollService {
       AppDataCache.markHomeDirty();
       await _syncToFirestore(goal: goal);
     } catch (e) {
-      print('Error setting bankroll goal: $e');
+      debugPrint('Error setting bankroll goal: $e');
     }
   }
 
@@ -96,7 +97,7 @@ class BankrollService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getDouble(_currentBankrollKey) ?? 0.0;
     } catch (e) {
-      print('Error getting current bankroll: $e');
+      debugPrint('Error getting current bankroll: $e');
       return 0.0;
     }
   }
@@ -109,7 +110,7 @@ class BankrollService {
       AppDataCache.markHomeDirty();
       await _syncToFirestore(bankroll: amount);
     } catch (e) {
-      print('Error setting current bankroll: $e');
+      debugPrint('Error setting current bankroll: $e');
     }
   }
 
@@ -119,7 +120,7 @@ class BankrollService {
       final current = await getCurrentBankroll();
       await setCurrentBankroll(current + amount);
     } catch (e) {
-      print('Error adding to bankroll: $e');
+      debugPrint('Error adding to bankroll: $e');
     }
   }
 
@@ -131,7 +132,7 @@ class BankrollService {
       final progress = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
       return progress;
     } catch (e) {
-      print('Error calculating bankroll progress: $e');
+      debugPrint('Error calculating bankroll progress: $e');
       return 0.0;
     }
   }
@@ -143,7 +144,7 @@ class BankrollService {
       final goal = await getBankrollGoal();
       return (goal - current).clamp(0.0, double.infinity);
     } catch (e) {
-      print('Error calculating remaining to goal: $e');
+      debugPrint('Error calculating remaining to goal: $e');
       return 0.0;
     }
   }
@@ -238,7 +239,7 @@ class BankrollService {
         'totalHands': userStats.totalHands,
       };
     } catch (e) {
-      print('Error getting player statistics: $e');
+      debugPrint('Error getting player statistics: $e');
       return {
         'totalSessions': 0,
         'totalHours': 0.0,

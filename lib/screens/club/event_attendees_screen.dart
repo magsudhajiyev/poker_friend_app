@@ -78,7 +78,7 @@ class _EventAttendeesScreenState extends State<EventAttendeesScreen>
         _isLoading = false;
       });
     } catch (e) {
-      // print('Error loading attendees: $e');
+      // debugPrint('Error loading attendees: $e');
       setState(() => _isLoading = false);
     }
   }

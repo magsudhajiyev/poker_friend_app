@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../config/env_config.dart';
 import 'auth_service.dart';
 import 'logger_service.dart';
 
 class AIAnalyzerService {
-  static const String _apiKey = 'oCx_2Be-_wkxXGa_cacuG4Dm0--sglzSSddJD46bibI';
+  static String get _apiKey => EnvConfig.aiApiKey;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Analyze a poker hand using the backend AI service.

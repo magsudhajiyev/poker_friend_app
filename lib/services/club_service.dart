@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/club.dart';
 import '../models/club_member.dart';
@@ -97,7 +98,7 @@ class ClubService {
       // This is more reliable but slower
       return await _getClubsByMembership(userId);
     } catch (e) {
-      print('Error getting clubs: $e');
+      debugPrint('Error getting clubs: $e');
       // Ultimate fallback
       return await _getClubsByMembership(userId);
     }
@@ -125,7 +126,7 @@ class ClubService {
 
       return clubs;
     } catch (e) {
-      print('Error getting clubs by membership: $e');
+      debugPrint('Error getting clubs by membership: $e');
       return [];
     }
   }
@@ -139,7 +140,7 @@ class ClubService {
       }
       return null;
     } catch (e) {
-      print('Error getting club: $e');
+      debugPrint('Error getting club: $e');
       return null;
     }
   }
@@ -179,7 +180,7 @@ class ClubService {
 
       return snapshot.docs.map((doc) => ClubMember.fromFirestore(doc)).toList();
     } catch (e) {
-      print('Error getting club members: $e');
+      debugPrint('Error getting club members: $e');
       return [];
     }
   }
@@ -200,7 +201,7 @@ class ClubService {
       }
       return null;
     } catch (e) {
-      print('Error getting member role: $e');
+      debugPrint('Error getting member role: $e');
       return null;
     }
   }
@@ -239,7 +240,7 @@ class ClubService {
           .cast<String>()
           .toList();
     } catch (e) {
-      print('Error getting member user IDs: $e');
+      debugPrint('Error getting member user IDs: $e');
       return [];
     }
   }
@@ -256,7 +257,7 @@ class ClubService {
 
       return snapshot.count ?? 0;
     } catch (e) {
-      print('Error getting member count: $e');
+      debugPrint('Error getting member count: $e');
       return 0;
     }
   }
@@ -307,7 +308,7 @@ class ClubService {
       try {
         await FCMService.subscribeToClub(clubId);
       } catch (e) {
-        print('Failed to subscribe to club FCM topic: $e');
+        debugPrint('Failed to subscribe to club FCM topic: $e');
         // Don't fail membership if FCM subscription fails
       }
     }
@@ -366,7 +367,7 @@ class ClubService {
         'role': newRole.value,
       });
     } catch (e) {
-      print('Error updating member role: $e');
+      debugPrint('Error updating member role: $e');
       rethrow;
     }
   }
@@ -387,7 +388,7 @@ class ClubService {
       }
       return null;
     } catch (e) {
-      print('Error getting member: $e');
+      debugPrint('Error getting member: $e');
       return null;
     }
   }
@@ -406,7 +407,7 @@ class ClubService {
       }
       return null;
     } catch (e) {
-      print('Error finding club by name: $e');
+      debugPrint('Error finding club by name: $e');
       return null;
     }
   }
@@ -427,7 +428,7 @@ class ClubService {
       }
       return null;
     } catch (e) {
-      print('Error finding member by name: $e');
+      debugPrint('Error finding member by name: $e');
       return null;
     }
   }
@@ -468,12 +469,12 @@ class ClubService {
         try {
           await FCMService.unsubscribeFromClub(clubId);
         } catch (e) {
-          print('Failed to unsubscribe from club FCM topic: $e');
+          debugPrint('Failed to unsubscribe from club FCM topic: $e');
           // Don't fail removal if FCM unsubscription fails
         }
       }
     } catch (e) {
-      print('Error removing member: $e');
+      debugPrint('Error removing member: $e');
       rethrow;
     }
   }
@@ -497,7 +498,7 @@ class ClubService {
         );
       }
     } catch (e) {
-      print('Error ensuring membership: $e');
+      debugPrint('Error ensuring membership: $e');
     }
   }
 }

@@ -261,7 +261,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       _computeSessionFinancials(results);
 
     } catch (e) {
-      print('Error calculating statistics: $e');
+      debugPrint('Error calculating statistics: $e');
       throw e;
     }
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/poker_table.dart';
 import '../models/qr_seat_data.dart';
@@ -106,7 +107,7 @@ class TableService {
           .map((doc) => PokerTable.fromFirestore(doc, clubId: clubId))
           .toList();
     } catch (e) {
-      print('Error getting tables: $e');
+      debugPrint('Error getting tables: $e');
       return [];
     }
   }
@@ -126,7 +127,7 @@ class TableService {
       }
       return null;
     } catch (e) {
-      print('Error getting table: $e');
+      debugPrint('Error getting table: $e');
       return null;
     }
   }
@@ -170,7 +171,7 @@ class TableService {
 
       return null;
     } catch (e) {
-      print('Error finding table by name pattern: $e');
+      debugPrint('Error finding table by name pattern: $e');
       return null;
     }
   }
@@ -260,7 +261,7 @@ class TableService {
 
       return await getTable(clubId, tableId);
     } catch (e) {
-      print('Error regenerating QR codes: $e');
+      debugPrint('Error regenerating QR codes: $e');
       return null;
     }
   }
@@ -321,7 +322,7 @@ class TableService {
 
       return tableQRCode;
     } catch (e) {
-      print('Error getting/generating table QR code: $e');
+      debugPrint('Error getting/generating table QR code: $e');
       return null;
     }
   }
@@ -345,7 +346,7 @@ class TableService {
 
       return table;
     } catch (e) {
-      print('Error getting table with QR code: $e');
+      debugPrint('Error getting table with QR code: $e');
       return null;
     }
   }

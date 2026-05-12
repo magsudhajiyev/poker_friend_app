@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/event_attendance.dart';
 import 'auth_service.dart';
@@ -18,8 +19,8 @@ class EventAttendanceService {
   }) async {
     final userId = AuthService.userId;
     final displayName = DisplayIdentityService.cachedDisplayIdentity;
-    print('📝 updateAttendance: userId=$userId, displayName=$displayName, status=${status.value}');
-    print('📝 updateAttendance: clubId=$clubId, eventId=$eventId');
+    debugPrint('📝 updateAttendance: userId=$userId, displayName=$displayName, status=${status.value}');
+    debugPrint('📝 updateAttendance: clubId=$clubId, eventId=$eventId');
     if (userId == null) throw 'User not authenticated';
 
     final attendanceRef = _firestore
@@ -31,18 +32,18 @@ class EventAttendanceService {
         .doc(userId);
 
     final existing = await attendanceRef.get();
-    print('📝 updateAttendance: existing=${existing.exists}');
+    debugPrint('📝 updateAttendance: existing=${existing.exists}');
 
     if (existing.exists) {
       // Update existing attendance
-      print('📝 updateAttendance: Updating existing record');
+      debugPrint('📝 updateAttendance: Updating existing record');
       await attendanceRef.update({
         'status': status.value,
         'respondedAt': Timestamp.now(),
       });
     } else {
       // Create new attendance record
-      print('📝 updateAttendance: Creating new record');
+      debugPrint('📝 updateAttendance: Creating new record');
       final attendance = EventAttendance(
         id: userId,
         eventId: eventId,
@@ -53,7 +54,7 @@ class EventAttendanceService {
       );
       await attendanceRef.set(attendance.toFirestore());
     }
-    print('📝 updateAttendance: Done');
+    debugPrint('📝 updateAttendance: Done');
   }
 
   /// Get all attendance records for an event
@@ -73,7 +74,7 @@ class EventAttendanceService {
 
       return snapshot.docs.map((doc) => EventAttendance.fromFirestore(doc)).toList();
     } catch (e) {
-      print('Error getting event attendance: $e');
+      debugPrint('Error getting event attendance: $e');
       return [];
     }
   }
@@ -84,7 +85,7 @@ class EventAttendanceService {
     String eventId,
     AttendanceStatus status,
   ) async {
-    print('📋 getEventAttendanceByStatus: clubId=$clubId, eventId=$eventId, status=${status.value}');
+    debugPrint('📋 getEventAttendanceByStatus: clubId=$clubId, eventId=$eventId, status=${status.value}');
     try {
       // Avoid composite index by not using orderBy - sort locally instead
       final snapshot = await _firestore
@@ -96,9 +97,9 @@ class EventAttendanceService {
           .where('status', isEqualTo: status.value)
           .get();
 
-      print('📋 getEventAttendanceByStatus: Found ${snapshot.docs.length} documents');
+      debugPrint('📋 getEventAttendanceByStatus: Found ${snapshot.docs.length} documents');
       for (final doc in snapshot.docs) {
-        print('📋 getEventAttendanceByStatus: Doc ${doc.id} = ${doc.data()}');
+        debugPrint('📋 getEventAttendanceByStatus: Doc ${doc.id} = ${doc.data()}');
       }
 
       final attendance = snapshot.docs
@@ -108,7 +109,7 @@ class EventAttendanceService {
       attendance.sort((a, b) => b.respondedAt.compareTo(a.respondedAt));
       return attendance;
     } catch (e) {
-      print('Error getting event attendance by status: $e');
+      debugPrint('Error getting event attendance by status: $e');
       return [];
     }
   }
@@ -139,7 +140,7 @@ class EventAttendanceService {
         counts[status] = (counts[status] ?? 0) + 1;
       }
     } catch (e) {
-      print('Error getting attendance counts: $e');
+      debugPrint('Error getting attendance counts: $e');
     }
 
     return counts;
@@ -168,7 +169,7 @@ class EventAttendanceService {
       }
       return null;
     } catch (e) {
-      print('Error getting current user attendance: $e');
+      debugPrint('Error getting current user attendance: $e');
       return null;
     }
   }
@@ -312,7 +313,7 @@ class EventAttendanceService {
 
       return snapshot.docs.map((doc) => doc.id).toList();
     } catch (e) {
-      print('Error getting going user IDs: $e');
+      debugPrint('Error getting going user IDs: $e');
       return [];
     }
   }

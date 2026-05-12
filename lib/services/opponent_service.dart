@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -40,7 +41,7 @@ class OpponentService {
         opponent = opponent.copyWith(id: newId);
       }
     } catch (e) {
-      print('⚠️ Firebase save failed, using local storage: $e');
+      debugPrint('⚠️ Firebase save failed, using local storage: $e');
     }
 
     await _saveOpponentToLocal(opponent);
@@ -53,13 +54,13 @@ class OpponentService {
     try {
       // Try Firebase first
       final firebaseOpponents = await _getOpponentsFromFirebase();
-      print('📊 Loaded ${firebaseOpponents.length} opponents from Firebase');
+      debugPrint('📊 Loaded ${firebaseOpponents.length} opponents from Firebase');
       return firebaseOpponents;
     } catch (e) {
-      print('⚠️ Firebase load failed, using local storage: $e');
+      debugPrint('⚠️ Firebase load failed, using local storage: $e');
       // Fallback to local storage
       final localOpponents = await _getOpponentsFromLocal();
-      print('📊 Loaded ${localOpponents.length} opponents from local storage');
+      debugPrint('📊 Loaded ${localOpponents.length} opponents from local storage');
       return localOpponents;
     }
   }
@@ -69,15 +70,15 @@ class OpponentService {
     try {
       // Delete from Firebase
       await _deleteOpponentFromFirebase(opponentId);
-      print('🗑️ Opponent deleted from Firebase: $opponentId');
+      debugPrint('🗑️ Opponent deleted from Firebase: $opponentId');
     } catch (e) {
-      print('⚠️ Firebase delete failed: $e');
+      debugPrint('⚠️ Firebase delete failed: $e');
     }
     
     // Delete from local storage
     await _deleteOpponentFromLocal(opponentId);
     AppDataCache.markOpponentsDirty();
-    print('🗑️ Opponent deleted locally: $opponentId');
+    debugPrint('🗑️ Opponent deleted locally: $opponentId');
   }
 
   /// Find opponent by name (case insensitive)
@@ -124,16 +125,16 @@ class OpponentService {
           batch.delete(doc.reference);
         }
         await batch.commit();
-        print('🗑️ All opponents cleared from Firebase');
+        debugPrint('🗑️ All opponents cleared from Firebase');
       }
     } catch (e) {
-      print('⚠️ Error clearing Firebase opponents: $e');
+      debugPrint('⚠️ Error clearing Firebase opponents: $e');
     }
 
     // Clear local storage
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_localOpponentsKey);
-    print('🗑️ All opponents cleared from local storage');
+    debugPrint('🗑️ All opponents cleared from local storage');
   }
 
   // === Firebase Operations ===
@@ -172,7 +173,7 @@ class OpponentService {
         }
       }
     } catch (e) {
-      print('⚠️ Temp opponent sync failed: $e');
+      debugPrint('⚠️ Temp opponent sync failed: $e');
     }
   }
 
@@ -316,7 +317,7 @@ class OpponentService {
   /// via OpponentStatsService.updateStatsIncremental() after each hand.
   @Deprecated('Use OpponentStatsService for all statistical operations')
   static Future<void> recalculateOpponentStats() async {
-    print('⚠️ recalculateOpponentStats is deprecated. Stats are now managed by OpponentStatsService.');
+    debugPrint('⚠️ recalculateOpponentStats is deprecated. Stats are now managed by OpponentStatsService.');
   }
 
 }

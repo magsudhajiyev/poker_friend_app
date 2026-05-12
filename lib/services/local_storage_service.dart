@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as path;
@@ -193,9 +194,9 @@ class LocalStorageService {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
       
-      print('Session saved locally: $sessionId');
+      debugPrint('Session saved locally: $sessionId');
     } catch (e) {
-      print('Error saving session locally: $e');
+      debugPrint('Error saving session locally: $e');
     }
   }
 
@@ -300,9 +301,9 @@ class LocalStorageService {
         [sessionId],
       );
       
-      print('Hand saved locally: $handId with potAmount: ${potAmount ?? 0}');
+      debugPrint('Hand saved locally: $handId with potAmount: ${potAmount ?? 0}');
     } catch (e) {
-      print('Error saving hand locally: $e');
+      debugPrint('Error saving hand locally: $e');
     }
   }
   
@@ -331,7 +332,7 @@ class LocalStorageService {
             return startTime.isAfter(thirtyDaysAgo);
           } catch (e) {
             // If startTime parsing fails, exclude the session
-            print('Error parsing session startTime "$startTimeStr": $e');
+            debugPrint('Error parsing session startTime "$startTimeStr": $e');
             return false;
           }
         }).toList();
@@ -339,7 +340,7 @@ class LocalStorageService {
 
       return sessions;
     } catch (e) {
-      print('Error getting user sessions: $e');
+      debugPrint('Error getting user sessions: $e');
       return [];
     }
   }
@@ -441,7 +442,7 @@ class LocalStorageService {
         return result;
       }).toList();
     } catch (e) {
-      print('Error getting session hands: $e');
+      debugPrint('Error getting session hands: $e');
       return [];
     }
   }
@@ -458,9 +459,9 @@ class LocalStorageService {
         whereArgs: [sessionId],
       );
       
-      print('Session ended locally: $sessionId');
+      debugPrint('Session ended locally: $sessionId');
     } catch (e) {
-      print('Error ending session locally: $e');
+      debugPrint('Error ending session locally: $e');
     }
   }
   
@@ -470,9 +471,9 @@ class LocalStorageService {
       final db = await database;
       await db.delete('hands');
       await db.delete('sessions');
-      print('All local data cleared');
+      debugPrint('All local data cleared');
     } catch (e) {
-      print('Error clearing local data: $e');
+      debugPrint('Error clearing local data: $e');
     }
   }
 
@@ -506,9 +507,9 @@ class LocalStorageService {
         whereArgs: [userId],
       );
       
-      print('All user sessions cleared from local storage');
+      debugPrint('All user sessions cleared from local storage');
     } catch (e) {
-      print('Error clearing user sessions: $e');
+      debugPrint('Error clearing user sessions: $e');
     }
   }
 
@@ -526,9 +527,9 @@ class LocalStorageService {
         whereArgs: [sessionId],
       );
       
-      print('Session name updated locally: $sessionId -> $sessionName');
+      debugPrint('Session name updated locally: $sessionId -> $sessionName');
     } catch (e) {
-      print('Error updating session name locally: $e');
+      debugPrint('Error updating session name locally: $e');
       rethrow;
     }
   }
@@ -572,7 +573,7 @@ class LocalStorageService {
       );
 
     } catch (e) {
-      print('Error updating session locally: $e');
+      debugPrint('Error updating session locally: $e');
       rethrow;
     }
   }
@@ -586,7 +587,7 @@ class LocalStorageService {
       try {
         return jsonEncode(_makeJsonSafe(data));
       } catch (e2) {
-        print('Warning: Failed to JSON encode data, using toString: $e2');
+        debugPrint('Warning: Failed to JSON encode data, using toString: $e2');
         return jsonEncode({'error': 'Failed to encode', 'data': data.toString()});
       }
     }
@@ -665,7 +666,7 @@ class LocalStorageService {
         try {
           sessionData['stackHistory'] = jsonDecode(sessionData['stackHistory']);
         } catch (e) {
-          print('Error parsing stackHistory: $e');
+          debugPrint('Error parsing stackHistory: $e');
           sessionData['stackHistory'] = [];
         }
       } else {
@@ -677,7 +678,7 @@ class LocalStorageService {
 
       return sessionData;
     } catch (e) {
-      print('Error getting session from local storage: $e');
+      debugPrint('Error getting session from local storage: $e');
       return null;
     }
   }

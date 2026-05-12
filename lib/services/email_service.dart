@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/env_config.dart';
@@ -21,7 +22,7 @@ class EmailService {
   }) async {
     final apiKey = EnvConfig.resendApiKey;
     if (apiKey.isEmpty) {
-      print('EmailService: Resend API key not configured');
+      debugPrint('EmailService: Resend API key not configured');
       return false;
     }
 
@@ -49,14 +50,14 @@ class EmailService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('EmailService: Invitation email sent to $toEmail');
+        debugPrint('EmailService: Invitation email sent to $toEmail');
         return true;
       } else {
-        print('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
+        debugPrint('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('EmailService: Error sending email - $e');
+      debugPrint('EmailService: Error sending email - $e');
       return false;
     }
   }
@@ -72,7 +73,7 @@ class EmailService {
   }) async {
     final apiKey = EnvConfig.resendApiKey;
     if (apiKey.isEmpty) {
-      print('EmailService: Resend API key not configured');
+      debugPrint('EmailService: Resend API key not configured');
       return false;
     }
 
@@ -100,14 +101,14 @@ class EmailService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('EmailService: New club request email sent to $toEmail');
+        debugPrint('EmailService: New club request email sent to $toEmail');
         return true;
       } else {
-        print('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
+        debugPrint('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('EmailService: Error sending email - $e');
+      debugPrint('EmailService: Error sending email - $e');
       return false;
     }
   }
@@ -224,7 +225,7 @@ class EmailService {
   }) async {
     final apiKey = EnvConfig.resendApiKey;
     if (apiKey.isEmpty) {
-      print('EmailService: Resend API key not configured');
+      debugPrint('EmailService: Resend API key not configured');
       return false;
     }
 
@@ -246,14 +247,14 @@ class EmailService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('EmailService: Club approval email sent to $toEmail');
+        debugPrint('EmailService: Club approval email sent to $toEmail');
         return true;
       } else {
-        print('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
+        debugPrint('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('EmailService: Error sending email - $e');
+      debugPrint('EmailService: Error sending email - $e');
       return false;
     }
   }
@@ -345,7 +346,7 @@ class EmailService {
   }) async {
     final apiKey = EnvConfig.resendApiKey;
     if (apiKey.isEmpty) {
-      print('EmailService: Resend API key not configured');
+      debugPrint('EmailService: Resend API key not configured');
       return false;
     }
 
@@ -373,14 +374,14 @@ class EmailService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('EmailService: Member invitation email sent to $toEmail');
+        debugPrint('EmailService: Member invitation email sent to $toEmail');
         return true;
       } else {
-        print('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
+        debugPrint('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('EmailService: Error sending email - $e');
+      debugPrint('EmailService: Error sending email - $e');
       return false;
     }
   }
@@ -575,7 +576,7 @@ class EmailService {
   }) async {
     final apiKey = EnvConfig.resendApiKey;
     if (apiKey.isEmpty) {
-      print('EmailService: Resend API key not configured');
+      debugPrint('EmailService: Resend API key not configured');
       return false;
     }
 
@@ -597,14 +598,14 @@ class EmailService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('EmailService: Password reset code sent to $toEmail');
+        debugPrint('EmailService: Password reset code sent to $toEmail');
         return true;
       } else {
-        print('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
+        debugPrint('EmailService: Failed to send email - ${response.statusCode}: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('EmailService: Error sending email - $e');
+      debugPrint('EmailService: Error sending email - $e');
       return false;
     }
   }

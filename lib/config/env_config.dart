@@ -32,15 +32,19 @@ class EnvConfig {
   static String get resendApiKey =>
       dotenv.env['RESEND_API_KEY'] ?? '';
 
+  /// AI hand analysis API key
+  static String get aiApiKey =>
+      dotenv.env['AI_API_KEY'] ?? '';
+
   // ==================== Server URLs ====================
 
   /// WebSocket server URL for real-time communication
   static String get websocketServerUrl =>
-      dotenv.env['WEBSOCKET_SERVER_URL'] ?? 'http://localhost:8000';
+      dotenv.env['WEBSOCKET_SERVER_URL'] ?? 'https://poker-friend-engine.onrender.com';
 
   /// API server URL for REST endpoints
   static String get apiServerUrl =>
-      dotenv.env['API_SERVER_URL'] ?? 'http://localhost:8000';
+      dotenv.env['API_SERVER_URL'] ?? 'https://poker-friend-engine.onrender.com';
 
   // ==================== Environment ====================
 

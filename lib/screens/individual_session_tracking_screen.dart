@@ -348,7 +348,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
         _sessionId = sessionId;
       });
     } catch (e) {
-      print('Error creating individual session in Firebase: $e');
+      debugPrint('Error creating individual session in Firebase: $e');
       final localSessionId = DateTime.now().millisecondsSinceEpoch.toString();
 
       await LocalStorageService.saveSession(
@@ -419,7 +419,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
                   _sessionStartTime = DateTime.parse(sessionData['startTime']);
                 }
               } catch (e) {
-                print('Error parsing session start time: $e');
+                debugPrint('Error parsing session start time: $e');
               }
             }
           });
@@ -1946,7 +1946,7 @@ class _IndividualSessionTrackingScreenState extends State<IndividualSessionTrack
             newTotalBuyIn: _totalBuyIn,
           );
         } catch (e) {
-          print('Error saving rebuy: $e');
+          debugPrint('Error saving rebuy: $e');
         }
       }
 

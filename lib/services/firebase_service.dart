@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/poker_game_state.dart';
 import '../models/game_types.dart';
@@ -100,7 +101,7 @@ class FirebaseService {
       AppDataCache.markStatsDirty();
       return sessionRef.id;
     } catch (e) {
-      print('Error creating session: $e');
+      debugPrint('Error creating session: $e');
       rethrow;
     }
   }
@@ -335,7 +336,7 @@ class FirebaseService {
       AppDataCache.markOpponentsDirty();
       AppDataCache.markOpponentHandsDirty();
     } catch (e) {
-      print('Error saving hand: $e');
+      debugPrint('Error saving hand: $e');
       rethrow;
     }
   }
@@ -373,7 +374,7 @@ class FirebaseService {
           .update(updateData);
 
     } catch (e) {
-      print('Error updating hand annotations: $e');
+      debugPrint('Error updating hand annotations: $e');
       rethrow;
     }
   }
@@ -399,7 +400,7 @@ class FirebaseService {
       });
       
     } catch (e) {
-      print('Error saving action: $e');
+      debugPrint('Error saving action: $e');
       // Don't rethrow - action logging shouldn't break the game
     }
   }
@@ -449,7 +450,7 @@ class FirebaseService {
       AppDataCache.markSessionsDirty();
       AppDataCache.markStatsDirty();
     } catch (e) {
-      print('Error ending session: $e');
+      debugPrint('Error ending session: $e');
       rethrow;
     }
   }
@@ -463,7 +464,7 @@ class FirebaseService {
       }
       return null;
     } catch (e) {
-      print('Error getting session: $e');
+      debugPrint('Error getting session: $e');
       return null;
     }
   }
@@ -489,7 +490,7 @@ class FirebaseService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting session hands from Firebase: $e');
+      debugPrint('Error getting session hands from Firebase: $e');
       return [];
     }
   }
@@ -556,7 +557,7 @@ class FirebaseService {
         ...doc.data(),
       }).toList();
     } catch (e) {
-      print('Error getting recent sessions: $e');
+      debugPrint('Error getting recent sessions: $e');
       return [];
     }
   }
@@ -674,8 +675,8 @@ class FirebaseService {
 
       return sessions;
     } catch (e) {
-      print('Error getting user sessions from Firebase: $e');
-      print('Falling back to local storage...');
+      debugPrint('Error getting user sessions from Firebase: $e');
+      debugPrint('Falling back to local storage...');
 
       // Fallback to local storage
       try {
@@ -695,7 +696,7 @@ class FirebaseService {
 
         return localSessions;
       } catch (localError) {
-        print('Error getting sessions from local storage: $localError');
+        debugPrint('Error getting sessions from local storage: $localError');
         return _getMockOfflineData();
       }
     }
@@ -737,7 +738,7 @@ class FirebaseService {
         'participationPeriods': participationPeriods,
       });
     } catch (e) {
-      print('Error adding session participant: $e');
+      debugPrint('Error adding session participant: $e');
       // Don't rethrow - this is a non-critical operation
     }
   }
@@ -768,7 +769,7 @@ class FirebaseService {
         });
       }
     } catch (e) {
-      print('Error marking participant left: $e');
+      debugPrint('Error marking participant left: $e');
       // Don't rethrow - this is a non-critical operation
     }
   }
@@ -831,7 +832,7 @@ class FirebaseService {
         'totalActions': folds + bets + calls + raises + checks,
       };
     } catch (e) {
-      print('Error getting player stats: $e');
+      debugPrint('Error getting player stats: $e');
       return {};
     }
   }
@@ -848,7 +849,7 @@ class FirebaseService {
       });
       
     } catch (e) {
-      print('Error updating session name: $e');
+      debugPrint('Error updating session name: $e');
       rethrow;
     }
   }
@@ -893,7 +894,7 @@ class FirebaseService {
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
 
     } catch (e) {
-      print('Error updating session: $e');
+      debugPrint('Error updating session: $e');
       rethrow;
     }
   }
@@ -970,7 +971,7 @@ class FirebaseService {
       await _firestore.collection(_sessionsCollection).doc(sessionId).update(updateData);
 
     } catch (e) {
-      print('Error updating individual session: $e');
+      debugPrint('Error updating individual session: $e');
       rethrow;
     }
   }
@@ -1031,7 +1032,7 @@ class FirebaseService {
       });
 
     } catch (e) {
-      print('Error adding rebuy to session: $e');
+      debugPrint('Error adding rebuy to session: $e');
       rethrow;
     }
   }
@@ -1067,7 +1068,7 @@ class FirebaseService {
         await sessionDoc.reference.delete();
       }
     } catch (e) {
-      print('Error clearing user sessions from Firebase: $e');
+      debugPrint('Error clearing user sessions from Firebase: $e');
       rethrow;
     }
   }
@@ -1211,7 +1212,7 @@ class FirebaseService {
           final opponent = savedOpponents.where((o) => o.id == opponentId).firstOrNull;
 
           if (opponent == null) {
-            print('Warning: Opponent with ID $opponentId not found in savedOpponents, skipping advanced stat detection');
+            debugPrint('Warning: Opponent with ID $opponentId not found in savedOpponents, skipping advanced stat detection');
             continue;
           }
 
@@ -1356,7 +1357,7 @@ class FirebaseService {
       }
 
     } catch (e) {
-      print('⚠️ Error updating opponent stats: $e');
+      debugPrint('⚠️ Error updating opponent stats: $e');
       // Don't rethrow - stats update failure shouldn't break hand saving
     }
   }
@@ -1473,7 +1474,7 @@ class FirebaseService {
 
 
     } catch (e) {
-      print('⚠️ Error updating user stats: $e');
+      debugPrint('⚠️ Error updating user stats: $e');
       // Don't rethrow - stats update failure shouldn't break hand saving
     }
   }
@@ -1556,7 +1557,7 @@ class FirebaseService {
           wonHandsDelta: (didWin && didPlay) ? 1 : 0,
         );
       } catch (e) {
-        print('⚠️ Error updating stats for player $odUserId at seat $seatNumber: $e');
+        debugPrint('⚠️ Error updating stats for player $odUserId at seat $seatNumber: $e');
         // Continue with other players
       }
     }
@@ -1591,16 +1592,16 @@ class FirebaseService {
     }
 
     try {
-      print('🔄 Starting sync of local sessions to Firebase...');
+      debugPrint('🔄 Starting sync of local sessions to Firebase...');
 
       // Get all local sessions
       final localSessions = await LocalStorageService.getUserSessions();
-      print('📊 Found ${localSessions.length} local sessions');
+      debugPrint('📊 Found ${localSessions.length} local sessions');
 
       // Get existing Firebase sessions to avoid duplicates
       final firebaseSessions = await getAllSessions();
       final firebaseSessionIds = firebaseSessions.map((s) => s['id'] as String).toSet();
-      print('📊 Found ${firebaseSessions.length} existing Firebase sessions');
+      debugPrint('📊 Found ${firebaseSessions.length} existing Firebase sessions');
 
       int syncedCount = 0;
       int skippedCount = 0;
@@ -1647,20 +1648,20 @@ class FirebaseService {
                   .doc(handId)
                   .set(hand, SetOptions(merge: true));
             }
-            print('✅ Synced session $sessionId with ${localHands.length} hands');
+            debugPrint('✅ Synced session $sessionId with ${localHands.length} hands');
           } else {
-            print('✅ Synced session $sessionId (no hands)');
+            debugPrint('✅ Synced session $sessionId (no hands)');
           }
 
           syncedCount++;
         } catch (e) {
           errors.add('Session $sessionId: $e');
-          print('❌ Failed to sync session $sessionId: $e');
+          debugPrint('❌ Failed to sync session $sessionId: $e');
         }
       }
 
       final message = 'Sync complete: $syncedCount synced, $skippedCount already in cloud${errors.isNotEmpty ? ', ${errors.length} errors' : ''}';
-      print('🎉 $message');
+      debugPrint('🎉 $message');
 
       return {
         'success': true,
@@ -1670,7 +1671,7 @@ class FirebaseService {
         'errors': errors,
       };
     } catch (e) {
-      print('❌ Sync failed: $e');
+      debugPrint('❌ Sync failed: $e');
       return {
         'success': false,
         'message': 'Sync failed: $e',

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:math';
 import '../services/currency_service.dart';
 import '../utils/poker_positions.dart';
@@ -251,11 +252,11 @@ class PokerGameState {
   void _setInitialActionOrder() {
 
     List<int> activePlayers = getActivePlayers();
-    print('[ACTION_ORDER] _setInitialActionOrder called: hand#=$handNumber, activePlayers=$activePlayers (${activePlayers.length}), btn=$buttonPosition');
+    debugPrint('[ACTION_ORDER] _setInitialActionOrder called: hand#=$handNumber, activePlayers=$activePlayers (${activePlayers.length}), btn=$buttonPosition');
 
     if (activePlayers.length < 2) {
       currentPlayer = activePlayers.isNotEmpty ? activePlayers[0] : 1;
-      print('[ACTION_ORDER] <2 players, currentPlayer=$currentPlayer');
+      debugPrint('[ACTION_ORDER] <2 players, currentPlayer=$currentPlayer');
       return;
     }
 
@@ -267,7 +268,7 @@ class PokerGameState {
         // Find first active player
         currentPlayer = activePlayers[0];
       }
-      print('[ACTION_ORDER] Heads-up: btn=$buttonPosition, currentPlayer=$currentPlayer');
+      debugPrint('[ACTION_ORDER] Heads-up: btn=$buttonPosition, currentPlayer=$currentPlayer');
     } else {
       // Multi-way: UTG (Under The Gun) acts first
       // Find effective SB and BB positions among active players using proper calculation
@@ -277,7 +278,7 @@ class PokerGameState {
       // UTG is the first active player after BB
       int utgPosition = _findNextActivePlayerAfter(_effectiveBBPosition);
 
-      print('[ACTION_ORDER] Multi-way: btn=$buttonPosition, SB=$_effectiveSBPosition, BB=$_effectiveBBPosition, UTG=$utgPosition');
+      debugPrint('[ACTION_ORDER] Multi-way: btn=$buttonPosition, SB=$_effectiveSBPosition, BB=$_effectiveBBPosition, UTG=$utgPosition');
       // In 3-handed: UTG == BTN (correct poker rules)
       currentPlayer = utgPosition;
     }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/club_notification.dart';
 import '../models/club_event.dart';
@@ -43,7 +44,7 @@ class ClubNotificationService {
         'isRead': false,
       });
     } catch (e) {
-      print('Error sending notification to user: $e');
+      debugPrint('Error sending notification to user: $e');
     }
   }
 
@@ -57,28 +58,28 @@ class ClubNotificationService {
     Map<String, dynamic>? data,
     String? excludeUserId,  // Exclude this user (e.g., the creator)
   }) async {
-    print('notifyClubMembers called for clubId: $clubId');
+    debugPrint('notifyClubMembers called for clubId: $clubId');
     try {
       // Get club info
       final club = await ClubService.getClub(clubId);
       if (club == null) {
-        print('Club not found: $clubId');
+        debugPrint('Club not found: $clubId');
         return;
       }
-      print('Club found: ${club.name}');
+      debugPrint('Club found: ${club.name}');
 
       // Get all member user IDs
       var memberIds = await ClubService.getMemberUserIds(clubId);
-      print('Found ${memberIds.length} members: $memberIds');
+      debugPrint('Found ${memberIds.length} members: $memberIds');
 
       // Exclude the specified user (e.g., admin who created the event)
       if (excludeUserId != null) {
         memberIds = memberIds.where((id) => id != excludeUserId).toList();
-        print('After excluding $excludeUserId: ${memberIds.length} members');
+        debugPrint('After excluding $excludeUserId: ${memberIds.length} members');
       }
 
       if (memberIds.isEmpty) {
-        print('No members to notify for club: $clubId');
+        debugPrint('No members to notify for club: $clubId');
         return;
       }
 
@@ -123,7 +124,7 @@ class ClubNotificationService {
       // await _sendPushNotifications(memberIds, title, body, data);
 
     } catch (e) {
-      print('Error notifying club members: $e');
+      debugPrint('Error notifying club members: $e');
     }
   }
 
@@ -132,15 +133,15 @@ class ClubNotificationService {
     required String clubId,
     required ClubEvent event,
   }) async {
-    print('notifyEventCreated called for event: ${event.name}, notifyMembers: ${event.notifyMembers}');
+    debugPrint('notifyEventCreated called for event: ${event.name}, notifyMembers: ${event.notifyMembers}');
     if (!event.notifyMembers) {
-      print('Skipping notification - notifyMembers is false');
+      debugPrint('Skipping notification - notifyMembers is false');
       return;
     }
 
     final club = await ClubService.getClub(clubId);
     final clubName = club?.name ?? 'Club';
-    print('Club found: $clubName');
+    debugPrint('Club found: $clubName');
 
     await notifyClubMembers(
       clubId: clubId,
@@ -279,7 +280,7 @@ class ClubNotificationService {
         },
       );
     } catch (e) {
-      print('Error sending seat available notification: $e');
+      debugPrint('Error sending seat available notification: $e');
     }
   }
 
@@ -349,7 +350,7 @@ class ClubNotificationService {
       }
       await batch.commit();
     } catch (e) {
-      print('Error notifying admin about RSVP: $e');
+      debugPrint('Error notifying admin about RSVP: $e');
     }
   }
 
@@ -358,7 +359,7 @@ class ClubNotificationService {
     int limit = 50,
   }) async {
     final userId = AuthService.userId;
-    print('📬 getUserNotifications: userId=$userId');
+    debugPrint('📬 getUserNotifications: userId=$userId');
     if (userId == null) return [];
 
     try {
@@ -368,7 +369,7 @@ class ClubNotificationService {
           .where('userId', isEqualTo: userId)
           .get();
 
-      print('📬 getUserNotifications: Received ${snapshot.docs.length} documents');
+      debugPrint('📬 getUserNotifications: Received ${snapshot.docs.length} documents');
       final notifications = snapshot.docs
           .map((doc) => ClubNotification.fromFirestore(doc))
           .toList();
@@ -377,7 +378,7 @@ class ClubNotificationService {
       // Apply limit
       return notifications.take(limit).toList();
     } catch (e) {
-      print('Error getting user notifications: $e');
+      debugPrint('Error getting user notifications: $e');
       return [];
     }
   }
@@ -397,7 +398,7 @@ class ClubNotificationService {
 
       return snapshot.count ?? 0;
     } catch (e) {
-      print('Error getting unread count: $e');
+      debugPrint('Error getting unread count: $e');
       return 0;
     }
   }
@@ -418,7 +419,7 @@ class ClubNotificationService {
   /// Mark a notification as read
   static Future<void> markAsRead(String notificationDocId) async {
     final userId = AuthService.userId;
-    print('📬 markAsRead: notificationDocId=$notificationDocId, userId=$userId');
+    debugPrint('📬 markAsRead: notificationDocId=$notificationDocId, userId=$userId');
     if (userId == null) return;
 
     try {
@@ -427,9 +428,9 @@ class ClubNotificationService {
           .collection(_userNotificationsCollection)
           .doc(notificationDocId)
           .update({'isRead': true});
-      print('📬 markAsRead: Success');
+      debugPrint('📬 markAsRead: Success');
     } catch (e) {
-      print('Error marking notification as read: $e');
+      debugPrint('Error marking notification as read: $e');
     }
   }
 
@@ -451,7 +452,7 @@ class ClubNotificationService {
       }
       await batch.commit();
     } catch (e) {
-      print('Error marking all notifications as read: $e');
+      debugPrint('Error marking all notifications as read: $e');
     }
   }
 
@@ -476,7 +477,7 @@ class ClubNotificationService {
       }
       await batch.commit();
     } catch (e) {
-      print('Error cleaning up old notifications: $e');
+      debugPrint('Error cleaning up old notifications: $e');
     }
   }
 
@@ -485,20 +486,20 @@ class ClubNotificationService {
     int limit = 50,
   }) {
     final userId = AuthService.userId;
-    print('📬 watchUserNotifications: userId=$userId');
+    debugPrint('📬 watchUserNotifications: userId=$userId');
     if (userId == null) {
-      print('📬 watchUserNotifications: No user ID, returning empty stream');
+      debugPrint('📬 watchUserNotifications: No user ID, returning empty stream');
       return Stream.value([]);
     }
 
     // Avoid composite index by not using orderBy - sort locally instead
-    print('📬 watchUserNotifications: Setting up Firestore listener for userId=$userId');
+    debugPrint('📬 watchUserNotifications: Setting up Firestore listener for userId=$userId');
     return _firestore
         .collection(_userNotificationsCollection)
         .where('userId', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
-          print('📬 watchUserNotifications: Received ${snapshot.docs.length} documents');
+          debugPrint('📬 watchUserNotifications: Received ${snapshot.docs.length} documents');
           final notifications = snapshot.docs
               .map((doc) => ClubNotification.fromFirestore(doc))
               .toList();

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/dealer_session.dart';
 import '../models/poker_table.dart';
@@ -249,7 +250,7 @@ class DealerService {
 
       return lastStack;
     } catch (e) {
-      print('Error looking up player last stack: $e');
+      debugPrint('Error looking up player last stack: $e');
       return null;
     }
   }
@@ -280,7 +281,7 @@ class DealerService {
           await endSession(doc.id);
         } catch (e) {
           // Log but continue - don't block new session creation
-          print('Error ending existing session ${doc.id}: $e');
+          debugPrint('Error ending existing session ${doc.id}: $e');
           // At minimum, mark it as ended
           await _firestore
               .collection(_dealerSessionsCollection)
@@ -289,7 +290,7 @@ class DealerService {
         }
       }
     } catch (e) {
-      print('Error checking for existing sessions: $e');
+      debugPrint('Error checking for existing sessions: $e');
     }
   }
 
@@ -328,7 +329,7 @@ class DealerService {
           }
         }
       } catch (e) {
-        print('Error fetching event for session name: $e');
+        debugPrint('Error fetching event for session name: $e');
       }
     }
 
@@ -357,7 +358,7 @@ class DealerService {
           .where('isLive', isEqualTo: true)
           .get();
     } catch (e) {
-      print('Error checking existing sessions: $e');
+      debugPrint('Error checking existing sessions: $e');
     }
 
     // Find matching session by dealer session time overlap

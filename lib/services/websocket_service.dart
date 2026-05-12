@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -63,7 +64,7 @@ class WebSocketService {
   /// Socket.IO is now at the default /socket.io path
   void connect(String serverUrl, {String? userId}) {
     if (_socket != null && _socket!.connected) {
-      // print('WebSocket already connected');
+      // debugPrint('WebSocket already connected');
       return;
     }
 
@@ -95,7 +96,7 @@ class WebSocketService {
     if (_socket == null) return;
 
     _socket!.onConnect((_) {
-      // print('WebSocket connected');
+      // debugPrint('WebSocket connected');
       _updateState(WebSocketConnectionState.connected);
 
       // Rejoin table if we were in one
@@ -105,22 +106,22 @@ class WebSocketService {
     });
 
     _socket!.onDisconnect((_) {
-      // print('WebSocket disconnected');
+      // debugPrint('WebSocket disconnected');
       _updateState(WebSocketConnectionState.disconnected);
     });
 
 _socket!.onReconnect((_) {
-      // print('WebSocket reconnected');
+      // debugPrint('WebSocket reconnected');
       _updateState(WebSocketConnectionState.connected);
     });
 
     _socket!.onConnectError((error) {
-      // print('WebSocket connection error: $error');
+      // debugPrint('WebSocket connection error: $error');
       _errorController.add({'type': 'connection_error', 'error': error.toString()});
     });
 
     _socket!.onError((error) {
-      // print('WebSocket error: $error');
+      // debugPrint('WebSocket error: $error');
       _errorController.add({'type': 'error', 'error': error.toString()});
     });
 
@@ -198,7 +199,7 @@ _socket!.onReconnect((_) {
         'seat_number': seatNumber,
         'player_name': playerName ?? 'Unknown',
       });
-      // print('Joining table: $tableId');
+      // debugPrint('Joining table: $tableId');
     }
   }
 
@@ -206,7 +207,7 @@ _socket!.onReconnect((_) {
   void leaveTable(String tableId) {
     if (isConnected) {
       _socket!.emit('leave_table', {'table_id': tableId});
-      // print('Leaving table: $tableId');
+      // debugPrint('Leaving table: $tableId');
     }
     if (_currentTableId == tableId) {
       _currentTableId = null;
@@ -224,7 +225,7 @@ _socket!.onReconnect((_) {
     double? potAfter,
   }) {
     if (!isConnected) {
-      // print('Cannot emit action: not connected');
+      // debugPrint('Cannot emit action: not connected');
       return;
     }
 

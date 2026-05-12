@@ -56,18 +56,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
     await AuthService.ensureUserDocument();
 
     final completed = await UsernameService.hasCompletedUsernameSetup();
-    print('📍 AUTH: hasCompletedUsernameSetup=$completed');
+    debugPrint('📍 AUTH: hasCompletedUsernameSetup=$completed');
     if (completed) return true;
 
     // Look up web reservation by email — auto-claim and skip setup screen
     final email = AuthService.currentUser?.email;
-    print('📍 AUTH: Checking web reservation for email=$email');
+    debugPrint('📍 AUTH: Checking web reservation for email=$email');
     if (email != null) {
       final reservedUsername = await UsernameService.getPendingClaimForEmail(email);
-      print('📍 AUTH: Reserved username=$reservedUsername');
+      debugPrint('📍 AUTH: Reserved username=$reservedUsername');
       if (reservedUsername != null) {
         final claimed = await UsernameService.claimUsername(reservedUsername);
-        print('📍 AUTH: Auto-claim result=$claimed');
+        debugPrint('📍 AUTH: Auto-claim result=$claimed');
         if (claimed) return true;
       }
     }
@@ -83,15 +83,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    print('📍 AUTH_WRAPPER: build() called');
+    debugPrint('📍 AUTH_WRAPPER: build() called');
     return StreamBuilder<User?>(
       stream: AuthService.authStateChanges,
       builder: (context, snapshot) {
-        print('📍 AUTH: Stream state=${snapshot.connectionState}, hasData=${snapshot.hasData}, user=${snapshot.data?.uid?.substring(0, 8) ?? 'null'}');
+        debugPrint('📍 AUTH: Stream state=${snapshot.connectionState}, hasData=${snapshot.hasData}, user=${snapshot.data?.uid?.substring(0, 8) ?? 'null'}');
 
         // Show loading spinner while checking auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
-          print('📍 AUTH: Connection waiting, timedOut=$_authTimedOut');
+          debugPrint('📍 AUTH: Connection waiting, timedOut=$_authTimedOut');
           if (_authTimedOut) {
             return _buildConnectionErrorScreen(context);
           }
@@ -103,7 +103,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         // User is signed in
         if (snapshot.hasData && snapshot.data != null) {
-          print('📍 AUTH: User signed in, showing HomeScreen');
+          debugPrint('📍 AUTH: User signed in, showing HomeScreen');
           _loggedUnexpectedLogout = false;
           _wasSignedIn = true;  // Remember user was signed in
           _waitingForRecovery = false;
@@ -134,20 +134,20 @@ class _AuthWrapperState extends State<AuthWrapper> {
         // User appears signed out - verify this is intentional
         // Check 1: If currentUser still exists but stream says null (transient issue)
         if (!AuthService.isExplicitLogout && AuthService.currentUser != null) {
-          print('📍 AUTH: MISMATCH - stream null but currentUser exists, isExplicitLogout=${AuthService.isExplicitLogout}');
+          debugPrint('📍 AUTH: MISMATCH - stream null but currentUser exists, isExplicitLogout=${AuthService.isExplicitLogout}');
           return _buildLoadingScreen(context);
         }
 
         // Check 2: If user was signed in but now stream says null and it wasn't explicit
         // Wait briefly for auth to recover (might be transient network issue)
         if (_wasSignedIn && !AuthService.isExplicitLogout && !_waitingForRecovery) {
-          print('📍 AUTH: Unexpected auth loss (was signed in), waiting 3s for recovery');
+          debugPrint('📍 AUTH: Unexpected auth loss (was signed in), waiting 3s for recovery');
           _waitingForRecovery = true;
 
           // Wait up to 3 seconds for auth to recover
           Future.delayed(const Duration(seconds: 3), () {
             if (mounted && _waitingForRecovery) {
-              print('📍 AUTH: Recovery timeout, re-evaluating auth state');
+              debugPrint('📍 AUTH: Recovery timeout, re-evaluating auth state');
               setState(() {
                 _waitingForRecovery = false;
               });
@@ -163,12 +163,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         // Log unexpected logout for debugging (only once per session)
         if (!AuthService.isExplicitLogout && !_loggedUnexpectedLogout) {
-          print('⚠️ AUTH: Unexpected logout detected - user did not explicitly sign out');
-          print('📍 AUTH: _wasSignedIn=$_wasSignedIn, isExplicitLogout=${AuthService.isExplicitLogout}');
+          debugPrint('⚠️ AUTH: Unexpected logout detected - user did not explicitly sign out');
+          debugPrint('📍 AUTH: _wasSignedIn=$_wasSignedIn, isExplicitLogout=${AuthService.isExplicitLogout}');
           _loggedUnexpectedLogout = true;
         }
 
-        print('📍 AUTH: User not signed in, showing IntroScreen, isExplicitLogout=${AuthService.isExplicitLogout}');
+        debugPrint('📍 AUTH: User not signed in, showing IntroScreen, isExplicitLogout=${AuthService.isExplicitLogout}');
         // Reset state when showing intro screen
         _wasSignedIn = false;
         _usernameSetupFuture = null;

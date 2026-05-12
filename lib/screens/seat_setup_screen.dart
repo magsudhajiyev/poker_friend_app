@@ -204,7 +204,7 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         opponentStats = statsMap;
       });
     } catch (e) {
-      print('Failed to load opponents: $e');
+      debugPrint('Failed to load opponents: $e');
     }
   }
 

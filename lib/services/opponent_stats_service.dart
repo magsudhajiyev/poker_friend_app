@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:isolate';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,7 +38,7 @@ class OpponentStatsService {
       // Return Firebase result (even if null - means no stats exist)
       return stats;
     } catch (e) {
-      print('⚠️ Firebase stats load failed, using local storage: $e');
+      debugPrint('⚠️ Firebase stats load failed, using local storage: $e');
       // Only fallback to local storage on actual errors
       return await _getStatsFromLocal(opponentId);
     }
@@ -48,14 +49,14 @@ class OpponentStatsService {
     try {
       // Save to Firebase first
       await _saveStatsToFirebase(stats);
-      print('✅ Stats saved to Firebase: ${stats.opponentId}');
+      debugPrint('✅ Stats saved to Firebase: ${stats.opponentId}');
     } catch (e) {
-      print('⚠️ Firebase stats save failed, using local storage: $e');
+      debugPrint('⚠️ Firebase stats save failed, using local storage: $e');
     }
 
     // Always save to local storage as backup
     await _saveStatsToLocal(stats);
-    print('✅ Stats saved locally: ${stats.opponentId}');
+    debugPrint('✅ Stats saved locally: ${stats.opponentId}');
   }
 
   /// Update opponent stats incrementally (fast O(1) operation)
@@ -222,9 +223,9 @@ class OpponentStatsService {
 
       AppDataCache.markOpponentsDirty();
       AppDataCache.markOpponentHandsDirty();
-      print('✅ Stats updated atomically for opponent: $opponentId');
+      debugPrint('✅ Stats updated atomically for opponent: $opponentId');
     } catch (e) {
-      print('⚠️ Atomic update failed, falling back to regular update: $e');
+      debugPrint('⚠️ Atomic update failed, falling back to regular update: $e');
       await updateStatsIncremental(
         opponentId: opponentId,
         handsDelta: handsDelta,
@@ -262,7 +263,7 @@ class OpponentStatsService {
       // Use the migration service to rebuild stats
       await StatsMigrationService.rebuildOpponentStats(opponentId);
     } catch (e) {
-      print('❌ Failed to rebuild stats for opponent $opponentId: $e');
+      debugPrint('❌ Failed to rebuild stats for opponent $opponentId: $e');
     }
   }
 
@@ -274,7 +275,7 @@ class OpponentStatsService {
       // Return Firebase result (even if empty - means no stats exist)
       return firebaseStats;
     } catch (e) {
-      print('⚠️ Firebase bulk load failed, using local storage: $e');
+      debugPrint('⚠️ Firebase bulk load failed, using local storage: $e');
       // Only fallback to local storage on actual errors
       return await _getAllStatsFromLocal();
     }
@@ -378,15 +379,15 @@ class OpponentStatsService {
     try {
       // Delete from Firebase
       await _statsCollection.doc(opponentId).delete();
-      print('✅ Stats deleted from Firebase: $opponentId');
+      debugPrint('✅ Stats deleted from Firebase: $opponentId');
     } catch (e) {
-      print('⚠️ Firebase deletion failed: $e');
+      debugPrint('⚠️ Firebase deletion failed: $e');
     }
 
     // Delete from local storage
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('${_localStatsKey}_$opponentId');
-    print('✅ Stats deleted locally: $opponentId');
+    debugPrint('✅ Stats deleted locally: $opponentId');
   }
 
   /// Clear all stats (for testing/reset purposes)
@@ -399,9 +400,9 @@ class OpponentStatsService {
         batch.delete(doc.reference);
       }
       await batch.commit();
-      print('✅ All stats cleared from Firebase');
+      debugPrint('✅ All stats cleared from Firebase');
     } catch (e) {
-      print('⚠️ Firebase clear failed: $e');
+      debugPrint('⚠️ Firebase clear failed: $e');
     }
 
     // Clear local storage
@@ -410,7 +411,7 @@ class OpponentStatsService {
     for (final key in keys) {
       await prefs.remove(key);
     }
-    print('✅ All stats cleared from local storage');
+    debugPrint('✅ All stats cleared from local storage');
   }
 
   /// Initialize stats optimization system
@@ -421,16 +422,16 @@ class OpponentStatsService {
       final migrationNeeded = await StatsMigrationService.isMigrationNeeded();
 
       if (migrationNeeded) {
-        print('🚀 Stats optimization migration needed, starting background process...');
+        debugPrint('🚀 Stats optimization migration needed, starting background process...');
 
         // Run migration in background without blocking app startup
         _runMigrationInBackground();
       } else {
-        print('✅ Stats optimization already active');
+        debugPrint('✅ Stats optimization already active');
       }
 
     } catch (e) {
-      print('⚠️ Error initializing stats optimization: $e');
+      debugPrint('⚠️ Error initializing stats optimization: $e');
       // Don't rethrow - app should continue working even if optimization fails
     }
   }
@@ -441,9 +442,9 @@ class OpponentStatsService {
     Future.microtask(() async {
       try {
         await StatsMigrationService.migrateInBackground();
-        print('🎉 Background migration completed successfully');
+        debugPrint('🎉 Background migration completed successfully');
       } catch (e) {
-        print('❌ Background migration failed: $e');
+        debugPrint('❌ Background migration failed: $e');
       }
     });
   }
@@ -465,7 +466,7 @@ class OpponentStatsService {
       };
 
     } catch (e) {
-      print('❌ Error getting performance stats: $e');
+      debugPrint('❌ Error getting performance stats: $e');
       return {
         'error': e.toString(),
         'optimizationActive': false,
@@ -476,11 +477,11 @@ class OpponentStatsService {
   /// Manual trigger for stats rebuild (admin function)
   static Future<void> rebuildAllStats() async {
     try {
-      print('🔄 Starting manual stats rebuild...');
+      debugPrint('🔄 Starting manual stats rebuild...');
       await StatsMigrationService.migrateAllOpponentsToOptimizedStats();
-      print('✅ Manual stats rebuild completed');
+      debugPrint('✅ Manual stats rebuild completed');
     } catch (e) {
-      print('❌ Manual stats rebuild failed: $e');
+      debugPrint('❌ Manual stats rebuild failed: $e');
       rethrow;
     }
   }

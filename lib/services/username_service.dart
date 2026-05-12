@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -99,7 +100,7 @@ class UsernameService {
       }
       return success;
     } catch (e) {
-      print('Error claiming username: $e');
+      debugPrint('Error claiming username: $e');
       return false;
     }
   }
@@ -141,7 +142,7 @@ class UsernameService {
         return true;
       });
     } catch (e) {
-      print('Error changing username: $e');
+      debugPrint('Error changing username: $e');
       return false;
     }
   }
@@ -159,7 +160,7 @@ class UsernameService {
       _cachedHasSetUsername = true;
       _cachedForUserId = userId;
     } catch (e) {
-      print('Error skipping username: $e');
+      debugPrint('Error skipping username: $e');
     }
   }
 
@@ -191,7 +192,7 @@ class UsernameService {
       _cachedForUserId = userId;
       return result;
     } catch (e) {
-      print('Error checking username setup: $e');
+      debugPrint('Error checking username setup: $e');
       return true; // On error, don't block the user
     }
   }
@@ -207,7 +208,7 @@ class UsernameService {
           .where('email', isEqualTo: normalizedEmail)
           .get();
       if (claims.docs.isEmpty) {
-        print('📍 USERNAME: No nickname claims found for email: $normalizedEmail');
+        debugPrint('📍 USERNAME: No nickname claims found for email: $normalizedEmail');
         return null;
       }
       // Find the first pending claim
@@ -215,14 +216,14 @@ class UsernameService {
         final data = doc.data();
         if (data['status'] == 'pending') {
           final nickname = data['nickname'] as String?;
-          print('📍 USERNAME: Found pending claim "$nickname" for $normalizedEmail');
+          debugPrint('📍 USERNAME: Found pending claim "$nickname" for $normalizedEmail');
           return nickname;
         }
       }
-      print('📍 USERNAME: Claims found but none pending for $normalizedEmail');
+      debugPrint('📍 USERNAME: Claims found but none pending for $normalizedEmail');
       return null;
     } catch (e) {
-      print('❌ USERNAME: Error looking up nickname claim: $e');
+      debugPrint('❌ USERNAME: Error looking up nickname claim: $e');
       return null;
     }
   }
@@ -240,7 +241,7 @@ class UsernameService {
         await doc.reference.update({'status': 'claimed'});
       }
     } catch (e) {
-      print('Error marking claim as claimed: $e');
+      debugPrint('Error marking claim as claimed: $e');
     }
   }
 
@@ -253,7 +254,7 @@ class UsernameService {
       final doc = await _firestore.collection('users').doc(userId).get();
       return doc.data()?['username'] as String?;
     } catch (e) {
-      print('Error getting username: $e');
+      debugPrint('Error getting username: $e');
       return null;
     }
   }
@@ -267,7 +268,7 @@ class UsernameService {
       final doc = await _firestore.collection('users').doc(userId).get();
       return doc.data()?['useNicknameInGame'] as bool? ?? false;
     } catch (e) {
-      print('Error getting useNicknameInGame: $e');
+      debugPrint('Error getting useNicknameInGame: $e');
       return false;
     }
   }
@@ -283,7 +284,7 @@ class UsernameService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error setting useNicknameInGame: $e');
+      debugPrint('Error setting useNicknameInGame: $e');
     }
   }
 

@@ -62,7 +62,7 @@ class _MemberTableViewScreenState extends State<MemberTableViewScreen> {
         });
       }
     } catch (e) {
-      print('Error loading data: $e');
+      debugPrint('Error loading data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

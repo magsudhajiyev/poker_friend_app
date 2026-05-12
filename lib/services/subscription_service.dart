@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -57,7 +58,7 @@ class SubscriptionService {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey(_debugOverrideKey)) {
       _debugPremiumOverride = prefs.getBool(_debugOverrideKey);
-      print('DEBUG: Loaded persisted premium override: $_debugPremiumOverride');
+      debugPrint('DEBUG: Loaded persisted premium override: $_debugPremiumOverride');
     }
   }
 

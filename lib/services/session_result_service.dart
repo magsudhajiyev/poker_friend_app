@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 
@@ -39,9 +40,9 @@ class SessionResultService {
 
       await _firestore.collection(_sessionResultsCollection).add(data);
 
-      print('✅ Session result added: $amount ($gameType)');
+      debugPrint('✅ Session result added: $amount ($gameType)');
     } catch (e) {
-      print('Error adding session result: $e');
+      debugPrint('Error adding session result: $e');
       rethrow;
     }
   }
@@ -67,7 +68,7 @@ class SessionResultService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting session results: $e');
+      debugPrint('Error getting session results: $e');
       return [];
     }
   }
@@ -98,7 +99,7 @@ class SessionResultService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting session results by date range: $e');
+      debugPrint('Error getting session results by date range: $e');
       return [];
     }
   }
@@ -150,7 +151,7 @@ class SessionResultService {
             .fold<double>(0.0, (sum, r) => sum + ((r['amount'] as num?)?.toDouble() ?? 0.0)),
       };
     } catch (e) {
-      print('Error getting earnings chart data: $e');
+      debugPrint('Error getting earnings chart data: $e');
       return {'chartData': {}, 'totalCash': 0.0, 'totalTournament': 0.0};
     }
   }

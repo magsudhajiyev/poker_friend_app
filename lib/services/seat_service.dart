@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/seat_assignment.dart';
 import '../models/qr_seat_data.dart';
@@ -362,7 +363,7 @@ class SeatService {
 
       return seats;
     } catch (e) {
-      print('Error getting table seats: $e');
+      debugPrint('Error getting table seats: $e');
       return {};
     }
   }
@@ -389,7 +390,7 @@ class SeatService {
       }
       return null;
     } catch (e) {
-      print('Error getting current user seat: $e');
+      debugPrint('Error getting current user seat: $e');
       return null;
     }
   }
@@ -518,7 +519,7 @@ class SeatService {
       }
     } catch (e) {
       // Non-critical — rankings will still work, just might show duplicates
-      print('Error clearing player from other tables: $e');
+      debugPrint('Error clearing player from other tables: $e');
     }
   }
 
@@ -569,22 +570,22 @@ class SeatService {
   /// Returns a stream of seat assignments with status 'joined'
   static Stream<List<SeatAssignment>> watchCurrentUserSeats() {
     final userId = AuthService.userId;
-    print('🪑 watchCurrentUserSeats: userId=$userId');
+    debugPrint('🪑 watchCurrentUserSeats: userId=$userId');
     if (userId == null) {
-      print('🪑 watchCurrentUserSeats: No user ID, returning empty stream');
+      debugPrint('🪑 watchCurrentUserSeats: No user ID, returning empty stream');
       return Stream.value([]);
     }
 
-    print('🪑 watchCurrentUserSeats: Setting up Firestore listener for playerId=$userId, status=joined');
+    debugPrint('🪑 watchCurrentUserSeats: Setting up Firestore listener for playerId=$userId, status=joined');
     return _firestore
         .collection(_seatAssignmentsCollection)
         .where('playerId', isEqualTo: userId)
         .where('status', isEqualTo: 'joined')
         .snapshots()
         .map((snapshot) {
-          print('🪑 watchCurrentUserSeats: Received ${snapshot.docs.length} documents');
+          debugPrint('🪑 watchCurrentUserSeats: Received ${snapshot.docs.length} documents');
           for (final doc in snapshot.docs) {
-            print('🪑 watchCurrentUserSeats: Doc ${doc.id} = ${doc.data()}');
+            debugPrint('🪑 watchCurrentUserSeats: Doc ${doc.id} = ${doc.data()}');
           }
           return snapshot.docs
               .map((doc) => SeatAssignment.fromFirestore(doc))
@@ -594,28 +595,28 @@ class SeatService {
 
   /// Get all current seat assignments for a user (one-time fetch)
   static Future<List<SeatAssignment>> getCurrentUserAllSeats() async {
-    print('🪑 getCurrentUserAllSeats() called');
+    debugPrint('🪑 getCurrentUserAllSeats() called');
     final userId = AuthService.userId;
-    print('🪑 getCurrentUserAllSeats: userId=$userId');
+    debugPrint('🪑 getCurrentUserAllSeats: userId=$userId');
     if (userId == null) {
-      print('🪑 getCurrentUserAllSeats: No user ID, returning empty list');
+      debugPrint('🪑 getCurrentUserAllSeats: No user ID, returning empty list');
       return [];
     }
 
     try {
-      print('🪑 getCurrentUserAllSeats: Querying Firestore...');
+      debugPrint('🪑 getCurrentUserAllSeats: Querying Firestore...');
       final snapshot = await _firestore
           .collection(_seatAssignmentsCollection)
           .where('playerId', isEqualTo: userId)
           .where('status', isEqualTo: 'joined')
           .get();
 
-      print('🪑 getCurrentUserAllSeats: Got ${snapshot.docs.length} results');
+      debugPrint('🪑 getCurrentUserAllSeats: Got ${snapshot.docs.length} results');
       return snapshot.docs
           .map((doc) => SeatAssignment.fromFirestore(doc))
           .toList();
     } catch (e) {
-      print('🪑 getCurrentUserAllSeats ERROR: $e');
+      debugPrint('🪑 getCurrentUserAllSeats ERROR: $e');
       return [];
     }
   }

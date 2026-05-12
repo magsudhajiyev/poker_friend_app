@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
@@ -38,7 +39,7 @@ class LoggerService {
       await _writeToFile('Timestamp: ${DateTime.now().toIso8601String()}');
       await _writeToFile('═' * 80);
     } catch (e) {
-      print('❌ Failed to initialize LoggerService: $e');
+      debugPrint('❌ Failed to initialize LoggerService: $e');
     }
   }
 
@@ -51,7 +52,7 @@ class LoggerService {
     try {
       await _logFile!.writeAsString('$message\n', mode: FileMode.append);
     } catch (e) {
-      print('❌ Failed to write to log file: $e');
+      debugPrint('❌ Failed to write to log file: $e');
     }
   }
 
@@ -69,7 +70,7 @@ class LoggerService {
 
     // Also print to console for real-time debugging
     final emoji = _getEmojiForLevel(level);
-    print('$emoji $formattedMessage');
+    debugPrint('$emoji $formattedMessage');
   }
 
   /// Get emoji for log level (for console visibility)
@@ -230,7 +231,7 @@ class LoggerService {
         await info('Logs cleared');
       }
     } catch (e) {
-      print('❌ Failed to clear logs: $e');
+      debugPrint('❌ Failed to clear logs: $e');
     }
   }
 
@@ -246,7 +247,7 @@ class LoggerService {
         return size / (1024 * 1024); // Convert to MB
       }
     } catch (e) {
-      print('❌ Failed to get log file size: $e');
+      debugPrint('❌ Failed to get log file size: $e');
     }
     return 0.0;
   }

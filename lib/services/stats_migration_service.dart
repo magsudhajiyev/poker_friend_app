@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:isolate';
 import '../models/opponent_stats.dart';
 import 'firebase_service.dart';
@@ -12,13 +13,13 @@ class StatsMigrationService {
   /// Migrate all existing opponents to optimized stats format
   /// This is a one-time operation that should be run after deployment
   static Future<void> migrateAllOpponentsToOptimizedStats() async {
-    print('🚀 Starting one-time migration to optimized opponent stats...');
+    debugPrint('🚀 Starting one-time migration to optimized opponent stats...');
 
     try {
       // Get all unique opponent names from existing sessions
       final opponentNames = await _getAllUniqueOpponentNames();
       final opponentList = opponentNames.toList();
-      print('📊 Found ${opponentList.length} unique opponents to migrate');
+      debugPrint('📊 Found ${opponentList.length} unique opponents to migrate');
 
       int successCount = 0;
       int errorCount = 0;
@@ -28,7 +29,7 @@ class StatsMigrationService {
         final opponentName = opponentList[i];
 
         try {
-          print('🔄 Migrating opponent ${i + 1}/${opponentList.length}: $opponentName');
+          debugPrint('🔄 Migrating opponent ${i + 1}/${opponentList.length}: $opponentName');
 
           // Calculate stats from all hands involving this opponent
           final stats = await _calculateOpponentStatsFromAllHands(opponentName);
@@ -36,51 +37,51 @@ class StatsMigrationService {
           if (stats != null) {
             await OpponentStatsService.saveOpponentStats(stats);
             successCount++;
-            print('✅ Migrated $opponentName: ${stats.handsPlayed} hands, ${stats.vpipPercentage.toStringAsFixed(1)}% VPIP');
+            debugPrint('✅ Migrated $opponentName: ${stats.handsPlayed} hands, ${stats.vpipPercentage.toStringAsFixed(1)}% VPIP');
           } else {
-            print('⚠️ No hands found for $opponentName');
+            debugPrint('⚠️ No hands found for $opponentName');
           }
 
         } catch (e) {
           errorCount++;
-          print('❌ Failed to migrate $opponentName: $e');
+          debugPrint('❌ Failed to migrate $opponentName: $e');
         }
       }
 
-      print('🎉 Migration completed: $successCount successful, $errorCount errors');
+      debugPrint('🎉 Migration completed: $successCount successful, $errorCount errors');
 
       // Set migration completion flag
       await _setMigrationCompleted();
 
     } catch (e) {
-      print('❌ Migration failed: $e');
+      debugPrint('❌ Migration failed: $e');
       rethrow;
     }
   }
 
   /// Rebuild stats for a specific opponent from all their hands
   static Future<void> rebuildOpponentStats(String opponentName) async {
-    print('🔄 Rebuilding stats for opponent: $opponentName');
+    debugPrint('🔄 Rebuilding stats for opponent: $opponentName');
 
     try {
       final stats = await _calculateOpponentStatsFromAllHands(opponentName);
 
       if (stats != null) {
         await OpponentStatsService.saveOpponentStats(stats);
-        print('✅ Rebuilt stats for $opponentName: ${stats.handsPlayed} hands');
+        debugPrint('✅ Rebuilt stats for $opponentName: ${stats.handsPlayed} hands');
       } else {
-        print('⚠️ No hands found for $opponentName');
+        debugPrint('⚠️ No hands found for $opponentName');
       }
 
     } catch (e) {
-      print('❌ Failed to rebuild stats for $opponentName: $e');
+      debugPrint('❌ Failed to rebuild stats for $opponentName: $e');
       rethrow;
     }
   }
 
   /// Migrate stats for just one specific opponent (like Gringo)
   static Future<void> migrateSingleOpponent(String opponentName) async {
-    print('🚀 Starting single opponent migration for: $opponentName');
+    debugPrint('🚀 Starting single opponent migration for: $opponentName');
 
     try {
       // Calculate stats from all hands involving this opponent
@@ -88,15 +89,15 @@ class StatsMigrationService {
 
       if (stats != null) {
         await OpponentStatsService.saveOpponentStats(stats);
-        print('✅ Migrated $opponentName: ${stats.handsPlayed} hands, ${stats.vpipPercentage.toStringAsFixed(1)}% VPIP');
+        debugPrint('✅ Migrated $opponentName: ${stats.handsPlayed} hands, ${stats.vpipPercentage.toStringAsFixed(1)}% VPIP');
       } else {
-        print('⚠️ No hands found for $opponentName');
+        debugPrint('⚠️ No hands found for $opponentName');
       }
 
-      print('🎉 Single opponent migration completed!');
+      debugPrint('🎉 Single opponent migration completed!');
 
     } catch (e) {
-      print('❌ Failed to migrate $opponentName: $e');
+      debugPrint('❌ Failed to migrate $opponentName: $e');
       rethrow;
     }
   }
@@ -106,7 +107,7 @@ class StatsMigrationService {
     try {
       await Isolate.run(() => migrateAllOpponentsToOptimizedStats());
     } catch (e) {
-      print('❌ Background migration failed: $e');
+      debugPrint('❌ Background migration failed: $e');
       rethrow;
     }
   }
@@ -118,7 +119,7 @@ class StatsMigrationService {
       final isCompleted = await _isMigrationCompleted();
       return !isCompleted;
     } catch (e) {
-      print('⚠️ Error checking migration status: $e');
+      debugPrint('⚠️ Error checking migration status: $e');
       return true; // Assume migration needed on error
     }
   }
@@ -152,7 +153,7 @@ class StatsMigrationService {
       };
 
     } catch (e) {
-      print('❌ Error getting migration progress: $e');
+      debugPrint('❌ Error getting migration progress: $e');
       return {
         'totalOpponents': 0,
         'migratedOpponents': 0,
@@ -179,9 +180,9 @@ class StatsMigrationService {
           opponents.add(opponent.name);
         }
       }
-      print('📊 Found ${opponents.length} saved opponents: ${opponents.join(', ')}');
+      debugPrint('📊 Found ${opponents.length} saved opponents: ${opponents.join(', ')}');
     } catch (e) {
-      print('⚠️ Error getting saved opponents: $e');
+      debugPrint('⚠️ Error getting saved opponents: $e');
     }
 
     return opponents;
@@ -205,7 +206,7 @@ class StatsMigrationService {
   /// This replicates the old logic but builds optimized counters instead
   static Future<OpponentStats?> _calculateOpponentStatsFromAllHands(String opponentName) async {
     try {
-      print('📊 Calculating stats from all hands for: $opponentName');
+      debugPrint('📊 Calculating stats from all hands for: $opponentName');
 
       // Initialize counters
       int handsPlayed = 0;
@@ -325,7 +326,7 @@ class StatsMigrationService {
       }
 
       if (handsPlayed == 0) {
-        print('⚠️ No hands found for opponent: $opponentName');
+        debugPrint('⚠️ No hands found for opponent: $opponentName');
         return null;
       }
 
@@ -349,12 +350,12 @@ class StatsMigrationService {
         threeBetCount: threeBetCount,
       );
 
-      print('✅ Calculated stats for $opponentName: ${stats.handsPlayed} hands, ${stats.vpipPercentage.toStringAsFixed(1)}% VPIP, ${stats.pfrPercentage.toStringAsFixed(1)}% PFR');
+      debugPrint('✅ Calculated stats for $opponentName: ${stats.handsPlayed} hands, ${stats.vpipPercentage.toStringAsFixed(1)}% VPIP, ${stats.pfrPercentage.toStringAsFixed(1)}% PFR');
 
       return stats;
 
     } catch (e) {
-      print('❌ Error calculating stats for $opponentName: $e');
+      debugPrint('❌ Error calculating stats for $opponentName: $e');
       return null;
     }
   }
@@ -373,7 +374,7 @@ class StatsMigrationService {
       // Store flag in Firebase
       await FirebaseService.setMigrationFlag(completed: true);
     } catch (e) {
-      print('⚠️ Failed to set Firebase migration flag, using local storage: $e');
+      debugPrint('⚠️ Failed to set Firebase migration flag, using local storage: $e');
     }
 
     // Always store locally as backup
@@ -387,7 +388,7 @@ class StatsMigrationService {
       final firebaseCompleted = await FirebaseService.isMigrationCompleted();
       if (firebaseCompleted) return true;
     } catch (e) {
-      print('⚠️ Firebase migration check failed, using local storage: $e');
+      debugPrint('⚠️ Firebase migration check failed, using local storage: $e');
     }
 
     // Fallback to local storage

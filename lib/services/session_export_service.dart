@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'pokerstars_export_service.dart';
@@ -25,15 +26,15 @@ class SessionExportService {
   }) async {
     if (hands.isEmpty) throw Exception('No hands to export');
 
-    print('SessionExport: Generating export for ${hands.length} hands...');
+    debugPrint('SessionExport: Generating export for ${hands.length} hands...');
 
     final pokerstarsText =
         PokerStarsExportService.exportSession(session, hands);
     final statsSummary = generateStatsSummary(session, hands);
     final fullText = '$statsSummary\n\n$pokerstarsText';
 
-    print('SessionExport: Export text generated (${fullText.length} chars)');
-    print('SessionExport: Sending to $userEmail via $_baseUrl/session-email');
+    debugPrint('SessionExport: Export text generated (${fullText.length} chars)');
+    debugPrint('SessionExport: Sending to $userEmail via $_baseUrl/session-email');
 
     try {
       final response = await http
@@ -53,17 +54,17 @@ class SessionExportService {
           )
           .timeout(const Duration(seconds: 30));
 
-      print('SessionExport: Response status=${response.statusCode}');
-      print('SessionExport: Response body=${response.body}');
+      debugPrint('SessionExport: Response status=${response.statusCode}');
+      debugPrint('SessionExport: Response body=${response.body}');
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw Exception(
             'Server returned ${response.statusCode}: ${response.body}');
       }
 
-      print('SessionExport: Email sent successfully to $userEmail');
+      debugPrint('SessionExport: Email sent successfully to $userEmail');
     } catch (e) {
-      print('SessionExport: ERROR — $e');
+      debugPrint('SessionExport: ERROR — $e');
       rethrow;
     }
   }

@@ -1772,7 +1772,7 @@ class _DealerTableScreenState extends State<DealerTableScreen> {
       try {
         await _sessionManager!.endSession();
       } catch (e) {
-        // print('Error ending session during event end: $e');
+        // debugPrint('Error ending session during event end: $e');
       }
       _sessionStarted = false;
     }

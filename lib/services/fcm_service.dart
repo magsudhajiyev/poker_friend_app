@@ -10,10 +10,10 @@ import 'auth_service.dart';
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Handle background messages
   // Note: This runs in a separate isolate, so we can't access app state
-  print('FCM: Background message received: ${message.messageId}');
-  print('FCM: Title: ${message.notification?.title}');
-  print('FCM: Body: ${message.notification?.body}');
-  print('FCM: Data: ${message.data}');
+  debugPrint('FCM: Background message received: ${message.messageId}');
+  debugPrint('FCM: Title: ${message.notification?.title}');
+  debugPrint('FCM: Body: ${message.notification?.body}');
+  debugPrint('FCM: Data: ${message.data}');
 }
 
 /// Service for managing Firebase Cloud Messaging (FCM) push notifications
@@ -69,9 +69,9 @@ class FCMService {
       }
 
       _isInitialized = true;
-      print('FCM: Service initialized successfully');
+      debugPrint('FCM: Service initialized successfully');
     } catch (e) {
-      print('FCM: Initialization failed: $e');
+      debugPrint('FCM: Initialization failed: $e');
     }
   }
 
@@ -87,17 +87,17 @@ class FCMService {
         provisional: false,
         sound: true,
       ).timeout(_fcmTimeout, onTimeout: () {
-        print('FCM: Permission request timed out');
+        debugPrint('FCM: Permission request timed out');
         throw TimeoutException('Permission request timed out');
       });
 
       final isAuthorized = settings.authorizationStatus == AuthorizationStatus.authorized ||
                            settings.authorizationStatus == AuthorizationStatus.provisional;
 
-      print('FCM: Permission status: ${settings.authorizationStatus}');
+      debugPrint('FCM: Permission status: ${settings.authorizationStatus}');
       return isAuthorized;
     } catch (e) {
-      print('FCM: Permission request failed: $e');
+      debugPrint('FCM: Permission request failed: $e');
       return false;
     }
   }
@@ -110,7 +110,7 @@ class FCMService {
         final apnsToken = await _messaging.getAPNSToken()
             .timeout(_fcmTimeout, onTimeout: () => null);
         if (apnsToken == null) {
-          print('FCM: APNs token not available yet');
+          debugPrint('FCM: APNs token not available yet');
           return null;
         }
       }
@@ -118,13 +118,13 @@ class FCMService {
       _currentToken = await _messaging.getToken()
           .timeout(_fcmTimeout, onTimeout: () => null);
       if (_currentToken != null) {
-        print('FCM: Token retrieved: ${_currentToken?.substring(0, 20)}...');
+        debugPrint('FCM: Token retrieved: ${_currentToken?.substring(0, 20)}...');
       } else {
-        print('FCM: getToken timed out or returned null');
+        debugPrint('FCM: getToken timed out or returned null');
       }
       return _currentToken;
     } catch (e) {
-      print('FCM: Failed to get token: $e');
+      debugPrint('FCM: Failed to get token: $e');
       return null;
     }
   }
@@ -139,7 +139,7 @@ class FCMService {
 
   /// Handle token refresh
   static void _onTokenRefresh(String token) {
-    print('FCM: Token refreshed');
+    debugPrint('FCM: Token refreshed');
     _currentToken = token;
     storeToken(token);
   }
@@ -148,7 +148,7 @@ class FCMService {
   static Future<void> storeToken(String token) async {
     final userId = AuthService.userId;
     if (userId == null) {
-      print('FCM: Cannot store token - no user logged in');
+      debugPrint('FCM: Cannot store token - no user logged in');
       return;
     }
 
@@ -168,9 +168,9 @@ class FCMService {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      print('FCM: Token stored for user $userId');
+      debugPrint('FCM: Token stored for user $userId');
     } catch (e) {
-      print('FCM: Failed to store token: $e');
+      debugPrint('FCM: Failed to store token: $e');
     }
   }
 
@@ -184,10 +184,10 @@ class FCMService {
           .doc(_currentToken)
           .delete();
 
-      print('FCM: Token removed');
+      debugPrint('FCM: Token removed');
       _currentToken = null;
     } catch (e) {
-      print('FCM: Failed to remove token: $e');
+      debugPrint('FCM: Failed to remove token: $e');
     }
   }
 
@@ -201,7 +201,7 @@ class FCMService {
 
       return snapshot.docs.map((doc) => doc['token'] as String).toList();
     } catch (e) {
-      print('FCM: Failed to get tokens for user: $e');
+      debugPrint('FCM: Failed to get tokens for user: $e');
       return [];
     }
   }
@@ -228,17 +228,17 @@ class FCMService {
 
       return allTokens;
     } catch (e) {
-      print('FCM: Failed to get tokens for users: $e');
+      debugPrint('FCM: Failed to get tokens for users: $e');
       return [];
     }
   }
 
   /// Handle foreground message
   static void _handleForegroundMessage(RemoteMessage message) {
-    print('FCM: Foreground message received');
-    print('FCM: Title: ${message.notification?.title}');
-    print('FCM: Body: ${message.notification?.body}');
-    print('FCM: Data: ${message.data}');
+    debugPrint('FCM: Foreground message received');
+    debugPrint('FCM: Title: ${message.notification?.title}');
+    debugPrint('FCM: Body: ${message.notification?.body}');
+    debugPrint('FCM: Data: ${message.data}');
 
     // Call the foreground message callback if set
     onForegroundMessage?.call(message);
@@ -246,8 +246,8 @@ class FCMService {
 
   /// Handle notification tap (deep linking)
   static void _handleNotificationTap(RemoteMessage message) {
-    print('FCM: Notification tapped');
-    print('FCM: Data: ${message.data}');
+    debugPrint('FCM: Notification tapped');
+    debugPrint('FCM: Data: ${message.data}');
 
     // Call the notification tap callback if set
     onNotificationTap?.call(message.data);
@@ -276,11 +276,11 @@ class FCMService {
     try {
       await _messaging.subscribeToTopic(topic)
           .timeout(_fcmTimeout, onTimeout: () {
-        print('FCM: Subscribe to $topic timed out');
+        debugPrint('FCM: Subscribe to $topic timed out');
       });
-      print('FCM: Subscribed to topic: $topic');
+      debugPrint('FCM: Subscribed to topic: $topic');
     } catch (e) {
-      print('FCM: Failed to subscribe to topic: $e');
+      debugPrint('FCM: Failed to subscribe to topic: $e');
     }
   }
 
@@ -289,11 +289,11 @@ class FCMService {
     try {
       await _messaging.unsubscribeFromTopic(topic)
           .timeout(_fcmTimeout, onTimeout: () {
-        print('FCM: Unsubscribe from $topic timed out');
+        debugPrint('FCM: Unsubscribe from $topic timed out');
       });
-      print('FCM: Unsubscribed from topic: $topic');
+      debugPrint('FCM: Unsubscribed from topic: $topic');
     } catch (e) {
-      print('FCM: Failed to unsubscribe from topic: $e');
+      debugPrint('FCM: Failed to unsubscribe from topic: $e');
     }
   }
 
@@ -334,13 +334,13 @@ class FCMService {
       await Future.wait(
         clubIds.map((clubId) => subscribeToClub(clubId)),
       ).timeout(const Duration(seconds: 10), onTimeout: () {
-        print('FCM: Bulk subscribe timed out');
+        debugPrint('FCM: Bulk subscribe timed out');
         return [];
       });
 
-      print('FCM: Subscribed to ${clubIds.length} club topics');
+      debugPrint('FCM: Subscribed to ${clubIds.length} club topics');
     } catch (e) {
-      print('FCM: Failed to subscribe to user clubs: $e');
+      debugPrint('FCM: Failed to subscribe to user clubs: $e');
     }
   }
 
@@ -363,13 +363,13 @@ class FCMService {
       await Future.wait(
         clubIds.map((clubId) => unsubscribeFromClub(clubId)),
       ).timeout(const Duration(seconds: 10), onTimeout: () {
-        print('FCM: Bulk unsubscribe timed out');
+        debugPrint('FCM: Bulk unsubscribe timed out');
         return [];
       });
 
-      print('FCM: Unsubscribed from ${clubIds.length} club topics');
+      debugPrint('FCM: Unsubscribed from ${clubIds.length} club topics');
     } catch (e) {
-      print('FCM: Failed to unsubscribe from clubs: $e');
+      debugPrint('FCM: Failed to unsubscribe from clubs: $e');
     }
   }
 }

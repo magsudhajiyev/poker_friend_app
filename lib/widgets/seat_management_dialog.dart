@@ -103,7 +103,7 @@ class _SeatManagementDialogState extends State<SeatManagementDialog> {
         allOpponents = opponents;
       });
     } catch (e) {
-      print('Failed to load opponents: $e');
+      debugPrint('Failed to load opponents: $e');
     }
   }
 

@@ -138,7 +138,7 @@ class _QuickStackUpdateScreenState extends State<QuickStackUpdateScreen> {
         _loadingOpponents = false;
       });
     } catch (e) {
-      // print('Error loading opponents: $e');
+      // debugPrint('Error loading opponents: $e');
       setState(() {
         _loadingOpponents = false;
       });

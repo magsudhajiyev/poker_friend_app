@@ -210,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _notifiedSeatIds.add(seat.id);
       }
     }).catchError((e) {
-      print('Error pre-populating seats: $e');
+      debugPrint('Error pre-populating seats: $e');
     });
 
     // Set up real-time listener
@@ -231,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         }
       }
     }, onError: (error) {
-      print('Seat listener error: $error');
+      debugPrint('Seat listener error: $error');
     });
 
     // Set up club notification listener for event notifications
@@ -248,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // Also update unread notifications list
       _updateUnreadNotifications(existing);
     }).catchError((e) {
-      print('Error pre-populating club notifications: $e');
+      debugPrint('Error pre-populating club notifications: $e');
     });
 
     // Set up real-time listener
@@ -268,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         }
       }
     }, onError: (error) {
-      print('Club notification listener error: $error');
+      debugPrint('Club notification listener error: $error');
     });
   }
 
@@ -1258,7 +1258,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _checkPendingInvitations();
       }
     } catch (e) {
-      print('Error loading data: $e');
+      debugPrint('Error loading data: $e');
       if (mounted) {
         setState(() {
           isLoadingData = false;
@@ -1345,7 +1345,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
     } catch (e) {
       // Silently fail - invitations are not critical
-      print('Error checking invitations: $e');
+      debugPrint('Error checking invitations: $e');
     }
   }
 
@@ -1396,7 +1396,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       return sessions.take(3).toList();
     } catch (e) {
-      print('Error loading recent sessions: $e');
+      debugPrint('Error loading recent sessions: $e');
       return [];
     }
   }
@@ -1496,7 +1496,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         'avgEarnings': avgEarnings,
       };
     } catch (e) {
-      print('Error getting earnings data: $e');
+      debugPrint('Error getting earnings data: $e');
       return {
         'chartData': <Map<String, dynamic>>[],
         'avgEarnings': 0.0,

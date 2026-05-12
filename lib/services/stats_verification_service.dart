@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import '../services/firebase_service.dart';
@@ -9,21 +10,21 @@ class StatsVerificationService {
 
   /// Verify all stats and print detailed breakdown
   static Future<void> verifyAllStats() async {
-    print('\n' + '='*80);
-    print('📊 STATS VERIFICATION REPORT');
-    print('='*80 + '\n');
+    debugPrint('\n' + '='*80);
+    debugPrint('📊 STATS VERIFICATION REPORT');
+    debugPrint('='*80 + '\n');
 
     try {
       final userId = AuthService.userId;
       if (userId == null) {
-        print('❌ Error: User not logged in');
+        debugPrint('❌ Error: User not logged in');
         return;
       }
 
       // Fetch all sessions
       final sessions = await FirebaseService.getAllSessions();
-      print('📁 Total Sessions Found: ${sessions.length}');
-      print('📁 Session IDs: ${sessions.map((s) => s['id']).join(', ')}\n');
+      debugPrint('📁 Total Sessions Found: ${sessions.length}');
+      debugPrint('📁 Session IDs: ${sessions.map((s) => s['id']).join(', ')}\n');
 
       // Variables to track calculated stats
       int totalHandsCalc = 0;
@@ -40,13 +41,13 @@ class StatsVerificationService {
         final sessionId = session['id'] as String?;
         if (sessionId == null) continue;
 
-        print('─'*80);
-        print('Session ${i + 1}: ${session['sessionName'] ?? 'Unnamed'}');
-        print('─'*80);
-        print('Session ID: $sessionId');
-        print('Game Type: ${session['gameType']}');
-        print('Our Seat: ${session['ourSeatNumber']}');
-        print('Player Count: ${session['playerCount']}');
+        debugPrint('─'*80);
+        debugPrint('Session ${i + 1}: ${session['sessionName'] ?? 'Unnamed'}');
+        debugPrint('─'*80);
+        debugPrint('Session ID: $sessionId');
+        debugPrint('Game Type: ${session['gameType']}');
+        debugPrint('Our Seat: ${session['ourSeatNumber']}');
+        debugPrint('Player Count: ${session['playerCount']}');
 
         // Calculate session duration
         if (session['startTime'] != null && session['endTime'] != null) {
@@ -73,24 +74,24 @@ class StatsVerificationService {
 
             final duration = endTime.difference(startTime).inMinutes;
             totalPlayTimeMinutes += duration;
-            print('Duration: $duration minutes');
+            debugPrint('Duration: $duration minutes');
           } catch (e) {
-            print('⚠️  Error parsing session times: $e');
+            debugPrint('⚠️  Error parsing session times: $e');
           }
         }
 
         // Fetch hands for this session
         final hands = await _getHandsForSession(sessionId);
-        print('Total Hands: ${hands.length}');
+        debugPrint('Total Hands: ${hands.length}');
 
         if (hands.isEmpty) {
-          print('⚠️  No hands found for this session\n');
+          debugPrint('⚠️  No hands found for this session\n');
           continue;
         }
 
         final ourSeat = session['ourSeatNumber'] as int?;
         if (ourSeat == null) {
-          print('⚠️  Our seat number not found\n');
+          debugPrint('⚠️  Our seat number not found\n');
           continue;
         }
 
@@ -107,8 +108,8 @@ class StatsVerificationService {
           final winnerId = hand['winnerId'];
           final actions = hand['actions'] as List<dynamic>? ?? [];
 
-          print('\n  🃏 Hand #$handNumber:');
-          print('     Winner: Seat $winnerId ${winnerId == ourSeat ? "✅ (WE WON!)" : ""}');
+          debugPrint('\n  🃏 Hand #$handNumber:');
+          debugPrint('     Winner: Seat $winnerId ${winnerId == ourSeat ? "✅ (WE WON!)" : ""}');
 
           // Check if we won
           if (winnerId == ourSeat) {
@@ -122,18 +123,18 @@ class StatsVerificationService {
           bool didPfr = false;
           bool didThreeBet = false;
 
-          print('     Our Actions:');
+          debugPrint('     Our Actions:');
           final ourActions = actions.where((a) => a['player'] == ourSeat).toList();
 
           if (ourActions.isEmpty) {
-            print('       - None (folded or sat out)');
+            debugPrint('       - None (folded or sat out)');
           } else {
             for (var action in ourActions) {
               final actionType = action['action']?.toString() ?? 'unknown';
               final street = action['street']?.toString() ?? 'unknown';
               final amount = action['amount'];
 
-              print('       - $actionType on $street${amount != null ? " (\$$amount)" : ""}');
+              debugPrint('       - $actionType on $street${amount != null ? " (\$$amount)" : ""}');
 
               if (street.toLowerCase() == 'preflop') {
                 final actionLower = actionType.toLowerCase();
@@ -178,7 +179,7 @@ class StatsVerificationService {
 
           // Log what we counted for this hand
           if (didPlay) {
-            print('     ✓ Counted as: ${[
+            debugPrint('     ✓ Counted as: ${[
               if (didVpip) 'VPIP',
               if (didPfr) 'PFR',
               if (didThreeBet) '3-Bet',
@@ -188,62 +189,62 @@ class StatsVerificationService {
           // Show opponent actions for context
           final opponentActions = actions.where((a) => a['player'] != ourSeat).toList();
           if (opponentActions.isNotEmpty) {
-            print('     Opponent Actions:');
+            debugPrint('     Opponent Actions:');
             for (var action in opponentActions) {
-              print('       - Seat ${action['player']}: ${action['action']} on ${action['street']}');
+              debugPrint('       - Seat ${action['player']}: ${action['action']} on ${action['street']}');
             }
           }
         }
 
         // Session summary
-        print('\n  📈 Session Summary:');
-        print('     Hands: ${hands.length}');
-        print('     Hands Played: $sessionHandsPlayed');
-        print('     Hands Won: $sessionHandsWon (${hands.length > 0 ? (sessionHandsWon / hands.length * 100).toStringAsFixed(1) : "0.0"}%)');
-        print('     VPIP: $sessionVpip (${hands.length > 0 ? (sessionVpip / hands.length * 100).toStringAsFixed(1) : "0.0"}%)');
-        print('     PFR: $sessionPfr (${hands.length > 0 ? (sessionPfr / hands.length * 100).toStringAsFixed(1) : "0.0"}%)');
-        print('     3-Bet: $sessionThreeBet');
-        print('');
+        debugPrint('\n  📈 Session Summary:');
+        debugPrint('     Hands: ${hands.length}');
+        debugPrint('     Hands Played: $sessionHandsPlayed');
+        debugPrint('     Hands Won: $sessionHandsWon (${hands.length > 0 ? (sessionHandsWon / hands.length * 100).toStringAsFixed(1) : "0.0"}%)');
+        debugPrint('     VPIP: $sessionVpip (${hands.length > 0 ? (sessionVpip / hands.length * 100).toStringAsFixed(1) : "0.0"}%)');
+        debugPrint('     PFR: $sessionPfr (${hands.length > 0 ? (sessionPfr / hands.length * 100).toStringAsFixed(1) : "0.0"}%)');
+        debugPrint('     3-Bet: $sessionThreeBet');
+        debugPrint('');
       }
 
-      print('='*80);
-      print('🧮 CALCULATED STATS FROM RAW DATA:');
-      print('='*80);
-      print('Total Hands: $totalHandsCalc');
-      print('Hands Played: $handsPlayedCalc');
-      print('Won Hands: $wonHandsCalc');
-      print('Win Rate: ${handsPlayedCalc > 0 ? (wonHandsCalc / handsPlayedCalc * 100).toStringAsFixed(1) : "0.0"}%');
-      print('VPIP Count: $vpipCountCalc');
-      print('VPIP %: ${totalHandsCalc > 0 ? (vpipCountCalc / totalHandsCalc * 100).toStringAsFixed(1) : "0.0"}%');
-      print('PFR Count: $pfrCountCalc');
-      print('PFR %: ${totalHandsCalc > 0 ? (pfrCountCalc / totalHandsCalc * 100).toStringAsFixed(1) : "0.0"}%');
-      print('3-Bet Count: $threeBetCountCalc');
-      print('Total Play Time: $totalPlayTimeMinutes minutes (${(totalPlayTimeMinutes / 60).toStringAsFixed(1)} hours)');
-      print('');
+      debugPrint('='*80);
+      debugPrint('🧮 CALCULATED STATS FROM RAW DATA:');
+      debugPrint('='*80);
+      debugPrint('Total Hands: $totalHandsCalc');
+      debugPrint('Hands Played: $handsPlayedCalc');
+      debugPrint('Won Hands: $wonHandsCalc');
+      debugPrint('Win Rate: ${handsPlayedCalc > 0 ? (wonHandsCalc / handsPlayedCalc * 100).toStringAsFixed(1) : "0.0"}%');
+      debugPrint('VPIP Count: $vpipCountCalc');
+      debugPrint('VPIP %: ${totalHandsCalc > 0 ? (vpipCountCalc / totalHandsCalc * 100).toStringAsFixed(1) : "0.0"}%');
+      debugPrint('PFR Count: $pfrCountCalc');
+      debugPrint('PFR %: ${totalHandsCalc > 0 ? (pfrCountCalc / totalHandsCalc * 100).toStringAsFixed(1) : "0.0"}%');
+      debugPrint('3-Bet Count: $threeBetCountCalc');
+      debugPrint('Total Play Time: $totalPlayTimeMinutes minutes (${(totalPlayTimeMinutes / 60).toStringAsFixed(1)} hours)');
+      debugPrint('');
 
       // Fetch database stats
       final userStats = await UserStatsService.getUserStats(userId);
       if (userStats != null) {
-        print('='*80);
-        print('💾 DATABASE STATS (from user_stats collection):');
-        print('='*80);
-        print('Total Hands: ${userStats.totalHands}');
-        print('Hands Played: ${userStats.handsPlayed}');
-        print('Won Hands: ${userStats.wonHands}');
-        print('Win Rate: ${userStats.handsPlayed > 0 ? (userStats.wonHands / userStats.handsPlayed * 100).toStringAsFixed(1) : "0.0"}%');
-        print('VPIP Count: ${userStats.vpipCount}');
-        print('VPIP %: ${userStats.totalHands > 0 ? (userStats.vpipCount / userStats.totalHands * 100).toStringAsFixed(1) : "0.0"}%');
-        print('PFR Count: ${userStats.pfrCount}');
-        print('PFR %: ${userStats.totalHands > 0 ? (userStats.pfrCount / userStats.totalHands * 100).toStringAsFixed(1) : "0.0"}%');
-        print('3-Bet Count: ${userStats.threeBetCount}');
-        print('Total Play Time: ${userStats.totalPlayTimeMinutes} minutes (${(userStats.totalPlayTimeMinutes / 60).toStringAsFixed(1)} hours)');
-        print('Total Sessions: ${userStats.totalSessions} ⚠️  (Database shows ${userStats.totalSessions} but we found ${sessions.length} sessions in poker_sessions collection)');
-        print('');
+        debugPrint('='*80);
+        debugPrint('💾 DATABASE STATS (from user_stats collection):');
+        debugPrint('='*80);
+        debugPrint('Total Hands: ${userStats.totalHands}');
+        debugPrint('Hands Played: ${userStats.handsPlayed}');
+        debugPrint('Won Hands: ${userStats.wonHands}');
+        debugPrint('Win Rate: ${userStats.handsPlayed > 0 ? (userStats.wonHands / userStats.handsPlayed * 100).toStringAsFixed(1) : "0.0"}%');
+        debugPrint('VPIP Count: ${userStats.vpipCount}');
+        debugPrint('VPIP %: ${userStats.totalHands > 0 ? (userStats.vpipCount / userStats.totalHands * 100).toStringAsFixed(1) : "0.0"}%');
+        debugPrint('PFR Count: ${userStats.pfrCount}');
+        debugPrint('PFR %: ${userStats.totalHands > 0 ? (userStats.pfrCount / userStats.totalHands * 100).toStringAsFixed(1) : "0.0"}%');
+        debugPrint('3-Bet Count: ${userStats.threeBetCount}');
+        debugPrint('Total Play Time: ${userStats.totalPlayTimeMinutes} minutes (${(userStats.totalPlayTimeMinutes / 60).toStringAsFixed(1)} hours)');
+        debugPrint('Total Sessions: ${userStats.totalSessions} ⚠️  (Database shows ${userStats.totalSessions} but we found ${sessions.length} sessions in poker_sessions collection)');
+        debugPrint('');
 
         // Compare
-        print('='*80);
-        print('⚖️  COMPARISON (Calculated vs Database):');
-        print('='*80);
+        debugPrint('='*80);
+        debugPrint('⚖️  COMPARISON (Calculated vs Database):');
+        debugPrint('='*80);
         _compareValues('Total Hands', totalHandsCalc, userStats.totalHands);
         _compareValues('Hands Played', handsPlayedCalc, userStats.handsPlayed);
         _compareValues('Won Hands', wonHandsCalc, userStats.wonHands);
@@ -251,7 +252,7 @@ class StatsVerificationService {
         _compareValues('PFR Count', pfrCountCalc, userStats.pfrCount);
         _compareValues('3-Bet Count', threeBetCountCalc, userStats.threeBetCount);
         _compareValues('Play Time (min)', totalPlayTimeMinutes, userStats.totalPlayTimeMinutes);
-        print('');
+        debugPrint('');
 
         // Check for double-counting pattern
         _checkDoubleCountingPattern(
@@ -266,17 +267,17 @@ class StatsVerificationService {
         );
       }
 
-      print('='*80);
-      print('✅ VERIFICATION COMPLETE');
-      print('='*80 + '\n');
+      debugPrint('='*80);
+      debugPrint('✅ VERIFICATION COMPLETE');
+      debugPrint('='*80 + '\n');
     } catch (e, stackTrace) {
-      print('❌ Error during verification: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('❌ Error during verification: $e');
+      debugPrint('Stack trace: $stackTrace');
     }
   }
 
   static Future<List<Map<String, dynamic>>> _getHandsForSession(String sessionId) async {
-    print('     🔍 Fetching hands from: poker_sessions/$sessionId/poker_hands');
+    debugPrint('     🔍 Fetching hands from: poker_sessions/$sessionId/poker_hands');
 
     final snapshot = await _firestore
         .collection('poker_sessions')
@@ -285,10 +286,10 @@ class StatsVerificationService {
         .orderBy('handNumber')
         .get();
 
-    print('     🔍 Found ${snapshot.docs.length} hand documents');
+    debugPrint('     🔍 Found ${snapshot.docs.length} hand documents');
 
     if (snapshot.docs.isNotEmpty) {
-      print('     🔍 Hand document IDs: ${snapshot.docs.map((d) => d.id).join(', ')}');
+      debugPrint('     🔍 Hand document IDs: ${snapshot.docs.map((d) => d.id).join(', ')}');
     }
 
     return snapshot.docs.map((doc) {
@@ -301,7 +302,7 @@ class StatsVerificationService {
   static void _compareValues(String label, int calculated, int database) {
     final match = calculated == database;
     final icon = match ? '✅' : '❌';
-    print('$icon $label: Calculated=$calculated, Database=$database ${match ? "" : "⚠️ MISMATCH!"}');
+    debugPrint('$icon $label: Calculated=$calculated, Database=$database ${match ? "" : "⚠️ MISMATCH!"}');
   }
 
   /// Detect if player made a 3-bet (re-raised AFTER seeing an opponent's raise)
@@ -344,13 +345,13 @@ class StatsVerificationService {
     required int dbVpipCount,
     required int dbPfrCount,
   }) {
-    print('');
-    print('='*80);
-    print('🔍 DOUBLE-COUNTING DETECTION:');
-    print('='*80);
+    debugPrint('');
+    debugPrint('='*80);
+    debugPrint('🔍 DOUBLE-COUNTING DETECTION:');
+    debugPrint('='*80);
 
     if (totalHandsCalc == 0) {
-      print('⚠️  Cannot check for double-counting: no hands calculated');
+      debugPrint('⚠️  Cannot check for double-counting: no hands calculated');
       return;
     }
 
@@ -360,12 +361,12 @@ class StatsVerificationService {
     final vpipRatio = vpipCountCalc > 0 ? dbVpipCount / vpipCountCalc : 0.0;
     final pfrRatio = pfrCountCalc > 0 ? dbPfrCount / pfrCountCalc : 0.0;
 
-    print('Ratio Analysis (DB / Calculated):');
-    print('   Total Hands: ${totalHandsRatio.toStringAsFixed(2)}x');
-    print('   Hands Played: ${handsPlayedRatio.toStringAsFixed(2)}x');
-    print('   VPIP Count: ${vpipRatio.toStringAsFixed(2)}x');
-    print('   PFR Count: ${pfrRatio.toStringAsFixed(2)}x');
-    print('');
+    debugPrint('Ratio Analysis (DB / Calculated):');
+    debugPrint('   Total Hands: ${totalHandsRatio.toStringAsFixed(2)}x');
+    debugPrint('   Hands Played: ${handsPlayedRatio.toStringAsFixed(2)}x');
+    debugPrint('   VPIP Count: ${vpipRatio.toStringAsFixed(2)}x');
+    debugPrint('   PFR Count: ${pfrRatio.toStringAsFixed(2)}x');
+    debugPrint('');
 
     // Check for consistent ~2x inflation (within 10% of 2.0)
     final ratios = [totalHandsRatio, handsPlayedRatio, vpipRatio, pfrRatio]
@@ -373,7 +374,7 @@ class StatsVerificationService {
         .toList();
 
     if (ratios.isEmpty) {
-      print('✅ No ratios to analyze');
+      debugPrint('✅ No ratios to analyze');
       return;
     }
 
@@ -381,22 +382,22 @@ class StatsVerificationService {
     final isDoubleCount = avgRatio >= 1.8 && avgRatio <= 2.2;
 
     if (isDoubleCount) {
-      print('⚠️  WARNING: DOUBLE-COUNTING DETECTED!');
-      print('   Average ratio: ${avgRatio.toStringAsFixed(2)}x (close to 2x)');
-      print('');
-      print('   This indicates stats were being incremented twice per hand.');
-      print('   Common causes:');
-      print('   1. FirebaseService._updateUserStatsFromHand() AND');
-      print('   2. PokerSessionManager._updateOptimizedStats() both updating');
-      print('');
-      print('   FIX: Run UserStatsService.recalculateUserStats(userId) to repair');
+      debugPrint('⚠️  WARNING: DOUBLE-COUNTING DETECTED!');
+      debugPrint('   Average ratio: ${avgRatio.toStringAsFixed(2)}x (close to 2x)');
+      debugPrint('');
+      debugPrint('   This indicates stats were being incremented twice per hand.');
+      debugPrint('   Common causes:');
+      debugPrint('   1. FirebaseService._updateUserStatsFromHand() AND');
+      debugPrint('   2. PokerSessionManager._updateOptimizedStats() both updating');
+      debugPrint('');
+      debugPrint('   FIX: Run UserStatsService.recalculateUserStats(userId) to repair');
     } else if (avgRatio > 1.1) {
-      print('⚠️  WARNING: Stats appear inflated (${avgRatio.toStringAsFixed(2)}x)');
-      print('   Consider running recalculation to repair');
+      debugPrint('⚠️  WARNING: Stats appear inflated (${avgRatio.toStringAsFixed(2)}x)');
+      debugPrint('   Consider running recalculation to repair');
     } else {
-      print('✅ No double-counting pattern detected');
-      print('   Average ratio: ${avgRatio.toStringAsFixed(2)}x (expected: 1.0x)');
+      debugPrint('✅ No double-counting pattern detected');
+      debugPrint('   Average ratio: ${avgRatio.toStringAsFixed(2)}x (expected: 1.0x)');
     }
-    print('');
+    debugPrint('');
   }
 }

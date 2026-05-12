@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,21 +19,23 @@ class TestDataSeedService {
 
   /// Check if test data has already been seeded
   static Future<bool> isSeeded() async {
+    if (!kDebugMode) return true;
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_seedCompletedKey) ?? false;
   }
 
   /// Clean up test data from Firebase AND local SQLite
   static Future<void> cleanupTestData() async {
+    if (!kDebugMode) return;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      print('No user logged in, cannot cleanup test data');
+      debugPrint('No user logged in, cannot cleanup test data');
       return;
     }
 
     final firestore = FirebaseFirestore.instance;
     final db = await LocalStorageService.database;
-    print('Starting test data cleanup...');
+    debugPrint('Starting test data cleanup...');
 
     // Test opponent names to delete
     const testOpponentNames = ['FISH Mike', 'TAG Sarah', 'NIT Helen', 'LAG Carlos', 'MANIAC Jake'];
@@ -51,12 +54,12 @@ class TestDataSeedService {
         try {
           await firestore.collection('opponent_stats').doc(doc.id).delete();
         } catch (e) {
-          print('Could not delete stats for ${doc.id}: $e');
+          debugPrint('Could not delete stats for ${doc.id}: $e');
         }
         // Delete opponent
         await doc.reference.delete();
         deletedOpponents++;
-        print('Deleted opponent: $name');
+        debugPrint('Deleted opponent: $name');
       }
     }
 
@@ -76,12 +79,12 @@ class TestDataSeedService {
         for (final hand in hands.docs) {
           await hand.reference.delete();
         }
-        print('Deleted ${hands.docs.length} hands from Firebase session');
+        debugPrint('Deleted ${hands.docs.length} hands from Firebase session');
         // Delete session
         await session.reference.delete();
         deletedSessionIds.add(session.id);
         deletedSessions++;
-        print('Deleted Firebase session: $sessionName');
+        debugPrint('Deleted Firebase session: $sessionName');
       }
     }
 
@@ -94,7 +97,7 @@ class TestDataSeedService {
           where: 'sessionId = ?',
           whereArgs: [sessionId],
         );
-        print('Deleted $deletedHands hands from SQLite for session $sessionId');
+        debugPrint('Deleted $deletedHands hands from SQLite for session $sessionId');
       }
 
       // Delete sessions from SQLite
@@ -103,7 +106,7 @@ class TestDataSeedService {
         where: 'sessionName = ?',
         whereArgs: ['50-Hand Test Session (All Scenarios)'],
       );
-      print('Deleted $deletedLocalSessions sessions from SQLite');
+      debugPrint('Deleted $deletedLocalSessions sessions from SQLite');
 
       // Delete opponents from SQLite
       for (final name in testOpponentNames) {
@@ -113,26 +116,27 @@ class TestDataSeedService {
           whereArgs: [name],
         );
       }
-      print('Deleted test opponents from SQLite');
+      debugPrint('Deleted test opponents from SQLite');
     } catch (e) {
-      print('Error cleaning up SQLite: $e');
+      debugPrint('Error cleaning up SQLite: $e');
     }
 
     // Reset seed flag
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_seedCompletedKey, false);
 
-    print('Cleanup complete: $deletedOpponents opponents, $deletedSessions sessions');
+    debugPrint('Cleanup complete: $deletedOpponents opponents, $deletedSessions sessions');
   }
 
   /// Seed all test data (opponents + session with 50 hands)
   static Future<void> seedTestData({bool force = false}) async {
+    if (!kDebugMode) return;
     if (!force && await isSeeded()) {
-      print('Test data already seeded. Use force=true to re-seed.');
+      debugPrint('Test data already seeded. Use force=true to re-seed.');
       return;
     }
 
-    print('Starting test data seed...');
+    debugPrint('Starting test data seed...');
 
     // Create opponents
     await _createTestOpponents();
@@ -144,14 +148,15 @@ class TestDataSeedService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_seedCompletedKey, true);
 
-    print('Test data seed completed!');
+    debugPrint('Test data seed completed!');
   }
 
   /// Clear test data and reset seed flag
   static Future<void> clearTestData() async {
+    if (!kDebugMode) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_seedCompletedKey);
-    print('Test data seed flag cleared.');
+    debugPrint('Test data seed flag cleared.');
   }
 
   /// Create 5 opponents with different play styles
@@ -285,7 +290,7 @@ class TestDataSeedService {
       );
 
       await OpponentService.saveOpponent(opponent);
-      print('Created opponent: ${opponent.name} (${id.substring(0, 8)})');
+      debugPrint('Created opponent: ${opponent.name} (${id.substring(0, 8)})');
 
       // Save opponent stats
       final baseStats = entry.value['stats'] as OpponentStats;
@@ -308,7 +313,7 @@ class TestDataSeedService {
       );
 
       await OpponentStatsService.saveOpponentStats(stats);
-      print('  Stats: VPIP=${stats.vpipPercentage.toStringAsFixed(1)}%, PFR=${stats.pfrPercentage.toStringAsFixed(1)}%, Style=${stats.playingStyle}');
+      debugPrint('  Stats: VPIP=${stats.vpipPercentage.toStringAsFixed(1)}%, PFR=${stats.pfrPercentage.toStringAsFixed(1)}%, Style=${stats.playingStyle}');
     }
 
     return opponentIds;
@@ -327,12 +332,12 @@ class TestDataSeedService {
       final userEmail = currentUser?.email ?? 'test@example.com';
       final userName = currentUser?.displayName ?? 'TestHero';
 
-      print('Creating session for user: $userId ($userEmail)');
+      debugPrint('Creating session for user: $userId ($userEmail)');
 
       // Get opponent IDs
       final opponents = await OpponentService.getAllOpponents();
       final opponentMap = {for (var o in opponents) o.name: o.id};
-      print('Found ${opponents.length} opponents: ${opponentMap.keys.toList()}');
+      debugPrint('Found ${opponents.length} opponents: ${opponentMap.keys.toList()}');
 
       // Create session in Firebase first
       final sessionRef = await firestore.collection('poker_sessions').add({
@@ -354,7 +359,7 @@ class TestDataSeedService {
       });
 
       final sessionId = sessionRef.id;
-      print('Created Firebase session: $sessionId');
+      debugPrint('Created Firebase session: $sessionId');
 
       // Also save to local SQLite for offline access
       await db.insert('sessions', {
@@ -376,17 +381,17 @@ class TestDataSeedService {
         'buyInAmount': 10000.0,
         'totalBuyIn': 10000.0,
       });
-      print('Created local SQLite session: $sessionId');
+      debugPrint('Created local SQLite session: $sessionId');
 
       // Generate 50 hands
-      print('Generating test hands...');
+      debugPrint('Generating test hands...');
       List<Map<String, dynamic>> hands;
       try {
         hands = _generateTestHands(sessionId, opponentMap);
-        print('Generated ${hands.length} hands, now inserting into database...');
+        debugPrint('Generated ${hands.length} hands, now inserting into database...');
       } catch (e, stackTrace) {
-        print('ERROR generating hands: $e');
-        print('Stack trace: $stackTrace');
+        debugPrint('ERROR generating hands: $e');
+        debugPrint('Stack trace: $stackTrace');
         rethrow;
       }
 
@@ -418,24 +423,24 @@ class TestDataSeedService {
 
           insertedCount++;
         } catch (e) {
-          print('Error inserting hand ${hand['handNumber']}: $e');
+          debugPrint('Error inserting hand ${hand['handNumber']}: $e');
         }
       }
 
       // Commit Firebase batch
       await batch.commit();
-      print('Successfully inserted $insertedCount hands into both Firebase and SQLite');
+      debugPrint('Successfully inserted $insertedCount hands into both Firebase and SQLite');
 
       // Update opponent stats
-      print('Updating opponent stats for ${opponentStatsDeltas.length} opponents...');
+      debugPrint('Updating opponent stats for ${opponentStatsDeltas.length} opponents...');
       for (final entry in opponentStatsDeltas.entries) {
-        print('  Opponent ${entry.key}: ${entry.value}');
+        debugPrint('  Opponent ${entry.key}: ${entry.value}');
       }
       await _updateOpponentStatsFromDeltas(opponentStatsDeltas);
-      print('Opponent stats updated!');
+      debugPrint('Opponent stats updated!');
     } catch (e, stackTrace) {
-      print('ERROR in _createTestSession: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('ERROR in _createTestSession: $e');
+      debugPrint('Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -623,9 +628,9 @@ class TestDataSeedService {
           raiseDelta: stats['raises'] ?? 0,
           threeBetDelta: stats['threeBets'] ?? 0,
         );
-        print('  Updated stats for opponent $opponentId: ${stats['hands']} hands, vpip=${stats['vpip']}, pfr=${stats['pfr']}');
+        debugPrint('  Updated stats for opponent $opponentId: ${stats['hands']} hands, vpip=${stats['vpip']}, pfr=${stats['pfr']}');
       } catch (e) {
-        print('  Error updating stats for opponent $opponentId: $e');
+        debugPrint('  Error updating stats for opponent $opponentId: $e');
       }
     }
   }
