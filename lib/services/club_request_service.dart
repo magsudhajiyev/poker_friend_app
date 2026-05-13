@@ -288,7 +288,7 @@ class ClubRequestService {
       address: request.address,
       phone: request.phone,
       appStoreQRUrl: 'https://apps.apple.com/app/final-table/PLACEHOLDER',
-      playStoreQRUrl: 'https://play.google.com/store/apps/details?id=com.pokerfriend.app',
+      playStoreQRUrl: 'https://play.google.com/store/apps/details?id=com.finaltable.app',
     );
 
     // If adminEmail user is different from requester and was found,

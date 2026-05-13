@@ -1,4 +1,4 @@
-package com.pokerfriend.app
+package com.finaltable.app
 
 import io.flutter.embedding.android.FlutterActivity
 
