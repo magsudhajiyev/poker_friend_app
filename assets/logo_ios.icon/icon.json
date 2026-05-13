@@ -21,7 +21,7 @@
           "image-name" : "Property 1=Logo-text.svg",
           "name" : "Property 1=Logo-text",
           "position" : {
-            "scale" : 5.43,
+            "scale" : 5.71,
             "translation-in-points" : [
               0,
               0
@@ -48,9 +48,8 @@
     }
   ],
   "supported-platforms" : {
-    "circles" : [
-      "watchOS"
-    ],
-    "squares" : "shared"
+    "squares" : [
+      "iOS"
+    ]
   }
 }

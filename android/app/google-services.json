@@ -8,20 +8,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:311745459306:android:82fe9770985ad558d00613",
+        "mobilesdk_app_id": "1:311745459306:android:9f2480c79d8ca13ed00613",
         "android_client_info": {
-          "package_name": "com.example.poker_logger"
+          "package_name": "com.finaltable.app"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "311745459306-5klcrvgthfn55gica3gr6fv9gcf6l6d2.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.poker_logger",
-            "certificate_hash": "2836cf642f30c08de6b06be943c9d03477a5d17b"
-          }
-        },
         {
           "client_id": "311745459306-povk09gd7ll56fgng8rsac54lrbgguq6.apps.googleusercontent.com",
           "client_type": 3
@@ -59,11 +51,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "311745459306-ui8ela0sh1nk7l56rit7nhcus2iquuj0.apps.googleusercontent.com",
+          "client_id": "311745459306-acnpoh9jnr1d40p07nj4vjt1fi3ec178.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.pokerfriend.app",
-            "certificate_hash": "2836cf642f30c08de6b06be943c9d03477a5d17b"
+            "certificate_hash": "9f26c7877e4eaade7dbf033796ba273d529fba60"
           }
         },
         {
