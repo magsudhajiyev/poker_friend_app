@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
@@ -122,8 +121,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               child: Column(
                 children: [
                   // Logo
-                  SvgPicture.asset(
-                    'assets/logo.svg',
+                  Image.asset(
+                    'assets/logo.png',
                     width: 100,
                     height: 100,
                   ),

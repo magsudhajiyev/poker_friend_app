@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 
 class GlobalLoadingSpinner extends StatefulWidget {
@@ -53,8 +52,8 @@ class _GlobalLoadingSpinnerState extends State<GlobalLoadingSpinner>
           if (widget.showLogo) ...[
             FadeTransition(
               opacity: _fadeAnimation,
-              child: SvgPicture.asset(
-                'assets/logo.svg',
+              child: Image.asset(
+                'assets/logo.png',
                 width: widget.size,
                 height: widget.size,
                 fit: BoxFit.contain,

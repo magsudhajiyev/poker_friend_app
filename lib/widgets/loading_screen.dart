@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class LoadingScreen extends StatefulWidget {
   final String? message;
@@ -42,10 +41,10 @@ class _LoadingScreenState extends State<LoadingScreen>
       child: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: SvgPicture.asset(
-            'assets/logo.svg',
-            width: 100,
-            height: 100,
+          child: Image.asset(
+            'assets/logo.png',
+            width: 140,
+            height: 140,
             fit: BoxFit.contain,
           ),
         ),

@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -239,8 +238,8 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header: logo + app name
-          SvgPicture.asset(
-            'assets/logo.svg',
+          Image.asset(
+            'assets/logo.png',
             width: 28,
             height: 28,
           ),

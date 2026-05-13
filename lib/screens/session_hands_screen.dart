@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/currency_service.dart';
@@ -285,8 +284,8 @@ class _SessionHandsScreenState extends State<SessionHandsScreen> {
                 color: const Color(0xFF131616),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: SvgPicture.asset(
-                'assets/logo.svg',
+              child: Image.asset(
+                'assets/logo.png',
                 width: 60,
                 height: 60,
                 fit: BoxFit.contain,

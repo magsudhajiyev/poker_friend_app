@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
@@ -183,10 +182,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return Scaffold(
       backgroundColor: const Color(0xFF02050B),
       body: Center(
-        child: SvgPicture.asset(
-          'assets/logo.svg',
-          width: 100,
-          height: 100,
+        child: Image.asset(
+          'assets/logo.png',
+          width: 140,
+          height: 140,
           fit: BoxFit.contain,
         ),
       ),
