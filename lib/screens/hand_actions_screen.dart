@@ -1624,16 +1624,11 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     final card2 = ourHoleCards?['card2'] as String?;
     final hasHeroCards = card1 != null && card2 != null && card1.isNotEmpty && card2.isNotEmpty;
 
-    final isPremium = SubscriptionService.isPremium;
-
     Color buttonColor;
     Color textColor;
     if (!hasHeroCards) {
       buttonColor = Colors.white.withOpacity(0.1);
       textColor = Colors.white.withOpacity(0.3);
-    } else if (!isPremium) {
-      buttonColor = const Color(0xFF89F1EC);
-      textColor = Colors.black;
     } else if (_aiAnalysis != null) {
       buttonColor = Colors.white.withOpacity(0.1);
       textColor = Colors.white.withOpacity(0.4);
@@ -1643,7 +1638,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     }
 
     return GestureDetector(
-      onTap: (_isAnalyzing || !hasHeroCards || _aiAnalysis != null) ? null : () => _handleAnalyzeButtonTap(isPremium),
+      onTap: (_isAnalyzing || !hasHeroCards || _aiAnalysis != null) ? null : () => _handleAnalyzeButtonTap(),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1683,17 +1678,6 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            ] else if (!isPremium) ...[
-              Icon(Icons.lock_open, color: textColor),
-              const SizedBox(width: 12),
-              Text(
-                AppLocalizations.of(context).handActionsUnlockAiAnalysis,
-                style: GoogleFonts.ibmPlexSans(
-                  color: textColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
             ] else ...[
               Icon(
                 _aiAnalysis != null ? Icons.check_circle_outline : Icons.psychology,
@@ -1715,11 +1699,17 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
-  static const int _maxBetaAnalyses = 2;
-  static const String _betaAnalysisCountKey = 'beta_ai_analysis_count';
+  static const int _maxMonthlyAnalyses = 20;
+  static const String _analysisCountKey = 'monthly_ai_analysis_count';
+  static const String _analysisMonthKey = 'monthly_ai_analysis_month';
 
-  Future<void> _handleAnalyzeButtonTap(bool isPremium) async {
-    // Skip beta limit for admin users
+  static String _currentMonthKey() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month}';
+  }
+
+  Future<void> _handleAnalyzeButtonTap() async {
+    // Skip quota for admin users
     bool isAdmin = false;
     final uid = AuthService.userId;
     if (uid != null) {
@@ -1729,10 +1719,19 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       } catch (_) {}
     }
 
-    // Beta limit: max 2 AI analyses total (admins exempt)
     final prefs = await SharedPreferences.getInstance();
-    final usedCount = prefs.getInt(_betaAnalysisCountKey) ?? 0;
-    if (!isAdmin && usedCount >= _maxBetaAnalyses) {
+    final storedMonth = prefs.getString(_analysisMonthKey) ?? '';
+    final currentMonth = _currentMonthKey();
+    int usedCount = prefs.getInt(_analysisCountKey) ?? 0;
+
+    // Reset count if new month
+    if (storedMonth != currentMonth) {
+      usedCount = 0;
+      await prefs.setString(_analysisMonthKey, currentMonth);
+      await prefs.setInt(_analysisCountKey, 0);
+    }
+
+    if (!isAdmin && usedCount >= _maxMonthlyAnalyses) {
       if (mounted) {
         showDialog(
           context: context,
@@ -1742,7 +1741,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               borderRadius: BorderRadius.circular(18),
             ),
             title: Text(
-              'Beta Limit Reached',
+              'Monthly Limit Reached',
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white,
                 fontSize: 18,
@@ -1750,7 +1749,7 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
               ),
             ),
             content: Text(
-              'You\'ve used all $usedCount of $_maxBetaAnalyses AI analyses available during the beta. This feature will be fully available at launch.',
+              'You\'ve used all $usedCount of $_maxMonthlyAnalyses AI analyses this month. Your quota resets next month.',
               style: GoogleFonts.ibmPlexSans(
                 color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 14,
@@ -1776,17 +1775,8 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
       return;
     }
 
-    if (isPremium) {
-      _analyzeHand();
-      if (!isAdmin) await prefs.setInt(_betaAnalysisCountKey, usedCount + 1);
-    } else {
-      final purchased = await PaywallScreen.show(context, featureName: 'AI Hand Analysis');
-      if (purchased == true && mounted) {
-        setState(() {});
-        _analyzeHand();
-        if (!isAdmin) await prefs.setInt(_betaAnalysisCountKey, usedCount + 1);
-      }
-    }
+    _analyzeHand();
+    if (!isAdmin) await prefs.setInt(_analysisCountKey, usedCount + 1);
   }
 
   Widget _buildAnalysisError() {

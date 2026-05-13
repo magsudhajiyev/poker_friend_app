@@ -908,14 +908,14 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
                   final tappedIndex = tappedOnSpot ? response!.lineBarSpots!.first.x.toInt() : null;
 
                   if (_touchedSpotIndex != null) {
-                    if (tappedIndex == _touchedSpotIndex) {
-                      // Tapped on the tooltip spot — navigate to hand
+                    if (tappedIndex != null && tappedIndex != _touchedSpotIndex) {
+                      // Tapped a different dot — switch tooltip
+                      setState(() => _touchedSpotIndex = tappedIndex);
+                    } else {
+                      // Tapped same dot, tooltip, or empty area — navigate to hand
                       final idx = _touchedSpotIndex!;
                       setState(() => _touchedSpotIndex = null);
                       _navigateToHandFromChart(idx);
-                    } else {
-                      // Tapped elsewhere — dismiss tooltip
-                      setState(() => _touchedSpotIndex = null);
                     }
                     return;
                   }

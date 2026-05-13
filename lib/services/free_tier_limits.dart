@@ -13,8 +13,8 @@ class FreeTierLimits {
   FreeTierLimits._();
 
   /// Maximum number of hands a free user can log per session.
-  /// NOTE: Set to 1 for testing. Revert to 5 before release.
-  static const int maxHandsPerSession = 1;
+  /// TODO(v1-launch): Set back to 5 once subscriptions are wired up.
+  static const int maxHandsPerSession = 999;
 
   /// Maximum number of saved opponent profiles for a free user.
   static const int maxOpponentProfiles = 10;

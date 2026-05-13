@@ -14,6 +14,20 @@
   ],
   "groups" : [
     {
+      "hidden" : false,
+      "layers" : [
+
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
       "blur-material" : 0.25,
       "hidden" : false,
       "layers" : [
@@ -21,7 +35,7 @@
           "image-name" : "Property 1=Logo-text.svg",
           "name" : "Property 1=Logo-text",
           "position" : {
-            "scale" : 5.71,
+            "scale" : 6.36,
             "translation-in-points" : [
               0,
               0

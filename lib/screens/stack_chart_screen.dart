@@ -451,17 +451,14 @@ class _StackChartScreenState extends State<StackChartScreen> {
                   : null;
 
               if (_touchedSpotIndex != null) {
-                if (tappedIndex == _touchedSpotIndex) {
-                  // Tapped same dot again — navigate to hand details
-                  final idx = _touchedSpotIndex!;
-                  setState(() => _touchedSpotIndex = null);
-                  _navigateToHandFromChart(idx);
-                } else if (tappedIndex != null) {
+                if (tappedIndex != null && tappedIndex != _touchedSpotIndex) {
                   // Tapped a different dot — switch tooltip
                   setState(() => _touchedSpotIndex = tappedIndex);
                 } else {
-                  // Tapped empty area — dismiss tooltip
+                  // Tapped same dot, tooltip, or empty area — navigate to hand details
+                  final idx = _touchedSpotIndex!;
                   setState(() => _touchedSpotIndex = null);
+                  _navigateToHandFromChart(idx);
                 }
                 return;
               }
