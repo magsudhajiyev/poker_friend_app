@@ -15,6 +15,30 @@
       },
       "oauth_client": [
         {
+          "client_id": "311745459306-b3jmmlrg448lvtmdabe8bn307h868kps.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.finaltable.app",
+            "certificate_hash": "e2d1aa6f76ed2347e455de1721a9cb3f67a136f9"
+          }
+        },
+        {
+          "client_id": "311745459306-mnqaqtg0eu6t8o8vhfhsobar17gjvqnc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.finaltable.app",
+            "certificate_hash": "9f26c7877e4eaade7dbf033796ba273d529fba60"
+          }
+        },
+        {
+          "client_id": "311745459306-va8anc3q9envs3eva9r62ivcha910o5v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.finaltable.app",
+            "certificate_hash": "d7c951f7069f5c5d0c87e5b89b2ce1996c3d3ba3"
+          }
+        },
+        {
           "client_id": "311745459306-povk09gd7ll56fgng8rsac54lrbgguq6.apps.googleusercontent.com",
           "client_type": 3
         }

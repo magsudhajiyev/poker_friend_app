@@ -11,6 +11,11 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
+    // Helper function to check if user is the super admin
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.email == 'magsud94@gmail.com';
+    }
+
     // FCM tokens - users can only manage their own tokens
     match /fcm_tokens/{tokenId} {
       allow read, write: if isAuthenticated() &&
@@ -25,10 +30,10 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Users collection - anyone can read (for display names), only owner can write
+    // Users collection - public read, owner or superAdmin write
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(userId);
+      allow read: if true;
+      allow write: if isOwner(userId) || isSuperAdmin();
     }
 
     // User stats - only owner can read/write
@@ -134,12 +139,12 @@ service cloud.firestore {
       }
     }
 
-    // Shared hands - public read for web viewer, authenticated create
+    // Shared hands - public read for web viewer, authenticated create, admin delete
     match /shared_hands/{shareId} {
       allow read: if true;
       allow create: if isAuthenticated();
       allow update: if false;
-      allow delete: if true;  // Admin dashboard (no auth)
+      allow delete: if isSuperAdmin();
     }
 
     // ── Public + Admin collections (web landing page & dashboard, no Firebase Auth) ──
@@ -151,39 +156,42 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Nickname claims - public read/create (web reservation), full access for admin dashboard
+    // Nickname claims - public read/create (web reservation), admin full access
     match /nickname_claims/{claimId} {
-      allow read, write: if true;
+      allow read, create: if true;
+      allow update, delete: if isSuperAdmin();
     }
 
-    // Waitlist - public read/create (landing page signup), full access for admin dashboard
+    // Waitlist - public read/create (landing page signup), admin full access
     match /waitlist/{docId} {
-      allow read, write: if true;
+      allow read, create: if true;
+      allow update, delete: if isSuperAdmin();
     }
 
-    // Contact form submissions - public create (contact form), full access for admin
+    // Contact form submissions - public create (contact form), admin read/manage
     match /contact_submissions/{docId} {
-      allow read, write: if true;
+      allow create: if true;
+      allow read, update, delete: if isSuperAdmin();
     }
 
-    // Email templates - admin dashboard only (no Firebase Auth)
+    // Email templates - admin dashboard only
     match /email_templates/{docId} {
-      allow read, write: if true;
+      allow read, write: if isSuperAdmin();
     }
 
     // Email logs - admin dashboard only
     match /email_logs/{docId} {
-      allow read, write: if true;
+      allow read, write: if isSuperAdmin();
     }
 
     // Inbox replies - admin dashboard only
     match /inbox_replies/{docId} {
-      allow read, write: if true;
+      allow read, write: if isSuperAdmin();
     }
 
     // Inbox status (read/archive/delete state) - admin dashboard only
     match /inbox_status/{docId} {
-      allow read, write: if true;
+      allow read, write: if isSuperAdmin();
     }
   }
 }

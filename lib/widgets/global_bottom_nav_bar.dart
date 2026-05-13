@@ -29,8 +29,9 @@ class GlobalBottomNavBar extends StatelessWidget {
     // FAB overflows 30px above the navbar. Include that in the total height
     // so the Scaffold reserves space and content doesn't overlap the FAB.
     const double fabOverflow = 30;
-    const double barHeight = 14 + 51 + 18; // topPad + content + bottomPad
-    const double navHeight = fabOverflow + barHeight;
+    final double systemBottomPad = MediaQuery.of(context).viewPadding.bottom;
+    final double barHeight = 14 + 51 + 18 + systemBottomPad; // topPad + content + bottomPad + system nav
+    final double navHeight = fabOverflow + barHeight;
     return SizedBox(
       height: navHeight,
       child: Stack(
@@ -53,8 +54,8 @@ class GlobalBottomNavBar extends StatelessWidget {
                   ),
                 ),
               ),
-              // Figma: pb-18, pt-14, px-24
-              padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
+              // Figma: pb-18, pt-14, px-24 + system nav inset
+              padding: EdgeInsets.fromLTRB(24, 14, 24, 18 + systemBottomPad),
               child: Builder(
                 builder: (context) {
                   final l10n = AppLocalizations.of(context);
