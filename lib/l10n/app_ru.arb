@@ -3286,6 +3286,7 @@
   "winnerSelectionBackToSingle": "Вернуться к одному победителю",
   "winnerSelectionChoppedPot": "Chopped Pot",
   "winnerSelectionConfirmChop": "Подтвердить Chop",
+  "winnerSelectionConfirmWinner": "Подтвердить победителя",
   "winnerSelectionIndividualShares": "Индивидуальные доли:",
   "winnerSelectionLongPressHint": "Долгое нажатие для Chopped Pot",
   "winnerSelectionSelectAllWinners": "Выберите всех победителей:",

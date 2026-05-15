@@ -2406,6 +2406,7 @@
   "winnerSelectionTapTheWinner": "Tap the winner:",
   "winnerSelectionLongPressHint": "Long-press for chopped pot",
   "winnerSelectionConfirmChop": "Confirm Chop",
+  "winnerSelectionConfirmWinner": "Confirm Winner",
   "winnerSelectionBackToSingle": "Back to Single Winner",
 
   "boardCardsCards": "Cards",

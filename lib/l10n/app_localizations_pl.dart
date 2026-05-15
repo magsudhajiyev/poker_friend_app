@@ -4299,6 +4299,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get winnerSelectionConfirmChop => 'Potwierdź Chop';
 
   @override
+  String get winnerSelectionConfirmWinner => 'Potwierdź zwycięzcę';
+
+  @override
   String get winnerSelectionBackToSingle => 'Wróć do jednego zwycięzcy';
 
   @override

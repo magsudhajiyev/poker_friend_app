@@ -4284,6 +4284,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get winnerSelectionConfirmChop => 'Confirm Chop';
 
   @override
+  String get winnerSelectionConfirmWinner => 'Confirm Winner';
+
+  @override
   String get winnerSelectionBackToSingle => 'Back to Single Winner';
 
   @override

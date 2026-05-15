@@ -4318,6 +4318,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get winnerSelectionConfirmChop => 'Confirmar Chop';
 
   @override
+  String get winnerSelectionConfirmWinner => 'Confirmar vencedor';
+
+  @override
   String get winnerSelectionBackToSingle => 'Voltar para vencedor único';
 
   @override

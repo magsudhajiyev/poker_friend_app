@@ -3456,6 +3456,7 @@
   "winnerSelectionBackToSingle": "Volver a un solo ganador",
   "winnerSelectionChoppedPot": "Chopped Pot",
   "winnerSelectionConfirmChop": "Confirmar Chop",
+  "winnerSelectionConfirmWinner": "Confirmar ganador",
   "winnerSelectionIndividualShares": "Partes individuales:",
   "winnerSelectionLongPressHint": "Mantén pulsado para Chopped Pot",
   "winnerSelectionSelectAllWinners": "Selecciona todos los ganadores:",

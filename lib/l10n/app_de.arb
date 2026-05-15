@@ -3470,6 +3470,7 @@
   "winnerSelectionBackToSingle": "Zurück zum einzelnen Gewinner",
   "winnerSelectionChoppedPot": "Chopped Pot",
   "winnerSelectionConfirmChop": "Chop bestätigen",
+  "winnerSelectionConfirmWinner": "Gewinner bestätigen",
   "winnerSelectionIndividualShares": "Individuelle Anteile:",
   "winnerSelectionLongPressHint": "Lang drücken für Chopped Pot",
   "winnerSelectionSelectAllWinners": "Alle Gewinner auswählen:",

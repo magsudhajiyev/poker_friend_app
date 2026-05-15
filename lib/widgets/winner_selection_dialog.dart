@@ -147,9 +147,10 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
             }
           });
         } else {
-          // Single-tap in normal mode → immediately select and save
-          selectedWinner = playerId;
-          _saveChanges();
+          // Single-tap in normal mode → select (toggle), confirm via checkmark/save button
+          setState(() {
+            selectedWinner = selectedWinner == playerId ? null : playerId;
+          });
         }
       },
       onLongPress: () {
@@ -442,40 +443,40 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
               ),
             ),
 
-            // Bottom buttons — only show in chopped pot mode (single-tap handles normal mode)
-            if (isChoppedPot)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 34, 16, 34),
-                child: Column(
-                  children: [
-                    // Save button
-                    GestureDetector(
-                      onTap: _canSave ? _saveChanges : null,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: _canSave
-                              ? const Color(0xFF89F1EC)
-                              : const Color(0xFF89F1EC).withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(110),
-                        ),
-                        child: Center(
-                          child: Text(
-                            l10n.winnerSelectionConfirmChop,
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                              letterSpacing: -0.5,
-                              height: 24 / 17,
-                            ),
+            // Bottom buttons
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 34, 16, 34),
+              child: Column(
+                children: [
+                  // Save / Confirm button
+                  GestureDetector(
+                    onTap: _canSave ? _saveChanges : null,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _canSave
+                            ? const Color(0xFF89F1EC)
+                            : const Color(0xFF89F1EC).withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(110),
+                      ),
+                      child: Center(
+                        child: Text(
+                          isChoppedPot ? l10n.winnerSelectionConfirmChop : l10n.winnerSelectionConfirmWinner,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                            letterSpacing: -0.5,
+                            height: 24 / 17,
                           ),
                         ),
                       ),
                     ),
+                  ),
+                  // Back to single winner (only in chopped mode)
+                  if (isChoppedPot) ...[
                     const SizedBox(height: 14),
-                    // Back to single winner
                     GestureDetector(
                       onTap: () {
                         setState(() {
@@ -509,8 +510,9 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
+            ),
           ],
         ),
       ),

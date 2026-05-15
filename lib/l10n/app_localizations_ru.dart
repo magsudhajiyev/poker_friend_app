@@ -4296,6 +4296,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get winnerSelectionConfirmChop => 'Подтвердить Chop';
 
   @override
+  String get winnerSelectionConfirmWinner => 'Подтвердить победителя';
+
+  @override
   String get winnerSelectionBackToSingle => 'Вернуться к одному победителю';
 
   @override

@@ -4319,6 +4319,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get winnerSelectionConfirmChop => 'Chop bestätigen';
 
   @override
+  String get winnerSelectionConfirmWinner => 'Gewinner bestätigen';
+
+  @override
   String get winnerSelectionBackToSingle => 'Zurück zum einzelnen Gewinner';
 
   @override

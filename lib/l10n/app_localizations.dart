@@ -7610,6 +7610,12 @@ abstract class AppLocalizations {
   /// **'Confirm Chop'**
   String get winnerSelectionConfirmChop;
 
+  /// No description provided for @winnerSelectionConfirmWinner.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Winner'**
+  String get winnerSelectionConfirmWinner;
+
   /// No description provided for @winnerSelectionBackToSingle.
   ///
   /// In en, this message translates to:

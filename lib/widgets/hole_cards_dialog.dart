@@ -88,6 +88,29 @@ class _HoleCardsDialogState extends State<HoleCardsDialog> {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Row(
         children: [
+          // Back button
+          GestureDetector(
+            onTap: () => Navigator.pop(
+              context,
+              HoleCards(card1: 'GO_BACK', card2: 'GO_BACK'),
+            ),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: const BoxDecoration(
+                color: Color(0xFF35373C),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.chevron_left,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
