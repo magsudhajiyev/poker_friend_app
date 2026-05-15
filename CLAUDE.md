@@ -156,6 +156,18 @@ The app has two themes. **Modern Dark (AppTheme)** is used in all newer screens.
 - Records: start time, end time, profit/loss, session name
 - Does NOT update hand-based stats (VPIP, PFR, etc.)
 
+### 2b. Post-Session Summary Card (`lib/widgets/session_summary_card.dart`)
+- Shareable PNG card shown after ending any session (full or quick logging)
+- Shows: session name, game type badge, duration, net P/L, hands played, biggest pot, best/worst hand
+- **Cash**: Net P/L = `finalStack - totalBuyIn` (both in currency)
+- **Tournament**: Net P/L = `prizeWon - totalBuyIn` from `SessionEndBankrollSheet` result (NEVER use chips - money). Also shows placement (e.g., "11th / 28"), prize won, and net profit
+- **Biggest pot**: Cash shows currency; Tournament shows BB equivalent (`biggestPot / biggestPotBB` where `biggestPotBB` is the BB level when the biggest pot occurred)
+- **Best/worst hand**: Uses pot-to-stack ratio (`pot / heroPreHandStack`) for meaningful cross-blind-level comparison. Falls back to "Hand #N" when hole cards not entered
+- `SessionSummaryData` is the data class; `SessionSummaryCard.show()` displays it as a dialog
+- Card is captured via `RepaintBoundary` for PNG sharing
+- Three code paths call `_showSessionSummary()`: `_stopSession()`, `_handleNavigationAttempt('save')`, `_endSessionFromGate()`
+- Debug test button on Profile screen dev tools for quick iteration
+
 ### 3. Statistics Tracking (7 Core Metrics)
 All stats use **incremental atomic updates** (O(1)) with opportunity-based denominators:
 

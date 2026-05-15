@@ -15,6 +15,7 @@ import '../screens/intro_screen.dart';
 import '../screens/username_setup_screen.dart';
 import '../screens/poker_hand_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
+import '../widgets/session_summary_card.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -515,7 +516,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
+          SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => _showTestSummaryCard(),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Color(0xFFFF6B6B).withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Color(0xFFFF6B6B).withAlpha(60)),
+              ),
+              child: Center(
+                child: Text(
+                  'Test Summary Card (Tournament)',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFFF6B6B),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _showTestSummaryCard() {
+    SessionSummaryCard.show(
+      context: context,
+      data: SessionSummaryData(
+        sessionName: 'Deepstack Turbo',
+        gameType: GameType.tournament,
+        profitLoss: -600.0,
+        totalBuyIn: 600.0,
+        handsPlayed: 47,
+        biggestPot: 95000,
+        biggestPotBB: 1000,
+        durationMinutes: 185,
+        finishedPlace: 11,
+        fieldSize: 28,
+        prizeWon: 0,
+        biggestPotWonCards: 'A\u2660 K\u2665',
+        biggestPotLostCards: 'Hand #42',
       ),
     );
   }

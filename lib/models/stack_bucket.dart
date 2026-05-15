@@ -20,13 +20,13 @@ class StackBucketHelper {
   /// Range labels for display.
   static String rangeLabel(StackRange range) {
     switch (range) {
-      case StackRange.short:     return '1-15bb';
-      case StackRange.belowAvg:  return '16-30bb';
-      case StackRange.average:   return '31-60bb';
-      case StackRange.deep:      return '61-80bb';
-      case StackRange.veryDeep:  return '81-100bb';
-      case StackRange.ultraDeep: return '100-150bb';
-      case StackRange.massive:   return '150+bb';
+      case StackRange.short:     return '1-15 BB';
+      case StackRange.belowAvg:  return '16-30 BB';
+      case StackRange.average:   return '31-60 BB';
+      case StackRange.deep:      return '61-80 BB';
+      case StackRange.veryDeep:  return '81-100 BB';
+      case StackRange.ultraDeep: return '100-150 BB';
+      case StackRange.massive:   return '150+ BB';
     }
   }
 
@@ -75,6 +75,6 @@ class StackBucketHelper {
   static String bbLabel(double stack, int bigBlind) {
     if (bigBlind <= 0) return stack.toStringAsFixed(0);
     final bb = stack / bigBlind;
-    return '~${bb.round()}bb';
+    return '~${bb.round()} BB';
   }
 }

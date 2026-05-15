@@ -18,6 +18,7 @@ class SessionSummaryData {
   final double totalBuyIn;
   final int handsPlayed;
   final double biggestPot;
+  final int? biggestPotBB; // BB level when biggest pot occurred
   final int durationMinutes;
   final int? finishedPlace; // tournament only
   final int? fieldSize; // tournament only
@@ -32,6 +33,7 @@ class SessionSummaryData {
     required this.totalBuyIn,
     required this.handsPlayed,
     required this.biggestPot,
+    this.biggestPotBB = 0,
     required this.durationMinutes,
     this.finishedPlace,
     this.fieldSize,
@@ -237,62 +239,73 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: logo + app name
-          Image.asset(
-            'assets/logo.png',
-            width: 28,
-            height: 28,
-          ),
-          const SizedBox(height: 20),
-
-          // Session name
-          Text(
-            data.sessionName,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-
-          // Game type pill + duration
+          // Header: logo + session info side by side
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: data.isCash
-                      ? const Color(0xFF62E3BC).withValues(alpha: 0.15)
-                      : const Color(0xFFFFB74D).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(40),
-                ),
-                child: Text(
-                  data.isCash ? 'CASH' : 'TOURNAMENT',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: data.isCash
-                        ? const Color(0xFF62E3BC)
-                        : const Color(0xFFFFB74D),
-                    letterSpacing: 0.8,
-                  ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 48,
+                  height: 48,
                 ),
               ),
-              const SizedBox(width: 10),
-              Icon(
-                Icons.access_time,
-                size: 14,
-                color: Colors.white.withValues(alpha: 0.4),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                data.formattedDuration,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 13,
-                  color: Colors.white.withValues(alpha: 0.4),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data.sessionName,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: data.isCash
+                                ? const Color(0xFF62E3BC).withValues(alpha: 0.15)
+                                : const Color(0xFFFFB74D).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(40),
+                          ),
+                          child: Text(
+                            data.isCash ? 'CASH' : 'TOURNAMENT',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: data.isCash
+                                  ? const Color(0xFF62E3BC)
+                                  : const Color(0xFFFFB74D),
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.access_time,
+                          size: 13,
+                          color: Colors.white.withValues(alpha: 0.4),
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          data.formattedDuration,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -328,9 +341,7 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
             children: [
               _buildStatItemCentered('Hands', '${data.handsPlayed}'),
               const SizedBox(width: 40),
-              _buildStatItemCentered('Biggest Pot', data.isCash
-                  ? CurrencyService.formatCash(data.biggestPot)
-                  : data.biggestPot.toStringAsFixed(0)),
+              _buildStatItemCentered('Biggest Pot', _formatBiggestPot()),
             ],
           ),
           if (data.biggestPotWonCards != null || data.biggestPotLostCards != null) ...[
@@ -461,6 +472,19 @@ class _SessionSummaryCardState extends State<SessionSummaryCard> {
         ),
       ],
     );
+  }
+
+  String _formatBiggestPot() {
+    final data = widget.data;
+    if (data.isCash) {
+      return CurrencyService.formatCash(data.biggestPot);
+    }
+    // Tournament: show BB equivalent if we know the BB level
+    if (data.biggestPotBB != null && data.biggestPotBB! > 0) {
+      final bb = (data.biggestPot / data.biggestPotBB!).round();
+      return '$bb BB';
+    }
+    return data.biggestPot.toStringAsFixed(0);
   }
 
   String _ordinal(int n) {

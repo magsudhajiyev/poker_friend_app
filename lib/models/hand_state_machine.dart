@@ -413,10 +413,11 @@ class PokerSessionManager {
 
   // Biggest pot tracking
   double biggestPot = 0.0;
-  // Biggest pot won/lost with hole cards
-  double biggestPotWon = 0.0;
+  int biggestPotBB = 0; // BB level when biggest pot occurred
+  // Best/worst hand tracking — uses pot-to-stack ratio for meaningful comparison
+  double _bestHandRatio = 0.0;  // potWon / heroPreHandStack
   String? biggestPotWonCards; // e.g. "A♠ K♥"
-  double biggestPotLost = 0.0;
+  double _worstHandRatio = 0.0; // potLost / heroPreHandStack
   String? biggestPotLostCards; // e.g. "Q♦ J♣"
 
   // Table change tracking (cash games)
@@ -686,13 +687,22 @@ class PokerSessionManager {
     final cardsStr = (cards != null && cards.isComplete)
         ? '${cards.card1} ${cards.card2}'
         : null;
+
+    // Use pot relative to hero's stack for meaningful comparison.
+    // Hero's pre-hand stack = last stack history entry (end of previous hand).
+    final heroPreHandStack = stackHistory.isNotEmpty
+        ? (stackHistory.last['stackSize'] as num).toDouble()
+        : totalBuyIn;
+    final ratio = heroPreHandStack > 0 ? potAmount / heroPreHandStack : 0.0;
+
     final heroWon = ourSeatNumber != null && winnerId == ourSeatNumber;
-    if (heroWon && potAmount > biggestPotWon) {
-      biggestPotWon = potAmount;
-      biggestPotWonCards = cardsStr;
-    } else if (!heroWon && potAmount > biggestPotLost) {
-      biggestPotLost = potAmount;
-      biggestPotLostCards = cardsStr;
+    if (heroWon && ratio > _bestHandRatio) {
+      _bestHandRatio = ratio;
+      // Show cards if available, otherwise show hand number
+      biggestPotWonCards = cardsStr ?? 'Hand #${currentHand!.handNumber}';
+    } else if (!heroWon && ratio > _worstHandRatio) {
+      _worstHandRatio = ratio;
+      biggestPotLostCards = cardsStr ?? 'Hand #${currentHand!.handNumber}';
     }
   }
 
@@ -703,9 +713,10 @@ class PokerSessionManager {
     // Set pot amount and winner if provided
     if (potAmount != null) {
       currentHand!.potAmount = potAmount;
-      // Track biggest pot
+      // Track biggest pot with BB level for display
       if (potAmount > biggestPot) {
         biggestPot = potAmount;
+        biggestPotBB = bigBlind;
       }
     }
     if (winnerId != null) {
@@ -763,9 +774,10 @@ class PokerSessionManager {
     // Set pot amount
     currentHand!.potAmount = potAmount;
 
-    // Track biggest pot
+    // Track biggest pot with BB level for display
     if (potAmount > biggestPot) {
       biggestPot = potAmount;
+      biggestPotBB = bigBlind;
     }
 
     // For chopped pots, we'll store the first winner in winnerId for compatibility

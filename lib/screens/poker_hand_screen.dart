@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../services/currency_service.dart';
@@ -134,6 +135,10 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   AnimationController? _tapFlashController;
   Animation<double>? _tapFlashOpacity;
   Color _tapFlashColor = Colors.transparent;
+  // Next hand card scatter animation
+  AnimationController? _nextHandSweepController;
+  Animation<double>? _nextHandSweepProgress;
+  int _scatterSeed = 0;
   // Set to true once the free-tier hand gate has fired for this session.
   bool _freeTierLocked = false;
 
@@ -749,6 +754,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               } catch (_) {}
             }
           }
+
+          if (!mounted) return;
+          await _showSessionSummary(bankrollResult: bankrollResult);
         }
 
         if (!mounted) return;
@@ -1089,6 +1097,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     _actionFlashTimer = null;
     _actionFlashController?.dispose();
     _tapFlashController?.dispose();
+    _nextHandSweepController?.dispose();
 
     // End session when leaving, but only if there's actual data to save
     if (sessionManager.sessionState == SessionState.active) {
@@ -1321,6 +1330,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         if (!mounted) return;
 
         // Show bankroll/session end sheet (finish position, field size, etc.)
+        Map<String, dynamic>? bankrollResult;
         final stackHistory = sessionManager.stackHistory;
         if (stackHistory.isNotEmpty) {
           final lastStack = (stackHistory.last['stackSize'] as num).toDouble();
@@ -1328,7 +1338,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           final sessionDuration = sessionManager.sessionStartTime != null
               ? DateTime.now().difference(sessionManager.sessionStartTime!).inMinutes
               : null;
-          final bankrollResult = await SessionEndBankrollSheet.show(
+          bankrollResult = await SessionEndBankrollSheet.show(
             context: context,
             gameType: sessionManager.gameType,
             profitLoss: profit,
@@ -1355,7 +1365,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         }
 
         if (!mounted) return;
-        await _showSessionSummary();
+        await _showSessionSummary(bankrollResult: bankrollResult);
         if (!mounted) return;
         Navigator.of(context).popUntil((route) => route.isFirst);
       } catch (e) {
@@ -1868,6 +1878,25 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                             decoration: BoxDecoration(
                               color: _tapFlashColor.withValues(alpha: 0.08 * (_tapFlashOpacity?.value ?? 0.0)),
                             ),
+                          ),
+                        ),
+                      ),
+
+                    // Next hand card scatter overlay
+                    if (_nextHandSweepController != null && _nextHandSweepController!.isAnimating)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: AnimatedBuilder(
+                            animation: _nextHandSweepController!,
+                            builder: (context, _) {
+                              final progress = _nextHandSweepProgress?.value ?? 0.0;
+                              return CustomPaint(
+                                painter: _CardScatterPainter(
+                                  progress: progress,
+                                  seed: _scatterSeed,
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -3533,6 +3562,21 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       );
       if (confirmed != true) return;
     }
+
+    // Play card scatter animation
+    _scatterSeed = DateTime.now().millisecondsSinceEpoch;
+    _nextHandSweepController?.dispose();
+    final sweepController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _nextHandSweepController = sweepController;
+    _nextHandSweepProgress = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: sweepController, curve: Curves.easeOut),
+    );
+    sweepController.addListener(() => setState(() {}));
+    sweepController.forward();
+    await Future.delayed(const Duration(milliseconds: 200));
 
     // Skip the entire hand - move button and start fresh without incrementing hand number
     setState(() {
@@ -5260,7 +5304,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     }
   }
 
-  Future<void> _showSessionSummary() async {
+  Future<void> _showSessionSummary({Map<String, dynamic>? bankrollResult}) async {
     final ourSeat = sessionManager.ourSeatNumber;
     final finalStack = ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length
         ? gameState.players[ourSeat - 1].currentStack
@@ -5269,16 +5313,44 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         ? DateTime.now().difference(sessionManager.sessionStartTime!).inMinutes
         : 0;
 
+    // For tournaments, use the bankroll sheet result (prize - totalBuyIn) if available.
+    // The raw finalStack is chips, not money, so finalStack - totalBuyIn is meaningless.
+    final double profitLoss;
+    final int? finishedPlace;
+    final int? fieldSize;
+    final double? prizeWon;
+    if (bankrollResult != null) {
+      profitLoss = (bankrollResult['profitLoss'] as num?)?.toDouble() ?? 0.0;
+      finishedPlace = bankrollResult['finishedPlace'] as int?;
+      fieldSize = bankrollResult['fieldSize'] as int?;
+      prizeWon = bankrollResult['prizeWon'] as double?;
+    } else if (widget.gameType == GameType.cash) {
+      profitLoss = finalStack - sessionManager.totalBuyIn;
+      finishedPlace = null;
+      fieldSize = null;
+      prizeWon = null;
+    } else {
+      // Tournament without bankroll sheet — no meaningful profit to show
+      profitLoss = 0.0;
+      finishedPlace = null;
+      fieldSize = null;
+      prizeWon = null;
+    }
+
     await SessionSummaryCard.show(
       context: context,
       data: SessionSummaryData(
         sessionName: widget.sessionName ?? sessionManager.sessionName ?? 'Session',
         gameType: widget.gameType,
-        profitLoss: finalStack - sessionManager.totalBuyIn,
+        profitLoss: profitLoss,
         totalBuyIn: sessionManager.totalBuyIn,
         handsPlayed: sessionManager.completedHands.length,
         biggestPot: sessionManager.biggestPot,
+        biggestPotBB: sessionManager.biggestPotBB,
         durationMinutes: duration,
+        finishedPlace: finishedPlace,
+        fieldSize: fieldSize,
+        prizeWon: prizeWon,
         biggestPotWonCards: sessionManager.biggestPotWonCards,
         biggestPotLostCards: sessionManager.biggestPotLostCards,
       ),
@@ -6555,4 +6627,103 @@ class _RebuyBodyState extends State<_RebuyBody> {
       ),
     );
   }
+}
+
+/// Paints two poker cards falling away (downward + shrinking) with slight rotation spread.
+class _CardScatterPainter extends CustomPainter {
+  final double progress; // 0.0 to 1.0
+  final int seed;
+
+  _CardScatterPainter({required this.progress, required this.seed});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+
+    final centerX = size.width / 2;
+    final centerY = size.height * 0.4;
+    const cardWidth = 56.0;
+    const cardHeight = 78.0;
+
+    // Both cards fall downward — depth = shrink + move down
+    final fallDistance = size.height * 0.35 * progress;
+    // Scale shrinks to simulate depth (falling away from viewer)
+    final scale = 1.0 - progress * 0.45;
+    // Opacity fades as cards fall away
+    final opacity = (1.0 - progress * 1.3).clamp(0.0, 1.0);
+
+    // Left card — slight left drift + counter-clockwise tilt
+    _drawCard(
+      canvas,
+      centerX: centerX - 14 - 12 * progress,
+      centerY: centerY + fallDistance,
+      width: cardWidth,
+      height: cardHeight,
+      rotation: -progress * 0.2,
+      scale: scale,
+      opacity: opacity,
+    );
+
+    // Right card — slight right drift + clockwise tilt (overlapping)
+    _drawCard(
+      canvas,
+      centerX: centerX + 14 + 12 * progress,
+      centerY: centerY + fallDistance * 0.9,
+      width: cardWidth,
+      height: cardHeight,
+      rotation: progress * 0.15,
+      scale: scale * 0.97,
+      opacity: opacity,
+    );
+  }
+
+  void _drawCard(
+    Canvas canvas, {
+    required double centerX,
+    required double centerY,
+    required double width,
+    required double height,
+    required double rotation,
+    required double scale,
+    required double opacity,
+  }) {
+    if (opacity <= 0) return;
+
+    canvas.save();
+    canvas.translate(centerX, centerY);
+    canvas.rotate(rotation);
+    canvas.scale(scale);
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset.zero, width: width, height: height),
+      const Radius.circular(6),
+    );
+
+    // Card face — white with opacity
+    final facePaint = Paint()
+      ..color = Color.fromRGBO(255, 255, 255, opacity * 0.9);
+    canvas.drawRRect(rrect, facePaint);
+
+    // Card border — teal accent
+    final borderPaint = Paint()
+      ..color = Color.fromRGBO(137, 241, 236, opacity * 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawRRect(rrect, borderPaint);
+
+    // Inner card back pattern
+    final innerRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset.zero, width: width - 8, height: height - 8),
+      const Radius.circular(3),
+    );
+    final innerPaint = Paint()
+      ..color = Color.fromRGBO(98, 227, 188, opacity * 0.2);
+    canvas.drawRRect(innerRect, innerPaint);
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_CardScatterPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.seed != seed;
 }
