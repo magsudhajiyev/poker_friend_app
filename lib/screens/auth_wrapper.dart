@@ -5,10 +5,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link_service.dart';
 import '../services/username_service.dart';
+import '../services/onboarding_service.dart';
 import '../l10n/app_localizations.dart';
 import 'intro_screen.dart';
 import 'home_screen.dart';
-import 'username_setup_screen.dart';
+import 'onboarding/onboarding_flow.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -23,6 +24,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   bool _waitingForRecovery = false;  // Track if we're waiting for auth to recover
   bool _authTimedOut = false;  // Track if auth stream took too long to resolve
   Future<bool>? _usernameSetupFuture;  // Stored future to prevent re-creation on stream rebuilds
+  Future<bool>? _onboardingFuture;    // Stored future for onboarding check
   Timer? _authTimeoutTimer;
   @override
   void initState() {
@@ -123,9 +125,23 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 return _buildLoadingScreen(context);
               }
               if (usernameSnapshot.data == true) {
-                return HomeScreen();
+                // Username done — check onboarding
+                _onboardingFuture ??= OnboardingService.hasCompletedOnboarding();
+                return FutureBuilder<bool>(
+                  future: _onboardingFuture,
+                  builder: (context, onboardingSnapshot) {
+                    if (onboardingSnapshot.connectionState == ConnectionState.waiting) {
+                      return _buildLoadingScreen(context);
+                    }
+                    if (onboardingSnapshot.data == true) {
+                      return HomeScreen();
+                    }
+                    return const OnboardingFlow(skipNickname: true);
+                  },
+                );
               }
-              return const UsernameSetupScreen();
+              // Username not set — onboarding flow handles nickname claim
+              return const OnboardingFlow(skipNickname: false);
             },
           );
         }
@@ -171,6 +187,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
         // Reset state when showing intro screen
         _wasSignedIn = false;
         _usernameSetupFuture = null;
+        _onboardingFuture = null;
 
         // User is not signed in
         return IntroScreen();

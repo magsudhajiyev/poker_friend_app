@@ -11898,7 +11898,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWelcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Final Table'**
+  /// **'Welcome to\nFinal Table'**
   String get onboardingWelcomeTitle;
 
   /// No description provided for @onboardingWelcomeBody.
@@ -12980,6 +12980,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Calculated Profit: {amount}'**
   String sessionEndCalculatedProfit(String amount);
+
+  /// No description provided for @onboardingWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal poker companion for logging hands, tracking stats, and improving your game.'**
+  String get onboardingWelcomeSubtitle;
+
+  /// No description provided for @onboardingNicknameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s start by choosing your nickname'**
+  String get onboardingNicknameTitle;
+
+  /// No description provided for @onboardingNicknameSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can switch between your name and nickname and change it whenever you want.'**
+  String get onboardingNicknameSubtitle;
+
+  /// No description provided for @onboardingGameTypeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your game type'**
+  String get onboardingGameTypeTitle;
+
+  /// No description provided for @onboardingGameTypeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll tailor your experience based on what you play. Let us know, are you mainly a cash or MTT player?'**
+  String get onboardingGameTypeSubtitle;
+
+  /// No description provided for @onboardingGameTypeCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Game'**
+  String get onboardingGameTypeCash;
+
+  /// No description provided for @onboardingGameTypeTournament.
+  ///
+  /// In en, this message translates to:
+  /// **'Tournament (MTT)'**
+  String get onboardingGameTypeTournament;
+
+  /// No description provided for @onboardingJourneyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where are you in your poker journey?'**
+  String get onboardingJourneyTitle;
+
+  /// No description provided for @onboardingJourneySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This helps us personalize your experience.'**
+  String get onboardingJourneySubtitle;
+
+  /// No description provided for @onboardingJourneyBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get onboardingJourneyBeginner;
+
+  /// No description provided for @onboardingJourneyFun.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing for fun'**
+  String get onboardingJourneyFun;
+
+  /// No description provided for @onboardingJourneyRegular.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular player'**
+  String get onboardingJourneyRegular;
+
+  /// No description provided for @onboardingJourneyPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro'**
+  String get onboardingJourneyPro;
+
+  /// No description provided for @onboardingMonthlySessionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How many sessions are you approximately playing a month?'**
+  String get onboardingMonthlySessionsTitle;
+
+  /// No description provided for @onboardingMonthlySessionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the wheel to select your monthly sessions.'**
+  String get onboardingMonthlySessionsSubtitle;
+
+  /// No description provided for @onboardingMonthlySessionsUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'sessions / month'**
+  String get onboardingMonthlySessionsUnit;
+
+  /// No description provided for @onboardingPurposeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is your main purpose of using Final Table?'**
+  String get onboardingPurposeTitle;
+
+  /// No description provided for @onboardingPurposeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all that apply.'**
+  String get onboardingPurposeSubtitle;
+
+  /// No description provided for @onboardingPurposeLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Logging hands'**
+  String get onboardingPurposeLogging;
+
+  /// No description provided for @onboardingPurposeBankroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking bankroll'**
+  String get onboardingPurposeBankroll;
+
+  /// No description provided for @onboardingPurposeOpponents.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysing opponents'**
+  String get onboardingPurposeOpponents;
+
+  /// No description provided for @onboardingPurposeActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Logging every action for later analysis'**
+  String get onboardingPurposeActions;
+
+  /// No description provided for @onboardingPurposeStudying.
+  ///
+  /// In en, this message translates to:
+  /// **'Studying spots'**
+  String get onboardingPurposeStudying;
+
+  /// No description provided for @onboardingPurposeSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing hand histories with friends'**
+  String get onboardingPurposeSharing;
+
+  /// No description provided for @onboardingPurposeAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing with AI'**
+  String get onboardingPurposeAi;
+
+  /// No description provided for @onboardingPurposeExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting hands to GTO tools'**
+  String get onboardingPurposeExport;
+
+  /// No description provided for @onboardingPurposeStacks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking stack sizes in tournaments'**
+  String get onboardingPurposeStacks;
+
+  /// No description provided for @onboardingContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get onboardingContinue;
+
+  /// No description provided for @onboardingGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get onboardingGetStarted;
+
+  /// No description provided for @onboardingSkipNickname.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get onboardingSkipNickname;
 }
 
 class _AppLocalizationsDelegate

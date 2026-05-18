@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'onboarding/onboarding_flow.dart';
 import '../services/auth_service.dart';
 import '../services/display_identity_service.dart';
 import '../services/subscription_service.dart';
@@ -534,6 +535,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFFFF6B6B),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 8),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OnboardingFlow(
+                    skipNickname: true,
+                    testMode: true,
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Color(0xFF6B9FFF).withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Color(0xFF6B9FFF).withAlpha(60)),
+              ),
+              child: Center(
+                child: Text(
+                  'Test Onboarding + Paywall',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6B9FFF),
                   ),
                 ),
               ),

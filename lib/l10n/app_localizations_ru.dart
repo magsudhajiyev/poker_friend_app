@@ -6795,7 +6795,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onboardingSkipTour => 'Пропустить тур';
 
   @override
-  String get onboardingWelcomeTitle => 'Добро пожаловать в Final Table';
+  String get onboardingWelcomeTitle => 'Добро пожаловать в\nFinal Table';
 
   @override
   String get onboardingWelcomeBody =>
@@ -7402,4 +7402,105 @@ class AppLocalizationsRu extends AppLocalizations {
   String sessionEndCalculatedProfit(String amount) {
     return 'Рассчитанная прибыль: $amount';
   }
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'Ваш персональный покерный помощник для записи рук, отслеживания статистики и улучшения игры.';
+
+  @override
+  String get onboardingNicknameTitle =>
+      'Давайте начнём с выбора вашего никнейма';
+
+  @override
+  String get onboardingNicknameSubtitle =>
+      'Вы можете переключаться между вашим именем и никнеймом и менять его в любое время.';
+
+  @override
+  String get onboardingGameTypeTitle => 'Выберите тип игры';
+
+  @override
+  String get onboardingGameTypeSubtitle =>
+      'Мы настроим ваш опыт в зависимости от того, во что вы играете. Расскажите нам, в основном ли вы играете cash или MTT?';
+
+  @override
+  String get onboardingGameTypeCash => 'Cash Game';
+
+  @override
+  String get onboardingGameTypeTournament => 'Tournament (MTT)';
+
+  @override
+  String get onboardingJourneyTitle =>
+      'На каком этапе вашего покерного пути вы находитесь?';
+
+  @override
+  String get onboardingJourneySubtitle =>
+      'Это поможет нам персонализировать ваш опыт.';
+
+  @override
+  String get onboardingJourneyBeginner => 'Начинающий';
+
+  @override
+  String get onboardingJourneyFun => 'Играю для удовольствия';
+
+  @override
+  String get onboardingJourneyRegular => 'Регулярный игрок';
+
+  @override
+  String get onboardingJourneyPro => 'Pro';
+
+  @override
+  String get onboardingMonthlySessionsTitle =>
+      'Сколько сессий примерно вы играете в месяц?';
+
+  @override
+  String get onboardingMonthlySessionsSubtitle =>
+      'Прокрутите колесо, чтобы выбрать количество сессий в месяц.';
+
+  @override
+  String get onboardingMonthlySessionsUnit => 'сессий / месяц';
+
+  @override
+  String get onboardingPurposeTitle =>
+      'Какова ваша основная цель использования Final Table?';
+
+  @override
+  String get onboardingPurposeSubtitle => 'Выберите все подходящие варианты.';
+
+  @override
+  String get onboardingPurposeLogging => 'Запись рук';
+
+  @override
+  String get onboardingPurposeBankroll => 'Отслеживание банкролла';
+
+  @override
+  String get onboardingPurposeOpponents => 'Анализ оппонентов';
+
+  @override
+  String get onboardingPurposeActions =>
+      'Запись каждого действия для последующего анализа';
+
+  @override
+  String get onboardingPurposeStudying => 'Изучение спотов';
+
+  @override
+  String get onboardingPurposeSharing => 'Обмен историями рук с друзьями';
+
+  @override
+  String get onboardingPurposeAi => 'Анализ с AI';
+
+  @override
+  String get onboardingPurposeExport => 'Экспорт рук в GTO-инструменты';
+
+  @override
+  String get onboardingPurposeStacks =>
+      'Отслеживание размеров стеков в турнирах';
+
+  @override
+  String get onboardingContinue => 'Продолжить';
+
+  @override
+  String get onboardingGetStarted => 'Начать';
+
+  @override
+  String get onboardingSkipNickname => 'Пропустить пока';
 }

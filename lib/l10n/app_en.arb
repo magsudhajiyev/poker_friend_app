@@ -4137,5 +4137,37 @@
     "placeholders": {
       "amount": { "type": "String" }
     }
-  }
+  },
+
+  "onboardingWelcomeTitle": "Welcome to\nFinal Table",
+  "onboardingWelcomeSubtitle": "Your personal poker companion for logging hands, tracking stats, and improving your game.",
+  "onboardingNicknameTitle": "Let's start by choosing your nickname",
+  "onboardingNicknameSubtitle": "You can switch between your name and nickname and change it whenever you want.",
+  "onboardingGameTypeTitle": "Choose your game type",
+  "onboardingGameTypeSubtitle": "We'll tailor your experience based on what you play. Let us know, are you mainly a cash or MTT player?",
+  "onboardingGameTypeCash": "Cash Game",
+  "onboardingGameTypeTournament": "Tournament (MTT)",
+  "onboardingJourneyTitle": "Where are you in your poker journey?",
+  "onboardingJourneySubtitle": "This helps us personalize your experience.",
+  "onboardingJourneyBeginner": "Beginner",
+  "onboardingJourneyFun": "Playing for fun",
+  "onboardingJourneyRegular": "Regular player",
+  "onboardingJourneyPro": "Pro",
+  "onboardingMonthlySessionsTitle": "How many sessions are you approximately playing a month?",
+  "onboardingMonthlySessionsSubtitle": "Drag the wheel to select your monthly sessions.",
+  "onboardingMonthlySessionsUnit": "sessions / month",
+  "onboardingPurposeTitle": "What is your main purpose of using Final Table?",
+  "onboardingPurposeSubtitle": "Select all that apply.",
+  "onboardingPurposeLogging": "Logging hands",
+  "onboardingPurposeBankroll": "Tracking bankroll",
+  "onboardingPurposeOpponents": "Analysing opponents",
+  "onboardingPurposeActions": "Logging every action for later analysis",
+  "onboardingPurposeStudying": "Studying spots",
+  "onboardingPurposeSharing": "Sharing hand histories with friends",
+  "onboardingPurposeAi": "Analyzing with AI",
+  "onboardingPurposeExport": "Exporting hands to GTO tools",
+  "onboardingPurposeStacks": "Tracking stack sizes in tournaments",
+  "onboardingContinue": "Continue",
+  "onboardingGetStarted": "Get Started",
+  "onboardingSkipNickname": "Skip for now"
 }

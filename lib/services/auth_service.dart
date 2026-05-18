@@ -139,6 +139,7 @@ class AuthService {
         'displayNameLower': displayName.toLowerCase(), // For case-insensitive search
         'email': email,
         'hasSetUsername': false,
+        'hasCompletedOnboarding': false,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));

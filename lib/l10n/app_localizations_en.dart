@@ -6773,7 +6773,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSkipTour => 'Skip tour';
 
   @override
-  String get onboardingWelcomeTitle => 'Welcome to Final Table';
+  String get onboardingWelcomeTitle => 'Welcome to\nFinal Table';
 
   @override
   String get onboardingWelcomeBody =>
@@ -7380,4 +7380,103 @@ class AppLocalizationsEn extends AppLocalizations {
   String sessionEndCalculatedProfit(String amount) {
     return 'Calculated Profit: $amount';
   }
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'Your personal poker companion for logging hands, tracking stats, and improving your game.';
+
+  @override
+  String get onboardingNicknameTitle =>
+      'Let\'s start by choosing your nickname';
+
+  @override
+  String get onboardingNicknameSubtitle =>
+      'You can switch between your name and nickname and change it whenever you want.';
+
+  @override
+  String get onboardingGameTypeTitle => 'Choose your game type';
+
+  @override
+  String get onboardingGameTypeSubtitle =>
+      'We\'ll tailor your experience based on what you play. Let us know, are you mainly a cash or MTT player?';
+
+  @override
+  String get onboardingGameTypeCash => 'Cash Game';
+
+  @override
+  String get onboardingGameTypeTournament => 'Tournament (MTT)';
+
+  @override
+  String get onboardingJourneyTitle => 'Where are you in your poker journey?';
+
+  @override
+  String get onboardingJourneySubtitle =>
+      'This helps us personalize your experience.';
+
+  @override
+  String get onboardingJourneyBeginner => 'Beginner';
+
+  @override
+  String get onboardingJourneyFun => 'Playing for fun';
+
+  @override
+  String get onboardingJourneyRegular => 'Regular player';
+
+  @override
+  String get onboardingJourneyPro => 'Pro';
+
+  @override
+  String get onboardingMonthlySessionsTitle =>
+      'How many sessions are you approximately playing a month?';
+
+  @override
+  String get onboardingMonthlySessionsSubtitle =>
+      'Drag the wheel to select your monthly sessions.';
+
+  @override
+  String get onboardingMonthlySessionsUnit => 'sessions / month';
+
+  @override
+  String get onboardingPurposeTitle =>
+      'What is your main purpose of using Final Table?';
+
+  @override
+  String get onboardingPurposeSubtitle => 'Select all that apply.';
+
+  @override
+  String get onboardingPurposeLogging => 'Logging hands';
+
+  @override
+  String get onboardingPurposeBankroll => 'Tracking bankroll';
+
+  @override
+  String get onboardingPurposeOpponents => 'Analysing opponents';
+
+  @override
+  String get onboardingPurposeActions =>
+      'Logging every action for later analysis';
+
+  @override
+  String get onboardingPurposeStudying => 'Studying spots';
+
+  @override
+  String get onboardingPurposeSharing => 'Sharing hand histories with friends';
+
+  @override
+  String get onboardingPurposeAi => 'Analyzing with AI';
+
+  @override
+  String get onboardingPurposeExport => 'Exporting hands to GTO tools';
+
+  @override
+  String get onboardingPurposeStacks => 'Tracking stack sizes in tournaments';
+
+  @override
+  String get onboardingContinue => 'Continue';
+
+  @override
+  String get onboardingGetStarted => 'Get Started';
+
+  @override
+  String get onboardingSkipNickname => 'Skip for now';
 }
