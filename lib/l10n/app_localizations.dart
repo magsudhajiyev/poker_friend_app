@@ -3804,6 +3804,12 @@ abstract class AppLocalizations {
   /// **'Profit/Loss'**
   String get sessionAnalyticsProfitLoss;
 
+  /// No description provided for @sessionAnalyticsNotAvailableFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available'**
+  String get sessionAnalyticsNotAvailableFull;
+
   /// No description provided for @sessionAnalyticsAvgGrowth.
   ///
   /// In en, this message translates to:

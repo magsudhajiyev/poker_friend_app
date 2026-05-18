@@ -1104,6 +1104,7 @@
   "sessionAnalyticsFinished": "Classement",
   "sessionAnalyticsAddons": "Add-ons",
   "sessionAnalyticsProfitLoss": "Profit/Perte",
+  "sessionAnalyticsNotAvailableFull": "Non disponible",
   "sessionAnalyticsAvgGrowth": "Croissance moy.",
   "sessionAnalyticsDuration": "Durée",
   "sessionAnalyticsRebuys": "Rebuys",

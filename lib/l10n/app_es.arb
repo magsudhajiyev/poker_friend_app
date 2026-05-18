@@ -1104,6 +1104,7 @@
   "sessionAnalyticsFinished": "Posición",
   "sessionAnalyticsAddons": "Add-ons",
   "sessionAnalyticsProfitLoss": "Ganancia/Pérdida",
+  "sessionAnalyticsNotAvailableFull": "No disponible",
   "sessionAnalyticsAvgGrowth": "Crecimiento prom.",
   "sessionAnalyticsDuration": "Duración",
   "sessionAnalyticsRebuys": "Rebuys",

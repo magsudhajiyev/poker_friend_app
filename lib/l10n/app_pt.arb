@@ -1127,6 +1127,7 @@
   "sessionAnalyticsFinished": "Posição",
   "sessionAnalyticsAddons": "Add-ons",
   "sessionAnalyticsProfitLoss": "Lucro/Perda",
+  "sessionAnalyticsNotAvailableFull": "Não disponível",
   "sessionAnalyticsAvgGrowth": "Crescimento Medio",
   "sessionAnalyticsDuration": "Duracao",
   "sessionAnalyticsRebuys": "Rebuys",

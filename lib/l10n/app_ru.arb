@@ -953,6 +953,7 @@
   "sessionAnalyticsFinished": "Место",
   "sessionAnalyticsAddons": "Add-ons",
   "sessionAnalyticsProfitLoss": "Прибыль/Убыток",
+  "sessionAnalyticsNotAvailableFull": "Недоступно",
   "sessionAnalyticsAvgGrowth": "Средний рост",
   "sessionAnalyticsDuration": "Продолжительность",
   "sessionAnalyticsRebuys": "Rebuys",

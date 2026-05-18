@@ -2067,6 +2067,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sessionAnalyticsProfitLoss => 'Ganancia/Pérdida';
 
   @override
+  String get sessionAnalyticsNotAvailableFull => 'No disponible';
+
+  @override
   String get sessionAnalyticsAvgGrowth => 'Crecimiento prom.';
 
   @override

@@ -2053,6 +2053,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionAnalyticsProfitLoss => 'Прибыль/Убыток';
 
   @override
+  String get sessionAnalyticsNotAvailableFull => 'Недоступно';
+
+  @override
   String get sessionAnalyticsAvgGrowth => 'Средний рост';
 
   @override

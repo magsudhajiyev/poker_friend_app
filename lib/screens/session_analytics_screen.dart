@@ -409,11 +409,10 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     return AppLocalizations.of(context).commonNotAvailable;
   }
 
-  double _getTournamentCashout() {
+  double? _getTournamentCashout() {
     final prize = widget.sessionData['prizeWon']?.toDouble();
     if (prize != null && prize > 0) return prize;
-    // Fallback: use final stack for sessions saved before prizeWon was tracked
-    return _finalStack;
+    return null; // No prize data — can't mix chips with money
   }
 
   @override
@@ -615,12 +614,17 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
             children: [
               Expanded(child: _buildMetricTile(l10n.sessionAnalyticsTotalInvested, _formatTotalInvested(_totalInvested))),
               const SizedBox(width: 10),
-              Expanded(child: _buildMetricTile(
-                l10n.sessionAnalyticsCashout,
-                _isCashGame()
-                  ? _formatCurrency(_finalStack)
-                  : CurrencyService.formatCash(_getTournamentCashout()),
-              )),
+              Expanded(child: Builder(builder: (_) {
+                final cashout = _getTournamentCashout();
+                return _buildMetricTile(
+                  l10n.sessionAnalyticsCashout,
+                  _isCashGame()
+                    ? _formatCurrency(_finalStack)
+                    : cashout != null
+                        ? CurrencyService.formatCash(cashout)
+                        : l10n.sessionAnalyticsNotAvailableFull,
+                );
+              })),
             ],
           ),
           const SizedBox(height: 10),
@@ -639,11 +643,20 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
               ),
               const SizedBox(width: 10),
               Expanded(child: Builder(builder: (_) {
-                final pl = _isCashGame() ? _profitLoss : _getTournamentCashout() - _totalInvested;
+                final tournamentCashout = _isCashGame() ? null : _getTournamentCashout();
+                final pl = _isCashGame()
+                    ? _profitLoss
+                    : tournamentCashout != null
+                        ? tournamentCashout - _totalInvested
+                        : null;
                 return _buildMetricTile(
                   l10n.sessionAnalyticsProfitLoss,
-                  '${pl >= 0 ? '+' : ''}${CurrencyService.formatCash(pl)}',
-                  valueColor: pl >= 0 ? const Color(0xFF89F1EC) : const Color(0xFFFF6B6B),
+                  pl != null
+                      ? '${pl >= 0 ? '+' : ''}${CurrencyService.formatCash(pl)}'
+                      : l10n.sessionAnalyticsNotAvailableFull,
+                  valueColor: pl != null
+                      ? (pl >= 0 ? const Color(0xFF89F1EC) : const Color(0xFFFF6B6B))
+                      : null,
                 );
               })),
             ],

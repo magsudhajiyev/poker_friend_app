@@ -1007,6 +1007,7 @@
   "sessionAnalyticsFinalStack": "Final Stack",
   "sessionAnalyticsCashout": "Cashout",
   "sessionAnalyticsProfitLoss": "Profit/Loss",
+  "sessionAnalyticsNotAvailableFull": "Not available",
   "sessionAnalyticsAvgGrowth": "Avg Growth",
   "sessionAnalyticsHourlyRate": "Hourly Rate",
   "sessionAnalyticsFinished": "Finished",

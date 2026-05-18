@@ -17,6 +17,8 @@ import '../screens/username_setup_screen.dart';
 import '../screens/poker_hand_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../widgets/session_summary_card.dart';
+import '../services/firebase_service.dart';
+import 'session_analytics_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -573,6 +575,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
+          SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => _openLatestSession(),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Color(0xFFFFB74D).withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Color(0xFFFFB74D).withAlpha(60)),
+              ),
+              child: Center(
+                child: Text(
+                  'Open Latest Session Analytics',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFFFB74D),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -597,6 +622,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
         biggestPotLostCards: 'Hand #42',
       ),
     );
+  }
+
+  Future<void> _openLatestSession() async {
+    try {
+      final userId = AuthService.currentUser?.uid;
+      if (userId == null) return;
+      final snap = await FirebaseFirestore.instance
+          .collection('poker_sessions')
+          .where('userId', isEqualTo: userId)
+          .orderBy('startTime', descending: true)
+          .limit(1)
+          .get();
+      if (snap.docs.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No sessions found')),
+          );
+        }
+        return;
+      }
+      final doc = snap.docs.first;
+      final sessionData = doc.data();
+      sessionData['id'] = doc.id;
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SessionAnalyticsScreen(
+            sessionData: sessionData,
+            sessionId: doc.id,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
 
   void _launchQuickDebugSession() {
