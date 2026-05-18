@@ -6,6 +6,7 @@ class AppColors {
   // Primary Accents (Lime Green Theme)
   static const Color limeGreen = Color(0xFF87ED81);
   static const Color accentGreen = Color(0xFFA5EC44);
+  static const Color accentSecondary = Color(0xFFA3FF78); // Figma --semantic/accent/secondary
 
   // Gradient Colors
   static const Color gradientGreenStart = Color(0xFF022F00);

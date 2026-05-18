@@ -1479,6 +1479,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallTitle => 'FINAL TABLE PREMIUM';
 
   @override
+  String get paywallAvailablePlans => 'Available plans';
+
+  @override
+  String get paywallStepLabel => 'Step 1 of 2';
+
+  @override
+  String get paywallChooseYourPlan => 'Choose your plan';
+
+  @override
+  String get paywallUpgradeOrCancel => 'Upgrade or cancel* at anytime';
+
+  @override
+  String get paywallContinue => 'Continue';
+
+  @override
   String paywallUnlockFeature(String featureName) {
     return 'Unlock $featureName';
   }
@@ -1495,10 +1510,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unlock everything Final Table has to offer. Track more hands, analyze your game, run your club.';
 
   @override
-  String get paywallProTier => 'PRO';
+  String get paywallProTier => 'Pro';
 
   @override
-  String get paywallFreeTrialBadge => '7-day free trial';
+  String get paywallFreeTrialBadge => '7-Day Free Trial';
 
   @override
   String get paywallProDescription =>
@@ -1517,16 +1532,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallExportHandsCsv => 'Export hands to CSV';
 
   @override
-  String get paywallProMonthly => '\$19.99/mo';
+  String get paywallProMonthly => '\$19.99/month';
 
   @override
-  String get paywallProYearly => '\$199.99/yr';
+  String get paywallProYearly => 'or \$199.99/year. Save about 25%**';
 
   @override
   String get paywallStartFreeTrial => 'Start 7-Day Free Trial';
 
   @override
-  String get paywallEliteTier => 'ELITE';
+  String get paywallEliteTier => 'Elite';
 
   @override
   String get paywallEliteDescription => 'Take your game to the next level.';
@@ -1544,16 +1559,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallEliteFeature3 => 'Priority support';
 
   @override
-  String get paywallEliteMonthly => '\$29.99/mo';
+  String get paywallEliteMonthly => '\$29.99/month';
 
   @override
-  String get paywallEliteYearly => '\$249.99/yr';
+  String get paywallEliteYearly => 'or \$199.99/year. Save about 25%**';
 
   @override
   String get paywallGetElite => 'Get Elite';
 
   @override
-  String get paywallClubTier => 'CLUB';
+  String get paywallClubTier => 'Club';
 
   @override
   String get paywallClubDescription =>
@@ -1572,17 +1587,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallMultiTableEvents => 'Multi-table events with rankings';
 
   @override
-  String get paywallClubMonthly => '\$39.99/mo';
+  String get paywallClubMonthly => '\$39.99/month';
 
   @override
-  String get paywallClubYearly => '\$299.99/yr';
+  String get paywallClubYearly => 'or \$199.99/year. Save about 25%**';
 
   @override
   String get paywallGetClub => 'Get Club';
 
   @override
   String get paywallDisclaimer =>
-      'Subscriptions auto-renew. Cancel anytime from your account settings.';
+      'Subscriptions auto-renew. Cancel* anytime\nfrom your account settings.';
 
   @override
   String get paywallTerms => 'Terms';

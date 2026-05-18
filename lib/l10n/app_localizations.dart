@@ -2796,6 +2796,36 @@ abstract class AppLocalizations {
   /// **'FINAL TABLE PREMIUM'**
   String get paywallTitle;
 
+  /// No description provided for @paywallAvailablePlans.
+  ///
+  /// In en, this message translates to:
+  /// **'Available plans'**
+  String get paywallAvailablePlans;
+
+  /// No description provided for @paywallStepLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 1 of 2'**
+  String get paywallStepLabel;
+
+  /// No description provided for @paywallChooseYourPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your plan'**
+  String get paywallChooseYourPlan;
+
+  /// No description provided for @paywallUpgradeOrCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade or cancel* at anytime'**
+  String get paywallUpgradeOrCancel;
+
+  /// No description provided for @paywallContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get paywallContinue;
+
   /// No description provided for @paywallUnlockFeature.
   ///
   /// In en, this message translates to:
@@ -2823,13 +2853,13 @@ abstract class AppLocalizations {
   /// No description provided for @paywallProTier.
   ///
   /// In en, this message translates to:
-  /// **'PRO'**
+  /// **'Pro'**
   String get paywallProTier;
 
   /// No description provided for @paywallFreeTrialBadge.
   ///
   /// In en, this message translates to:
-  /// **'7-day free trial'**
+  /// **'7-Day Free Trial'**
   String get paywallFreeTrialBadge;
 
   /// No description provided for @paywallProDescription.
@@ -2865,13 +2895,13 @@ abstract class AppLocalizations {
   /// No description provided for @paywallProMonthly.
   ///
   /// In en, this message translates to:
-  /// **'\$19.99/mo'**
+  /// **'\$19.99/month'**
   String get paywallProMonthly;
 
   /// No description provided for @paywallProYearly.
   ///
   /// In en, this message translates to:
-  /// **'\$199.99/yr'**
+  /// **'or \$199.99/year. Save about 25%**'**
   String get paywallProYearly;
 
   /// No description provided for @paywallStartFreeTrial.
@@ -2883,7 +2913,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallEliteTier.
   ///
   /// In en, this message translates to:
-  /// **'ELITE'**
+  /// **'Elite'**
   String get paywallEliteTier;
 
   /// No description provided for @paywallEliteDescription.
@@ -2919,13 +2949,13 @@ abstract class AppLocalizations {
   /// No description provided for @paywallEliteMonthly.
   ///
   /// In en, this message translates to:
-  /// **'\$29.99/mo'**
+  /// **'\$29.99/month'**
   String get paywallEliteMonthly;
 
   /// No description provided for @paywallEliteYearly.
   ///
   /// In en, this message translates to:
-  /// **'\$249.99/yr'**
+  /// **'or \$199.99/year. Save about 25%**'**
   String get paywallEliteYearly;
 
   /// No description provided for @paywallGetElite.
@@ -2937,7 +2967,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallClubTier.
   ///
   /// In en, this message translates to:
-  /// **'CLUB'**
+  /// **'Club'**
   String get paywallClubTier;
 
   /// No description provided for @paywallClubDescription.
@@ -2973,13 +3003,13 @@ abstract class AppLocalizations {
   /// No description provided for @paywallClubMonthly.
   ///
   /// In en, this message translates to:
-  /// **'\$39.99/mo'**
+  /// **'\$39.99/month'**
   String get paywallClubMonthly;
 
   /// No description provided for @paywallClubYearly.
   ///
   /// In en, this message translates to:
-  /// **'\$299.99/yr'**
+  /// **'or \$199.99/year. Save about 25%**'**
   String get paywallClubYearly;
 
   /// No description provided for @paywallGetClub.
@@ -2991,7 +3021,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Subscriptions auto-renew. Cancel anytime from your account settings.'**
+  /// **'Subscriptions auto-renew. Cancel* anytime\nfrom your account settings.'**
   String get paywallDisclaimer;
 
   /// No description provided for @paywallTerms.

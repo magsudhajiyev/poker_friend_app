@@ -1482,6 +1482,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallTitle => 'FINAL TABLE PREMIUM';
 
   @override
+  String get paywallAvailablePlans => 'Доступные планы';
+
+  @override
+  String get paywallStepLabel => 'Шаг 1 из 2';
+
+  @override
+  String get paywallChooseYourPlan => 'Выберите план';
+
+  @override
+  String get paywallUpgradeOrCancel => 'Улучшайте или отменяйте* в любое время';
+
+  @override
+  String get paywallContinue => 'Продолжить';
+
+  @override
   String paywallUnlockFeature(String featureName) {
     return 'Разблокировать $featureName';
   }
@@ -1498,7 +1513,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Разблокируйте все возможности Final Table. Больше раздач, анализ игры, управление клубом.';
 
   @override
-  String get paywallProTier => 'PRO';
+  String get paywallProTier => 'Pro';
 
   @override
   String get paywallFreeTrialBadge => '7 дней бесплатно';
@@ -1520,16 +1535,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallExportHandsCsv => 'Экспорт раздач в CSV';
 
   @override
-  String get paywallProMonthly => '\$19.99/мес.';
+  String get paywallProMonthly => '\$19.99/месяц';
 
   @override
-  String get paywallProYearly => '\$199.99/год';
+  String get paywallProYearly => 'или \$199.99/год. Экономия около 25%**';
 
   @override
   String get paywallStartFreeTrial => 'Начать 7-дневный пробный период';
 
   @override
-  String get paywallEliteTier => 'ELITE';
+  String get paywallEliteTier => 'Elite';
 
   @override
   String get paywallEliteDescription => 'Поднимите свою игру на новый уровень.';
@@ -1547,16 +1562,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallEliteFeature3 => 'Приоритетная поддержка';
 
   @override
-  String get paywallEliteMonthly => '\$29.99/мес.';
+  String get paywallEliteMonthly => '\$29.99/месяц';
 
   @override
-  String get paywallEliteYearly => '\$249.99/год';
+  String get paywallEliteYearly => 'или \$199.99/год. Экономия около 25%**';
 
   @override
   String get paywallGetElite => 'Получить Elite';
 
   @override
-  String get paywallClubTier => 'CLUB';
+  String get paywallClubTier => 'Club';
 
   @override
   String get paywallClubDescription =>
@@ -1575,17 +1590,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallMultiTableEvents => 'Мультистоловые турниры с рейтингами';
 
   @override
-  String get paywallClubMonthly => '\$39.99/мес.';
+  String get paywallClubMonthly => '\$39.99/месяц';
 
   @override
-  String get paywallClubYearly => '\$299.99/год';
+  String get paywallClubYearly => 'или \$199.99/год. Экономия около 25%**';
 
   @override
   String get paywallGetClub => 'Получить Club';
 
   @override
   String get paywallDisclaimer =>
-      'Подписки продлеваются автоматически. Отмена возможна в любое время в настройках аккаунта.';
+      'Подписки продлеваются автоматически. Отмените* в любое время\nв настройках аккаунта.';
 
   @override
   String get paywallTerms => 'Условия';

@@ -1498,6 +1498,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallTitle => 'FINAL TABLE PREMIUM';
 
   @override
+  String get paywallAvailablePlans => 'Verfügbare Pläne';
+
+  @override
+  String get paywallStepLabel => 'Schritt 1 von 2';
+
+  @override
+  String get paywallChooseYourPlan => 'Wähle deinen Plan';
+
+  @override
+  String get paywallUpgradeOrCancel => 'Jederzeit upgraden oder kündigen*';
+
+  @override
+  String get paywallContinue => 'Weiter';
+
+  @override
   String paywallUnlockFeature(String featureName) {
     return '$featureName freischalten';
   }
@@ -1514,10 +1529,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Schalte alles frei, was Final Table zu bieten hat. Mehr Hände tracken, dein Spiel analysieren, deinen Club leiten.';
 
   @override
-  String get paywallProTier => 'PRO';
+  String get paywallProTier => 'Pro';
 
   @override
-  String get paywallFreeTrialBadge => '7 Tage kostenlos testen';
+  String get paywallFreeTrialBadge => '7-Tage-Testversion';
 
   @override
   String get paywallProDescription =>
@@ -1536,16 +1551,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallExportHandsCsv => 'Hände als CSV exportieren';
 
   @override
-  String get paywallProMonthly => '29,99 \$/Monat';
+  String get paywallProMonthly => '19,99 \$/Monat';
 
   @override
-  String get paywallProYearly => '249,99 \$/Jahr';
+  String get paywallProYearly => 'oder 199,99 \$/Jahr. Spare ca. 25 %**';
 
   @override
   String get paywallStartFreeTrial => '7-Tage-Testversion starten';
 
   @override
-  String get paywallEliteTier => 'ELITE';
+  String get paywallEliteTier => 'Elite';
 
   @override
   String get paywallEliteDescription =>
@@ -1567,13 +1582,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallEliteMonthly => '29,99 \$/Monat';
 
   @override
-  String get paywallEliteYearly => '249,99 \$/Jahr';
+  String get paywallEliteYearly => 'oder 199,99 \$/Jahr. Spare ca. 25 %**';
 
   @override
   String get paywallGetElite => 'Elite holen';
 
   @override
-  String get paywallClubTier => 'CLUB';
+  String get paywallClubTier => 'Club';
 
   @override
   String get paywallClubDescription =>
@@ -1595,14 +1610,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallClubMonthly => '39,99 \$/Monat';
 
   @override
-  String get paywallClubYearly => '299,99 \$/Jahr';
+  String get paywallClubYearly => 'oder 199,99 \$/Jahr. Spare ca. 25 %**';
 
   @override
   String get paywallGetClub => 'Club holen';
 
   @override
   String get paywallDisclaimer =>
-      'Abonnements verlängern sich automatisch. Jederzeit in den Kontoeinstellungen kündbar.';
+      'Abos verlängern sich automatisch. Kündige* jederzeit\nin deinen Kontoeinstellungen.';
 
   @override
   String get paywallTerms => 'AGB';

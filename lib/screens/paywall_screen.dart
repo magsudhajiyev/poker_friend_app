@@ -1,33 +1,19 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
-import '../design_system/constants/decorations.dart';
 import '../design_system/constants/spacing.dart';
-import '../design_system/constants/typography.dart';
-import '../design_system/components/backgrounds/gradient_background.dart';
-import '../services/subscription_service.dart';
-import 'trial_confirmation_screen.dart';
 
-/// Paywall screen for displaying subscription options.
+/// Paywall screen showing subscription plan selection.
 ///
-/// V1 launch version: shows a two-tier layout (Pro + Club) with static
-/// pricing. Both tiers currently map to the single `premium` entitlement
-/// in RevenueCat — proper entitlement split will come with dashboard
-/// configuration work. CTA taps show a "Coming soon" snackbar until
-/// RevenueCat products are published.
+/// Displays three tiers (Pro, Elite, Club) as vertically stacked cards.
+/// Tapping a card selects it (green border). The pinned "Continue" button
+/// triggers RevenueCat's native purchase flow for the selected plan.
 class PaywallScreen extends StatefulWidget {
-  /// Optional feature name that triggered the paywall.
-  /// Shown in the subtitle (e.g. "AI Hand Analysis is a premium feature").
   final String? featureName;
 
   const PaywallScreen({super.key, this.featureName});
 
-  /// Show the paywall as a full-screen route.
-  ///
-  /// Returns `true` if the user successfully upgraded (reserved for future
-  /// use — currently always returns `null` until purchase flow is wired).
   static Future<bool?> show(BuildContext context, {String? featureName}) {
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -42,99 +28,94 @@ class PaywallScreen extends StatefulWidget {
 }
 
 class _PaywallScreenState extends State<PaywallScreen> {
-  bool _isRestoring = false;
+  int _selectedPlanIndex = 0;
 
-  Future<void> _restorePurchases() async {
-    setState(() => _isRestoring = true);
-    final success = await SubscriptionService.restorePurchases();
-    if (!mounted) return;
-    setState(() => _isRestoring = false);
-
-    if (success) {
-      Navigator.of(context).pop(true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).paywallPurchasesRestored),
-          backgroundColor: AppColors.limeGreen.withOpacity(0.2),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).paywallNoPreviousPurchases),
-        ),
-      );
-    }
-  }
-
-  void _showComingSoon(String tierLabel) {
+  void _onContinue() {
+    final l10n = AppLocalizations.of(context);
+    final tierLabels = [
+      l10n.paywallProTier,
+      l10n.paywallEliteTier,
+      l10n.paywallClubTier,
+    ];
+    // TODO: wire to RevenueCat purchase flow
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppLocalizations.of(context).paywallComingSoon(tierLabel)),
+        content: Text(l10n.paywallComingSoon(tierLabels[_selectedPlanIndex])),
         duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _showTrialConfirmation({
-    required String tierLabel,
-    required Color accentColor,
-    required String monthlyPrice,
-    required String annualPrice,
-  }) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => TrialConfirmationScreen(
-          tierLabel: tierLabel,
-          accentColor: accentColor,
-          monthlyPrice: monthlyPrice,
-          annualPrice: annualPrice,
-        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    // Scale horizontal padding based on screen width so small phones
-    // don't feel cramped and larger phones don't look stretched.
-    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 28.0);
+    final l10n = AppLocalizations.of(context);
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
-      body: Stack(
+      backgroundColor: const Color(0xFF0C0C0C),
+      body: Column(
         children: [
-          const GradientBackground(),
-          SafeArea(
-            child: Column(
+          _buildTopBar(l10n),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                top: AppSpacing.xl,
+                left: AppSpacing.md,
+                right: AppSpacing.md,
+                bottom: AppSpacing.xl,
+              ),
+              child: Column(
+                children: [
+                  _buildHeader(l10n),
+                  const SizedBox(height: 32),
+                  _buildPlanCards(l10n),
+                  const SizedBox(height: 24),
+                  _buildFooter(l10n),
+                ],
+              ),
+            ),
+          ),
+          _buildBottomButton(l10n, bottomPadding),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar(AppLocalizations l10n) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Container(
+      color: const Color(0xFF161719),
+      padding: EdgeInsets.only(top: topPadding, bottom: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 44,
+            child: Stack(
               children: [
-                _buildTopBar(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.only(
-                      top: AppSpacing.md,
-                      bottom: AppSpacing.bottomPadding,
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Padding(
+                      padding: EdgeInsets.only(left: AppSpacing.md),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: horizontalPadding,
-                          ),
-                          child: _buildHeader(),
-                        ),
-                        SizedBox(height: AppSpacing.xxxl),
-                        _buildTierCarousel(),
-                        SizedBox(height: AppSpacing.xl),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: horizontalPadding,
-                          ),
-                          child: _buildLegalFooter(),
-                        ),
-                      ],
+                  ),
+                ),
+                Center(
+                  child: Text(
+                    l10n.paywallAvailablePlans,
+                    style: const TextStyle(
+                      fontFamily: 'IBM Plex Sans',
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      height: 22 / 17,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -146,494 +127,372 @@ class _PaywallScreenState extends State<PaywallScreen> {
     );
   }
 
-  Widget _buildTopBar() {
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xxs,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _TopBarIconButton(
-            icon: Icons.close,
-            onTap: () => Navigator.of(context).pop(),
-          ),
-          TextButton(
-            onPressed: _isRestoring ? null : _restorePurchases,
-            child: _isRestoring
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
-                    ),
-                  )
-                : Text(
-                    l10n.paywallRestore,
-                    style: AppTypography.bodyMedium(
-                      color: AppColors.textSecondary,
-                    ).copyWith(fontWeight: FontWeight.w500),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    final l10n = AppLocalizations.of(context);
-    final title = widget.featureName != null
-        ? l10n.paywallUnlockFeature(widget.featureName!)
-        : l10n.paywallGoPremium;
-    final subtitle = widget.featureName != null
-        ? l10n.paywallFeatureSubtitle
-        : l10n.paywallGeneralSubtitle;
-
+  Widget _buildHeader(AppLocalizations l10n) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.paywallTitle,
-          style: AppTypography.sectionHeader(),
+          l10n.paywallStepLabel,
+          style: const TextStyle(
+            fontFamily: 'IBM Plex Sans',
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            height: 22 / 15,
+            color: Colors.white,
+          ),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: 8),
         Text(
-          title,
-          style: AppTypography.pageTitleLarge(),
+          l10n.paywallChooseYourPlan,
+          style: const TextStyle(
+            fontFamily: 'IBM Plex Sans',
+            fontSize: 28,
+            fontWeight: FontWeight.w600,
+            height: 36 / 28,
+            color: Colors.white,
+          ),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: 4),
         Text(
-          subtitle,
-          style: AppTypography.bodyMedium(
-            color: Colors.white.withOpacity(0.7),
+          l10n.paywallUpgradeOrCancel,
+          style: const TextStyle(
+            fontFamily: 'IBM Plex Sans',
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            height: 22 / 15,
+            color: Color(0xFFB9B9B9),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTierCarousel() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 28.0);
-    final cardWidth = screenWidth * 0.78;
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      clipBehavior: Clip.none,
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              width: cardWidth,
-              child: _buildProTierCard(),
-            ),
-            SizedBox(width: AppSpacing.md),
-            SizedBox(
-              width: cardWidth,
-              child: _buildEliteTierCard(),
-            ),
-            SizedBox(width: AppSpacing.md),
-            SizedBox(
-              width: cardWidth,
-              child: _buildClubTierCard(),
-            ),
+  Widget _buildPlanCards(AppLocalizations l10n) {
+    return Column(
+      children: [
+        _PlanCard(
+          tierLabel: l10n.paywallProTier,
+          tagline: l10n.paywallProDescription,
+          monthlyPrice: l10n.paywallProMonthly,
+          annualPrice: l10n.paywallProYearly,
+          features: [
+            l10n.paywallUnlimitedHandLogging,
+            l10n.paywallFullSessionHistory,
+            l10n.paywallAiHandAnalysis,
+            l10n.paywallExportHandsCsv,
           ],
+          showTrialBadge: true,
+          trialBadgeText: l10n.paywallFreeTrialBadge,
+          isSelected: _selectedPlanIndex == 0,
+          onTap: () => setState(() => _selectedPlanIndex = 0),
         ),
-      ),
-    );
-  }
-
-  Widget _buildProTierCard() {
-    final l10n = AppLocalizations.of(context);
-    return _TierCard(
-      tierLabel: l10n.paywallProTier,
-      accentColor: AppColors.buttonPrimary, // mint
-      trialBadge: l10n.paywallFreeTrialBadge,
-      tagline: l10n.paywallProDescription,
-      features: [
-        l10n.paywallUnlimitedHandLogging,
-        l10n.paywallFullSessionHistory,
-        l10n.paywallAiHandAnalysis,
-        l10n.paywallExportHandsCsv,
+        const SizedBox(height: 16),
+        _PlanCard(
+          tierLabel: l10n.paywallEliteTier,
+          tagline: l10n.paywallEliteDescription,
+          monthlyPrice: l10n.paywallEliteMonthly,
+          annualPrice: l10n.paywallEliteYearly,
+          features: [
+            l10n.paywallEverythingInProElite,
+            l10n.paywallEliteFeature1,
+            l10n.paywallEliteFeature2,
+            l10n.paywallEliteFeature3,
+          ],
+          showTrialBadge: false,
+          isSelected: _selectedPlanIndex == 1,
+          onTap: () => setState(() => _selectedPlanIndex = 1),
+        ),
+        const SizedBox(height: 16),
+        _PlanCard(
+          tierLabel: l10n.paywallClubTier,
+          tagline: l10n.paywallClubDescription,
+          monthlyPrice: l10n.paywallClubMonthly,
+          annualPrice: l10n.paywallClubYearly,
+          features: [
+            l10n.paywallEverythingInPro,
+            l10n.paywallClubManagement,
+            l10n.paywallLiveDealerVoice,
+            l10n.paywallMultiTableEvents,
+          ],
+          showTrialBadge: false,
+          isSelected: _selectedPlanIndex == 2,
+          onTap: () => setState(() => _selectedPlanIndex = 2),
+        ),
       ],
-      monthlyPrice: l10n.paywallProMonthly,
-      annualPrice: l10n.paywallProYearly,
-      ctaLabel: l10n.paywallStartFreeTrial,
-      ctaBackgroundColor: Colors.white,
-      ctaTextColor: Colors.black,
-      isHighlighted: true,
-      onTap: () => _showTrialConfirmation(
-        tierLabel: l10n.paywallProTier,
-        accentColor: AppColors.buttonPrimary,
-        monthlyPrice: l10n.paywallProMonthly,
-        annualPrice: l10n.paywallProYearly,
-      ),
     );
   }
 
-  Widget _buildEliteTierCard() {
-    final l10n = AppLocalizations.of(context);
-    return _TierCard(
-      tierLabel: l10n.paywallEliteTier,
-      accentColor: const Color(0xFFFFD700), // gold
-      trialBadge: null,
-      tagline: l10n.paywallEliteDescription,
-      features: [
-        l10n.paywallEverythingInProElite,
-        l10n.paywallEliteFeature1,
-        l10n.paywallEliteFeature2,
-        l10n.paywallEliteFeature3,
-      ],
-      monthlyPrice: l10n.paywallEliteMonthly,
-      annualPrice: l10n.paywallEliteYearly,
-      ctaLabel: l10n.paywallGetElite,
-      ctaBackgroundColor: const Color(0xFFFFD700),
-      ctaTextColor: Colors.black,
-      isHighlighted: false,
-      onTap: () => _showTrialConfirmation(
-        tierLabel: l10n.paywallEliteTier,
-        accentColor: const Color(0xFFFFD700),
-        monthlyPrice: l10n.paywallEliteMonthly,
-        annualPrice: l10n.paywallEliteYearly,
-      ),
-    );
-  }
-
-  Widget _buildClubTierCard() {
-    final l10n = AppLocalizations.of(context);
-    return _TierCard(
-      tierLabel: l10n.paywallClubTier,
-      accentColor: AppColors.limeGreen,
-      trialBadge: null,
-      tagline: l10n.paywallClubDescription,
-      features: [
-        l10n.paywallEverythingInPro,
-        l10n.paywallClubManagement,
-        l10n.paywallLiveDealerVoice,
-        l10n.paywallMultiTableEvents,
-      ],
-      monthlyPrice: l10n.paywallClubMonthly,
-      annualPrice: l10n.paywallClubYearly,
-      ctaLabel: l10n.paywallGetClub,
-      ctaBackgroundColor: AppColors.limeGreen,
-      ctaTextColor: Colors.black,
-      isHighlighted: false,
-      onTap: () => _showTrialConfirmation(
-        tierLabel: l10n.paywallClubTier,
-        accentColor: AppColors.limeGreen,
-        monthlyPrice: l10n.paywallClubMonthly,
-        annualPrice: l10n.paywallClubYearly,
-      ),
-    );
-  }
-
-  Widget _buildLegalFooter() {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildFooter(AppLocalizations l10n) {
     return Column(
       children: [
         Text(
           l10n.paywallDisclaimer,
-          style: AppTypography.bodySmall(
-            color: Colors.white.withOpacity(0.5),
-          ),
           textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'IBM Plex Sans',
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            height: 22 / 15,
+            color: Colors.white,
+          ),
         ),
-        SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _FooterLink(
-              label: l10n.paywallTerms,
-              onTap: () {
-                launchUrl(Uri.parse('https://www.finaltable.io/terms'));
-              },
-            ),
-            Text(
-              '  ·  ',
-              style: AppTypography.bodySmall(
-                color: Colors.white.withOpacity(0.3),
+            GestureDetector(
+              onTap: () => launchUrl(Uri.parse('https://www.finaltable.io/terms')),
+              child: Text(
+                l10n.paywallTerms,
+                style: const TextStyle(
+                  fontFamily: 'IBM Plex Sans',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  height: 22 / 15,
+                  color: Color(0xFFB9B9B9),
+                  decoration: TextDecoration.underline,
+                  decorationColor: Color(0xFFB9B9B9),
+                ),
               ),
             ),
-            _FooterLink(
-              label: l10n.paywallPrivacy,
-              onTap: () {
-                launchUrl(Uri.parse('https://www.finaltable.io/privacy'));
-              },
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                '\u2022',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFFB9B9B9),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => launchUrl(Uri.parse('https://www.finaltable.io/privacy')),
+              child: Text(
+                l10n.paywallPrivacy,
+                style: const TextStyle(
+                  fontFamily: 'IBM Plex Sans',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  height: 22 / 15,
+                  color: Color(0xFFB9B9B9),
+                  decoration: TextDecoration.underline,
+                  decorationColor: Color(0xFFB9B9B9),
+                ),
+              ),
             ),
           ],
         ),
       ],
     );
   }
-}
 
-/// Top bar icon button — small circular glass button matching the rest
-/// of the app's close/back affordances.
-class _TopBarIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _TopBarIconButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: AppColors.iconButtonBg,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: AppColors.whiteBorder(),
-            width: AppDecorations.borderThin,
+  Widget _buildBottomButton(AppLocalizations l10n, double bottomPadding) {
+    return Container(
+      color: const Color(0xFF0C0C0C),
+      padding: EdgeInsets.only(
+        top: 24,
+        bottom: bottomPadding > 0 ? bottomPadding : 24,
+      ),
+      child: Center(
+        child: GestureDetector(
+          onTap: _onContinue,
+          child: Container(
+            width: 323,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Center(
+              child: Text(
+                l10n.paywallContinue,
+                style: const TextStyle(
+                  fontFamily: 'IBM Plex Sans',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 20 / 15,
+                  color: Color(0xFF0C0C0C),
+                ),
+              ),
+            ),
           ),
         ),
-        child: Icon(icon, color: Colors.white, size: 20),
       ),
     );
   }
 }
 
-/// Footer text link (Terms / Privacy).
-class _FooterLink extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _FooterLink({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Text(
-        label,
-        style: AppTypography.bodySmall(
-          color: AppColors.textSecondary,
-        ).copyWith(
-          decoration: TextDecoration.underline,
-          decorationColor: AppColors.textSecondary.withOpacity(0.5),
-        ),
-      ),
-    );
-  }
-}
-
-/// A single tier card (Pro or Club).
-///
-/// Uses the app's glassmorphism style (BackdropFilter blur + white border)
-/// with optional highlight variant for the recommended tier.
-class _TierCard extends StatelessWidget {
+/// A single subscription plan card.
+class _PlanCard extends StatelessWidget {
   final String tierLabel;
-  final Color accentColor;
-  final String? trialBadge;
   final String tagline;
-  final List<String> features;
   final String monthlyPrice;
   final String annualPrice;
-  final String ctaLabel;
-  final Color ctaBackgroundColor;
-  final Color ctaTextColor;
-  final bool isHighlighted;
+  final List<String> features;
+  final bool showTrialBadge;
+  final String? trialBadgeText;
+  final bool isSelected;
   final VoidCallback onTap;
 
-  const _TierCard({
+  const _PlanCard({
     required this.tierLabel,
-    required this.accentColor,
-    required this.trialBadge,
     required this.tagline,
-    required this.features,
     required this.monthlyPrice,
     required this.annualPrice,
-    required this.ctaLabel,
-    required this.ctaBackgroundColor,
-    required this.ctaTextColor,
-    required this.isHighlighted,
+    required this.features,
+    required this.showTrialBadge,
+    this.trialBadgeText,
+    required this.isSelected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = isHighlighted
-        ? accentColor.withOpacity(0.6)
-        : AppColors.whiteBorder(opacity: 0.12);
-    final borderWidth = isHighlighted ? 1.5 : 1.0;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppDecorations.modeCardRadius),
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(
-          sigmaX: AppDecorations.blurLight,
-          sigmaY: AppDecorations.blurLight,
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: const Color(0xFF161719),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.accentSecondary : Colors.transparent,
+            width: 2,
+          ),
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.backgroundSurface.withOpacity(0.82),
-            borderRadius: BorderRadius.circular(AppDecorations.modeCardRadius),
-            border: Border.all(color: borderColor, width: borderWidth),
-            boxShadow: isHighlighted
-                ? [
-                    BoxShadow(
-                      color: accentColor.withOpacity(0.15),
-                      blurRadius: 24,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 4),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Tier name + trial badge
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    tierLabel,
+                    style: const TextStyle(
+                      fontFamily: 'IBM Plex Sans',
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
+                      height: 36 / 28,
+                      color: AppColors.accentSecondary,
                     ),
-                  ]
-                : null,
-          ),
-          padding: EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildTierHeader(),
-              SizedBox(height: AppSpacing.xs),
-              Text(
-                tagline,
-                style: AppTypography.bodyMedium(
-                  color: Colors.white.withOpacity(0.7),
+                  ),
                 ),
+                if (showTrialBadge && trialBadgeText != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.timer_outlined,
+                          size: 12,
+                          color: Color(0xFF0C0C0C),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          trialBadgeText!,
+                          style: const TextStyle(
+                            fontFamily: 'IBM Plex Sans',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            height: 16 / 11,
+                            color: Color(0xFF0C0C0C),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Tagline
+            Text(
+              tagline,
+              style: const TextStyle(
+                fontFamily: 'IBM Plex Sans',
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                height: 22 / 17,
+                color: Color(0xFFB9B9B9),
               ),
-              SizedBox(height: AppSpacing.lg),
-              ...features.map(_buildFeatureRow),
-              SizedBox(height: AppSpacing.lg),
-              _buildPricing(),
-              SizedBox(height: AppSpacing.md),
-              _buildCta(),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+
+            // Price
+            Text(
+              monthlyPrice,
+              style: const TextStyle(
+                fontFamily: 'IBM Plex Sans',
+                fontSize: 28,
+                fontWeight: FontWeight.w600,
+                height: 36 / 28,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 4),
+
+            // Annual price
+            Text(
+              annualPrice,
+              style: const TextStyle(
+                fontFamily: 'IBM Plex Sans',
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                height: 20 / 13,
+                color: Color(0xFFB9B9B9),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Divider
+            Container(
+              height: 1,
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+            const SizedBox(height: 24),
+
+            // Features
+            ...features.map(_buildFeatureRow),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildTierHeader() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          tierLabel,
-          style: AppTypography.sectionHeader(color: accentColor).copyWith(
-            fontSize: 14,
-            letterSpacing: 1.5,
-          ),
-        ),
-        const Spacer(),
-        if (trialBadge != null)
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.xs,
-              vertical: AppSpacing.xxxs + 1,
-            ),
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(AppDecorations.pillRadius),
-              border: Border.all(
-                color: accentColor.withOpacity(0.4),
-                width: AppDecorations.borderThin,
-              ),
-            ),
-            child: Text(
-              trialBadge!,
-              style: AppTypography.bodySmall(color: accentColor).copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ),
-      ],
     );
   }
 
   Widget _buildFeatureRow(String feature) {
     return Padding(
-      padding: EdgeInsets.only(bottom: AppSpacing.xxs + 2),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 18,
-            color: accentColor,
+          const Icon(
+            Icons.check,
+            size: 16,
+            color: AppColors.accentSecondary,
           ),
-          SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               feature,
-              style: AppTypography.bodyMedium(color: Colors.white),
+              style: const TextStyle(
+                fontFamily: 'IBM Plex Sans',
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                height: 22 / 15,
+                color: Color(0xFFB9B9B9),
+              ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildPricing() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Text(
-          monthlyPrice,
-          style: AppTypography.bodyLarge(color: Colors.white).copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        SizedBox(width: AppSpacing.xs),
-        Text(
-          '·',
-          style: AppTypography.bodyLarge(
-            color: Colors.white.withOpacity(0.4),
-          ),
-        ),
-        SizedBox(width: AppSpacing.xs),
-        Text(
-          annualPrice,
-          style: AppTypography.bodyLarge(
-            color: Colors.white.withOpacity(0.7),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCta() {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: ctaBackgroundColor,
-          borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
-        ),
-        padding: EdgeInsets.symmetric(
-          horizontal: AppSpacing.xxxl,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(
-              child: Text(
-                ctaLabel,
-                style: AppTypography.buttonText(color: ctaTextColor),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward,
-              color: ctaTextColor,
-              size: 22,
-            ),
-          ],
-        ),
       ),
     );
   }
