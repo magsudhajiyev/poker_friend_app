@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link_service.dart';
+import '../services/subscription_service.dart';
 import '../services/username_service.dart';
 import '../services/onboarding_service.dart';
 import '../l10n/app_localizations.dart';
@@ -113,6 +114,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
           // Process any pending deep link invitations
           WidgetsBinding.instance.addPostFrameCallback((_) {
             DeepLinkService.processPendingInvitation();
+            // Associate RevenueCat user on app restart with existing session
+            if (SubscriptionService.isInitialized) {
+              SubscriptionService.loginUser(snapshot.data!.uid);
+            }
           });
 
           // Reuse the same future across stream rebuilds to avoid re-running the check

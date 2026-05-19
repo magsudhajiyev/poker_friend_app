@@ -1632,6 +1632,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallNoPreviousPurchases => 'Keine früheren Käufe gefunden';
 
   @override
+  String get paywallWelcomePro => 'Willkommen bei Pro!';
+
+  @override
+  String get paywallPurchaseFailed =>
+      'Kauf fehlgeschlagen. Bitte versuche es erneut.';
+
+  @override
+  String get paywallSubscriptionUnavailable =>
+      'Abo-Optionen nicht verfügbar. Bitte versuche es erneut.';
+
+  @override
+  String get paywallMonthly => 'Monatlich';
+
+  @override
+  String get paywallAnnual => 'Jährlich';
+
+  @override
+  String get paywallAnnualSave => 'Jährlich (Spare ~25%)';
+
+  @override
   String paywallComingSoon(String tier) {
     return '$tier-Abonnements kommen bald';
   }

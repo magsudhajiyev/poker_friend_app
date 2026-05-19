@@ -3048,6 +3048,42 @@ abstract class AppLocalizations {
   /// **'No previous purchases found'**
   String get paywallNoPreviousPurchases;
 
+  /// No description provided for @paywallWelcomePro.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Pro!'**
+  String get paywallWelcomePro;
+
+  /// No description provided for @paywallPurchaseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase failed. Please try again.'**
+  String get paywallPurchaseFailed;
+
+  /// No description provided for @paywallSubscriptionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription options unavailable. Please try again.'**
+  String get paywallSubscriptionUnavailable;
+
+  /// No description provided for @paywallMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get paywallMonthly;
+
+  /// No description provided for @paywallAnnual.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual'**
+  String get paywallAnnual;
+
+  /// No description provided for @paywallAnnualSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual (Save ~25%)'**
+  String get paywallAnnualSave;
+
   /// No description provided for @paywallComingSoon.
   ///
   /// In en, this message translates to:

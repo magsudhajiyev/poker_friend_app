@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/account_type.dart';
 import 'app_data_cache.dart';
 import 'fcm_service.dart';
+import 'subscription_service.dart';
 import 'username_service.dart';
 import 'display_identity_service.dart';
 
@@ -66,6 +67,9 @@ class AuthService {
         debugPrint('Calling ensureUserDocument after sign in...');
         await ensureUserDocument();
         debugPrint('ensureUserDocument completed');
+
+        // RevenueCat user association - don't block sign-in
+        unawaited(SubscriptionService.loginUser(credential.user!.uid));
 
         // FCM setup runs in background - don't block sign-in
         unawaited(_setupFcmInBackground());
@@ -217,6 +221,9 @@ class AuthService {
       // FCM cleanup runs in background - don't block sign-out
       unawaited(_cleanupFcmInBackground());
 
+      // RevenueCat logout - don't block sign-out
+      unawaited(SubscriptionService.logoutUser());
+
       clearAccountTypeCache();  // Clear cached account type
       UsernameService.clearCache();
       DisplayIdentityService.clearCache();
@@ -283,6 +290,7 @@ class AuthService {
         await _syncGoogleProfileData(userCredential.user!, googleUser);
         await ensureUserDocument();
         clearExplicitLogoutFlag();
+        unawaited(SubscriptionService.loginUser(userCredential.user!.uid));
         unawaited(_setupFcmInBackground());
       }
 
@@ -331,6 +339,7 @@ class AuthService {
 
       await ensureUserDocument();
       clearExplicitLogoutFlag();
+      unawaited(SubscriptionService.loginUser(linked.user!.uid));
       unawaited(_setupFcmInBackground());
 
       return linked;

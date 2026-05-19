@@ -36,7 +36,7 @@
       "localizations" : [
 
       ],
-      "name" : "Premium",
+      "name" : "Pro",
       "subscriptions" : [
         {
           "adHocOffers" : [
@@ -45,21 +45,21 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "24.99",
+          "displayPrice" : "29.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "24210ACE",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "",
-              "displayName" : "",
+              "description" : "Unlimited hand logging, AI analysis, full history",
+              "displayName" : "Pro Monthly",
               "locale" : "en_US"
             }
           ],
-          "productID" : "premium_monthly",
+          "productID" : "pro_monthly",
           "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "Premium Monthly",
+          "referenceName" : "Pro Monthly",
           "subscriptionGroupID" : "ECD86BD7",
           "type" : "RecurringSubscription",
           "winbackOffers" : [
@@ -73,21 +73,21 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "269.99",
+          "displayPrice" : "249.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "3ED0212C",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "",
-              "displayName" : "",
+              "description" : "Unlimited hand logging, AI analysis, full history",
+              "displayName" : "Pro Annual",
               "locale" : "en_US"
             }
           ],
-          "productID" : "premium_annual",
+          "productID" : "pro_annual",
           "recurringSubscriptionPeriod" : "P1Y",
-          "referenceName" : "Premium Annual",
+          "referenceName" : "Pro Annual",
           "subscriptionGroupID" : "ECD86BD7",
           "type" : "RecurringSubscription",
           "winbackOffers" : [

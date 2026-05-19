@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
+import '../services/subscription_service.dart';
 
 /// Paywall screen showing subscription plan selection.
 ///
@@ -29,21 +31,122 @@ class PaywallScreen extends StatefulWidget {
 
 class _PaywallScreenState extends State<PaywallScreen> {
   int _selectedPlanIndex = 0;
+  bool _isAnnual = true;
+  bool _isPurchasing = false;
+  bool _isRestoring = false;
+  Offering? _offering;
 
-  void _onContinue() {
+  @override
+  void initState() {
+    super.initState();
+    _offering = SubscriptionService.currentOffering;
+    if (_offering == null) {
+      _fetchOfferings();
+    }
+  }
+
+  Future<void> _fetchOfferings() async {
+    await SubscriptionService.fetchOfferings();
+    if (mounted) {
+      setState(() {
+        _offering = SubscriptionService.currentOffering;
+      });
+    }
+  }
+
+  Future<void> _onContinue() async {
     final l10n = AppLocalizations.of(context);
-    final tierLabels = [
-      l10n.paywallProTier,
-      l10n.paywallEliteTier,
-      l10n.paywallClubTier,
-    ];
-    // TODO: wire to RevenueCat purchase flow
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.paywallComingSoon(tierLabels[_selectedPlanIndex])),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+
+    // Only Pro (index 0) is purchasable — Elite/Club show "coming soon"
+    if (_selectedPlanIndex != 0) {
+      final tierLabels = [
+        l10n.paywallProTier,
+        l10n.paywallEliteTier,
+        l10n.paywallClubTier,
+      ];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.paywallComingSoon(tierLabels[_selectedPlanIndex])),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Get the appropriate package
+    final package = _isAnnual ? _offering?.annual : _offering?.monthly;
+    debugPrint('📦 Paywall: offering=$_offering, isAnnual=$_isAnnual, package=${package?.identifier}');
+    if (package == null) {
+      // Try fetching offerings one more time before giving up
+      await SubscriptionService.fetchOfferings();
+      _offering = SubscriptionService.currentOffering;
+      final retryPackage = _isAnnual ? _offering?.annual : _offering?.monthly;
+      debugPrint('📦 Paywall retry: offering=$_offering, package=${retryPackage?.identifier}');
+      if (retryPackage != null) {
+        if (mounted) setState(() {});
+        // Re-run with the now-available package
+        return _onContinue();
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.paywallSubscriptionUnavailable),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isPurchasing = true);
+    try {
+      final success = await SubscriptionService.purchasePackage(package);
+      if (!mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.paywallWelcomePro),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.of(context).pop(true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.paywallPurchaseFailed),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPurchasing = false);
+    }
+  }
+
+  Future<void> _onRestore() async {
+    final l10n = AppLocalizations.of(context);
+    setState(() => _isRestoring = true);
+    try {
+      final success = await SubscriptionService.restorePurchases();
+      if (!mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.paywallPurchasesRestored),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.of(context).pop(true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.paywallNoPreviousPurchases),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isRestoring = false);
+    }
   }
 
   @override
@@ -67,7 +170,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
               child: Column(
                 children: [
                   _buildHeader(l10n),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+                  _buildBillingToggle(l10n),
+                  const SizedBox(height: 24),
                   _buildPlanCards(l10n),
                   const SizedBox(height: 24),
                   _buildFooter(l10n),
@@ -166,14 +271,99 @@ class _PaywallScreenState extends State<PaywallScreen> {
     );
   }
 
+  Widget _buildBillingToggle(AppLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1F21),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _isAnnual = false),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: !_isAnnual ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    l10n.paywallMonthly,
+                    style: TextStyle(
+                      fontFamily: 'IBM Plex Sans',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: !_isAnnual
+                          ? const Color(0xFF0C0C0C)
+                          : const Color(0xFFB9B9B9),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _isAnnual = true),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: _isAnnual ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    l10n.paywallAnnualSave,
+                    style: TextStyle(
+                      fontFamily: 'IBM Plex Sans',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _isAnnual
+                          ? const Color(0xFF0C0C0C)
+                          : const Color(0xFFB9B9B9),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build the price strings for Pro card from RevenueCat or fallback to l10n.
+  String _proPrimaryPrice(AppLocalizations l10n) {
+    if (_isAnnual) {
+      return _offering?.annual?.storeProduct.priceString ?? l10n.paywallProYearly;
+    }
+    return _offering?.monthly?.storeProduct.priceString ?? l10n.paywallProMonthly;
+  }
+
+  String _proSecondaryPrice(AppLocalizations l10n) {
+    if (_isAnnual) {
+      final monthly = _offering?.monthly?.storeProduct.priceString;
+      return monthly != null ? 'or $monthly/month' : l10n.paywallProMonthly;
+    }
+    final annual = _offering?.annual?.storeProduct.priceString;
+    return annual != null ? 'or $annual/year' : l10n.paywallProYearly;
+  }
+
   Widget _buildPlanCards(AppLocalizations l10n) {
     return Column(
       children: [
         _PlanCard(
           tierLabel: l10n.paywallProTier,
           tagline: l10n.paywallProDescription,
-          monthlyPrice: l10n.paywallProMonthly,
-          annualPrice: l10n.paywallProYearly,
+          primaryPrice: _isAnnual
+              ? '${_offering?.annual?.storeProduct.priceString ?? '\$249.99'}/year'
+              : '${_offering?.monthly?.storeProduct.priceString ?? '\$29.99'}/month',
+          secondaryPrice: _proSecondaryPrice(l10n),
           features: [
             l10n.paywallUnlimitedHandLogging,
             l10n.paywallFullSessionHistory,
@@ -189,8 +379,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
         _PlanCard(
           tierLabel: l10n.paywallEliteTier,
           tagline: l10n.paywallEliteDescription,
-          monthlyPrice: l10n.paywallEliteMonthly,
-          annualPrice: l10n.paywallEliteYearly,
+          primaryPrice: _isAnnual ? l10n.paywallEliteYearly : l10n.paywallEliteMonthly,
+          secondaryPrice: _isAnnual ? l10n.paywallEliteMonthly : l10n.paywallEliteYearly,
           features: [
             l10n.paywallEverythingInProElite,
             l10n.paywallEliteFeature1,
@@ -205,8 +395,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
         _PlanCard(
           tierLabel: l10n.paywallClubTier,
           tagline: l10n.paywallClubDescription,
-          monthlyPrice: l10n.paywallClubMonthly,
-          annualPrice: l10n.paywallClubYearly,
+          primaryPrice: _isAnnual ? l10n.paywallClubYearly : l10n.paywallClubMonthly,
+          secondaryPrice: _isAnnual ? l10n.paywallClubMonthly : l10n.paywallClubYearly,
           features: [
             l10n.paywallEverythingInPro,
             l10n.paywallClubManagement,
@@ -235,7 +425,33 @@ class _PaywallScreenState extends State<PaywallScreen> {
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
+        // Restore purchases button
+        GestureDetector(
+          onTap: (_isPurchasing || _isRestoring) ? null : _onRestore,
+          child: _isRestoring
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Color(0xFFB9B9B9),
+                  ),
+                )
+              : Text(
+                  l10n.paywallRestore,
+                  style: const TextStyle(
+                    fontFamily: 'IBM Plex Sans',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    height: 22 / 15,
+                    color: Color(0xFFB9B9B9),
+                    decoration: TextDecoration.underline,
+                    decorationColor: Color(0xFFB9B9B9),
+                  ),
+                ),
+        ),
+        const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -286,6 +502,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Widget _buildBottomButton(AppLocalizations l10n, double bottomPadding) {
+    final isLoading = _isPurchasing || _isRestoring;
     return Container(
       color: const Color(0xFF0C0C0C),
       padding: EdgeInsets.only(
@@ -294,25 +511,35 @@ class _PaywallScreenState extends State<PaywallScreen> {
       ),
       child: Center(
         child: GestureDetector(
-          onTap: _onContinue,
-          child: Container(
+          onTap: isLoading ? null : _onContinue,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             width: 323,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isLoading ? Colors.white.withValues(alpha: 0.6) : Colors.white,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Center(
-              child: Text(
-                l10n.paywallContinue,
-                style: const TextStyle(
-                  fontFamily: 'IBM Plex Sans',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  height: 20 / 15,
-                  color: Color(0xFF0C0C0C),
-                ),
-              ),
+              child: _isPurchasing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF0C0C0C),
+                      ),
+                    )
+                  : Text(
+                      l10n.paywallContinue,
+                      style: const TextStyle(
+                        fontFamily: 'IBM Plex Sans',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        height: 20 / 15,
+                        color: Color(0xFF0C0C0C),
+                      ),
+                    ),
             ),
           ),
         ),
@@ -325,8 +552,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
 class _PlanCard extends StatelessWidget {
   final String tierLabel;
   final String tagline;
-  final String monthlyPrice;
-  final String annualPrice;
+  final String primaryPrice;
+  final String secondaryPrice;
   final List<String> features;
   final bool showTrialBadge;
   final String? trialBadgeText;
@@ -336,8 +563,8 @@ class _PlanCard extends StatelessWidget {
   const _PlanCard({
     required this.tierLabel,
     required this.tagline,
-    required this.monthlyPrice,
-    required this.annualPrice,
+    required this.primaryPrice,
+    required this.secondaryPrice,
     required this.features,
     required this.showTrialBadge,
     this.trialBadgeText,
@@ -428,9 +655,9 @@ class _PlanCard extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Price
+            // Primary price
             Text(
-              monthlyPrice,
+              primaryPrice,
               style: const TextStyle(
                 fontFamily: 'IBM Plex Sans',
                 fontSize: 28,
@@ -441,9 +668,9 @@ class _PlanCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
 
-            // Annual price
+            // Secondary price
             Text(
-              annualPrice,
+              secondaryPrice,
               style: const TextStyle(
                 fontFamily: 'IBM Plex Sans',
                 fontSize: 13,

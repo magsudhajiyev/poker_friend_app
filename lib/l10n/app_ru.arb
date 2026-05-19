@@ -630,6 +630,12 @@
   "paywallPrivacy": "Конфиденциальность",
   "paywallPurchasesRestored": "Покупки восстановлены",
   "paywallNoPreviousPurchases": "Предыдущие покупки не найдены",
+  "paywallWelcomePro": "Добро пожаловать в Pro!",
+  "paywallPurchaseFailed": "Покупка не удалась. Попробуйте снова.",
+  "paywallSubscriptionUnavailable": "Варианты подписки недоступны. Попробуйте снова.",
+  "paywallMonthly": "Ежемесячно",
+  "paywallAnnual": "Ежегодно",
+  "paywallAnnualSave": "Ежегодно (Скидка ~25%)",
   "paywallComingSoon": "Подписка {tier} скоро появится",
   "@paywallComingSoon": {
     "placeholders": {

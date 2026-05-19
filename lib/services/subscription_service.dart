@@ -18,7 +18,7 @@ class SubscriptionService {
   static String get _androidApiKey => EnvConfig.revenueCatAndroidApiKey;
 
   // Entitlement identifier - must match RevenueCat dashboard
-  static const String premiumEntitlement = 'premium';
+  static const String premiumEntitlement = 'pro';
 
   // Cached subscription state
   static bool _isPremium = false;

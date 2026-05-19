@@ -805,6 +805,12 @@
   "paywallPrivacy": "Confidentialité",
   "paywallPurchasesRestored": "Achats restaurés",
   "paywallNoPreviousPurchases": "Aucun achat précédent trouvé",
+  "paywallWelcomePro": "Bienvenue dans Pro !",
+  "paywallPurchaseFailed": "Achat échoué. Veuillez réessayer.",
+  "paywallSubscriptionUnavailable": "Options d'abonnement indisponibles. Veuillez réessayer.",
+  "paywallMonthly": "Mensuel",
+  "paywallAnnual": "Annuel",
+  "paywallAnnualSave": "Annuel (Économisez ~25%)",
   "paywallComingSoon": "Abonnements {tier} bientôt disponibles",
   "@paywallComingSoon": {
     "placeholders": {

@@ -1628,6 +1628,26 @@ class AppLocalizationsPt extends AppLocalizations {
   String get paywallNoPreviousPurchases => 'Nenhuma compra anterior encontrada';
 
   @override
+  String get paywallWelcomePro => 'Bem-vindo ao Pro!';
+
+  @override
+  String get paywallPurchaseFailed =>
+      'Compra falhou. Por favor, tente novamente.';
+
+  @override
+  String get paywallSubscriptionUnavailable =>
+      'Opções de assinatura indisponíveis. Por favor, tente novamente.';
+
+  @override
+  String get paywallMonthly => 'Mensal';
+
+  @override
+  String get paywallAnnual => 'Anual';
+
+  @override
+  String get paywallAnnualSave => 'Anual (Economize ~25%)';
+
+  @override
   String paywallComingSoon(String tier) {
     return 'Assinaturas $tier em breve';
   }

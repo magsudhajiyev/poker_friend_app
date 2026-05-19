@@ -1615,6 +1615,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallNoPreviousPurchases => 'Предыдущие покупки не найдены';
 
   @override
+  String get paywallWelcomePro => 'Добро пожаловать в Pro!';
+
+  @override
+  String get paywallPurchaseFailed => 'Покупка не удалась. Попробуйте снова.';
+
+  @override
+  String get paywallSubscriptionUnavailable =>
+      'Варианты подписки недоступны. Попробуйте снова.';
+
+  @override
+  String get paywallMonthly => 'Ежемесячно';
+
+  @override
+  String get paywallAnnual => 'Ежегодно';
+
+  @override
+  String get paywallAnnualSave => 'Ежегодно (Скидка ~25%)';
+
+  @override
   String paywallComingSoon(String tier) {
     return 'Подписка $tier скоро появится';
   }

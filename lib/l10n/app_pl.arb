@@ -630,6 +630,12 @@
   "paywallPrivacy": "Prywatnosc",
   "paywallPurchasesRestored": "Zakupy przywrocone",
   "paywallNoPreviousPurchases": "Nie znaleziono poprzednich zakupow",
+  "paywallWelcomePro": "Witaj w Pro!",
+  "paywallPurchaseFailed": "Zakup nie powiodl sie. Sprobuj ponownie.",
+  "paywallSubscriptionUnavailable": "Opcje subskrypcji niedostepne. Sprobuj ponownie.",
+  "paywallMonthly": "Miesiecznie",
+  "paywallAnnual": "Rocznie",
+  "paywallAnnualSave": "Rocznie (Oszczedz ~25%)",
   "paywallComingSoon": "Subskrypcje {tier} juz wkrotce",
   "@paywallComingSoon": {
     "placeholders": {

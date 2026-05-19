@@ -1612,6 +1612,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallNoPreviousPurchases => 'No previous purchases found';
 
   @override
+  String get paywallWelcomePro => 'Welcome to Pro!';
+
+  @override
+  String get paywallPurchaseFailed => 'Purchase failed. Please try again.';
+
+  @override
+  String get paywallSubscriptionUnavailable =>
+      'Subscription options unavailable. Please try again.';
+
+  @override
+  String get paywallMonthly => 'Monthly';
+
+  @override
+  String get paywallAnnual => 'Annual';
+
+  @override
+  String get paywallAnnualSave => 'Annual (Save ~25%)';
+
+  @override
   String paywallComingSoon(String tier) {
     return '$tier subscriptions coming soon';
   }
