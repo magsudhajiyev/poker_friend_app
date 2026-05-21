@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 
@@ -50,6 +51,14 @@ class PokerTableWidget extends StatelessWidget {
   /// Table height as fraction of available height (default 0.72).
   final double tableHeightFraction;
 
+  /// Seat ellipse width fraction — defaults to tableWidthFraction.
+  /// Set larger than tableWidthFraction to push seats outside the table edge.
+  final double? seatWidthFraction;
+
+  /// Seat ellipse height fraction — defaults to tableHeightFraction.
+  /// Set larger than tableHeightFraction to push seats outside the table edge.
+  final double? seatHeightFraction;
+
   const PokerTableWidget({
     Key? key,
     required this.activeSeatMap,
@@ -63,6 +72,8 @@ class PokerTableWidget extends StatelessWidget {
     this.centerContent,
     this.tableWidthFraction = 0.85,
     this.tableHeightFraction = 0.72,
+    this.seatWidthFraction,
+    this.seatHeightFraction,
   }) : super(key: key);
 
   // ─── SEAT POSITION MATH ─────────────────────────────────────────
@@ -76,7 +87,9 @@ class PokerTableWidget extends StatelessWidget {
     final double radiusY = (areaSize.height * heightFraction) / 2;
 
     final double angleStep = (2 * math.pi) / 9;
-    const double startAngle = math.pi * 1.25 + (2 * math.pi) / 9;
+    // +π/12 (15°) rotates the layout so the gap between seats 7 and 8
+    // falls at 180° (left-center), aligning with the notch in Table.svg.
+    const double startAngle = math.pi * 1.25 + (2 * math.pi) / 9 + math.pi / 12;
     final double angle = startAngle + (angleStep * (seatNumber - 1));
 
     return Offset(
@@ -98,7 +111,7 @@ class PokerTableWidget extends StatelessWidget {
   /// Compute the angle for a seat (used for button offset).
   static double getSeatAngle(int seatNumber) {
     final double angleStep = (2 * math.pi) / 9;
-    const double startAngle = math.pi * 1.25 + (2 * math.pi) / 9;
+    const double startAngle = math.pi * 1.25 + (2 * math.pi) / 9 + math.pi / 12;
     return startAngle + (angleStep * (seatNumber - 1));
   }
 
@@ -125,8 +138,8 @@ class PokerTableWidget extends StatelessWidget {
               final seatNumber = index + 1;
               final isActive = activeSeatMap[seatNumber] ?? false;
               final position = getSeatPosition(seatNumber, areaSize,
-                  widthFraction: tableWidthFraction,
-                  heightFraction: tableHeightFraction);
+                  widthFraction: seatWidthFraction ?? tableWidthFraction,
+                  heightFraction: seatHeightFraction ?? tableHeightFraction);
 
               if (seatBuilder != null) {
                 // Custom seat builder — caller provides the full widget
@@ -154,78 +167,12 @@ class PokerTableWidget extends StatelessWidget {
     );
   }
 
-  /// The table felt surface with Figma's green gradient + double border.
-  /// Matches Figma node 1015:7173-7174.
   Widget _buildTableSurface(double width, double height) {
-    // Use half of each dimension for a true ellipse
-    final outerRadius = BorderRadius.all(
-      Radius.elliptical(width / 2, height / 2),
-    );
-    const borderW = 16.5;
-    final innerRadius = BorderRadius.all(
-      Radius.elliptical((width - borderW * 2) / 2, (height - borderW * 2) / 2),
-    );
-    const railW = 5.9;
-    final innermost = BorderRadius.all(
-      Radius.elliptical(
-        (width - (borderW + railW) * 2) / 2,
-        (height - (borderW + railW) * 2) / 2,
-      ),
-    );
-
-    return Container(
+    return SvgPicture.asset(
+      'assets/icons/Table.svg',
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        borderRadius: outerRadius,
-        border: Border.all(
-          color: const Color(0xFF161A14),
-          width: borderW,
-        ),
-        gradient: const RadialGradient(
-          center: Alignment.center,
-          radius: 0.85,
-          colors: [
-            Color(0xFF224747),
-            Color(0xFF123631),
-            Color(0xFF02261A),
-          ],
-          stops: [0.0, 0.5, 1.0],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 20,
-            spreadRadius: 0,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: innerRadius,
-          border: Border.all(
-            color: const Color(0xFF12332D),
-            width: railW,
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: innermost,
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [
-                  Color(0x4D375E6B),
-                  Colors.transparent,
-                ],
-                stops: [0.0, 0.08],
-              ),
-            ),
-          ),
-        ),
-      ),
+      fit: BoxFit.fill,
     );
   }
 
@@ -233,27 +180,23 @@ class PokerTableWidget extends StatelessWidget {
 
   Widget _buildDefaultSeatCircle(int seatNumber, bool isActive) {
     return Container(
-      width: 38,
-      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
-        color: isActive ? Colors.black : const Color(0xFF2A2A2E),
-        shape: BoxShape.circle,
+        color: const Color(0xFF161719),
+        borderRadius: BorderRadius.circular(35),
         border: Border.all(
           color: isActive
-              ? const Color(0xFF89F1EC)
-              : const Color(0xFF89F1EC).withValues(alpha: 0.3),
+              ? const Color(0xFFA3FF78)
+              : const Color(0xFF2C2C2E),
           width: 2,
         ),
       ),
-      child: Center(
-        child: Text(
-          '$seatNumber',
-          style: GoogleFonts.inter(
-            color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.4),
-            fontWeight: FontWeight.w700,
-            fontSize: 17,
-            height: 1.45,
-          ),
+      child: Text(
+        '$seatNumber',
+        style: GoogleFonts.ibmPlexMono(
+          color: const Color(0xFFA3FF78),
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -282,7 +225,7 @@ class PokerTableWidget extends StatelessWidget {
 
   List<Widget> _buildDefaultSeatWidgets(
       BuildContext context, int seatNumber, bool isActive, Offset position) {
-    const double circleR = 19.0; // half of 38
+    const double circleR = 15.5; // half of ~31px pill height
     final variant = getSeatLayoutVariant(seatNumber);
     final label = seatLabels[seatNumber] ?? '';
 
@@ -365,8 +308,8 @@ class PokerTableWidget extends StatelessWidget {
     final buttonOffsetX = -50 * math.cos(seatAngle);
     final buttonOffsetY = -50 * math.sin(seatAngle);
 
-    final buttonImage = Image.asset(
-      'icons/button.png',
+    final buttonImage = SvgPicture.asset(
+      'assets/icons/Dealer Button.svg',
       width: 32,
       height: 32,
     );
@@ -383,7 +326,7 @@ class PokerTableWidget extends StatelessWidget {
               data: buttonPosition!,
               feedback: Opacity(
                 opacity: 0.7,
-                child: Image.asset('icons/button.png', width: 40, height: 40),
+                child: SvgPicture.asset('assets/icons/Dealer Button.svg', width: 40, height: 40),
               ),
               childWhenDragging: Opacity(
                 opacity: 0.3,

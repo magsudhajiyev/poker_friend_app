@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,9 +13,6 @@ import '../onboarding/onboarding_tour.dart';
 import '../onboarding/onboarding_progress_bar.dart';
 import 'poker_hand_screen.dart';
 
-/// Unified session setup screen that merges session config + seat setup
-/// into a single scrollable view. Replaces the old 2-screen flow
-/// (IndividualSessionSetupScreen → SeatSetupScreen) for Full mode.
 class UnifiedSessionSetupScreen extends StatefulWidget {
   const UnifiedSessionSetupScreen({super.key});
 
@@ -76,7 +72,6 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     super.initState();
     _initSeats();
     _loadHeroName();
-    // Intentionally NOT loading saved defaults — start fresh each time
     _scheduleOnboardingTour();
   }
 
@@ -140,9 +135,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     OnboardingState.tableTourPending = false;
     OnboardingState.advanceTo(3);
 
-    // Scroll down to table section, then show the tour
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // Scroll to bottom to reveal the table
       await _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 400),
@@ -187,7 +180,6 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
         ? _sessionNameController.text
         : 'Session';
 
-    // Build session manager
     final sessionManager = PokerSessionManager(
       smallBlind: _smallBlind,
       bigBlind: _bigBlind,
@@ -198,7 +190,6 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       startingStack: startingStack,
     );
 
-    // Register players
     for (int seat = 1; seat <= 9; seat++) {
       if (_seatActive[seat] == true) {
         final name = _seatNames[seat] ?? 'Player $seat';
@@ -208,14 +199,12 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       }
     }
 
-    // Ensure hero is registered
     if (_heroSeat != null && _seatActive[_heroSeat!] != true) {
       final l10n = AppLocalizations.of(context);
       sessionManager.addPlayer(_heroSeat!, _heroName.isNotEmpty ? _heroName : l10n.setupHero);
       sessionManager.setPlayerStack(_heroSeat!, startingStack);
     }
 
-    // Validate button is on an active seat — if not, move to first active seat
     int buttonPos = _buttonPosition;
     if (_seatActive[buttonPos] != true) {
       for (int seat = 1; seat <= 9; seat++) {
@@ -256,7 +245,6 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
         ? buyIn
         : (double.tryParse(_startingStackController.text) ?? 0);
 
-    // Build seated players map for opponent badge display
     final seatedPlayers = <String, int>{};
     for (int s = 1; s <= 9; s++) {
       if (_seatActive[s] == true && (_seatNames[s]?.isNotEmpty ?? false)) {
@@ -283,7 +271,6 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           }) {
             setState(() {
               if (isHero) {
-                // Clear previous hero seat completely
                 if (_heroSeat != null && _heroSeat != seatNumber) {
                   _seatActive[_heroSeat!] = false;
                   _seatNames[_heroSeat!] = '';
@@ -294,7 +281,6 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                 _seatNames[seatNumber] = _heroName.isNotEmpty ? _heroName : name;
                 _seatStacks[seatNumber] = stack;
               } else if (isActive) {
-                // Check if this player name is already seated elsewhere — reseat
                 if (name.isNotEmpty) {
                   for (int s = 1; s <= 9; s++) {
                     if (s != seatNumber &&
@@ -312,7 +298,6 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                 _seatNames[seatNumber] = name;
                 _seatStacks[seatNumber] = stack;
               } else {
-                // Removing player
                 _seatActive[seatNumber] = false;
                 _seatNames[seatNumber] = '';
                 _seatStacks[seatNumber] = 0;
@@ -323,63 +308,14 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     );
   }
 
-  // ─── UI HELPERS ──────────────────────────────────────────────────
-
-  Widget _buildIcon(String path, double size, Color color) {
-    if (path.endsWith('.svg')) {
-      return SvgPicture.asset(
-        path,
-        width: size,
-        height: size,
-        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-      );
+  void _updateBlindsForGameType() {
+    if (_gameType == GameType.cash) {
+      _smallBlind = 1;
+      _bigBlind = 2;
+    } else {
+      _smallBlind = 100;
+      _bigBlind = 200;
     }
-    return Image.asset(path, width: size, height: size, color: color);
-  }
-
-  InputDecoration _inputDecoration(String hint, {String? prefixText, String? suffixText}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: GoogleFonts.ibmPlexSans(
-        color: Colors.white.withOpacity(0.4),
-        fontSize: 17,
-        fontWeight: FontWeight.w400,
-        height: 1.44,
-      ),
-      prefixText: prefixText,
-      prefixStyle: GoogleFonts.ibmPlexSans(
-        color: Colors.white,
-        fontSize: 17,
-        fontWeight: FontWeight.w400,
-        height: 1.44,
-      ),
-      suffixText: suffixText,
-      suffixStyle: GoogleFonts.ibmPlexSans(
-        color: Colors.white,
-        fontSize: 17,
-        fontWeight: FontWeight.w400,
-        height: 1.44,
-      ),
-      filled: true,
-      fillColor: const Color(0xFF1C1C1E),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: const Color(0xFF1B262D).withOpacity(0.6),
-        ),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: const Color(0xFF1B262D).withOpacity(0.6),
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF89F1EC)),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    );
   }
 
   // ─── BUILD ───────────────────────────────────────────────────────
@@ -387,442 +323,573 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
+      backgroundColor: const Color(0xFF0C0C0C),
+      body: Column(
         children: [
-          // Teal gradient background
-          Positioned(
-            top: -screenWidth * 0.3,
-            right: -screenWidth * 0.25,
-            child: Transform.scale(
-              scaleX: 1.0,
-              scaleY: 0.7,
-              child: Container(
-                width: screenWidth * 1.5,
-                height: screenWidth * 1.2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 0.5,
-                    colors: [
-                      const Color(0xFF1A4A4A),
-                      const Color(0xFF133538).withOpacity(0.7),
-                      const Color(0xFF133538).withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.3, 0.6, 1.0],
-                  ),
-                ),
+          _buildHeader(l10n),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildFormSection(l10n),
+                  const SizedBox(height: 24),
+                  _buildTableCard(l10n),
+                  const SizedBox(height: 32),
+                  _buildStartButton(l10n),
+                  const SizedBox(height: 48),
+                ],
               ),
             ),
           ),
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Close button
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF3C3C43).withOpacity(0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: _buildIcon(
-                              'icons/figma_icons/close.svg',
-                              16,
-                              Colors.white,
-                            ),
-                          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── HEADER ──────────────────────────────────────────────────────
+
+  Widget _buildHeader(AppLocalizations l10n) {
+    return Container(
+      color: const Color(0xFF161719),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 44,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      behavior: HitTestBehavior.opaque,
+                      child: const SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Center(
+                          child: Icon(Icons.chevron_left,
+                              color: Colors.white, size: 24),
                         ),
                       ),
-                      Text(
+                    ),
+                    Expanded(
+                      child: Text(
                         l10n.setupSessionSetup,
+                        textAlign: TextAlign.center,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
-                          color: Colors.white,
                           fontWeight: FontWeight.w600,
-                          letterSpacing: -0.43,
-                          height: 1.3,
+                          color: Colors.white,
+                          height: 22 / 17,
                         ),
                       ),
-                      // Start button (checkmark)
-                      GestureDetector(
-                        onTap: _isFormValid ? _startSession : null,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: _isFormValid
-                                ? const Color(0xFF62E3BC)
-                                : const Color(0xFF3C3C43).withOpacity(0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: _buildIcon(
-                              'icons/figma_icons/check.svg',
-                              16,
-                              _isFormValid
-                                  ? Colors.black
-                                  : Colors.white.withOpacity(0.5),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Onboarding progress bar
-                if (OnboardingState.isOnboardingActive)
-                  const OnboardingProgressBar(),
-
-                // Scrollable content
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-
-                        // ── SESSION FORM SECTION ──
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // ── Session Name ──────────────────────────
-                            _buildCard(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildCardTitle(l10n.setupSessionName),
-                                  const SizedBox(height: 12),
-                                  TextField(
-                                    controller: _sessionNameController,
-                                    textInputAction: TextInputAction.done,
-                                    style: _textFieldStyle,
-                                    decoration: _inputDecoration(
-                                        l10n.setupSessionNameHint),
-                                    onChanged: (_) => setState(() {}),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // ── Game Type ─────────────────────────────
-                            _buildCard(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildCardTitle(l10n.setupGameType),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _buildToggle(
-                                          l10n.setupCashGame,
-                                          _gameType == GameType.cash,
-                                          () => setState(() {
-                                            _gameType = GameType.cash;
-                                            _updateBlindsForGameType();
-                                          }),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: _buildToggle(
-                                          l10n.setupTournament,
-                                          _gameType == GameType.tournament,
-                                          () => setState(() {
-                                            _gameType = GameType.tournament;
-                                            _updateBlindsForGameType();
-                                          }),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // ── Blinds Row ────────────────────────────
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildBlindCard(l10n.setupSmallBlind,
-                                      _gameType == GameType.cash
-                                          ? '${CurrencyService.symbol}$_smallBlind'
-                                          : '$_smallBlind', () {
-                                    _showBlindDialog(l10n.setupSmallBlind, _smallBlind,
-                                        (v) {
-                                      setState(() => _smallBlind = v);
-                                    });
-                                  }),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _buildBlindCard(l10n.setupBigBlind,
-                                      _gameType == GameType.cash
-                                          ? '${CurrencyService.symbol}$_bigBlind'
-                                          : '$_bigBlind', () {
-                                    _showBlindDialog(l10n.setupBigBlind, _bigBlind, (v) {
-                                      setState(() => _bigBlind = v);
-                                    });
-                                  }),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // ── Buy-in ────────────────────────────────
-                            _buildCard(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildCardTitle(l10n.setupBuyInAmount),
-                                  const SizedBox(height: 12),
-                                  TextField(
-                                    controller: _buyInController,
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                            decimal: true),
-                                    textInputAction: TextInputAction.done,
-                                    style: _textFieldStyle,
-                                    decoration:
-                                        _inputDecoration(l10n.setupEnterAmount, prefixText: CurrencyService.prefixText, suffixText: CurrencyService.suffixText),
-                                    onChanged: (_) => setState(() {}),
-                                  ),
-                                  if (_gameType == GameType.cash) ...[
-                                    const SizedBox(height: 10),
-                                    Row(
-                                      children: [
-                                        _buildIcon(
-                                          'icons/figma_icons/info.svg',
-                                          16,
-                                          const Color(0xFF89F1EC),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            l10n.setupStartingStackEqualsBuyIn,
-                                            style: GoogleFonts.ibmPlexSans(
-                                              color: Colors.white.withOpacity(0.5),
-                                              fontSize: 13,
-                                              height: 1.4,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-
-                            // ── Starting Stack (tournament only) ──────
-                            if (_gameType == GameType.tournament) ...[
-                              const SizedBox(height: 12),
-                              Builder(builder: (context) {
-                                final stack = double.tryParse(
-                                    _startingStackController.text);
-                                final hasError =
-                                    stack != null && stack < _bigBlind;
-                                return _buildCard(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      _buildCardTitle(l10n.setupStartingStack),
-                                      const SizedBox(height: 12),
-                                      TextField(
-                                        controller: _startingStackController,
-                                        keyboardType:
-                                            const TextInputType.numberWithOptions(
-                                                decimal: true),
-                                        textInputAction: TextInputAction.done,
-                                        style: _textFieldStyle,
-                                        decoration: InputDecoration(
-                                          hintText: l10n.setupEnterChipStack,
-                                          hintStyle: GoogleFonts.ibmPlexSans(
-                                            color: Colors.white.withOpacity(0.4),
-                                            fontSize: 17,
-                                            height: 1.44,
-                                          ),
-                                          filled: true,
-                                          fillColor: const Color(0xFF1C1C1E),
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            borderSide: BorderSide(
-                                              color: hasError
-                                                  ? const Color(0xFFFF4444)
-                                                  : const Color(0xFF1B262D)
-                                                      .withOpacity(0.6),
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            borderSide: BorderSide(
-                                              color: hasError
-                                                  ? const Color(0xFFFF4444)
-                                                  : const Color(0xFF1B262D)
-                                                      .withOpacity(0.6),
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            borderSide: BorderSide(
-                                              color: hasError
-                                                  ? const Color(0xFFFF4444)
-                                                  : const Color(0xFF89F1EC),
-                                            ),
-                                          ),
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 16, vertical: 14),
-                                        ),
-                                        onChanged: (_) => setState(() {}),
-                                      ),
-                                      if (hasError) ...[
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Must be at least the Big Blind ($_bigBlind)',
-                                          style: GoogleFonts.ibmPlexSans(
-                                            fontSize: 12,
-                                            color: const Color(0xFFFF4444),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                );
-                              }),
-                            ],
-
-                            // ── BB Ante (tournament only) ─────────────
-                            if (_gameType == GameType.tournament) ...[
-                              const SizedBox(height: 12),
-                              _buildCard(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      l10n.setupBbAnte,
-                                      style: GoogleFonts.ibmPlexSans(
-                                        fontSize: 17,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.44,
-                                      ),
-                                    ),
-                                    _buildSwitch(
-                                      _hasBBante,
-                                      (v) => setState(() => _hasBBante = v),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ── SECTION: Table Setup (keyed for onboarding) ──
-                        Column(
-                          key: _tableSectionKey,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSectionHeader(l10n.setupTableSection),
-                            const SizedBox(height: 8),
-                            Text(
-                              l10n.setupTableInstructions,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 13,
-                                color: Colors.white.withOpacity(0.5),
-                                height: 1.4,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-
-                            // ── Poker Table ───────────────────────────
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.38,
-                              child: PokerTableWidget(
-                                activeSeatMap: _seatActive,
-                                seatLabels: _buildSeatLabels(),
-                                buttonPosition: _buttonPosition,
-                                showDealerButton: true,
-                                isDealerButtonDraggable: true,
-                                onDealerButtonMoved: (newSeat) {
-                                  setState(() => _buttonPosition = newSeat);
-                                },
-                                seatBuilder: (seatNumber, isActive) {
-                                  return _buildSeatWidget(seatNumber);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ── Start Session Button ──────────────────
-                        GestureDetector(
-                          onTap: _isFormValid ? _startSession : null,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            decoration: BoxDecoration(
-                              color: _isFormValid
-                                  ? const Color(0xFF62E3BC)
-                                  : const Color(0xFF1C1C1E),
-                              borderRadius: BorderRadius.circular(110),
-                            ),
-                            child: Center(
-                              child: Text(
-                                l10n.setupStartSession,
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 17,
-                                  color: _isFormValid
-                                      ? Colors.black
-                                      : Colors.white.withOpacity(0.4),
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.43,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 100),
-                      ],
                     ),
-                  ),
+                    const SizedBox(width: 44),
+                  ],
                 ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            if (OnboardingState.isOnboardingActive) const OnboardingProgressBar(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── FORM SECTION ────────────────────────────────────────────────
+
+  Widget _buildFormSection(AppLocalizations l10n) {
+    return Column(
+      children: [
+        // Session Name
+        _buildFormRow(
+          label: 'Session\nName',
+          crossAxisAlignment: CrossAxisAlignment.center,
+          content: _buildTextField(
+            controller: _sessionNameController,
+            hint: 'Enter name',
+          ),
+        ),
+        _buildDivider(),
+
+        // Game Type
+        _buildFormRow(
+          label: 'Choose\nGame Type',
+          crossAxisAlignment: CrossAxisAlignment.center,
+          content: Row(
+            children: [
+              _buildRadioOption(
+                l10n.setupCashGame,
+                _gameType == GameType.cash,
+                () => setState(() {
+                  _gameType = GameType.cash;
+                  _updateBlindsForGameType();
+                }),
+              ),
+              const SizedBox(width: 16),
+              _buildRadioOption(
+                l10n.setupTournament,
+                _gameType == GameType.tournament,
+                () => setState(() {
+                  _gameType = GameType.tournament;
+                  _updateBlindsForGameType();
+                }),
+              ),
+            ],
+          ),
+        ),
+        _buildDivider(),
+
+        // Buy-in Amount
+        _buildFormRow(
+          label: 'Buy-in\nAmount',
+          crossAxisAlignment: CrossAxisAlignment.start,
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTextField(
+                controller: _buyInController,
+                hint: l10n.setupEnterAmount,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                prefixText: CurrencyService.prefixText,
+                suffixText: CurrencyService.suffixText,
+              ),
+              if (_gameType == GameType.cash) ...[
+                const SizedBox(height: 8),
+                _buildInfoNote(l10n.setupStartingStackEqualsBuyIn),
               ],
+            ],
+          ),
+        ),
+        _buildDivider(),
+
+        // Blinds
+        _buildFormRow(
+          label: 'Blinds',
+          crossAxisAlignment: CrossAxisAlignment.center,
+          content: Row(
+            children: [
+              Expanded(
+                child: _buildBlindInput(
+                  l10n.setupSmallBlind,
+                  _gameType == GameType.cash
+                      ? '${CurrencyService.symbol}$_smallBlind'
+                      : '$_smallBlind',
+                  () => _showBlindDialog(l10n.setupSmallBlind, _smallBlind,
+                      (v) => setState(() => _smallBlind = v)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildBlindInput(
+                  l10n.setupBigBlind,
+                  _gameType == GameType.cash
+                      ? '${CurrencyService.symbol}$_bigBlind'
+                      : '$_bigBlind',
+                  () => _showBlindDialog(l10n.setupBigBlind, _bigBlind,
+                      (v) => setState(() => _bigBlind = v)),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Tournament-only fields
+        if (_gameType == GameType.tournament) ...[
+          _buildDivider(),
+          Builder(builder: (context) {
+            final stack = double.tryParse(_startingStackController.text);
+            final hasError = stack != null && stack < _bigBlind;
+            return _buildFormRow(
+              label: 'Starting\nStack',
+              crossAxisAlignment: CrossAxisAlignment.start,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTextField(
+                    controller: _startingStackController,
+                    hint: l10n.setupEnterChipStack,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    hasError: hasError,
+                  ),
+                  if (hasError) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Must be at least the Big Blind ($_bigBlind)',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 12,
+                        color: const Color(0xFFFF3B30),
+                        height: 16 / 12,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }),
+          _buildDivider(),
+          _buildFormRow(
+            label: 'BB Ante',
+            crossAxisAlignment: CrossAxisAlignment.center,
+            content: Align(
+              alignment: Alignment.centerLeft,
+              child: _buildSwitch(
+                  _hasBBante, (v) => setState(() => _hasBBante = v)),
             ),
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildFormRow({
+    required String label,
+    required Widget content,
+    required CrossAxisAlignment crossAxisAlignment,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Row(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+                height: 1.44,
+              ),
+            ),
+          ),
+          const SizedBox(width: 40),
+          Expanded(child: content),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      color: Color(0xFF2C2C2E),
+    );
+  }
+
+  // ─── FORM INPUTS ─────────────────────────────────────────────────
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    String? hint,
+    TextInputType? keyboardType,
+    String? prefixText,
+    String? suffixText,
+    bool hasError = false,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      textInputAction: TextInputAction.done,
+      style: GoogleFonts.ibmPlexSans(
+        color: Colors.white,
+        fontSize: 15,
+        fontWeight: FontWeight.w400,
+      ),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.ibmPlexSans(
+          color: const Color(0xFFB9B9B9),
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+        ),
+        prefixText: prefixText,
+        prefixStyle: GoogleFonts.ibmPlexSans(
+          color: Colors.white,
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+        ),
+        suffixText: suffixText,
+        suffixStyle: GoogleFonts.ibmPlexSans(
+          color: Colors.white,
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+        ),
+        filled: true,
+        fillColor: const Color(0xFF161719),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: hasError
+              ? const BorderSide(color: Color(0xFFFF3B30), width: 1.5)
+              : BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: hasError
+                ? const Color(0xFFFF3B30)
+                : const Color(0xFF4CDE78),
+            width: 1.5,
+          ),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      onChanged: (_) => setState(() {}),
+    );
+  }
+
+  Widget _buildRadioOption(
+      String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: 44,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: const Color(0xFF161719),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFF4CDE78)
+                      : const Color(0xFF161719),
+                  width: 1.5,
+                ),
+              ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF4CDE78),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlindInput(String label, String value, VoidCallback onTap) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFFB9B9B9),
+          ),
+        ),
+        const SizedBox(height: 4),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: double.infinity,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161719),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              value,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFFB9B9B9),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoNote(String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 1),
+          child: Icon(Icons.info_outline,
+              color: Color(0xFF4CDE78), size: 16),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFFB9B9B9),
+              height: 16 / 11,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSwitch(bool value, ValueChanged<bool> onChanged) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: Container(
+        width: 51,
+        height: 31,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: value
+              ? const Color(0xFF4CDE78)
+              : const Color(0xFF161719),
+          borderRadius: BorderRadius.circular(16),
+          border: value
+              ? null
+              : Border.all(color: const Color(0xFF2C2C2E)),
+        ),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 200),
+          alignment:
+              value ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            width: 27,
+            height: 27,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── TABLE CARD ──────────────────────────────────────────────────
+
+  Widget _buildTableCard(AppLocalizations l10n) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        key: _tableSectionKey,
+        width: double.infinity,
+        color: const Color(0xFF161719),
+        child: Column(
+          children: [
+            const SizedBox(height: 18),
+            Text(
+              l10n.setupTableInstructions,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+                height: 22 / 15,
+              ),
+            ),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.50,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Dotted background — cover fills the full area
+                  Image.asset(
+                    'assets/icons/Table bg_small.png',
+                    fit: BoxFit.cover,
+                  ),
+                  // Table + seats
+                  PokerTableWidget(
+                    activeSeatMap: _seatActive,
+                    seatLabels: _buildSeatLabels(),
+                    buttonPosition: _buttonPosition,
+                    showDealerButton: true,
+                    isDealerButtonDraggable: true,
+                    // Table oval occupies 68% width / 72% height of the area
+                    tableWidthFraction: 0.68,
+                    tableHeightFraction: 0.72,
+                    // Seat centers match the table outline boundary
+                    seatWidthFraction: 0.68,
+                    seatHeightFraction: 0.72,
+                    onDealerButtonMoved: (newSeat) {
+                      setState(() => _buttonPosition = newSeat);
+                    },
+                    seatBuilder: (seatNumber, isActive) {
+                      return _buildSeatWidget(seatNumber);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── START BUTTON ────────────────────────────────────────────────
+
+  Widget _buildStartButton(AppLocalizations l10n) {
+    final isValid = _isFormValid;
+    return GestureDetector(
+      onTap: isValid ? _startSession : null,
+      child: Container(
+        width: double.infinity,
+        padding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+        decoration: BoxDecoration(
+          color: isValid
+              ? const Color(0xFF4CDE78)
+              : const Color(0xFF4CDE78).withValues(alpha: 0.35),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          l10n.setupStartSession,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF0C0C0C),
+            height: 20 / 15,
+          ),
+        ),
       ),
     );
   }
@@ -835,80 +902,81 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     final name = _seatNames[seatNumber] ?? '';
     final variant = PokerTableWidget.getSeatLayoutVariant(seatNumber);
 
-    final circleColor = isHero
-        ? const Color(0xFF62E3BC)
-        : isActive
-            ? const Color(0xFF89F1EC)
-            : const Color(0xFF89F1EC).withOpacity(0.3);
-
-    final circleFill = isActive ? Colors.black : const Color(0xFF2A2A2E);
-
     final l10n = AppLocalizations.of(context);
     final displayName = isHero
         ? (_heroName.isNotEmpty ? _heroName : l10n.setupMe)
         : (name.isNotEmpty
-            ? (name.length > 7 ? '${name.substring(0, 7)}..' : name)
+            ? (name.length > 6 ? '${name.substring(0, 6)}..' : name)
             : '');
 
-    // Build circle + label
-    Widget circle = Container(
-      width: 38,
-      height: 38,
-      decoration: BoxDecoration(
-        color: circleFill,
-        shape: BoxShape.circle,
-        border: Border.all(color: circleColor, width: 2),
-      ),
-      child: Center(
-        child: isHero
-            ? const Icon(Icons.person, color: Color(0xFF62E3BC), size: 18)
-            : Text(
-                '$seatNumber',
-                style: GoogleFonts.inter(
-                  color: isActive
-                      ? Colors.white
-                      : Colors.white.withOpacity(0.4),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 17,
-                ),
-              ),
+    final borderColor = (isHero || isActive)
+        ? const Color(0xFFA3FF78)
+        : const Color(0xFF2C2C2E);
+
+    final chip = GestureDetector(
+      onTap: () => _onSeatTap(seatNumber),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161719),
+          borderRadius: BorderRadius.circular(35),
+          border: Border.all(color: borderColor, width: 2),
+        ),
+        child: Text(
+          '$seatNumber',
+          style: GoogleFonts.ibmPlexMono(
+            color: const Color(0xFFA3FF78),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
     );
 
-    Widget label = Text(
-      displayName.isNotEmpty ? displayName : (isActive ? 'P$seatNumber' : ''),
-      style: GoogleFonts.ibmPlexSans(
-        color: isActive ? Colors.white : Colors.white.withOpacity(0.4),
-        fontSize: 10,
-        fontWeight: FontWeight.w500,
-      ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
+    if (displayName.isEmpty) return chip;
 
-    // Layout depends on seat position
-    Widget content;
+    final badge = _buildNameBadge(displayName, isHero);
+    const gap = SizedBox(width: 4, height: 4);
+
     if (variant == 'top') {
-      content = Column(
+      return Column(
         mainAxisSize: MainAxisSize.min,
-        children: [circle, const SizedBox(height: 4), label],
+        children: [badge, gap, chip],
       );
     } else if (variant == 'right') {
-      content = Row(
+      return Row(
         mainAxisSize: MainAxisSize.min,
-        children: [circle, const SizedBox(width: 6), label],
+        children: [chip, gap, badge],
       );
     } else {
-      // left
-      content = Row(
+      return Row(
         mainAxisSize: MainAxisSize.min,
-        children: [label, const SizedBox(width: 6), circle],
+        children: [badge, gap, chip],
       );
     }
+  }
 
-    return GestureDetector(
-      onTap: () => _onSeatTap(seatNumber),
-      child: content,
+  Widget _buildNameBadge(String name, bool isHero) {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: isHero
+            ? const Color(0xFFA3FF78)
+            : const Color(0xFF2C2C2E),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        name,
+        style: GoogleFonts.ibmPlexSans(
+          color:
+              isHero ? const Color(0xFF0C0C0C) : Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 
@@ -925,190 +993,25 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     return labels;
   }
 
-  // ─── REUSABLE CARD WIDGETS ───────────────────────────────────────
-
-  Widget _buildCard({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF131616),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: child,
-    );
-  }
-
-  Widget _buildCardTitle(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.ibmPlexSans(
-        fontSize: 17,
-        color: const Color(0xFF62E3BC),
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.43,
-        height: 1.3,
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.ibmPlexSans(
-        fontSize: 12,
-        color: const Color(0xFF87ED81),
-        fontWeight: FontWeight.w600,
-        letterSpacing: 1.0,
-      ),
-    );
-  }
-
-  TextStyle get _textFieldStyle => GoogleFonts.ibmPlexSans(
-        color: Colors.white,
-        fontSize: 17,
-        fontWeight: FontWeight.w400,
-        height: 1.44,
-      );
-
-  Widget _buildToggle(String title, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1C1C1E),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF89F1EC)
-                : const Color(0xFF1B262D).withOpacity(0.6),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            title,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 15,
-              color: isSelected
-                  ? const Color(0xFF89F1EC)
-                  : Colors.white.withOpacity(0.6),
-              fontWeight: FontWeight.w500,
-              height: 1.44,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBlindCard(String title, String value, VoidCallback onTap) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF131616),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 15,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-              height: 1.44,
-            ),
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: onTap,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1C1C1E),
-                borderRadius: BorderRadius.circular(80),
-                border: Border.all(
-                  color: const Color(0xFF1B262D).withOpacity(0.6),
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  value,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 17,
-                    color: Colors.white.withOpacity(0.6),
-                    fontWeight: FontWeight.w400,
-                    height: 1.44,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSwitch(bool value, ValueChanged<bool> onChanged) {
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: Container(
-        width: 51,
-        height: 31,
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          color: value ? const Color(0xFF62E3BC) : const Color(0xFF1C1C1E),
-          borderRadius: BorderRadius.circular(16),
-          border: value
-              ? null
-              : Border.all(
-                  color: const Color(0xFF1B262D).withOpacity(0.6),
-                ),
-        ),
-        child: AnimatedAlign(
-          duration: const Duration(milliseconds: 200),
-          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            width: 27,
-            height: 27,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─── DIALOGS ─────────────────────────────────────────────────────
+  // ─── BLIND DIALOG ────────────────────────────────────────────────
 
   void _showBlindDialog(
       String title, int currentValue, ValueChanged<int> onConfirm) {
     final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController(text: currentValue.toString());
+    final controller =
+        TextEditingController(text: currentValue.toString());
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF131616),
+        backgroundColor: const Color(0xFF161719),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
         ),
         title: Text(
           title,
           style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFF62E3BC),
+            color: Colors.white,
             fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
@@ -1119,9 +1022,32 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           textInputAction: TextInputAction.done,
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
-            fontSize: 17,
+            fontSize: 15,
           ),
-          decoration: _inputDecoration('Enter value'),
+          decoration: InputDecoration(
+            hintText: 'Enter value',
+            hintStyle: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFFB9B9B9),
+              fontSize: 15,
+            ),
+            filled: true,
+            fillColor: const Color(0xFF0C0C0C),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                  color: Color(0xFF4CDE78), width: 1.5),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
           autofocus: true,
         ),
         actions: [
@@ -1130,7 +1056,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
             child: Text(
               l10n.commonCancel,
               style: GoogleFonts.ibmPlexSans(
-                color: Colors.white.withOpacity(0.6),
+                color: const Color(0xFFB9B9B9),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1146,7 +1072,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
             child: Text(
               l10n.commonOk,
               style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF62E3BC),
+                color: const Color(0xFF4CDE78),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1154,15 +1080,5 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
         ],
       ),
     );
-  }
-
-  void _updateBlindsForGameType() {
-    if (_gameType == GameType.cash) {
-      _smallBlind = 1;
-      _bigBlind = 2;
-    } else {
-      _smallBlind = 100;
-      _bigBlind = 200;
-    }
   }
 }
