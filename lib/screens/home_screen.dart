@@ -112,6 +112,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? _loadError;
   bool _isBankrollHidden = false;
 
+  // Play style tooltip overlay
+  OverlayEntry? _playStyleTooltipEntry;
+  final GlobalKey _playStyleInfoKey = GlobalKey(debugLabel: 'playStyleInfo');
+
   // Bankroll card flip animation
   late AnimationController _flipController;
   late Animation<double> _flipAnimation;
@@ -1161,6 +1165,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void dispose() {
     _seatSubscription?.cancel();
     _clubNotificationSubscription?.cancel();
+    _playStyleTooltipEntry?.remove();
     _progressAnimationController.dispose();
     _flipController.dispose();
     _resultController.dispose();
@@ -1529,7 +1534,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgMainV2,
       extendBody: true,
       extendBodyBehindAppBar: true,
       drawer: AppNavigationDrawer(
@@ -1541,7 +1546,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           final topPadding = MediaQuery.of(context).padding.top;
           final isAndroid = Theme.of(context).platform == TargetPlatform.android;
           final extraTopPadding = isAndroid ? 12.0 : 0.0;
-          final headerHeight = topPadding + extraTopPadding + 100;
+          final headerHeight = topPadding + extraTopPadding + 62;
 
           return Stack(
             children: [
@@ -1575,23 +1580,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         // Earnings Chart
                         _buildEarningsCard(),
 
-                        const SizedBox(height: 32),
-
-                        // Recent Sessions
-                        _buildRecentSessionsCard(),
-
-                        const SizedBox(height: 32),
-
-                        // Upcoming Events
-                        _buildUpcomingEventsCard(),
-
                       const SizedBox(height: 100),
                     ],
                   ),
                 ),
               ),
 
-              // Glassmorphic header overlay
+              // Header overlay
               Positioned(
                 top: 0,
                 left: 0,
@@ -1600,33 +1595,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     OnboardingProgressBar(),
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(34),
-                        bottomRight: Radius.circular(34),
-                      ),
-                      child: BackdropFilter(
-                        filter: ui.ImageFilter.blur(sigmaX: 27, sigmaY: 27),
-                        child: HomeHeader(
-                          userName: userName,
-                          subtitle: AppLocalizations.of(context).homeWelcomeBack,
-                          onMenuPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const QRScanScreen()),
-                            );
-                          },
-                          onNotificationPressed: () {
-                            _showNotificationsDropdown(context);
-                          },
-                          onSettingsPressed: () {
-                            _scaffoldKey.currentState?.openDrawer();
-                          },
-                          showNotificationBadge: _unreadNotificationCount > 0,
-                          notificationCount: _unreadNotificationCount,
-                        ),
-                      ),
-                    ),
+                    _buildNewHeader(context, topPadding, extraTopPadding),
                   ],
                 ),
               ),
@@ -1660,6 +1629,55 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         },
       ),
       bottomNavigationBar: GlobalBottomNavBar(currentScreen: 'home', fabKey: _fabKey, sessionsKey: _sessionsNavKey),
+    );
+  }
+
+  // ── Figma v2 Header ──────────────────────────────────────────────
+  Widget _buildNewHeader(BuildContext context, double topPadding, double extraTopPadding) {
+    return Container(
+      color: AppColors.cardBorderV2, // #161719 surface
+      padding: EdgeInsets.fromLTRB(16, topPadding + extraTopPadding + 6, 16, 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Logo
+          Image.asset('assets/icons/Logo horizontal-text.png', height: 34, fit: BoxFit.contain),
+
+          // Right: bell + menu
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _showNotificationsDropdown(context),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    _buildIcon('icons/flat_icons/bell.png', 24, Colors.white),
+                    if (_unreadNotificationCount > 0)
+                      Positioned(
+                        right: -2,
+                        top: -2,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEF5350),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              GestureDetector(
+                onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                child: const Icon(Icons.menu, color: Colors.white, size: 24),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -1852,6 +1870,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildStatsGrid() {
+    final l10n = AppLocalizations.of(context);
+    final playStyleName = _getPlayStyleName();
+    final isUnknown = playStyleName.contains('/50');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1859,16 +1881,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
-            AppLocalizations.of(context).homeRecentActivity,
+            l10n.homeRecentActivity,
             style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF8C8C8C),
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
           ),
         ),
         const SizedBox(height: 2),
-        // 2x2 grid of stat cards
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
@@ -1877,15 +1898,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   Expanded(
                     child: _buildStatCell(
-                      AppLocalizations.of(context).statsSessions,
-                      '${playerStats['totalSessions'] ?? 0}',
+                      label: l10n.homePlayStyle,
+                      value: playStyleName,
+                      iconBg: AppColors.cardIconBlue,
+                      icon: SvgPicture.asset(
+                        'assets/icons/GameController.svg',
+                        width: 18,
+                        height: 18,
+                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                      ),
+                      onInfoTap: isUnknown ? _showPlayStyleTooltip : null,
+                      infoKey: isUnknown ? _playStyleInfoKey : null,
                     ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: _buildStatCell(
-                      AppLocalizations.of(context).homeWinRate,
-                      '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
+                      label: l10n.statsSessions,
+                      value: '${playerStats['totalSessions'] ?? 0}',
+                      iconBg: AppColors.cardIconPurple,
+                      icon: SvgPicture.asset(
+                        'assets/icons/DiceFour.svg',
+                        width: 18,
+                        height: 18,
+                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                      ),
                     ),
                   ),
                 ],
@@ -1895,13 +1932,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   Expanded(
                     child: _buildStatCell(
-                      AppLocalizations.of(context).homeHours,
-                      '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(0)}',
+                      label: l10n.homeWinRate,
+                      value: '${(playerStats['winRate'] ?? 0.0).toStringAsFixed(0)}%',
+                      iconBg: AppColors.cardIconOrange,
+                      icon: SvgPicture.asset(
+                        'assets/icons/Trophy.svg',
+                        width: 18,
+                        height: 18,
+                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: _buildPlayStyleCell(),
+                    child: _buildStatCell(
+                      label: l10n.homeHours,
+                      value: '${(playerStats['totalHours'] ?? 0.0).toStringAsFixed(0)}',
+                      iconBg: AppColors.cardIconRed,
+                      icon: SvgPicture.asset(
+                        'assets/icons/ClockUser.svg',
+                        width: 18,
+                        height: 18,
+                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1912,38 +1966,170 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildStatCell(String label, String value) {
+  Widget _buildStatCell({
+    required String label,
+    required String value,
+    required Color iconBg,
+    required Widget icon,
+    VoidCallback? onInfoTap,
+    GlobalKey? infoKey,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF101115),
+        border: Border.all(color: AppColors.cardBorderV2, width: 1),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w400,
-              color: const Color(0xFF9A9B9E),
-              height: 1.44,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(child: icon),
+              ),
+              const SizedBox(height: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondaryV2,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    value,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-              height: 0.75,
+          if (onInfoTap != null)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: GestureDetector(
+                key: infoKey,
+                onTap: onInfoTap,
+                behavior: HitTestBehavior.opaque,
+                child: SvgPicture.asset(
+                  'assets/icons/Info.svg',
+                  width: 16,
+                  height: 16,
+                  colorFilter: const ColorFilter.mode(
+                    Color(0xFF9A9B9E), BlendMode.srcIn),
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
+  }
+
+  void _showPlayStyleTooltip() {
+    if (_playStyleTooltipEntry != null) {
+      _dismissPlayStyleTooltip();
+      return;
+    }
+
+    final box = _playStyleInfoKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return;
+
+    // Top-center of the info icon in global coordinates
+    final iconCenter = box.localToGlobal(Offset(box.size.width / 2, 0));
+    final screenHeight = MediaQuery.of(context).size.height;
+    final l10n = AppLocalizations.of(context)!;
+
+    _playStyleTooltipEntry = OverlayEntry(
+      builder: (ctx) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _dismissPlayStyleTooltip,
+        child: Stack(
+          children: [
+            Positioned(
+              left: 16,
+              right: 16,
+              // Position the tooltip pill above the icon, leaving 6px gap for the arrow
+              bottom: screenHeight - iconCenter.dy + 6,
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Tooltip pill
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2C2C2E),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/icons/Info.svg',
+                            width: 12,
+                            height: 12,
+                            colorFilter: const ColorFilter.mode(
+                              Color(0xFFB9B9B9), BlendMode.srcIn),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              l10n.homePlayStyleTooltip,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFFB9B9B9),
+                                height: 16 / 11,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Downward caret arrow aligned under the info icon
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: (iconCenter.dx - 16 - 6).clamp(0.0, double.infinity),
+                      ),
+                      child: CustomPaint(
+                        size: const Size(12, 6),
+                        painter: _DownArrowPainter(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_playStyleTooltipEntry!);
+  }
+
+  void _dismissPlayStyleTooltip() {
+    _playStyleTooltipEntry?.remove();
+    _playStyleTooltipEntry = null;
   }
 
   void _flipBankrollCard() {
@@ -1993,212 +2179,126 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  Widget _buildBankrollCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: AnimatedSize(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        child: AnimatedBuilder(
-          animation: _flipAnimation,
-          builder: (context, child) {
-            final angle = _flipAnimation.value * 3.14159;
-            final isFront = _flipAnimation.value < 0.5;
-            final content = isFront
-                ? _buildBankrollFront()
-                : Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()..rotateY(3.14159),
-                    child: _buildBankrollBack(),
-                  );
-
-            // Apply rotation as paint-only (no layout impact) so
-            // AnimatedSize can measure the real child height.
-            return Transform(
-              alignment: Alignment.center,
-              filterQuality: FilterQuality.none,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.001)
-                ..rotateY(angle),
-              child: content,
-            );
-          },
-        ),
-      ),
-    );
-  }
+  Widget _buildBankrollCard() => _buildBankrollFront();
 
   Widget _buildBankrollFront() {
     final remaining = bankrollGoal - currentBankroll;
     final progress = bankrollGoal > 0
         ? (currentBankroll / bankrollGoal).clamp(0.0, 1.0)
         : 0.0;
+    final progressPct = (progress * 100).toStringAsFixed(0);
+    final blurFilter = _isBankrollHidden
+        ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
+        : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0);
 
-    return GestureDetector(
-      onTap: _flipBankrollCard,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: const Color(0xFF2A605D),
-            width: 1,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x40000000),
-              blurRadius: 4,
-              offset: Offset(0, 4),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // "Total Bankroll" label
+          Text(
+            'Total Bankroll',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 10, fontWeight: FontWeight.w600,
+              color: AppColors.textSecondaryV2,
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(23),
-          child: Container(
-            color: const Color(0xFF121F24),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: -8, left: -8, right: -8, bottom: -8,
-                  child: Image.asset('assets/bankroll_background.png', fit: BoxFit.fill),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+
+          const SizedBox(height: 12),
+
+          // Amount row + eye icon
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: ImageFiltered(
+                  imageFilter: blurFilter,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: RichText(
+                      text: TextSpan(
                         children: [
-                          Text(
-                            AppLocalizations.of(context).homeBankroll,
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 13, fontWeight: FontWeight.w300,
-                              color: Colors.white, height: 1.64,
+                          TextSpan(
+                            text: CurrencyService.formatBankroll(currentBankroll),
+                            style: GoogleFonts.familjenGrotesk(
+                              fontSize: 64, fontWeight: FontWeight.w600,
+                              color: Colors.white, height: 1.0,
                             ),
                           ),
-                          GestureDetector(
-                            onTap: () async {
-                              final prefs = await SharedPreferences.getInstance();
-                              setState(() => _isBankrollHidden = !_isBankrollHidden);
-                              await prefs.setBool('bankroll_hidden', _isBankrollHidden);
-                            },
-                            child: SizedBox(
-                              width: 24, height: 24,
-                              child: Padding(
-                                padding: const EdgeInsets.all(3),
-                                child: FittedBox(
-                                  child: Icon(
-                                    _isBankrollHidden ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
+                          TextSpan(
+                            text: '  of ${CurrencyService.formatBankroll(bankrollGoal)}',
+                            style: GoogleFonts.familjenGrotesk(
+                              fontSize: 24, fontWeight: FontWeight.w400,
+                              color: AppColors.textSecondaryV2, height: 1.0,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 28),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ImageFiltered(
-                            imageFilter: _isBankrollHidden
-                                ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
-                                : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                AppLocalizations.of(context).homeBankrollOfGoal(
-                                  CurrencyService.formatBankroll(currentBankroll), CurrencyService.formatBankroll(bankrollGoal),
-                                ),
-                                style: GoogleFonts.familjenGrotesk(
-                                  fontSize: 40, fontWeight: FontWeight.w600,
-                                  color: Colors.white, height: 1.0,
-                                ),
-                                maxLines: 1,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
-                            decoration: _isBankrollHidden ? null : BoxDecoration(
-                              color: const Color(0x0AD3FFFD),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0x0AD3FFFD), width: 1),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ImageFiltered(
-                                  imageFilter: _isBankrollHidden
-                                      ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
-                                      : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                                  child: Text(
-                                    AppLocalizations.of(context).homeAmountLeft(CurrencyService.formatBankroll(remaining.toDouble())),
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 13, fontWeight: FontWeight.w500,
-                                      color: Colors.white, height: 1.44,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                ImageFiltered(
-                                  imageFilter: _isBankrollHidden
-                                      ? ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7)
-                                      : ui.ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                                  child: SizedBox(
-                                    height: 4,
-                                    child: LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        final fillWidth = constraints.maxWidth * progress;
-                                        return Stack(
-                                          clipBehavior: Clip.none,
-                                          alignment: Alignment.centerLeft,
-                                          children: [
-                                            Container(
-                                              height: 4,
-                                              decoration: BoxDecoration(
-                                                color: Colors.black,
-                                                borderRadius: BorderRadius.circular(9999),
-                                              ),
-                                            ),
-                                            AnimatedContainer(
-                                              duration: const Duration(milliseconds: 300),
-                                              width: fillWidth,
-                                              height: 4,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF89F1EC),
-                                                borderRadius: BorderRadius.circular(9999),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: const Color(0xFF54E98A).withValues(alpha: 0.4),
-                                                    blurRadius: 10,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  setState(() => _isBankrollHidden = !_isBankrollHidden);
+                  await prefs.setBool('bankroll_hidden', _isBankrollHidden);
+                },
+                child: _buildIcon('icons/figma_icons/eye.svg', 24, Colors.white),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // "$X left" | "Y%" + progress bar
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ImageFiltered(
+                  imageFilter: blurFilter,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${CurrencyService.formatBankroll(remaining)} left',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13, fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        '$progressPct%',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13, fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ImageFiltered(
+                  imageFilter: blurFilter,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(70),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 6,
+                      backgroundColor: AppColors.progressTrack,
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentGreenV2),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -2460,48 +2560,206 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildEarningsCard() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header row with title and avg badge
-        SectionHeadline(
-          title: AppLocalizations.of(context).homeEarnings,
-          badgeText: AppLocalizations.of(context).homeAvgAmount(CurrencyService.formatCash(avgEarnings)),
-        ),
-        const SizedBox(height: 12),
-        // Legend
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
+    final l10n = AppLocalizations.of(context);
+    final netProfit = earningsChartData.fold<double>(
+      0.0,
+      (sum, p) =>
+          sum +
+          ((p['tournament'] as num?)?.toDouble() ?? 0.0) +
+          ((p['cash'] as num?)?.toDouble() ?? 0.0),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row: "Earnings" left · net profit + label right
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.homeEarnings,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      height: 20 / 17,
+                    ),
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      CurrencyService.formatCash(netProfit),
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.accentGreenV2,
+                        height: 1.44,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Net Profit',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textSecondaryV2,
+                        height: 16 / 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 19),
+          // Legend + chart
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _buildLegendItem(l10n.homeTournament, AppColors.accentBlueV2),
+                    const SizedBox(width: 17),
+                    _buildLegendItem(l10n.homeCashGame, AppColors.accentGreenV2),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: () => _showNoEarningsDataModal(),
+                  child: SizedBox(
+                    height: 167,
+                    child: earningsChartData.isEmpty
+                        ? Center(
+                            child: Text(
+                              l10n.homeNoEarningsDataYet,
+                              style: AppTypography.listRowText(
+                                color: Colors.white.withValues(alpha: 0.40),
+                              ),
+                            ),
+                          )
+                        : _buildEarningsLineChart(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNoEarningsDataModal() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildLegendItem(AppLocalizations.of(context).homeTournament, AppColors.tournamentBlue),
-              const SizedBox(width: 16),
-              _buildLegendItem(AppLocalizations.of(context).homeCashGame, AppColors.cashGameGreen),
+              // Close button
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(ctx).pop(),
+                  child: const Icon(Icons.close, size: 18, color: Color(0xFFB9B9B9)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Icon container — Flutter color, no SVG asset caching
+                  Center(
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF161719),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: SvgPicture.string(
+                          '''<svg width="24" height="24" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M28 26.5H10V11.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25.75 13.75L19 20.5L16 17.5L10 23.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25.75 17.5V13.75H22" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>''',
+                          width: 24,
+                          height: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No earning data yet',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF0C0C0C),
+                      height: 1.44,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add some session results first to view your earnings chart. You can add results from the Profile page.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFFB9B9B9),
+                      height: 22 / 15,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0C0C0C),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Ok',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          height: 20 / 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        // Chart - tap to open full-screen Bankroll view
-        GestureDetector(
-          onTap: () => _navigateToEarningsChart(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              height: 167,
-              child: earningsChartData.isEmpty
-                  ? Center(
-                      child: Text(
-                        AppLocalizations.of(context).homeNoEarningsDataYet,
-                        style: AppTypography.listRowText(
-                          color: Colors.white.withOpacity(0.40),
-                        ),
-                      ),
-                    )
-                  : _buildEarningsLineChart(),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -2576,8 +2834,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 return Text(
                   CurrencyService.formatCash(value),
                   style: GoogleFonts.robotoMono(
-                    color: Colors.white.withValues(alpha: 0.35),
-                    fontSize: 10,
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w300,
                   ),
                 );
               },
@@ -2598,9 +2857,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   space: 4,
                   child: Text(
                     earningsChartData[idx]['date'] ?? '',
-                    style: GoogleFonts.ibmPlexSans(
-                      color: Colors.white.withValues(alpha: 0.35),
-                      fontSize: 10,
+                    style: GoogleFonts.robotoMono(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w300,
                     ),
                   ),
                 );
@@ -4527,10 +4787,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       children: [
         Container(
           width: 8,
-          height: 8,
+          height: 4,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(1),
           ),
         ),
         const SizedBox(width: 6),
@@ -4539,80 +4799,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           style: GoogleFonts.ibmPlexSans(
             color: Colors.white,
             fontSize: 13,
-            
             fontWeight: FontWeight.w500,
             letterSpacing: -0.26,
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildPlayStyleCell() {
-    final l10n = AppLocalizations.of(context);
-    final styleName = _getPlayStyleName();
-    final isUnknown = styleName.contains('/50');
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF101115),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      clipBehavior: Clip.none,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.homePlayStyle,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFF9A9B9E),
-                  height: 1.44,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                styleName,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                  height: 0.75,
-                ),
-              ),
-            ],
-          ),
-          if (isUnknown)
-            Positioned(
-              top: -4,
-              right: -4,
-              child: Tooltip(
-                message: l10n.homePlayStyleTooltip,
-                triggerMode: TooltipTriggerMode.tap,
-                preferBelow: false,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1C2926),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                textStyle: GoogleFonts.ibmPlexSans(
-                  fontSize: 13,
-                  color: Colors.white,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: const Icon(
-                  Icons.info_outline,
-                  size: 16,
-                  color: Color(0xFF9A9B9E),
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 
@@ -4665,5 +4856,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return 'assets/play_style/balanced.png'; // Default fallback
     }
   }
+}
+
+class _DownArrowPainter extends CustomPainter {
+  const _DownArrowPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, 0)
+        ..lineTo(size.width, 0)
+        ..lineTo(size.width / 2, size.height)
+        ..close(),
+      Paint()..color = const Color(0xFF2C2C2E),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_DownArrowPainter old) => false;
 }
 

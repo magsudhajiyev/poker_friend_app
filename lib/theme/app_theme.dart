@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+class NoTransitionsBuilder extends PageTransitionsBuilder {
+  const NoTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => child;
+}
+
 class AppTheme {
   // IBM Plex Sans base text style
   static TextStyle get _baseTextStyle => GoogleFonts.ibmPlexSans(
@@ -12,6 +25,12 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: false,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.iOS: NoTransitionsBuilder(),
+          TargetPlatform.android: NoTransitionsBuilder(),
+        },
+      ),
       // Set IBM Plex Sans as the default font family
       fontFamily: GoogleFonts.ibmPlexSans().fontFamily,
       colorScheme: ColorScheme.fromSeed(

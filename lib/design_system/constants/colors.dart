@@ -90,6 +90,21 @@ class AppColors {
   static const Color infoCardDateText = Color(0xFF4E5054);     // Date/timestamp text
   static const Color eventBuyInText = Color(0xFFCEEFFF);       // Event buy-in pill text
 
+  // Figma v2 Home Screen — stat card icon backgrounds
+  static const Color cardIconBlue   = Color(0xFF4879FF);  // Play Style
+  static const Color cardIconPurple = Color(0xFFA148FF);  // Sessions
+  static const Color cardIconOrange = Color(0xFFFF7648);  // Win Rate
+  static const Color cardIconRed    = Color(0xFFFF4848);  // Hours
+
+  // Figma v2 general surface tokens
+  static const Color bgElevated     = Color(0xFF2C2C2E);  // currency/period pills
+  static const Color progressTrack  = Color(0xFF3A3A3C);  // progress bar background
+  static const Color accentGreenV2  = Color(0xFF4CDE78);  // earnings amount, cash game legend
+  static const Color accentBlueV2   = Color(0xFF007AFF);  // tournament legend
+  static const Color cardBorderV2   = Color(0xFF161719);  // stat card border + header bg
+  static const Color bgMainV2       = Color(0xFF0C0C0C);  // main scaffold background
+  static const Color textSecondaryV2 = Color(0xFFB9B9B9); // secondary labels
+
   // Opacity helpers for commonly used transparent colors
   static Color glassyCardColor({double opacity = 0.74}) =>
     glassyCardBase.withOpacity(opacity);
