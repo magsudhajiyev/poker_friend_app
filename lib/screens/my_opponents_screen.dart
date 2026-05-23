@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -42,11 +43,22 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
   bool isLoading = true;
   String? error;
   String searchQuery = '';
+  StreamSubscription<bool>? _premiumSub;
 
   @override
   void initState() {
     super.initState();
     _loadOpponents(useCache: !AppDataCache.isOpponentsDirty);
+    // Rebuild when subscription tier changes (e.g. after purchase)
+    _premiumSub = SubscriptionService.premiumStatusStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _premiumSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadOpponents({bool useCache = false}) async {
@@ -220,13 +232,17 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
                             SizedBox(height: 2),
                             Builder(
                               builder: (context) {
-                                // Free users see "N/10 free" so they know their cap.
-                                // Premium users see the clean count only.
-                                final showFreeCounter =
-                                    !SubscriptionService.isPremium;
-                                final subtitle = showFreeCounter
-                                    ? l10n.opponentsCountFree(opponents.length, FreeTierLimits.maxOpponentProfiles)
-                                    : l10n.opponentsCountPremium(opponents.length);
+                                // Elite/Club: no cap shown — just the count.
+                                // Pro: show N/15.
+                                // Free: show N/5 free.
+                                final String subtitle;
+                                if (SubscriptionService.isElite) {
+                                  subtitle = l10n.opponentsCountPremium(opponents.length);
+                                } else if (SubscriptionService.isPro) {
+                                  subtitle = l10n.opponentsCountFree(opponents.length, FreeTierLimits.maxOpponentProfilesPro);
+                                } else {
+                                  subtitle = l10n.opponentsCountFree(opponents.length, FreeTierLimits.maxOpponentProfilesFree);
+                                }
                                 return Text(
                                   subtitle,
                                   style: GoogleFonts.ibmPlexSans(

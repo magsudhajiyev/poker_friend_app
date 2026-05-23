@@ -746,7 +746,7 @@
   "paywallSubscriptionUnavailable": "Subscription options unavailable. Please try again.",
   "paywallMonthly": "Monthly",
   "paywallAnnual": "Annual",
-  "paywallAnnualSave": "Annual (Save ~25%)",
+  "paywallAnnualSave": "Annual (Save ~40%)",
   "paywallComingSoon": "{tier} subscriptions coming soon",
   "@paywallComingSoon": {
     "placeholders": {
@@ -4176,5 +4176,109 @@
   "onboardingPurposeStacks": "Tracking stack sizes in tournaments",
   "onboardingContinue": "Continue",
   "onboardingGetStarted": "Get Started",
-  "onboardingSkipNickname": "Skip for now"
+  "onboardingSkipNickname": "Skip for now",
+
+  "freeTierHandLimitTitle": "Hand limit reached",
+  "freeTierHandLimitFree": "Free accounts can log up to {free} hands per session. Upgrade to Pro for {pro} hands, or Elite for unlimited.",
+  "@freeTierHandLimitFree": {
+    "placeholders": {
+      "free": { "type": "int" },
+      "pro": { "type": "int" }
+    }
+  },
+  "freeTierHandLimitPro": "Pro accounts can log up to {pro} hands per session. Upgrade to Elite for unlimited hand logging.",
+  "@freeTierHandLimitPro": {
+    "placeholders": {
+      "pro": { "type": "int" }
+    }
+  },
+  "freeTierOpponentLimitTitle": "Opponent limit reached",
+  "freeTierOpponentLimitFree": "Free accounts can save up to {free} opponent profiles. Upgrade to Pro for {pro}, or Elite for unlimited.",
+  "@freeTierOpponentLimitFree": {
+    "placeholders": {
+      "free": { "type": "int" },
+      "pro": { "type": "int" }
+    }
+  },
+  "freeTierOpponentLimitPro": "Pro accounts can save up to {pro} opponent profiles. Upgrade to Elite for unlimited opponents.",
+  "@freeTierOpponentLimitPro": {
+    "placeholders": {
+      "pro": { "type": "int" }
+    }
+  },
+  "freeTierUpgrade": "Upgrade",
+  "freeTierNotNow": "Not now",
+
+  "quotaMonthlyLimitTitle": "Monthly Limit Reached",
+  "quotaAiLimitElite": "You've used all {max} AI analyses this month. Your quota resets next month.",
+  "@quotaAiLimitElite": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "quotaAiLimitPro": "You've used all {max} AI analyses this month (Pro limit). Upgrade to Elite for {elite} analyses/month.",
+  "@quotaAiLimitPro": {
+    "placeholders": {
+      "max": { "type": "int" },
+      "elite": { "type": "int" }
+    }
+  },
+  "quotaExportLimitTitle": "Export Limit Reached",
+  "quotaExportLimitPro": "You've used all {max} exports this month (Pro limit). Upgrade to Elite for unlimited exports.",
+  "@quotaExportLimitPro": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "quotaSessionExportLimitPro": "You've used all {max} session exports this month (Pro limit). Upgrade to Elite for unlimited exports.",
+  "@quotaSessionExportLimitPro": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "quotaUpgradeToElite": "Upgrade to Elite",
+  "quotaOk": "OK",
+
+  "statsLockedTitle": "Upgrade to unlock",
+  "statsLockedSubtitle": "This section is available on Pro and above.",
+  "statsLockedUpgrade": "Upgrade",
+
+  "paywallBestValue": "BEST VALUE",
+  "paywallWelcomeElite": "Welcome to Elite!",
+  "paywallWelcomeClub": "Welcome to Club!",
+  "paywallStartWithPro": "Start with Pro",
+  "paywallGetEliteAction": "Get Elite",
+  "paywallGetClubAction": "Get Club",
+  "paywallProFeature1": "50 hands per session",
+  "paywallProFeature2": "90-day session history",
+  "paywallProFeature3": "15 opponent profiles",
+  "paywallProFeature4": "10 AI analyses / month",
+  "paywallProFeature5": "30 exports / month",
+  "paywallEliteFeature4": "Unlimited hand logging",
+  "paywallEliteFeature5": "All-time session history",
+  "paywallEliteFeature6": "Unlimited opponents",
+  "paywallEliteFeature7": "30 AI analyses / month",
+  "paywallEliteFeature8": "Unlimited exports",
+  "paywallClubFeature1": "Everything in Elite",
+  "paywallClubFeature2": "Club management & member roles",
+  "paywallClubFeature3": "Live dealer voice logging",
+  "paywallClubFeature4": "Multi-table events with rankings",
+
+  "profileTierOverride": "Subscription tier override",
+  "profileTierOverrideSubtitleReal": "Real: {tier}",
+  "@profileTierOverrideSubtitleReal": {
+    "placeholders": {
+      "tier": { "type": "String" }
+    }
+  },
+  "profileTierOverrideSubtitleActive": "Override: {tier}",
+  "@profileTierOverrideSubtitleActive": {
+    "placeholders": {
+      "tier": { "type": "String" }
+    }
+  },
+  "profileTierFree": "free",
+  "profileTierPro": "Pro",
+  "profileTierElite": "Elite",
+  "profileTierClub": "Club"
 }

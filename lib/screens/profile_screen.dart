@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -30,11 +31,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _username;
   bool _useNicknameInGame = false;
   bool _isAdmin = false;
+  StreamSubscription<bool>? _premiumSub;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _premiumSub = SubscriptionService.premiumStatusStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _premiumSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -150,6 +161,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  String _subscriptionPillLabel(AppLocalizations l10n) {
+    switch (SubscriptionService.currentTier) {
+      case 'club':  return l10n.profileTierClub;
+      case 'elite': return l10n.profileTierElite;
+      case 'pro':   return l10n.profileTierPro;
+      default:      return l10n.profileUpgrade;
+    }
+  }
+
   Widget _buildHeaderRow() {
     final l10n = AppLocalizations.of(context);
     return Row(
@@ -207,7 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 SizedBox(width: 6),
                 Text(
-                  l10n.profileUpgrade,
+                  _subscriptionPillLabel(l10n),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -412,7 +432,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 
   Widget _buildDevToolsCard() {
-    final override = SubscriptionService.debugPremiumOverride;
+    final l10n = AppLocalizations.of(context);
+    final tierOverride = SubscriptionService.debugTierOverride;
+    final currentTierLabel = tierOverride != null
+        ? l10n.profileTierOverrideSubtitleActive(tierOverride)
+        : l10n.profileTierOverrideSubtitleReal(SubscriptionService.currentTier);
+
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -428,7 +453,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Icon(Icons.bug_report, color: Color(0xFFFF6B6B), size: 20),
               SizedBox(width: 8),
               Text(
-                AppLocalizations.of(context).profileDevTools,
+                l10n.profileDevTools,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -441,61 +466,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context).profilePremiumOverride,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.profileTierOverride,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      currentTierLabel,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF8C8C8C),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              DropdownButton<String?>(
+                value: tierOverride,
+                dropdownColor: const Color(0xFF1C1F21),
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                underline: const SizedBox.shrink(),
+                onChanged: (value) async {
+                  await SubscriptionService.setDebugTierOverride(value);
+                  setState(() {});
+                },
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text(
+                      'Real — no override',
+                      style: GoogleFonts.ibmPlexSans(fontSize: 13, color: Color(0xFF8C8C8C)),
                     ),
                   ),
-                  SizedBox(height: 2),
-                  Text(
-                    override == null
-                        ? AppLocalizations.of(context).profileUsingRealStatus(SubscriptionService.isPremium ? AppLocalizations.of(context).profilePremium : AppLocalizations.of(context).profileFree)
-                        : AppLocalizations.of(context).profileOverridden(override ? AppLocalizations.of(context).profilePremium : AppLocalizations.of(context).profileFree),
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF8C8C8C),
+                  DropdownMenuItem<String?>(
+                    value: 'pro',
+                    child: Text(
+                      l10n.profileTierPro,
+                      style: GoogleFonts.ibmPlexSans(fontSize: 13, color: Colors.white),
+                    ),
+                  ),
+                  DropdownMenuItem<String?>(
+                    value: 'elite',
+                    child: Text(
+                      l10n.profileTierElite,
+                      style: GoogleFonts.ibmPlexSans(fontSize: 13, color: Colors.white),
+                    ),
+                  ),
+                  DropdownMenuItem<String?>(
+                    value: 'club',
+                    child: Text(
+                      l10n.profileTierClub,
+                      style: GoogleFonts.ibmPlexSans(fontSize: 13, color: Colors.white),
                     ),
                   ),
                 ],
               ),
-              Switch(
-                value: SubscriptionService.isPremium,
-                onChanged: (value) async {
-                  await SubscriptionService.setDebugPremiumOverride(value);
-                  setState(() {});
-                },
-                activeColor: Color(0xFF62E3BC),
-                inactiveThumbColor: Color(0xFF8C8C8C),
-                inactiveTrackColor: Color(0xFF35373C),
-              ),
             ],
           ),
-          if (override != null) ...[
-            SizedBox(height: 8),
-            GestureDetector(
-              onTap: () async {
-                await SubscriptionService.setDebugPremiumOverride(null);
-                setState(() {});
-              },
-              child: Text(
-                AppLocalizations.of(context).profileResetToReal,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF89F1EC),
-                  decoration: TextDecoration.underline,
-                  decorationColor: Color(0xFF89F1EC),
-                ),
-              ),
-            ),
-          ],
           SizedBox(height: 16),
           GestureDetector(
             onTap: () => _launchQuickDebugSession(),

@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../services/firebase_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/subscription_service.dart';
+import '../services/free_tier_limits.dart';
 import '../utils/poker_positions.dart';
 import '../widgets/loading_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
@@ -39,23 +40,16 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   List<Map<String, dynamic>> get tournamentSessions => _filterSessionsForTier(
       sessions.where((session) => session['gameType'] == 'tournament').toList());
 
-  /// Filter sessions based on user's subscription tier
-  /// Free users: last 30 days only
-  /// Premium users: all sessions
+  /// Filter sessions based on user's subscription tier.
+  /// Elite/Club: all time. Pro: 90 days. Free: 30 days.
   List<Map<String, dynamic>> _filterSessionsForTier(List<Map<String, dynamic>> sessionList) {
-    if (SubscriptionService.isPremium) {
-      return sessionList;
-    }
-
-    // Free users get sessions from the last 30 days only
-    final thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
+    final cutoff = FreeTierLimits.sessionHistoryCutoff();
+    if (cutoff == null) return sessionList;
 
     return sessionList.where((session) {
       try {
-        final startTime = DateTime.parse(session['startTime']);
-        return startTime.isAfter(thirtyDaysAgo);
-      } catch (e) {
-        // If parsing fails, include the session (graceful fallback)
+        return DateTime.parse(session['startTime']).isAfter(cutoff);
+      } catch (_) {
         return true;
       }
     }).toList();

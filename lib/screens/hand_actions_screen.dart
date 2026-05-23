@@ -12,6 +12,7 @@ import '../services/subscription_service.dart';
 import '../services/pokerstars_export_service.dart';
 import '../services/hand_sharing_service.dart';
 import '../services/opponent_service.dart';
+import '../services/play_style_detector.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/opponent_stats_service.dart';
 import '../l10n/app_localizations.dart';
@@ -225,17 +226,95 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
-  Future<void> _handleExportButtonTap() async {
-    final isPremium = SubscriptionService.isPremium;
+  static const int _maxMonthlyExportsPro = 30;
+  static const String _exportCountKey = 'monthly_export_count';
+  static const String _exportMonthKey = 'monthly_export_month';
 
-    if (!isPremium) {
+  Future<void> _handleExportButtonTap() async {
+    // Gate free users at the paywall
+    if (!SubscriptionService.isPremium) {
       final purchased = await PaywallScreen.show(context, featureName: 'Hand Export');
       if (purchased != true || !mounted) return;
-      setState(() {});
+      if (!SubscriptionService.isPremium) return;
+    }
+
+    // Elite/Club: unlimited
+    if (SubscriptionService.isElite) {
+      if (mounted) _exportPokerStarsFormat();
+      return;
+    }
+
+    // Pro: monthly quota of 30
+    final prefs = await SharedPreferences.getInstance();
+    final storedMonth = prefs.getString(_exportMonthKey) ?? '';
+    final currentMonth = _currentMonthKey();
+
+    if (storedMonth != currentMonth) {
+      await prefs.setString(_exportMonthKey, currentMonth);
+      await prefs.setInt(_exportCountKey, 0);
+    }
+
+    final int usedCount = prefs.getInt(_exportCountKey) ?? 0;
+
+    if (usedCount >= _maxMonthlyExportsPro) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF131616),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          title: Text(
+            l10n.quotaExportLimitTitle,
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            l10n.quotaExportLimitPro(_maxMonthlyExportsPro),
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                PaywallScreen.show(context, featureName: 'Unlimited Exports');
+              },
+              child: Text(
+                l10n.quotaUpgradeToElite,
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF89F1EC),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                l10n.quotaOk,
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF89F1EC),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
     }
 
     if (!mounted) return;
     _exportPokerStarsFormat();
+    await prefs.setInt(_exportCountKey, usedCount + 1);
   }
 
   Future<void> _exportPokerStarsFormat() async {
@@ -439,11 +518,22 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         if (opponent != null) {
           final stats = await OpponentStatsService.getOpponentStats(opponent.id);
           if (stats != null && stats.handsPlayed >= 10) {
+            final playStyle = PlayStyleDetector.detectPlayStyle(
+              vpip: stats.vpipPercentage,
+              pfr: stats.pfrPercentage,
+              threeBet: stats.threeBetPercentage,
+              aggressionFactor: stats.aggressionFrequency,
+              handsPlayed: stats.handsPlayed,
+            );
             context[playerName] = {
-              'aggressionFreq': stats.aggressionFrequency,
-              'showdown': stats.showdownPercentage,
+              'style': playStyle['style'] ?? 'Unknown',
+              'vpip': stats.vpipPercentage,
+              'pfr': stats.pfrPercentage,
               'threeBet': stats.threeBetPercentage,
               'cbet': stats.cbetPercentage,
+              'aggressionFreq': stats.aggressionFrequency,
+              'fold3Bet': stats.fold3betPercentage,
+              'steal': stats.stealPercentage,
               'hands': stats.handsPlayed,
             };
           }
@@ -1699,8 +1789,10 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
     );
   }
 
-  static const int _maxMonthlyAnalyses = 20;
-  static const String _analysisCountKey = 'monthly_ai_analysis_count';
+  static const int _maxMonthlyAnalysesPro = 10;
+  static const int _maxMonthlyAnalysesElite = 30;
+  static const String _analysisCountKeyPro = 'monthly_ai_analysis_count_pro';
+  static const String _analysisCountKeyElite = 'monthly_ai_analysis_count_elite';
   static const String _analysisMonthKey = 'monthly_ai_analysis_month';
 
   static String _currentMonthKey() {
@@ -1709,7 +1801,21 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
   }
 
   Future<void> _handleAnalyzeButtonTap() async {
-    // Skip quota for admin users
+    // Gate free users at the paywall — AI analysis requires at least Pro
+    if (!SubscriptionService.isPremium) {
+      final purchased = await PaywallScreen.show(context, featureName: 'AI Hand Analysis');
+      if (purchased != true || !mounted) return;
+      // Re-check after purchase
+      if (!SubscriptionService.isPremium) return;
+    }
+
+    // Club tier: unlimited — no quota check
+    if (SubscriptionService.isClub) {
+      _analyzeHand();
+      return;
+    }
+
+    // Admin users bypass quota
     bool isAdmin = false;
     final uid = AuthService.userId;
     if (uid != null) {
@@ -1718,65 +1824,95 @@ class _HandActionsScreenState extends State<HandActionsScreen> {
         isAdmin = doc.data()?['role'] == 'admin';
       } catch (_) {}
     }
+    if (isAdmin) {
+      _analyzeHand();
+      return;
+    }
+
+    // Determine per-tier quota
+    final bool isElite = SubscriptionService.isElite;
+    final String countKey = isElite ? _analysisCountKeyElite : _analysisCountKeyPro;
+    final int maxAllowed = isElite ? _maxMonthlyAnalysesElite : _maxMonthlyAnalysesPro;
 
     final prefs = await SharedPreferences.getInstance();
     final storedMonth = prefs.getString(_analysisMonthKey) ?? '';
     final currentMonth = _currentMonthKey();
-    int usedCount = prefs.getInt(_analysisCountKey) ?? 0;
 
-    // Reset count if new month
+    // Reset both counters on month boundary
     if (storedMonth != currentMonth) {
-      usedCount = 0;
       await prefs.setString(_analysisMonthKey, currentMonth);
-      await prefs.setInt(_analysisCountKey, 0);
+      await prefs.setInt(_analysisCountKeyPro, 0);
+      await prefs.setInt(_analysisCountKeyElite, 0);
     }
 
-    if (!isAdmin && usedCount >= _maxMonthlyAnalyses) {
+    final int usedCount = prefs.getInt(countKey) ?? 0;
+
+    if (usedCount >= maxAllowed) {
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF131616),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            title: Text(
-              'Monthly Limit Reached',
-              style: GoogleFonts.ibmPlexSans(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: Text(
-              'You\'ve used all $usedCount of $_maxMonthlyAnalyses AI analyses this month. Your quota resets next month.',
-              style: GoogleFonts.ibmPlexSans(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'OK',
-                  style: GoogleFonts.ibmPlexSans(
-                    color: const Color(0xFF89F1EC),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
+        _showAnalysisQuotaDialog(usedCount, maxAllowed, isElite);
       }
       return;
     }
 
     _analyzeHand();
-    if (!isAdmin) await prefs.setInt(_analysisCountKey, usedCount + 1);
+    await prefs.setInt(countKey, usedCount + 1);
+  }
+
+  void _showAnalysisQuotaDialog(int used, int max, bool isElite) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF131616),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(
+          l10n.quotaMonthlyLimitTitle,
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          isElite
+              ? l10n.quotaAiLimitElite(max)
+              : l10n.quotaAiLimitPro(max, _maxMonthlyAnalysesElite),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          if (!isElite)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                PaywallScreen.show(context, featureName: 'More AI Analyses');
+              },
+              child: Text(
+                l10n.quotaUpgradeToElite,
+                style: GoogleFonts.ibmPlexSans(
+                  color: const Color(0xFF89F1EC),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              l10n.quotaOk,
+              style: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF89F1EC),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildAnalysisError() {

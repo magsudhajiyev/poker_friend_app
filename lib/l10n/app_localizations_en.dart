@@ -1628,7 +1628,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallAnnual => 'Annual';
 
   @override
-  String get paywallAnnualSave => 'Annual (Save ~25%)';
+  String get paywallAnnualSave => 'Annual (Save ~40%)';
 
   @override
   String paywallComingSoon(String tier) {
@@ -7501,4 +7501,163 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSkipNickname => 'Skip for now';
+
+  @override
+  String get freeTierHandLimitTitle => 'Hand limit reached';
+
+  @override
+  String freeTierHandLimitFree(int free, int pro) {
+    return 'Free accounts can log up to $free hands per session. Upgrade to Pro for $pro hands, or Elite for unlimited.';
+  }
+
+  @override
+  String freeTierHandLimitPro(int pro) {
+    return 'Pro accounts can log up to $pro hands per session. Upgrade to Elite for unlimited hand logging.';
+  }
+
+  @override
+  String get freeTierOpponentLimitTitle => 'Opponent limit reached';
+
+  @override
+  String freeTierOpponentLimitFree(int free, int pro) {
+    return 'Free accounts can save up to $free opponent profiles. Upgrade to Pro for $pro, or Elite for unlimited.';
+  }
+
+  @override
+  String freeTierOpponentLimitPro(int pro) {
+    return 'Pro accounts can save up to $pro opponent profiles. Upgrade to Elite for unlimited opponents.';
+  }
+
+  @override
+  String get freeTierUpgrade => 'Upgrade';
+
+  @override
+  String get freeTierNotNow => 'Not now';
+
+  @override
+  String get quotaMonthlyLimitTitle => 'Monthly Limit Reached';
+
+  @override
+  String quotaAiLimitElite(int max) {
+    return 'You\'ve used all $max AI analyses this month. Your quota resets next month.';
+  }
+
+  @override
+  String quotaAiLimitPro(int max, int elite) {
+    return 'You\'ve used all $max AI analyses this month (Pro limit). Upgrade to Elite for $elite analyses/month.';
+  }
+
+  @override
+  String get quotaExportLimitTitle => 'Export Limit Reached';
+
+  @override
+  String quotaExportLimitPro(int max) {
+    return 'You\'ve used all $max exports this month (Pro limit). Upgrade to Elite for unlimited exports.';
+  }
+
+  @override
+  String quotaSessionExportLimitPro(int max) {
+    return 'You\'ve used all $max session exports this month (Pro limit). Upgrade to Elite for unlimited exports.';
+  }
+
+  @override
+  String get quotaUpgradeToElite => 'Upgrade to Elite';
+
+  @override
+  String get quotaOk => 'OK';
+
+  @override
+  String get statsLockedTitle => 'Upgrade to unlock';
+
+  @override
+  String get statsLockedSubtitle =>
+      'This section is available on Pro and above.';
+
+  @override
+  String get statsLockedUpgrade => 'Upgrade';
+
+  @override
+  String get paywallBestValue => 'BEST VALUE';
+
+  @override
+  String get paywallWelcomeElite => 'Welcome to Elite!';
+
+  @override
+  String get paywallWelcomeClub => 'Welcome to Club!';
+
+  @override
+  String get paywallStartWithPro => 'Start with Pro';
+
+  @override
+  String get paywallGetEliteAction => 'Get Elite';
+
+  @override
+  String get paywallGetClubAction => 'Get Club';
+
+  @override
+  String get paywallProFeature1 => '50 hands per session';
+
+  @override
+  String get paywallProFeature2 => '90-day session history';
+
+  @override
+  String get paywallProFeature3 => '15 opponent profiles';
+
+  @override
+  String get paywallProFeature4 => '10 AI analyses / month';
+
+  @override
+  String get paywallProFeature5 => '30 exports / month';
+
+  @override
+  String get paywallEliteFeature4 => 'Unlimited hand logging';
+
+  @override
+  String get paywallEliteFeature5 => 'All-time session history';
+
+  @override
+  String get paywallEliteFeature6 => 'Unlimited opponents';
+
+  @override
+  String get paywallEliteFeature7 => '30 AI analyses / month';
+
+  @override
+  String get paywallEliteFeature8 => 'Unlimited exports';
+
+  @override
+  String get paywallClubFeature1 => 'Everything in Elite';
+
+  @override
+  String get paywallClubFeature2 => 'Club management & member roles';
+
+  @override
+  String get paywallClubFeature3 => 'Live dealer voice logging';
+
+  @override
+  String get paywallClubFeature4 => 'Multi-table events with rankings';
+
+  @override
+  String get profileTierOverride => 'Subscription tier override';
+
+  @override
+  String profileTierOverrideSubtitleReal(String tier) {
+    return 'Real: $tier';
+  }
+
+  @override
+  String profileTierOverrideSubtitleActive(String tier) {
+    return 'Override: $tier';
+  }
+
+  @override
+  String get profileTierFree => 'free';
+
+  @override
+  String get profileTierPro => 'Pro';
+
+  @override
+  String get profileTierElite => 'Elite';
+
+  @override
+  String get profileTierClub => 'Club';
 }

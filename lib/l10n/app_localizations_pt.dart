@@ -1645,7 +1645,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get paywallAnnual => 'Anual';
 
   @override
-  String get paywallAnnualSave => 'Anual (Economize ~25%)';
+  String get paywallAnnualSave => 'Anual (Economize ~40%)';
 
   @override
   String paywallComingSoon(String tier) {
@@ -7556,4 +7556,163 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingSkipNickname => 'Pular por enquanto';
+
+  @override
+  String get freeTierHandLimitTitle => 'Limite de mãos atingido';
+
+  @override
+  String freeTierHandLimitFree(int free, int pro) {
+    return 'Contas gratuitas podem registrar até $free mãos por sessão. Atualize para Pro com $pro mãos ou Elite para ilimitado.';
+  }
+
+  @override
+  String freeTierHandLimitPro(int pro) {
+    return 'Contas Pro podem registrar até $pro mãos por sessão. Atualize para Elite para registro ilimitado.';
+  }
+
+  @override
+  String get freeTierOpponentLimitTitle => 'Limite de adversários atingido';
+
+  @override
+  String freeTierOpponentLimitFree(int free, int pro) {
+    return 'Contas gratuitas podem salvar até $free perfis de adversários. Atualize para Pro com $pro ou Elite para ilimitado.';
+  }
+
+  @override
+  String freeTierOpponentLimitPro(int pro) {
+    return 'Contas Pro podem salvar até $pro perfis de adversários. Atualize para Elite para adversários ilimitados.';
+  }
+
+  @override
+  String get freeTierUpgrade => 'Atualizar';
+
+  @override
+  String get freeTierNotNow => 'Agora não';
+
+  @override
+  String get quotaMonthlyLimitTitle => 'Limite mensal atingido';
+
+  @override
+  String quotaAiLimitElite(int max) {
+    return 'Você usou todas as $max análises de IA deste mês. Sua cota é redefinida no próximo mês.';
+  }
+
+  @override
+  String quotaAiLimitPro(int max, int elite) {
+    return 'Você usou todas as $max análises de IA deste mês (limite Pro). Atualize para Elite com $elite análises/mês.';
+  }
+
+  @override
+  String get quotaExportLimitTitle => 'Limite de exportações atingido';
+
+  @override
+  String quotaExportLimitPro(int max) {
+    return 'Você usou todas as $max exportações deste mês (limite Pro). Atualize para Elite para exportações ilimitadas.';
+  }
+
+  @override
+  String quotaSessionExportLimitPro(int max) {
+    return 'Você usou todas as $max exportações de sessão deste mês (limite Pro). Atualize para Elite para exportações ilimitadas.';
+  }
+
+  @override
+  String get quotaUpgradeToElite => 'Atualizar para Elite';
+
+  @override
+  String get quotaOk => 'OK';
+
+  @override
+  String get statsLockedTitle => 'Atualize para desbloquear';
+
+  @override
+  String get statsLockedSubtitle =>
+      'Esta seção está disponível no Pro e superior.';
+
+  @override
+  String get statsLockedUpgrade => 'Atualizar';
+
+  @override
+  String get paywallBestValue => 'MELHOR CUSTO-BENEFÍCIO';
+
+  @override
+  String get paywallWelcomeElite => 'Bem-vindo ao Elite!';
+
+  @override
+  String get paywallWelcomeClub => 'Bem-vindo ao Club!';
+
+  @override
+  String get paywallStartWithPro => 'Começar com Pro';
+
+  @override
+  String get paywallGetEliteAction => 'Obter Elite';
+
+  @override
+  String get paywallGetClubAction => 'Obter Club';
+
+  @override
+  String get paywallProFeature1 => '50 mãos por sessão';
+
+  @override
+  String get paywallProFeature2 => 'Histórico de 90 dias';
+
+  @override
+  String get paywallProFeature3 => '15 perfis de adversários';
+
+  @override
+  String get paywallProFeature4 => '10 análises de IA / mês';
+
+  @override
+  String get paywallProFeature5 => '30 exportações / mês';
+
+  @override
+  String get paywallEliteFeature4 => 'Registro de mãos ilimitado';
+
+  @override
+  String get paywallEliteFeature5 => 'Histórico de sessões completo';
+
+  @override
+  String get paywallEliteFeature6 => 'Adversários ilimitados';
+
+  @override
+  String get paywallEliteFeature7 => '30 análises de IA / mês';
+
+  @override
+  String get paywallEliteFeature8 => 'Exportações ilimitadas';
+
+  @override
+  String get paywallClubFeature1 => 'Tudo no Elite';
+
+  @override
+  String get paywallClubFeature2 => 'Gestão de clube e funções de membro';
+
+  @override
+  String get paywallClubFeature3 => 'Registro de voz ao vivo com dealer';
+
+  @override
+  String get paywallClubFeature4 => 'Eventos multimesa com classificações';
+
+  @override
+  String get profileTierOverride => 'Substituir nível de assinatura';
+
+  @override
+  String profileTierOverrideSubtitleReal(String tier) {
+    return 'Real: $tier';
+  }
+
+  @override
+  String profileTierOverrideSubtitleActive(String tier) {
+    return 'Substituído: $tier';
+  }
+
+  @override
+  String get profileTierFree => 'gratuito';
+
+  @override
+  String get profileTierPro => 'Pro';
+
+  @override
+  String get profileTierElite => 'Elite';
+
+  @override
+  String get profileTierClub => 'Club';
 }

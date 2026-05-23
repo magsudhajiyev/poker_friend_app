@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
@@ -7,6 +8,8 @@ import '../services/session_result_service.dart';
 import '../services/currency_service.dart';
 import '../models/currency.dart';
 import '../services/app_data_cache.dart';
+import '../services/subscription_service.dart';
+import 'paywall_screen.dart';
 import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../design_system/design_system.dart';
@@ -506,15 +509,24 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 const SizedBox(height: 32),
                 _buildSectionHeader(l10n.statsGeneral),
                 const SizedBox(height: 12),
-                _buildGeneralSessionStats(),
+                _buildLockedSection(
+                  child: _buildGeneralSessionStats(),
+                  featureName: l10n.statsGeneral,
+                ),
                 const SizedBox(height: 24),
                 _buildSectionHeader(l10n.statsCash),
                 const SizedBox(height: 12),
-                _buildCashSessionStats(),
+                _buildLockedSection(
+                  child: _buildCashSessionStats(),
+                  featureName: l10n.statsCash,
+                ),
                 const SizedBox(height: 24),
                 _buildSectionHeader(l10n.statsTournament),
                 const SizedBox(height: 12),
-                _buildTournamentSessionStats(),
+                _buildLockedSection(
+                  child: _buildTournamentSessionStats(),
+                  featureName: l10n.statsTournament,
+                ),
                 const SizedBox(height: 120),
               ],
             ),
@@ -618,6 +630,77 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         color: const Color(0xFF87ED81),
         letterSpacing: 1.0,
       ),
+    );
+  }
+
+  /// Wraps [child] with a blur + lock overlay when the user is on the free tier.
+  /// Premium users (any paid tier) see the content directly — no overhead.
+  Widget _buildLockedSection({required Widget child, required String featureName}) {
+    if (SubscriptionService.isPremium) return child;
+    final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    return Stack(
+      children: [
+        ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          child: child,
+        ),
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.45),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.lock_outline,
+                  color: Colors.white,
+                  size: screenWidth * 0.07,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.statsLockedTitle,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.statsLockedSubtitle,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 13,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () => PaywallScreen.show(context, featureName: featureName),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(60),
+                    ),
+                    child: Text(
+                      l10n.statsLockedUpgrade,
+                      style: GoogleFonts.ibmPlexSans(
+                        color: Colors.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

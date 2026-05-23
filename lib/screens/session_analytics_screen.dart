@@ -12,6 +12,7 @@ import 'stack_chart_screen.dart';
 import '../widgets/global_bottom_nav_bar.dart';
 import '../services/session_export_service.dart';
 import '../services/subscription_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/app_data_cache.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'paywall_screen.dart';
@@ -135,14 +136,98 @@ class _SessionAnalyticsScreenState extends State<SessionAnalyticsScreen> {
     }
   }
 
+  static const int _maxMonthlySessionExportsPro = 30;
+  static const String _sessionExportCountKey = 'monthly_session_export_count';
+  static const String _sessionExportMonthKey = 'monthly_session_export_month';
+
+  static String _currentMonthKey() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month}';
+  }
+
   Future<void> _handleSessionExport() async {
     if (_isExporting || _hands.isEmpty) return;
 
-    final isPremium = SubscriptionService.isPremium;
-    if (!isPremium) {
+    // Gate free users at paywall
+    if (!SubscriptionService.isPremium) {
       final purchased =
           await PaywallScreen.show(context, featureName: 'Session Export');
       if (purchased != true || !mounted) return;
+      if (!SubscriptionService.isPremium) return;
+    }
+
+    // Elite/Club: unlimited — skip quota
+    if (!SubscriptionService.isElite) {
+      // Pro: monthly quota
+      final prefs = await SharedPreferences.getInstance();
+      final storedMonth = prefs.getString(_sessionExportMonthKey) ?? '';
+      final currentMonth = _currentMonthKey();
+
+      if (storedMonth != currentMonth) {
+        await prefs.setString(_sessionExportMonthKey, currentMonth);
+        await prefs.setInt(_sessionExportCountKey, 0);
+      }
+
+      final int usedCount = prefs.getInt(_sessionExportCountKey) ?? 0;
+
+      if (usedCount >= _maxMonthlySessionExportsPro) {
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context);
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: const Color(0xFF131616),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            title: Text(
+              l10n.quotaExportLimitTitle,
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              l10n.quotaSessionExportLimitPro(_maxMonthlySessionExportsPro),
+              style: GoogleFonts.ibmPlexSans(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  PaywallScreen.show(context, featureName: 'Unlimited Exports');
+                },
+                child: Text(
+                  l10n.quotaUpgradeToElite,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF89F1EC),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  l10n.quotaOk,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: const Color(0xFF89F1EC),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
+      // Increment counter after successful export (done after confirm)
+      await prefs.setInt(_sessionExportCountKey, usedCount + 1);
     }
 
     final user = FirebaseAuth.instance.currentUser;

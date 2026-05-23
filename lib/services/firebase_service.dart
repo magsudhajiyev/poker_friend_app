@@ -11,6 +11,7 @@ import 'stats_calculator.dart';
 import 'user_stats_service.dart';
 import 'app_data_cache.dart';
 import 'subscription_service.dart';
+import 'free_tier_limits.dart';
 
 class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -661,15 +662,15 @@ class FirebaseService {
         };
       }).toList();
 
-      // Apply 30-day filtering for free-tier users
-      if (!SubscriptionService.isPremium) {
-        final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+      // Apply session history filtering based on subscription tier
+      final cutoff = FreeTierLimits.sessionHistoryCutoff();
+      if (cutoff != null) {
         sessions = sessions.where((session) {
           final startTimeStr = session['startTime'] as String?;
           if (startTimeStr == null) return false;
 
           final startTime = DateTime.tryParse(startTimeStr);
-          return startTime != null && startTime.isAfter(thirtyDaysAgo);
+          return startTime != null && startTime.isAfter(cutoff);
         }).toList();
       }
 
@@ -682,15 +683,15 @@ class FirebaseService {
       try {
         var localSessions = await LocalStorageService.getUserSessions();
 
-        // Apply 30-day filtering to local storage fallback for free-tier users
-        if (!SubscriptionService.isPremium) {
-          final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+        // Apply session history filtering to local storage fallback
+        final cutoff = FreeTierLimits.sessionHistoryCutoff();
+        if (cutoff != null) {
           localSessions = localSessions.where((session) {
             final startTimeStr = session['startTime'] as String?;
             if (startTimeStr == null) return false;
 
             final startTime = DateTime.tryParse(startTimeStr);
-            return startTime != null && startTime.isAfter(thirtyDaysAgo);
+            return startTime != null && startTime.isAfter(cutoff);
           }).toList();
         }
 

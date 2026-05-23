@@ -249,7 +249,7 @@ class AIAnalyzerService {
           .doc(sessionId)
           .collection('poker_hands')
           .doc(handId)
-          .get();
+          .get(const GetOptions(source: Source.server));
 
       if (doc.exists) {
         final data = doc.data();

@@ -318,8 +318,36 @@ void _navigateToClubRequests(BuildContext context) {
   );
 }
 
-class PokerTrackerApp extends StatelessWidget {
+class PokerTrackerApp extends StatefulWidget {
   const PokerTrackerApp({super.key});
+
+  @override
+  State<PokerTrackerApp> createState() => _PokerTrackerAppState();
+}
+
+class _PokerTrackerAppState extends State<PokerTrackerApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Called whenever the app returns to the foreground.
+  /// Forces a fresh CustomerInfo fetch from RevenueCat so cancellations
+  /// made in iOS/Android Settings are reflected immediately.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      SubscriptionService.refreshOnResume();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
