@@ -1,16 +1,20 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../l10n/app_localizations.dart';
 import '../screens/home_screen.dart';
 import '../screens/my_opponents_screen.dart';
 import '../screens/session_history_screen.dart';
-import '../screens/profile_screen.dart';
 import '../screens/logging_mode_selection_screen.dart';
+import '../screens/club/club_dashboard_screen.dart';
+import '../screens/player/qr_scan_screen.dart' show QRScanScreen;
+import '../design_system/constants/colors.dart';
+import '../services/club_service.dart';
 
-/// Global bottom navigation bar matching Figma design (node 370:4719)
-/// Full width with menu item labels
-class GlobalBottomNavBar extends StatelessWidget {
+/// Nav bar — Figma node 139:1186
+/// Layout: [Home | Clubs | Opponents | Statistics | Scan] ··· [+ FAB]
+/// Active icon: green (#4CDE78). Inactive: gray (#808285).
+class GlobalBottomNavBar extends StatefulWidget {
   final String currentScreen;
   final Future<bool> Function()? onNavigationAttempt;
   final GlobalKey? fabKey;
@@ -24,98 +28,135 @@ class GlobalBottomNavBar extends StatelessWidget {
     this.sessionsKey,
   }) : super(key: key);
 
+  static const Color _activeColor = Color(0xFF4CDE78);
+  static const Color _inactiveColor = Color(0xFF808285);
+
+  @override
+  State<GlobalBottomNavBar> createState() => _GlobalBottomNavBarState();
+}
+
+class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
+  String? _pendingScreen;
+
+  bool _isActive(String screen) =>
+      widget.currentScreen == screen || _pendingScreen == screen;
+
   @override
   Widget build(BuildContext context) {
-    // FAB overflows 30px above the navbar. Include that in the total height
-    // so the Scaffold reserves space and content doesn't overlap the FAB.
-    const double fabOverflow = 30;
     final double systemBottomPad = MediaQuery.of(context).viewPadding.bottom;
-    final double barHeight = 14 + 51 + 18 + systemBottomPad; // topPad + content + bottomPad + system nav
-    final double navHeight = fabOverflow + barHeight;
-    return SizedBox(
-      height: navHeight,
-      child: Stack(
-        clipBehavior: Clip.none,
+
+    return Container(
+      color: AppColors.bgMainV2, // #0c0c0c
+      padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + systemBottomPad),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Navbar background — only the bottom barHeight portion
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: barHeight,
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Color(0xFF02050B), // backgroundPaper
-                border: Border(
-                  top: BorderSide(
-                    color: Color(0xFF1B1E24), // neutrals/800
-                    width: 1,
-                  ),
-                ),
+          // Left: 5 icon buttons, gap 28px
+          Row(
+            children: [
+              _NavIcon(
+                path: 'assets/icons/HouseSimple.svg',
+                isSvg: true,
+                isActive: _isActive('home'),
+                onTap: () => _navigateTo(context, 'home'),
               ),
-              // Figma: pb-18, pt-14, px-24 + system nav inset
-              padding: EdgeInsets.fromLTRB(24, 14, 24, 18 + systemBottomPad),
-              child: Builder(
-                builder: (context) {
-                  final l10n = AppLocalizations.of(context);
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Home
-                      _buildNavItem(
-                        context: context,
-                        iconPath: 'icons/figma_icons/navbar_home.svg',
-                        label: l10n.navHome,
-                        isActive: currentScreen == 'home',
-                        onTap: () => _navigateTo(context, 'home'),
-                      ),
-
-                      // Opponents
-                      _buildNavItem(
-                        context: context,
-                        iconPath: 'icons/figma_icons/navbar_opponents.svg',
-                        label: l10n.navOpponents,
-                        isActive: currentScreen == 'opponents',
-                        onTap: () => _navigateTo(context, 'opponents'),
-                      ),
-
-                      // Center spacer
-                      const SizedBox(width: 62, height: 51),
-
-                      // Sessions
-                      _buildNavItem(
-                        context: context,
-                        iconPath: 'icons/figma_icons/navbar_sessions.svg',
-                        label: l10n.navSessions,
-                        isActive: currentScreen == 'sessions',
-                        onTap: () => _navigateTo(context, 'sessions'),
-                        itemKey: sessionsKey,
-                      ),
-
-                      // Profile
-                      _buildNavItem(
-                        context: context,
-                        iconPath: 'icons/figma_icons/navbar_profile.svg',
-                        label: l10n.navProfile,
-                        isActive: currentScreen == 'profile',
-                        onTap: () => _navigateTo(context, 'profile'),
-                      ),
-                    ],
-                  );
-                },
+              const SizedBox(width: 28),
+              _NavIcon(
+                path: 'icons/figma_icons/club_suit.svg',
+                isSvg: true,
+                isActive: _isActive('clubs'),
+                onTap: () => _navigateToClubs(context),
               ),
-            ),
+              const SizedBox(width: 28),
+              _NavIcon(
+                path: 'assets/icons/UsersThree.svg',
+                activePath: 'assets/icons/UsersThree-1.svg',
+                isSvg: true,
+                isActive: _isActive('opponents'),
+                onTap: () => _navigateTo(context, 'opponents'),
+              ),
+              const SizedBox(width: 28),
+              _NavIcon(
+                path: 'icons/figma_icons/chart_regular.svg',
+                isSvg: true,
+                isActive: _isActive('sessions'),
+                itemKey: widget.sessionsKey,
+                onTap: () => _navigateTo(context, 'sessions'),
+              ),
+              const SizedBox(width: 28),
+              _NavIcon(
+                path: 'icons/flat_icons/scanner.png',
+                isSvg: false,
+                isActive: _isActive('scan'),
+                onTap: () => _navigateTo(context, 'scan'),
+              ),
+            ],
           ),
 
-          // Center FAB button — sits in the fabOverflow zone above the bar
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: fabOverflow + 62, // full FAB height to claim hit area
-            child: Center(
-              child: _buildCenterFab(context),
+          // Right: white circle FAB (44px)
+          GestureDetector(
+            key: widget.fabKey,
+            behavior: HitTestBehavior.opaque,
+            onTap: () async {
+              if (widget.onNavigationAttempt != null) {
+                final ok = await widget.onNavigationAttempt!();
+                if (!ok) return;
+              }
+              if (context.mounted) {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    opaque: false,
+                    barrierColor: Colors.transparent,
+                    transitionDuration: const Duration(milliseconds: 400),
+                    reverseTransitionDuration: const Duration(milliseconds: 300),
+                    pageBuilder: (_, __, ___) => LoggingModeSelectionScreen(),
+                    transitionsBuilder: (_, animation, __, child) {
+                      final slide = Tween<Offset>(
+                        begin: const Offset(0, 1),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                        reverseCurve: Curves.easeInCubic,
+                      ));
+                      return Stack(
+                        children: [
+                          // Blur fades in/out — does not slide
+                          FadeTransition(
+                            opacity: animation,
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                              child: Container(color: Colors.black.withValues(alpha: 0.15)),
+                            ),
+                          ),
+                          // White panel slides up/down
+                          SlideTransition(
+                            position: slide,
+                            child: child,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                );
+              }
+            },
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'icons/figma_icons/plus.svg',
+                  width: 20,
+                  height: 20,
+                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                ),
+              ),
             ),
           ),
         ],
@@ -124,137 +165,159 @@ class GlobalBottomNavBar extends StatelessWidget {
   }
 
   Future<void> _navigateTo(BuildContext context, String screen) async {
-    if (currentScreen == screen) return;
-
-    if (onNavigationAttempt != null) {
-      final shouldProceed = await onNavigationAttempt!();
-      if (!shouldProceed) return;
+    if (widget.currentScreen == screen) return;
+    if (widget.onNavigationAttempt != null) {
+      final ok = await widget.onNavigationAttempt!();
+      if (!ok) return;
     }
+    if (!context.mounted) return;
 
-    Widget destination;
+    setState(() => _pendingScreen = screen);
+
     switch (screen) {
       case 'home':
-        destination = HomeScreen();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+        );
         break;
       case 'opponents':
-        destination = MyOpponentsScreen();
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => MyOpponentsScreen()),
+        );
         break;
       case 'sessions':
-        destination = SessionHistoryScreen();
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => SessionHistoryScreen()),
+        );
         break;
-      case 'profile':
-        destination = ProfileScreen();
+      case 'scan':
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const QRScanScreen()),
+        );
         break;
-      default:
-        return;
     }
 
-    if (screen == 'home') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => destination),
-      );
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => destination),
-      );
-    }
+    if (mounted) setState(() => _pendingScreen = null);
   }
 
-  /// Nav item with icon and label
-  Widget _buildNavItem({
-    required BuildContext context,
-    required String iconPath,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-    GlobalKey? itemKey,
-  }) {
+  Future<void> _navigateToClubs(BuildContext context) async {
+    if (widget.currentScreen == 'clubs') return;
+    if (widget.onNavigationAttempt != null) {
+      final ok = await widget.onNavigationAttempt!();
+      if (!ok) return;
+    }
+    if (!context.mounted) return;
+
+    setState(() => _pendingScreen = 'clubs');
+    final clubs = await ClubService.getClubs();
+    if (!context.mounted) return;
+    if (clubs.isNotEmpty) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => ClubDashboardScreen(club: clubs.first)),
+      );
+    } else {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset(
+                  'assets/icons/Info.svg',
+                  width: 12,
+                  height: 12,
+                  colorFilter: const ColorFilter.mode(
+                    Color(0xFF9A9B9E),
+                    BlendMode.srcIn,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  "You're not a member of any clubs yet",
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFFB9B9B9),
+                    height: 16 / 11,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF2C2C2E),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            behavior: SnackBarBehavior.floating,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+    }
+    if (mounted) setState(() => _pendingScreen = null);
+  }
+}
+
+/// Single nav icon button — 28×28 touch target.
+/// When [activePath] is provided, that SVG is shown as-is (native colors)
+/// when the icon is active, and [path] is shown with the inactive color filter
+/// when inactive.
+class _NavIcon extends StatelessWidget {
+  final String path;
+  final String? activePath;
+  final bool isSvg;
+  final bool isActive;
+  final VoidCallback onTap;
+  final GlobalKey? itemKey;
+
+  const _NavIcon({
+    required this.path,
+    required this.isSvg,
+    required this.isActive,
+    required this.onTap,
+    this.activePath,
+    this.itemKey,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // When an activePath is provided and the icon is active, render it
+    // without any color filter so the SVG's own fill colors show through.
+    final useActivePath = isActive && activePath != null;
+    final resolvedPath = useActivePath ? activePath! : path;
     final color = isActive
-        ? const Color(0xFF89F1EC)
-        : const Color(0xFF808285);
+        ? GlobalBottomNavBar._activeColor
+        : GlobalBottomNavBar._inactiveColor;
 
     return GestureDetector(
       key: itemKey,
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 66,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 32,
-              height: 31,
-              child: Center(
-                child: SvgPicture.asset(
-                  iconPath,
-                  width: 24,
-                  height: 24,
-                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                ),
-              ),
-            ),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color: color,
-                  height: 1.47,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Center FAB button
-  Widget _buildCenterFab(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () async {
-        if (onNavigationAttempt != null) {
-          final shouldProceed = await onNavigationAttempt!();
-          if (!shouldProceed) return;
-        }
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => LoggingModeSelectionScreen()),
-        );
-      },
-      child: Container(
-        key: fabKey,
-        width: 62,
-        height: 62,
-        decoration: const BoxDecoration(
-          color: Color(0xFF1B1E24),
-          shape: BoxShape.circle,
-        ),
+        width: 28,
+        height: 28,
         child: Center(
-          child: Container(
-            width: 49,
-            height: 49,
-            decoration: const BoxDecoration(
-              color: Color(0xFF89F1EC),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: SvgPicture.asset(
-                'icons/figma_icons/plus.svg',
-                width: 27,
-                height: 27,
-                colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-              ),
-            ),
-          ),
+          child: isSvg
+              ? SvgPicture.asset(
+                  resolvedPath,
+                  width: 28,
+                  height: 28,
+                  colorFilter: useActivePath
+                      ? null
+                      : ColorFilter.mode(color, BlendMode.srcIn),
+                )
+              : Image.asset(
+                  resolvedPath,
+                  width: 28,
+                  height: 28,
+                  color: useActivePath ? null : color,
+                ),
         ),
       ),
     );
