@@ -30,6 +30,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   final TextEditingController _sessionNameController = TextEditingController();
   final TextEditingController _buyInController = TextEditingController();
   final TextEditingController _startingStackController = TextEditingController();
+  final TextEditingController _sbController = TextEditingController(text: '1');
+  final TextEditingController _bbController = TextEditingController(text: '2');
 
   // ─── Session settings ────────────────────────────────────────────
   GameType _gameType = GameType.cash;
@@ -54,7 +56,9 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   // ─── Validation ──────────────────────────────────────────────────
   bool get _isFormValid {
-    final hasBlinds = _smallBlind > 0 && _bigBlind > 0;
+    final sb = int.tryParse(_sbController.text);
+    final bb = int.tryParse(_bbController.text);
+    final hasBlinds = (sb != null && sb > 0) && (bb != null && bb > 0);
     final hasBuyIn = _buyInController.text.isNotEmpty &&
         double.tryParse(_buyInController.text) != null;
     final hasHero = _heroSeat != null;
@@ -108,6 +112,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       }
       if (savedBBante != null) _hasBBante = savedBBante;
     });
+    _sbController.text = _smallBlind.toString();
+    _bbController.text = _bigBlind.toString();
   }
 
   Future<void> _loadHeroName() async {
@@ -163,6 +169,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     _sessionNameController.dispose();
     _buyInController.dispose();
     _startingStackController.dispose();
+    _sbController.dispose();
+    _bbController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -316,6 +324,8 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
       _smallBlind = 100;
       _bigBlind = 200;
     }
+    _sbController.text = _smallBlind.toString();
+    _bbController.text = _bigBlind.toString();
   }
 
   // ─── BUILD ───────────────────────────────────────────────────────
@@ -480,24 +490,18 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           content: Row(
             children: [
               Expanded(
-                child: _buildBlindInput(
+                child: _buildBlindTextField(
                   l10n.setupSmallBlind,
-                  _gameType == GameType.cash
-                      ? '${CurrencyService.symbol}$_smallBlind'
-                      : '$_smallBlind',
-                  () => _showBlindDialog(l10n.setupSmallBlind, _smallBlind,
-                      (v) => setState(() => _smallBlind = v)),
+                  _sbController,
+                  (v) => setState(() => _smallBlind = v),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _buildBlindInput(
+                child: _buildBlindTextField(
                   l10n.setupBigBlind,
-                  _gameType == GameType.cash
-                      ? '${CurrencyService.symbol}$_bigBlind'
-                      : '$_bigBlind',
-                  () => _showBlindDialog(l10n.setupBigBlind, _bigBlind,
-                      (v) => setState(() => _bigBlind = v)),
+                  _bbController,
+                  (v) => setState(() => _bigBlind = v),
                 ),
               ),
             ],
@@ -707,7 +711,11 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     );
   }
 
-  Widget _buildBlindInput(String label, String value, VoidCallback onTap) {
+  Widget _buildBlindTextField(
+    String label,
+    TextEditingController controller,
+    ValueChanged<int> onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -720,24 +728,44 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: double.infinity,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF161719),
-              borderRadius: BorderRadius.circular(12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(color: const Color(0xFF1F272F)),
+          ),
+          child: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
             ),
-            child: Text(
-              value,
-              style: GoogleFonts.ibmPlexSans(
+            decoration: InputDecoration(
+              hintText: '0',
+              hintStyle: GoogleFonts.ibmPlexSans(
+                color: const Color(0xFF8C8C8C),
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
-                color: const Color(0xFFB9B9B9),
               ),
+              filled: false,
+              fillColor: Colors.transparent,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+              isDense: true,
             ),
+            onChanged: (value) {
+              final v = int.tryParse(value);
+              if (v != null && v > 0) {
+                onChanged(v);
+              }
+              setState(() {});
+            },
           ),
         ),
       ],
@@ -993,92 +1021,4 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     return labels;
   }
 
-  // ─── BLIND DIALOG ────────────────────────────────────────────────
-
-  void _showBlindDialog(
-      String title, int currentValue, ValueChanged<int> onConfirm) {
-    final l10n = AppLocalizations.of(context);
-    final controller =
-        TextEditingController(text: currentValue.toString());
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF161719),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          title,
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          textInputAction: TextInputAction.done,
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 15,
-          ),
-          decoration: InputDecoration(
-            hintText: 'Enter value',
-            hintStyle: GoogleFonts.ibmPlexSans(
-              color: const Color(0xFFB9B9B9),
-              fontSize: 15,
-            ),
-            filled: true,
-            fillColor: const Color(0xFF0C0C0C),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                  color: Color(0xFF4CDE78), width: 1.5),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              l10n.commonCancel,
-              style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFFB9B9B9),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              final v = int.tryParse(controller.text);
-              if (v != null && v > 0) {
-                onConfirm(v);
-                Navigator.pop(ctx);
-              }
-            },
-            child: Text(
-              l10n.commonOk,
-              style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF4CDE78),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

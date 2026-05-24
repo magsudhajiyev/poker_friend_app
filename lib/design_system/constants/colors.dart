@@ -15,6 +15,7 @@ class AppColors {
   static const Color gradientGreenMid = Color(0xFF006434);
 
   // Card & Background Colors
+  static const Color bgMainV2 = Color(0xFF0C0C0C);           // Nav bar / page bg v2
   static const Color glassyCardBase = Color(0xFF546165);
   static const Color semiTransparentDark = Color(0xFF3D3D3D);
   static const Color navBarBackground = Color(0xFF1E1E1E);
