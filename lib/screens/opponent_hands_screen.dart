@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import '../models/opponent.dart';
 import '../services/local_storage_service.dart';
@@ -573,7 +572,6 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
 
   Widget _buildHandCard(Map<String, dynamic> hand, int index) {
     final l10n = AppLocalizations.of(context);
-    final startTime = DateTime.parse(hand['startTime']);
     final sessionName = hand['sessionName'] ?? l10n.opponentHandsUnknownSession;
     final handNumber = hand['handNumber'] ?? (index + 1);
     final buttonPosition = hand['buttonPosition'] ?? 1;
@@ -583,23 +581,18 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     final winnerId = hand['winnerId'];
     final isCash = hand['gameType'] == 'cash';
 
-    // Get hero position name
     final heroPositionName = PokerPositions.getPositionName(heroPosition, buttonPosition, playerCount);
 
-    // Check if opponent won and get opponent position
     bool opponentWon = false;
     String? opponentPosition;
     final playerNamesData = hand['playerNames'];
     if (playerNamesData != null && playerNamesData is Map) {
-      // Find opponent position
       playerNamesData.forEach((seat, name) {
         if (name.toString().toLowerCase().trim() == widget.opponent.name.toLowerCase().trim()) {
           final seatNum = int.tryParse(seat.toString()) ?? 1;
           opponentPosition = PokerPositions.getPositionName(seatNum, buttonPosition, playerCount);
         }
       });
-
-      // Check winner
       if (winnerId != null) {
         final winnerName = playerNamesData[winnerId.toString()];
         opponentWon = winnerName?.toString().toLowerCase().trim() ==
@@ -607,128 +600,122 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
       }
     }
 
+    final potText = 'Pot ${isCash ? CurrencyService.formatCash(potAmount) : potAmount.toStringAsFixed(0)}';
+
     return GestureDetector(
       onTap: () {
         final allHands = _allFilteredHands ?? [hand];
-        final index = allHands.indexOf(hand);
+        final idx = allHands.indexOf(hand);
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => HandActionsPageView(
               hands: allHands,
-              initialIndex: index < 0 ? 0 : index,
+              initialIndex: idx < 0 ? 0 : idx,
             ),
           ),
         );
       },
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: _cardColor,
-          borderRadius: BorderRadius.circular(14),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFF161719), width: 1)),
         ),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top row: Hand # + session + date | opponent won badge
+            // Row 1: hand number chip + session name | OPP WON badge
             Row(
               children: [
-                // Hand number
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  width: 38,
+                  height: 36,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(6),
+                    color: const Color(0xFF161719),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  alignment: Alignment.center,
                   child: Text(
                     '#$handNumber',
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
+                      fontWeight: FontWeight.w500,
                       color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                      height: 20 / 13,
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                // Session name + date
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        sessionName,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 14,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        DateFormat('MMM dd, yyyy').format(startTime),
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.4),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    sessionName,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      height: 22 / 17,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Opponent won badge
                 if (opponentWon)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.12),
+                      color: const Color(0xFFFF3B30),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       l10n.opponentHandsOppWon,
                       style: GoogleFonts.ibmPlexSans(
-                        fontSize: 10,
-                        color: Colors.red,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                        height: 20 / 13,
                       ),
                     ),
                   ),
               ],
             ),
-
-            const SizedBox(height: 12),
-            Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
-            const SizedBox(height: 12),
-
-            // Bottom row: positions + pot + chevron
+            const SizedBox(height: 16),
+            // Row 2: player chips | pot chip
             Row(
               children: [
-                // Your position
-                _buildPositionChip(l10n.opponentHandsYou, heroPositionName, _mint),
+                _buildPlayerChip(l10n.opponentHandsYou, heroPositionName, isHero: true),
                 const SizedBox(width: 8),
-                // Opponent position
                 if (opponentPosition != null)
-                  _buildPositionChip(
+                  _buildPlayerChip(
                     widget.opponent.name.length > 8
                         ? '${widget.opponent.name.substring(0, 8)}.'
                         : widget.opponent.name,
                     opponentPosition!,
-                    Colors.white.withValues(alpha: 0.6),
+                    isHero: false,
                   ),
                 const Spacer(),
-                // Pot
-                Text(
-                  l10n.opponentHandsPot(isCash ? CurrencyService.formatCash(potAmount) : potAmount.toStringAsFixed(0)),
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    color: _mint,
-                    fontWeight: FontWeight.w600,
+                // Pot chip
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF161719),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.chevron_right,
-                  color: Colors.white.withValues(alpha: 0.3),
-                  size: 20,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        potText,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF4CDE78),
+                          height: 20 / 13,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.chevron_right, size: 12, color: Color(0xFF4CDE78)),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -738,33 +725,53 @@ class _OpponentHandsScreenState extends State<OpponentHandsScreen> {
     );
   }
 
-  Widget _buildPositionChip(String label, String position, Color positionColor) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '$label ',
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.4),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: positionColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            position,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 11,
-              color: positionColor,
-              fontWeight: FontWeight.w600,
+  Widget _buildPlayerChip(String label, String position, {required bool isHero}) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161719),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 38,
+            height: 28,
+            child: Center(
+              child: Text(
+                label,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  height: 20 / 13,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-        ),
-      ],
+          Container(
+            width: 38,
+            height: 28,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0C0C0C),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              position,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: isHero ? const Color(0xFFA3FF78) : const Color(0xFFB9B9B9),
+                height: 20 / 13,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

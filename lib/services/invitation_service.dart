@@ -84,30 +84,27 @@ class InvitationService {
     if (email == null) return [];
 
     try {
+      // collectionGroup query requires a Firestore index on (email, status)
+      // but doesn't require reading all clubs — avoids permission errors.
+      final snapshot = await _firestore
+          .collectionGroup(_invitationsSubcollection)
+          .where('email', isEqualTo: email)
+          .where('status', isEqualTo: 'pending')
+          .get();
+
       final invitations = <ClubInvitation>[];
-
-      // Query all clubs for pending invitations with this email
-      final clubsSnapshot = await _firestore.collection(_clubsCollection).get();
-
-      for (final clubDoc in clubsSnapshot.docs) {
-        final invitationsQuery = await clubDoc.reference
-            .collection(_invitationsSubcollection)
-            .where('email', isEqualTo: email)
-            .where('status', isEqualTo: 'pending')
-            .get();
-
-        for (final invDoc in invitationsQuery.docs) {
-          final invitation = ClubInvitation.fromFirestore(invDoc, clubId: clubDoc.id);
-          // Check if not expired
-          if (!invitation.isExpired) {
-            invitations.add(invitation);
-          }
+      for (final doc in snapshot.docs) {
+        // Extract clubId from path: clubs/{clubId}/invitations/{invId}
+        final clubId = doc.reference.parent.parent?.id;
+        if (clubId == null) continue;
+        final invitation = ClubInvitation.fromFirestore(doc, clubId: clubId);
+        if (!invitation.isExpired) {
+          invitations.add(invitation);
         }
       }
-
       return invitations;
     } catch (e) {
-      debugPrint('Error getting pending invitations: $e');
+      // Silently return empty list — user may not be invited to any club.
       return [];
     }
   }
