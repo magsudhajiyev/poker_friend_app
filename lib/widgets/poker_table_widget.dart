@@ -223,11 +223,53 @@ class PokerTableWidget extends StatelessWidget {
     );
   }
 
+  Widget _buildSeatNameBadge(String name) {
+    const badgeWidth = 52.0;
+    const badgeHeight = 17.0;
+    const tailHeight = 3.5;
+    final truncated = name.length > 8 ? '${name.substring(0, 6)}..' : name;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Container(
+          width: badgeWidth,
+          height: badgeHeight,
+          decoration: BoxDecoration(
+            color: const Color(0xFF0097D2),
+            borderRadius: BorderRadius.circular(8.5),
+          ),
+          child: Center(
+            child: Text(
+              truncated,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 10.0,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+                height: 1.24,
+              ),
+              maxLines: 1,
+            ),
+          ),
+        ),
+        CustomPaint(
+          size: const Size(badgeWidth, tailHeight),
+          painter: _SeatBadgeTailPainter(),
+        ),
+      ],
+    );
+  }
+
   List<Widget> _buildDefaultSeatWidgets(
       BuildContext context, int seatNumber, bool isActive, Offset position) {
     const double circleR = 15.5; // half of ~31px pill height
+    const double badgeW = 52.0;
+    const double badgeH = 20.5;
     final variant = getSeatLayoutVariant(seatNumber);
     final label = seatLabels[seatNumber] ?? '';
+    final isDefaultName = label.isEmpty || RegExp(r'^Player\s*\d*$').hasMatch(label);
+    final showBadge = isActive && !isDefaultName;
 
     final circleWidget = Positioned(
       left: position.dx - circleR,
@@ -239,40 +281,77 @@ class PokerTableWidget extends StatelessWidget {
     );
 
     Widget labelWidget;
-    if (variant == 'top') {
-      labelWidget = Positioned(
-        left: position.dx - 30,
-        top: position.dy + circleR + 4,
-        child: SizedBox(
-          width: 60,
+
+    if (showBadge) {
+      final badge = _buildSeatNameBadge(label);
+      if (variant == 'top') {
+        labelWidget = Positioned(
+          left: position.dx - badgeW / 2,
+          top: position.dy + circleR + 4,
           child: GestureDetector(
             onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
-            child: Center(
-                child: _buildDefaultSeatLabel(context, seatNumber, isActive, label)),
+            child: badge,
           ),
-        ),
-      );
-    } else if (variant == 'right') {
-      labelWidget = Positioned(
-        left: position.dx + circleR + 8,
-        top: position.dy - 7,
-        child: GestureDetector(
-          onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
-          child: _buildDefaultSeatLabel(context, seatNumber, isActive, label),
-        ),
-      );
+        );
+      } else if (variant == 'right') {
+        labelWidget = Positioned(
+          left: position.dx + circleR + 4,
+          top: position.dy - badgeH / 2,
+          child: GestureDetector(
+            onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
+            child: badge,
+          ),
+        );
+      } else {
+        // 'left' — badge sits to the left of the seat circle
+        labelWidget = Positioned(
+          left: position.dx - circleR - 4,
+          top: position.dy - badgeH / 2,
+          child: GestureDetector(
+            onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
+            child: FractionalTranslation(
+              translation: const Offset(-1.0, 0.0),
+              child: badge,
+            ),
+          ),
+        );
+      }
     } else {
-      labelWidget = Positioned(
-        left: position.dx - circleR - 8,
-        top: position.dy - 7,
-        child: GestureDetector(
-          onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
-          child: FractionalTranslation(
-            translation: const Offset(-1.0, 0.0),
+      if (variant == 'top') {
+        labelWidget = Positioned(
+          left: position.dx - 30,
+          top: position.dy + circleR + 4,
+          child: SizedBox(
+            width: 60,
+            child: GestureDetector(
+              onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
+              child: Center(
+                  child: _buildDefaultSeatLabel(context, seatNumber, isActive, label)),
+            ),
+          ),
+        );
+      } else if (variant == 'right') {
+        labelWidget = Positioned(
+          left: position.dx + circleR + 8,
+          top: position.dy - 7,
+          child: GestureDetector(
+            onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
             child: _buildDefaultSeatLabel(context, seatNumber, isActive, label),
           ),
-        ),
-      );
+        );
+      } else {
+        labelWidget = Positioned(
+          left: position.dx - circleR - 8,
+          top: position.dy - 7,
+          child: GestureDetector(
+            onTap: onSeatTap != null ? () => onSeatTap!(seatNumber) : null,
+            child: FractionalTranslation(
+              translation: const Offset(-1.0, 0.0),
+              child: _buildDefaultSeatLabel(context, seatNumber, isActive, label),
+            ),
+          ),
+        );
+      }
     }
 
     return [circleWidget, labelWidget];
@@ -385,4 +464,20 @@ class PokerTableWidget extends StatelessWidget {
       onDealerButtonMoved!(closestSeat);
     }
   }
+}
+
+class _SeatBadgeTailPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0xFF0097D2);
+    final path = Path()
+      ..moveTo(size.width * 0.715, 0)
+      ..lineTo(size.width * 0.865, 0)
+      ..lineTo(size.width * 0.865, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_SeatBadgeTailPainter oldDelegate) => false;
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../design_system/components.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hand_state_machine.dart';
 import '../utils/poker_positions.dart';
@@ -275,40 +274,34 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
 
 
   void _showSeatDialog(int seatNumber) {
-    // Store original values to restore on cancel
-    final originalIsActive = seatActive[seatNumber] ?? false;
     final originalSelectedSeat = selectedSeat;
     final originalName = nameControllers[seatNumber]?.text ?? '';
     final originalStack = stackControllers[seatNumber]?.text ?? '';
 
-    // Create temporary state for the dialog
-    bool tempIsActive = originalIsActive;
     bool tempIsMySeat = selectedSeat == seatNumber;
     String tempName = originalName;
     String tempStack = originalStack;
+    bool tempSaveAsOpponent = false;
+    List<String> suggestions = [];
 
-    // Create temporary controllers for the dialog
     final tempNameController = TextEditingController(text: tempName);
     final tempStackController = TextEditingController(text: tempStack);
 
     void saveChanges() {
-      // Pop with save data - state update happens in .then() callback
       Navigator.pop(context, {
         'save': true,
-        'isActive': tempIsActive,
+        'isActive': tempName.isNotEmpty || tempIsMySeat,
         'isMySeat': tempIsMySeat,
         'name': tempName,
         'stack': tempStack,
+        'saveAsOpponent': tempSaveAsOpponent,
       });
     }
 
     void cancelChanges() {
-      // Just close - no changes applied
       Navigator.pop(context, null);
     }
 
-    // Onboarding keys for the seat dialog tour
-    final seatToggleKey = GlobalKey(debugLabel: 'seatToggle');
     final mySeatKey = GlobalKey(debugLabel: 'mySeat');
     final playerNameKey = GlobalKey(debugLabel: 'playerName');
     final saveOpponentKey = GlobalKey(debugLabel: 'saveOpponent');
@@ -320,559 +313,484 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          // Schedule onboarding tour for the dialog (once)
           if (!_dialogTourShown &&
               OnboardingState.isOnboardingActive &&
               OnboardingState.seatDialogTourPending) {
             _dialogTourShown = true;
-            // Wait for bottom sheet animation + keys to settle
             Future.delayed(const Duration(milliseconds: 500), () {
               if (!mounted) return;
               SeatDialogTour(
-                seatToggleKey: seatToggleKey,
+                seatToggleKey: mySeatKey,
                 mySeatKey: mySeatKey,
                 playerNameKey: playerNameKey,
                 saveOpponentKey: saveOpponentKey,
               ).show(context);
             });
           }
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.85,
-            decoration: BoxDecoration(
-              color: Color(0xFF131616),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
+
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: Column(
-              children: [
-                // Header with X, title, checkmark
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // X button - cancel without saving
-                      GestureDetector(
-                        onTap: cancelChanges,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF3C3C43).withOpacity(0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: _buildIcon(
-                              'icons/figma_icons/close.svg',
-                              16,
-                              Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Title
-                      Text(
-                        AppLocalizations.of(context).seatSetupTitle,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.43,
-                        ),
-                      ),
-                      // Checkmark button - save changes
-                      GestureDetector(
-                        onTap: saveChanges,
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF89F1EC),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: SvgPicture.asset(
-                              'icons/figma_icons/check.svg',
-                              width: 24,
-                              height: 24,
-                              colorFilter: const ColorFilter.mode(
-                                Color(0xFF1A4A4A),
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
-
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ─── HEADER ────────────────────────────────────
+                    Row(
                       children: [
-                        // Seat info card with toggle
-                        Container(
-                          key: seatToggleKey,
-                          width: double.infinity,
-                          padding: EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Color(0xFF1C1C1E),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    AppLocalizations.of(context).seatSetupSeatNumber(seatNumber),
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 17,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    _getPositionForActiveSeat(seatNumber),
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 15,
-                                      color: Colors.white.withOpacity(0.6),
-                                    ),
-                                  ),
-                                ],
+                        const SizedBox(width: 18),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              'Seat $seatNumber',
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF0C0C0C),
+                                height: 20 / 15,
                               ),
-                              // Toggle - teal switch matching app design
-                              GestureDetector(
-                                onTap: _areSeatChangesLocked() ? null : () {
-                                  setDialogState(() {
-                                    tempIsActive = !tempIsActive;
-                                    if (tempIsActive) {
-                                      if (tempName.isEmpty) {
-                                        tempName = 'Player $seatNumber';
-                                        tempNameController.text = tempName;
-                                      }
-                                    } else {
-                                      // Reset to defaults when deactivating
-                                      tempName = '';
-                                      tempNameController.text = '';
-                                      final defaultStack = widget.startingStack != null
-                                          ? (widget.gameType == GameType.cash
-                                              ? widget.startingStack!.toStringAsFixed(2)
-                                              : widget.startingStack!.toInt().toString())
-                                          : (widget.isCashGame ? '100.00' : '1500');
-                                      tempStack = defaultStack;
-                                      tempStackController.text = defaultStack;
-                                      tempIsMySeat = false;
-                                    }
-                                  });
-                                },
-                                child: AppToggle(
-                                  value: tempIsActive,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-
-                        SizedBox(height: 12),
-
-                        // "This is my seat" row
                         GestureDetector(
-                          onTap: _areSeatChangesLocked() ? null : () {
-                            setDialogState(() {
-                              if (!tempIsMySeat) {
-                                tempIsMySeat = true;
-                                tempIsActive = true;
-                                // Auto-insert username
-                                final userName = DisplayIdentityService.cachedDisplayIdentity;
-                                if (userName.isNotEmpty) {
-                                  tempName = userName;
-                                  tempNameController.text = userName;
-                                }
-                                // Set stack
-                                if (widget.isIndividualSession && widget.individualCurrentStack != null) {
-                                  tempStack = widget.isCashGame
-                                    ? widget.individualCurrentStack!.toStringAsFixed(2)
-                                    : widget.individualCurrentStack!.toInt().toString();
-                                  tempStackController.text = tempStack;
-                                } else if (widget.startingStack != null) {
-                                  tempStack = widget.gameType == GameType.cash
-                                    ? widget.startingStack!.toStringAsFixed(2)
-                                    : widget.startingStack!.toInt().toString();
-                                  tempStackController.text = tempStack;
-                                }
-                              } else {
-                                tempIsMySeat = false;
-                              }
-                            });
-                          },
-                          child: Container(
-                            key: mySeatKey,
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                          onTap: cancelChanges,
+                          child: _buildIcon(
+                            'icons/figma_icons/close.svg',
+                            18,
+                            const Color(0xFFB9B9B9),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // ─── THIS IS MY SEAT ───────────────────────────
+                    GestureDetector(
+                      key: mySeatKey,
+                      onTap: _areSeatChangesLocked() ? null : () {
+                        setDialogState(() {
+                          tempIsMySeat = !tempIsMySeat;
+                          if (tempIsMySeat) {
+                            final userName = DisplayIdentityService.cachedDisplayIdentity;
+                            if (userName.isNotEmpty) {
+                              tempName = userName;
+                              tempNameController.text = userName;
+                              suggestions = _getSuggestions(userName);
+                            }
+                            if (widget.isIndividualSession && widget.individualCurrentStack != null) {
+                              tempStack = widget.isCashGame
+                                  ? widget.individualCurrentStack!.toStringAsFixed(2)
+                                  : widget.individualCurrentStack!.toInt().toString();
+                              tempStackController.text = tempStack;
+                            } else if (widget.startingStack != null) {
+                              tempStack = widget.gameType == GameType.cash
+                                  ? widget.startingStack!.toStringAsFixed(2)
+                                  : widget.startingStack!.toInt().toString();
+                              tempStackController.text = tempStack;
+                            }
+                          }
+                        });
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 22,
+                            height: 22,
                             decoration: BoxDecoration(
-                              color: tempIsMySeat ? const Color(0xFF101115) : const Color(0xFF1C1C1E),
-                              borderRadius: BorderRadius.circular(18),
-                              border: tempIsMySeat
-                                  ? Border.all(color: const Color(0xFF73D4CF), width: 1)
-                                  : null,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: tempIsMySeat
+                                    ? const Color(0xFF0C0C0C)
+                                    : const Color(0xFFB9B9B9),
+                                width: 1.5,
+                              ),
                             ),
-                            child: Row(
-                              children: [
-                                // Radio button style circle
-                                Container(
-                                  width: 20,
-                                  height: 20,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: tempIsMySeat ? const Color(0xFF73D4CF) : const Color(0xFF48484A),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: tempIsMySeat
-                                      ? Center(
-                                          child: Container(
-                                            width: 12,
-                                            height: 12,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: const Color(0xFF73D4CF),
-                                              border: Border.all(
-                                                color: const Color(0xFF73D4CF),
-                                                width: 2,
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                SizedBox(width: 10),
-                                Text(
-                                  AppLocalizations.of(context).seatSetupThisIsMySeat,
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 15,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: 12),
-
-                        // Player Name and Buy-in fields in one card
-                        Container(
-                          key: playerNameKey,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF1C1C1E),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              // Player Name field
-                              Autocomplete<String>(
-                                initialValue: TextEditingValue(text: tempName),
-                                optionsBuilder: (TextEditingValue textEditingValue) {
-                                  return _getSuggestions(textEditingValue.text);
-                                },
-                                onSelected: (String selection) {
-                                  setDialogState(() {
-                                    tempName = selection;
-                                    tempNameController.text = selection;
-                                    _checkIfShouldShowSaveTip(seatNumber, selection);
-                                  });
-                                },
-                                fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
-                                  // Sync controller with tempName
-                                  if (controller.text != tempNameController.text) {
-                                    controller.text = tempNameController.text;
-                                  }
-
-                                  return TextField(
-                                    controller: controller,
-                                    focusNode: focusNode,
-                                    onEditingComplete: onEditingComplete,
-                                    enabled: !_areSeatChangesLocked(),
-                                    style: GoogleFonts.ibmPlexSans(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText: AppLocalizations.of(context).seatSetupPlayerName,
-                                      hintStyle: GoogleFonts.ibmPlexSans(
-                                        color: Colors.white.withOpacity(0.4),
-                                        fontSize: 15,
-                                      ),
-                                      border: InputBorder.none,
-                                      enabledBorder: InputBorder.none,
-                                      focusedBorder: InputBorder.none,
-                                      disabledBorder: InputBorder.none,
-                                      errorBorder: InputBorder.none,
-                                      focusedErrorBorder: InputBorder.none,
-                                      filled: false,
-                                      contentPadding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-                                    ),
-                                    textCapitalization: TextCapitalization.words,
-                                    onChanged: (value) {
-                                      tempName = value;
-                                      tempNameController.text = value;
-                                      setDialogState(() {
-                                        _checkIfShouldShowSaveTip(seatNumber, value);
-                                      });
-                                    },
-                                  );
-                                },
-                                optionsViewBuilder: (context, onSelected, options) {
-                                  return Align(
-                                    alignment: Alignment.topLeft,
-                                    child: Material(
-                                      elevation: 8,
-                                      borderRadius: BorderRadius.circular(12),
-                                      color: Color(0xFF1C1C1E),
-                                      child: Container(
-                                        constraints: BoxConstraints(maxHeight: 200, maxWidth: 300),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: Color(0xFF2A2A2E)),
-                                        ),
-                                        child: ListView.builder(
-                                          padding: EdgeInsets.all(8),
-                                          shrinkWrap: true,
-                                          itemCount: options.length,
-                                          itemBuilder: (context, index) {
-                                            final option = options.elementAt(index);
-                                            final opponent = allOpponents.firstWhere(
-                                              (o) => o.name == option,
-                                              orElse: () => allOpponents.first,
-                                            );
-
-                                            return Container(
-                                              margin: EdgeInsets.only(bottom: 4),
-                                              decoration: BoxDecoration(
-                                                color: Color(0xFF131616),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: ListTile(
-                                                dense: true,
-                                                title: Text(
-                                                  option,
-                                                  style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14),
-                                                ),
-                                                subtitle: Text(
-                                                  opponentStats[opponent.name]?.playingStyle ?? 'No Data',
-                                                  style: GoogleFonts.ibmPlexSans(fontSize: 11, color: Colors.white.withOpacity(0.6)),
-                                                ),
-                                                leading: Container(
-                                                  width: 12,
-                                                  height: 12,
-                                                  decoration: BoxDecoration(
-                                                    color: _getColorForOpponent(opponent.color),
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                ),
-                                                onTap: () => onSelected(option),
-                                              ),
-                                            );
-                                          },
-                                        ),
+                            child: tempIsMySeat
+                                ? Center(
+                                    child: Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Color(0xFF0C0C0C),
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
-
-                              // Divider
-                              Container(
-                                margin: EdgeInsets.symmetric(horizontal: 16),
-                                height: 0.5,
-                                color: Color(0xFF38383A),
-                              ),
-
-                              // Buy-in Amount field
-                              TextField(
-                                controller: tempStackController,
-                                enabled: !_areSeatChangesLocked(),
-                                keyboardType: TextInputType.numberWithOptions(decimal: widget.isCashGame),
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: widget.isCashGame ? AppLocalizations.of(context).seatSetupBuyInAmount : AppLocalizations.of(context).seatSetupStartingChips,
-                                  hintStyle: GoogleFonts.ibmPlexSans(
-                                    color: Colors.white.withOpacity(0.4),
-                                    fontSize: 15,
-                                  ),
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  disabledBorder: InputBorder.none,
-                                  errorBorder: InputBorder.none,
-                                  focusedErrorBorder: InputBorder.none,
-                                  filled: false,
-                                  contentPadding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-                                ),
-                                onChanged: (value) {
-                                  if (widget.isCashGame) {
-                                    if (value.isNotEmpty && !RegExp(r'^\d*\.?\d{0,2}$').hasMatch(value)) {
-                                      tempStackController.text = tempStackController.text.substring(0, tempStackController.text.length - 1);
-                                      tempStackController.selection = TextSelection.fromPosition(TextPosition(offset: tempStackController.text.length));
-                                    }
-                                  } else {
-                                    if (value.isNotEmpty && !RegExp(r'^\d+$').hasMatch(value)) {
-                                      tempStackController.text = tempStackController.text.substring(0, tempStackController.text.length - 1);
-                                      tempStackController.selection = TextSelection.fromPosition(TextPosition(offset: tempStackController.text.length));
-                                    }
-                                  }
-                                  tempStack = tempStackController.text;
-                                },
-                              ),
-                            ],
+                                  )
+                                : null,
                           ),
-                        ),
-
-                        // Save opponent tip (never show for user's own seat)
-                        if (showSaveOpponentTip[seatNumber] == true && !tempIsMySeat) ...[
-                          SizedBox(height: 12),
-                          InkWell(
-                            key: saveOpponentKey,
-                            onTap: () async {
-                              // Free-tier gate: enforce opponent profile cap.
-                              if (!FreeTierLimits.canCreateAnotherOpponent(
-                                allOpponents.length,
-                              )) {
-                                await FreeTierLimits.showOpponentLimitDialog(
-                                  context,
-                                );
-                                return;
-                              }
-                              setState(() {
-                                showSaveOpponentTip[seatNumber] = false;
-                              });
-                              setDialogState(() {});
-
-                              try {
-                                final sMessenger = ScaffoldMessenger.of(context);
-                                final existingOpp = await OpponentService.findOpponentByName(tempName);
-                                if (existingOpp != null) {
-                                  sMessenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text(AppLocalizations.of(context).opponentAlreadyExists(tempName)),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                  return;
-                                }
-                                final opponent = OpponentService.createNewOpponent(name: tempName);
-                                await OpponentService.saveOpponent(opponent);
-                                // Invalidate MyOpponentsScreen cache so it shows the new opponent
-                                MyOpponentsScreen.invalidateCache();
-                                await _loadOpponents();
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(AppLocalizations.of(context).seatSetupOpponentSaved),
-                                    backgroundColor: Color(0xFF62E3BC),
-                                  ),
-                                );
-                              } catch (e) {
-                                setState(() {
-                                  showSaveOpponentTip[seatNumber] = true;
-                                });
-                                setDialogState(() {});
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(AppLocalizations.of(context).seatSetupFailedSave(e.toString())),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            },
-                            child: Container(
-                              padding: EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Color(0xFF62E3BC).withOpacity(0.1),
-                                border: Border.all(color: Color(0xFF62E3BC).withOpacity(0.3)),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.person_add, size: 16, color: Color(0xFF62E3BC)),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      AppLocalizations.of(context).seatSetupSaveAsOpponent(tempName),
-                                      style: GoogleFonts.ibmPlexSans(fontSize: 12, color: Color(0xFF62E3BC)),
-                                    ),
-                                  ),
-                                  Icon(Icons.arrow_forward, size: 16, color: Color(0xFF62E3BC)),
-                                ],
-                              ),
+                          const SizedBox(width: 8),
+                          Text(
+                            AppLocalizations.of(context).seatSetupThisIsMySeat,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xFF0C0C0C),
                             ),
                           ),
                         ],
+                      ),
+                    ),
 
-                        SizedBox(height: 24),
+                    const SizedBox(height: 8),
 
-                        // Done button - saves changes
-                        GestureDetector(
-                          onTap: saveChanges,
-                          child: Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            decoration: BoxDecoration(
-                              color: Color(0xFF62E3BC),
-                              borderRadius: BorderRadius.circular(110),
+                    // ─── PLAYER NAME ───────────────────────────────
+                    Column(
+                      key: playerNameKey,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context).seatSetupPlayerName,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFFB9B9B9),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFDFDFD),
+                            border: Border.all(
+                                color: const Color(0xFFEFEFEF), width: 1.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: TextField(
+                            controller: tempNameController,
+                            enabled: !_areSeatChangesLocked(),
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              color: const Color(0xFF0C0C0C),
                             ),
-                            child: Center(
-                              child: Text(
-                                AppLocalizations.of(context).seatSetupDone,
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: Colors.black,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
+                            textCapitalization: TextCapitalization.words,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              hintText: AppLocalizations.of(context).seatSetupPlayerName,
+                              hintStyle: GoogleFonts.ibmPlexSans(
+                                fontSize: 15,
+                                color: const Color(0xFFB9B9B9),
+                              ),
+                            ),
+                            onChanged: (value) {
+                              setDialogState(() {
+                                tempName = value;
+                                suggestions = _getSuggestions(value);
+                              });
+                            },
+                          ),
+                        ),
+                        // Inline autocomplete suggestions
+                        if (suggestions.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          ...suggestions.map((suggestion) {
+                            final opponent = allOpponents.firstWhere(
+                              (o) => o.name == suggestion,
+                              orElse: () => allOpponents.first,
+                            );
+                            final color = _getColorForOpponent(opponent.color);
+                            final initials = suggestion.length >= 2
+                                ? suggestion.substring(0, 2).toUpperCase()
+                                : suggestion.toUpperCase();
+                            // Find which seat this opponent is currently at
+                            String? assignedSeat;
+                            for (int i = 1; i <= 9; i++) {
+                              if (i != seatNumber &&
+                                  nameControllers[i]?.text == suggestion) {
+                                assignedSeat = 'Seat $i';
+                                break;
+                              }
+                            }
+                            return GestureDetector(
+                              onTap: () {
+                                setDialogState(() {
+                                  tempName = suggestion;
+                                  tempNameController.text = suggestion;
+                                  tempNameController.selection =
+                                      TextSelection.fromPosition(TextPosition(
+                                          offset: suggestion.length));
+                                  suggestions = [];
+                                });
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 4),
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF161719),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: color,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          initials,
+                                          style: GoogleFonts.ibmPlexSans(
+                                            fontSize: 7.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      suggestion,
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white,
+                                        height: 20 / 13,
+                                      ),
+                                    ),
+                                    if (assignedSeat != null) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFA3FF78),
+                                          borderRadius:
+                                              BorderRadius.circular(999),
+                                        ),
+                                        child: Text(
+                                          assignedSeat,
+                                          style: GoogleFonts.ibmPlexSans(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: const Color(0xFF0C0C0C),
+                                            height: 16 / 11,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // ─── SAVE AS OPPONENT ──────────────────────────
+                    Container(
+                      key: saveOpponentKey,
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFDFDFD),
+                        border: Border.all(color: const Color(0xFFEFEFEF)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Save as opponent',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFFB2B2B2),
+                            ),
+                          ),
+                          Switch(
+                            value: tempSaveAsOpponent,
+                            onChanged: (val) =>
+                                setDialogState(() => tempSaveAsOpponent = val),
+                            thumbColor: WidgetStateProperty.all(Colors.white),
+                            trackColor: WidgetStateProperty.resolveWith((s) {
+                              if (s.contains(WidgetState.selected)) {
+                                return const Color(0xFF0C0C0C);
+                              }
+                              return const Color(0xFFB9B9B9);
+                            }),
+                            trackOutlineColor:
+                                WidgetStateProperty.all(Colors.transparent),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // ─── STACK ─────────────────────────────────────
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.isCashGame
+                              ? AppLocalizations.of(context).seatSetupBuyInAmount
+                              : AppLocalizations.of(context).seatSetupStartingChips,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFFB9B9B9),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFDFDFD),
+                            border: Border.all(color: const Color(0xFFEFEFEF)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: TextField(
+                            controller: tempStackController,
+                            enabled: !_areSeatChangesLocked(),
+                            keyboardType: TextInputType.numberWithOptions(
+                                decimal: widget.isCashGame),
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              color: const Color(0xFF0C0C0C),
+                            ),
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              hintText: r'$',
+                              hintStyle: GoogleFonts.ibmPlexSans(
+                                fontSize: 15,
+                                color: const Color(0xFFB9B9B9),
+                              ),
+                            ),
+                            onChanged: (value) {
+                              if (widget.isCashGame) {
+                                if (value.isNotEmpty &&
+                                    !RegExp(r'^\d*\.?\d{0,2}$')
+                                        .hasMatch(value)) {
+                                  tempStackController.text = tempStackController
+                                      .text
+                                      .substring(
+                                          0,
+                                          tempStackController.text.length - 1);
+                                  tempStackController.selection =
+                                      TextSelection.fromPosition(TextPosition(
+                                          offset:
+                                              tempStackController.text.length));
+                                }
+                              } else {
+                                if (value.isNotEmpty &&
+                                    !RegExp(r'^\d+$').hasMatch(value)) {
+                                  tempStackController.text = tempStackController
+                                      .text
+                                      .substring(
+                                          0,
+                                          tempStackController.text.length - 1);
+                                  tempStackController.selection =
+                                      TextSelection.fromPosition(TextPosition(
+                                          offset:
+                                              tempStackController.text.length));
+                                }
+                              }
+                              tempStack = tempStackController.text;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // ─── FOOTER ────────────────────────────────────
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: cancelChanges,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                    color: const Color(0xFFB9B9B9)),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Back',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF0C0C0C),
+                                    height: 20 / 15,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-
-                        SizedBox(height: 40),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: saveChanges,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0C0C0C),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Save',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                    height: 20 / 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
+
+                    SizedBox(
+                      height: MediaQuery.of(context).padding.bottom + 24,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         },
       ),
     ).then((result) {
-      // Apply changes if save was requested
       if (result != null && result['save'] == true) {
-        setState(() {
-          final isActive = result['isActive'] as bool;
-          final isMySeat = result['isMySeat'] as bool;
-          final name = result['name'] as String;
-          final stack = result['stack'] as String;
+        final isActive = result['isActive'] as bool;
+        final isMySeat = result['isMySeat'] as bool;
+        final name = result['name'] as String;
+        final stack = result['stack'] as String;
+        final doSaveOpponent = result['saveAsOpponent'] as bool;
 
-          // Apply all changes
+        setState(() {
           seatActive[seatNumber] = isActive;
 
           if (!isActive) {
-            // Reset seat to defaults when deactivated
             nameControllers[seatNumber]?.text = '';
             final defaultStack = widget.startingStack != null
                 ? (widget.gameType == GameType.cash
@@ -881,39 +799,36 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
                 : (widget.isCashGame ? '100.00' : '1500');
             stackControllers[seatNumber]?.text = defaultStack;
             widget.sessionManager?.setPlayerName(seatNumber, 'Player $seatNumber');
-
-            // If this was my seat, clear selection
-            if (selectedSeat == seatNumber) {
-              selectedSeat = null;
-            }
+            if (selectedSeat == seatNumber) selectedSeat = null;
           } else {
             nameControllers[seatNumber]?.text = name;
             stackControllers[seatNumber]?.text = stack;
 
             if (isMySeat && selectedSeat != seatNumber) {
-              // Restore defaults for previous seat if changing my seat
               if (selectedSeat != null && selectedSeat != seatNumber) {
                 _restoreDefaultsForPreviousSeat(selectedSeat);
               }
               selectedSeat = seatNumber;
-              widget.sessionManager?.setPlayerName(seatNumber, name);
             } else if (!isMySeat && originalSelectedSeat == seatNumber) {
-              // Unchecked "this is my seat"
               selectedSeat = null;
             }
 
             widget.sessionManager?.setPlayerName(seatNumber, name);
           }
+
+          showSaveOpponentTip[seatNumber] = false;
         });
+
+        if (doSaveOpponent && name.isNotEmpty && !isMySeat) {
+          _saveOpponentFromDialog(name);
+        }
       }
 
-      // Dispose controllers after animation completes (300ms is typical modal animation duration)
       Future.delayed(const Duration(milliseconds: 350), () {
         tempNameController.dispose();
         tempStackController.dispose();
       });
 
-      // Show button token tour after dialog closes
       if (OnboardingState.isOnboardingActive &&
           OnboardingState.buttonTokenTourPending) {
         OnboardingState.buttonTokenTourPending = false;
@@ -923,6 +838,27 @@ class _SeatSetupScreenState extends State<SeatSetupScreen> {
         });
       }
     });
+  }
+
+  Future<void> _saveOpponentFromDialog(String name) async {
+    if (!FreeTierLimits.canCreateAnotherOpponent(allOpponents.length)) {
+      if (mounted) await FreeTierLimits.showOpponentLimitDialog(context);
+      return;
+    }
+    try {
+      final existing = await OpponentService.findOpponentByName(name);
+      if (existing != null) return;
+      final opponent = OpponentService.createNewOpponent(name: name);
+      await OpponentService.saveOpponent(opponent);
+      MyOpponentsScreen.invalidateCache();
+      await _loadOpponents();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).seatSetupOpponentSaved),
+          backgroundColor: const Color(0xFF62E3BC),
+        ));
+      }
+    } catch (_) {}
   }
 
   @override
