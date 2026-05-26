@@ -206,7 +206,7 @@ class GlobalBottomNavBar extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   color: color,
-                  height: 1.47,
+                  height: 1.2,
                 ),
               ),
             ),

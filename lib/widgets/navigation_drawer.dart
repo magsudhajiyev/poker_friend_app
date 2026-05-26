@@ -219,7 +219,11 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   label: l10n.navDrawerRegisterClub,
                                   onTap: () {
                                     Navigator.pop(context);
-                                    showRegisterClubDialog(context);
+                                    if (SubscriptionService.isClub) {
+                                      showRegisterClubDialog(context);
+                                    } else {
+                                      PaywallScreen.show(context, featureName: l10n.navDrawerRegisterClub, preselectedTier: 2);
+                                    }
                                   },
                                 ),
                                 _MenuItemData(

@@ -426,7 +426,7 @@ class _PublicLeaderboardScreenState extends State<PublicLeaderboardScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              AppLocalizations.of(context).leaderboardChipLeader(name: _rankingsData!.rankings.first.playerName),
+              AppLocalizations.of(context).leaderboardChipLeader(_rankingsData!.rankings.first.playerName),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,

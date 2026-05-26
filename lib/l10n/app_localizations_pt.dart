@@ -1502,8 +1502,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get paywallChooseYourPlan => 'Escolha seu plano';
 
   @override
-  String get paywallUpgradeOrCancel =>
-      'Atualize ou cancele* a qualquer momento';
+  String get paywallUpgradeOrCancel => 'Atualize ou cancele a qualquer momento';
 
   @override
   String get paywallContinue => 'Continuar';
@@ -1529,6 +1528,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get paywallFreeTrialBadge => 'Teste grátis de 7 dias';
+
+  @override
+  String get paywallFreeTrialBadge14 => 'Teste grátis de 14 dias';
 
   @override
   String get paywallProDescription =>
@@ -1613,7 +1615,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'As assinaturas são renovadas automaticamente. Cancele* a qualquer momento\nnas configurações da sua conta.';
+      'As assinaturas são renovadas automaticamente. Após o período de teste gratuito, será cobrado o preço indicado, a menos que você cancele pelo menos 24 horas antes do fim do período. Cancele a qualquer momento nas configurações da sua conta.';
 
   @override
   String get paywallTerms => 'Termos';
@@ -7650,6 +7652,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get paywallGetClubAction => 'Obter Club';
 
   @override
+  String get paywallCurrentPlan => 'Plano atual';
+
+  @override
   String get paywallProFeature1 => '50 mãos por sessão';
 
   @override
@@ -7683,13 +7688,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get paywallClubFeature1 => 'Tudo no Elite';
 
   @override
-  String get paywallClubFeature2 => 'Gestão de clube e funções de membro';
+  String get paywallClubFeature2 => 'Crie e administre seu próprio clube';
 
   @override
-  String get paywallClubFeature3 => 'Registro de voz ao vivo com dealer';
+  String get paywallClubFeature3 => 'Convide dealers e gerencie membros';
 
   @override
-  String get paywallClubFeature4 => 'Eventos multimesa com classificações';
+  String get paywallClubFeature4 =>
+      'Organize eventos multimesa com rankings ao vivo';
 
   @override
   String get profileTierOverride => 'Substituir nível de assinatura';

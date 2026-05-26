@@ -1506,7 +1506,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paywallChooseYourPlan => 'Elige tu plan';
 
   @override
-  String get paywallUpgradeOrCancel => 'Mejora o cancela* en cualquier momento';
+  String get paywallUpgradeOrCancel => 'Mejora o cancela en cualquier momento';
 
   @override
   String get paywallContinue => 'Continuar';
@@ -1532,6 +1532,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallFreeTrialBadge => 'Prueba gratis de 7 días';
+
+  @override
+  String get paywallFreeTrialBadge14 => 'Prueba gratis de 14 días';
 
   @override
   String get paywallProDescription =>
@@ -1615,7 +1618,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'Las suscripciones se renuevan automáticamente. Cancela* en cualquier momento\ndesde los ajustes de tu cuenta.';
+      'Las suscripciones se renuevan automáticamente. Después de tu prueba gratuita, se te cobrará el precio indicado a menos que canceles al menos 24 horas antes de que finalice el período. Cancela en cualquier momento desde los ajustes de tu cuenta.';
 
   @override
   String get paywallTerms => 'Términos';
@@ -7652,6 +7655,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paywallGetClubAction => 'Obtener Club';
 
   @override
+  String get paywallCurrentPlan => 'Plan actual';
+
+  @override
   String get paywallProFeature1 => '50 manos por sesión';
 
   @override
@@ -7685,13 +7691,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paywallClubFeature1 => 'Todo en Elite';
 
   @override
-  String get paywallClubFeature2 => 'Gestión de club y roles de miembro';
+  String get paywallClubFeature2 => 'Crea y gestiona tu propio club';
 
   @override
-  String get paywallClubFeature3 => 'Registro de voz con crupier en vivo';
+  String get paywallClubFeature3 => 'Invita dealers y gestiona miembros';
 
   @override
-  String get paywallClubFeature4 => 'Eventos multimesa con clasificaciones';
+  String get paywallClubFeature4 =>
+      'Organiza eventos multimesa con rankings en vivo';
 
   @override
   String get profileTierOverride => 'Anular nivel de suscripción';

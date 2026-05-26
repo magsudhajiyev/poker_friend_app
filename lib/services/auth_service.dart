@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/account_type.dart';
 import 'app_data_cache.dart';
 import 'fcm_service.dart';
+import 'logger_service.dart';
 import 'subscription_service.dart';
 import 'username_service.dart';
 import 'display_identity_service.dart';
@@ -68,6 +69,10 @@ class AuthService {
         await ensureUserDocument();
         debugPrint('ensureUserDocument completed');
 
+        // Set user context for observability
+        unawaited(LoggerService.setUserId(credential.user!.uid));
+        unawaited(LoggerService.logEvent('login', parameters: {'method': 'email'}));
+
         // RevenueCat user association - don't block sign-in
         unawaited(SubscriptionService.loginUser(credential.user!.uid));
 
@@ -77,7 +82,7 @@ class AuthService {
 
       return credential;
     } on FirebaseAuthException catch (e) {
-      debugPrint('Sign in error: ${e.message}');
+      await LoggerService.error('Sign in error', e);
 
       // If sign-in fails, check if this email uses Google-only sign-in
       if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
@@ -94,7 +99,7 @@ class AuthService {
 
       throw _getAuthException(e);
     } catch (e) {
-      debugPrint('Unexpected error during sign in: $e');
+      await LoggerService.error('Unexpected error during sign in', e, StackTrace.current);
       if (e is String) rethrow; // Re-throw our custom message
       throw 'An unexpected error occurred. Please try again.';
     }
@@ -118,6 +123,10 @@ class AuthService {
         // Verify document was created (safety net)
         await ensureUserDocument();
 
+        // Set user context for observability
+        unawaited(LoggerService.setUserId(credential.user!.uid));
+        unawaited(LoggerService.logEvent('signup', parameters: {'method': 'email'}));
+
         // FCM setup runs in background - don't block registration
         unawaited(_setupFcmInBackground());
       }
@@ -125,10 +134,10 @@ class AuthService {
       debugPrint('User registered: ${credential.user?.email}');
       return credential;
     } on FirebaseAuthException catch (e) {
-      debugPrint('Registration error: ${e.message}');
+      await LoggerService.error('Registration error', e);
       throw _getAuthException(e);
     } catch (e) {
-      debugPrint('Unexpected error during registration: $e');
+      await LoggerService.error('Unexpected error during registration', e, StackTrace.current);
       throw 'An unexpected error occurred. Please try again.';
     }
   }
@@ -149,7 +158,7 @@ class AuthService {
       }, SetOptions(merge: true));
       debugPrint('User document created successfully for $uid');
     } catch (e) {
-      debugPrint('Error creating user document: $e');
+      await LoggerService.error('Error creating user document', e, StackTrace.current);
       // Don't throw - user registration should still succeed
     }
   }
@@ -176,7 +185,7 @@ class AuthService {
         debugPrint('ensureUserDocument: Document already exists, skipping creation');
       }
     } catch (e) {
-      debugPrint('ensureUserDocument error: $e');
+      await LoggerService.error('ensureUserDocument error', e, StackTrace.current);
     }
   }
 
@@ -205,7 +214,7 @@ class AuthService {
         };
       }).toList();
     } catch (e) {
-      debugPrint('Error searching users: $e');
+      await LoggerService.error('Error searching users', e, StackTrace.current);
       return [];
     }
   }
@@ -239,13 +248,15 @@ class AuthService {
         await prefs.remove('beta_ai_analysis_count');
       } catch (_) {}
 
+      unawaited(LoggerService.logEvent('logout'));
+
       await _auth.signOut();
       // Sign out of Google so account picker appears next time
       try { await _googleSignIn.signOut(); } catch (_) {}
       debugPrint('User signed out');
     } catch (e) {
       _isExplicitLogout = false;  // Reset on error
-      debugPrint('Sign out error: $e');
+      await LoggerService.error('Sign out error', e, StackTrace.current);
       throw 'Failed to sign out. Please try again.';
     }
   }
@@ -290,6 +301,8 @@ class AuthService {
         await _syncGoogleProfileData(userCredential.user!, googleUser);
         await ensureUserDocument();
         clearExplicitLogoutFlag();
+        unawaited(LoggerService.setUserId(userCredential.user!.uid));
+        unawaited(LoggerService.logEvent('login', parameters: {'method': 'google'}));
         unawaited(SubscriptionService.loginUser(userCredential.user!.uid));
         unawaited(_setupFcmInBackground());
       }
@@ -339,6 +352,8 @@ class AuthService {
 
       await ensureUserDocument();
       clearExplicitLogoutFlag();
+      unawaited(LoggerService.setUserId(linked.user!.uid));
+      unawaited(LoggerService.logEvent('login', parameters: {'method': 'google_link'}));
       unawaited(SubscriptionService.loginUser(linked.user!.uid));
       unawaited(_setupFcmInBackground());
 
@@ -398,10 +413,10 @@ class AuthService {
       await _auth.sendPasswordResetEmail(email: email);
       debugPrint('Password reset email sent to: $email');
     } on FirebaseAuthException catch (e) {
-      debugPrint('Password reset error: ${e.message}');
+      await LoggerService.error('Password reset error', e);
       throw _getAuthException(e);
     } catch (e) {
-      debugPrint('Unexpected error during password reset: $e');
+      await LoggerService.error('Unexpected error during password reset', e, StackTrace.current);
       throw 'An unexpected error occurred. Please try again.';
     }
   }
@@ -470,10 +485,10 @@ class AuthService {
       await currentUser?.delete();
       debugPrint('User account deleted');
     } on FirebaseAuthException catch (e) {
-      debugPrint('Account deletion error: ${e.message}');
+      await LoggerService.error('Account deletion error', e);
       throw _getAuthException(e);
     } catch (e) {
-      debugPrint('Unexpected error during account deletion: $e');
+      await LoggerService.error('Unexpected error during account deletion', e, StackTrace.current);
       throw 'Failed to delete account. Please try again.';
     }
   }
@@ -486,7 +501,7 @@ class AuthService {
       await currentUser?.reload();
       debugPrint('Profile updated successfully');
     } catch (e) {
-      debugPrint('Profile update error: $e');
+      await LoggerService.error('Profile update error', e, StackTrace.current);
       throw 'Failed to update profile. Please try again.';
     }
   }
@@ -500,7 +515,7 @@ class AuthService {
       await currentUser?.sendEmailVerification();
       debugPrint('Email verification sent');
     } catch (e) {
-      debugPrint('Email verification error: $e');
+      await LoggerService.error('Email verification error', e, StackTrace.current);
       throw 'Failed to send verification email. Please try again.';
     }
   }
@@ -532,7 +547,7 @@ class AuthService {
       _cachedAccountTypeUserId = uid;
       return _cachedAccountType!;
     } catch (e) {
-      debugPrint('Error getting account type: $e');
+      await LoggerService.error('Error getting account type', e, StackTrace.current);
       return AccountType.player;
     }
   }
@@ -575,7 +590,7 @@ class AuthService {
       }
       return [];
     } catch (e) {
-      debugPrint('Error getting dealer club IDs: $e');
+      await LoggerService.error('Error getting dealer club IDs', e, StackTrace.current);
       return [];
     }
   }

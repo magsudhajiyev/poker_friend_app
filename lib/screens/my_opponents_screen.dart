@@ -17,6 +17,7 @@ import '../design_system/components/drawer_dots.dart';
 import '../design_system/components/form_drawer.dart';
 import '../design_system/components/cards/error_state_card.dart';
 import '../services/app_data_cache.dart';
+import '../services/logger_service.dart';
 import '../l10n/app_localizations.dart';
 
 class MyOpponentsScreen extends StatefulWidget {
@@ -48,6 +49,7 @@ class _MyOpponentsScreenState extends State<MyOpponentsScreen> {
   @override
   void initState() {
     super.initState();
+    LoggerService.logScreenView('opponents');
     _loadOpponents(useCache: !AppDataCache.isOpponentsDirty);
     // Rebuild when subscription tier changes (e.g. after purchase)
     _premiumSub = SubscriptionService.premiumStatusStream.listen((_) {

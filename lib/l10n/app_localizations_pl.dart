@@ -1494,7 +1494,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get paywallUpgradeOrCancel =>
-      'Zmień plan lub anuluj* w dowolnym momencie';
+      'Zmień plan lub anuluj w dowolnym momencie';
 
   @override
   String get paywallContinue => 'Kontynuuj';
@@ -1520,6 +1520,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get paywallFreeTrialBadge => '7-dniowy bezpłatny okres próbny';
+
+  @override
+  String get paywallFreeTrialBadge14 => '14-dniowy bezpłatny okres próbny';
 
   @override
   String get paywallProDescription =>
@@ -1604,7 +1607,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'Subskrypcje odnawiają się automatycznie. Anuluj* w dowolnym momencie\nw ustawieniach konta.';
+      'Subskrypcje odnawiają się automatycznie. Po zakończeniu bezpłatnego okresu próbnego zostanie naliczona podana cena, chyba że anulujesz co najmniej 24 godziny przed końcem okresu. Anuluj w dowolnym momencie w ustawieniach konta.';
 
   @override
   String get paywallTerms => 'Regulamin';
@@ -7627,6 +7630,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get paywallGetClubAction => 'Zdobądź Club';
 
   @override
+  String get paywallCurrentPlan => 'Bieżący plan';
+
+  @override
   String get paywallProFeature1 => '50 rąk na sesję';
 
   @override
@@ -7660,13 +7666,14 @@ class AppLocalizationsPl extends AppLocalizations {
   String get paywallClubFeature1 => 'Wszystko z Elite';
 
   @override
-  String get paywallClubFeature2 => 'Zarządzanie klubem i role członków';
+  String get paywallClubFeature2 => 'Utwórz i prowadź własny klub';
 
   @override
-  String get paywallClubFeature3 => 'Głosowe logowanie z krupierem na żywo';
+  String get paywallClubFeature3 => 'Zapraszaj krupierów i zarządzaj członkami';
 
   @override
-  String get paywallClubFeature4 => 'Eventy wielostołowe z rankingami';
+  String get paywallClubFeature4 =>
+      'Organizuj eventy wielostołowe z rankingami na żywo';
 
   @override
   String get profileTierOverride => 'Zastąp poziom subskrypcji';

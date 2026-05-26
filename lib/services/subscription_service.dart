@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -85,6 +86,7 @@ class SubscriptionService {
   /// Set a debug tier override for testing. Pass null to clear.
   /// Accepts: 'pro', 'elite', 'club', or null.
   static Future<void> setDebugTierOverride(String? tier) async {
+    if (kReleaseMode) return;
     _debugTierOverride = tier;
     _premiumStatusController.add(isPremium);
     final prefs = await SharedPreferences.getInstance();
@@ -107,12 +109,12 @@ class SubscriptionService {
   static bool? get debugPremiumOverride =>
       _debugTierOverride == null ? null : _debugTierOverride != 'free';
 
-  /// Load persisted debug override (call during init)
+  /// Load persisted debug override (call during init — debug builds only)
   static Future<void> _loadDebugOverride() async {
+    if (kReleaseMode) return;
     final prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey(_debugTierOverrideKey)) {
       _debugTierOverride = prefs.getString(_debugTierOverrideKey);
-      debugPrint('DEBUG: Loaded persisted tier override: $_debugTierOverride');
     } else if (prefs.containsKey(_debugOverrideKeyLegacy)) {
       // Migrate legacy boolean key → 'pro' string
       final legacyBool = prefs.getBool(_debugOverrideKeyLegacy);
@@ -121,7 +123,6 @@ class SubscriptionService {
         await prefs.setString(_debugTierOverrideKey, 'pro');
       }
       await prefs.remove(_debugOverrideKeyLegacy);
-      debugPrint('DEBUG: Migrated legacy premium override → tier: $_debugTierOverride');
     }
   }
 
@@ -229,8 +230,6 @@ class SubscriptionService {
     _isPremium = customerInfo.entitlements.all[premiumEntitlement]?.isActive ?? false;
     _isElite = customerInfo.entitlements.all[eliteEntitlement]?.isActive ?? false;
     _isClub = customerInfo.entitlements.all[clubEntitlement]?.isActive ?? false;
-    debugPrint('🔎 _updatePremiumStatus: pro=$_isPremium elite=$_isElite club=$_isClub '
-        'override=$_purchasedTierOverride prevTier=$prevTier');
 
     // Clear the purchased-tier override once entitlements match or exceed it.
     // e.g. after buying Pro: override='pro', entitlements show pro=active → clear.
@@ -245,9 +244,14 @@ class SubscriptionService {
       }
     }
 
-    // Notify listeners on any tier change (not just free↔paid)
+    // Notify listeners on any tier change (not just free/paid)
     if (currentTier != prevTier) {
       _premiumStatusController.add(_isPremium);
+      unawaited(LoggerService.logEvent('tier_change', parameters: {
+        'from_tier': prevTier,
+        'to_tier': currentTier,
+      }));
+      unawaited(LoggerService.setUserProperties(tier: currentTier));
     }
   }
 
@@ -261,12 +265,9 @@ class SubscriptionService {
       // Clear purchase override so fresh entitlements are authoritative
       _purchasedTierOverride = null;
       final info = await Purchases.getCustomerInfo();
-      debugPrint('🔄 Resume entitlements: ${info.entitlements.all.map((k, v) => MapEntry(k, v.isActive))}');
       _updatePremiumStatus(info);
-      debugPrint('🔄 Refreshed subscription on resume — tier: $currentTier');
     } catch (e) {
       // Non-fatal: cached state stays until next successful fetch
-      debugPrint('⚠️ Failed to refresh subscription on resume: $e');
     }
   }
 
@@ -291,19 +292,6 @@ class SubscriptionService {
     try {
       _offerings = await Purchases.getOfferings();
       await LoggerService.info('📦 Fetched ${_offerings?.all.length ?? 0} offerings');
-
-      // Debug: log all packages available in the default offering
-      final pkgs = defaultOffering?.availablePackages ?? [];
-      debugPrint('📦 Default offering packages (${pkgs.length} total):');
-      for (final p in pkgs) {
-        debugPrint('   id="${p.identifier}" type=${p.packageType.name} '
-            'price=${p.storeProduct.priceString} '
-            'productId=${p.storeProduct.identifier}');
-      }
-      if (pkgs.isEmpty) {
-        debugPrint('   (no packages — RevenueCat offerings may not be configured)');
-      }
-
       return _offerings;
     } catch (e) {
       await LoggerService.error('❌ Failed to fetch offerings: $e');
@@ -317,18 +305,12 @@ class SubscriptionService {
     if (!_isInitialized) return false;
 
     try {
-      await LoggerService.info('🛒 Purchasing package: ${package.identifier}');
+      await LoggerService.info('Purchasing package: ${package.identifier}');
+      unawaited(LoggerService.logEvent('purchase_start', parameters: {
+        'package_id': package.identifier,
+      }));
 
       final result = await Purchases.purchasePackage(package);
-
-      // Debug: log all entitlements returned after purchase
-      debugPrint('🔍 Entitlements after purchase:');
-      for (final entry in result.entitlements.all.entries) {
-        debugPrint('   "${entry.key}" → isActive: ${entry.value.isActive}, productId: ${entry.value.productIdentifier}');
-      }
-      if (result.entitlements.all.isEmpty) {
-        debugPrint('   (no entitlements returned)');
-      }
 
       // Determine the purchased tier from the package identifier and apply
       // it immediately — entitlements from RevenueCat may still show a
@@ -343,30 +325,45 @@ class SubscriptionService {
         purchasedTier = 'pro';
       }
       _purchasedTierOverride = purchasedTier;
-      debugPrint('🎯 Purchased tier override set to: $purchasedTier (package: $pid)');
-
       _updatePremiumStatus(result);
-      debugPrint('🎯 After _updatePremiumStatus — currentTier: $currentTier, '
-          'override: $_purchasedTierOverride, '
-          'isPremium: $isPremium, isElite: $isElite, isClub: $isClub');
 
       if (isPremium) {
-        await LoggerService.info('✅ Purchase successful - Tier: $currentTier');
+        await LoggerService.info('Purchase successful - Tier: $currentTier');
+        unawaited(LoggerService.logEvent('purchase_success', parameters: {
+          'package_id': package.identifier,
+          'tier': currentTier,
+        }));
+        unawaited(LoggerService.setUserProperties(tier: currentTier));
         return true;
       } else {
-        await LoggerService.warning('⚠️ Purchase completed but premium not activated');
-        debugPrint('⚠️ Found entitlements: ${result.entitlements.all.keys.toList()}');
+        await LoggerService.warning('Purchase completed but premium not activated');
         return false;
       }
     } on PurchasesErrorCode catch (e) {
       if (e == PurchasesErrorCode.purchaseCancelledError) {
-        await LoggerService.info('ℹ️ Purchase cancelled by user');
+        await LoggerService.info('Purchase cancelled by user');
+        unawaited(LoggerService.logEvent('purchase_cancelled', parameters: {
+          'package_id': package.identifier,
+        }));
       } else {
-        await LoggerService.error('❌ Purchase failed: $e');
+        await LoggerService.error('Purchase failed', e, StackTrace.current);
+        unawaited(LoggerService.logEvent('purchase_error', parameters: {
+          'package_id': package.identifier,
+          'error': e.toString(),
+        }));
       }
       return false;
     } catch (e) {
-      await LoggerService.error('❌ Purchase error: $e');
+      // RevenueCat throws PlatformException for user cancellations
+      if (e is PlatformException &&
+          (e.details is Map && e.details['userCancelled'] == true)) {
+        await LoggerService.info('Purchase cancelled by user');
+        unawaited(LoggerService.logEvent('purchase_cancelled', parameters: {
+          'package_id': package.identifier,
+        }));
+      } else {
+        await LoggerService.error('Purchase error', e, StackTrace.current);
+      }
       return false;
     }
   }
@@ -377,20 +374,24 @@ class SubscriptionService {
     if (!_isInitialized) return false;
 
     try {
-      await LoggerService.info('🔄 Restoring purchases...');
+      await LoggerService.info('Restoring purchases...');
+      unawaited(LoggerService.logEvent('restore_start'));
 
       final customerInfo = await Purchases.restorePurchases();
       _updatePremiumStatus(customerInfo);
 
       if (isPremium) {
-        await LoggerService.info('✅ Purchases restored - Tier: $currentTier');
+        await LoggerService.info('Purchases restored - Tier: $currentTier');
+        unawaited(LoggerService.logEvent('restore_success', parameters: {
+          'tier': currentTier,
+        }));
         return true;
       } else {
-        await LoggerService.info('ℹ️ No active purchases found to restore');
+        await LoggerService.info('No active purchases found to restore');
         return false;
       }
     } catch (e) {
-      await LoggerService.error('❌ Restore purchases failed: $e');
+      await LoggerService.error('Restore purchases failed', e, StackTrace.current);
       return false;
     }
   }

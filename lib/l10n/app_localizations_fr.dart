@@ -1512,7 +1512,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paywallUpgradeOrCancel =>
-      'Mettez à niveau ou annulez* à tout moment';
+      'Mettez à niveau ou annulez à tout moment';
 
   @override
   String get paywallContinue => 'Continuer';
@@ -1538,6 +1538,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paywallFreeTrialBadge => 'Essai gratuit de 7 jours';
+
+  @override
+  String get paywallFreeTrialBadge14 => 'Essai gratuit de 14 jours';
 
   @override
   String get paywallProDescription =>
@@ -1622,7 +1625,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'Les abonnements se renouvellent automatiquement. Annulez* à tout moment\ndepuis les paramètres de votre compte.';
+      'Les abonnements se renouvellent automatiquement. Après votre essai gratuit, le prix affiché vous sera facturé sauf si vous annulez au moins 24 heures avant la fin de la période. Annulez à tout moment dans les paramètres de votre compte.';
 
   @override
   String get paywallTerms => 'Conditions';
@@ -7681,6 +7684,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get paywallGetClubAction => 'Obtenir Club';
 
   @override
+  String get paywallCurrentPlan => 'Plan actuel';
+
+  @override
   String get paywallProFeature1 => '50 mains par session';
 
   @override
@@ -7714,14 +7720,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get paywallClubFeature1 => 'Tout dans Elite';
 
   @override
-  String get paywallClubFeature2 => 'Gestion de club et rôles membres';
+  String get paywallClubFeature2 => 'Créez et gérez votre propre club';
 
   @override
-  String get paywallClubFeature3 =>
-      'Enregistrement vocal du croupier en direct';
+  String get paywallClubFeature3 => 'Invitez des dealers et gérez les membres';
 
   @override
-  String get paywallClubFeature4 => 'Événements multi-tables avec classements';
+  String get paywallClubFeature4 =>
+      'Organisez des événements multi-tables avec classements en direct';
 
   @override
   String get profileTierOverride => 'Remplacer le niveau d\'abonnement';

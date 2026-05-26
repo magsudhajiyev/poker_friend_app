@@ -2817,7 +2817,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallUpgradeOrCancel.
   ///
   /// In en, this message translates to:
-  /// **'Upgrade or cancel* at anytime'**
+  /// **'Upgrade or cancel at any time'**
   String get paywallUpgradeOrCancel;
 
   /// No description provided for @paywallContinue.
@@ -2861,6 +2861,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'7-Day Free Trial'**
   String get paywallFreeTrialBadge;
+
+  /// No description provided for @paywallFreeTrialBadge14.
+  ///
+  /// In en, this message translates to:
+  /// **'14-Day Free Trial'**
+  String get paywallFreeTrialBadge14;
 
   /// No description provided for @paywallProDescription.
   ///
@@ -3021,7 +3027,7 @@ abstract class AppLocalizations {
   /// No description provided for @paywallDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Subscriptions auto-renew. Cancel* anytime\nfrom your account settings.'**
+  /// **'Subscriptions auto-renew. After your free trial, you\'ll be charged the listed price unless you cancel at least 24 hours before the period ends. Cancel anytime in your account settings.'**
   String get paywallDisclaimer;
 
   /// No description provided for @paywallTerms.
@@ -13353,6 +13359,12 @@ abstract class AppLocalizations {
   /// **'Get Club'**
   String get paywallGetClubAction;
 
+  /// No description provided for @paywallCurrentPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Plan'**
+  String get paywallCurrentPlan;
+
   /// No description provided for @paywallProFeature1.
   ///
   /// In en, this message translates to:
@@ -13422,19 +13434,19 @@ abstract class AppLocalizations {
   /// No description provided for @paywallClubFeature2.
   ///
   /// In en, this message translates to:
-  /// **'Club management & member roles'**
+  /// **'Create & run your own club'**
   String get paywallClubFeature2;
 
   /// No description provided for @paywallClubFeature3.
   ///
   /// In en, this message translates to:
-  /// **'Live dealer voice logging'**
+  /// **'Invite dealers & manage members'**
   String get paywallClubFeature3;
 
   /// No description provided for @paywallClubFeature4.
   ///
   /// In en, this message translates to:
-  /// **'Multi-table events with rankings'**
+  /// **'Host multi-table events with live rankings'**
   String get paywallClubFeature4;
 
   /// No description provided for @profileTierOverride.

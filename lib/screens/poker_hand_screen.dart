@@ -168,7 +168,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   @override
   void initState() {
     super.initState();
-    
+    LoggerService.logScreenView('hand_logging');
+
     // Initialize poker game state with 9 seats (standard poker table)
     gameState = PokerGameState(
       numberOfPlayers: 9, // Always 9 seats regardless of initial player count

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_stats.dart';
 import '../services/firebase_service.dart';
+import '../services/logger_service.dart';
 
 class UserStatsService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -20,7 +21,7 @@ class UserStatsService {
 
       return null;
     } catch (e) {
-      debugPrint('Error getting user stats: $e');
+      await LoggerService.error('Error getting user stats', e, StackTrace.current);
       return null;
     }
   }
@@ -36,7 +37,7 @@ class UserStatsService {
         await docRef.set(stats.toFirestore());
       }
     } catch (e) {
-      debugPrint('Error initializing user stats: $e');
+      await LoggerService.error('Error initializing user stats', e, StackTrace.current);
     }
   }
 
@@ -103,7 +104,7 @@ class UserStatsService {
         transaction.update(docRef, updates);
       });
     } catch (e) {
-      debugPrint('Error updating user stats atomically: $e');
+      await LoggerService.error('Error updating user stats atomically', e, StackTrace.current);
       rethrow;
     }
   }
@@ -127,7 +128,7 @@ class UserStatsService {
       try {
         sessions = await FirebaseService.getAllSessions();
       } catch (e) {
-        debugPrint('Error fetching sessions: $e');
+        await LoggerService.error('Error fetching sessions for migration', e, StackTrace.current);
         return;
       }
 
@@ -147,7 +148,7 @@ class UserStatsService {
         try {
           hands = await FirebaseService.getSessionHands(session['id']);
         } catch (e) {
-          debugPrint('Error fetching hands for session ${session['id']}: $e');
+          await LoggerService.error('Error fetching hands for session ${session['id']}', e, StackTrace.current);
           continue;
         }
 
@@ -230,7 +231,7 @@ class UserStatsService {
 
 
     } catch (e) {
-      debugPrint('Error during user stats migration: $e');
+      await LoggerService.error('Error during user stats migration', e, StackTrace.current);
       rethrow;
     }
   }
@@ -263,7 +264,7 @@ class UserStatsService {
       try {
         sessions = await FirebaseService.getAllSessions();
       } catch (e) {
-        debugPrint('❌ Error fetching sessions: $e');
+        await LoggerService.error('Error fetching sessions for recalculation', e, StackTrace.current);
         return {'success': false, 'error': 'Failed to fetch sessions: $e'};
       }
 
@@ -295,7 +296,7 @@ class UserStatsService {
 
             totalPlayTimeMinutes += endTime.difference(startTime).inMinutes;
           } catch (e) {
-            debugPrint('⚠️ Error parsing session times for $sessionId: $e');
+            await LoggerService.error('Error parsing session times for $sessionId', e, StackTrace.current);
           }
         }
 
@@ -304,7 +305,7 @@ class UserStatsService {
         try {
           hands = await FirebaseService.getSessionHands(sessionId);
         } catch (e) {
-          debugPrint('⚠️ Error fetching hands for session $sessionId: $e');
+          await LoggerService.error('Error fetching hands for session $sessionId', e, StackTrace.current);
           continue;
         }
 
@@ -402,7 +403,7 @@ class UserStatsService {
         'totalPlayTimeMinutes': totalPlayTimeMinutes,
       };
     } catch (e) {
-      debugPrint('❌ Error during stats recalculation: $e');
+      await LoggerService.error('Error during stats recalculation', e, StackTrace.current);
       return {'success': false, 'error': 'Recalculation failed: $e'};
     }
   }

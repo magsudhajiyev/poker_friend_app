@@ -9,6 +9,7 @@ import '../services/currency_service.dart';
 import '../models/currency.dart';
 import '../services/app_data_cache.dart';
 import '../services/subscription_service.dart';
+import '../services/logger_service.dart';
 import 'paywall_screen.dart';
 import '../widgets/global_loading_spinner.dart';
 import '../widgets/global_bottom_nav_bar.dart';
@@ -82,6 +83,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
+    LoggerService.logScreenView('statistics');
     _loadStatistics();
   }
 

@@ -1491,7 +1491,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallChooseYourPlan => 'Выберите план';
 
   @override
-  String get paywallUpgradeOrCancel => 'Улучшайте или отменяйте* в любое время';
+  String get paywallUpgradeOrCancel => 'Улучшайте или отменяйте в любое время';
 
   @override
   String get paywallContinue => 'Продолжить';
@@ -1517,6 +1517,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get paywallFreeTrialBadge => '7 дней бесплатно';
+
+  @override
+  String get paywallFreeTrialBadge14 => '14 дней бесплатно';
 
   @override
   String get paywallProDescription =>
@@ -1600,7 +1603,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'Подписки продлеваются автоматически. Отмените* в любое время\nв настройках аккаунта.';
+      'Подписки продлеваются автоматически. После окончания бесплатного пробного периода с вас будет списана указанная сумма, если вы не отмените подписку как минимум за 24 часа до окончания периода. Отмените в любое время в настройках аккаунта.';
 
   @override
   String get paywallTerms => 'Условия';
@@ -7618,6 +7621,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallGetClubAction => 'Получить Club';
 
   @override
+  String get paywallCurrentPlan => 'Текущий план';
+
+  @override
   String get paywallProFeature1 => '50 рук за сессию';
 
   @override
@@ -7651,13 +7657,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallClubFeature1 => 'Всё из Elite';
 
   @override
-  String get paywallClubFeature2 => 'Управление клубом и роли участников';
+  String get paywallClubFeature2 => 'Создайте и управляйте своим клубом';
 
   @override
-  String get paywallClubFeature3 => 'Голосовая запись с живым дилером';
+  String get paywallClubFeature3 =>
+      'Приглашайте дилеров и управляйте участниками';
 
   @override
-  String get paywallClubFeature4 => 'Многостольные события с рейтингами';
+  String get paywallClubFeature4 =>
+      'Проводите многостольные турниры с рейтингами в реальном времени';
 
   @override
   String get profileTierOverride => 'Переопределить уровень подписки';

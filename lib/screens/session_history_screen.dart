@@ -17,6 +17,7 @@ import '../services/app_data_cache.dart';
 import '../screens/paywall_screen.dart';
 import 'session_analytics_screen.dart';
 import '../services/currency_service.dart';
+import '../services/logger_service.dart';
 
 class SessionHistoryScreen extends StatefulWidget {
   final String? targetSessionId;
@@ -58,6 +59,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
   @override
   void initState() {
     super.initState();
+    LoggerService.logScreenView('session_history');
     _tabController = TabController(length: 2, vsync: this);
     _loadSessions();
   }

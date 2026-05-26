@@ -476,6 +476,7 @@ class PokerSessionManager {
         );
         sessionId = firebaseId;
       } catch (e) {
+        await LoggerService.error('Firebase session creation failed, using local fallback', e, StackTrace.current);
       }
 
       // Always save locally as backup
@@ -915,6 +916,7 @@ class PokerSessionManager {
       // Update optimized stats for all participants
       await _updateOptimizedStats(hand);
     } catch (e) {
+      await LoggerService.error('Firebase hand save failed, using local fallback', e, StackTrace.current);
       // Mark as saved since we have it locally
       hand.markSaved();
 
@@ -1052,6 +1054,7 @@ class PokerSessionManager {
         }
       }
     } catch (e) {
+      await LoggerService.error('Error updating optimized stats', e, StackTrace.current);
     }
   }
 
@@ -1094,6 +1097,7 @@ class PokerSessionManager {
         totalBuyIn: totalBuyIn,
       );
     } catch (e) {
+      await LoggerService.error('Error updating session progress in Firebase', e, StackTrace.current);
     }
 
     // Always update local storage with stack history, totalBuyIn, and stats
@@ -1127,11 +1131,13 @@ class PokerSessionManager {
                 await OpponentService.updateLastSeen(opponent.id);
               }
             } catch (e) {
+              // Continue with other opponents
             }
           }
         }
       }
     } catch (e) {
+      await LoggerService.error('Error updating opponent stats', e, StackTrace.current);
     }
   }
 
@@ -1163,6 +1169,7 @@ class PokerSessionManager {
       try {
         await FirebaseService.endSession(sessionId!);
       } catch (e) {
+        await LoggerService.error('Error ending Firebase session', e, StackTrace.current);
       }
     } else {
     }
@@ -1212,6 +1219,7 @@ class PokerSessionManager {
       try {
         await _saveHandToFirebase(hand);
       } catch (e) {
+        await LoggerService.error('Retry save failed for hand #${hand.handNumber}', e, StackTrace.current);
       }
     }
   }

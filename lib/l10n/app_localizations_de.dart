@@ -1507,7 +1507,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallChooseYourPlan => 'Wähle deinen Plan';
 
   @override
-  String get paywallUpgradeOrCancel => 'Jederzeit upgraden oder kündigen*';
+  String get paywallUpgradeOrCancel => 'Jederzeit upgraden oder kündigen';
 
   @override
   String get paywallContinue => 'Weiter';
@@ -1533,6 +1533,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get paywallFreeTrialBadge => '7-Tage-Testversion';
+
+  @override
+  String get paywallFreeTrialBadge14 => '14-Tage-Testversion';
 
   @override
   String get paywallProDescription =>
@@ -1617,7 +1620,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'Abos verlängern sich automatisch. Kündige* jederzeit\nin deinen Kontoeinstellungen.';
+      'Abos verlängern sich automatisch. Nach der kostenlosen Testphase wird dir der angezeigte Preis berechnet, sofern du nicht mindestens 24 Stunden vor Ablauf des Zeitraums kündigst. Kündige jederzeit in deinen Kontoeinstellungen.';
 
   @override
   String get paywallTerms => 'AGB';
@@ -7657,6 +7660,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallGetClubAction => 'Club holen';
 
   @override
+  String get paywallCurrentPlan => 'Aktueller Plan';
+
+  @override
   String get paywallProFeature1 => '50 Hände pro Session';
 
   @override
@@ -7690,13 +7696,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paywallClubFeature1 => 'Alles in Elite';
 
   @override
-  String get paywallClubFeature2 => 'Clubverwaltung & Mitgliedsrollen';
+  String get paywallClubFeature2 => 'Eigenen Club erstellen & leiten';
 
   @override
-  String get paywallClubFeature3 => 'Live-Dealer-Sprachprotokollierung';
+  String get paywallClubFeature3 => 'Dealer einladen & Mitglieder verwalten';
 
   @override
-  String get paywallClubFeature4 => 'Mehrtisch-Events mit Ranglisten';
+  String get paywallClubFeature4 =>
+      'Mehrtisch-Events mit Live-Ranglisten veranstalten';
 
   @override
   String get profileTierOverride => 'Abonnement-Stufe überschreiben';

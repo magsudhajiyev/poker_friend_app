@@ -1488,7 +1488,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallChooseYourPlan => 'Choose your plan';
 
   @override
-  String get paywallUpgradeOrCancel => 'Upgrade or cancel* at anytime';
+  String get paywallUpgradeOrCancel => 'Upgrade or cancel at any time';
 
   @override
   String get paywallContinue => 'Continue';
@@ -1514,6 +1514,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallFreeTrialBadge => '7-Day Free Trial';
+
+  @override
+  String get paywallFreeTrialBadge14 => '14-Day Free Trial';
 
   @override
   String get paywallProDescription =>
@@ -1597,7 +1600,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallDisclaimer =>
-      'Subscriptions auto-renew. Cancel* anytime\nfrom your account settings.';
+      'Subscriptions auto-renew. After your free trial, you\'ll be charged the listed price unless you cancel at least 24 hours before the period ends. Cancel anytime in your account settings.';
 
   @override
   String get paywallTerms => 'Terms';
@@ -7595,6 +7598,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallGetClubAction => 'Get Club';
 
   @override
+  String get paywallCurrentPlan => 'Current Plan';
+
+  @override
   String get paywallProFeature1 => '50 hands per session';
 
   @override
@@ -7628,13 +7634,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallClubFeature1 => 'Everything in Elite';
 
   @override
-  String get paywallClubFeature2 => 'Club management & member roles';
+  String get paywallClubFeature2 => 'Create & run your own club';
 
   @override
-  String get paywallClubFeature3 => 'Live dealer voice logging';
+  String get paywallClubFeature3 => 'Invite dealers & manage members';
 
   @override
-  String get paywallClubFeature4 => 'Multi-table events with rankings';
+  String get paywallClubFeature4 =>
+      'Host multi-table events with live rankings';
 
   @override
   String get profileTierOverride => 'Subscription tier override';

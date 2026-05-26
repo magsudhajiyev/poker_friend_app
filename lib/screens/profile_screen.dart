@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -9,6 +10,8 @@ import '../services/auth_service.dart';
 import '../services/display_identity_service.dart';
 import '../services/subscription_service.dart';
 import '../services/username_service.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import '../services/logger_service.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
 import '../screens/settings_screen.dart';
@@ -36,6 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    LoggerService.logScreenView('profile');
     _loadData();
     _premiumSub = SubscriptionService.premiumStatusStream.listen((_) {
       if (mounted) setState(() {});
@@ -53,17 +57,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final username = await UsernameService.getUsername();
       final useNickname = await UsernameService.getUseNicknameInGame();
 
-      // Check admin role from Firestore
+      // Check admin role — dev tools only in debug builds
       bool isAdmin = false;
-      final uid = AuthService.userId;
-      if (uid != null) {
-        try {
-          final doc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .get();
-          isAdmin = doc.data()?['role'] == 'admin';
-        } catch (_) {}
+      if (!kReleaseMode) {
+        final uid = AuthService.userId;
+        if (uid != null) {
+          try {
+            final doc = await FirebaseFirestore.instance
+                .collection('users')
+                .doc(uid)
+                .get();
+            isAdmin = doc.data()?['role'] == 'admin';
+          } catch (_) {}
+        }
       }
 
       if (mounted) {
@@ -536,6 +542,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           SizedBox(height: 16),
+          GestureDetector(
+            onTap: () async {
+              // Send a non-fatal error (delivered while app is running)
+              await FirebaseCrashlytics.instance.recordError(
+                Exception('Test non-fatal error from dev tools'),
+                StackTrace.current,
+                reason: 'Manual test from profile dev tools',
+              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Non-fatal error sent to Crashlytics')),
+                );
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withAlpha(60)),
+              ),
+              child: Center(
+                child: Text(
+                  'Test Crashlytics (non-fatal error)',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 8),
+          GestureDetector(
+            onTap: () {
+              FirebaseCrashlytics.instance.crash();
+            },
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.red.withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withAlpha(60)),
+              ),
+              child: Center(
+                child: Text(
+                  'Test Crashlytics (force crash)',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 8),
           GestureDetector(
             onTap: () => _launchQuickDebugSession(),
             child: Container(

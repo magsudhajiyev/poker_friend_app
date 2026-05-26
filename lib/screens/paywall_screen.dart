@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../design_system/constants/colors.dart';
 import '../design_system/constants/spacing.dart';
 import '../services/subscription_service.dart';
+import '../services/logger_service.dart';
 
 /// Paywall screen showing subscription plan selection.
 ///
@@ -13,14 +14,16 @@ import '../services/subscription_service.dart';
 /// All three tiers are purchasable via RevenueCat.
 class PaywallScreen extends StatefulWidget {
   final String? featureName;
+  /// Optional tier index to pre-select (0=Pro, 1=Elite, 2=Club).
+  final int? preselectedTier;
 
-  const PaywallScreen({super.key, this.featureName});
+  const PaywallScreen({super.key, this.featureName, this.preselectedTier});
 
-  static Future<bool?> show(BuildContext context, {String? featureName}) {
+  static Future<bool?> show(BuildContext context, {String? featureName, int? preselectedTier}) {
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (context) => PaywallScreen(featureName: featureName),
+        builder: (context) => PaywallScreen(featureName: featureName, preselectedTier: preselectedTier),
       ),
     );
   }
@@ -39,6 +42,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   bool _isAnnual = false;
   bool _isPurchasing = false;
   bool _isRestoring = false;
+  final _scrollController = ScrollController();
 
   // Package identifier pairs per tier [monthlyId, annualId]
   static const _tierPackageIds = [
@@ -55,10 +59,33 @@ class _PaywallScreenState extends State<PaywallScreen> {
   @override
   void initState() {
     super.initState();
+    LoggerService.logScreenView('paywall');
     _refreshPackages();
     if (SubscriptionService.defaultOffering == null) {
       _fetchOfferings();
     }
+    if (widget.preselectedTier != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToSelectedTier();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToSelectedTier() {
+    if (!_scrollController.hasClients) return;
+    // Scroll to bottom if Club (last card), otherwise to a reasonable offset
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    _scrollController.animateTo(
+      maxScroll,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+    );
   }
 
   Future<void> _fetchOfferings() async {
@@ -82,13 +109,31 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
     _visibleTierIndices = visible;
 
-    // Pre-select Elite (tier index 1) if available, else first visible
-    final eliteVisible = visible.indexOf(1);
-    _selectedVisibleIndex = eliteVisible >= 0 ? eliteVisible : 0;
+    // Pre-select priority: preselectedTier > current plan > Elite > first
+    final preselected = widget.preselectedTier;
+    final currentIdx = _currentTierIndex;
+    if (preselected != null && visible.contains(preselected)) {
+      _selectedVisibleIndex = visible.indexOf(preselected);
+    } else if (currentIdx >= 0 && visible.contains(currentIdx)) {
+      _selectedVisibleIndex = visible.indexOf(currentIdx);
+    } else {
+      final eliteVisible = visible.indexOf(1);
+      _selectedVisibleIndex = eliteVisible >= 0 ? eliteVisible : 0;
+    }
   }
 
   /// The tier index (0=Pro,1=Elite,2=Club) for the currently selected card.
   int get _selectedTierIndex => _visibleTierIndices[_selectedVisibleIndex];
+
+  /// The tier index for the user's current subscription, or -1 if free.
+  int get _currentTierIndex {
+    switch (SubscriptionService.currentTier) {
+      case 'pro': return 0;
+      case 'elite': return 1;
+      case 'club': return 2;
+      default: return -1;
+    }
+  }
 
   Package? _packageForTier(int tierIndex, {required bool annual}) {
     final id = _tierPackageIds[tierIndex][annual ? 1 : 0];
@@ -203,6 +248,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           _buildTopBar(l10n),
           Expanded(
             child: SingleChildScrollView(
+              controller: _scrollController,
               padding: EdgeInsets.only(
                 top: AppSpacing.xl,
                 left: AppSpacing.md,
@@ -411,6 +457,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     for (int vi = 0; vi < _visibleTierIndices.length; vi++) {
       final ti = _visibleTierIndices[vi]; // actual tier index (0/1/2)
       if (cards.isNotEmpty) cards.add(const SizedBox(height: 16));
+      final isCurrentPlan = ti == _currentTierIndex;
       cards.add(_PlanCard(
         tierLabel: tierLabels[ti],
         tagline: tierTaglines[ti],
@@ -419,9 +466,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
             : '${_primaryPrice(ti)}/month',
         secondaryPrice: _secondaryPrice(ti),
         features: _featuresForTier(ti, l10n),
-        showTrialBadge: ti == 0, // Trial badge only on Pro
-        trialBadgeText: l10n.paywallFreeTrialBadge,
-        isBestValue: ti == 1, // Best Value badge only on Elite
+        showTrialBadge: !isCurrentPlan, // Hide trial badge on current plan
+        trialBadgeText: _isAnnual
+            ? l10n.paywallFreeTrialBadge14
+            : l10n.paywallFreeTrialBadge,
+        isBestValue: ti == 1 && !isCurrentPlan,
+        isCurrentPlan: isCurrentPlan,
         isSelected: _selectedVisibleIndex == vi,
         onTap: () => setState(() => _selectedVisibleIndex = vi),
       ));
@@ -511,12 +561,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Widget _buildBottomButton(AppLocalizations l10n, double bottomPadding, double screenWidth) {
     final isLoading = _isPurchasing || _isRestoring;
+    final isCurrentPlan = _selectedTierIndex == _currentTierIndex;
     final String label;
-    switch (_selectedTierIndex) {
-      case 0: label = l10n.paywallStartWithPro; break;
-      case 2: label = l10n.paywallGetClubAction; break;
-      default: label = l10n.paywallGetEliteAction;
+    if (isCurrentPlan) {
+      label = l10n.paywallCurrentPlan;
+    } else {
+      switch (_selectedTierIndex) {
+        case 0: label = l10n.paywallStartWithPro; break;
+        case 2: label = l10n.paywallGetClubAction; break;
+        default: label = l10n.paywallGetEliteAction;
+      }
     }
+    final isDisabled = isLoading || isCurrentPlan;
 
     return Container(
       color: const Color(0xFF0C0C0C),
@@ -526,13 +582,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
       ),
       child: Center(
         child: GestureDetector(
-          onTap: isLoading ? null : _onContinue,
+          onTap: isDisabled ? null : _onContinue,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: screenWidth * 0.85,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: isLoading ? Colors.white.withValues(alpha: 0.6) : Colors.white,
+              color: isDisabled ? Colors.white.withValues(alpha: 0.4) : Colors.white,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Center(
@@ -544,12 +600,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     )
                   : Text(
                       label,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'IBM Plex Sans',
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         height: 20 / 15,
-                        color: Color(0xFF0C0C0C),
+                        color: isCurrentPlan
+                            ? const Color(0xFF0C0C0C).withValues(alpha: 0.5)
+                            : const Color(0xFF0C0C0C),
                       ),
                     ),
             ),
@@ -570,6 +628,7 @@ class _PlanCard extends StatelessWidget {
   final bool showTrialBadge;
   final String? trialBadgeText;
   final bool isBestValue;
+  final bool isCurrentPlan;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -582,6 +641,7 @@ class _PlanCard extends StatelessWidget {
     required this.showTrialBadge,
     this.trialBadgeText,
     required this.isBestValue,
+    this.isCurrentPlan = false,
     required this.isSelected,
     required this.onTap,
   });
@@ -621,7 +681,26 @@ class _PlanCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (isBestValue)
+                if (isCurrentPlan)
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentSecondary,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      l10n.paywallCurrentPlan,
+                      style: const TextStyle(
+                        fontFamily: 'IBM Plex Sans',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        height: 14 / 10,
+                        color: Color(0xFF0C0C0C),
+                      ),
+                    ),
+                  ),
+                if (isBestValue && !isCurrentPlan)
                   Container(
                     margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

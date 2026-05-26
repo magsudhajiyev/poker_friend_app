@@ -227,6 +227,9 @@ Classifies based on VPIP, PFR, 3-bet%, AF thresholds:
 
 ### 8. Club Management
 - **Roles**: Owner > Admin > Dealer > Player
+- **Club registration requires Club tier** — non-Club users see the paywall (pre-scrolled to Club card)
+- Once a club exists, all members/dealers operate freely regardless of their own subscription tier
+- Club tier is a "club creator license" — the owner pays, everyone else participates free
 - Club registration flow (user submits request, admin approves)
 - Member invitation via email + in-app notifications
 - Multi-table event management with live rankings
