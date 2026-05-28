@@ -408,7 +408,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
                 child: _isLoading || _tabController == null
                     ? Center(
                         child: CircularProgressIndicator(
-                          color: AppColors.tealAccent,
+                          color: AppColors.accentPrimary,
                         ),
                       )
                     : _loadError != null
@@ -716,7 +716,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       final items = _liveLaneItems;
       return RefreshIndicator(
         onRefresh: () { AppDataCache.markClubDirty(); return _loadData(); },
-        color: AppColors.tealAccent,
+        color: AppColors.accentPrimary,
         child: ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
           itemCount: items.length,
@@ -733,7 +733,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
     return RefreshIndicator(
       onRefresh: () { AppDataCache.markClubDirty(); return _loadData(); },
-      color: AppColors.tealAccent,
+      color: AppColors.accentPrimary,
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
         itemCount: events.length,
@@ -1039,7 +1039,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 37, sigmaY: 37),
         child: Material(
-          color: AppColors.backgroundSurface.withValues(alpha: 0.85),
+          color: AppColors.bgSurface.withValues(alpha: 0.85),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(58),
             side: const BorderSide(color: Colors.white, width: 1),
@@ -1318,7 +1318,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen>
 
     return RefreshIndicator(
       onRefresh: () { AppDataCache.markClubDirty(); return _loadData(); },
-      color: AppColors.tealAccent,
+      color: AppColors.accentPrimary,
       child: ListView(
         padding: const EdgeInsets.all(24),
         children: [

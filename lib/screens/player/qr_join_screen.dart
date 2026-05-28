@@ -172,7 +172,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           const GradientBackground(),
@@ -467,7 +467,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF1C1F21)),
       ),
@@ -644,7 +644,7 @@ class _QRJoinScreenState extends State<QRJoinScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.backgroundSurface,
+                color: AppColors.bgSurface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFF1C1F21)),
               ),

@@ -121,7 +121,7 @@ class AppTypography {
 
   static TextStyle homeSubtitle({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? AppColors.textSecondary,
+    color: color ?? AppColors.textMint,
     fontWeight: FontWeight.w500,
     height: 1.44,
   );
@@ -166,7 +166,7 @@ class AppTypography {
 
   static TextStyle viewAllButton({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? AppColors.textSecondary,
+    color: color ?? AppColors.textMint,
     fontWeight: FontWeight.w500,
     height: 1.44,
   );
@@ -193,7 +193,7 @@ class AppTypography {
 
   static TextStyle infoCardAccent({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 17,
-    color: color ?? AppColors.textSecondary,
+    color: color ?? AppColors.textMint,
     fontWeight: FontWeight.w400,
     height: 1.44,
   );
@@ -201,7 +201,7 @@ class AppTypography {
   // Info Card Pill Text (12px medium, used in session/event card pills)
   static TextStyle infoCardPill({Color? color}) => GoogleFonts.ibmPlexSans(
     fontSize: 12,
-    color: color ?? AppColors.infoCardPillText,
+    color: color ?? AppColors.buttonPrimary,
     fontWeight: FontWeight.w500,
   );
 
@@ -211,5 +211,47 @@ class AppTypography {
     color: color ?? AppColors.infoCardDateText,
     fontWeight: FontWeight.w500,
     height: 1.44,
+  );
+
+  // Figma v2 Type Scale
+  // Title — 17px SemiBold lh22 (nav titles, modal headers)
+  static TextStyle titleBase({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 17,
+    fontWeight: FontWeight.w600,
+    color: color ?? Colors.white,
+    height: 22 / 17,
+  );
+
+  // Label/LG — 15px SemiBold lh20 (button labels, tab labels)
+  static TextStyle labelLg({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    color: color ?? Colors.white,
+    height: 20 / 15,
+    letterSpacing: -0.5,
+  );
+
+  // Body/MD — 15px Regular lh22 (body copy, menu items)
+  static TextStyle bodyMd({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    color: color ?? Colors.white,
+    height: 22 / 15,
+  );
+
+  // Body/SM Medium — 13px Medium lh20 (secondary labels, chips)
+  static TextStyle bodySmMedium({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    color: color ?? Colors.white,
+    height: 20 / 13,
+  );
+
+  // Body/XS Medium — 11px Medium lh16 (tiny labels, badges)
+  static TextStyle bodyXsMedium({Color? color}) => GoogleFonts.ibmPlexSans(
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    color: color ?? Colors.white,
+    height: 16 / 11,
   );
 }

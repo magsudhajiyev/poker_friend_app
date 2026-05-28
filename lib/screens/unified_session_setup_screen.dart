@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,6 +33,14 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   final TextEditingController _startingStackController = TextEditingController();
   final TextEditingController _sbController = TextEditingController(text: '1');
   final TextEditingController _bbController = TextEditingController(text: '2');
+  final FocusNode _sbFocusNode = FocusNode();
+  final FocusNode _bbFocusNode = FocusNode();
+  final FocusNode _buyInFocusNode = FocusNode();
+  final FocusNode _startingStackFocusNode = FocusNode();
+  bool _isSBFocused = false;
+  bool _isBBFocused = false;
+  bool _isBuyInFocused = false;
+  bool _isStartingStackFocused = false;
 
   // ─── Session settings ────────────────────────────────────────────
   GameType _gameType = GameType.cash;
@@ -77,6 +86,10 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     _initSeats();
     _loadHeroName();
     _scheduleOnboardingTour();
+    _sbFocusNode.addListener(() => setState(() => _isSBFocused = _sbFocusNode.hasFocus));
+    _bbFocusNode.addListener(() => setState(() => _isBBFocused = _bbFocusNode.hasFocus));
+    _buyInFocusNode.addListener(() => setState(() => _isBuyInFocused = _buyInFocusNode.hasFocus));
+    _startingStackFocusNode.addListener(() => setState(() => _isStartingStackFocused = _startingStackFocusNode.hasFocus));
   }
 
   void _initSeats() {
@@ -171,6 +184,10 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     _startingStackController.dispose();
     _sbController.dispose();
     _bbController.dispose();
+    _sbFocusNode.dispose();
+    _bbFocusNode.dispose();
+    _buyInFocusNode.dispose();
+    _startingStackFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -466,13 +483,78 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTextField(
-                controller: _buyInController,
-                hint: l10n.setupEnterAmount,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                prefixText: CurrencyService.prefixText,
-                suffixText: CurrencyService.suffixText,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF161719),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _isBuyInFocused ? const Color(0xFF4CDE78) : const Color(0xFF161719),
+                    width: _isBuyInFocused ? 1.5 : 1.0,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    if (CurrencyService.prefixText != null) ...[
+                      Text(
+                        CurrencyService.prefixText!,
+                        style: GoogleFonts.ibmPlexSans(
+                          color: _isBuyInFocused ? Colors.white : const Color(0xFFB9B9B9),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          height: 22 / 15,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Expanded(
+                      child: TextField(
+                        controller: _buyInController,
+                        focusNode: _buyInFocusNode,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        textInputAction: TextInputAction.done,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        ],
+                        style: GoogleFonts.ibmPlexSans(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          height: 22 / 15,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: l10n.setupEnterAmount,
+                          hintStyle: GoogleFonts.ibmPlexSans(
+                            color: const Color(0xFFB9B9B9),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            height: 22 / 15,
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          contentPadding: EdgeInsets.zero,
+                          isDense: true,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    if (CurrencyService.suffixText != null) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        CurrencyService.suffixText!,
+                        style: GoogleFonts.ibmPlexSans(
+                          color: _isBuyInFocused ? Colors.white : const Color(0xFFB9B9B9),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          height: 22 / 15,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
               if (_gameType == GameType.cash) ...[
                 const SizedBox(height: 8),
@@ -493,6 +575,9 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                 child: _buildBlindTextField(
                   l10n.setupSmallBlind,
                   _sbController,
+                  _sbFocusNode,
+                  _isSBFocused,
+                  true,
                   (v) => setState(() => _smallBlind = v),
                 ),
               ),
@@ -501,6 +586,9 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
                 child: _buildBlindTextField(
                   l10n.setupBigBlind,
                   _bbController,
+                  _bbFocusNode,
+                  _isBBFocused,
+                  true,
                   (v) => setState(() => _bigBlind = v),
                 ),
               ),
@@ -520,12 +608,82 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
               content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildTextField(
-                    controller: _startingStackController,
-                    hint: l10n.setupEnterChipStack,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    hasError: hasError,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF161719),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: hasError
+                            ? const Color(0xFFFF3B30)
+                            : _isStartingStackFocused
+                                ? const Color(0xFF4CDE78)
+                                : const Color(0xFF161719),
+                        width: (hasError || _isStartingStackFocused) ? 1.5 : 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        if (CurrencyService.prefixText != null) ...[
+                          Text(
+                            CurrencyService.prefixText!,
+                            style: GoogleFonts.ibmPlexSans(
+                              color: _isStartingStackFocused ? Colors.white : const Color(0xFFB9B9B9),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              height: 22 / 15,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Expanded(
+                          child: TextField(
+                            controller: _startingStackController,
+                            focusNode: _startingStackFocusNode,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            textInputAction: TextInputAction.done,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                            ],
+                            style: GoogleFonts.ibmPlexSans(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              height: 22 / 15,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: l10n.setupEnterChipStack,
+                              hintStyle: GoogleFonts.ibmPlexSans(
+                                color: const Color(0xFFB9B9B9),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w400,
+                                height: 22 / 15,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              filled: true,
+                              fillColor: Colors.transparent,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                            ),
+                            onChanged: (_) => setState(() {}),
+                          ),
+                        ),
+                        if (CurrencyService.suffixText != null) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            CurrencyService.suffixText!,
+                            style: GoogleFonts.ibmPlexSans(
+                              color: _isStartingStackFocused ? Colors.white : const Color(0xFFB9B9B9),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              height: 22 / 15,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                   if (hasError) ...[
                     const SizedBox(height: 8),
@@ -714,6 +872,9 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
   Widget _buildBlindTextField(
     String label,
     TextEditingController controller,
+    FocusNode focusNode,
+    bool isFocused,
+    bool showCurrencyPrefix,
     ValueChanged<int> onChanged,
   ) {
     return Column(
@@ -729,43 +890,66 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
         ),
         const SizedBox(height: 4),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: const Color(0xFF1F272F)),
+            color: const Color(0xFF161719),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isFocused ? const Color(0xFF4CDE78) : const Color(0xFF161719),
+              width: isFocused ? 1.5 : 1.0,
+            ),
           ),
-          child: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            style: GoogleFonts.ibmPlexSans(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-            ),
-            decoration: InputDecoration(
-              hintText: '0',
-              hintStyle: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFF8C8C8C),
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
+          child: Row(
+            children: [
+              if (showCurrencyPrefix) ...[
+                Text(
+                  CurrencyService.symbol,
+                  style: GoogleFonts.ibmPlexSans(
+                    color: isFocused ? Colors.white : const Color(0xFFB9B9B9),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    height: 22 / 15,
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  style: GoogleFonts.ibmPlexSans(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    height: 22 / 15,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '0',
+                    hintStyle: GoogleFonts.ibmPlexSans(
+                      color: const Color(0xFFB9B9B9),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      height: 22 / 15,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                  onChanged: (value) {
+                    final v = int.tryParse(value);
+                    if (v != null && v > 0) onChanged(v);
+                    setState(() {});
+                  },
+                ),
               ),
-              filled: false,
-              fillColor: Colors.transparent,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-              isDense: true,
-            ),
-            onChanged: (value) {
-              final v = int.tryParse(value);
-              if (v != null && v > 0) {
-                onChanged(v);
-              }
-              setState(() {});
-            },
+            ],
           ),
         ),
       ],
@@ -896,26 +1080,24 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
   Widget _buildStartButton(AppLocalizations l10n) {
     final isValid = _isFormValid;
-    return GestureDetector(
-      onTap: isValid ? _startSession : null,
-      child: Container(
-        width: double.infinity,
-        padding:
-            const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-        decoration: BoxDecoration(
-          color: isValid
-              ? const Color(0xFF4CDE78)
-              : const Color(0xFF4CDE78).withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          l10n.setupStartSession,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF0C0C0C),
-            height: 20 / 15,
+    return Center(
+      child: GestureDetector(
+        onTap: isValid ? _startSession : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+          decoration: BoxDecoration(
+            color: isValid
+                ? const Color(0xFF4CDE78)
+                : const Color(0xFF4CDE78).withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            l10n.setupStartSession,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF0C0C0C),
+            ),
           ),
         ),
       ),
@@ -963,7 +1145,7 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
 
     if (displayName.isEmpty) return chip;
 
-    final badge = _buildNameBadge(displayName, isHero);
+    final badge = _buildNameBadge(displayName, variant);
     const gap = SizedBox(width: 4, height: 4);
 
     if (variant == 'top') {
@@ -984,28 +1166,76 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     }
   }
 
-  Widget _buildNameBadge(String name, bool isHero) {
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+  Widget _buildNameBadge(String name, String variant) {
+    const badgeWidth = 52.0;
+    const badgeHeight = 17.0;
+    const tailThickness = 3.5;
+
+    const bgColor = Color(0xFF0097D2);
+    const textColor = Colors.white;
+    final truncated = name.length > 8 ? '${name.substring(0, 6)}..' : name;
+
+    final pill = Container(
+      width: badgeWidth,
+      height: badgeHeight,
       decoration: BoxDecoration(
-        color: isHero
-            ? const Color(0xFFA3FF78)
-            : const Color(0xFF2C2C2E),
-        borderRadius: BorderRadius.circular(4),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8.5),
       ),
-      child: Text(
-        name,
-        style: GoogleFonts.ibmPlexSans(
-          color:
-              isHero ? const Color(0xFF0C0C0C) : Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
+      child: Center(
+        child: Text(
+          truncated,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 10.0,
+            fontWeight: FontWeight.w500,
+            color: textColor,
+            height: 1.24,
+          ),
+          maxLines: 1,
         ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
       ),
     );
+
+    if (variant == 'top') {
+      // Badge above chip → tail points down from bottom-right
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          pill,
+          CustomPaint(
+            size: Size(badgeWidth, tailThickness),
+            painter: _BadgeTailPainter(color: bgColor, direction: _TailDirection.bottom),
+          ),
+        ],
+      );
+    } else if (variant == 'left') {
+      // Badge left of chip → tail points right
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          pill,
+          CustomPaint(
+            size: Size(tailThickness, badgeHeight),
+            painter: _BadgeTailPainter(color: bgColor, direction: _TailDirection.right),
+          ),
+        ],
+      );
+    } else {
+      // 'right' — badge right of chip → tail points left
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          CustomPaint(
+            size: Size(tailThickness, badgeHeight),
+            painter: _BadgeTailPainter(color: bgColor, direction: _TailDirection.left),
+          ),
+          pill,
+        ],
+      );
+    }
   }
 
   Map<int, String> _buildSeatLabels() {
@@ -1021,4 +1251,47 @@ class _UnifiedSessionSetupScreenState extends State<UnifiedSessionSetupScreen> {
     return labels;
   }
 
+}
+
+enum _TailDirection { bottom, right, left }
+
+class _BadgeTailPainter extends CustomPainter {
+  final Color color;
+  final _TailDirection direction;
+
+  const _BadgeTailPainter({required this.color, required this.direction});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final path = Path();
+    switch (direction) {
+      case _TailDirection.bottom:
+        // Small triangle at bottom-right corner pointing downward
+        path
+          ..moveTo(size.width * 0.715, 0)
+          ..lineTo(size.width * 0.865, 0)
+          ..lineTo(size.width * 0.865, size.height)
+          ..close();
+      case _TailDirection.right:
+        // Small triangle at right side pointing rightward (bottom-anchored)
+        path
+          ..moveTo(0, size.height * 0.715)
+          ..lineTo(0, size.height * 0.865)
+          ..lineTo(size.width, size.height * 0.865)
+          ..close();
+      case _TailDirection.left:
+        // Small triangle at left side pointing leftward (bottom-anchored)
+        path
+          ..moveTo(size.width, size.height * 0.715)
+          ..lineTo(size.width, size.height * 0.865)
+          ..lineTo(0, size.height * 0.865)
+          ..close();
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_BadgeTailPainter old) =>
+      old.color != color || old.direction != direction;
 }

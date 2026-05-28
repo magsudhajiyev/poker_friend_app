@@ -378,7 +378,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundSurface,
+        backgroundColor: AppColors.bgSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           AppLocalizations.of(context).playerSessionEndedTitle,
@@ -426,7 +426,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundSurface,
+        backgroundColor: AppColors.bgSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           AppLocalizations.of(context).playerSessionRemovedTitle,
@@ -472,7 +472,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               : 'Seat $winnerId wins ${_formatAmount(pot)}',
           style: GoogleFonts.ibmPlexSans(color: Colors.white),
         ),
-        backgroundColor: isWinner ? const Color(0xFF87ED81) : AppColors.backgroundSurface,
+        backgroundColor: isWinner ? const Color(0xFF87ED81) : AppColors.bgSurface,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -567,7 +567,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.backgroundSurface,
+        backgroundColor: AppColors.bgSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           AppLocalizations.of(context).playerSessionLeaveTableTitle,
@@ -640,7 +640,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           const GradientBackground(),
@@ -912,7 +912,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF1C1F21)),
       ),
@@ -962,7 +962,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.backgroundSurface,
+          color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: hasCards
@@ -1025,7 +1025,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: hasCards
@@ -1113,7 +1113,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.backgroundSurface,
+          color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFF1C1F21)),
         ),
@@ -1160,7 +1160,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF1C1F21)),
       ),
@@ -1211,7 +1211,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
           behavior: HitTestBehavior.opaque,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: AppColors.backgroundPaper,
+            color: AppColors.bgPrimary,
             child: Row(
               children: [
                 Text(
@@ -1327,7 +1327,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF1C1F21)),
       ),
@@ -1388,7 +1388,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF1C1F21)),
       ),
@@ -1425,7 +1425,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFF89F1EC).withValues(alpha: 0.15)
-              : AppColors.backgroundPaper,
+              : AppColors.bgPrimary,
           borderRadius: BorderRadius.circular(40),
           border: Border.all(
             color: isSelected
@@ -1450,7 +1450,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
   Widget _buildHandHistorySection() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF1C1F21)),
       ),
@@ -1564,7 +1564,7 @@ class _PlayerSessionScreenState extends State<PlayerSessionScreen> {
               decoration: BoxDecoration(
                 color: isWinner
                     ? const Color(0xFF87ED81).withValues(alpha: 0.15)
-                    : AppColors.backgroundPaper,
+                    : AppColors.bgPrimary,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
@@ -2059,7 +2059,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.only(
@@ -2136,7 +2136,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.backgroundPaper,
+                    color: AppColors.bgPrimary,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: hasCards
@@ -2234,7 +2234,7 @@ class _EditHandBottomSheetState extends State<_EditHandBottomSheet> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFF89F1EC).withValues(alpha: 0.15)
-                            : AppColors.backgroundPaper,
+                            : AppColors.bgPrimary,
                         borderRadius: BorderRadius.circular(40),
                         border: Border.all(
                           color: isSelected

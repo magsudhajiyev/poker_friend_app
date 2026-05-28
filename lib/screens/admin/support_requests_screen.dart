@@ -66,7 +66,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
     final response = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.backgroundSurface,
+        backgroundColor: AppColors.bgSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           l10n.supportRequestsResolveTitle,
@@ -89,7 +89,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 hintText: l10n.supportRequestsResponseHint,
                 hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
                 filled: true,
-                fillColor: AppColors.backgroundPaper,
+                fillColor: AppColors.bgPrimary,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -153,7 +153,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
     final reason = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.backgroundSurface,
+        backgroundColor: AppColors.bgSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           l10n.supportRequestsRejectTitle,
@@ -176,7 +176,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 hintText: l10n.supportRequestsRejectHint,
                 hintStyle: GoogleFonts.ibmPlexSans(color: const Color(0xFF8C8C8C)),
                 filled: true,
-                fillColor: AppColors.backgroundPaper,
+                fillColor: AppColors.bgPrimary,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -249,7 +249,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.backgroundSurface,
+        backgroundColor: AppColors.bgSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
@@ -291,7 +291,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.backgroundPaper,
+                  color: AppColors.bgPrimary,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -408,7 +408,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           const GradientBackground(),
@@ -486,7 +486,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: TabBar(
@@ -584,7 +584,7 @@ class _SupportRequestsScreenState extends State<SupportRequestsScreen>
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.backgroundSurface,
+          color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFF1C1F21), width: 1),
         ),

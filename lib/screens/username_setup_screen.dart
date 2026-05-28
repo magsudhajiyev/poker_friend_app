@@ -180,7 +180,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           const GradientBackground(),
@@ -237,7 +237,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                             '@',
                             style: AppTypography.bodyMedium().copyWith(
                               fontSize: 18,
-                              color: AppColors.accentGreen,
+                              color: AppColors.accentPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -265,10 +265,10 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                               AppDecorations.cardRadius),
                           borderSide: BorderSide(
                             color: _hasChecked && _isAvailable
-                                ? AppColors.accentGreen
+                                ? AppColors.accentPrimary
                                 : _hasChecked && !_isAvailable
                                     ? Colors.red
-                                    : AppColors.accentGreen,
+                                    : AppColors.accentPrimary,
                             width: 2,
                           ),
                         ),
@@ -313,7 +313,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                         onPressed: _canClaim ? _claimUsername : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: AppColors.backgroundPaper,
+                          foregroundColor: AppColors.bgPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
@@ -330,7 +330,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.backgroundPaper),
+                                      AppColors.bgPrimary),
                                 ),
                               )
                             : Text(
@@ -392,7 +392,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
     if (_hasChecked && _isAvailable) {
       return const Padding(
         padding: EdgeInsets.only(right: 12),
-        child: Icon(Icons.check_circle, color: AppColors.accentGreen, size: 20),
+        child: Icon(Icons.check_circle, color: AppColors.accentPrimary, size: 20),
       );
     }
     if (_hasChecked && !_isAvailable) {
@@ -419,7 +419,7 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Text(
           AppLocalizations.of(context).usernameSetupAvailable,
-          style: TextStyle(color: AppColors.accentGreen, fontSize: 13),
+          style: TextStyle(color: AppColors.accentPrimary, fontSize: 13),
         ),
       );
     }

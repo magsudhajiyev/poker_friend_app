@@ -157,7 +157,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.backgroundSurface,
+          backgroundColor: AppColors.bgSurface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(l10n.authExpLinkGoogleTitle,
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
@@ -283,7 +283,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           const GradientBackground(),
@@ -581,7 +581,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
-          foregroundColor: AppColors.backgroundPaper,
+          foregroundColor: AppColors.bgPrimary,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppDecorations.buttonRadius),
@@ -595,7 +595,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.backgroundPaper),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.bgPrimary),
                 ),
               )
             : Text(
@@ -643,7 +643,7 @@ class _AuthScreenExperimentalState extends State<AuthScreenExperimental> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.cardRadius),
           borderSide: BorderSide(
-            color: AppColors.accentGreen,
+            color: AppColors.accentPrimary,
             width: 2,
           ),
         ),

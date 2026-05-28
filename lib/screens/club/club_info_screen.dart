@@ -48,7 +48,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           // Teal glow at top
@@ -115,7 +115,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
             width: 44,
             height: 44,
             decoration: const BoxDecoration(
-              color: AppColors.backgroundSurface,
+              color: AppColors.bgSurface,
               shape: BoxShape.circle,
             ),
             child: const Center(
@@ -150,7 +150,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -258,7 +258,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: AppColors.backgroundSurface,
+              color: AppColors.bgSurface,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
@@ -272,7 +272,7 @@ class _ClubInfoScreenState extends State<ClubInfoScreen> {
         else
           Container(
             decoration: BoxDecoration(
-              color: AppColors.backgroundSurface,
+              color: AppColors.bgSurface,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(

@@ -50,3 +50,13 @@ export 'components/app_toggle.dart';
 export 'components/calendar/calendar_picker.dart';
 export 'components/calendar/calendar_day_cell.dart';
 export 'components/calendar/time_picker_row.dart';
+
+// Buttons (v2)
+export 'components/buttons/app_button.dart';
+
+// Tabs
+export 'components/tabs/app_tab_selector.dart';
+
+// Chips
+export 'components/chips/info_chip_dark.dart';
+export 'components/chips/player_chip.dart';

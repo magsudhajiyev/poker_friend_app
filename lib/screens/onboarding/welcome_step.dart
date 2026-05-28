@@ -77,7 +77,7 @@ class WelcomeStep extends StatelessWidget {
                     onPressed: onContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: AppColors.backgroundPaper,
+                      foregroundColor: AppColors.bgPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(110),
                       ),
@@ -88,7 +88,7 @@ class WelcomeStep extends StatelessWidget {
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.backgroundPaper,
+                        color: AppColors.bgPrimary,
                       ),
                     ),
                   ),

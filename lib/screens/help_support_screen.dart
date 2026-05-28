@@ -90,7 +90,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       (key: 'Other', label: l10n.supportOther),
     ];
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           const GradientBackground(),
@@ -156,7 +156,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? const Color(0xFF89F1EC).withValues(alpha: 0.15)
-                                      : AppColors.backgroundSurface,
+                                      : AppColors.bgSurface,
                                   borderRadius: BorderRadius.circular(40),
                                   border: Border.all(
                                     color: isSelected

@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../models/game_types.dart';
 import '../services/currency_service.dart';
+import '../design_system/constants/colors.dart';
+import '../design_system/constants/decorations.dart';
 
 class WinnerSelectionDialog extends StatefulWidget {
   final List<int> activePlayers;
@@ -56,11 +58,12 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
     final baseShare = (widget.potAmount / numWinners).floor().toDouble();
     final extraChips = (widget.potAmount % numWinners).toInt();
 
-    final sortedWinners = selectedWinners.toList()..sort((a, b) {
-      final positionA = _getPositionOrder(a);
-      final positionB = _getPositionOrder(b);
-      return positionA.compareTo(positionB);
-    });
+    final sortedWinners = selectedWinners.toList()
+      ..sort((a, b) {
+        final positionA = _getPositionOrder(a);
+        final positionB = _getPositionOrder(b);
+        return positionA.compareTo(positionB);
+      });
 
     Map<int, double> shares = {};
     for (int i = 0; i < sortedWinners.length; i++) {
@@ -147,14 +150,12 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
             }
           });
         } else {
-          // Single-tap in normal mode → select (toggle), confirm via checkmark/save button
           setState(() {
             selectedWinner = selectedWinner == playerId ? null : playerId;
           });
         }
       },
       onLongPress: () {
-        // Long-press enters chopped pot mode with this player pre-selected
         if (!isChoppedPot) {
           setState(() {
             isChoppedPot = true;
@@ -166,39 +167,41 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF101115),
-          borderRadius: BorderRadius.circular(18),
+          color: AppColors.borderOnInverseSubtle,
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+          border: isSelected
+              ? Border.all(color: AppColors.textOnInverse, width: 1.5)
+              : null,
         ),
         child: Row(
           children: [
-            // Radio/Checkbox circle
             Container(
               width: 20,
               height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? const Color(0xFF89F1EC) : const Color(0xFF555555),
+                  color: isSelected
+                      ? AppColors.textOnInverse
+                      : AppColors.borderLight,
                   width: isSelected ? 2 : 1.5,
                 ),
-                color: isSelected ? const Color(0xFF89F1EC) : Colors.transparent,
+                color: isSelected ? AppColors.textOnInverse : Colors.transparent,
               ),
               child: isSelected
                   ? Center(
-                      child: Container(
-                        width: isChoppedPot ? 10 : 8,
-                        height: isChoppedPot ? 10 : 8,
-                        decoration: BoxDecoration(
-                          shape: isChoppedPot ? BoxShape.rectangle : BoxShape.circle,
-                          color: isChoppedPot ? Colors.transparent : Colors.black,
-                          borderRadius: isChoppedPot ? BorderRadius.circular(2) : null,
-                        ),
-                        child: isChoppedPot
-                            ? const Icon(Icons.check, size: 10, color: Colors.black)
-                            : null,
-                      ),
+                      child: isChoppedPot
+                          ? Icon(Icons.check, size: 11, color: AppColors.bgInverse)
+                          : Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.bgInverse,
+                              ),
+                            ),
                     )
                   : null,
             ),
@@ -209,7 +212,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w400,
-                  color: Colors.white,
+                  color: AppColors.textOnInverse,
                   height: 1.44,
                 ),
               ),
@@ -229,84 +232,64 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
       alignment: Alignment.bottomCenter,
       child: Container(
         width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top,
+        height: MediaQuery.of(context).size.height -
+            MediaQuery.of(context).padding.top,
         decoration: BoxDecoration(
-          color: Colors.black,
+          color: AppColors.bgInverse,
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(32),
-            topRight: Radius.circular(32),
+            topLeft: Radius.circular(AppDecorations.radiusXl),
+            topRight: Radius.circular(AppDecorations.radiusXl),
           ),
-          border: Border.all(color: const Color(0xFF262626)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0xFF2E5A59),
-              blurRadius: 64,
-              offset: Offset(0, -6),
-            ),
-          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Overlay Header
+            // Drag handle
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
+              padding: const EdgeInsets.only(top: 12),
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.borderOnInverseSubtle,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            // Header: spacer | title (centered) | X
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // X close button
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF35373C),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'icons/figma_icons/close.svg',
-                          width: 16,
-                          height: 16,
-                          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Title
+                  const SizedBox(width: 28),
                   Expanded(
                     child: Center(
                       child: Text(
-                        isChoppedPot ? l10n.winnerSelectionWhoChopped : l10n.winnerSelectionWhoWon,
+                        isChoppedPot
+                            ? l10n.winnerSelectionWhoChopped
+                            : l10n.winnerSelectionWhoWon,
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: AppColors.textOnInverse,
                           letterSpacing: -0.43,
                         ),
                       ),
                     ),
                   ),
-                  // Green checkmark button
                   GestureDetector(
-                    onTap: _canSave ? _saveChanges : null,
-                    child: Opacity(
-                      opacity: _canSave ? 1.0 : 0.4,
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF54E98A),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: SvgPicture.asset(
-                            'icons/figma_icons/check.svg',
-                            width: 16,
-                            height: 16,
-                            colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-                          ),
+                    onTap: () => Navigator.pop(context),
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'assets/icons/X.svg',
+                          width: 18,
+                          height: 18,
+                          colorFilter: ColorFilter.mode(
+                              AppColors.borderLight, BlendMode.srcIn),
                         ),
                       ),
                     ),
@@ -318,30 +301,32 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
             // Scrollable content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 34, 16, 0),
+                padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Chopped pot indicator (only visible in chopped mode)
+                    // Chopped pot indicator
                     if (isChoppedPot)
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1B4341),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFF4B9A96)),
+                          color: AppColors.accentPrimary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+                          border: Border.all(color: AppColors.accentPrimary),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.call_split, color: Color(0xFF73D4CF), size: 18),
+                            Icon(Icons.call_split,
+                                color: AppColors.textOnInverse, size: 18),
                             const SizedBox(width: 10),
                             Text(
                               l10n.winnerSelectionChoppedPot,
                               style: GoogleFonts.ibmPlexSans(
-                                fontSize: 17,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF73D4CF),
+                                color: AppColors.textOnInverse,
                                 height: 1.44,
                               ),
                             ),
@@ -354,10 +339,11 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                       const SizedBox(height: 12),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF101115),
-                          borderRadius: BorderRadius.circular(18),
+                          color: AppColors.borderOnInverseSubtle,
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,25 +351,30 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                             Text(
                               l10n.winnerSelectionIndividualShares,
                               style: GoogleFonts.ibmPlexSans(
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF8C8C8C),
+                                color: AppColors.borderLight,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            ..._calculateIndividualShares().entries.map((entry) {
-                              final playerDisplayName = _getPlayerDisplayName(entry.key);
+                            ..._calculateIndividualShares()
+                                .entries
+                                .map((entry) {
+                              final playerDisplayName =
+                                  _getPlayerDisplayName(entry.key);
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 2),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Text(
                                         playerDisplayName,
                                         style: GoogleFonts.ibmPlexSans(
                                           fontSize: 14,
-                                          color: const Color(0xFF89F1EC),
+                                          color: AppColors.textOnInverse,
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -393,7 +384,7 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                                       style: GoogleFonts.ibmPlexSans(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF89F1EC),
+                                        color: AppColors.textOnInverse,
                                       ),
                                     ),
                                   ],
@@ -405,15 +396,17 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                       ),
                     ],
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                    // "Select the winner:" label
+                    // Instruction label
                     Text(
-                      isChoppedPot ? l10n.winnerSelectionSelectAllWinners : l10n.winnerSelectionTapTheWinner,
+                      isChoppedPot
+                          ? l10n.winnerSelectionSelectAllWinners
+                          : l10n.winnerSelectionTapTheWinner,
                       style: GoogleFonts.ibmPlexSans(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textOnInverse,
                         height: 1.44,
                       ),
                     ),
@@ -425,16 +418,16 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
-                            color: Colors.white.withValues(alpha: 0.4),
+                            color: AppColors.borderLight,
                           ),
                         ),
                       ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
 
                     // Player rows
                     ...widget.activePlayers.map((playerId) {
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(bottom: 10),
                         child: _buildPlayerRow(playerId),
                       );
                     }),
@@ -445,38 +438,42 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
 
             // Bottom buttons
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 34, 16, 34),
+              padding: EdgeInsets.fromLTRB(
+                  16, 24, 16, MediaQuery.of(context).padding.bottom + 24),
               child: Column(
                 children: [
-                  // Save / Confirm button
+                  // Confirm button
                   GestureDetector(
                     onTap: _canSave ? _saveChanges : null,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _canSave
-                            ? const Color(0xFF89F1EC)
-                            : const Color(0xFF89F1EC).withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(110),
-                      ),
-                      child: Center(
-                        child: Text(
-                          isChoppedPot ? l10n.winnerSelectionConfirmChop : l10n.winnerSelectionConfirmWinner,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                            letterSpacing: -0.5,
-                            height: 24 / 17,
+                    child: Opacity(
+                      opacity: _canSave ? 1.0 : 0.35,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgPrimary,
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                        ),
+                        child: Center(
+                          child: Text(
+                            isChoppedPot
+                                ? l10n.winnerSelectionConfirmChop
+                                : l10n.winnerSelectionConfirmWinner,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.bgInverse,
+                              letterSpacing: -0.5,
+                              height: 20 / 15,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  // Back to single winner (only in chopped mode)
+                  // Back to single winner (chopped mode only)
                   if (isChoppedPot) ...[
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     GestureDetector(
                       onTap: () {
                         setState(() {
@@ -487,23 +484,21 @@ class _WinnerSelectionDialogState extends State<WinnerSelectionDialog> {
                       },
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
                           color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(110),
-                          border: Border.all(
-                            color: const Color(0xFFD3FFFD),
-                          ),
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                          border: Border.all(color: AppColors.borderLight),
                         ),
                         child: Center(
                           child: Text(
                             l10n.winnerSelectionBackToSingle,
                             style: GoogleFonts.ibmPlexSans(
-                              fontSize: 17,
+                              fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFFD3FFFD),
+                              color: AppColors.textOnInverse,
                               letterSpacing: -0.5,
-                              height: 24 / 17,
+                              height: 20 / 15,
                             ),
                           ),
                         ),

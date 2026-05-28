@@ -30,7 +30,7 @@ class TrialConfirmationScreen extends StatelessWidget {
     final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 28.0);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           const GradientBackground(),

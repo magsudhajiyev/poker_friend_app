@@ -159,7 +159,7 @@ class _EarningsChartScreenState extends State<EarningsChartScreen> {
         child: SafeArea(
           child: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.tealAccent),
+                  child: CircularProgressIndicator(color: AppColors.accentPrimary),
                 )
               : _chartData.isEmpty
                   ? _buildEmptyState()

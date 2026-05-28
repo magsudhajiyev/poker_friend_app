@@ -142,7 +142,7 @@ class _RegisterClubDialogState extends State<RegisterClubDialog> {
       child: Container(
         width: 370,
         decoration: BoxDecoration(
-          color: AppColors.backgroundSurface, // #101115
+          color: AppColors.bgSurface, // #101115
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: const Color(0xFF1B1E24), // neutrals/800
@@ -530,7 +530,7 @@ class _SuccessDialogContent extends StatelessWidget {
       child: Container(
         width: 370,
         decoration: BoxDecoration(
-          color: AppColors.backgroundSurface, // #101115
+          color: AppColors.bgSurface, // #101115
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: const Color(0xFF1B1E24), // neutrals/800

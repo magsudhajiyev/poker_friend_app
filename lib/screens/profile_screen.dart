@@ -1,24 +1,24 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'onboarding/onboarding_flow.dart';
+import '../design_system/constants/colors.dart';
 import '../services/auth_service.dart';
+import '../services/username_service.dart';
 import '../services/display_identity_service.dart';
 import '../services/subscription_service.dart';
-import '../services/username_service.dart';
 import '../models/hand_state_machine.dart';
 import '../models/game_types.dart';
-import '../screens/settings_screen.dart';
-import '../screens/paywall_screen.dart';
-import '../screens/intro_screen.dart';
-import '../screens/username_setup_screen.dart';
-import '../screens/poker_hand_screen.dart';
-import '../widgets/global_bottom_nav_bar.dart';
-import '../widgets/session_summary_card.dart';
-import '../services/firebase_service.dart';
+import 'intro_screen.dart';
+import 'help_support_screen.dart';
+import 'username_setup_screen.dart';
+import 'poker_hand_screen.dart';
 import 'session_analytics_screen.dart';
+import '../widgets/session_summary_card.dart';
+import 'onboarding/onboarding_flow.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -26,579 +26,815 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool isLoading = true;
-  String? _username;
-  bool _useNicknameInGame = false;
+  bool _isLoading = true;
+  bool _isSaving = false;
   bool _isAdmin = false;
+
+  // Editable fields
+  late TextEditingController _nameCtrl;
+  late TextEditingController _emailCtrl;
+  late TextEditingController _usernameCtrl;
+  bool _useNicknameInGame = false;
+  bool _emailUpdates = false;
+
+  // Username availability
+  String? _usernameError;
+  bool _isCheckingUsername = false;
+  Timer? _usernameDebounce;
+  String? _originalUsername;
+
+  static const _bg = Color(0xFF0C0C0C);
+  static const _surface = Color(0xFF161719);
+  static const _elevated = Color(0xFF2C2C2E);
+  static const _secondary = Color(0xFFB9B9B9);
+  static const _saveGreen = Color(0xFFA3FF78);
+  static const _danger = Color(0xFFFF3B30);
+  static const _grey = Color(0xFF3A3A3C);
 
   @override
   void initState() {
     super.initState();
+    _nameCtrl = TextEditingController();
+    _emailCtrl = TextEditingController();
+    _usernameCtrl = TextEditingController();
     _loadData();
   }
 
-  Future<void> _loadData() async {
-    try {
-      final username = await UsernameService.getUsername();
-      final useNickname = await UsernameService.getUseNicknameInGame();
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _usernameCtrl.dispose();
+    _usernameDebounce?.cancel();
+    super.dispose();
+  }
 
-      // Check admin role from Firestore
-      bool isAdmin = false;
-      final uid = AuthService.userId;
-      if (uid != null) {
-        try {
-          final doc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .get();
-          isAdmin = doc.data()?['role'] == 'admin';
-        } catch (_) {}
+  Future<void> _loadData() async {
+    final username = await UsernameService.getUsername();
+    final useNickname = await UsernameService.getUseNicknameInGame();
+
+    bool isAdmin = false;
+    final uid = AuthService.userId;
+    if (uid != null) {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+        isAdmin = doc.data()?['role'] == 'admin';
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() {
+        _nameCtrl.text = AuthService.userDisplayName;
+        _emailCtrl.text = AuthService.currentUser?.email ?? '';
+        _usernameCtrl.text = username ?? '';
+        _originalUsername = username;
+        _useNicknameInGame = useNickname;
+        _isAdmin = isAdmin;
+        _isLoading = false;
+      });
+    }
+  }
+
+  // ── Username availability ──────────────────────────────────────────────────
+
+  void _onUsernameChanged(String value) {
+    _usernameDebounce?.cancel();
+    final cleaned = value.replaceAll('@', '').trim();
+    if (cleaned == (_originalUsername ?? '')) {
+      setState(() { _usernameError = null; _isCheckingUsername = false; });
+      return;
+    }
+    if (cleaned.isEmpty) {
+      setState(() { _usernameError = null; _isCheckingUsername = false; });
+      return;
+    }
+    final validationError = UsernameService.validateUsername(cleaned);
+    if (validationError != null) {
+      setState(() { _usernameError = validationError; _isCheckingUsername = false; });
+      return;
+    }
+    setState(() { _isCheckingUsername = true; _usernameError = null; });
+    _usernameDebounce = Timer(const Duration(milliseconds: 600), () async {
+      final available = await UsernameService.isUsernameAvailable(cleaned,
+          currentUserEmail: AuthService.currentUser?.email);
+      if (mounted) {
+        setState(() {
+          _isCheckingUsername = false;
+          _usernameError = available ? null : 'Username already taken';
+        });
+      }
+    });
+  }
+
+  // ── Save ───────────────────────────────────────────────────────────────────
+
+  Future<void> _save() async {
+    if (_isSaving) return;
+    final newName = _nameCtrl.text.trim();
+    final newUsername = _usernameCtrl.text.replaceAll('@', '').trim();
+
+    if (_usernameError != null) {
+      _showSnack('Fix username error before saving');
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      // Save display name
+      if (newName.isNotEmpty && newName != AuthService.userDisplayName) {
+        await AuthService.updateProfile(displayName: newName);
+        final uid = AuthService.userId;
+        if (uid != null) {
+          await FirebaseFirestore.instance.collection('users').doc(uid)
+              .update({'displayName': newName, 'displayNameLower': newName.toLowerCase()});
+        }
+      }
+
+      // Save nickname toggle
+      await UsernameService.setUseNicknameInGame(_useNicknameInGame);
+      DisplayIdentityService.clearCache();
+
+      // Save username if changed
+      if (newUsername.isNotEmpty && newUsername != _originalUsername) {
+        final claimed = await UsernameService.claimUsername(newUsername);
+        if (!claimed) {
+          if (mounted) _showSnack('Username no longer available');
+          setState(() => _isSaving = false);
+          return;
+        }
+        setState(() => _originalUsername = newUsername);
       }
 
       if (mounted) {
-        setState(() {
-          _username = username;
-          _useNicknameInGame = useNickname;
-          _isAdmin = isAdmin;
-          isLoading = false;
-        });
+        _showSnack('Saved successfully', isSuccess: true);
+        setState(() => _isSaving = false);
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
+        _showSnack('Failed to save: $e');
+        setState(() => _isSaving = false);
       }
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+  void _showSnack(String msg, {bool isSuccess = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: GoogleFonts.ibmPlexSans(color: Colors.white)),
+      backgroundColor: isSuccess ? const Color(0xFF2C2C2E) : const Color(0xFF3A3A3C),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ));
+  }
 
-    if (isLoading) {
-      return Scaffold(
-        backgroundColor: Color(0xFF02050B),
-        body: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF89F1EC)),
+  // ── Sign out / Delete ──────────────────────────────────────────────────────
+
+  void _showSignOutConfirmation() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Sign Out', style: GoogleFonts.ibmPlexSans(color: Colors.white, fontWeight: FontWeight.w600)),
+        content: Text('Are you sure you want to sign out?',
+            style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: _secondary, fontWeight: FontWeight.w500)),
           ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await AuthService.signOut();
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                    context, MaterialPageRoute(builder: (_) => IntroScreen()), (_) => false);
+              }
+            },
+            child: Text('Sign Out', style: GoogleFonts.ibmPlexSans(color: _danger, fontWeight: FontWeight.w500)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Delete Account', style: GoogleFonts.ibmPlexSans(color: _danger, fontWeight: FontWeight.w600)),
+        content: Text(
+          'This will permanently delete your account and all associated data. This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.',
+          style: GoogleFonts.ibmPlexSans(color: Colors.white, fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.ibmPlexSans(color: _secondary, fontWeight: FontWeight.w500)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _deleteAccount();
+            },
+            child: Text('Delete', style: GoogleFonts.ibmPlexSans(color: _danger, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteAccount() async {
+    final uid = AuthService.userId;
+    if (uid == null) return;
+    try {
+      final firestore = FirebaseFirestore.instance;
+      await firestore.collection('users').doc(uid).delete();
+      await firestore.collection('user_stats').doc(uid).delete();
+      for (final coll in ['session_results', 'poker_sessions', 'opponents']) {
+        final snap = await firestore.collection(coll).where('userId', isEqualTo: uid).get();
+        for (final doc in snap.docs) {
+          await doc.reference.delete();
+        }
+      }
+      final opponents = await firestore.collection('opponents').where('userId', isEqualTo: uid).get();
+      for (final doc in opponents.docs) {
+        await firestore.collection('opponent_stats').doc(doc.id).delete();
+      }
+      await AuthService.deleteAccount();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+            context, MaterialPageRoute(builder: (_) => IntroScreen()), (_) => false);
+      }
+    } catch (e) {
+      if (mounted) _showSnack('Failed to delete account: $e');
+    }
+  }
+
+  // ── Avatar ─────────────────────────────────────────────────────────────────
+
+  Widget _buildAvatar(double size) {
+    final photoURL = AuthService.userPhotoURL;
+    if (photoURL != null && photoURL.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(size / 2),
+        child: CachedNetworkImage(
+          imageUrl: photoURL,
+          width: size, height: size, fit: BoxFit.cover,
+          placeholder: (_, __) => _buildInitialsAvatar(size),
+          errorWidget: (_, __, ___) => _buildInitialsAvatar(size),
         ),
       );
     }
+    return _buildInitialsAvatar(size);
+  }
 
-    final topPadding = MediaQuery.of(context).padding.top;
+  Widget _buildInitialsAvatar(double size) {
+    final name = AuthService.userDisplayName;
+    final parts = name.trim().split(' ');
+    final initials = parts.length >= 2
+        ? '${parts[0][0]}${parts[1][0]}'.toUpperCase()
+        : name.isNotEmpty ? name[0].toUpperCase() : 'U';
+    return Container(
+      width: size, height: size,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size / 2),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: [Color(0xFF2A5A30), Color(0xFF1A3A20)],
+        ),
+      ),
+      child: Center(
+        child: Text(initials,
+            style: GoogleFonts.ibmPlexSans(
+                fontSize: size * 0.35, fontWeight: FontWeight.w600, color: const Color(0xFF87ED81))),
+      ),
+    );
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: _bg,
+        body: const Center(child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation(Color(0xFF89F1EC)))),
+      );
+    }
+
+    final safeTop = MediaQuery.of(context).padding.top;
+    final hPad = MediaQuery.of(context).size.width * 0.044;
 
     return Scaffold(
-      backgroundColor: Color(0xFF02050B),
-      bottomNavigationBar: const GlobalBottomNavBar(currentScreen: 'profile'),
-      body: Stack(
+      backgroundColor: _bg,
+      resizeToAvoidBottomInset: true,
+      body: Column(
         children: [
-          // Elliptical cyan/teal glow at top (background decoration)
-          Positioned(
-            top: -250 + topPadding,
-            left: -screenWidth * 0.25,
-            right: -screenWidth * 0.25,
-            child: Container(
-              height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 0.5,
-                  colors: [
-                    const Color(0xFF1A4A48).withOpacity(0.9),
-                    const Color(0xFF1A4A48).withOpacity(0.5),
-                    const Color(0xFF0D2B2A).withOpacity(0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.3, 0.6, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // Main scrollable content — full screen, no overlay container
-          SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(20, topPadding + 16, 20, 100),
+          // Top nav (surface bg)
+          Container(
+            color: _surface,
             child: Column(
-              children: [
-                // Header row
-                _buildHeaderRow(),
-                SizedBox(height: 36),
-
-                // Profile section
-                _buildProfileSection(),
-                SizedBox(height: 24),
-
-                // Username card
-                _buildUsernameCard(),
-                SizedBox(height: 36),
-
-                // Dev tools — only visible to admin role
-                if (_isAdmin) ...[
-                  _buildDevToolsCard(),
-                  SizedBox(height: 16),
-                ],
-
-                _buildSettingsCard(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderRow() {
-    final l10n = AppLocalizations.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Back button
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Color(0xFF101115),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-          ),
-        ),
-
-        // Upgrade button
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const PaywallScreen()),
-            );
-          },
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Color(0xFF104034).withOpacity(0.6),
-              borderRadius: BorderRadius.circular(70),
-              border: Border.all(color: Color(0xFF89F1EC), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFF91FFFB).withOpacity(0.25),
-                  blurRadius: 21,
-                  offset: Offset(3, 2),
-                ),
-              ],
-            ),
-            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.diamond_outlined,
-                  color: Color(0xFF89F1EC),
-                  size: 18,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  l10n.profileUpgrade,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF89F1EC),
+                SizedBox(height: safeTop),
+                SizedBox(
+                  height: 44,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: hPad),
+                    child: Row(
+                      children: [
+                        // Back
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const SizedBox(
+                            width: 39,
+                            child: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                          ),
+                        ),
+                        // Title centered
+                        Expanded(
+                          child: Text('Settings',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
+                        ),
+                        // Save
+                        GestureDetector(
+                          onTap: _isSaving ? null : _save,
+                          child: _isSaving
+                              ? const SizedBox(
+                                  width: 39,
+                                  child: Center(
+                                    child: SizedBox(width: 16, height: 16,
+                                        child: CircularProgressIndicator(strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation(_saveGreen))),
+                                  ))
+                              : SizedBox(
+                                  width: 39,
+                                  child: Text('Save',
+                                      textAlign: TextAlign.right,
+                                      style: GoogleFonts.ibmPlexSans(
+                                          fontSize: 17, fontWeight: FontWeight.w600, color: _saveGreen)),
+                                ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
-    );
-  }
 
-  Widget _buildProfileSection() {
-    final showNickname = _useNicknameInGame && _username != null;
-    return Column(
-      children: [
-        // Avatar — Google photo or initials fallback
-        _buildAvatar(56),
-        SizedBox(height: 12),
-
-        // Primary name (nickname or real name)
-        Text(
-          showNickname ? '@$_username' : AuthService.userDisplayName,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-
-        // Secondary name (real name when showing nickname)
-        if (showNickname) ...[
-          SizedBox(height: 4),
-          Text(
-            AuthService.userDisplayName,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF8C8C8C),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-        SizedBox(height: 8),
-
-        // Email
-        Text(
-          AuthService.currentUser?.email ?? '',
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF8C8C8C),
-            height: 1.64,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUsernameCard() {
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Color(0xFF101115),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Text(
-            l10n.profileUsername,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 14),
-
-          // Current username display + action button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Username or "Not set" label
-              Expanded(
-                child: Text(
-                  _username != null ? '@$_username' : l10n.profileNotSet,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: _username != null
-                        ? Color(0xFF89F1EC)
-                        : Color(0xFF8C8C8C),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              SizedBox(width: 12),
-              // Set / Change button
-              GestureDetector(
-                onTap: () async {
-                  final result = await Navigator.push<String>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UsernameSetupScreen(
-                        isChanging: _username != null,
-                        currentUsername: _username,
-                      ),
-                    ),
-                  );
-                  if (result != null && mounted) {
-                    setState(() {
-                      _username = result;
-                    });
-                    DisplayIdentityService.clearCache();
-                  }
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(40),
-                    border: Border.all(
-                      color: Color(0xFF89F1EC).withValues(alpha: 0.5),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    _username != null ? l10n.profileChange : l10n.profileSetUsername,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF89F1EC),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Use nickname toggle (only show if username is set)
-          if (_username != null) ...[
-            SizedBox(height: 20),
-            Container(
-              height: 1,
-              color: Color(0xFF1C1F21),
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.profileUseNicknameInGames,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        l10n.profileUseNicknameDescription(_username!),
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF8C8C8C),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 12),
-                Switch(
-                  value: _useNicknameInGame,
-                  onChanged: (value) async {
-                    setState(() {
-                      _useNicknameInGame = value;
-                    });
-                    await UsernameService.setUseNicknameInGame(value);
-                    DisplayIdentityService.clearCache();
-                  },
-                  activeColor: Color(0xFF62E3BC),
-                  inactiveThumbColor: Color(0xFF8C8C8C),
-                  inactiveTrackColor: Color(0xFF35373C),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-
-  Widget _buildDevToolsCard() {
-    final override = SubscriptionService.debugPremiumOverride;
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Color(0xFF101115),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Color(0xFFFF6B6B).withAlpha(80), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.bug_report, color: Color(0xFFFF6B6B), size: 20),
-              SizedBox(width: 8),
-              Text(
-                AppLocalizations.of(context).profileDevTools,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFFF6B6B),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(hPad, 32, hPad, 40),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    AppLocalizations.of(context).profilePremiumOverride,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                  // ── Avatar ──────────────────────────────────────────────
+                  Center(
+                    child: SizedBox(
+                      width: 74,
+                      height: 74 + 14.0, // avatar + button overlap
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          _buildAvatar(74),
+                          Positioned(
+                            bottom: 0,
+                            left: 0, right: 0,
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _elevated,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text('Edit',
+                                    style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  SizedBox(height: 2),
-                  Text(
-                    override == null
-                        ? AppLocalizations.of(context).profileUsingRealStatus(SubscriptionService.isPremium ? AppLocalizations.of(context).profilePremium : AppLocalizations.of(context).profileFree)
-                        : AppLocalizations.of(context).profileOverridden(override ? AppLocalizations.of(context).profilePremium : AppLocalizations.of(context).profileFree),
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF8C8C8C),
+
+                  const SizedBox(height: 32),
+
+                  // ── Nickname toggle card ────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(16)),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Use nickname in games',
+                                  style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white)),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Show @${_usernameCtrl.text.replaceAll('@', '').isNotEmpty ? _usernameCtrl.text.replaceAll('@', '') : 'username'} instead of your name in events and hand logging',
+                                style: GoogleFonts.ibmPlexSans(fontSize: 13, color: _secondary, height: 20 / 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        _buildToggle(_useNicknameInGame, (v) => setState(() => _useNicknameInGame = v)),
+                      ],
                     ),
                   ),
+
+                  const SizedBox(height: 16),
+
+                  // ── Inputs ──────────────────────────────────────────────
+                  _buildInputField(
+                    label: 'Edit Name',
+                    controller: _nameCtrl,
+                    placeholder: 'Your name',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInputField(
+                    label: 'Edit email',
+                    controller: _emailCtrl,
+                    placeholder: 'your@email.com',
+                    keyboardType: TextInputType.emailAddress,
+                    readOnly: true,
+                    onTap: () => _showSnack('Email changes require account re-authentication. Contact support to change your email.'),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildUsernameField(),
+                  const SizedBox(height: 16),
+                  _buildInputField(
+                    label: 'Change password',
+                    controller: TextEditingController(text: '***********'),
+                    placeholder: '***********',
+                    readOnly: true,
+                    onTap: _showChangePasswordSheet,
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // ── List rows ───────────────────────────────────────────
+                  _buildRow(
+                    icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.contentInactive, size: 24),
+                    title: 'Contact support',
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
+                  ),
+                  _buildRow(
+                    icon: const Icon(Icons.auto_awesome_outlined, color: AppColors.contentInactive, size: 24),
+                    title: 'Share your feedback',
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
+                  ),
+                  _buildRow(
+                    icon: const Icon(Icons.email_outlined, color: AppColors.contentInactive, size: 24),
+                    title: 'Email updates',
+                    trailing: _buildToggle(_emailUpdates, (v) => setState(() => _emailUpdates = v)),
+                  ),
+                  _buildRow(
+                    icon: _svgIcon('assets/icons/X.svg'),
+                    title: 'Follow @finaltable',
+                    onTap: () => launchUrl(Uri.parse('https://x.com/finaltable'), mode: LaunchMode.externalApplication),
+                  ),
+                  _buildRow(
+                    icon: const Icon(Icons.logout_rounded, color: AppColors.contentInactive, size: 24),
+                    title: 'Sign out',
+                    onTap: _showSignOutConfirmation,
+                  ),
+                  _buildRow(
+                    icon: const SizedBox(width: 24),
+                    title: 'Delete Account',
+                    titleColor: _grey,
+                    onTap: _showDeleteConfirmation,
+                    showCaret: true,
+                  ),
+
+                  // ── Admin dev tools ─────────────────────────────────────
+                  if (_isAdmin) ...[
+                    const SizedBox(height: 24),
+                    _buildDevTools(),
+                  ],
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Input helpers ──────────────────────────────────────────────────────────
+
+  Widget _buildInputField({
+    required String label,
+    required TextEditingController controller,
+    required String placeholder,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    TextInputType? keyboardType,
+  }) {
+    final isFilled = controller.text.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
+        const SizedBox(height: 4),
+        Container(
+          decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(12)),
+          child: TextField(
+            controller: controller,
+            readOnly: readOnly,
+            onTap: onTap,
+            keyboardType: keyboardType,
+            style: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
+            decoration: InputDecoration(
+              hintText: placeholder,
+              hintStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: _secondary),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: InputBorder.none,
+              suffixIcon: isFilled && !readOnly
+                  ? GestureDetector(
+                      onTap: () => setState(() => controller.clear()),
+                      child: const Icon(Icons.cancel_rounded, color: AppColors.contentInactive, size: 18),
+                    )
+                  : null,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUsernameField() {
+    final value = _usernameCtrl.text.replaceAll('@', '');
+    final isFilled = value.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Edit username',
+            style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w500, color: _secondary)),
+        const SizedBox(height: 4),
+        Container(
+          decoration: BoxDecoration(
+            color: _surface,
+            borderRadius: BorderRadius.circular(12),
+            border: _usernameError != null
+                ? Border.all(color: _danger.withValues(alpha: 0.6), width: 1)
+                : null,
+          ),
+          child: TextField(
+            controller: _usernameCtrl,
+            style: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'username',
+              hintStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: _secondary),
+              prefixText: '@',
+              prefixStyle: GoogleFonts.ibmPlexSans(fontSize: 15, color: Colors.white),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: InputBorder.none,
+              suffixIcon: _isCheckingUsername
+                  ? const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(width: 16, height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(AppColors.contentInactive))),
+                    )
+                  : isFilled
+                      ? GestureDetector(
+                          onTap: () { setState(() => _usernameCtrl.clear()); _onUsernameChanged(''); },
+                          child: const Icon(Icons.cancel_rounded, color: AppColors.contentInactive, size: 18),
+                        )
+                      : null,
+            ),
+            onChanged: _onUsernameChanged,
+          ),
+        ),
+        if (_usernameError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4),
+            child: Text(_usernameError!,
+                style: GoogleFonts.ibmPlexSans(fontSize: 11, color: _danger)),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildToggle(bool value, ValueChanged<bool> onChanged) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 38, height: 24,
+        decoration: BoxDecoration(
+          color: value ? Colors.white : Colors.white,
+          borderRadius: BorderRadius.circular(74),
+        ),
+        child: Stack(
+          children: [
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 200),
+              left: value ? 18 : 2, top: 3,
+              child: Container(
+                width: 18, height: 18,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0C0C0C),
+                  borderRadius: BorderRadius.circular(42),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRow({
+    required Widget icon,
+    required String title,
+    Color? titleColor,
+    VoidCallback? onTap,
+    Widget? trailing,
+    bool showCaret = false,
+  }) {
+    final hasAction = onTap != null || trailing != null;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            SizedBox(width: 24, height: 24, child: icon),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(title,
+                  style: GoogleFonts.ibmPlexSans(
+                      fontSize: 17, fontWeight: FontWeight.w400,
+                      color: titleColor ?? Colors.white, height: 26 / 17)),
+            ),
+            if (trailing != null) trailing
+            else if (hasAction || showCaret)
+              SvgPicture.asset('assets/icons/CaretRight.svg',
+                  width: 14, height: 14,
+                  colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _svgIcon(String path) {
+    return SvgPicture.asset(path, width: 24, height: 24,
+        colorFilter: const ColorFilter.mode(AppColors.contentInactive, BlendMode.srcIn));
+  }
+
+  // ── Change password sheet ──────────────────────────────────────────────────
+
+  void _showChangePasswordSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: _surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Change Password',
+                  style: GoogleFonts.ibmPlexSans(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
+              const SizedBox(height: 8),
+              Text('We\'ll send a password reset link to your email address.',
+                  style: GoogleFonts.ibmPlexSans(fontSize: 14, color: _secondary), textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final email = AuthService.currentUser?.email;
+                    if (email != null) {
+                      try {
+                        await AuthService.sendPasswordReset(email);
+                        if (mounted) _showSnack('Password reset email sent to $email', isSuccess: true);
+                      } catch (e) {
+                        if (mounted) _showSnack('Failed to send reset email');
+                      }
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                        color: _elevated, borderRadius: BorderRadius.circular(60)),
+                    child: Text('Send Reset Email',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.ibmPlexSans(
+                            fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Admin dev tools ────────────────────────────────────────────────────────
+
+  Widget _buildDevTools() {
+    final override = SubscriptionService.debugPremiumOverride;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A0000),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFF6B6B).withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.bug_report, color: Color(0xFFFF6B6B), size: 20),
+            const SizedBox(width: 8),
+            Text('Dev Tools', style: GoogleFonts.ibmPlexSans(
+                fontSize: 17, fontWeight: FontWeight.w600, color: const Color(0xFFFF6B6B))),
+          ]),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Premium Override', style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white)),
+                Text(
+                  override == null
+                      ? 'Real: ${SubscriptionService.isPremium ? 'Premium' : 'Free'}'
+                      : 'Overridden: ${override ? 'Premium' : 'Free'}',
+                  style: GoogleFonts.ibmPlexSans(fontSize: 12, color: _secondary),
+                ),
+              ]),
               Switch(
                 value: SubscriptionService.isPremium,
-                onChanged: (value) async {
-                  await SubscriptionService.setDebugPremiumOverride(value);
-                  setState(() {});
-                },
-                activeColor: Color(0xFF62E3BC),
-                inactiveThumbColor: Color(0xFF8C8C8C),
-                inactiveTrackColor: Color(0xFF35373C),
+                onChanged: (v) async { await SubscriptionService.setDebugPremiumOverride(v); setState(() {}); },
+                activeColor: const Color(0xFF62E3BC),
+                inactiveThumbColor: const Color(0xFF8C8C8C),
+                inactiveTrackColor: const Color(0xFF35373C),
               ),
             ],
           ),
           if (override != null) ...[
-            SizedBox(height: 8),
             GestureDetector(
-              onTap: () async {
-                await SubscriptionService.setDebugPremiumOverride(null);
-                setState(() {});
-              },
-              child: Text(
-                AppLocalizations.of(context).profileResetToReal,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF89F1EC),
-                  decoration: TextDecoration.underline,
-                  decorationColor: Color(0xFF89F1EC),
-                ),
-              ),
+              onTap: () async { await SubscriptionService.setDebugPremiumOverride(null); setState(() {}); },
+              child: Text('Reset to real', style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13, color: const Color(0xFF89F1EC),
+                  decoration: TextDecoration.underline, decorationColor: const Color(0xFF89F1EC))),
             ),
+            const SizedBox(height: 8),
           ],
-          SizedBox(height: 16),
-          GestureDetector(
-            onTap: () => _launchQuickDebugSession(),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Color(0xFFFF6B6B).withAlpha(30),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Color(0xFFFF6B6B).withAlpha(60)),
-              ),
-              child: Center(
-                child: Text(
-                  'Quick Debug Session (7P Cash 1/2)',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFFF6B6B),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => _showTestSummaryCard(),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Color(0xFFFF6B6B).withAlpha(30),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Color(0xFFFF6B6B).withAlpha(60)),
-              ),
-              child: Center(
-                child: Text(
-                  'Test Summary Card (Tournament)',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFFF6B6B),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 8),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const OnboardingFlow(
-                    skipNickname: true,
-                    testMode: true,
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Color(0xFF6B9FFF).withAlpha(30),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Color(0xFF6B9FFF).withAlpha(60)),
-              ),
-              child: Center(
-                child: Text(
-                  'Test Onboarding + Paywall',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF6B9FFF),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => _openLatestSession(),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Color(0xFFFFB74D).withAlpha(30),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Color(0xFFFFB74D).withAlpha(60)),
-              ),
-              child: Center(
-                child: Text(
-                  'Open Latest Session Analytics',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFFFB74D),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const SizedBox(height: 8),
+          _devButton('Quick Debug Session (7P Cash 1/2)', const Color(0xFFFF6B6B), _launchQuickDebugSession),
+          const SizedBox(height: 8),
+          _devButton('Test Summary Card (Tournament)', const Color(0xFFFF6B6B), _showTestSummaryCard),
+          const SizedBox(height: 8),
+          _devButton('Test Onboarding + Paywall', const Color(0xFF6B9FFF), () {
+            Navigator.push(context, MaterialPageRoute(
+                builder: (_) => const OnboardingFlow(skipNickname: true, testMode: true)));
+          }),
+          const SizedBox(height: 8),
+          _devButton('Open Latest Session Analytics', const Color(0xFFFFB74D), _openLatestSession),
         ],
+      ),
+    );
+  }
+
+  Widget _devButton(String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.24)),
+        ),
+        child: Center(
+          child: Text(label, style: GoogleFonts.ibmPlexSans(
+              fontSize: 14, fontWeight: FontWeight.w600, color: color)),
+        ),
       ),
     );
   }
@@ -618,7 +854,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         finishedPlace: 11,
         fieldSize: 28,
         prizeWon: 0,
-        biggestPotWonCards: 'A\u2660 K\u2665',
+        biggestPotWonCards: 'A♠ K♥',
         biggestPotLostCards: 'Hand #42',
       ),
     );
@@ -634,411 +870,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .orderBy('startTime', descending: true)
           .limit(1)
           .get();
-      if (snap.docs.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No sessions found')),
-          );
-        }
-        return;
-      }
+      if (snap.docs.isEmpty) { if (mounted) _showSnack('No sessions found'); return; }
       final doc = snap.docs.first;
-      final sessionData = doc.data();
-      sessionData['id'] = doc.id;
+      final data = doc.data()..['id'] = doc.id;
       if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SessionAnalyticsScreen(
-            sessionData: sessionData,
-            sessionId: doc.id,
-          ),
-        ),
-      );
+      Navigator.push(context, MaterialPageRoute(
+          builder: (_) => SessionAnalyticsScreen(sessionData: data, sessionId: doc.id)));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
+      if (mounted) _showSnack('Error: $e');
     }
   }
 
   void _launchQuickDebugSession() {
     final sessionManager = PokerSessionManager(
-      smallBlind: 1,
-      bigBlind: 2,
-      playerCount: 9,
-      gameType: GameType.cash,
-      sessionName: 'Debug Session',
-      initialBuyIn: 200,
-      startingStack: 200,
+      smallBlind: 1, bigBlind: 2, playerCount: 9,
+      gameType: GameType.cash, sessionName: 'Debug Session',
+      initialBuyIn: 200, startingStack: 200,
     );
-
-    // 7 players in seats 1-7, hero at seat 1
-    const playerNames = ['Hero', 'Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Frank'];
+    const names = ['Hero', 'Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Frank'];
     for (int i = 0; i < 7; i++) {
-      final seat = i + 1;
-      sessionManager.addPlayer(seat, playerNames[i]);
-      sessionManager.setPlayerStack(seat, 200);
+      sessionManager.addPlayer(i + 1, names[i]);
+      sessionManager.setPlayerStack(i + 1, 200);
     }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PokerHandScreen(
-          smallBlind: 1,
-          bigBlind: 2,
-          numberOfPlayers: 9,
-          gameType: GameType.cash,
-          hasBBante: false,
-          ante: 0,
-          sessionName: 'Debug Session',
-          buyInAmount: 200,
-          startingStack: 200,
-          initialSeat: 1,
-          initialButtonPosition: 1,
-          sessionManager: sessionManager,
-        ),
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => PokerHandScreen(
+        smallBlind: 1, bigBlind: 2, numberOfPlayers: 9,
+        gameType: GameType.cash, hasBBante: false, ante: 0,
+        sessionName: 'Debug Session', buyInAmount: 200, startingStack: 200,
+        initialSeat: 1, initialButtonPosition: 1, sessionManager: sessionManager,
       ),
-    );
-  }
-
-
-  Widget _buildSettingsCard() {
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: BoxDecoration(
-        color: Color(0xFF101115),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Column(
-        children: [
-          // Settings
-          _buildMenuItem(
-            icon: Icons.settings_outlined,
-            label: l10n.settingsTitle,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SettingsScreen()),
-              );
-            },
-          ),
-          SizedBox(height: 24),
-
-          // Log out
-          _buildMenuItem(
-            icon: Icons.logout,
-            label: l10n.profileLogOut,
-            onTap: _showSignOutConfirmation,
-          ),
-          SizedBox(height: 16),
-
-          // Delete account
-          _buildMenuItem(
-            icon: Icons.delete_forever,
-            label: 'Delete Account',
-            onTap: _showDeleteAccountConfirmation,
-            color: const Color(0xFFFF6B6B),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
-    final itemColor = color ?? Colors.white.withOpacity(0.9);
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        height: 40,
-        child: Row(
-          children: [
-            Icon(icon, color: itemColor, size: 24),
-            SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 17,
-                fontWeight: FontWeight.w400,
-                color: itemColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFooter() {
-    final l10n = AppLocalizations.of(context);
-    return Column(
-      children: [
-        Text(
-          l10n.profileVersion,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: Colors.white.withOpacity(0.7),
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          l10n.onboardingFinalTable,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: Colors.white.withOpacity(0.7),
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          l10n.profileLastLogin(_getLastLoginText()),
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: Colors.white.withOpacity(0.7),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAvatar(double size) {
-    final photoURL = AuthService.userPhotoURL;
-    if (photoURL != null && photoURL.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(size / 2),
-        child: CachedNetworkImage(
-          imageUrl: photoURL,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => _buildInitialsAvatar(size),
-          errorWidget: (context, url, error) => _buildInitialsAvatar(size),
-        ),
-      );
-    }
-    return _buildInitialsAvatar(size);
-  }
-
-  Widget _buildInitialsAvatar(double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size / 2),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2A5A30), Color(0xFF1A3A20)],
-        ),
-      ),
-      child: Center(
-        child: Text(
-          _getInitials(),
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: size * 0.357,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF87ED81),
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _getInitials() {
-    final name = AuthService.userDisplayName;
-    if (name.isEmpty) return 'U';
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return name[0].toUpperCase();
-  }
-
-  String _getLastLoginText() {
-    final now = DateTime.now();
-    final l10n = AppLocalizations.of(context);
-    final months = [l10n.monthJan, l10n.monthFeb, l10n.monthMar, l10n.monthApr, l10n.monthMay, l10n.monthJun, l10n.monthJul, l10n.monthAug, l10n.monthSep, l10n.monthOct, l10n.monthNov, l10n.monthDec];
-    return '${now.day} ${months[now.month - 1]} ${now.year} at ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-  }
-
-  void _showSignOutConfirmation() {
-    final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFF1A1A1E),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          l10n.profileSignOut,
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          l10n.profileSignOutConfirmation,
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 14,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.commonCancel,
-              style: GoogleFonts.ibmPlexSans(
-                color: Colors.white.withOpacity(0.7),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await AuthService.signOut();
-              if (mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => IntroScreen()),
-                  (route) => false,
-                );
-              }
-            },
-            child: Text(
-              l10n.profileSignOut,
-              style: GoogleFonts.ibmPlexSans(
-                color: Color(0xFFFF6B6B),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteAccountConfirmation() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1E),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          'Delete Account',
-          style: GoogleFonts.ibmPlexSans(
-            color: const Color(0xFFFF6B6B),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          'This will permanently delete your account and all associated data (sessions, hands, stats, opponents). This action cannot be undone.\n\nIf you have an active subscription, please cancel it first in your device settings.',
-          style: GoogleFonts.ibmPlexSans(
-            color: Colors.white,
-            fontSize: 14,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.ibmPlexSans(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _deleteAccount();
-            },
-            child: Text(
-              'Delete',
-              style: GoogleFonts.ibmPlexSans(
-                color: const Color(0xFFFF6B6B),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _deleteAccount() async {
-    final uid = AuthService.userId;
-    if (uid == null) return;
-
-    try {
-      final firestore = FirebaseFirestore.instance;
-
-      // Delete user data from Firestore
-      await firestore.collection('users').doc(uid).delete();
-      await firestore.collection('user_stats').doc(uid).delete();
-
-      // Delete session results
-      final results = await firestore
-          .collection('session_results')
-          .where('userId', isEqualTo: uid)
-          .get();
-      for (final doc in results.docs) {
-        await doc.reference.delete();
-      }
-
-      // Delete opponents
-      final opponents = await firestore
-          .collection('opponents')
-          .where('userId', isEqualTo: uid)
-          .get();
-      for (final doc in opponents.docs) {
-        await doc.reference.delete();
-        // Also delete opponent stats
-        await firestore.collection('opponent_stats').doc(doc.id).delete();
-      }
-
-      // Delete poker sessions (and their subcollections are orphaned but harmless)
-      final sessions = await firestore
-          .collection('poker_sessions')
-          .where('userId', isEqualTo: uid)
-          .get();
-      for (final doc in sessions.docs) {
-        await doc.reference.delete();
-      }
-
-      // Delete Firebase Auth account
-      await AuthService.deleteAccount();
-
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => IntroScreen()),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to delete account: $e'),
-            backgroundColor: const Color(0xFFFF6B6B),
-          ),
-        );
-      }
-    }
+    ));
   }
 }

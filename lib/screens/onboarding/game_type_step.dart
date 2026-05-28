@@ -105,7 +105,7 @@ class _GameTypeStepState extends State<GameTypeStep>
                         _selected != null ? () => widget.onContinue(_selected!) : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: AppColors.backgroundPaper,
+                      foregroundColor: AppColors.bgPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(110),
                       ),
@@ -118,7 +118,7 @@ class _GameTypeStepState extends State<GameTypeStep>
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.backgroundPaper,
+                        color: AppColors.bgPrimary,
                       ),
                     ),
                   ),

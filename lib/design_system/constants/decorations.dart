@@ -1,13 +1,20 @@
 /// Decoration constants for the design system
 /// Includes border radius, blur values, and other decoration properties
 class AppDecorations {
-  // Border Radius
+  // Border Radius (legacy)
   static const double cardRadius = 12.0;
   static const double modeCardRadius = 24.0;
   static const double buttonRadius = 60.0;
   static const double navBarRadius = 70.0;
   static const double pillRadius = 40.0;
   static const double legendDotRadius = 3.5;
+
+  // Border Radius — Figma tokens (mirrors "Radius" variable collection)
+  static const double radiusSm   = 8.0;    // radius/sm   — chips, tags
+  static const double radiusMd   = 12.0;   // radius/md   — cards (= cardRadius)
+  static const double radiusLg   = 16.0;   // radius/lg   — info cards, overlays
+  static const double radiusXl   = 24.0;   // radius/xl   — mode cards (= modeCardRadius)
+  static const double radiusFull = 999.0;  // radius/full — pills, fully rounded
 
   // Blur Values
   static const double blurLight = 45.0;    // For glassy cards

@@ -46,7 +46,7 @@ class _GlobalBottomNavBarState extends State<GlobalBottomNavBar> {
     final double systemBottomPad = MediaQuery.of(context).viewPadding.bottom;
 
     return Container(
-      color: AppColors.bgMainV2, // #0c0c0c
+      color: AppColors.bgPrimary, // #0c0c0c
       padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + systemBottomPad),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

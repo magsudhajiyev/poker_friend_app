@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
-import '../design_system/components/form_drawer.dart';
 import '../services/currency_service.dart';
 import '../services/opponent_service.dart';
 import '../models/opponent.dart';
+import '../design_system/constants/colors.dart';
+import '../design_system/constants/decorations.dart';
 
-/// Bottom sheet for configuring a single seat: name (with opponent search),
-/// stack, and hero toggle. Uses FormDrawer for consistent design.
 class SeatConfigSheet extends StatefulWidget {
   final int seatNumber;
   final String initialName;
@@ -16,8 +16,10 @@ class SeatConfigSheet extends StatefulWidget {
   final bool isActive;
   final double defaultStack;
   final String heroName;
-  final Map<String, int> seatedPlayers; // lowercase name → seat
+  final Map<String, int> seatedPlayers;
   final bool isCash;
+  final bool showSaveAsOpponent;
+  final String? titleOverride;
   final void Function({
     required String name,
     required double stack,
@@ -36,10 +38,11 @@ class SeatConfigSheet extends StatefulWidget {
     this.heroName = '',
     this.seatedPlayers = const {},
     this.isCash = true,
+    this.showSaveAsOpponent = true,
+    this.titleOverride,
     required this.onSave,
   }) : super(key: key);
 
-  /// Show the seat config sheet using FormDrawer.
   static Future<void> show({
     required BuildContext context,
     required int seatNumber,
@@ -51,6 +54,8 @@ class SeatConfigSheet extends StatefulWidget {
     String heroName = '',
     Map<String, int> seatedPlayers = const {},
     bool isCash = true,
+    bool showSaveAsOpponent = true,
+    String? titleOverride,
     required void Function({
       required String name,
       required double stack,
@@ -58,19 +63,11 @@ class SeatConfigSheet extends StatefulWidget {
       required bool isActive,
     }) onSave,
   }) {
-    final l10n = AppLocalizations.of(context);
-    // Use a GlobalKey to access state for the save action
-    final bodyKey = GlobalKey<_SeatConfigBodyState>();
-
-    return FormDrawer.show(
+    return showModalBottomSheet(
       context: context,
-      title: l10n.seatConfigSeatTitle(seatNumber),
-      heightFraction: 0.55,
-      onSave: () {
-        bodyKey.currentState?._save();
-      },
-      body: _SeatConfigBody(
-        key: bodyKey,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SeatConfigSheet(
         seatNumber: seatNumber,
         initialName: initialName,
         initialStack: initialStack,
@@ -80,6 +77,8 @@ class SeatConfigSheet extends StatefulWidget {
         heroName: heroName,
         seatedPlayers: seatedPlayers,
         isCash: isCash,
+        showSaveAsOpponent: showSaveAsOpponent,
+        titleOverride: titleOverride,
         onSave: onSave,
       ),
     );
@@ -90,68 +89,15 @@ class SeatConfigSheet extends StatefulWidget {
 }
 
 class _SeatConfigSheetState extends State<SeatConfigSheet> {
-  @override
-  Widget build(BuildContext context) {
-    // Legacy build — callers should use SeatConfigSheet.show() instead
-    return _SeatConfigBody(
-      seatNumber: widget.seatNumber,
-      initialName: widget.initialName,
-      initialStack: widget.initialStack,
-      isHero: widget.isHero,
-      isActive: widget.isActive,
-      defaultStack: widget.defaultStack,
-      heroName: widget.heroName,
-      seatedPlayers: widget.seatedPlayers,
-      isCash: widget.isCash,
-      onSave: widget.onSave,
-    );
-  }
-}
-
-/// The form body content, used inside FormDrawer.
-class _SeatConfigBody extends StatefulWidget {
-  final int seatNumber;
-  final String initialName;
-  final double initialStack;
-  final bool isHero;
-  final bool isActive;
-  final double defaultStack;
-  final String heroName;
-  final Map<String, int> seatedPlayers;
-  final bool isCash;
-  final void Function({
-    required String name,
-    required double stack,
-    required bool isHero,
-    required bool isActive,
-  }) onSave;
-
-  const _SeatConfigBody({
-    Key? key,
-    required this.seatNumber,
-    required this.initialName,
-    required this.initialStack,
-    required this.isHero,
-    required this.isActive,
-    required this.defaultStack,
-    this.heroName = '',
-    this.seatedPlayers = const {},
-    this.isCash = true,
-    required this.onSave,
-  }) : super(key: key);
-
-  @override
-  State<_SeatConfigBody> createState() => _SeatConfigBodyState();
-}
-
-class _SeatConfigBodyState extends State<_SeatConfigBody> {
   late TextEditingController _nameController;
   late TextEditingController _stackController;
+  final FocusNode _nameFocusNode = FocusNode();
+  final FocusNode _stackFocusNode = FocusNode();
   late bool _isHero;
   late bool _isActive;
+  bool _saveAsOpponent = false;
   List<Opponent> _allOpponents = [];
   List<Opponent> _filteredOpponents = [];
-  bool _showSaveAsOpponent = false;
 
   @override
   void initState() {
@@ -160,15 +106,26 @@ class _SeatConfigBodyState extends State<_SeatConfigBody> {
     _stackController = TextEditingController(
       text: widget.initialStack > 0
           ? widget.initialStack.toStringAsFixed(
-              widget.initialStack == widget.initialStack.roundToDouble()
-                  ? 0
-                  : 2)
+              widget.initialStack == widget.initialStack.roundToDouble() ? 0 : 2)
           : '',
     );
     _isHero = widget.isHero;
     _isActive = widget.isActive;
-    _loadOpponents();
     _nameController.addListener(_onNameChanged);
+    _stackController.addListener(() => setState(() {}));
+    _nameFocusNode.addListener(() => setState(() {}));
+    _stackFocusNode.addListener(() => setState(() {}));
+    _loadOpponents();
+  }
+
+  @override
+  void dispose() {
+    _nameController.removeListener(_onNameChanged);
+    _nameController.dispose();
+    _stackController.dispose();
+    _nameFocusNode.dispose();
+    _stackFocusNode.dispose();
+    super.dispose();
   }
 
   Future<void> _loadOpponents() async {
@@ -184,146 +141,94 @@ class _SeatConfigBodyState extends State<_SeatConfigBody> {
   void _onNameChanged() {
     final query = _nameController.text.trim().toLowerCase();
     if (query.isEmpty) {
-      setState(() {
-        _filteredOpponents = [];
-        _showSaveAsOpponent = false;
-      });
+      setState(() => _filteredOpponents = []);
       return;
     }
-    final matches = _allOpponents
-        .where((o) => o.name.toLowerCase().contains(query))
-        .take(5)
-        .toList();
-    final exactMatch = _allOpponents.any((o) => o.name.toLowerCase() == query);
     setState(() {
-      _filteredOpponents = matches;
-      _showSaveAsOpponent = !exactMatch && query.length >= 2;
+      _filteredOpponents = _allOpponents
+          .where((o) => o.name.toLowerCase().contains(query))
+          .take(5)
+          .toList();
     });
-  }
-
-  Future<void> _saveAsNewOpponent() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) return;
-    try {
-      final messenger = ScaffoldMessenger.of(context);
-      final existing = await OpponentService.findOpponentByName(name);
-      if (existing != null) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).opponentAlreadyExists(name)),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-      final newOpponent = OpponentService.createNewOpponent(name: name);
-      final saved = await OpponentService.saveOpponent(newOpponent);
-      _allOpponents.add(saved);
-      setState(() {
-        _showSaveAsOpponent = false;
-        _filteredOpponents = [];
-      });
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.seatConfigSavedAsOpponent(name)),
-            backgroundColor: const Color(0xFF1A1A1E),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (_) {}
   }
 
   void _selectOpponent(Opponent opponent) {
     _nameController.removeListener(_onNameChanged);
     _nameController.text = opponent.name;
     _nameController.addListener(_onNameChanged);
-    setState(() {
-      _filteredOpponents = [];
-      _showSaveAsOpponent = false;
-    });
-    FocusScope.of(context).nextFocus();
-  }
-
-  @override
-  void dispose() {
-    _nameController.removeListener(_onNameChanged);
-    _nameController.dispose();
-    _stackController.dispose();
-    super.dispose();
-  }
-
-  InputDecoration _inputDecoration(String hint, {String? prefixText, String? suffixText}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: GoogleFonts.ibmPlexSans(
-        color: Colors.white.withOpacity(0.4),
-        fontSize: 17,
-        fontWeight: FontWeight.w400,
-        height: 1.44,
-      ),
-      prefixText: prefixText,
-      prefixStyle: GoogleFonts.ibmPlexSans(
-        color: Colors.white,
-        fontSize: 17,
-        fontWeight: FontWeight.w400,
-        height: 1.44,
-      ),
-      suffixText: suffixText,
-      suffixStyle: GoogleFonts.ibmPlexSans(
-        color: Colors.white,
-        fontSize: 17,
-        fontWeight: FontWeight.w400,
-        height: 1.44,
-      ),
-      filled: true,
-      fillColor: const Color(0xFF1C1C1E),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: const Color(0xFF1B262D).withOpacity(0.6),
-        ),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: const Color(0xFF1B262D).withOpacity(0.6),
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF89F1EC)),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    );
+    setState(() => _filteredOpponents = []);
+    FocusScope.of(context).unfocus();
   }
 
   void _save() {
-    final name = _nameController.text.trim();
     final stackText = _stackController.text.trim();
     final stack = stackText.isEmpty
         ? widget.defaultStack
         : (double.tryParse(stackText) ?? widget.defaultStack);
+    final name = _isHero && widget.heroName.isNotEmpty
+        ? widget.heroName
+        : _nameController.text.trim();
+    widget.onSave(name: name, stack: stack, isHero: _isHero, isActive: true);
 
-    widget.onSave(
-      name: name,
-      stack: stack,
-      isHero: _isHero,
-      isActive: true,
-    );
+    if (_saveAsOpponent && name.isNotEmpty && !_isHero) {
+      _saveAsNewOpponent(name);
+    }
+
     Navigator.pop(context);
   }
 
   void _remove() {
-    widget.onSave(
-      name: '',
-      stack: 0,
-      isHero: false,
-      isActive: false,
-    );
+    widget.onSave(name: '', stack: 0, isHero: false, isActive: false);
     Navigator.pop(context);
+  }
+
+  Future<void> _saveAsNewOpponent(String name) async {
+    try {
+      final existing = await OpponentService.findOpponentByName(name);
+      if (existing != null) return;
+      final opponent = OpponentService.createNewOpponent(name: name);
+      await OpponentService.saveOpponent(opponent);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).seatConfigSavedAsOpponent(name)),
+          backgroundColor: AppColors.accentPrimary,
+          duration: const Duration(seconds: 2),
+        ));
+      }
+    } catch (_) {}
+  }
+
+  Color _opponentColor(Opponent o) => o.color.flutterColor;
+
+  String _initials(String name) =>
+      name.length >= 2 ? name.substring(0, 2).toUpperCase() : name.toUpperCase();
+
+  Widget _buildToggle(bool value) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: 38,
+      height: 24,
+      decoration: BoxDecoration(
+        color: value ? AppColors.textOnInverse : AppColors.borderLight,
+        borderRadius: BorderRadius.circular(74),
+        border: Border.all(
+          color: value ? AppColors.textOnInverse : AppColors.borderLight,
+        ),
+      ),
+      child: AnimatedAlign(
+        duration: const Duration(milliseconds: 180),
+        alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          width: 18,
+          height: 18,
+          margin: const EdgeInsets.all(1),
+          decoration: BoxDecoration(
+            color: AppColors.bgInverse,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -331,255 +236,423 @@ class _SeatConfigBodyState extends State<_SeatConfigBody> {
     final l10n = AppLocalizations.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // "This is me" toggle
-          GestureDetector(
-            onTap: () {
-              if (!_isHero) {
-                // Toggling ON — auto-save with hero name + default stack and close
-                final stackText = _stackController.text.trim();
-                final stack = stackText.isNotEmpty
-                    ? (double.tryParse(stackText) ?? widget.defaultStack)
-                    : widget.defaultStack;
-                widget.onSave(
-                  name: widget.heroName.isNotEmpty ? widget.heroName : _nameController.text.trim(),
-                  stack: stack,
-                  isHero: true,
-                  isActive: true,
-                );
-                Navigator.pop(context);
-                return;
-              }
-              setState(() => _isHero = false);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: _isHero
-                    ? const Color(0xFF62E3BC).withOpacity(0.15)
-                    : const Color(0xFF1C1C1E),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _isHero
-                      ? const Color(0xFF62E3BC)
-                      : const Color(0xFF1B262D).withOpacity(0.6),
-                  width: _isHero ? 2 : 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.bgInverse,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(AppDecorations.radiusXl),
+            topRight: Radius.circular(AppDecorations.radiusXl),
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ─── HEADER ──────────────────────────────────────────
+              Row(
                 children: [
-                  Icon(
-                    _isHero
-                        ? Icons.person
-                        : Icons.person_outline,
-                    color: _isHero
-                        ? const Color(0xFF62E3BC)
-                        : Colors.white.withOpacity(0.6),
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.seatConfigThisIsMe,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 14,
-                      color: _isHero
-                          ? const Color(0xFF62E3BC)
-                          : Colors.white.withOpacity(0.6),
-                      fontWeight: FontWeight.w500,
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        widget.titleOverride ?? l10n.seatConfigSeatTitle(widget.seatNumber),
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textOnInverse,
+                          height: 20 / 15,
+                        ),
+                      ),
                     ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Icon(Icons.close,
+                        size: 18, color: AppColors.borderLight),
                   ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 14),
 
-          // Name field with opponent search
-          Text(
-            l10n.seatConfigNameLabel,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 13,
-              color: Colors.white.withOpacity(0.6),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _nameController,
-            textInputAction: TextInputAction.done,
-            style: GoogleFonts.ibmPlexSans(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w400,
-              height: 1.44,
-            ),
-            decoration: _inputDecoration(l10n.seatConfigSearchOrEnterName),
-            textCapitalization: TextCapitalization.words,
-          ),
+              const SizedBox(height: 24),
 
-          // Opponent search results + save option
-          if (_filteredOpponents.isNotEmpty || _showSaveAsOpponent)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              constraints: const BoxConstraints(maxHeight: 180),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1C1C1E),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF2A2A2E)),
-              ),
-              child: ListView(
-                padding: const EdgeInsets.all(6),
-                shrinkWrap: true,
-                children: [
-                  ..._filteredOpponents.map((opponent) {
-                    final seatedAt = widget.seatedPlayers[opponent.name.toLowerCase()];
-                    return GestureDetector(
-                      onTap: () => _selectOpponent(opponent),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        margin: const EdgeInsets.only(bottom: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF131616),
-                          borderRadius: BorderRadius.circular(8),
+              // ─── THIS IS MY SEAT ─────────────────────────────────
+              GestureDetector(
+                onTap: () => setState(() => _isHero = !_isHero),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _isHero
+                              ? AppColors.textOnInverse
+                              : AppColors.borderLight,
+                          width: 1.5,
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: opponent.color.flutterColor,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              opponent.name,
-                              style: GoogleFonts.ibmPlexSans(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                            if (seatedAt != null) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      ),
+                      child: _isHero
+                          ? Center(
+                              child: Container(
+                                width: 10,
+                                height: 10,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  l10n.seatConfigSeatTitle(seatedAt!),
-                                  style: GoogleFonts.ibmPlexSans(
-                                    color: const Color(0xFF8C8C8C),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  shape: BoxShape.circle,
+                                  color: AppColors.textOnInverse,
                                 ),
                               ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                  if (_showSaveAsOpponent)
-                    GestureDetector(
-                      onTap: _saveAsNewOpponent,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        margin: const EdgeInsets.only(bottom: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF131616),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.person_add_outlined,
-                              color: Color(0xFF62E3BC),
-                              size: 16,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                l10n.seatConfigSaveAsOpponent(_nameController.text.trim()),
-                                style: GoogleFonts.ibmPlexSans(
-                                  color: const Color(0xFF62E3BC),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.seatConfigThisIsMe,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textOnInverse,
                       ),
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-          const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
-          // Stack field
-          Text(
-            l10n.seatConfigStackLabel,
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 13,
-              color: Colors.white.withOpacity(0.6),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _stackController,
-            keyboardType: const TextInputType.numberWithOptions(
-                decimal: true),
-            textInputAction: TextInputAction.done,
-            style: GoogleFonts.ibmPlexSans(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w400,
-              height: 1.44,
-            ),
-            decoration: _inputDecoration(
-              widget.defaultStack.toStringAsFixed(0),
-              prefixText: widget.isCash ? CurrencyService.prefixText : null,
-              suffixText: widget.isCash ? CurrencyService.suffixText : null,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Remove button (only for active seats)
-          if (_isActive)
-            Center(
-              child: GestureDetector(
-                onTap: _remove,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    l10n.seatConfigRemove,
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 15,
-                      color: const Color(0xFFFF4444),
-                      fontWeight: FontWeight.w500,
+              // ─── PLAYER NAME ──────────────────────────────────────
+              Text(
+                l10n.seatConfigNameLabel,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: _nameFocusNode.hasFocus
+                      ? AppColors.textOnInverse
+                      : AppColors.borderLight,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.bgInputOnInverse,
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  border: Border.all(
+                    color: _nameFocusNode.hasFocus
+                        ? AppColors.accentPrimary
+                        : AppColors.borderOnInverseSubtle,
+                    width: _nameFocusNode.hasFocus ? 1.5 : 1.0,
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _nameController,
+                        focusNode: _nameFocusNode,
+                        textInputAction: TextInputAction.next,
+                        textCapitalization: TextCapitalization.words,
+                        style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15, color: AppColors.textOnInverse),
+                        decoration: InputDecoration(
+                          hintText: l10n.seatConfigSearchOrEnterName,
+                          hintStyle: GoogleFonts.ibmPlexSans(
+                              fontSize: 15, color: AppColors.borderLight),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
                     ),
+                    if (_nameController.text.isNotEmpty)
+                      GestureDetector(
+                        onTap: () => _nameController.clear(),
+                        child: Icon(Icons.cancel,
+                            color: AppColors.borderLight, size: 16),
+                      ),
+                  ],
+                ),
+              ),
+
+              // Inline autocomplete chips
+              if (_filteredOpponents.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                ..._filteredOpponents.map((opponent) {
+                  final seatedAt =
+                      widget.seatedPlayers[opponent.name.toLowerCase()];
+                  return GestureDetector(
+                    onTap: () => _selectOpponent(opponent),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.bgSurface,
+                        borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: _opponentColor(opponent),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                _initials(opponent.name),
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 7.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            opponent.name,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textPrimary,
+                              height: 20 / 13,
+                            ),
+                          ),
+                          if (seatedAt != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentSecondary,
+                                borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                              ),
+                              child: Text(
+                                l10n.seatConfigSeatTitle(seatedAt),
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textOnInverse,
+                                  height: 16 / 11,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+
+              // ─── SAVE AS OPPONENT ─────────────────────────────────
+              if (widget.showSaveAsOpponent) ...[
+                const SizedBox(height: 8),
+                GestureDetector(
+                onTap: () => setState(() => _saveAsOpponent = !_saveAsOpponent),
+                child: Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgInputOnInverse,
+                    border: Border.all(color: AppColors.borderOnInverseSubtle),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Save as opponent',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.borderLight,
+                        ),
+                      ),
+                      _buildToggle(_saveAsOpponent),
+                    ],
                   ),
                 ),
               ),
-            ),
-        ],
+              ],
+
+              const SizedBox(height: 8),
+
+              // ─── STACK ────────────────────────────────────────────
+              Text(
+                l10n.seatConfigStackLabel,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: _stackFocusNode.hasFocus
+                      ? AppColors.textOnInverse
+                      : AppColors.borderLight,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.bgInputOnInverse,
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                  border: Border.all(
+                    color: _stackFocusNode.hasFocus
+                        ? AppColors.accentPrimary
+                        : AppColors.borderOnInverseSubtle,
+                    width: _stackFocusNode.hasFocus ? 1.5 : 1.0,
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    if (CurrencyService.prefixText != null) ...[
+                      Text(
+                        CurrencyService.prefixText!,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          color: _stackFocusNode.hasFocus
+                              ? AppColors.textOnInverse
+                              : AppColors.borderLight,
+                        ),
+                      ),
+                    ],
+                    Expanded(
+                      child: TextField(
+                        controller: _stackController,
+                        focusNode: _stackFocusNode,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        textInputAction: TextInputAction.done,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        ],
+                        style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15, color: AppColors.textOnInverse),
+                        decoration: InputDecoration(
+                          hintText: '',
+                          hintStyle: GoogleFonts.ibmPlexSans(
+                              fontSize: 15, color: AppColors.borderLight),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ),
+                    if (CurrencyService.suffixText != null) ...[
+                      Text(
+                        CurrencyService.suffixText!,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          color: _stackFocusNode.hasFocus
+                              ? AppColors.textOnInverse
+                              : AppColors.borderLight,
+                        ),
+                      ),
+                    ],
+                    if (_stackController.text.isNotEmpty)
+                      GestureDetector(
+                        onTap: () => _stackController.clear(),
+                        child: Icon(Icons.cancel,
+                            color: AppColors.borderLight, size: 16),
+                      ),
+                  ],
+                ),
+              ),
+
+              // Remove player link (only for already-active seats)
+              if (_isActive) ...[
+                const SizedBox(height: 16),
+                Center(
+                  child: GestureDetector(
+                    onTap: _remove,
+                    child: Text(
+                      l10n.seatConfigRemove,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.accentDanger,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 32),
+
+              // ─── FOOTER ───────────────────────────────────────────
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                        decoration: BoxDecoration(
+                          border:
+                              Border.all(color: AppColors.borderLight),
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Back',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textOnInverse,
+                              height: 20 / 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _save,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgPrimary,
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusFull),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Save',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.bgInverse,
+                              height: 20 / 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(
+                  height: MediaQuery.of(context).padding.bottom + 24),
+            ],
+          ),
+        ),
       ),
     );
   }

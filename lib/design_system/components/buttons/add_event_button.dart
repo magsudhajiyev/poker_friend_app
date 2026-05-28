@@ -22,7 +22,7 @@ class AddEventButton extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         decoration: BoxDecoration(
-          color: AppColors.calendarAccentGreen,
+          color: AppColors.accentPrimary,
           borderRadius: BorderRadius.circular(1000),
         ),
         child: Row(

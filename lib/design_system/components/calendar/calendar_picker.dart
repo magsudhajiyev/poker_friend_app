@@ -41,7 +41,7 @@ class CalendarPicker extends StatelessWidget {
         filter: ui.ImageFilter.blur(sigmaX: 50, sigmaY: 50),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.calendarCardBg,
+            color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(13),
           ),
           child: Column(
@@ -94,7 +94,7 @@ class CalendarPicker extends StatelessWidget {
                     fontFamily: 'SF Pro',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.calendarAccentGreen,
+                    color: AppColors.accentPrimary,
                     letterSpacing: -0.5,
                     height: 18 / 15,
                   ),
@@ -117,7 +117,7 @@ class CalendarPicker extends StatelessWidget {
                       fontFamily: 'SF Pro',
                       fontSize: 28,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.calendarAccentGreen,
+                      color: AppColors.accentPrimary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -136,7 +136,7 @@ class CalendarPicker extends StatelessWidget {
                       fontFamily: 'SF Pro',
                       fontSize: 28,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.calendarAccentGreen,
+                      color: AppColors.accentPrimary,
                     ),
                     textAlign: TextAlign.center,
                   ),

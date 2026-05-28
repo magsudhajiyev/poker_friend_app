@@ -11,6 +11,7 @@ import 'package:vibration/vibration.dart';
 import '../l10n/app_localizations.dart';
 import '../design_system/poker_friend_theme.dart';
 import '../design_system/design_system.dart';
+import '../design_system/components/headers/top_nav_bar.dart';
 import '../widgets/drawing_painter.dart';
 import '../widgets/session_end_bankroll_sheet.dart';
 import '../widgets/global_bottom_nav_bar.dart';
@@ -964,104 +965,197 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final result = await showDialog<Map<String, int>>(
       context: context,
       barrierDismissible: true,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161618),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          l10n.handBlinds,
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.handTakesEffectNextHand,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 12,
-                color: Colors.white.withValues(alpha: 0.4),
+      barrierColor: Colors.black54,
+      builder: (ctx) {
+        Widget buildBlindField(
+          String label,
+          TextEditingController ctrl, {
+          bool autofocus = false,
+        }) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFFB9B9B9),
+                ),
               ),
+              const SizedBox(height: 4),
+              TextField(
+                controller: ctrl,
+                autofocus: autofocus,
+                keyboardType: TextInputType.number,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  color: const Color(0xFF0C0C0C),
+                ),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFFFDFDFD),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFEFEFEF)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFEFEFEF)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                        color: Color(0xFF0C0C0C), width: 1.5),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
             ),
-            const SizedBox(height: 16),
-            Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('SB', style: GoogleFonts.ibmPlexSans(fontSize: 12, color: Colors.white.withValues(alpha: 0.5), fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 4),
-                      TextField(
-                        controller: sbController,
-                        keyboardType: TextInputType.number,
+                // Header: spacer | title | X
+                Row(
+                  children: [
+                    const SizedBox(width: 28),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          l10n.handBlinds,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF0C0C0C),
+                            height: 20 / 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(ctx),
+                      child: SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: Center(
+                          child: SvgPicture.asset(
+                            'assets/icons/X.svg',
+                            width: 18,
+                            height: 18,
+                            colorFilter: const ColorFilter.mode(
+                                Color(0xFFB9B9B9), BlendMode.srcIn),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Subtitle
+                Text(
+                  l10n.handTakesEffectNextHand,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFFB9B9B9),
+                    height: 22 / 15,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // SB / BB inputs
+                Row(
+                  children: [
+                    Expanded(
+                      child: buildBlindField(
+                        l10n.setupSmallBlind,
+                        sbController,
                         autofocus: true,
-                        style: GoogleFonts.robotoMono(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w600),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: const Color(0xFF1B1E24),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: buildBlindField(l10n.setupBigBlind, bbController),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(ctx),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(999),
+                            border:
+                                Border.all(color: const Color(0xFFB9B9B9)),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            l10n.commonCancel,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0C0C0C),
+                              height: 20 / 15,
+                            ),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('/', style: GoogleFonts.robotoMono(fontSize: 24, color: Colors.white.withValues(alpha: 0.3))),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('BB', style: GoogleFonts.ibmPlexSans(fontSize: 12, color: Colors.white.withValues(alpha: 0.5), fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 4),
-                      TextField(
-                        controller: bbController,
-                        keyboardType: TextInputType.number,
-                        style: GoogleFonts.robotoMono(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w600),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: const Color(0xFF1B1E24),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          final sb = int.tryParse(sbController.text) ??
+                              gameState.smallBlind;
+                          final bb = int.tryParse(bbController.text) ??
+                              gameState.bigBlind;
+                          Navigator.pop(
+                              ctx, {'sb': sb, 'bb': bb >= sb ? bb : sb});
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0C0C0C),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            l10n.commonApply,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              height: 20 / 15,
+                            ),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              onPressed: () {
-                final sb = int.tryParse(sbController.text) ?? gameState.smallBlind;
-                final bb = int.tryParse(bbController.text) ?? gameState.bigBlind;
-                Navigator.pop(context, {'sb': sb, 'bb': bb >= sb ? bb : sb});
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFF89F1EC),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: Text(
-                l10n.commonApply,
-                style: GoogleFonts.ibmPlexSans(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.black),
-              ),
-            ),
           ),
-        ],
-      ),
+        );
+      },
     );
 
     if (result != null) {
@@ -1527,192 +1621,50 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.black,
-        extendBody: true,
-        bottomNavigationBar: GlobalBottomNavBar(
-          currentScreen: '',
-          onNavigationAttempt: () async {
-            // Always confirm — session locks the app to prevent cheating
-            final result = await _showNavigationConfirmationDialog();
-
-            if (result == 'save') {
-              try {
-                final ourSeat = sessionManager.ourSeatNumber;
-                if (ourSeat != null && ourSeat >= 1 && ourSeat <= gameState.players.length) {
-                  final finalStack = gameState.players[ourSeat - 1].currentStack;
-                  sessionManager.addFinalStackEntry(finalStack);
-                }
-                await sessionManager.endSession();
-                return true;
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(AppLocalizations.of(context).pokerHandFailedSaveSession(e.toString())),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-                return false;
-              }
-            } else if (result == 'discard') {
-              final sessionId = sessionManager.sessionId;
-              if (sessionId != null) {
-                await FirebaseService.deleteSession(sessionId);
-                await LocalStorageService.deleteSession(sessionId);
-              }
-              sessionManager.sessionState = SessionState.ended;
-              return true;
-            }
-
-            return false; // Cancel — stay in session
-          },
-        ),
+        backgroundColor: const Color(0xFF0C0C0C),
         body: Stack(
         children: [
-          // Teal gradient background (consistent with other screens)
-          Positioned(
-            top: -screenWidth * 0.3,
-            right: -screenWidth * 0.25,
-            child: Transform.scale(
-              scaleX: 1.0,
-              scaleY: 0.7,
-              child: Container(
-                width: screenWidth * 1.5,
-                height: screenWidth * 1.2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 0.5,
-                    colors: [
-                      Color(0xFF1A4A4A),
-                      Color(0xFF133538).withOpacity(0.7),
-                      Color(0xFF133538).withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                    stops: [0.0, 0.3, 0.6, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
+          Column(
+            children: [
                 OnboardingProgressBar(),
-                // Header - Figma Design
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  child: Row(
-                    children: [
-                      // Back button - 44px circle
-                      GestureDetector(
-                        onTap: () => _handleNavigationAttempt(isBackButton: true),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF101115),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Title section
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.handHandNumber(gameState.handNumber),
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 27,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
-                                height: 1,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Builder(
-                              builder: (context) {
-                                final baseSubtitle =
-                                    '${gameState.currentRound.name.toUpperCase()} • ${gameState.getActivePlayers().length} players';
-                                // Show "N/5 free" counter for users on the free tier,
-                                // hidden for premium so paying users get a clean header.
-                                final showFreeCounter =
-                                    !SubscriptionService.isPremium;
-                                final handsUsed = sessionManager
-                                    .completedHands.length;
-                                final subtitle = showFreeCounter
-                                    ? '$baseSubtitle • ${l10n.handFreeCounter(handsUsed, FreeTierLimits.maxHandsPerSession)}'
-                                    : baseSubtitle;
-                                return Text(
-                                  subtitle,
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 13,
-                                    color: const Color(0xFFD3FFFD),
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.47,
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Action buttons
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Session Details info button
-                          GestureDetector(
-                            key: _sessionInfoButtonKey,
-                            onTap: () => _showSessionDetails(),
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF101115),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.info_outline,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Menu button
-                          _buildMenuButton(context),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                // Header
+                Builder(builder: (context) {
+                  final baseSubtitle =
+                      '${gameState.currentRound.name.toUpperCase()} • ${gameState.getActivePlayers().length} players';
+                  final showFreeCounter = !SubscriptionService.isPremium;
+                  final handsUsed = sessionManager.completedHands.length;
+                  final subtitle = showFreeCounter
+                      ? '$baseSubtitle • ${l10n.handFreeCounter(handsUsed, FreeTierLimits.maxHandsPerSession)}'
+                      : baseSubtitle;
+                  return TopNavBar(
+                    title: l10n.handHandNumber(gameState.handNumber),
+                    subtitle: subtitle,
+                    onBack: () => _handleNavigationAttempt(isBackButton: true),
+                    onMenuTap: () => setState(() => _showMenuOverlay = !_showMenuOverlay),
+                    menuKey: _menuButtonKey,
+                  );
+                }),
 
-              // Main Gesture Area - Dark background
+              // Main Gesture Area
               Expanded(
                 child: Container(
                   key: _drawingAreaKey,
-                  margin: EdgeInsets.fromLTRB(16, 4, 16, 7),
+                  margin: const EdgeInsets.fromLTRB(16, 18, 16, 7),
                   decoration: BoxDecoration(
-                    color: Color(0xFF35373C),
-                    borderRadius: BorderRadius.circular(8),
+                    color: const Color(0xFF161719),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(24),
                     child: Stack(
                   children: [
+                    // Table background image
+                    Positioned.fill(
+                      child: Image.asset(
+                        'assets/Preflop_table.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                     // Gesture input area — tap=check/call, swipe out=fold, swipe up=raise
                     GestureDetector(
                         behavior: HitTestBehavior.opaque,
@@ -1784,85 +1736,109 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
                     // (Folded to me + Next Hand buttons moved below canvas)
 
-                    // Table icon + blinds display
+                    // Top bar: chips (left) + Next Hand (right)
                     Positioned(
                       top: 8,
                       left: 8,
+                      right: 8,
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Table icon
-                          GestureDetector(
-                            key: _tableButtonKey,
-                            onTap: () {
-                              TableManagementSheet.show(
-                                context: context,
-                                gameState: gameState,
-                                sessionManager: sessionManager,
-                                heroSeat: sessionManager.ourSeatNumber ?? 1,
-                                onChanged: () => setState(() {}),
-                              );
-                            },
-                            child: Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.table_restaurant_outlined,
-                                color: Color(0xFF8C8C8C),
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          // Blinds pill — tappable to edit
-                          GestureDetector(
-                            key: _blindsPillKey,
-                            onTap: () => _showBlindsEditDialog(),
-                            child: Container(
-                              height: 34,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '${gameState.smallBlind}/${gameState.bigBlind}',
-                                  style: GoogleFonts.robotoMono(
-                                    fontSize: 12,
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                    fontWeight: FontWeight.w500,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Table chip
+                              GestureDetector(
+                                key: _tableButtonKey,
+                                onTap: () {
+                                  TableManagementSheet.show(
+                                    context: context,
+                                    gameState: gameState,
+                                    sessionManager: sessionManager,
+                                    heroSeat: sessionManager.ourSeatNumber ?? 1,
+                                    onChanged: () => setState(() {}),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2C2C2E),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SvgPicture.asset('assets/icons/PicnicTable.svg', width: 12, height: 12),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Table',
+                                        style: GoogleFonts.ibmPlexSans(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFFB9B9B9),
+                                          height: 16 / 11,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                              // Blinds chip — tappable to edit
+                              GestureDetector(
+                                key: _blindsPillKey,
+                                onTap: () => _showBlindsEditDialog(),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2C2C2E),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.people_outline, color: Color(0xFFB9B9B9), size: 12),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${gameState.smallBlind}/${gameState.bigBlind}',
+                                        style: GoogleFonts.ibmPlexSans(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFFB9B9B9),
+                                          height: 16 / 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          // Next Hand (skip) button — hidden in individual/quick session mode
+                          // Next Hand button
                           if (!widget.isIndividualSession)
                             GestureDetector(
                               key: _nextHandButtonKey,
                               onTap: _skipCurrentAction,
                               child: Container(
-                                height: 34,
-                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(110),
+                                  color: const Color(0xFF0C0C0C),
+                                  borderRadius: BorderRadius.circular(999),
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    l10n.handNextHand,
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 13,
-                                      color: Colors.white.withValues(alpha: 0.8),
-                                      fontWeight: FontWeight.w500,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      l10n.handNextHand,
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 13,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    _buildIcon('assets/icons/CaretRight.svg', 16, Colors.white),
+                                  ],
                                 ),
                               ),
                             ),
@@ -2042,106 +2018,69 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                         right: 8,
                         child: _buildGestureTooltip(),
                       ),
+
+                    // Folded to me chip — white pill centered at bottom of canvas
+                    if (_canShowFoldedToMe())
+                      Positioned(
+                        bottom: 16,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: GestureDetector(
+                            onTap: _handleFoldedToMe,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: Text(
+                                l10n.handFoldedToMe,
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF0C0C0C),
+                                  letterSpacing: -0.15,
+                                  height: 22 / 15,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
             ),
           ),
-          
-          // Folded to me + Next Hand — side by side below canvas
-          if (_canShowFoldedToMe() || _canShowNextHand())
+
+          // Next Hand — shown below canvas when hero has folded
+          if (_canShowNextHand())
             Container(
               margin: const EdgeInsets.fromLTRB(16, 7, 16, 0),
-              child: Row(
-                children: [
-                  if (_canShowFoldedToMe())
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: _handleFoldedToMe,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF62E3BC),
-                            borderRadius: BorderRadius.circular(110),
-                          ),
-                          child: Center(
-                            child: Text(
-                              l10n.handFoldedToMe,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 17,
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
-                                height: 24 / 17,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (_canShowFoldedToMe() && _canShowNextHand())
-                    const SizedBox(width: 10),
-                  if (_canShowNextHand())
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: _skipCurrentAction,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(110),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              l10n.handNextHand,
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 17,
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
-                                height: 24 / 17,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-          // Undo Last Action Button - White pill
-          if (_canUndoLastAction())
-            Container(
-              margin: EdgeInsets.fromLTRB(16, 14, 16, 0),
-              width: double.infinity,
               child: GestureDetector(
-                onTap: _undoLastAction,
+                onTap: _skipCurrentAction,
                 child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.transparent,
                     borderRadius: BorderRadius.circular(110),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                    ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildIcon('icons/figma_icons/undo.svg', 24, Colors.black),
-                      SizedBox(width: 8),
-                      Text(
-                        l10n.handUndoLastAction,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 17,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.5,
-                          height: 24 / 17,
-                        ),
+                  child: Center(
+                    child: Text(
+                      l10n.handNextHand,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 17,
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.5,
+                        height: 24 / 17,
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -2150,21 +2089,21 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           // Game Info Row - Pot, Stack, To Act
           Container(
             key: _statsRowKey,
-            margin: EdgeInsets.fromLTRB(16, 14, 16, 0),
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: gameState.areAllPlayersAllIn()
               ? Container(
                   key: _potInfoKey,
                   decoration: BoxDecoration(
-                    color: Color(0xFF62E3BC).withValues(alpha: 0.2),
+                    color: const Color(0xFF62E3BC).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Color(0xFF62E3BC), width: 2),
+                    border: Border.all(color: const Color(0xFF62E3BC), width: 2),
                   ),
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.casino, color: Color(0xFF62E3BC), size: 24),
-                      SizedBox(width: 12),
+                      const Icon(Icons.casino, color: Color(0xFF62E3BC), size: 24),
+                      const SizedBox(width: 12),
                       Text(
                         l10n.handAllInHand,
                         style: GoogleFonts.ibmPlexSans(
@@ -2174,11 +2113,11 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                           letterSpacing: 2,
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Text(
                         '• POT: ${gameState.formatCurrency(gameState.currentPot)}',
                         style: GoogleFonts.ibmPlexSans(
-                          color: Color(0xFF62E3BC),
+                          color: const Color(0xFF62E3BC),
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -2192,20 +2131,78 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(child: _buildInfoCard(l10n.handPot, gameState.formatCurrency(gameState.currentPot))),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 12),
                       Expanded(child: _buildStackInfoCard()),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 12),
                       Expanded(child: _buildInfoCard(l10n.handToAct, _getCurrentPlayerNameSafely())),
                     ],
                   ),
                 ),
           ),
 
-          // Bottom padding for nav bar
-          SizedBox(height: _canUndoLastAction() ? 16 : 20),
+          // Bottom action row — always visible
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Back circle
+                GestureDetector(
+                  onTap: () => _handleNavigationAttempt(isBackButton: true),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: _buildIcon('assets/icons/back icon.svg', 24, Colors.black),
+                    ),
+                  ),
+                ),
+                // Undo pill — always visible, dimmed when nothing to undo
+                Opacity(
+                  opacity: _canUndoLastAction() ? 1.0 : 0.35,
+                  child: GestureDetector(
+                    onTap: _canUndoLastAction() ? _undoLastAction : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF161719),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: const Color(0xFF3A3A3C)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SvgPicture.asset(
+                            'assets/icons/undo.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.handUndoLastAction,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              height: 22 / 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
             ],
           ),
-        ),
         // Guided hand overlay (onboarding phase 4)
         GuidedHandOverlay(
           key: _guidedOverlayKey,
@@ -2303,20 +2300,13 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   Widget _buildMenuButton(BuildContext context) {
     return GestureDetector(
       key: _menuButtonKey,
-      onTap: () {
-        setState(() {
-          _showMenuOverlay = !_showMenuOverlay;
-        });
-      },
-      child: Container(
+      onTap: () => setState(() => _showMenuOverlay = !_showMenuOverlay),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
         width: 44,
         height: 44,
-        decoration: const BoxDecoration(
-          color: Color(0xFF101115),
-          shape: BoxShape.circle,
-        ),
         child: Center(
-          child: _buildIcon('icons/figma_icons/dots_vertical.svg', 18, Colors.white),
+          child: _buildIcon('icons/figma_icons/dots.svg', 24, Colors.white),
         ),
       ),
     );
@@ -2324,92 +2314,87 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   Widget _buildMenuOverlay() {
     final l10n = AppLocalizations.of(context);
-    // Get the position of the menu button
     final RenderBox? renderBox = _menuButtonKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return SizedBox.shrink();
+    if (renderBox == null) return const SizedBox.shrink();
 
     final buttonPosition = renderBox.localToGlobal(Offset.zero);
     final buttonSize = renderBox.size;
 
+    final List<Widget> items = [];
+
+    items.add(_buildMenuItem(
+      icon: 'assets/icons/Users.svg',
+      label: l10n.handManagePlayers,
+      onTap: () {
+        setState(() => _showMenuOverlay = false);
+        _managePlayersDialog();
+      },
+    ));
+
+    items.add(_buildMenuSeparator());
+
+    items.add(_buildMenuItem(
+      icon: 'assets/icons/PicnicTable.svg',
+      label: l10n.handChangeTable,
+      onTap: () {
+        setState(() => _showMenuOverlay = false);
+        _handleTableChange();
+      },
+    ));
+
+    if (widget.gameType == GameType.tournament) {
+      items.add(_buildMenuSeparator());
+      items.add(_buildMenuItem(
+        icon: 'assets/icons/Info.svg',
+        label: l10n.handRebuy,
+        onTap: () {
+          setState(() => _showMenuOverlay = false);
+          _showRebuyDialog();
+        },
+      ));
+    }
+
+    items.add(_buildMenuSeparator());
+
+    items.add(_buildMenuItem(
+      icon: 'assets/icons/HandSwipeRight.svg',
+      label: l10n.handGestureGuide,
+      onTap: () {
+        setState(() {
+          _showMenuOverlay = false;
+          _showGestureTooltip = true;
+        });
+      },
+    ));
+
+    items.add(_buildMenuSeparator());
+
+    items.add(_buildMenuItem(
+      icon: 'assets/icons/StopCircle.svg',
+      label: l10n.handStopSession,
+      onTap: () {
+        setState(() => _showMenuOverlay = false);
+        _stopSession();
+      },
+      textColor: const Color(0xFFFF3B30),
+      iconColor: const Color(0xFFFF3B30),
+    ));
+
     return Positioned(
-      top: buttonPosition.dy + buttonSize.height + 8,
-      right: 25,
+      top: buttonPosition.dy + buttonSize.height + 4,
+      right: 16,
       child: Material(
         color: Colors.transparent,
         child: Container(
-          padding: EdgeInsets.all(14),
+          width: 200,
+          padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: Color(0xFF141414),
-            borderRadius: BorderRadius.circular(8),
+            color: const Color(0xFF0C0C0C),
+            borderRadius: BorderRadius.circular(16),
           ),
-          child: SizedBox(
-            width: 113,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                _buildMenuItem(
-                  icon: 'icons/figma_icons/info.svg',
-                  label: l10n.handGestureGuide,
-                  onTap: () {
-                    setState(() {
-                      _showMenuOverlay = false;
-                      _showGestureTooltip = true;
-                    });
-                  },
-                ),
-                SizedBox(height: 12),
-                _buildMenuSeparator(),
-                SizedBox(height: 12),
-                _buildMenuItem(
-                  icon: 'icons/figma_icons/menu_players.svg',
-                  label: l10n.handManagePlayers,
-                  onTap: () {
-                    setState(() => _showMenuOverlay = false);
-                    _managePlayersDialog();
-                  },
-                ),
-                SizedBox(height: 12),
-                _buildMenuSeparator(),
-                SizedBox(height: 12),
-                _buildMenuItem(
-                  icon: 'icons/figma_icons/forward.svg',
-                  label: l10n.handChangeTable,
-                  onTap: () {
-                    setState(() => _showMenuOverlay = false);
-                    _handleTableChange();
-                  },
-                  iconColor: Color(0xFF62E3BC),
-                ),
-                if (widget.gameType == GameType.tournament) ...[
-                  SizedBox(height: 12),
-                  _buildMenuSeparator(),
-                  SizedBox(height: 12),
-                  _buildMenuItem(
-                    icon: 'icons/figma_icons/plus.svg',
-                    label: l10n.handRebuy,
-                    onTap: () {
-                      setState(() => _showMenuOverlay = false);
-                      _showRebuyDialog();
-                    },
-                    iconColor: Color(0xFF62E3BC),
-                  ),
-                ],
-                SizedBox(height: 12),
-                _buildMenuSeparator(),
-                SizedBox(height: 12),
-                _buildMenuItem(
-                  icon: 'icons/figma_icons/menu_stop.svg',
-                  label: l10n.handStopSession,
-                  onTap: () {
-                    setState(() => _showMenuOverlay = false);
-                    _stopSession();
-                  },
-                  textColor: Color(0xFFD55A41),
-                ),
-              ],
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: items,
           ),
         ),
       ),
@@ -2424,32 +2409,26 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     Color textColor = Colors.white,
     Color? iconColor,
   }) {
+    final color = iconColor ?? Colors.white;
     return GestureDetector(
       key: key,
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 113,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: iconColor != null
-                ? _buildIcon(icon, 16, iconColor)
-                : SvgPicture.asset(icon, width: 16, height: 16),
-            ),
-            SizedBox(width: 6),
             Text(
               label,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
                 fontWeight: FontWeight.w400,
                 color: textColor,
-                height: 1.5,
+                height: 22 / 15,
               ),
             ),
+            _buildIcon(icon, 16, color),
           ],
         ),
       ),
@@ -2459,8 +2438,8 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
   Widget _buildMenuSeparator() {
     return Container(
       height: 1,
-      width: 113,
-      color: Color(0xFF555555),
+      color: const Color(0xFF3A3A3C),
+      margin: const EdgeInsets.symmetric(vertical: 5),
     );
   }
 
@@ -2473,35 +2452,38 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     final currentPlayer = gameState.currentPlayer;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF101115),
+        color: const Color(0xFF161719),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF161719)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             l10n.handStack,
-            style: GoogleFonts.ibmPlexSans(
-              color: const Color(0xFF8C8C8C),
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
             textAlign: TextAlign.center,
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFFB9B9B9),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              height: 16 / 11,
+            ),
           ),
-          const SizedBox(height: 2),
           if (isHero)
             Text(
               _getCurrentPlayerStackSafely(),
+              textAlign: TextAlign.center,
               style: GoogleFonts.ibmPlexSans(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+                color: const Color(0xFF62E3BC),
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                height: 22 / 15,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
             )
           else
             StackRangeCircle(
@@ -2529,34 +2511,37 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
   Widget _buildInfoCard(String label, String value) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF101115),
+        color: const Color(0xFF161719),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF161719)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
-              color: const Color(0xFF8C8C8C),
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
             textAlign: TextAlign.center,
+            style: GoogleFonts.ibmPlexSans(
+              color: const Color(0xFFB9B9B9),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              height: 16 / 11,
+            ),
           ),
-          const SizedBox(height: 4),
           Text(
             value,
+            textAlign: TextAlign.center,
             style: GoogleFonts.ibmPlexSans(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              color: const Color(0xFFB9B9B9),
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              height: 22 / 15,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -3517,47 +3502,119 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
     if (hasActions) {
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF1B1E24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-          title: Text(
-            l10n.handHandInProgress,
-            style: GoogleFonts.ibmPlexSans(
+        barrierColor: Colors.black54,
+        builder: (ctx) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
               color: Colors.white,
-              fontWeight: FontWeight.w600,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header: spacer | title (centered) | X
+                Row(
+                  children: [
+                    const SizedBox(width: 28),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          l10n.handHandInProgress,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF0C0C0C),
+                            height: 20 / 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(ctx, false),
+                      child: SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: Center(
+                          child: SvgPicture.asset(
+                            'assets/icons/X.svg',
+                            width: 18,
+                            height: 18,
+                            colorFilter: const ColorFilter.mode(
+                                Color(0xFFB9B9B9), BlendMode.srcIn),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Body text
+                Text(
+                  l10n.handHandInProgressMessage,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFFB9B9B9),
+                    height: 22 / 15,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(ctx, false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: const Color(0xFFB9B9B9)),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            l10n.commonCancel,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0C0C0C),
+                              height: 20 / 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(ctx, true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0C0C0C),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            l10n.handMoveToNextHand,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              height: 20 / 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          content: Text(
-            l10n.handHandInProgressMessage,
-            style: GoogleFonts.ibmPlexSans(
-              color: Colors.white.withOpacity(0.7),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(
-                l10n.commonCancel,
-                style: GoogleFonts.ibmPlexSans(
-                  color: Colors.white.withOpacity(0.5),
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF89F1EC),
-              ),
-              child: Text(
-                l10n.handMoveToNextHand,
-                style: GoogleFonts.ibmPlexSans(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
         ),
       );
       if (confirmed != true) return;
@@ -4680,7 +4737,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context).pokerHandRebuyAdded(rebuyAmount.toStringAsFixed(2), stackSize.toStringAsFixed(0))),
-              backgroundColor: AppColors.gradientGreenEnd,
+              backgroundColor: AppColors.accentPrimary,
             ),
           );
         },

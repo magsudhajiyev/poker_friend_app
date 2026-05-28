@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// Reusable toggle switch matching the app's design system.
+/// Toggle switch matching Figma v2 spec (node: Toggle).
 ///
-/// ON state: teal track (#1B4341), teal border (#4B9A96), mint thumb (#73D4CF)
-/// OFF state: dark track (#39393D), grey border (#555555), grey thumb (#8C8C8C)
+/// Dimensions: 38×24px, thumb 18×18px round, radius 74px.
+/// Off: `#0C0C0C` track + `#3A3A3C` border, `#B9B9B9` thumb.
+/// On:  `#0C0C0C` track (no border), white thumb.
 class AppToggle extends StatelessWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
@@ -18,27 +19,29 @@ class AppToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onChanged != null ? () => onChanged!(!value) : null,
-      child: Container(
-        width: 50,
-        height: 20,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 38,
+        height: 24,
         decoration: BoxDecoration(
-          color: value ? const Color(0xFF1B4341) : const Color(0xFF39393D),
+          color: const Color(0xFF0C0C0C),
           borderRadius: BorderRadius.circular(74),
-          border: Border.all(
-            color: value ? const Color(0xFF4B9A96) : const Color(0xFF555555),
-            width: 1,
-          ),
+          border: value
+              ? null
+              : Border.all(color: const Color(0xFF3A3A3C), width: 1),
         ),
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.all(3),
         child: AnimatedAlign(
           duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
           alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            width: 22,
-            height: 15,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 18,
+            height: 18,
             decoration: BoxDecoration(
-              color: value ? const Color(0xFF73D4CF) : const Color(0xFF8C8C8C),
-              borderRadius: BorderRadius.circular(43),
+              color: value ? Colors.white : const Color(0xFFB9B9B9),
+              shape: BoxShape.circle,
             ),
           ),
         ),

@@ -147,7 +147,7 @@ class _WeeklyHoursStepState extends State<WeeklyHoursStep>
                         widget.onContinue(_values[_selectedIndex]),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: AppColors.backgroundPaper,
+                      foregroundColor: AppColors.bgPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(110),
                       ),
@@ -158,7 +158,7 @@ class _WeeklyHoursStepState extends State<WeeklyHoursStep>
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.backgroundPaper,
+                        color: AppColors.bgPrimary,
                       ),
                     ),
                   ),

@@ -353,7 +353,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           // Teal glow at top (matches final_standings_screen pattern)
@@ -471,7 +471,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
+                    color: AppColors.textMint,
                     height: 1.47,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -832,7 +832,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 37, sigmaY: 37),
           child: Material(
-            color: AppColors.backgroundSurface.withOpacity(0.85),
+            color: AppColors.bgSurface.withOpacity(0.85),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(58),
               side: const BorderSide(color: Colors.white, width: 1),
@@ -910,7 +910,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
     final shouldLeave = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.backgroundSurface,
+        backgroundColor: AppColors.bgSurface,
         title: Text(
           AppLocalizations.of(context).clubCashGameLeaveWaitlistConfirm,
           style: GoogleFonts.ibmPlexSans(color: Colors.white),
@@ -924,7 +924,7 @@ class _GroupedCashGameScreenState extends State<GroupedCashGameScreen> {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               AppLocalizations.of(context).clubCashGameKeep,
-              style: GoogleFonts.ibmPlexSans(color: AppColors.textSecondary),
+              style: GoogleFonts.ibmPlexSans(color: AppColors.textMint),
             ),
           ),
           TextButton(
@@ -1114,7 +1114,7 @@ class _AdminWaitlistSheetState extends State<_AdminWaitlistSheet> {
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textMint,
                       ),
                     ),
                     const Spacer(),
@@ -1585,7 +1585,7 @@ class _AddTableSheetState extends State<_AddTableSheet> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
+                    color: AppColors.textMint,
                   ),
                 ),
               ],

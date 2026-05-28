@@ -78,7 +78,7 @@ class FreeTierLimits {
       barrierColor: Colors.black.withOpacity(0.7),
       builder: (dialogContext) {
         return Dialog(
-          backgroundColor: AppColors.backgroundSurface,
+          backgroundColor: AppColors.bgSurface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(

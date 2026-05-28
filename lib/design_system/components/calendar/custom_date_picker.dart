@@ -103,7 +103,7 @@ Future<DateTime?> showCustomDatePicker(
                     child: Container(
                       width: cardWidth,
                       decoration: BoxDecoration(
-                        color: AppColors.calendarCardBg,
+                        color: AppColors.bgSurface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: AppColors.whiteBorder(opacity: 0.10),
@@ -343,7 +343,7 @@ Widget _pickerNavArrow({required String char, required VoidCallback onTap}) {
         style: GoogleFonts.ibmPlexSans(
           fontSize: 28,
           fontWeight: FontWeight.w500,
-          color: AppColors.calendarAccentGreen,
+          color: AppColors.accentPrimary,
           height: 1.0,
         ),
       ),

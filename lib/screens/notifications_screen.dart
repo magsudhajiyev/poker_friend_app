@@ -137,7 +137,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final statusBarHeight = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper, // #02050B
+      backgroundColor: AppColors.bgPrimary, // #02050B
       body: Stack(
         children: [
           // Cyan ellipse glow at top (Figma node 343:4912)
@@ -226,7 +226,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   height: 44,
                   padding: const EdgeInsets.all(9.68),
                   decoration: BoxDecoration(
-                    color: AppColors.backgroundSurface, // #101115
+                    color: AppColors.bgSurface, // #101115
                     borderRadius: BorderRadius.circular(88.733),
                   ),
                   child: Center(
@@ -443,7 +443,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary, // #D3FFFD
+                    color: AppColors.textMint, // #D3FFFD
                     height: 1.44,
                   ),
                 ),

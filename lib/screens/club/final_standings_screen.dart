@@ -80,7 +80,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
           // Teal glow at top
@@ -229,7 +229,7 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
+                    color: AppColors.textMint,
                     height: 1.47,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -438,13 +438,13 @@ class _FinalStandingsScreenState extends State<FinalStandingsScreen> {
       case 3:
         return const (
           bg: AppColors.neutral800,
-          rankBg: AppColors.backgroundSurface,
+          rankBg: AppColors.bgSurface,
           rankColor: AppColors.mint700,
           trophy: _TrophyKind.bronze,
         );
       default:
         return const (
-          bg: AppColors.backgroundSurface,
+          bg: AppColors.bgSurface,
           rankBg: Colors.black,
           rankColor: Colors.white,
           trophy: null,

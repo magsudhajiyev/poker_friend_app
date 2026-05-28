@@ -14,7 +14,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaper,
+      backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
         child: Column(
           children: [
@@ -171,7 +171,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF1C1F21)),
       ),
@@ -228,7 +228,7 @@ class KnowledgeBaseScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF1C1F21)),
       ),

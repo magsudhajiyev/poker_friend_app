@@ -82,11 +82,11 @@ class CalendarDayCell extends StatelessWidget {
 
   Color _getTextColor() {
     if (isDisabled) {
-      return AppColors.calendarDayDisabled;
+      return AppColors.labelTertiary;
     }
     if (isSelected || isToday) {
       return const Color(0xFF89F1EC);
     }
-    return AppColors.calendarDayText;
+    return AppColors.textPrimary;
   }
 }

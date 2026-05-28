@@ -209,7 +209,7 @@ class _NicknameStepState extends State<NicknameStep>
                               '@',
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 18,
-                                color: AppColors.accentGreen,
+                                color: AppColors.accentPrimary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -235,7 +235,7 @@ class _NicknameStepState extends State<NicknameStep>
                             borderSide: BorderSide(
                               color: _hasChecked && !_isAvailable
                                   ? Colors.red
-                                  : AppColors.accentGreen,
+                                  : AppColors.accentPrimary,
                               width: 2,
                             ),
                           ),
@@ -279,7 +279,7 @@ class _NicknameStepState extends State<NicknameStep>
                         onPressed: _canClaim ? _claimUsername : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: AppColors.backgroundPaper,
+                          foregroundColor: AppColors.bgPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(110),
                           ),
@@ -294,7 +294,7 @@ class _NicknameStepState extends State<NicknameStep>
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.backgroundPaper),
+                                      AppColors.bgPrimary),
                                 ),
                               )
                             : Text(
@@ -302,7 +302,7 @@ class _NicknameStepState extends State<NicknameStep>
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.backgroundPaper,
+                                  color: AppColors.bgPrimary,
                                 ),
                               ),
                       ),
@@ -349,7 +349,7 @@ class _NicknameStepState extends State<NicknameStep>
     if (_hasChecked && _isAvailable) {
       return const Padding(
         padding: EdgeInsets.only(right: 12),
-        child: Icon(Icons.check_circle, color: AppColors.accentGreen, size: 20),
+        child: Icon(Icons.check_circle, color: AppColors.accentPrimary, size: 20),
       );
     }
     if (_hasChecked && !_isAvailable) {
@@ -378,7 +378,7 @@ class _NicknameStepState extends State<NicknameStep>
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Text(
           l10n.usernameSetupAvailable,
-          style: const TextStyle(color: AppColors.accentGreen, fontSize: 13),
+          style: const TextStyle(color: AppColors.accentPrimary, fontSize: 13),
         ),
       );
     }

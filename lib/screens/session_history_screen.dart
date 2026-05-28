@@ -181,7 +181,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColors.backgroundSurface.withOpacity(0.6),
+            color: AppColors.bgSurface.withOpacity(0.6),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: AppColors.buttonPrimary.withOpacity(0.3),
@@ -199,7 +199,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
               Text(
                 '${l10n.sessionLast30Days} • ',
                 style: AppTypography.bodySmall(
-                  color: AppColors.textSecondary,
+                  color: AppColors.textMint,
                 ).copyWith(fontSize: 13),
               ),
               Text(
@@ -523,7 +523,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> with Single
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppColors.backgroundSurface,
+          color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.black),
         ),

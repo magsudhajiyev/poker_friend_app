@@ -1534,7 +1534,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
-      backgroundColor: AppColors.bgMainV2,
+      backgroundColor: AppColors.bgPrimary,
       extendBody: true,
       extendBodyBehindAppBar: true,
       drawer: AppNavigationDrawer(
@@ -1556,7 +1556,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   AppDataCache.markHomeDirty();
                   return _loadData();
                 },
-                color: AppColors.tealAccent,
+                color: AppColors.accentPrimary,
                 backgroundColor: const Color(0xFF1C2926),
                 edgeOffset: headerHeight,
                 child: SingleChildScrollView(
@@ -1635,7 +1635,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // ── Figma v2 Header ──────────────────────────────────────────────
   Widget _buildNewHeader(BuildContext context, double topPadding, double extraTopPadding) {
     return Container(
-      color: AppColors.cardBorderV2, // #161719 surface
+      color: AppColors.borderDefault, // #161719 surface
       padding: EdgeInsets.fromLTRB(16, topPadding + extraTopPadding + 6, 16, 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1671,7 +1671,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 16),
               GestureDetector(
-                onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                ),
                 child: const Icon(Icons.menu, color: Colors.white, size: 24),
               ),
             ],
@@ -1977,7 +1980,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.cardBorderV2, width: 1),
+        border: Border.all(color: AppColors.borderDefault, width: 1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Stack(
@@ -2004,7 +2007,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondaryV2,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -2201,7 +2204,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             'Total Bankroll',
             style: GoogleFonts.ibmPlexSans(
               fontSize: 10, fontWeight: FontWeight.w600,
-              color: AppColors.textSecondaryV2,
+              color: AppColors.textSecondary,
             ),
           ),
 
@@ -2231,7 +2234,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             text: '  of ${CurrencyService.formatBankroll(bankrollGoal)}',
                             style: GoogleFonts.familjenGrotesk(
                               fontSize: 24, fontWeight: FontWeight.w400,
-                              color: AppColors.textSecondaryV2, height: 1.0,
+                              color: AppColors.textSecondary, height: 1.0,
                             ),
                           ),
                         ],
@@ -2290,8 +2293,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 6,
-                      backgroundColor: AppColors.progressTrack,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentGreenV2),
+                      backgroundColor: AppColors.borderStrong,
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentPrimary),
                     ),
                   ),
                 ),
@@ -2601,7 +2604,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.accentGreenV2,
+                        color: AppColors.accentPrimary,
                         height: 1.44,
                       ),
                     ),
@@ -2611,7 +2614,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 11,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondaryV2,
+                        color: AppColors.textSecondary,
                         height: 16 / 11,
                       ),
                     ),
@@ -2629,9 +2632,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Row(
                   children: [
-                    _buildLegendItem(l10n.homeTournament, AppColors.accentBlueV2),
+                    _buildLegendItem(l10n.homeTournament, AppColors.accentInfo),
                     const SizedBox(width: 17),
-                    _buildLegendItem(l10n.homeCashGame, AppColors.accentGreenV2),
+                    _buildLegendItem(l10n.homeCashGame, AppColors.accentPrimary),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -3114,7 +3117,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.backgroundSurface,
+          color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.black),
         ),
@@ -3363,7 +3366,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.backgroundSurface,
+          color: AppColors.bgSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.black),
         ),
@@ -3380,7 +3383,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               child: Text(
                 gameType,
-                style: AppTypography.infoCardPill(color: AppColors.infoCardPillText),
+                style: AppTypography.infoCardPill(color: AppColors.buttonPrimary),
               ),
             ),
             const SizedBox(height: 8),

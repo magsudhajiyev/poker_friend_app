@@ -35,7 +35,7 @@ class InfoCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.black, width: 1),
       ),

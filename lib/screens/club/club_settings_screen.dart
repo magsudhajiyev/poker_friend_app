@@ -176,12 +176,12 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 child: _isLoading
                     ? Center(
                         child: CircularProgressIndicator(
-                          color: AppColors.tealAccent,
+                          color: AppColors.accentPrimary,
                         ),
                       )
                     : RefreshIndicator(
                         onRefresh: _loadData,
-                        color: AppColors.tealAccent,
+                        color: AppColors.accentPrimary,
                         child: SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
@@ -1112,7 +1112,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.backgroundSurface,
+            color: AppColors.bgSurface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: const Color(0xFF1C1F21)),
           ),
