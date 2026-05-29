@@ -59,6 +59,17 @@ class PokerTableWidget extends StatelessWidget {
   /// Set larger than tableHeightFraction to push seats outside the table edge.
   final double? seatHeightFraction;
 
+  /// Whether to show the logo text on the table surface.
+  /// When false, uses a clean SVG without text.
+  final bool showLogo;
+
+  /// Size of the dealer button chip (default 32).
+  final double dealerButtonSize;
+
+  /// Rotation in quarter turns to apply to the dealer button image.
+  /// Use to counter-rotate when the whole widget is rotated.
+  final int dealerButtonQuarterTurns;
+
   const PokerTableWidget({
     Key? key,
     required this.activeSeatMap,
@@ -74,6 +85,9 @@ class PokerTableWidget extends StatelessWidget {
     this.tableHeightFraction = 0.72,
     this.seatWidthFraction,
     this.seatHeightFraction,
+    this.showLogo = true,
+    this.dealerButtonSize = 32,
+    this.dealerButtonQuarterTurns = 0,
   }) : super(key: key);
 
   // ─── SEAT POSITION MATH ─────────────────────────────────────────
@@ -169,7 +183,7 @@ class PokerTableWidget extends StatelessWidget {
 
   Widget _buildTableSurface(double width, double height) {
     return SvgPicture.asset(
-      'assets/icons/Table.svg',
+      showLogo ? 'assets/icons/Table.svg' : 'assets/icons/Table_clean.svg',
       width: width,
       height: height,
       fit: BoxFit.fill,
@@ -383,20 +397,29 @@ class PokerTableWidget extends StatelessWidget {
         heightFraction: tableHeightFraction);
     final seatAngle = getSeatAngle(buttonPosition!);
 
-    // Offset button 50px toward center
-    final buttonOffsetX = -50 * math.cos(seatAngle);
-    final buttonOffsetY = -50 * math.sin(seatAngle);
+    // Offset button toward center
+    final buttonOffset = dealerButtonSize * 1.5;
+    final buttonOffsetX = -buttonOffset * math.cos(seatAngle);
+    final buttonOffsetY = -buttonOffset * math.sin(seatAngle);
+    final half = dealerButtonSize / 2;
 
-    final buttonImage = SvgPicture.asset(
-      'assets/icons/Dealer Button.svg',
-      width: 32,
-      height: 32,
-    );
+    Widget makeButtonImage(double size) {
+      final svg = SvgPicture.asset(
+        'assets/icons/Dealer Button.svg',
+        width: size,
+        height: size,
+      );
+      return dealerButtonQuarterTurns != 0
+          ? RotatedBox(quarterTurns: dealerButtonQuarterTurns, child: svg)
+          : svg;
+    }
+
+    final buttonImage = makeButtonImage(dealerButtonSize);
 
     if (isDealerButtonDraggable && onDealerButtonMoved != null) {
       return Positioned(
-        left: position.dx - 16 + buttonOffsetX,
-        top: position.dy - 16 + buttonOffsetY,
+        left: position.dx - half + buttonOffsetX,
+        top: position.dy - half + buttonOffsetY,
         // Use Builder to get a context whose ancestor RenderBox
         // covers the full table area for globalToLocal conversion.
         child: Builder(
@@ -405,7 +428,7 @@ class PokerTableWidget extends StatelessWidget {
               data: buttonPosition!,
               feedback: Opacity(
                 opacity: 0.7,
-                child: SvgPicture.asset('assets/icons/Dealer Button.svg', width: 40, height: 40),
+                child: makeButtonImage(dealerButtonSize * 1.25),
               ),
               childWhenDragging: Opacity(
                 opacity: 0.3,
@@ -422,8 +445,8 @@ class PokerTableWidget extends StatelessWidget {
       );
     } else {
       return Positioned(
-        left: position.dx - 16 + buttonOffsetX,
-        top: position.dy - 16 + buttonOffsetY,
+        left: position.dx - half + buttonOffsetX,
+        top: position.dy - half + buttonOffsetY,
         child: Opacity(
           opacity: isDealerButtonDraggable ? 1.0 : 0.6,
           child: buttonImage,

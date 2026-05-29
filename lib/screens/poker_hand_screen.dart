@@ -24,6 +24,8 @@ import '../widgets/showdown_dialog.dart';
 import 'seat_setup_screen.dart';
 import '../widgets/action_button_grid.dart';
 import '../widgets/table_management_sheet.dart';
+import '../widgets/seat_config_sheet.dart';
+import '../widgets/poker_table_widget.dart';
 import '../widgets/raise_snap_overlay.dart';
 import '../widgets/session_summary_card.dart';
 import '../widgets/winner_selection_dialog.dart';
@@ -1645,18 +1647,51 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                   );
                 }),
 
-              // Main Gesture Area
+              // Main Gesture Area + Live Table
               Expanded(
-                child: Container(
-                  key: _drawingAreaKey,
-                  margin: const EdgeInsets.fromLTRB(16, 18, 16, 7),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161719),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Stack(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 7),
+                  child: Column(
+                    children: [
+                      // TOP — Live poker table (compact)
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF161719),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
+                            ),
+                            child: _buildHandTable(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // BOTTOM — Gesture input area (larger)
+                      Expanded(
+                        flex: 3,
+                        child: Container(
+                          key: _drawingAreaKey,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF161719),
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(24),
+                              bottomRight: Radius.circular(24),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(24),
+                              bottomRight: Radius.circular(24),
+                            ),
+                            child: Stack(
                   children: [
                     // Table background image
                     Positioned.fill(
@@ -1736,7 +1771,7 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
                     // (Folded to me + Next Hand buttons moved below canvas)
 
-                    // Top bar: chips (left) + Next Hand (right)
+                    // Top bar: blinds (left) + Next Hand (right)
                     Positioned(
                       top: 8,
                       left: 8,
@@ -1744,104 +1779,84 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          // Blinds chip — tappable to edit
+                          GestureDetector(
+                            key: _blindsPillKey,
+                            onTap: () => _showBlindsEditDialog(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2C2C2E),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.people_outline, color: Color(0xFFB9B9B9), size: 12),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${gameState.smallBlind}/${gameState.bigBlind}',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xFFB9B9B9),
+                                      height: 16 / 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Table chip
+                              // Session info button
                               GestureDetector(
-                                key: _tableButtonKey,
-                                onTap: () {
-                                  TableManagementSheet.show(
-                                    context: context,
-                                    gameState: gameState,
-                                    sessionManager: sessionManager,
-                                    heroSeat: sessionManager.ourSeatNumber ?? 1,
-                                    onChanged: () => setState(() {}),
-                                  );
-                                },
+                                onTap: _showSessionDetails,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF2C2C2E),
-                                    borderRadius: BorderRadius.circular(999),
+                                  width: 32,
+                                  height: 32,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF2C2C2E),
+                                    shape: BoxShape.circle,
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      SvgPicture.asset('assets/icons/PicnicTable.svg', width: 12, height: 12),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Table',
-                                        style: GoogleFonts.ibmPlexSans(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
-                                          color: const Color(0xFFB9B9B9),
-                                          height: 16 / 11,
-                                        ),
-                                      ),
-                                    ],
+                                  child: const Center(
+                                    child: Icon(Icons.info_outline, color: Color(0xFFB9B9B9), size: 16),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              // Blinds chip — tappable to edit
-                              GestureDetector(
-                                key: _blindsPillKey,
-                                onTap: () => _showBlindsEditDialog(),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF2C2C2E),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.people_outline, color: Color(0xFFB9B9B9), size: 12),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${gameState.smallBlind}/${gameState.bigBlind}',
-                                        style: GoogleFonts.ibmPlexSans(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
-                                          color: const Color(0xFFB9B9B9),
-                                          height: 16 / 11,
+                              // Next Hand button
+                              if (!widget.isIndividualSession) ...[
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  key: _nextHandButtonKey,
+                                  onTap: _skipCurrentAction,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0C0C0C),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          l10n.handNextHand,
+                                          style: GoogleFonts.ibmPlexSans(
+                                            fontSize: 13,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(width: 8),
+                                        _buildIcon('assets/icons/CaretRight.svg', 16, Colors.white),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ],
                           ),
-                          // Next Hand button
-                          if (!widget.isIndividualSession)
-                            GestureDetector(
-                              key: _nextHandButtonKey,
-                              onTap: _skipCurrentAction,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0C0C0C),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      l10n.handNextHand,
-                                      style: GoogleFonts.ibmPlexSans(
-                                        fontSize: 13,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _buildIcon('assets/icons/CaretRight.svg', 16, Colors.white),
-                                  ],
-                                ),
-                              ),
-                            ),
                         ],
                       ),
                     ),
@@ -2054,91 +2069,22 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
               ),
             ),
           ),
-
-          // Next Hand — shown below canvas when hero has folded
-          if (_canShowNextHand())
-            Container(
-              margin: const EdgeInsets.fromLTRB(16, 7, 16, 0),
-              child: GestureDetector(
-                onTap: _skipCurrentAction,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(110),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      l10n.handNextHand,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 17,
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.5,
-                        height: 24 / 17,
-                      ),
-                    ),
+                      // (table is now above the gesture area)
+                    ],
                   ),
                 ),
               ),
-            ),
 
-          // Game Info Row - Pot, Stack, To Act
-          Container(
-            key: _statsRowKey,
-            margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: gameState.areAllPlayersAllIn()
-              ? Container(
-                  key: _potInfoKey,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF62E3BC).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF62E3BC), width: 2),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.casino, color: Color(0xFF62E3BC), size: 24),
-                      const SizedBox(width: 12),
-                      Text(
-                        l10n.handAllInHand,
-                        style: GoogleFonts.ibmPlexSans(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        '• POT: ${gameState.formatCurrency(gameState.currentPot)}',
-                        style: GoogleFonts.ibmPlexSans(
-                          color: const Color(0xFF62E3BC),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : IntrinsicHeight(
-                  key: _potInfoKey,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(child: _buildInfoCard(l10n.handPot, gameState.formatCurrency(gameState.currentPot))),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildStackInfoCard()),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildInfoCard(l10n.handToAct, _getCurrentPlayerNameSafely())),
-                    ],
-                  ),
-                ),
-          ),
+          // Next Hand button below canvas — REMOVED (top-right button sufficient)
+
+          // Game Info Row (Pot, Stack, To Act) — REMOVED (info shown on table now)
+          // Container(
+          //   key: _statsRowKey,
+          //   margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          //   child: gameState.areAllPlayersAllIn()
+          //     ? ...
+          //     : IntrinsicHeight(...)
+          // ),
 
           // Bottom action row — always visible
           Container(
@@ -2244,6 +2190,519 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
       ),  // Scaffold
     );  // PopScope
   }
+
+  // ─── LIVE POKER TABLE (bottom half of drawing board) ──────────────
+
+  /// Maps a widget seat position (1-9) to the logical seat number (1-9).
+  /// After rotating the vertical PokerTableWidget 270° CCW, the notch moves
+  /// to the bottom. In standard poker seating, seat 1 is immediately CW from
+  /// the dealer (notch) and seats go clockwise 1→9.
+  /// The vertical widget's CW order from the notch is: 8,9,1,2,3,4,5,6,7.
+  /// We remap so widget position 8→logical 1, 9→2, 1→3, etc.
+  int _widgetSeatToLogical(int widgetSeat) => ((widgetSeat - 8) % 9) + 1;
+  int _logicalSeatToWidget(int logicalSeat) => ((logicalSeat + 6) % 9) + 1;
+
+  Widget _buildHandTable() {
+    // Build remapped seat data: widget seat N gets logical seat data.
+    final seatActive = <int, bool>{};
+    final seatLabels = <int, String>{};
+    for (int widgetSeat = 1; widgetSeat <= 9; widgetSeat++) {
+      final logical = _widgetSeatToLogical(widgetSeat);
+      seatActive[widgetSeat] = gameState.players[logical - 1].isActive;
+      seatLabels[widgetSeat] = sessionManager.playerNames[logical] ?? '';
+    }
+
+    // Remap button position to widget seat
+    final logicalButton = gameState.buttonPosition;
+    final widgetButton = _logicalSeatToWidget(logicalButton);
+
+    // Allow button drag only when no hand actions have been logged
+    final handInProgress = sessionManager.currentHand?.actions.isNotEmpty ?? false;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableW = constraints.maxWidth;
+        final availableH = constraints.maxHeight;
+
+        return Center(
+          child: RotatedBox(
+            quarterTurns: 3,
+            child: SizedBox(
+              width: availableH,
+              height: availableW,
+              child: PokerTableWidget(
+                activeSeatMap: seatActive,
+                seatLabels: seatLabels,
+                buttonPosition: widgetButton,
+                showDealerButton: true,
+                showLogo: false,
+                dealerButtonSize: 22,
+                dealerButtonQuarterTurns: 1, // counter-rotate spade upright
+                isDealerButtonDraggable: !handInProgress,
+                onDealerButtonMoved: (widgetSeat) {
+                  final logicalSeat = _widgetSeatToLogical(widgetSeat);
+                  _onDealerButtonMoved(logicalSeat);
+                },
+                centerContent: RotatedBox(
+                  quarterTurns: 1,
+                  child: _buildTableCenterContent(),
+                ),
+                seatBuilder: (widgetSeat, isActive) {
+                  final logicalSeat = _widgetSeatToLogical(widgetSeat);
+                  return GestureDetector(
+                    onTap: () => _onSeatTapped(logicalSeat),
+                    onLongPress: isActive
+                        ? () => _onSeatLongPressed(logicalSeat)
+                        : null,
+                    child: RotatedBox(
+                      quarterTurns: 1,
+                      child: _buildHandSeat(logicalSeat, isActive, seatLabels[widgetSeat] ?? ''),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Builds a compact seat widget showing player state (name, stack, bet, fold/all-in).
+  Widget _buildHandSeat(int seatNumber, bool isActive, String label) {
+    final playerState = gameState.players[seatNumber - 1];
+    final isFolded = playerState.hasFolded;
+    final isAllIn = playerState.isAllIn;
+    final isCurrentPlayer = isActive && gameState.currentPlayer == seatNumber;
+    final isHero = seatNumber == (sessionManager.ourSeatNumber ?? -1);
+    final stack = playerState.currentStack;
+    var bet = playerState.betThisRound;
+    final hasChecked = playerState.lastAction == PlayerAction.check && bet == 0 && !isFolded;
+
+    // Determine circle border color based on state
+    Color borderColor;
+    if (!isActive) {
+      borderColor = const Color(0xFF2C2C2E);
+    } else if (isFolded) {
+      borderColor = const Color(0xFFA3FF78).withValues(alpha: 0.3);
+    } else if (isCurrentPlayer) {
+      borderColor = Colors.amber;
+    } else if (isHero) {
+      borderColor = const Color(0xFF4CDE78);
+    } else {
+      borderColor = const Color(0xFFA3FF78);
+    }
+
+    // Seat number pill — compact
+    final circle = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161719),
+        borderRadius: BorderRadius.circular(35),
+        border: Border.all(color: borderColor, width: 1.5),
+        boxShadow: isCurrentPlayer
+            ? [BoxShadow(color: Colors.amber.withValues(alpha: 0.4), blurRadius: 6)]
+            : null,
+      ),
+      child: Text(
+        '$seatNumber',
+        style: GoogleFonts.ibmPlexMono(
+          color: isActive ? const Color(0xFFA3FF78) : const Color(0xFF67696D),
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+
+    if (!isActive) {
+      // Empty seat — just the pill and "Player" label
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          circle,
+          const SizedBox(height: 2),
+          Text(
+            AppLocalizations.of(context).pokerTablePlayerFallback,
+            style: GoogleFonts.ibmPlexSans(
+              color: Colors.white.withValues(alpha: 0.4),
+              fontSize: 8,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+          ),
+        ],
+      );
+    }
+
+    // Player name
+    final displayName = label.isEmpty ? 'P$seatNumber' : (label.length > 7 ? '${label.substring(0, 5)}..' : label);
+
+    // Name badge or text
+    Widget nameWidget;
+    if (label.isNotEmpty && !RegExp(r'^Player\s*\d*$').hasMatch(label)) {
+      nameWidget = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0097D2),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          displayName,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 8,
+            fontWeight: FontWeight.w500,
+            color: isFolded ? Colors.white60 : Colors.white,
+          ),
+          maxLines: 1,
+        ),
+      );
+    } else {
+      nameWidget = Text(
+        displayName,
+        style: GoogleFonts.ibmPlexSans(
+          color: isFolded ? Colors.white38 : Colors.white,
+          fontSize: 8,
+          fontWeight: FontWeight.w500,
+        ),
+        maxLines: 1,
+      );
+    }
+
+    // Stack amount
+    final stackWidget = Text(
+      _formatCompactAmount(stack),
+      style: GoogleFonts.ibmPlexSans(
+        color: isFolded ? Colors.white38 : const Color(0xFF89F1EC),
+        fontSize: 9,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+
+    // Bet/status pill
+    Widget? statusPill;
+    if (isFolded) {
+      statusPill = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          'FOLD',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white38,
+            fontSize: 7,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    } else if (isAllIn) {
+      statusPill = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE53935),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          'ALL-IN',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 7,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    } else if (bet > 0) {
+      statusPill = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+        decoration: BoxDecoration(
+          color: const Color(0xFF4C94FF),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          _formatCompactAmount(bet),
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 7,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
+    } else if (hasChecked) {
+      statusPill = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+        decoration: BoxDecoration(
+          color: const Color(0xFF3BA55D),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          'CHECK',
+          style: GoogleFonts.ibmPlexSans(
+            color: Colors.white,
+            fontSize: 7,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        circle,
+        const SizedBox(height: 1),
+        nameWidget,
+        stackWidget,
+        if (statusPill != null) ...[
+          const SizedBox(height: 1),
+          statusPill,
+        ],
+      ],
+    );
+  }
+
+  String _formatCompactAmount(double amount) {
+    if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}M';
+    if (amount >= 10000) return '${(amount / 1000).toStringAsFixed(0)}K';
+    if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(1)}K';
+    if (amount == amount.roundToDouble()) return amount.toInt().toString();
+    return amount.toStringAsFixed(0);
+  }
+
+  void _onDealerButtonMoved(int newLogicalSeat) {
+    setState(() {
+      gameState.buttonPosition = newLogicalSeat;
+      sessionManager.buttonPosition = newLogicalSeat;
+
+      // Refund old blinds, recalculate positions, and re-post new blinds
+      gameState.initializePot();
+
+      // Sync sessionManager blind positions with gameState
+      final activePlayers = gameState.getActivePlayers();
+      if (activePlayers.length >= 2) {
+        if (activePlayers.length == 2) {
+          sessionManager.actualSBSeat = newLogicalSeat;
+          sessionManager.actualBBSeat =
+              activePlayers.firstWhere((p) => p != newLogicalSeat);
+        } else {
+          int sb = newLogicalSeat;
+          for (int i = 0; i < gameState.numberOfPlayers; i++) {
+            sb = (sb % gameState.numberOfPlayers) + 1;
+            if (activePlayers.contains(sb)) break;
+          }
+          sessionManager.actualSBSeat = sb;
+
+          int bb = sb;
+          for (int i = 0; i < gameState.numberOfPlayers; i++) {
+            bb = (bb % gameState.numberOfPlayers) + 1;
+            if (activePlayers.contains(bb)) break;
+          }
+          sessionManager.actualBBSeat = bb;
+        }
+      }
+    });
+  }
+
+  void _onSeatTapped(int seatNumber) {
+    final isActive = sessionManager.activeSeats.contains(seatNumber);
+    final isHero = seatNumber == (sessionManager.ourSeatNumber ?? -1);
+
+    final defaultStack = sessionManager.bigBlind > 0
+        ? (sessionManager.bigBlind * 100).toDouble()
+        : 0.0;
+    final heroName = sessionManager.playerNames[sessionManager.ourSeatNumber ?? -1] ?? '';
+
+    final seatedPlayers = <String, int>{};
+    for (final entry in sessionManager.playerNames.entries) {
+      if (sessionManager.activeSeats.contains(entry.key)) {
+        seatedPlayers[entry.value.toLowerCase()] = entry.key;
+      }
+    }
+
+    final currentName = sessionManager.playerNames[seatNumber] ?? '';
+    final currentStack =
+        isActive ? gameState.getPlayerStack(seatNumber) : defaultStack;
+
+    final l10n = AppLocalizations.of(context);
+    SeatConfigSheet.show(
+      context: context,
+      seatNumber: seatNumber,
+      initialName: isHero ? heroName : currentName,
+      initialStack: currentStack,
+      isHero: isHero,
+      isActive: isActive,
+      defaultStack: defaultStack,
+      heroName: heroName,
+      seatedPlayers: seatedPlayers,
+      isCash: sessionManager.gameType == GameType.cash,
+      showSaveAsOpponent: false,
+      titleOverride: l10n.tableManagementAddPlayerSeatTitle(seatNumber),
+      onSave: ({
+        required String name,
+        required double stack,
+        required bool isHero,
+        required bool isActive,
+      }) {
+        if (!isActive) {
+          // Remove player
+          sessionManager.activeSeats.remove(seatNumber);
+          sessionManager.playerNames.remove(seatNumber);
+          sessionManager.playerStacks.remove(seatNumber);
+          sessionManager.playerIds.remove(seatNumber);
+          gameState.setPlayerActive(seatNumber, false);
+          setState(() {});
+          return;
+        }
+
+        if (isHero) {
+          final heroStack = gameState.getPlayerStack(sessionManager.ourSeatNumber ?? seatNumber);
+          sessionManager.reseatHero(
+            newSeat: seatNumber,
+            gameState: gameState,
+            heroName: heroName.isNotEmpty ? heroName : name,
+            heroStack: heroStack > 0 ? heroStack : stack,
+          );
+        } else {
+          // Move player if already seated elsewhere (only for named players)
+          if (name.isNotEmpty) {
+            final lower = name.toLowerCase();
+            final existingSeat = seatedPlayers[lower];
+            if (existingSeat != null && existingSeat != seatNumber) {
+              sessionManager.activeSeats.remove(existingSeat);
+              sessionManager.playerNames.remove(existingSeat);
+              sessionManager.playerStacks.remove(existingSeat);
+              sessionManager.playerIds.remove(existingSeat);
+              gameState.setPlayerActive(existingSeat, false);
+            }
+          }
+          sessionManager.playerNames[seatNumber] = name;
+          sessionManager.playerStacks[seatNumber] = stack;
+          sessionManager.activeSeats.add(seatNumber);
+          gameState.setPlayerActive(seatNumber, true);
+          gameState.setPlayerStack(seatNumber, stack);
+        }
+        setState(() {});
+      },
+    );
+  }
+
+  void _onSeatLongPressed(int seatNumber) {
+    final playerState = gameState.players[seatNumber - 1];
+    if (!playerState.isActive) return;
+
+    final isHero = seatNumber == (sessionManager.ourSeatNumber ?? -1);
+    if (isHero) return; // Hero stack is known exactly
+
+    final confidence = playerState.stackConfidence;
+
+    // Show the StackRangeCircle overlay via a dialog
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (ctx) => Center(
+        child: Material(
+          color: Colors.transparent,
+          child: StackRangeCircle(
+            currentStack: gameState.getPlayerStack(seatNumber),
+            bigBlind: sessionManager.bigBlind,
+            confidence: confidence,
+            isHero: false,
+            isInteractive: true,
+            formatCurrency: gameState.formatCurrency,
+            onRangeSelected: (StackRange range) {
+              final newStack = StackBucketHelper.midpointBB(range) * sessionManager.bigBlind;
+              setState(() {
+                gameState.setPlayerStack(seatNumber, newStack);
+                gameState.players[seatNumber - 1].stackConfidence = StackConfidence.medium;
+                gameState.players[seatNumber - 1].handsSinceLastObservation = 0;
+              });
+              Navigator.of(ctx).pop();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTableCenterContent() {
+    final boardCards = sessionManager.currentHand?.boardCards;
+    final hasBoardCards = boardCards != null &&
+        (boardCards.flop.isNotEmpty || boardCards.turn != null || boardCards.river != null);
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasBoardCards) ...[
+          _buildCompactBoardCards(boardCards!),
+          const SizedBox(height: 2),
+        ],
+        Text(
+          gameState.formatCurrency(gameState.currentPot),
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFFD3FFFD),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.5,
+            height: 1.0,
+          ),
+        ),
+        Text(
+          'POT',
+          style: GoogleFonts.ibmPlexSans(
+            color: const Color(0xFF5EB7B3),
+            fontSize: 9,
+            fontWeight: FontWeight.w400,
+            height: 1.3,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactBoardCards(BoardCards boardCards) {
+    final cards = <String>[...boardCards.flop];
+    if (boardCards.turn != null) cards.add(boardCards.turn!);
+    if (boardCards.river != null) cards.add(boardCards.river!);
+    if (cards.isEmpty) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: cards.map((card) {
+        final isRed = card.contains('♥') || card.contains('♦');
+        return Container(
+          width: 18,
+          height: 24,
+          margin: const EdgeInsets.symmetric(horizontal: 1),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 1,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              card,
+              style: TextStyle(
+                fontFamily: 'IBM Plex Mono',
+                fontSize: 7,
+                fontWeight: FontWeight.w600,
+                color: isRed ? Colors.red : Colors.black,
+                height: 1.0,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ─── END LIVE POKER TABLE ───────────────────────────────────────
 
   Widget _buildInfoItem(BuildContext context, String label, String value, IconData icon) {
     final theme = Theme.of(context);
@@ -4440,6 +4899,9 @@ class _PokerHandScreenState extends State<PokerHandScreen> with TickerProviderSt
 
         // Notify guided hand overlay about board cards
         _guidedOverlayKey.currentState?.onBoardCardsDealt(round);
+
+        // Refresh UI to show board cards on the table immediately
+        setState(() {});
       } else {
         // Cancel pressed — roll back the street advance so user can undo actions
         setState(() {
